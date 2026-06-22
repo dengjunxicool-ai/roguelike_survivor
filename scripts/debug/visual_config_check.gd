@@ -193,101 +193,20 @@ func _check_dev_debug_control(main: Node, player: Node2D) -> void:
 		_assert(default_skeleton_armor > 0 and int(skeleton_for_armor.get("armor")) == default_skeleton_armor, "dev debug enemy armor 0 keeps default armor")
 		skeleton_for_armor.queue_free()
 		await process_frame
-	debug_panel.call("_refresh_runtime_upgrade_cards")
-	await process_frame
-	var runtime_upgrade_cards: Node = debug_panel.find_child("RuntimeUpgradeCards", true, false)
-	var runtime_upgrade_cards_scroll: ScrollContainer = debug_panel.find_child("RuntimeUpgradeCardsScroll", true, false) as ScrollContainer
-	var runtime_upgrade_options: Array = debug_panel.get("_runtime_upgrade_options")
-	var character_runtime: Node = player.get_node_or_null("CharacterRuntime")
-	var expected_branch_choice_count: int = 0
-	if character_runtime != null and character_runtime.has_method("get_equipped_weapon_branch_ids"):
-		expected_branch_choice_count = (character_runtime.call("get_equipped_weapon_branch_ids") as Array).size()
-	_assert(runtime_upgrade_cards_scroll != null, "dev debug skill cards use a scroll container")
-	_assert(runtime_upgrade_cards_scroll != null and runtime_upgrade_cards_scroll.custom_minimum_size.y >= 300.0, "dev debug skill cards scroll area has stable height")
-	_assert(runtime_upgrade_cards_scroll != null and runtime_upgrade_cards != null and runtime_upgrade_cards.get_parent() == runtime_upgrade_cards_scroll, "dev debug skill cards list is inside scroll container")
-	_assert(runtime_upgrade_cards != null and runtime_upgrade_cards.get_child_count() > 0, "dev debug lists runtime skill cards")
-	_assert(not runtime_upgrade_options.is_empty(), "dev debug runtime skill card options are available")
-	var branch_choice_count: int = 0
-	var has_unselected_branch_level_card: bool = false
-	for option_variant: Variant in runtime_upgrade_options:
-		if option_variant is Dictionary:
-			var option: Dictionary = option_variant
-			var option_id_text: String = String(option.get("id", ""))
-			if option_id_text.begins_with("branch_choice:"):
-				branch_choice_count += 1
-			if option_id_text.begins_with("skill_level_up:") and option_id_text.split(":").size() >= 4:
-				has_unselected_branch_level_card = true
-				break
-	_assert(branch_choice_count == expected_branch_choice_count, "dev debug skill cards show all Lv2 branch choices before branch lock")
-	_assert(not has_unselected_branch_level_card, "dev debug skill cards keep branch mutual exclusion before branch lock")
-	if not runtime_upgrade_options.is_empty():
-		var before_level: int = 0
-		var current_skill: RefCounted = null
-		var applied_branch_id: String = ""
-		var first_option: Dictionary = runtime_upgrade_options[0] as Dictionary
-		if first_option != null:
-			var first_payload: Dictionary = first_option.get("payload", {}) as Dictionary
-			applied_branch_id = String(first_payload.get("branch_id", ""))
-		var skill_manager: Node = player.get_node_or_null("SkillManager")
-		if skill_manager != null and skill_manager.has_method("get_all_skills"):
-			var skills: Array = skill_manager.call("get_all_skills")
-			if not skills.is_empty():
-				current_skill = skills[0] as RefCounted
-		if current_skill != null:
-			before_level = int(current_skill.get("current_level"))
-		debug_panel.call("_apply_runtime_upgrade_card", 0)
-		await process_frame
-		var comparison_rows: Array = debug_panel.get("_last_upgrade_comparison_rows")
-		_assert(not comparison_rows.is_empty(), "dev debug draws runtime skill upgrade comparison chart")
-		var after_level: int = int(current_skill.get("current_level")) if current_skill != null else before_level
-		_assert(after_level >= before_level, "dev debug can apply a selected runtime skill card")
-		var locked_branch_id: String = ""
-		if character_runtime != null and character_runtime.has_method("get_selected_weapon_branch_id"):
-			locked_branch_id = String(character_runtime.call("get_selected_weapon_branch_id"))
-		_assert(locked_branch_id == applied_branch_id, "dev debug skill cards lock selected branch at Lv2")
-		runtime_upgrade_options = debug_panel.get("_runtime_upgrade_options")
-		var has_selected_branch_level_card: bool = false
-		var has_other_branch_card: bool = false
-		var selected_branch_level_card_index: int = -1
-		var selected_branch_level_card_id: String = ""
-		for refreshed_option_variant: Variant in runtime_upgrade_options:
-			if not (refreshed_option_variant is Dictionary):
-				continue
-			var refreshed_option: Dictionary = refreshed_option_variant
-			var refreshed_id_text: String = String(refreshed_option.get("id", ""))
-			if refreshed_id_text.begins_with("branch_choice:"):
-				has_other_branch_card = true
-				break
-			if refreshed_id_text.begins_with("skill_level_up:"):
-				var refreshed_parts: PackedStringArray = refreshed_id_text.split(":")
-				if refreshed_parts.size() >= 4:
-					if String(refreshed_parts[3]) == applied_branch_id:
-						has_selected_branch_level_card = true
-						if selected_branch_level_card_index < 0:
-							selected_branch_level_card_index = runtime_upgrade_options.find(refreshed_option_variant)
-							selected_branch_level_card_id = refreshed_id_text
-					else:
-						has_other_branch_card = true
-						break
-		_assert(has_selected_branch_level_card, "dev debug skill cards show selected branch level cards after branch lock")
-		_assert(not has_other_branch_card, "dev debug skill cards hide mutually exclusive branch cards after branch lock")
-		if selected_branch_level_card_index >= 0:
-			debug_panel.call("_apply_runtime_upgrade_card", selected_branch_level_card_index)
-			await process_frame
-			runtime_upgrade_options = debug_panel.get("_runtime_upgrade_options")
-			var still_has_applied_level_card: bool = false
-			for applied_option_variant: Variant in runtime_upgrade_options:
-				if applied_option_variant is Dictionary and String((applied_option_variant as Dictionary).get("id", "")) == selected_branch_level_card_id:
-					still_has_applied_level_card = true
-					break
-			_assert(not still_has_applied_level_card, "dev debug skill cards hide an already applied branch level card")
-		debug_panel.call("_clear_skill_cards")
-		await process_frame
-		if skill_manager != null and skill_manager.has_method("get_all_skills"):
-			var cleared_skills: Array = skill_manager.call("get_all_skills")
-			_assert(cleared_skills.size() == 1, "dev debug clear skill cards keeps only character starting skill")
-			if not cleared_skills.is_empty():
-				_assert(String((cleared_skills[0] as RefCounted).get("skill_id")) == "fireball", "dev debug clear skill cards rebinds current weapon starting skill")
+	_assert(debug_panel.find_child("RuntimeUpgradeCards", true, false) == null, "dev debug removes old runtime skill card list")
+	_assert(debug_panel.find_child("RuntimeUpgradeCardsScroll", true, false) == null, "dev debug removes old runtime skill card scroll")
+	_assert(debug_panel.find_child("RuntimeUpgradeComparisonChart", true, false) == null, "dev debug removes old runtime skill card comparison chart")
+	var god_skill_cards: Node = debug_panel.find_child("GodSkillCards", true, false)
+	var god_skill_cards_scroll: ScrollContainer = debug_panel.find_child("GodSkillCardsScroll", true, false) as ScrollContainer
+	_assert(god_skill_cards_scroll != null, "dev debug god skill cards use a scroll container")
+	_assert(god_skill_cards_scroll != null and god_skill_cards_scroll.custom_minimum_size.y >= 520.0, "dev debug god skill cards scroll area uses the expanded card area")
+	_assert(god_skill_cards_scroll != null and god_skill_cards != null and god_skill_cards.get_parent() == god_skill_cards_scroll, "dev debug god skill card list is inside scroll container")
+	var fire_selection: Dictionary = {}
+	if debug_panel.has_method("debug_select_god_skill_cards"):
+		fire_selection = debug_panel.call("debug_select_god_skill_cards", &"fire") as Dictionary
+	_assert(int(fire_selection.get("button_count", 0)) == 6, "dev debug skill cards expose six god buttons")
+	_assert(int(fire_selection.get("card_count", 0)) == 60, "dev debug fire god lists fire skill cards")
+	_assert(debug_panel.find_child("GodSkillCard_mars_spark_missile", true, false) != null, "dev debug fire god lists mars_spark_missile card")
 	debug_panel.call("_set_debug_visible", false)
 	await process_frame
 	_assert(bool(root.get_meta("debug_control_mode", false)), "F12 close keeps debug control mode enabled from developer mode")

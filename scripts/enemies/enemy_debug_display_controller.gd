@@ -6,6 +6,7 @@ const DamageNumberPopupScript: Script = preload("res://scripts/combat/damage_num
 
 var _owner: Node2D
 var _hp_bar: ProgressBar
+var _hp_lag_bar: ProgressBar
 var _hp_tween: Tween
 var _popup_offset_index: int = 0
 
@@ -24,6 +25,9 @@ func update_health(current_health: int, max_health: int) -> void:
 		var target_value: float = clampf(float(current_health), 0.0, max_value)
 		var max_changed: bool = not is_equal_approx(float(_hp_bar.max_value), max_value)
 		_hp_bar.max_value = max_value
+		if _hp_lag_bar != null:
+			_hp_lag_bar.max_value = max_value
+			_hp_lag_bar.visible = current_health > 0 and current_health < max_health
 		_hp_bar.visible = current_health > 0 and current_health < max_health
 		_tween_health_value(target_value, max_changed)
 
@@ -48,17 +52,19 @@ func _ensure_health_display() -> void:
 	if _owner == null:
 		return
 
+	if _hp_lag_bar == null or not is_instance_valid(_hp_lag_bar):
+		_hp_lag_bar = _owner.get_node_or_null("DebugHpLagBar") as ProgressBar
+		if _hp_lag_bar == null:
+			_hp_lag_bar = ProgressBar.new()
+			_hp_lag_bar.name = "DebugHpLagBar"
+			_configure_bar(_hp_lag_bar, Color(0.72, 0.72, 0.72, 0.48), 59)
+			_owner.add_child(_hp_lag_bar)
 	if _hp_bar == null or not is_instance_valid(_hp_bar):
 		_hp_bar = _owner.get_node_or_null("DebugHpBar") as ProgressBar
 		if _hp_bar == null:
 			_hp_bar = ProgressBar.new()
 			_hp_bar.name = "DebugHpBar"
-			_hp_bar.position = Vector2(-38.0, -46.0)
-			_hp_bar.size = Vector2(76.0, 7.0)
-			_hp_bar.show_percentage = false
-			_hp_bar.z_index = 60
-			_hp_bar.add_theme_stylebox_override("background", _make_bar_style(Color(0.05, 0.045, 0.04, 0.88)))
-			_hp_bar.add_theme_stylebox_override("fill", _make_bar_style(Color(0.93, 0.18, 0.10, 0.96)))
+			_configure_bar(_hp_bar, Color(0.93, 0.18, 0.10, 0.96), 60)
 			_owner.add_child(_hp_bar)
 	var stale_label: Label = _owner.get_node_or_null("DebugHpLabel") as Label
 	if stale_label != null:
@@ -70,16 +76,36 @@ func _tween_health_value(target_value: float, force_instant: bool) -> void:
 		return
 	if force_instant or _hp_bar.value <= 0.0:
 		_hp_bar.value = target_value
+		if _hp_lag_bar != null:
+			_hp_lag_bar.value = target_value
 		return
+	var previous_value: float = float(_hp_bar.value)
+	_hp_bar.value = target_value
+	if _hp_lag_bar == null:
+		return
+	if target_value >= previous_value:
+		_hp_lag_bar.value = target_value
+		return
+	if _hp_lag_bar.value < previous_value:
+		_hp_lag_bar.value = previous_value
 	if _hp_tween != null and _hp_tween.is_valid():
 		_hp_tween.kill()
 	if _owner == null or not _owner.is_inside_tree():
-		_hp_bar.value = target_value
+		_hp_lag_bar.value = target_value
 		return
 	_hp_tween = _owner.create_tween()
 	_hp_tween.set_trans(Tween.TRANS_QUAD)
 	_hp_tween.set_ease(Tween.EASE_OUT)
-	_hp_tween.tween_property(_hp_bar, "value", target_value, 0.18)
+	_hp_tween.tween_property(_hp_lag_bar, "value", target_value, 1.0)
+
+
+func _configure_bar(bar: ProgressBar, fill_color: Color, z: int) -> void:
+	bar.position = Vector2(-38.0, -46.0)
+	bar.size = Vector2(76.0, 7.0)
+	bar.show_percentage = false
+	bar.z_index = z
+	bar.add_theme_stylebox_override("background", _make_bar_style(Color(0.05, 0.045, 0.04, 0.88)))
+	bar.add_theme_stylebox_override("fill", _make_bar_style(fill_color))
 
 
 func _make_bar_style(color: Color) -> StyleBoxFlat:

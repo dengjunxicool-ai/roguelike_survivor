@@ -45,6 +45,7 @@ var _curve_height: float = 0.0
 var _curve_duration: float = 0.0
 var _curve_elapsed: float = 0.0
 var _visual_effect_node: Node2D
+var _collision_radius: float = 12.0
 
 
 func _ready() -> void:
@@ -104,7 +105,8 @@ func setup(params: Dictionary) -> void:
 	_age = 0.0
 	_update_direction_state()
 	_reset_pierce_counter()
-	_apply_area_radius(float(params.get("radius", params.get("area_radius", 12.0))))
+	_collision_radius = maxf(float(params.get("radius", params.get("area_radius", 12.0))), 1.0)
+	_apply_area_radius(_collision_radius)
 	_apply_visual_config(params)
 	_attach_visual_effect_scene()
 	queue_redraw()
@@ -123,7 +125,11 @@ func _physics_process(delta: float) -> void:
 		_update_curve_trajectory(delta)
 	else:
 		_update_homing_direction(delta)
-		global_position += direction * speed * delta
+		var previous_position: Vector2 = global_position
+		var next_position: Vector2 = global_position + direction * speed * delta
+		if homing_enabled and _resolve_swept_homing_hit(previous_position, next_position):
+			return
+		global_position = next_position
 	if _visual_style == "lightning_orb":
 		queue_redraw()
 
@@ -296,7 +302,11 @@ func _setup_trajectory(params: Dictionary) -> void:
 
 func _update_curve_trajectory(delta: float) -> void:
 	if _curve_duration <= 0.0:
-		global_position += direction * speed * delta
+		var fallback_start: Vector2 = global_position
+		var fallback_end: Vector2 = global_position + direction * speed * delta
+		if homing_enabled and _resolve_swept_homing_hit(fallback_start, fallback_end):
+			return
+		global_position = fallback_end
 		return
 	_curve_elapsed += delta
 	var t: float = clampf(_curve_elapsed / _curve_duration, 0.0, 1.0)
@@ -311,6 +321,8 @@ func _update_curve_trajectory(delta: float) -> void:
 	if travel_direction != Vector2.ZERO:
 		direction = travel_direction
 		_update_direction_state()
+	if homing_enabled and _resolve_swept_homing_hit(previous_position, global_position):
+		return
 	if t >= 1.0:
 		queue_free()
 
@@ -348,6 +360,61 @@ func _find_nearest_homing_target() -> Node2D:
 			nearest_distance_squared = distance_squared
 			nearest = target
 	return nearest
+
+
+func _resolve_swept_homing_hit(from_position: Vector2, to_position: Vector2) -> bool:
+	var tree: SceneTree = get_tree()
+	if tree == null or from_position == to_position:
+		return false
+
+	var nearest_target: Node = null
+	var nearest_t: float = INF
+	var segment: Vector2 = to_position - from_position
+	var segment_length_squared: float = segment.length_squared()
+	for node: Node in tree.get_nodes_in_group(target_group):
+		var target: Node2D = node as Node2D
+		if target == null or _hit_bodies.has(target) or not _is_valid_homing_target(target):
+			continue
+		var t: float = clampf((target.global_position - from_position).dot(segment) / segment_length_squared, 0.0, 1.0)
+		var closest_position: Vector2 = from_position.lerp(to_position, t)
+		var hit_radius: float = _collision_radius + _get_target_hit_radius(target)
+		if closest_position.distance_squared_to(target.global_position) > hit_radius * hit_radius:
+			continue
+		if t < nearest_t:
+			nearest_t = t
+			nearest_target = target
+
+	if nearest_target == null:
+		return false
+
+	var impact_target: Node2D = nearest_target as Node2D
+	global_position = impact_target.global_position
+	_on_body_entered(impact_target)
+	return true
+
+
+func _is_valid_homing_target(target: Node2D) -> bool:
+	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
+		return false
+	if target.has_method("is_dead") and bool(target.call("is_dead")):
+		return false
+	return true
+
+
+func _get_target_hit_radius(target: Node2D) -> float:
+	var collision_shape: CollisionShape2D = target.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape == null or collision_shape.shape == null:
+		return 12.0
+	var shape: Shape2D = collision_shape.shape
+	if shape is CircleShape2D:
+		return maxf((shape as CircleShape2D).radius, 1.0)
+	if shape is RectangleShape2D:
+		var size: Vector2 = (shape as RectangleShape2D).size
+		return maxf(size.length() * 0.5, 1.0)
+	if shape is CapsuleShape2D:
+		var capsule: CapsuleShape2D = shape as CapsuleShape2D
+		return maxf(maxf(capsule.radius, capsule.height * 0.5), 1.0)
+	return 12.0
 
 
 func _apply_area_radius(radius: float) -> void:

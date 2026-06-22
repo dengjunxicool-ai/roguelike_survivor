@@ -5,12 +5,13 @@ class_name DevDebugPanel
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
-const SkillUpgradeComparisonChartScript: Script = preload("res://scripts/debug/skill_upgrade_comparison_chart.gd")
 const EnemyAttackRangeOverlayScript: Script = preload("res://scripts/debug/enemy_attack_range_overlay.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemy.tscn")
 const FIRE_TORNADO_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/fire_tornado_effect.tscn")
 const MARS_SPARK_MISSILE_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/mars_spark_missile_effect.tscn")
+const GODS_DATA_PATH: String = "res://data/gods.json"
+const SKILLS_DATA_PATH: String = "res://data/skills.json"
 
 @export var enabled_in_debug_builds: bool = true
 @export var update_interval: float = 0.2
@@ -49,14 +50,15 @@ var _hidden_ui_was_visible: bool = true
 var _tree_was_paused: bool = false
 var _enemy_range_overlays: Dictionary = {}
 var _upgrade_pool: RefCounted = UpgradePoolScript.new()
-var _runtime_upgrade_cards_scroll: ScrollContainer
-var _runtime_upgrade_cards: VBoxContainer
-var _runtime_upgrade_detail_label: Label
-var _runtime_upgrade_chart: Control
-var _runtime_upgrade_options: Array[Dictionary] = []
+var _god_skill_buttons: Dictionary = {}
+var _god_skill_cards_scroll: ScrollContainer
+var _god_skill_cards: VBoxContainer
+var _selected_god_id: StringName = &"fire"
+var _selected_god_skill_id: StringName = &""
+var _god_skill_options: Array[Dictionary] = []
+var _god_skill_definitions: Array[Dictionary] = []
 var _debug_fire_skill_options: Array[Dictionary] = []
 var _fire_skill_chain_log_label: Label
-var _last_upgrade_comparison_rows: Array[Dictionary] = []
 var _attack_damage_scroll: ScrollContainer
 var _attack_damage_label: Label
 var _last_attack_damage_text: String = "Damage Breakdown: no attack trace."
@@ -187,7 +189,6 @@ func _build_panel() -> void:
 	_add_category_button(category_grid, "run_setup", "Run Setup")
 	_add_category_button(category_grid, "runtime", "Runtime")
 	_add_category_button(category_grid, "skill_cards", "Skill Cards")
-	_add_category_button(category_grid, "fire_skills", "Fire Skills")
 	_add_category_button(category_grid, "enemy_spawn", "Enemy Spawn")
 	_add_category_button(category_grid, "effects", "Effects")
 	_add_category_button(category_grid, "status", "Status / Stacks")
@@ -247,47 +248,29 @@ func _build_panel() -> void:
 	_attack_damage_scroll.add_child(_attack_damage_label)
 	runtime_page.add_child(_attack_damage_scroll)
 
-	var skill_cards_page: VBoxContainer = _add_category_page(page_root, "skill_cards", "Runtime Skill Cards")
-	var skill_cards_row: HBoxContainer = _add_row(skill_cards_page)
-	_add_button(skill_cards_row, "Refresh Cards", Callable(self, "_refresh_runtime_upgrade_cards"), 132)
-	_add_button(skill_cards_row, "Clear Skill Cards", Callable(self, "_clear_skill_cards"), 148)
-	_add_button(skill_cards_row, "Clear Chart", Callable(self, "_clear_runtime_upgrade_chart"), 104)
-	_runtime_upgrade_detail_label = Label.new()
-	_runtime_upgrade_detail_label.name = "RuntimeUpgradeDetailLabel"
-	_runtime_upgrade_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_runtime_upgrade_detail_label.add_theme_font_size_override("font_size", 12)
-	skill_cards_page.add_child(_runtime_upgrade_detail_label)
-	_runtime_upgrade_chart = SkillUpgradeComparisonChartScript.new() as Control
-	_runtime_upgrade_chart.name = "RuntimeUpgradeComparisonChart"
-	_runtime_upgrade_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	skill_cards_page.add_child(_runtime_upgrade_chart)
-	_runtime_upgrade_cards_scroll = ScrollContainer.new()
-	_runtime_upgrade_cards_scroll.name = "RuntimeUpgradeCardsScroll"
-	_runtime_upgrade_cards_scroll.custom_minimum_size = Vector2(440, 340)
-	_runtime_upgrade_cards_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_runtime_upgrade_cards_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	skill_cards_page.add_child(_runtime_upgrade_cards_scroll)
-	_runtime_upgrade_cards = VBoxContainer.new()
-	_runtime_upgrade_cards.name = "RuntimeUpgradeCards"
-	_runtime_upgrade_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_runtime_upgrade_cards.add_theme_constant_override("separation", 6)
-	_runtime_upgrade_cards_scroll.add_child(_runtime_upgrade_cards)
+	var skill_cards_page: VBoxContainer = _add_category_page(page_root, "skill_cards", "Skill Cards")
+	var god_skill_button_row: HBoxContainer = _add_row(skill_cards_page)
+	god_skill_button_row.name = "GodSkillButtons"
 
-	var fire_skills_page: VBoxContainer = _add_category_page(page_root, "fire_skills", "Fire Skill Debug")
-	_fire_skill_option = _add_option_row(fire_skills_page, "Fire Skill")
-	var fire_skill_row: HBoxContainer = _add_row(fire_skills_page)
-	_add_button(fire_skill_row, "Grant", Callable(self, "_grant_selected_fire_skill"), 82)
-	_add_button(fire_skill_row, "Spawn Target", Callable(self, "_spawn_fire_skill_debug_target"), 132)
-	_add_button(fire_skill_row, "Cast Selected", Callable(self, "_cast_selected_fire_skill"), 128)
-	var fire_skill_chain_row: HBoxContainer = _add_row(fire_skills_page)
-	_add_button(fire_skill_chain_row, "Run Chain", Callable(self, "_run_selected_fire_skill_chain"), 120)
-	_add_button(fire_skill_chain_row, "Refresh", Callable(self, "_populate_fire_skill_options"), 92)
+	_god_skill_cards_scroll = ScrollContainer.new()
+	_god_skill_cards_scroll.name = "GodSkillCardsScroll"
+	_god_skill_cards_scroll.custom_minimum_size = Vector2(440, 560)
+	_god_skill_cards_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_god_skill_cards_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	skill_cards_page.add_child(_god_skill_cards_scroll)
+
+	_god_skill_cards = VBoxContainer.new()
+	_god_skill_cards.name = "GodSkillCards"
+	_god_skill_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_god_skill_cards.add_theme_constant_override("separation", 6)
+	_god_skill_cards_scroll.add_child(_god_skill_cards)
+
 	_fire_skill_chain_log_label = Label.new()
-	_fire_skill_chain_log_label.name = "FireSkillChainLogLabel"
+	_fire_skill_chain_log_label.name = "GodSkillChainLogLabel"
 	_fire_skill_chain_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_fire_skill_chain_log_label.add_theme_font_size_override("font_size", 12)
-	_fire_skill_chain_log_label.text = "Fire skill chain: idle."
-	fire_skills_page.add_child(_fire_skill_chain_log_label)
+	_fire_skill_chain_log_label.text = "God skill chain: idle."
+	skill_cards_page.add_child(_fire_skill_chain_log_label)
 
 	var enemy_spawn_page: VBoxContainer = _add_category_page(page_root, "enemy_spawn", "Enemy Spawn")
 	_enemy_option = _add_option_row(enemy_spawn_page, "Enemy")
@@ -349,11 +332,11 @@ func _populate_options() -> void:
 	_populate_enemy_options()
 	_populate_enemy_state_options()
 	_populate_effect_options()
-	_populate_fire_skill_options()
+	_populate_god_skill_buttons()
+	_refresh_god_skill_cards()
 	_populate_status_options()
 	_sync_player_stat_controls()
 	_sync_skill_stat_controls()
-	_refresh_runtime_upgrade_cards()
 
 
 func _populate_character_options() -> void:
@@ -469,6 +452,137 @@ func _populate_effect_options() -> void:
 	_select_first_enabled_option(_effect_option)
 
 
+func _populate_god_skill_buttons() -> void:
+	var button_row: HBoxContainer = find_child("GodSkillButtons", true, false) as HBoxContainer
+	if button_row == null:
+		return
+	_clear_children(button_row)
+	_god_skill_buttons.clear()
+
+	var gods: Array[Dictionary] = _get_god_definitions()
+	for god: Dictionary in gods:
+		var god_id: String = String(god.get("id", ""))
+		if god_id == "":
+			continue
+		var button: Button = _add_button(
+			button_row,
+			String(god.get("display_name", god_id)),
+			Callable(self, "_select_god_skill_cards").bind(StringName(god_id)),
+			68
+		)
+		button.name = "GodSkillButton_%s" % god_id
+		button.toggle_mode = true
+		_god_skill_buttons[StringName(god_id)] = button
+	if not _god_skill_buttons.has(_selected_god_id) and not gods.is_empty():
+		_selected_god_id = StringName(String(gods[0].get("id", "fire")))
+	_update_god_skill_button_states()
+
+
+func _refresh_god_skill_cards() -> void:
+	if _god_skill_cards == null:
+		return
+	_clear_children(_god_skill_cards)
+	_god_skill_definitions = _get_god_skill_definitions(_selected_god_id)
+	_god_skill_options = _build_debug_god_skill_options(_selected_god_id)
+	_sync_selected_god_skill_id()
+	if _god_skill_definitions.is_empty():
+		var empty_label: Label = Label.new()
+		empty_label.name = "GodSkillCardsEmpty"
+		empty_label.text = "No skill cards for this god yet."
+		empty_label.add_theme_font_size_override("font_size", 12)
+		_god_skill_cards.add_child(empty_label)
+		_update_god_skill_button_states()
+		_refresh_state()
+		return
+
+	for index in range(_god_skill_definitions.size()):
+		_add_god_skill_card(_god_skill_cards, _god_skill_definitions[index], index)
+	_update_god_skill_button_states()
+	_refresh_state()
+
+
+func _refresh_god_skill_section() -> void:
+	_populate_god_skill_buttons()
+	_refresh_god_skill_cards()
+
+
+func _select_god_skill_cards(god_id: StringName) -> void:
+	_selected_god_id = god_id
+	_update_god_skill_button_states()
+	_refresh_god_skill_cards()
+
+
+func _update_god_skill_button_states() -> void:
+	for god_id_variant: Variant in _god_skill_buttons.keys():
+		var god_id: StringName = StringName(String(god_id_variant))
+		var button: Button = _god_skill_buttons[god_id_variant] as Button
+		if button != null:
+			button.set_pressed_no_signal(god_id == _selected_god_id)
+
+
+func _sync_selected_god_skill_id() -> void:
+	if _god_skill_definitions.is_empty():
+		_selected_god_skill_id = &""
+		return
+	for skill: Dictionary in _god_skill_definitions:
+		if StringName(String(skill.get("id", ""))) == _selected_god_skill_id:
+			return
+	_selected_god_skill_id = StringName(String(_god_skill_definitions[0].get("id", "")))
+
+
+func _load_json_document(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if parsed is Dictionary:
+		var document: Dictionary = parsed
+		return document.duplicate(true)
+	return {}
+
+
+func _get_god_definitions() -> Array[Dictionary]:
+	var document: Dictionary = _load_json_document(GODS_DATA_PATH)
+	var gods: Array[Dictionary] = []
+	var god_variants: Variant = document.get("gods", [])
+	if god_variants is Array:
+		for god_variant: Variant in god_variants:
+			if god_variant is Dictionary:
+				var god: Dictionary = god_variant
+				if String(god.get("id", "")) != "":
+					gods.append(god.duplicate(true))
+	if not gods.is_empty():
+		return gods
+	return [
+		{"id": "fire", "display_name": "Fire"},
+		{"id": "thunder", "display_name": "Thunder"},
+		{"id": "frost", "display_name": "Frost"},
+		{"id": "curse", "display_name": "Curse"},
+		{"id": "holy", "display_name": "Holy"},
+		{"id": "chaos", "display_name": "Chaos"}
+	]
+
+
+func _get_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
+	var document: Dictionary = _load_json_document(SKILLS_DATA_PATH)
+	var definitions: Array[Dictionary] = []
+	var skills_variant: Variant = document.get("skills", [])
+	if not (skills_variant is Array):
+		return definitions
+	for skill_variant: Variant in skills_variant:
+		if not (skill_variant is Dictionary):
+			continue
+		var skill: Dictionary = skill_variant
+		if StringName(String(skill.get("god_id", ""))) != god_id:
+			continue
+		if bool(skill.get("offer_in_upgrade_pool", false)) != true:
+			continue
+		definitions.append(skill.duplicate(true))
+	return definitions
+
+
 func _populate_fire_skill_options() -> void:
 	if _fire_skill_option == null:
 		return
@@ -490,7 +604,11 @@ func _populate_fire_skill_options() -> void:
 	_select_first_enabled_option(_fire_skill_option)
 
 
-func _build_debug_fire_skill_options() -> Array[Dictionary]:
+func _build_debug_fire_skill_options(god_id: StringName = &"fire") -> Array[Dictionary]:
+	return _build_debug_god_skill_options(god_id)
+
+
+func _build_debug_god_skill_options(god_id: StringName) -> Array[Dictionary]:
 	var player: Node = _get_player()
 	if player == null:
 		return []
@@ -499,7 +617,7 @@ func _build_debug_fire_skill_options() -> Array[Dictionary]:
 
 	var options: Array[Dictionary] = []
 	var seen: Dictionary = {}
-	for option_variant: Variant in _upgrade_pool.call("generate_debug_fire_skill_options", player, &"fire"):
+	for option_variant: Variant in _upgrade_pool.call("generate_debug_fire_skill_options", player, god_id):
 		var option: Dictionary = _upgrade_option_to_dictionary(option_variant)
 		var skill_id: StringName = _get_option_learn_skill_id(option)
 		if skill_id == &"" or seen.has(skill_id):
@@ -1346,188 +1464,142 @@ func _refresh_state() -> void:
 	_state_label.text = _build_state_text()
 	if _player_attributes_label != null:
 		_player_attributes_label.text = _build_player_attributes_text()
-	if _runtime_upgrade_detail_label != null:
-		_runtime_upgrade_detail_label.text = _build_runtime_upgrade_detail_text()
-	if _runtime_upgrade_chart != null and _runtime_upgrade_chart.has_method("set_rows"):
-		_runtime_upgrade_chart.call("set_rows", _last_upgrade_comparison_rows)
 	_refresh_attack_damage_text()
 	if _log_label != null:
 		_log_label.text = "Log: %s" % _last_log
 
 
-func _refresh_runtime_upgrade_cards() -> void:
-	if _runtime_upgrade_cards == null:
-		return
-	_clear_children(_runtime_upgrade_cards)
-	_runtime_upgrade_options = _build_runtime_upgrade_options()
-	if _runtime_upgrade_options.is_empty():
-		var empty_label: Label = Label.new()
-		empty_label.text = "No available runtime skill cards."
-		empty_label.add_theme_font_size_override("font_size", 12)
-		_runtime_upgrade_cards.add_child(empty_label)
-		_refresh_state()
-		return
-
-	for index in range(_runtime_upgrade_options.size()):
-		_add_runtime_upgrade_card(_runtime_upgrade_cards, _runtime_upgrade_options[index], index)
-	_refresh_state()
-
-
-func _build_runtime_upgrade_options() -> Array[Dictionary]:
-	var player: Node = _get_player()
-	if player == null:
-		return []
-
-	var options: Array[Dictionary] = []
-	var seen: Dictionary = {}
-	var option_variants: Array = _upgrade_pool.call("generate_debug_full_weapon_options", player) if _upgrade_pool.has_method("generate_debug_full_weapon_options") else []
-	for option_variant: Variant in option_variants:
-		var option: Dictionary = _upgrade_option_to_dictionary(option_variant)
-		var option_id: String = String(option.get("id", ""))
-		if option_id == "" or seen.has(option_id):
-			continue
-		seen[option_id] = true
-		options.append(option)
-	return options
-
-
-
-func _add_runtime_upgrade_card(parent: VBoxContainer, option: Dictionary, option_index: int) -> void:
+func _add_god_skill_card(parent: VBoxContainer, skill: Dictionary, skill_index: int) -> void:
+	var skill_id: StringName = StringName(String(skill.get("id", "")))
 	var button: Button = Button.new()
-	button.name = "RuntimeUpgradeCard_%d" % option_index
-	button.text = _format_runtime_upgrade_card_text(option)
+	button.name = "GodSkillCard_%s" % String(skill_id)
+	button.set_meta("skill_index", skill_index)
+	button.text = _format_god_skill_card_text(skill)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	button.custom_minimum_size = Vector2(0, 96)
+	button.custom_minimum_size = Vector2(0, 118)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.tooltip_text = String(option.get("description", ""))
+	button.tooltip_text = String(skill.get("description", ""))
 	UIButtonSkin.apply(button)
-	button.pressed.connect(Callable(self, "_apply_runtime_upgrade_card").bind(option_index))
+	button.pressed.connect(Callable(self, "_on_god_skill_card_pressed").bind(skill_id))
 	parent.add_child(button)
 
 
-func _format_runtime_upgrade_card_text(option: Dictionary) -> String:
-	var title: String = String(option.get("display_name", option.get("id", "")))
-	var type_text: String = String(option.get("type", "upgrade"))
-	var rarity: String = String(option.get("rarity", "common")).to_upper()
-	var level_text: String = String(option.get("level_text", ""))
-	var description: String = String(option.get("description", ""))
-	var tags: Array[String] = _to_string_array(option.get("tags", []))
-	var meta_parts: Array[String] = [type_text, rarity]
-	if level_text != "":
-		meta_parts.append(level_text)
-	if not tags.is_empty():
-		meta_parts.append(" / ".join(tags.slice(0, mini(tags.size(), 3))))
-	return "%s\n%s\n%s" % [
+func _format_god_skill_card_text(skill: Dictionary) -> String:
+	var title: String = String(skill.get("display_name", skill.get("id", "")))
+	var description: String = String(skill.get("description", ""))
+	var vfx_description: String = String(skill.get("vfx_description", ""))
+	var effect_description: String = _get_god_skill_effect_description(skill)
+	return "%s\n描述：%s\n特效：%s\n效果：%s" % [
 		title,
-		"  |  ".join(meta_parts),
-		description
+		description,
+		vfx_description,
+		effect_description
 	]
 
 
-func _apply_runtime_upgrade_card(option_index: int) -> void:
-	var player: Node = _get_player()
-	if player == null:
-		_log_error("Player missing.")
-		return
-	if option_index < 0 or option_index >= _runtime_upgrade_options.size():
-		_log_error("Runtime upgrade card index invalid.")
-		return
+func _get_god_skill_effect_description(skill: Dictionary) -> String:
+	var effect_description: String = String(skill.get("effect_description", ""))
+	if effect_description != "":
+		return effect_description
 
-	var option: Dictionary = _runtime_upgrade_options[option_index]
-	var option_id: StringName = StringName(String(option.get("id", "")))
-	if option_id == &"" or not player.has_method("apply_upgrade"):
-		_log_error("Runtime upgrade card cannot be applied.")
-		return
+	var parts: Array[String] = []
+	for key: String in ["category", "runtime_family", "rarity"]:
+		var value: String = String(skill.get(key, ""))
+		if value != "":
+			parts.append("%s:%s" % [key, value])
 
-	var before_stats: Dictionary = _capture_upgrade_comparison_stats(player)
-	player.call("apply_upgrade", option_id)
-	if player.has_method("_refresh_skill_configs"):
-		player.call("_refresh_skill_configs")
-	if player.has_method("_refresh_synergies"):
-		player.call("_refresh_synergies")
-	var after_stats: Dictionary = _capture_upgrade_comparison_stats(player)
-	_last_upgrade_comparison_rows = _build_upgrade_comparison_rows(before_stats, after_stats)
-	_sync_player_stat_controls()
-	_sync_skill_stat_controls()
-	_refresh_runtime_upgrade_cards()
-	_log("Applied runtime card: %s." % String(option.get("display_name", option_id)))
+	var events_variant: Variant = skill.get("events", [])
+	if events_variant is Array:
+		for event_variant: Variant in events_variant:
+			if not (event_variant is Dictionary):
+				continue
+			var event: Dictionary = event_variant
+			var trigger: String = String(event.get("trigger", ""))
+			var actions_variant: Variant = event.get("actions", [])
+			var action_count: int = actions_variant.size() if actions_variant is Array else 0
+			if trigger != "" and action_count > 0:
+				parts.append("%s:%d actions" % [trigger, action_count])
+	if parts.is_empty():
+		return "No effect summary."
+	return " | ".join(parts)
 
 
-func _clear_skill_cards() -> void:
-	var player: Node = _get_player()
-	if player == null:
-		_log_error("Player missing.")
-		return
-	var runtime: Node = player.get_node_or_null("CharacterRuntime")
-	if runtime != null:
-		runtime.call("initialize", String(player.get("selected_character_id")), String(player.get("selected_weapon_id")))
-	var skill_manager: Node = _get_skill_manager(player)
-	if skill_manager != null and skill_manager.has_method("clear_skills"):
-		skill_manager.call("clear_skills")
-	var binding: Node = player.get_node_or_null("WeaponSkillBinding")
-	if binding != null and binding.has_method("bind_starting_skill"):
-		binding.call("bind_starting_skill", player)
-	player.set_meta("level_up_upgrade_levels", {})
-	if player.has_method("_refresh_skill_configs"):
-		player.call("_refresh_skill_configs")
-	if player.has_method("_refresh_synergies"):
-		player.call("_refresh_synergies")
-	_last_upgrade_comparison_rows.clear()
-	_sync_skill_stat_controls()
-	_refresh_runtime_upgrade_cards()
-	_log("Cleared learned skill cards and rebound character starting skill.")
+func _on_god_skill_card_pressed(skill_id: StringName) -> void:
+	_select_god_skill_card(skill_id)
+	await _run_god_skill_card(skill_id)
 
 
-func _clear_runtime_upgrade_chart() -> void:
-	_last_upgrade_comparison_rows.clear()
-	if _runtime_upgrade_chart != null and _runtime_upgrade_chart.has_method("set_rows"):
-		_runtime_upgrade_chart.call("set_rows", _last_upgrade_comparison_rows)
-	_log("Cleared skill upgrade comparison chart.")
+func _select_god_skill_card(skill_id: StringName) -> void:
+	_selected_god_skill_id = skill_id
+	_log("God skill card selected: %s." % String(skill_id))
 
 
-func debug_run_fire_skill_chain(skill_id: StringName) -> Dictionary:
-	if _fire_skill_option != null and _debug_fire_skill_options.is_empty():
-		_populate_fire_skill_options()
-	if skill_id != &"":
-		_select_option_by_id(_fire_skill_option, String(skill_id))
+func debug_select_god_skill_cards(god_id: StringName) -> Dictionary:
+	_select_god_skill_cards(god_id)
+	var button_ids: Array[String] = []
+	var button_tree_count: int = 0
+	var selected_button_pressed: bool = false
+	for button_id_variant: Variant in _god_skill_buttons.keys():
+		var button_id: StringName = StringName(String(button_id_variant))
+		var button: Button = _god_skill_buttons[button_id_variant] as Button
+		button_ids.append(String(button_id))
+		if button != null and button.is_inside_tree():
+			button_tree_count += 1
+		if button_id == god_id and button != null:
+			selected_button_pressed = button.button_pressed
+	return {
+		"god_id": god_id,
+		"card_count": _god_skill_definitions.size(),
+		"button_count": _god_skill_buttons.size(),
+		"button_ids": button_ids,
+		"button_tree_count": button_tree_count,
+		"selected_button_pressed": selected_button_pressed
+	}
 
-	var result: Dictionary = _build_fire_skill_chain_result(skill_id)
-	var option: Dictionary = _get_fire_skill_option(skill_id)
-	result["option_generated"] = not option.is_empty()
+
+func debug_run_god_skill_chain(skill_id: StringName) -> Dictionary:
+	return await _run_god_skill_card(skill_id)
+
+
+func _run_god_skill_card(skill_id: StringName) -> Dictionary:
+	_select_god_skill_card(skill_id)
+	if skill_id == &"":
+		return {"skill_id": skill_id, "option_generated": false, "granted": false, "error": "Missing skill id."}
+	var option: Dictionary = _get_god_skill_option(skill_id)
 	if option.is_empty():
-		result["error"] = "No fire skill debug option for %s." % String(skill_id)
-		_update_fire_skill_chain_log(result)
-		return result
-
+		var fallback: Dictionary = _build_fire_skill_chain_result(skill_id)
+		fallback["option_generated"] = false
+		fallback["error"] = "No god skill debug option for %s." % String(skill_id)
+		_update_fire_skill_chain_log(fallback)
+		return fallback
 	var selected_skill_id: StringName = _get_option_learn_skill_id(option)
-	result["skill_id"] = selected_skill_id
+	var result: Dictionary = _build_fire_skill_chain_result(selected_skill_id)
+	result["option_generated"] = true
 	result["option_id"] = String(option.get("id", ""))
 	result["granted"] = _grant_fire_skill_option(option)
 	if not bool(result.get("granted", false)):
 		result["error"] = "Could not grant %s." % String(selected_skill_id)
 		_update_fire_skill_chain_log(result)
 		return result
-
-	var target: Node2D = _spawn_fire_skill_debug_target()
-	result["target_spawned"] = target != null
-	if target == null:
-		result["error"] = "Could not spawn target."
-		_update_fire_skill_chain_log(result)
-		return result
-
-	await _wait_debug_frames(3, false)
-	_prepare_fire_skill_debug_target(target)
-	var cast_result: Dictionary = await _cast_fire_skill_once(selected_skill_id)
+	result["target_spawned"] = false
+	result["silent_no_target_allowed"] = true
+	var cast_result: Dictionary = await _cast_fire_skill_once(selected_skill_id, 0)
 	for key_variant: Variant in cast_result.keys():
 		result[key_variant] = cast_result[key_variant]
 	result["skill_id"] = selected_skill_id
 	result["option_id"] = String(option.get("id", ""))
 	result["option_generated"] = true
 	result["granted"] = true
-	result["target_spawned"] = true
+	result["target_spawned"] = false
+	result["silent_no_target_allowed"] = true
 	_update_fire_skill_chain_log(result)
 	return result
+
+
+func debug_run_fire_skill_chain(skill_id: StringName) -> Dictionary:
+	_select_god_skill_cards(&"fire")
+	return await debug_run_god_skill_chain(skill_id)
 
 
 func _run_selected_fire_skill_chain() -> void:
@@ -1620,7 +1692,7 @@ func _grant_fire_skill_option(option: Dictionary) -> bool:
 	return false
 
 
-func _cast_fire_skill_once(skill_id: StringName) -> Dictionary:
+func _cast_fire_skill_once(skill_id: StringName, max_damage_wait_frames: int = 120) -> Dictionary:
 	var result: Dictionary = _build_fire_skill_chain_result(skill_id)
 	var player: Node = _get_player()
 	if player == null:
@@ -1640,7 +1712,8 @@ func _cast_fire_skill_once(skill_id: StringName) -> Dictionary:
 	result["cast_count"] = maxi(cast_count, 0)
 	await _wait_debug_frames(2, false)
 	var immediate_particle_delta: int = maxi(_count_particle_nodes(root) - particle_count_before, 0)
-	await _wait_for_fire_skill_damage_record(skill_id, trace_id, 120)
+	if max_damage_wait_frames > 0:
+		await _wait_for_fire_skill_damage_record(skill_id, trace_id, max_damage_wait_frames)
 	await _wait_debug_frames(6, false)
 
 	var records: Array = DebugCombatTraceScript.get_records(root)
@@ -1731,6 +1804,15 @@ func _get_fire_skill_option(skill_id: StringName) -> Dictionary:
 	return {}
 
 
+func _get_god_skill_option(skill_id: StringName) -> Dictionary:
+	if _god_skill_options.is_empty():
+		_god_skill_options = _build_debug_god_skill_options(_selected_god_id)
+	for option: Dictionary in _god_skill_options:
+		if _get_option_learn_skill_id(option) == skill_id:
+			return option.duplicate(true)
+	return {}
+
+
 func _get_option_learn_skill_id(option: Dictionary) -> StringName:
 	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
 	if payload.has("learn_skill_id"):
@@ -1812,90 +1894,6 @@ func _is_fire_skill_chain_result_healthy(result: Dictionary) -> bool:
 		and int(result.get("damage_record_count", 0)) >= 1 \
 		and int(result.get("particle_count", 0)) >= 1 \
 		and int(result.get("damage_popup_count", 0)) >= 1
-
-
-func _capture_upgrade_comparison_stats(player: Node) -> Dictionary:
-	var stats: Dictionary = {}
-	if player == null:
-		return stats
-
-	for config: Dictionary in _get_upgrade_player_compare_configs():
-		var property: String = String(config.get("property", ""))
-		if property == "":
-			continue
-		var value: Variant = player.get(property)
-		if _is_number(value):
-			stats[String(config.get("label", property))] = float(value)
-
-	var skill: RefCounted = _get_weapon_skill(player)
-	if skill != null:
-		stats["Skill Level"] = float(int(skill.get("current_level")))
-		var skill_manager: Node = _get_skill_manager(player)
-		var relic_manager: Node = player.get_node_or_null("RelicManager")
-		for config: Dictionary in _get_skill_stat_configs():
-			var stat_name: String = String(config.get("stat", ""))
-			if stat_name == "":
-				continue
-			var stat_value: Variant = SkillStatServiceScript.get_effective_stat(skill, stat_name, null, skill_manager, relic_manager, player)
-			if _is_number(stat_value):
-				stats[String(config.get("label", stat_name))] = float(stat_value)
-	return stats
-
-
-func _build_upgrade_comparison_rows(before_stats: Dictionary, after_stats: Dictionary) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
-	for key_variant: Variant in after_stats.keys():
-		var key: String = String(key_variant)
-		if not before_stats.has(key):
-			continue
-		var before_value: float = float(before_stats.get(key, 0.0))
-		var after_value: float = float(after_stats.get(key, 0.0))
-		if not is_equal_approx(before_value, after_value):
-			rows.append({
-				"label": key,
-				"before": before_value,
-				"after": after_value
-			})
-	if rows.is_empty():
-		for key_variant: Variant in after_stats.keys():
-			var key: String = String(key_variant)
-			if not before_stats.has(key):
-				continue
-			rows.append({
-				"label": key,
-				"before": float(before_stats.get(key, 0.0)),
-				"after": float(after_stats.get(key, 0.0))
-			})
-			if rows.size() >= 8:
-				break
-	return rows.slice(0, mini(rows.size(), 12))
-
-
-func _get_upgrade_player_compare_configs() -> Array[Dictionary]:
-	return [
-		{"property": "max_health", "label": "Max HP"},
-		{"property": "move_speed", "label": "Move Speed"},
-		{"property": "damage_multiplier", "label": "Damage Mult"},
-		{"property": "attack_speed_multiplier", "label": "Attack Speed"},
-		{"property": "crit_chance", "label": "Crit Chance"},
-		{"property": "crit_damage", "label": "Crit Damage"},
-		{"property": "armor", "label": "Armor"},
-		{"property": "pickup_radius", "label": "Pickup Radius"},
-		{"property": "skill_area_multiplier", "label": "Area Mult"},
-		{"property": "status_duration_multiplier", "label": "Status Duration"},
-		{"property": "fire_damage_multiplier_add", "label": "Fire Add"},
-		{"property": "poison_damage_multiplier_add", "label": "Poison Add"},
-		{"property": "thorns_damage", "label": "Thorns Damage"},
-		{"property": "revive_count_add", "label": "Revive Count"},
-		{"property": "boss_hp_multiplier_add", "label": "Boss HP Add"}
-	]
-
-
-func _build_runtime_upgrade_detail_text() -> String:
-	var player: Node = _get_player()
-	if player == null:
-		return "Runtime skill cards: no player."
-	return "Runtime skill cards: %d available. Click a card to apply it and draw a before/after stat comparison." % _runtime_upgrade_options.size()
 
 
 func _refresh_attack_damage_text() -> void:
@@ -2788,9 +2786,7 @@ func _open_category(category_id: String) -> void:
 		return
 	_active_category_id = category_id
 	if category_id == "skill_cards":
-		_refresh_runtime_upgrade_cards()
-	if category_id == "fire_skills":
-		_populate_fire_skill_options()
+		_refresh_god_skill_section()
 	for page_id_variant: Variant in _category_pages.keys():
 		var page_id: String = String(page_id_variant)
 		var page: CanvasItem = _category_pages[page_id] as CanvasItem

@@ -138,10 +138,18 @@
 								"projectile_id": "mars_spark_missile_projectile",
 								"count": 2,
 								"speed": 500,
-								"spread_angle": 12,
+								"spread_angle": 30,
+								"trajectory_mode": "curve",
+								"curve_height": 72,
 								"lifetime": 1.8,
 								"collision_radius": 10,
 								"return_to_caster": false,
+								"homing_enabled": true,
+								"homing_turn_rate": 8.5,
+								"homing_seek_range": 560,
+								"damage": 12,
+								"damage_type": "direct_magical",
+								"damage_origin": "skill",
 								"element": "fire"
 							}
 						}
@@ -169,7 +177,12 @@
 						}
 					]
 				}
-			]
+			],
+			"damage_scaling": {
+				"skill_level_coefficients": [
+					1
+				]
+			}
 		},
 		{
 			"id": "flame_tongue_breath",

@@ -48,6 +48,9 @@ assert(castAction, "mars_spark_missile must spawn projectiles on cast");
 assert(castAction.params.projectile_id === "mars_spark_missile_projectile", "mars_spark_missile must spawn mars_spark_missile_projectile");
 assert(castAction.params.count === 3, "mars_spark_missile must fire three missiles per learned cast");
 assert(castAction.params.homing_enabled === true, "mars_spark_missile projectile action must enable homing");
+assert(Number(castAction.params.spread_angle || 0) >= 24, "mars_spark_missile must fire from visibly different launch angles");
+assert(castAction.params.trajectory_mode === "curve", "mars_spark_missile must use curved projectile trajectories");
+assert(Number(castAction.params.curve_height || 0) > 0, "mars_spark_missile must configure visible curve height");
 
 const hitEvent = (skill.events || []).find((event) => event.trigger === "on_projectile_hit" && event.source_id === "mars_spark_missile_projectile");
 assert(hitEvent, "mars_spark_missile must deal damage from mars_spark_missile_projectile hits");

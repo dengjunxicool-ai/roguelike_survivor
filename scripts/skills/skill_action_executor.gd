@@ -174,8 +174,6 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 		var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
 		var projectile_position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
 		var trajectory_mode: String = String(params.get("trajectory_mode", "linear"))
-		if trajectory_mode == "curve":
-			projectile_position = caster.global_position
 		CombatObjectFactoryScript.create_projectile({
 			"parent": parent,
 			"projectile_id": source_id,
@@ -204,7 +202,7 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 			"hot_rapid_fire_crit_chance_add": hot_rapid_fire_crit_chance_add if use_hot_rapid_fire else 0.0,
 			"forbidden_page": forbidden_page_pending and projectile_index == 0,
 			"trajectory_mode": trajectory_mode,
-			"curve_start_position": caster.global_position,
+			"curve_start_position": projectile_position,
 			"curve_target_position": target.global_position,
 			"curve_height": float(params.get("curve_height", 64.0)),
 			"homing_enabled": bool(params.get("homing_enabled", false)),
