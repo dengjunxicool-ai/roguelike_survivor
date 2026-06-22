@@ -1,0 +1,22 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://cewpnlti455f6"]
+
+[ext_resource type="Texture2D" uid="uid://ylp8iwt82x1p" path="res://assets/effect/burn/3.png" id="1_7tbum"]
+[ext_resource type="Texture2D" uid="uid://pn2pu2yxs8ra" path="res://assets/effect/burn/2.png" id="2_3h4o0"]
+[ext_resource type="Texture2D" uid="uid://cmd51ggxblaf" path="res://assets/effect/burn/1.png" id="3_omchg"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_7tbum")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_3h4o0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_omchg")
+}],
+"loop": false,
+"name": &"burn",
+"speed": 5.0
+}]

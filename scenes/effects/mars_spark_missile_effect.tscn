@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://d2fjvb1vm6qi4"]
+
+[ext_resource type="Script" uid="uid://bxn5aklg7j4mp" path="res://scripts/effects/mars_spark_missile_effect.gd" id="1_mars_spark"]
+[ext_resource type="Material" uid="uid://bv6gkqu6ynt4s" path="res://resources/effects/mars_spark_missile_core_particles.tres" id="2_core"]
+[ext_resource type="Texture2D" uid="uid://bce2ofo2gey4" path="res://assets/effect/fireball/1.png" id="2_jmbt5"]
+[ext_resource type="Material" uid="uid://cafdwq4blgip6" path="res://resources/effects/mars_spark_missile_trail_particles.tres" id="3_trail"]
+[ext_resource type="Material" uid="uid://8qyx5hsnos6n" path="res://resources/effects/mars_spark_missile_ember_particles.tres" id="4_ember"]
+[ext_resource type="Material" uid="uid://dolw26vgiwv6l" path="res://resources/effects/mars_spark_missile_smoke_particles.tres" id="5_smoke"]
+
+[node name="MarsSparkMissileEffect" type="Node2D" unique_id=1069565346]
+z_index = 13
+scale = Vector2(2, 2)
+script = ExtResource("1_mars_spark")
+
+[node name="CoreFireball" type="Sprite2D" parent="." unique_id=957324412]
+z_index = 6
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_jmbt5")
+
+[node name="CoreParticles" type="GPUParticles2D" parent="." unique_id=990535870]
+z_index = 4
+amount = 10
+lifetime = 0.18000000000000002
+randomness = 0.45
+local_coords = true
+process_material = ExtResource("2_core")
+
+[node name="TrailParticles" type="GPUParticles2D" parent="." unique_id=362088157]
+z_index = 3
+amount = 150
+lifetime = 0.78
+randomness = 0.45
+local_coords = true
+process_material = ExtResource("3_trail")
+
+[node name="EmberParticles" type="GPUParticles2D" parent="." unique_id=1855511036]
+z_index = 5
+amount = 72
+lifetime = 0.7
+randomness = 0.45
+local_coords = true
+process_material = ExtResource("4_ember")
+
+[node name="SmokeParticles" type="GPUParticles2D" parent="." unique_id=565456992]
+z_index = 2
+amount = 38
+lifetime = 0.76
+randomness = 0.4
+local_coords = true
+process_material = ExtResource("5_smoke")

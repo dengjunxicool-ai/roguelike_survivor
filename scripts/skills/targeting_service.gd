@@ -1,0 +1,259 @@
+extends RefCounted
+class_name TargetingService
+
+
+const ENEMY_GROUP: StringName = &"enemies"
+
+
+static func find_target(caster: Node, mode: String, params: Dictionary = {}) -> Node2D:
+	var targets: Array = find_targets(caster, mode, params)
+	if targets.is_empty():
+		return null
+
+	return targets[0] as Node2D
+
+
+static func find_targets(caster: Node, mode: String, params: Dictionary = {}) -> Array:
+	var caster_node: Node2D = caster as Node2D
+	match mode:
+		"self":
+			return [caster_node] if caster_node != null else []
+		"nearest_enemy":
+			var nearest_enemy: Node2D = _find_nearest_enemy(caster_node, params)
+			return [nearest_enemy] if nearest_enemy != null else []
+		"highest_hp_enemy":
+			var highest_hp_enemy: Node2D = _find_highest_hp_enemy(params)
+			return [highest_hp_enemy] if highest_hp_enemy != null else []
+		"random_enemy":
+			var random_enemy: Node2D = _find_random_enemy(params)
+			return [random_enemy] if random_enemy != null else []
+		"random_enemies_around_player":
+			return _find_random_enemies_around(caster_node, params)
+		"around_player":
+			return _find_enemies_around(caster_node, params)
+		_:
+			return []
+
+
+static func _find_nearest_enemy(caster: Node2D, params: Dictionary) -> Node2D:
+	if caster == null:
+		return null
+
+	var max_range: float = float(params.get("range", params.get("radius", INF)))
+	var max_distance_squared: float = max_range * max_range
+
+	var nearest_enemy: Node2D = null
+	var best_score: float = -INF
+	var recent_damage_enemy: Node2D = null
+	var best_recent_damage: float = 0.0
+	var best_recent_distance_squared: float = INF
+
+	for enemy: Node2D in _get_valid_enemies():
+		var distance_squared: float = caster.global_position.distance_squared_to(enemy.global_position)
+		if distance_squared > max_distance_squared:
+			continue
+
+		var recent_damage_priority: float = _get_recent_damage_priority(caster, enemy)
+		if recent_damage_priority > 0.0:
+			if recent_damage_priority > best_recent_damage or (is_equal_approx(recent_damage_priority, best_recent_damage) and distance_squared < best_recent_distance_squared):
+				recent_damage_enemy = enemy
+				best_recent_damage = recent_damage_priority
+				best_recent_distance_squared = distance_squared
+			continue
+
+		var score: float = -distance_squared
+		if enemy.is_in_group(&"boss_cores") or String(enemy.get_meta("enemy_type", "")) == "boss_core":
+			score += max_distance_squared * 3.0
+		elif String(enemy.get_meta("enemy_rank", "")) == "boss" or String(enemy.get_meta("enemy_rank", "")) == "elite":
+			score += max_distance_squared * 0.65
+		score += _get_weapon_priority_score(caster, enemy, max_distance_squared)
+		if score <= best_score:
+			continue
+		nearest_enemy = enemy
+		best_score = score
+
+	if recent_damage_enemy != null:
+		return recent_damage_enemy
+	return nearest_enemy
+
+
+static func _get_recent_damage_priority(caster: Node2D, enemy: Node2D) -> float:
+	if caster == null or not caster.has_method("get_recent_enemy_damage_priority"):
+		return 0.0
+	return float(caster.call("get_recent_enemy_damage_priority", enemy))
+
+
+static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
+	var max_range: float = float(params.get("range", INF))
+	var origin: Node2D = params.get("origin") as Node2D
+	var max_distance_squared: float = max_range * max_range
+	var best_enemy: Node2D = null
+	var best_score: float = -INF
+
+	for enemy: Node2D in _get_valid_enemies():
+		if origin != null and origin.global_position.distance_squared_to(enemy.global_position) > max_distance_squared:
+			continue
+
+		var score: float = float(_get_enemy_health(enemy))
+		if enemy.is_in_group(&"boss_cores") or String(enemy.get_meta("enemy_type", "")) == "boss_core":
+			score += 100000.0
+		score += _get_weapon_priority_score(origin if origin != null else enemy, enemy, max_distance_squared)
+		if score <= best_score:
+			continue
+
+		best_enemy = enemy
+		best_score = score
+
+	return best_enemy
+
+
+static func _find_random_enemy(params: Dictionary) -> Node2D:
+	var enemies: Array = _get_valid_enemies()
+	var max_range: float = float(params.get("range", INF))
+	var origin: Node2D = params.get("origin") as Node2D
+	if origin != null and max_range < INF:
+		enemies = enemies.filter(func(enemy: Node2D) -> bool:
+			return origin.global_position.distance_squared_to(enemy.global_position) <= max_range * max_range
+		)
+
+	if enemies.is_empty():
+		return null
+
+	return enemies[randi() % enemies.size()] as Node2D
+
+
+static func _find_random_enemies_around(caster: Node2D, params: Dictionary) -> Array:
+	var enemies: Array = _find_enemies_around(caster, params)
+	enemies.shuffle()
+
+	var count: int = int(params.get("count", enemies.size()))
+	if count <= 0 or count >= enemies.size():
+		return enemies
+
+	return enemies.slice(0, count)
+
+
+static func _find_enemies_around(caster: Node2D, params: Dictionary) -> Array:
+	if caster == null:
+		return []
+
+	var radius: float = float(params.get("radius", params.get("range", INF)))
+	var radius_squared: float = radius * radius
+	var enemies: Array = []
+	for enemy: Node2D in _get_valid_enemies():
+		if caster.global_position.distance_squared_to(enemy.global_position) <= radius_squared:
+			enemies.append(enemy)
+
+	return enemies
+
+
+static func _get_valid_enemies() -> Array:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return []
+
+	var enemies: Array = []
+	for node: Node in tree.get_nodes_in_group(ENEMY_GROUP):
+		var enemy: Node2D = node as Node2D
+		if _is_valid_enemy(enemy):
+			enemies.append(enemy)
+
+	return enemies
+
+
+static func _is_valid_enemy(enemy: Node2D) -> bool:
+	if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+		return false
+
+	if enemy.has_method("get_runtime_state") and String(enemy.call("get_runtime_state")) == "dead":
+		return false
+
+	var current_health_variant: Variant = enemy.get("current_health")
+	if current_health_variant != null and int(current_health_variant) <= 0:
+		return false
+
+	var is_dead_variant: Variant = enemy.get("_is_dead")
+	if is_dead_variant != null and bool(is_dead_variant):
+		return false
+
+	return true
+
+
+static func _get_enemy_health(enemy: Node2D) -> int:
+	var current_health_variant: Variant = enemy.get("current_health")
+	if current_health_variant != null:
+		return int(current_health_variant)
+
+	var max_health_variant: Variant = enemy.get("max_health")
+	if max_health_variant != null:
+		return int(max_health_variant)
+
+	return 0
+
+
+static func _get_weapon_priority_score(caster: Node, enemy: Node2D, scale: float) -> float:
+	if caster == null or enemy == null:
+		return 0.0
+	var weapon_id: String = _get_caster_weapon_id(caster)
+	match weapon_id:
+		"fire_staff":
+			return _nearby_enemy_count(enemy.global_position, 96.0) * scale * 0.08
+		"frost_staff":
+			return scale * 0.35 if _has_any_status(enemy, [&"chill", &"freeze", &"slow"]) else scale * 0.08
+		"lightning_whip":
+			return _nearby_enemy_count(enemy.global_position, 150.0) * scale * 0.10 + (scale * 0.25 if _has_any_status(enemy, [&"charge", &"shock"]) else 0.0)
+		"hunter_bow":
+			return scale * 0.45 if _is_strong_enemy(enemy) or _has_any_status(enemy, [&"hunter_mark"]) else 0.0
+		"trap_kit":
+			return scale * 0.30 if _is_between_player_and_enemy(caster, enemy) else scale * 0.05
+		"acid_sprayer":
+			return float(_get_enemy_armor(enemy)) * scale * 0.03 + (scale * 0.20 if _has_any_status(enemy, [&"corrosion"]) else 0.0)
+		"toxic_vial", "fire_oil_canister", "cross_relic":
+			return _nearby_enemy_count(enemy.global_position, 120.0) * scale * 0.06
+		_:
+			return 0.0
+
+
+static func _get_caster_weapon_id(caster: Node) -> String:
+	var runtime: Node = caster.get_node_or_null("CharacterRuntime")
+	if runtime != null:
+		return String(runtime.call("get_equipped_weapon_id"))
+	var value: Variant = caster.get("selected_weapon_id")
+	if value != null and String(value) != "":
+		return String(value)
+	return ""
+
+
+static func _nearby_enemy_count(center: Vector2, radius: float) -> int:
+	var radius_squared: float = radius * radius
+	var count: int = 0
+	for enemy: Node2D in _get_valid_enemies():
+		if center.distance_squared_to(enemy.global_position) <= radius_squared:
+			count += 1
+	return count
+
+
+static func _has_any_status(enemy: Node, statuses: Array[StringName]) -> bool:
+	if enemy == null or not enemy.has_method("has_status"):
+		return false
+	for status_id: StringName in statuses:
+		if bool(enemy.call("has_status", status_id)):
+			return true
+	return false
+
+
+static func _is_strong_enemy(enemy: Node) -> bool:
+	var rank: String = String(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "")))
+	return rank == "elite" or rank == "boss" or rank == "boss_core"
+
+
+static func _get_enemy_armor(enemy: Node) -> int:
+	var value: Variant = enemy.get("armor")
+	return int(value) if value != null else 0
+
+
+static func _is_between_player_and_enemy(caster: Node, enemy: Node2D) -> bool:
+	var caster_node: Node2D = caster as Node2D
+	if caster_node == null:
+		return false
+	return caster_node.global_position.distance_squared_to(enemy.global_position) <= 220.0 * 220.0

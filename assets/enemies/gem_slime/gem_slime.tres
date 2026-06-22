@@ -1,0 +1,68 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://cgammi71ynotl"]
+
+[ext_resource type="Texture2D" uid="uid://b1sudaohhrk5w" path="res://assets/enemies/gem_slime/9.png" id="1_sc7nd"]
+[ext_resource type="Texture2D" uid="uid://chrf0ppwqomos" path="res://assets/enemies/gem_slime/10.png" id="2_m5v20"]
+[ext_resource type="Texture2D" uid="uid://b5t1xxa1a4nyt" path="res://assets/enemies/gem_slime/11.png" id="3_2uxwe"]
+[ext_resource type="Texture2D" uid="uid://bw1mif1dpfnxf" path="res://assets/enemies/gem_slime/12.png" id="4_2r8ws"]
+[ext_resource type="Texture2D" uid="uid://davw83phiebya" path="res://assets/enemies/gem_slime/1.png" id="5_281ws"]
+[ext_resource type="Texture2D" uid="uid://pk4u2pvk6653" path="res://assets/enemies/gem_slime/2.png" id="6_ckn22"]
+[ext_resource type="Texture2D" uid="uid://s66wymrovy5a" path="res://assets/enemies/gem_slime/3.png" id="7_gpah2"]
+[ext_resource type="Texture2D" uid="uid://bsosxraun5a3p" path="res://assets/enemies/gem_slime/4.png" id="8_f8jqy"]
+[ext_resource type="Texture2D" uid="uid://ubvaslm4nhh4" path="res://assets/enemies/gem_slime/5.png" id="9_wh3mq"]
+[ext_resource type="Texture2D" uid="uid://bwnkui2eqyrwj" path="res://assets/enemies/gem_slime/6.png" id="10_fwmhp"]
+[ext_resource type="Texture2D" uid="uid://b2s4riqyf8i0i" path="res://assets/enemies/gem_slime/7.png" id="11_r63yf"]
+[ext_resource type="Texture2D" uid="uid://cq685ama6quyq" path="res://assets/enemies/gem_slime/8.png" id="12_3j0tb"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_sc7nd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_m5v20")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_2uxwe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_2r8ws")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_281ws")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_ckn22")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_gpah2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_f8jqy")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_wh3mq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_fwmhp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_r63yf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_3j0tb")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

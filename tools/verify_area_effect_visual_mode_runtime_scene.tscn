@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/verify_area_effect_visual_mode_runtime_scene.gd" id="1_8scrn"]
+
+[node name="VerifyAreaEffectVisualModeRuntimeScene" type="Node"]
+script = ExtResource("1_8scrn")

@@ -1,0 +1,10 @@
+[PASS] Protective lava ring spawns
+[PASS] Protective lava stores 3s duration
+[PASS] Protective lava stores damage reduction
+[PASS] Contact damage inside protective lava is reduced by 50%
+[PASS] Reduced contact damage is applied to player health
+[PASS] Damage trace records protective lava multiplier
+[PASS] Ranged damage inside protective lava is reduced by 50%
+[PASS] Reduced ranged damage is applied to player health
+[PASS] Damage outside protective lava keeps full amount
+[PASS] Outside damage is applied without protective lava reduction

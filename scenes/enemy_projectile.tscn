@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/projectile.gd" id="1_gpm44"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_ihk5v"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_n08ay"]
+radius = 8.0
+
+[node name="EnemyProjectile" type="Area2D"]
+z_index = 18
+script = ExtResource("1_gpm44")
+target_group = &"player"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 0.9, 0.08, 1)
+texture = ExtResource("2_ihk5v")
+scale = Vector2(0.07, 0.07)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_n08ay")

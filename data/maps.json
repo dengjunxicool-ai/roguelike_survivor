@@ -1,0 +1,84 @@
+{
+	"maps": [
+		{
+			"map_variable": {
+				"type": "open"
+			},
+			"difficulty": 1.0,
+			"boss_id": "dungeon_heart",
+			"elite_preview_ids": [
+				"giant_slime",
+				"skeleton_captain"
+			],
+			"visual": {
+				"background": "res://assets/ui/maps/abandoned_dungeon.png"
+			},
+			"id": "abandoned_dungeon",
+			"display_name": "废弃地牢",
+			"description": "无强机制，标准开阔地图。",
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"map_variable": {
+				"type": "toxic_fog"
+			},
+			"difficulty": 2.0,
+			"boss_id": "dungeon_heart",
+			"elite_preview_ids": [
+				"toxic_matriarch"
+			],
+			"visual": {
+				"background": "res://assets/ui/maps/poison_graveyard.png"
+			},
+			"id": "toxic_fog_graveyard",
+			"display_name": "瘴毒墓园",
+			"description": "随机瘴毒雾区，毒系敌人更多。",
+			"unlock": {
+				"type": "clear_map",
+				"map_id": "abandoned_dungeon"
+			}
+		},
+		{
+			"map_variable": {
+				"type": "lava_fissure"
+			},
+			"difficulty": 3.0,
+			"boss_id": "dungeon_heart",
+			"elite_preview_ids": [
+				"lava_golem"
+			],
+			"visual": {
+				"background": "res://assets/ui/maps/lava_temple.png"
+			},
+			"id": "lava_temple",
+			"display_name": "熔火神殿",
+			"description": "周期性熔岩裂隙。",
+			"unlock": {
+				"type": "clear_map",
+				"map_id": "toxic_fog_graveyard"
+			}
+		},
+		{
+			"map_variable": {
+				"type": "narrow_corridor"
+			},
+			"difficulty": 4.0,
+			"boss_id": "dungeon_heart",
+			"elite_preview_ids": [
+				"shadow_hunter"
+			],
+			"visual": {
+				"background": "res://assets/ui/maps/abyss_corridor.png"
+			},
+			"id": "abyss_corridor",
+			"display_name": "深渊回廊",
+			"description": "狭窄回廊，包围压力更强。",
+			"unlock": {
+				"type": "clear_map",
+				"map_id": "lava_temple"
+			}
+		}
+	]
+}

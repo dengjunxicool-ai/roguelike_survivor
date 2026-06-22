@@ -1,0 +1,48 @@
+{
+	"daily_challenges": [
+		{
+			"challenge_id": "daily_fixed_fire_mage",
+			"character_id": "mage",
+			"weapon_id": "fire_staff",
+			"map_id": "abandoned_dungeon",
+			"modifiers": [
+				{
+					"stat": "enemy_spawn_count",
+					"op": "multiplier_add",
+					"value": 0.15,
+					"scope": {
+						"domain": "enemy_spawn"
+					}
+				}
+			],
+			"display_name": "每日示例：火焰法师"
+		}
+	],
+	"weekly_challenges": [
+		{
+			"challenge_id": "weekly_fixed_pure_survival",
+			"character_id": "paladin",
+			"weapon_id": "holy_shield",
+			"map_id": "abyss_corridor",
+			"modifiers": [
+				{
+					"stat": "damage_taken",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "player"
+					}
+				},
+				{
+					"stat": "soul_gain",
+					"op": "multiplier_add",
+					"value": 0.2,
+					"scope": {
+						"domain": "economy"
+					}
+				}
+			],
+			"display_name": "每周示例：纯生存"
+		}
+	]
+}

@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://resources/effects/fireball_flying_shader.gdshader" id="1_fireball_shader"]
+
+[resource]
+shader = ExtResource("1_fireball_shader")
+shader_parameter/glow_strength = 2.6
+shader_parameter/distort_strength = 0.03
+shader_parameter/distort_speed = 2.0
+shader_parameter/trail_intensity = 0.85
+shader_parameter/edge_softness = 0.12
+shader_parameter/color_hot = Color(1, 0.92, 0.35, 1)
+shader_parameter/color_rim = Color(1, 0.48, 0.08, 1)

@@ -1,0 +1,1145 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "warhammer",
+	"display_name": "战锤",
+	"character_id": "paladin",
+	"starting_skill_id": "warhammer_slam",
+	"base_attack": {
+		"name": "战锤重击",
+		"role": "慢速高冲击范围攻击",
+		"state": "stagger"
+	},
+	"branches": [
+		{
+			"branch_id": "warhammer_branch_earthsplitter",
+			"display_name": "地裂锤",
+			"archetype": "coverage_clear",
+			"current_runtime_branch_id": "warhammer_branch_quake",
+			"levels": {
+				"2": "冲击半径 +20%",
+				"3": "命中地面产生裂缝，持续 1.2s，每 0.4s 造成 5 area_direct",
+				"4": "裂缝长度 +30%，最多命中 6 目标",
+				"5": "每第 3 锤变为地裂重击，裂缝向前延伸"
+			},
+			"damage_ownership": "primary_attack / field",
+			"boss_rule": "field Boss ×85%",
+			"limits": "裂缝同目标最多 2 次",
+			"ui_feedback": "地裂线清晰显示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "覆盖清潮流 Lv2: 冲击半径 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"tradeoff": "larger_area_lower_single_hit",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "地裂线清晰显示",
+						"level_label": "Lv2",
+						"readable_effect": "冲击半径 +20%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_earthsplitter:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "覆盖清潮流 Lv3: 命中地面产生裂缝，持续 1.2s，每 0.4s 造成 5 area_direct",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"core_engine": "spawn_limited_derived_attack",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "地裂线清晰显示",
+						"level_label": "Lv3",
+						"readable_effect": "命中地面产生裂缝，持续 1.2s，每 0.4s 造成 5 area_direct"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_earthsplitter:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "覆盖清潮流 Lv4: 裂缝长度 +30%，最多命中 6 目标",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "increase_derived_attack_budget",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "地裂线清晰显示",
+						"level_label": "Lv4",
+						"readable_effect": "裂缝长度 +30%，最多命中 6 目标"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_earthsplitter:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "覆盖清潮流 Lv5: 每第 3 锤变为地裂重击，裂缝向前延伸",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_chain_or_area_closure",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"capstone_chain_limiter",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "地裂线清晰显示",
+						"level_label": "Lv5",
+						"readable_effect": "每第 3 锤变为地裂重击，裂缝向前延伸"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_earthsplitter:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "warhammer_branch_judgement",
+			"display_name": "裁决审判",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "warhammer_branch_heaven",
+			"levels": {
+				"2": "战锤命中精英 / Boss 时施加 1 层 judgment，最多 4 层，持续 5s，同目标 1.0s CD",
+				"3": "4 层 judgment 目标被战锤命中时触发裁决震荡，造成 22 reaction holy/physical；Boss 获得 1 层 poise_break，2.0s CD",
+				"4": "对精英 / Boss 的裁决震荡伤害 +25%；Boss poise_break 持续 +1s",
+				"5": "Boss 处于 poise_break 时，下一次战锤裁决额外造成 34 reaction damage"
+			},
+			"damage_ownership": "reaction / primary_attack",
+			"boss_rule": "reaction Boss ×75%",
+			"limits": "裁决震荡 1.5s CD",
+			"ui_feedback": "judgment 层数",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "精准猎杀流 Lv2: 战锤命中精英 / Boss 时施加 1 层 judgment，最多 4 层，持续 5s，同目标 1.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"targeting_bias": "elite_boss_high_hp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "judgment 层数",
+						"level_label": "Lv2",
+						"readable_effect": "战锤命中精英 / Boss 时施加 1 层 judgment，最多 4 层，持续 5s，同目标 1.0s CD"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_judgement:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "精准猎杀流 Lv3: 4 层 judgment 目标被战锤命中时触发裁决震荡，造成 22 reaction holy/physical；Boss 获得 1 层 poise_break，2.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "same_target_mark_stack",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "judgment 层数",
+						"level_label": "Lv3",
+						"readable_effect": "4 层 judgment 目标被战锤命中时触发裁决震荡，造成 22 reaction holy/physical；Boss 获得 1 层 poise_break，2.0s CD"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_judgement:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "精准猎杀流 Lv4: 对精英 / Boss 的裁决震荡伤害 +25%；Boss poise_break 持续 +1s",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "marked_target_direct_damage_amp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "judgment 层数",
+						"level_label": "Lv4",
+						"readable_effect": "对精英 / Boss 的裁决震荡伤害 +25%；Boss poise_break 持续 +1s"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_judgement:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "精准猎杀流 Lv5: Boss 处于 poise_break 时，下一次战锤裁决额外造成 34 reaction damage",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "full_stack_single_target_burst",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "judgment 层数",
+						"level_label": "Lv5",
+						"readable_effect": "Boss 处于 poise_break 时，下一次战锤裁决额外造成 34 reaction damage"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_judgement:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "warhammer_branch_execute_slam",
+			"display_name": "重锤斩杀",
+			"archetype": "status_reaction",
+			"current_runtime_branch_id": "warhammer_branch_punish",
+			"levels": {
+				"2": "伤害 +18%，attack_interval +8%",
+				"3": "对低于 40% HP 的敌人伤害 +25%",
+				"4": "暴击伤害 +25%，暴击率 -4%",
+				"5": "Boss 低于 25% HP 时，每 3s 首次命中触发斩杀震波，造成 30 reaction physical"
+			},
+			"damage_ownership": "primary_attack / reaction",
+			"boss_rule": "斩杀 Boss 3s CD",
+			"limits": "低血条件触发",
+			"ui_feedback": "斩杀红色震波",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "状态反应流 Lv2: 伤害 +18%，attack_interval +8%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"tradeoff": "lower_direct_damage_higher_status_pressure",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "斩杀红色震波",
+						"level_label": "Lv2",
+						"readable_effect": "伤害 +18%，attack_interval +8%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_execute_slam:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "状态反应流 Lv3: 对低于 40% HP 的敌人伤害 +25%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"reaction_damage_multiplier": 0.7,
+						"required_status_stacks": 3,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "status_threshold_reaction",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "斩杀红色震波",
+						"level_label": "Lv3",
+						"readable_effect": "对低于 40% HP 的敌人伤害 +25%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_execute_slam:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "状态反应流 Lv4: 暴击伤害 +25%，暴击率 -4%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "refresh_and_strengthen_status",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "斩杀红色震波",
+						"level_label": "Lv4",
+						"readable_effect": "暴击伤害 +25%，暴击率 -4%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_execute_slam:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "状态反应流 Lv5: Boss 低于 25% HP 时，每 3s 首次命中触发斩杀震波，造成 30 reaction physical",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"death_transfer_ratio": 0.5,
+						"reaction_chain_max_steps": 3,
+						"chain_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_death_or_multitarget_reaction_chain",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"death_reaction_source_filter",
+						"reaction_chain_limiter"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "斩杀红色震波",
+						"level_label": "Lv5",
+						"readable_effect": "Boss 低于 25% HP 时，每 3s 首次命中触发斩杀震波，造成 30 reaction physical"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_execute_slam:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "warhammer_branch_stagger_control",
+			"display_name": "震荡控场",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "warhammer_branch_combo",
+			"levels": {
+				"2": "战锤击退 +25%",
+				"3": "战锤命中有 25% 概率 stun 普通怪 0.6s；精英 ×0.5；Boss 转破势",
+				"4": "stun 目标受到战锤主攻击 +15%",
+				"5": "每 8s 下一次战锤必定震荡，范围 +35%；若命中 Boss，获得 1 层 poise_break"
+			},
+			"damage_ownership": "control / primary_attack",
+			"boss_rule": "stun 转破势",
+			"limits": "强控递减",
+			"ui_feedback": "眩晕和破势提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "生存控制流 Lv2: 战锤击退 +25%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"survival_hook": "spawn_player_centered_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "眩晕和破势提示",
+						"level_label": "Lv2",
+						"readable_effect": "战锤击退 +25%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_stagger_control:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "生存控制流 Lv3: 战锤命中有 25% 概率 stun 普通怪 0.6s；精英 ×0.5；Boss 转破势",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"control_strength": 0.25,
+						"control_duration": 0.6,
+						"boss_control_effectiveness": 0.35
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "near_player_control",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"boss_control_fallback"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "眩晕和破势提示",
+						"level_label": "Lv3",
+						"readable_effect": "战锤命中有 25% 概率 stun 普通怪 0.6s；精英 ×0.5；Boss 转破势"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_stagger_control:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "生存控制流 Lv4: stun 目标受到战锤主攻击 +15%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"player_damage_reduction": 0.12,
+						"player_buff_duration": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "grant_player_temporary_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "眩晕和破势提示",
+						"level_label": "Lv4",
+						"readable_effect": "stun 目标受到战锤主攻击 +15%"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_stagger_control:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "生存控制流 Lv5: 每 8s 下一次战锤必定震荡，范围 +35%；若命中 Boss，获得 1 层 poise_break",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "low_hp_emergency_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "眩晕和破势提示",
+						"level_label": "Lv5",
+						"readable_effect": "每 8s 下一次战锤必定震荡，范围 +35%；若命中 Boss，获得 1 层 poise_break"
+					},
+					"modifier_source": "weapon_branch:warhammer_branch_stagger_control:lv5"
+				}
+			}
+		}
+	]
+}

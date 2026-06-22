@@ -1,0 +1,34 @@
+{
+	"synergies": [
+		{
+			"id": "frozen_physical_bonus",
+			"display_name": "碎冰打击",
+			"description": "物理伤害命中冰冻敌人时伤害提高 40%。",
+			"required_skill_tags": [
+				"ice",
+				"physical"
+			],
+			"effect": {
+				"type": "damage_bonus_vs_status",
+				"damage_type": "direct_physical",
+				"target_status": "freeze",
+				"damage_multiplier_add": 0.4,
+				"element": "physical"
+			}
+		},
+		{
+			"id": "poison_slow_bonus",
+			"display_name": "迟滞毒蚀",
+			"description": "敌人同时中毒和减速时，中毒 tick 间隔缩短 25%。",
+			"required_skill_tags": [
+				"poison"
+			],
+			"effect": {
+				"type": "status_tick_interval_multiplier",
+				"status": "poison",
+				"required_status": "slow",
+				"tick_interval_multiplier": 0.75
+			}
+		}
+	]
+}

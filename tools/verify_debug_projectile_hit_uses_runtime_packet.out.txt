@@ -1,0 +1,6 @@
+[PASS] debug projectile hit uses runtime projectile damage multiplier
+[PASS] debug damage packet preserves projectile special modifier
+[PASS] debug damage packet preserves projectile source type
+[PASS] debug trace records projectile damage
+[PASS] debug trace final damage keeps projectile multiplier
+[PASS] debug trace keeps projectile source instance

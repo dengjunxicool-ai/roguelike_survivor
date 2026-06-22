@@ -1,0 +1,71 @@
+{
+  "character_specializations": [
+    {
+      "character_id": "mage",
+      "goals": [
+        "overload_full_stack_kills",
+        "element_reaction_mastery"
+      ]
+    },
+    {
+      "character_id": "ranger",
+      "goals": [
+        "rhythm_uptime",
+        "trap_and_crit_mastery"
+      ]
+    },
+    {
+      "character_id": "paladin",
+      "goals": [
+        "shield_survival",
+        "holy_damage_mastery"
+      ]
+    },
+    {
+      "character_id": "alchemist",
+      "goals": [
+        "status_kill_chains",
+        "reaction_zone_mastery"
+      ]
+    }
+  ],
+  "map_challenges": [
+    {
+      "map_id": "abandoned_dungeon",
+      "objectives": [
+        "clear_once",
+        "clear_without_death",
+        "clear_without_healing",
+        "defeat_boss_before_285s"
+      ]
+    },
+    {
+      "map_id": "toxic_fog_graveyard",
+      "objectives": [
+        "clear_once",
+        "avoid_toxic_fog_overdamage",
+        "clear_with_dot_branch",
+        "clear_all_toxic_fog_events",
+        "defeat_toxic_matriarch"
+      ]
+    },
+    {
+      "map_id": "lava_temple",
+      "objectives": [
+        "clear_once",
+        "survive_lava_fissures",
+        "clear_with_control_branch",
+        "defeat_lava_golem"
+      ]
+    },
+    {
+      "map_id": "abyss_corridor",
+      "objectives": [
+        "clear_once",
+        "survive_encirclement",
+        "clear_with_pierce_or_bounce",
+        "defeat_shadow_hunter"
+      ]
+    }
+  ]
+}

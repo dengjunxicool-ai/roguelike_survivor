@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://cr70k1ykcdy5f"]
+
+[ext_resource type="PackedScene" uid="uid://d3u1w1qqv68ql" path="res://scenes/player.tscn" id="1_okdyv"]
+[ext_resource type="Script" uid="uid://dosow4hwi1hbw" path="res://scripts/enemies/enemy_spawner.gd" id="4_klmpo"]
+[ext_resource type="Script" path="res://scripts/maps/responsive_background.gd" id="10_vtk8d"]
+
+[node name="Main" type="Node2D" unique_id=803732399]
+
+[node name="DungeonBackground" type="Sprite2D" parent="." unique_id=396576305]
+z_index = -10
+centered = false
+script = ExtResource("10_vtk8d")
+
+[node name="Player" parent="." unique_id=268617203 instance=ExtResource("1_okdyv")]
+position = Vector2(768, 512)
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1910332516]
+enabled = true
+zoom = Vector2(1.35, 1.35)
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+
+[node name="EnemySpawner" type="Node2D" parent="." unique_id=246138285]
+script = ExtResource("4_klmpo")

@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://c6k7772dvvmew"]
+
+[ext_resource type="Script" path="res://scripts/enemies/boss_controller.gd" id="1_xq3fm"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_6t31k"]
+[ext_resource type="Script" path="res://scripts/combat/status_effect_manager.gd" id="3_um2ii"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xnnbt"]
+radius = 36.0
+
+[node name="Boss" type="CharacterBody2D"]
+scale = Vector2(1.4, 1.4)
+script = ExtResource("1_xq3fm")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.55, 0.08, 0.9, 1)
+texture = ExtResource("2_6t31k")
+scale = Vector2(0.28, 0.28)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_xnnbt")
+
+[node name="StatusEffectManager" type="Node" parent="."]
+script = ExtResource("3_um2ii")

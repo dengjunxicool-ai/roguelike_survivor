@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Character Switch Animation Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101116;
+      --panel: #181b20;
+      --panel-2: #20232a;
+      --line: #3b4350;
+      --text: #f7f8fb;
+      --muted: #b9c0cc;
+      --gold: #d8b95d;
+      --green: #78d47e;
+      --cyan: #72d7ff;
+      --violet: #b58cff;
+      --danger: #ff7d69;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(16, 17, 22, 0.92), rgba(16, 17, 22, 0.98)),
+        url("../../assets/ui/maps/abandoned_dungeon.png") center / cover fixed;
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      padding: 22px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 48px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .hint {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid #596273;
+      border-radius: 6px;
+      background: #263044;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #31405d;
+      border-color: #8ea6cc;
+    }
+
+    button.active {
+      background: #3f5f40;
+      border-color: var(--gold);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(240px, 360px) minmax(320px, 1fr) minmax(260px, 360px);
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .panel {
+      background: rgba(24, 27, 32, 0.94);
+      border: 1px solid rgba(74, 82, 96, 0.82);
+      border-radius: 8px;
+      min-height: 0;
+    }
+
+    .scheme-list {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .scheme-button {
+      width: 100%;
+      text-align: left;
+      min-height: 58px;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+    }
+
+    .scheme-button span {
+      display: block;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0.82;
+      line-height: 1.35;
+    }
+
+    .stage-wrap {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      min-height: 520px;
+      background:
+        linear-gradient(180deg, rgba(28, 31, 38, 0.72), rgba(16, 18, 24, 0.9)),
+        radial-gradient(circle at 50% 28%, rgba(216, 185, 93, 0.16), transparent 42%);
+    }
+
+    .stage {
+      position: relative;
+      width: min(460px, 88vw);
+      height: 440px;
+      perspective: 1100px;
+    }
+
+    .character-card,
+    .ghost-card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      place-items: center;
+      padding: 24px;
+      border: 2px solid rgba(216, 185, 93, 0.82);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(32, 36, 44, 0.92), rgba(16, 18, 24, 0.94));
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.34);
+      transform-origin: 50% 50%;
+      will-change: transform, opacity, filter;
+      overflow: hidden;
+    }
+
+    .character-card::before,
+    .ghost-card::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    .character-name {
+      position: relative;
+      z-index: 2;
+      font-size: 28px;
+      font-weight: 900;
+      text-align: center;
+      color: #fff;
+    }
+
+    .portrait {
+      position: relative;
+      z-index: 2;
+      width: min(280px, 72%);
+      height: 280px;
+      display: grid;
+      place-items: center;
+    }
+
+    .portrait img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 16px rgba(0, 0, 0, 0.45));
+    }
+
+    .role {
+      position: relative;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 15px;
+      text-align: center;
+      min-height: 24px;
+    }
+
+    .stage-actions {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .info {
+      padding: 18px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .info h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .info p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .stat-lines {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .stat {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 10px;
+      align-items: center;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .bar {
+      height: 8px;
+      background: #2a303a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+    }
+
+    .fx-sweep,
+    .spotlight,
+    .rift {
+      position: absolute;
+      pointer-events: none;
+      z-index: 12;
+      opacity: 0;
+    }
+
+    .fx-sweep {
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+      transform: translateX(-120%);
+    }
+
+    .spotlight {
+      width: 330px;
+      height: 330px;
+      left: 50%;
+      top: 42%;
+      transform: translate(-50%, -50%) scale(0.7);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(248, 222, 142, 0.34), transparent 68%);
+    }
+
+    .rift {
+      inset: -20%;
+      background:
+        linear-gradient(115deg, transparent 42%, rgba(114, 215, 255, 0.45) 48%, rgba(181, 140, 255, 0.34) 52%, transparent 60%);
+      transform: translateX(-100%) skewX(-12deg);
+      filter: blur(0.5px);
+    }
+
+    body[data-scheme="flip"] .character-card.enter {
+      animation: flipEnter 520ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    body[data-scheme="flip"] .ghost-card.exit {
+      animation: flipExit 420ms cubic-bezier(.4, .0, .2, 1) both;
+    }
+
+    body[data-scheme="afterimage"] .character-card.enter {
+      animation: afterEnter 460ms cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    body[data-scheme="afterimage"] .ghost-card.exit.g1 {
+      animation: ghostTrail1 520ms ease-out both;
+    }
+
+    body[data-scheme="afterimage"] .ghost-card.exit.g2 {
+      animation: ghostTrail2 620ms ease-out both;
+    }
+
+    body[data-scheme="afterimage"] .ghost-card.exit.g3 {
+      animation: ghostTrail3 720ms ease-out both;
+    }
+
+    body[data-scheme="spotlight"] .character-card.enter {
+      animation: stageEnter 560ms cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    body[data-scheme="spotlight"] .ghost-card.exit {
+      animation: stageExit 360ms ease-in both;
+    }
+
+    body[data-scheme="spotlight"] .spotlight.play {
+      animation: spotlightPop 620ms ease-out both;
+    }
+
+    body[data-scheme="rift"] .character-card.enter {
+      animation: riftEnter 560ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    body[data-scheme="rift"] .ghost-card.exit {
+      animation: riftExit 380ms ease-in both;
+    }
+
+    body[data-scheme="rift"] .rift.play {
+      animation: riftSweep 600ms ease-out both;
+    }
+
+    body[data-scheme="wheel"] .character-card.enter {
+      animation: wheelEnter 520ms cubic-bezier(.2, .85, .2, 1) both;
+    }
+
+    body[data-scheme="wheel"] .ghost-card.exit {
+      animation: wheelExit 460ms cubic-bezier(.4, .0, .2, 1) both;
+    }
+
+    body[data-scheme="wheel"] .fx-sweep.play {
+      animation: sweep 500ms ease-out both;
+    }
+
+    @keyframes flipEnter {
+      0% { opacity: 0; transform: translateX(90px) rotateY(-55deg) rotateZ(3deg) scale(.9); }
+      70% { opacity: 1; transform: translateX(-8px) rotateY(4deg) rotateZ(-1deg) scale(1.03); }
+      100% { opacity: 1; transform: translateX(0) rotateY(0) rotateZ(0) scale(1); }
+    }
+
+    @keyframes flipExit {
+      0% { opacity: .68; transform: translateX(0) rotateY(0) scale(1); }
+      100% { opacity: 0; transform: translateX(-120px) rotateY(48deg) rotateZ(-5deg) scale(.88); }
+    }
+
+    @keyframes afterEnter {
+      0% { opacity: 0; transform: translateX(42px) scale(.94); filter: saturate(1.4); }
+      75% { opacity: 1; transform: translateX(-5px) scale(1.025); }
+      100% { opacity: 1; transform: translateX(0) scale(1); filter: saturate(1); }
+    }
+
+    @keyframes ghostTrail1 {
+      0% { opacity: .36; transform: translateX(0) translateY(0) scale(1); filter: hue-rotate(20deg); }
+      100% { opacity: 0; transform: translateX(-54px) translateY(-10px) scale(1.05); filter: hue-rotate(80deg); }
+    }
+
+    @keyframes ghostTrail2 {
+      0% { opacity: .26; transform: translateX(0) translateY(0) scale(1); filter: hue-rotate(90deg); }
+      100% { opacity: 0; transform: translateX(-92px) translateY(8px) scale(1.08); filter: hue-rotate(140deg); }
+    }
+
+    @keyframes ghostTrail3 {
+      0% { opacity: .18; transform: translateX(0) translateY(0) scale(1); filter: hue-rotate(150deg); }
+      100% { opacity: 0; transform: translateX(-128px) translateY(18px) scale(1.12); filter: hue-rotate(220deg); }
+    }
+
+    @keyframes stageEnter {
+      0% { opacity: 0; transform: translateY(34px) scale(.84); filter: brightness(1.4); }
+      65% { opacity: 1; transform: translateY(-8px) scale(1.05); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+    }
+
+    @keyframes stageExit {
+      0% { opacity: .55; transform: scale(1); }
+      100% { opacity: 0; transform: scale(.72); }
+    }
+
+    @keyframes spotlightPop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(.58); }
+      35% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.28); }
+    }
+
+    @keyframes riftEnter {
+      0% { opacity: 0; transform: translateX(70px) scale(.92); clip-path: inset(0 100% 0 0); }
+      45% { opacity: 1; clip-path: inset(0 0 0 0); }
+      100% { opacity: 1; transform: translateX(0) scale(1); clip-path: inset(0 0 0 0); }
+    }
+
+    @keyframes riftExit {
+      0% { opacity: .58; transform: translateX(0) scale(1); clip-path: inset(0 0 0 0); }
+      100% { opacity: 0; transform: translateX(-70px) scale(.94); clip-path: inset(0 0 0 100%); }
+    }
+
+    @keyframes riftSweep {
+      0% { opacity: 0; transform: translateX(-100%) skewX(-12deg); }
+      28% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(100%) skewX(-12deg); }
+    }
+
+    @keyframes wheelEnter {
+      0% { opacity: 0; transform: translateX(160px) scale(.74) rotateZ(7deg); }
+      70% { opacity: 1; transform: translateX(-10px) scale(1.04) rotateZ(-1deg); }
+      100% { opacity: 1; transform: translateX(0) scale(1) rotateZ(0); }
+    }
+
+    @keyframes wheelExit {
+      0% { opacity: .52; transform: translateX(0) scale(1) rotateZ(0); }
+      100% { opacity: 0; transform: translateX(-170px) scale(.74) rotateZ(-8deg); }
+    }
+
+    @keyframes sweep {
+      0% { opacity: 0; transform: translateX(-120%); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(120%); }
+    }
+
+    @media (max-width: 920px) {
+      .app {
+        padding: 14px;
+      }
+
+      header,
+      .controls {
+        justify-content: flex-start;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .stage-wrap {
+        min-height: 470px;
+      }
+
+      .stage {
+        height: 400px;
+      }
+
+      .portrait {
+        height: 230px;
+      }
+    }
+  </style>
+</head>
+<body data-scheme="wheel">
+  <div class="app">
+    <header>
+      <div>
+        <h1>人物切换动画 Demo</h1>
+        <p class="hint">选择一个方案，再点上一位/下一位。键盘方向键也可切换人物。</p>
+      </div>
+      <div class="controls" aria-label="切换控制">
+        <button id="prevBtn" type="button">上一位</button>
+        <button id="nextBtn" type="button">下一位</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel scheme-list" aria-label="动画方案">
+        <button class="scheme-button" type="button" data-scheme="flip">
+          A 卡牌翻页
+          <span>滑出、旋转、回弹，最像角色卡切换。</span>
+        </button>
+        <button class="scheme-button" type="button" data-scheme="afterimage">
+          B 灵魂残影
+          <span>旧角色留下彩色残影，新角色从拖尾里淡入。</span>
+        </button>
+        <button class="scheme-button" type="button" data-scheme="spotlight">
+          C 聚光灯舞台
+          <span>暗场、聚光、缩放登场，强调英雄亮相。</span>
+        </button>
+        <button class="scheme-button" type="button" data-scheme="rift">
+          D 元素裂隙
+          <span>元素裂隙扫屏，适合魔幻感更强的表现。</span>
+        </button>
+        <button class="scheme-button active" type="button" data-scheme="wheel">
+          E 横向轮盘
+          <span>角色像轮盘滑动，适合频繁切换。</span>
+        </button>
+      </section>
+
+      <section class="panel stage-wrap" aria-label="动画预览">
+        <div class="stage" id="stage">
+          <div class="fx-sweep" id="sweep"></div>
+          <div class="spotlight" id="spotlight"></div>
+          <div class="rift" id="rift"></div>
+        </div>
+        <div class="stage-actions">
+          <button id="replayBtn" type="button">重播</button>
+        </div>
+      </section>
+
+      <aside class="panel info">
+        <h2 id="infoName">法师</h2>
+        <p id="infoRole">高爆发元素施法者。以主武器伤害和元素状态推进节奏。</p>
+        <div class="stat-lines">
+          <div class="stat"><span>输出</span><div class="bar"><i id="statDamage"></i></div></div>
+          <div class="stat"><span>机动</span><div class="bar"><i id="statSpeed"></i></div></div>
+          <div class="stat"><span>生存</span><div class="bar"><i id="statSurvive"></i></div></div>
+        </div>
+        <p id="schemeNote">B 灵魂残影：适合做成最终版，视觉明显但不会遮住信息。建议在 Godot 里用复制旧卡片节点 + Tween 的方式实现。</p>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const characters = [
+      {
+        name: "法师",
+        role: "高爆发元素施法者。以主武器伤害和元素状态推进节奏。",
+        image: "../../assets/hero/mege.png",
+        stats: [92, 58, 42]
+      },
+      {
+        name: "游侠",
+        role: "高速暴击与陷阱猎手。保持移动能进入猎手节奏。",
+        image: "../../assets/hero/2.png",
+        stats: [76, 94, 56]
+      },
+      {
+        name: "圣骑士",
+        role: "护盾与神圣防线。更稳定地承受伤害并强化神圣伤害。",
+        image: "../../assets/hero/3.png",
+        stats: [62, 44, 94]
+      },
+      {
+        name: "炼金术士",
+        role: "异常状态与反应专家。持续伤害与状态反应更强。",
+        image: "../../assets/hero/4.png",
+        stats: [78, 66, 70]
+      }
+    ];
+
+    const notes = {
+      flip: "A 卡牌翻页：清晰、游戏感强，适合角色卡本身是主视觉的版本。",
+      afterimage: "B 灵魂残影：适合做成最终版，视觉明显但不会遮住信息。建议在 Godot 里用复制旧卡片节点 + Tween 的方式实现。",
+      spotlight: "C 聚光灯舞台：登场感强，适合强调新角色被选中，但节奏会稍慢。",
+      rift: "D 元素裂隙：最炫，适合后续按角色元素色定制，需要额外美术资源时潜力最大。",
+      wheel: "E 横向轮盘：最适合频繁左右切换，手感稳，信息层级清楚。"
+    };
+
+    let index = 0;
+    let scheme = "wheel";
+    const stage = document.querySelector("#stage");
+    const sweep = document.querySelector("#sweep");
+    const spotlight = document.querySelector("#spotlight");
+    const rift = document.querySelector("#rift");
+    const infoName = document.querySelector("#infoName");
+    const infoRole = document.querySelector("#infoRole");
+    const schemeNote = document.querySelector("#schemeNote");
+    const statDamage = document.querySelector("#statDamage");
+    const statSpeed = document.querySelector("#statSpeed");
+    const statSurvive = document.querySelector("#statSurvive");
+
+    function makeCard(character, className = "character-card") {
+      const card = document.createElement("article");
+      card.className = className;
+      card.innerHTML = `
+        <div class="character-name">${character.name}</div>
+        <div class="portrait"><img src="${character.image}" alt="${character.name}"></div>
+        <div class="role">${character.role}</div>
+      `;
+      return card;
+    }
+
+    function currentCard() {
+      return stage.querySelector(".character-card");
+    }
+
+    function updateInfo() {
+      const character = characters[index];
+      infoName.textContent = character.name;
+      infoRole.textContent = character.role;
+      statDamage.style.width = `${character.stats[0]}%`;
+      statSpeed.style.width = `${character.stats[1]}%`;
+      statSurvive.style.width = `${character.stats[2]}%`;
+      schemeNote.textContent = notes[scheme];
+    }
+
+    function clearFx() {
+      for (const node of [sweep, spotlight, rift]) {
+        node.classList.remove("play");
+        void node.offsetWidth;
+      }
+    }
+
+    function playFx() {
+      clearFx();
+      if (scheme === "wheel") sweep.classList.add("play");
+      if (scheme === "spotlight") spotlight.classList.add("play");
+      if (scheme === "rift") rift.classList.add("play");
+    }
+
+    function switchCharacter(direction = 1, replay = false) {
+      const old = currentCard();
+      if (!replay) {
+        index = (index + direction + characters.length) % characters.length;
+      }
+      const next = makeCard(characters[index]);
+      next.classList.add("enter");
+
+      if (old) {
+        if (scheme === "afterimage") {
+          for (let i = 1; i <= 3; i++) {
+            const ghost = old.cloneNode(true);
+            ghost.className = `ghost-card exit g${i}`;
+            stage.appendChild(ghost);
+            ghost.addEventListener("animationend", () => ghost.remove(), { once: true });
+          }
+          old.remove();
+        } else {
+          const ghost = old.cloneNode(true);
+          ghost.className = "ghost-card exit";
+          stage.appendChild(ghost);
+          ghost.addEventListener("animationend", () => ghost.remove(), { once: true });
+          old.remove();
+        }
+      }
+
+      stage.appendChild(next);
+      next.addEventListener("animationend", () => next.classList.remove("enter"), { once: true });
+      playFx();
+      updateInfo();
+    }
+
+    document.querySelector("#prevBtn").addEventListener("click", () => switchCharacter(-1));
+    document.querySelector("#nextBtn").addEventListener("click", () => switchCharacter(1));
+    document.querySelector("#replayBtn").addEventListener("click", () => switchCharacter(1, true));
+
+    for (const button of document.querySelectorAll(".scheme-button")) {
+      button.addEventListener("click", () => {
+        scheme = button.dataset.scheme;
+        document.body.dataset.scheme = scheme;
+        document.querySelectorAll(".scheme-button").forEach(item => item.classList.toggle("active", item === button));
+        switchCharacter(1, true);
+      });
+    }
+
+    window.addEventListener("keydown", event => {
+      if (event.key === "ArrowLeft") switchCharacter(-1);
+      if (event.key === "ArrowRight") switchCharacter(1);
+    });
+
+    stage.appendChild(makeCard(characters[index]));
+    updateInfo();
+  </script>
+</body>
+</html>

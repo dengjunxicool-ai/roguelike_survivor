@@ -1,0 +1,1145 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "throwing_knife_belt",
+	"display_name": "飞刀腰带",
+	"character_id": "ranger",
+	"starting_skill_id": "throwing_knife",
+	"base_attack": {
+		"name": "飞刀",
+		"role": "高速单体投射物",
+		"state": "bleed"
+	},
+	"branches": [
+		{
+			"branch_id": "throwing_knife_belt_branch_rain",
+			"display_name": "暴雨飞刀",
+			"archetype": "coverage_clear",
+			"current_runtime_branch_id": "throwing_knife_belt_branch_thousand",
+			"levels": {
+				"2": "attack_interval -12%",
+				"3": "每第 4 次投掷额外发射 1 把飞刀，额外飞刀伤害 -35%",
+				"4": "飞刀速度 +25%，射程 +10%",
+				"5": "飞刀数量 +1，每把伤害 -25%；同目标 0.25s 内第二把伤害 60%"
+			},
+			"damage_ownership": "primary_attack",
+			"boss_rule": "Boss 同目标衰减",
+			"limits": "同目标短时衰减",
+			"ui_feedback": "飞刀雨密集轨迹",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "覆盖清潮流 Lv2: attack_interval -12%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"tradeoff": "larger_area_lower_single_hit",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "飞刀雨密集轨迹",
+						"level_label": "Lv2",
+						"readable_effect": "attack_interval -12%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_rain:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "覆盖清潮流 Lv3: 每第 4 次投掷额外发射 1 把飞刀，额外飞刀伤害 -35%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"core_engine": "spawn_limited_derived_attack",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "飞刀雨密集轨迹",
+						"level_label": "Lv3",
+						"readable_effect": "每第 4 次投掷额外发射 1 把飞刀，额外飞刀伤害 -35%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_rain:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "覆盖清潮流 Lv4: 飞刀速度 +25%，射程 +10%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "increase_derived_attack_budget",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "飞刀雨密集轨迹",
+						"level_label": "Lv4",
+						"readable_effect": "飞刀速度 +25%，射程 +10%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_rain:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "覆盖清潮流 Lv5: 飞刀数量 +1，每把伤害 -25%；同目标 0.25s 内第二把伤害 60%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_chain_or_area_closure",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"capstone_chain_limiter",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "飞刀雨密集轨迹",
+						"level_label": "Lv5",
+						"readable_effect": "飞刀数量 +1，每把伤害 -25%；同目标 0.25s 内第二把伤害 60%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_rain:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "throwing_knife_belt_branch_execution",
+			"display_name": "处决飞刀",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "throwing_knife_belt_branch_execution",
+			"levels": {
+				"2": "对低于 35% HP 敌人伤害 +15%",
+				"3": "对精英 / Boss 连续命中 5 次施加处决标记",
+				"4": "处决标记目标受到飞刀暴击伤害 +25%",
+				"5": "Boss 低于 20% HP 时，每 1.5s 首次飞刀命中额外造成 22 reaction physical"
+			},
+			"damage_ownership": "primary_attack / reaction",
+			"boss_rule": "斩杀 Boss 1.5s CD",
+			"limits": "处决标记只对强敌稳定",
+			"ui_feedback": "处决标记图标",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "精准猎杀流 Lv2: 对低于 35% HP 敌人伤害 +15%",
+					"runtime_modifiers": [
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"targeting_bias": "elite_boss_high_hp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "处决标记图标",
+						"level_label": "Lv2",
+						"readable_effect": "对低于 35% HP 敌人伤害 +15%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_execution:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "精准猎杀流 Lv3: 对精英 / Boss 连续命中 5 次施加处决标记",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "same_target_mark_stack",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "处决标记图标",
+						"level_label": "Lv3",
+						"readable_effect": "对精英 / Boss 连续命中 5 次施加处决标记"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_execution:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "精准猎杀流 Lv4: 处决标记目标受到飞刀暴击伤害 +25%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "marked_target_direct_damage_amp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "处决标记图标",
+						"level_label": "Lv4",
+						"readable_effect": "处决标记目标受到飞刀暴击伤害 +25%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_execution:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "精准猎杀流 Lv5: Boss 低于 20% HP 时，每 1.5s 首次飞刀命中额外造成 22 reaction physical",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "full_stack_single_target_burst",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "处决标记图标",
+						"level_label": "Lv5",
+						"readable_effect": "Boss 低于 20% HP 时，每 1.5s 首次飞刀命中额外造成 22 reaction physical"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_execution:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "throwing_knife_belt_branch_lacerate",
+			"display_name": "割裂飞刀",
+			"archetype": "status_reaction",
+			"current_runtime_branch_id": "throwing_knife_belt_branch_bloodshadow",
+			"levels": {
+				"2": "飞刀命中目标时施加 1 层 wound，最多 5 层，持续 4s，同目标 0.3s CD",
+				"3": "暴击命中 wound 目标施加 1 层 bleed，1.0s CD",
+				"4": "bleed 对移动目标额外 +20%；wound 持续 +1s",
+				"5": "5 层 wound 目标被暴击时触发割裂，造成 18 reaction physical"
+			},
+			"damage_ownership": "status_dot / reaction",
+			"boss_rule": "bleed ×65%，割裂 ×75%",
+			"limits": "bleed 1.0s CD",
+			"ui_feedback": "流血和“割裂”提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "状态反应流 Lv2: 飞刀命中目标时施加 1 层 wound，最多 5 层，持续 4s，同目标 0.3s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"tradeoff": "lower_direct_damage_higher_status_pressure",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "流血和“割裂”提示",
+						"level_label": "Lv2",
+						"readable_effect": "飞刀命中目标时施加 1 层 wound，最多 5 层，持续 4s，同目标 0.3s CD"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_lacerate:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "状态反应流 Lv3: 暴击命中 wound 目标施加 1 层 bleed，1.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"reaction_damage_multiplier": 0.7,
+						"required_status_stacks": 3,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "status_threshold_reaction",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "流血和“割裂”提示",
+						"level_label": "Lv3",
+						"readable_effect": "暴击命中 wound 目标施加 1 层 bleed，1.0s CD"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_lacerate:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "状态反应流 Lv4: bleed 对移动目标额外 +20%；wound 持续 +1s",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "refresh_and_strengthen_status",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "流血和“割裂”提示",
+						"level_label": "Lv4",
+						"readable_effect": "bleed 对移动目标额外 +20%；wound 持续 +1s"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_lacerate:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "状态反应流 Lv5: 5 层 wound 目标被暴击时触发割裂，造成 18 reaction physical，Boss ×75%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"death_transfer_ratio": 0.5,
+						"reaction_chain_max_steps": 3,
+						"chain_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_death_or_multitarget_reaction_chain",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"death_reaction_source_filter",
+						"reaction_chain_limiter"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "流血和“割裂”提示",
+						"level_label": "Lv5",
+						"readable_effect": "5 层 wound 目标被暴击时触发割裂，造成 18 reaction physical，Boss ×75%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_lacerate:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "throwing_knife_belt_branch_retrieve_evasion",
+			"display_name": "回收闪避",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "throwing_knife_belt_branch_cloudpiercer",
+			"levels": {
+				"2": "击杀后下一次飞刀伤害 +20%",
+				"3": "飞刀击杀普通怪时，35% 概率立即追加 1 把回收飞刀",
+				"4": "回收飞刀优先低血目标，伤害 70%",
+				"5": "3s 内连续触发 3 次回收后，玩家获得 12% 移速和 8% 闪避，持续 2s；Boss 战改为每 6 次命中触发"
+			},
+			"damage_ownership": "primary_attack / special",
+			"boss_rule": "Boss 改为命中计数",
+			"limits": "回收飞刀不能再触发回收",
+			"ui_feedback": "回收飞刀折返轨迹",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "生存控制流 Lv2: 击杀后下一次飞刀伤害 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"survival_hook": "spawn_player_centered_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "回收飞刀折返轨迹",
+						"level_label": "Lv2",
+						"readable_effect": "击杀后下一次飞刀伤害 +20%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_retrieve_evasion:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "生存控制流 Lv3: 飞刀击杀普通怪时，35% 概率立即追加 1 把回收飞刀",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"control_strength": 0.25,
+						"control_duration": 0.6,
+						"boss_control_effectiveness": 0.35
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "near_player_control",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"boss_control_fallback"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "回收飞刀折返轨迹",
+						"level_label": "Lv3",
+						"readable_effect": "飞刀击杀普通怪时，35% 概率立即追加 1 把回收飞刀"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_retrieve_evasion:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "生存控制流 Lv4: 回收飞刀优先低血目标，伤害 70%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"player_damage_reduction": 0.12,
+						"player_buff_duration": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "grant_player_temporary_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "回收飞刀折返轨迹",
+						"level_label": "Lv4",
+						"readable_effect": "回收飞刀优先低血目标，伤害 70%"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_retrieve_evasion:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "生存控制流 Lv5: 3s 内连续触发 3 次回收后，玩家获得 12% 移速和 8% 闪避，持续 2s；Boss 战改为每 6 次命中触发",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "low_hp_emergency_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "回收飞刀折返轨迹",
+						"level_label": "Lv5",
+						"readable_effect": "3s 内连续触发 3 次回收后，玩家获得 12% 移速和 8% 闪避，持续 2s；Boss 战改为每 6 次命中触发"
+					},
+					"modifier_source": "weapon_branch:throwing_knife_belt_branch_retrieve_evasion:lv5"
+				}
+			}
+		}
+	]
+}

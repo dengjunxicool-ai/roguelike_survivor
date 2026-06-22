@@ -1,0 +1,233 @@
+{
+	"relics": [
+		{
+			"rarity": "rare",
+			"tags": [
+				"fire",
+				"reaction"
+			],
+			"trigger_condition": {
+				"event": "apply_status",
+				"status_id": "heat"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "ember_badge",
+			"display_name": "余烬徽章",
+			"description": "热量相关伤害提高。",
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "damage",
+						"element": [
+							"fire"
+						]
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"ice",
+				"control"
+			],
+			"trigger_condition": {
+				"event": "hit_chilled_enemy"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "icecrack_ring",
+			"display_name": "冰裂指环",
+			"description": "攻击寒冷目标时更容易暴击。",
+			"modifiers": [
+				{
+					"stat": "crit_chance",
+					"op": "add",
+					"value": 0.06,
+					"scope": {
+						"domain": "skill"
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "epic",
+			"tags": [
+				"lightning",
+				"chain"
+			],
+			"trigger_condition": {
+				"event": "shock_triggered"
+			},
+			"cooldown": 3,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "thunder_conductor",
+			"display_name": "雷导体",
+			"description": "触发电击后短暂强化投射速度。",
+			"modifiers": [
+				{
+					"stat": "projectile_speed",
+					"op": "multiplier_add",
+					"value": 0.15,
+					"scope": {
+						"domain": "skill"
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"physical",
+				"trap"
+			],
+			"trigger_condition": {
+				"event": "elite_reward"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "hunter_bone_whistle",
+			"display_name": "猎骨哨",
+			"description": "陷阱部署间隔降低。",
+			"modifiers": [
+				{
+					"stat": "trap_interval",
+					"op": "multiplier_add",
+					"value": -0.12,
+					"scope": {
+						"domain": "skill",
+						"tag": [
+							"trap"
+						]
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "epic",
+			"tags": [
+				"boss",
+				"damage"
+			],
+			"trigger_condition": {
+				"event": "boss_phase_start"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [
+				{
+					"stat": "damage_taken",
+					"op": "multiplier_add",
+					"value": 0.08,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"id": "shieldbreaker_covenant",
+			"display_name": "破盾契约",
+			"description": "Boss 战更强，但承伤提高。",
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.18,
+					"scope": {
+						"domain": "damage",
+						"target_type": [
+							"boss"
+						]
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"poison",
+				"map"
+			],
+			"trigger_condition": {
+				"event": "map_event",
+				"map_variable": "toxic_fog"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "toxic_fog_remnant_flask",
+			"display_name": "瘴雾残瓶",
+			"description": "毒相关伤害提高。",
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.15,
+					"scope": {
+						"domain": "damage",
+						"element": [
+							"poison"
+						]
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"acid"
+			],
+			"trigger_condition": {
+				"event": "apply_status",
+				"status_id": "corrosion"
+			},
+			"cooldown": 0,
+			"limit_rule": {},
+			"negative_modifier": [],
+			"id": "corrosion_nameplate",
+			"display_name": "腐蚀名牌",
+			"description": "腐蚀相关伤害提高。",
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "damage",
+						"element": [
+							"acid"
+						]
+					}
+				}
+			],
+			"unlock": {
+				"type": "default"
+			}
+		}
+	]
+}

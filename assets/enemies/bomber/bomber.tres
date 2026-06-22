@@ -1,0 +1,68 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://3mon5xehanlk"]
+
+[ext_resource type="Texture2D" uid="uid://dc23ew2fjb7ug" path="res://assets/enemies/bomber/9.png" id="1_gfd2f"]
+[ext_resource type="Texture2D" uid="uid://vmo1ssik37sx" path="res://assets/enemies/bomber/10.png" id="2_cqrhr"]
+[ext_resource type="Texture2D" uid="uid://c6b1eb1x3w0rc" path="res://assets/enemies/bomber/11.png" id="3_blo3n"]
+[ext_resource type="Texture2D" uid="uid://d1ycbenuui8oo" path="res://assets/enemies/bomber/12.png" id="4_2il4y"]
+[ext_resource type="Texture2D" uid="uid://fa5he21e3hpv" path="res://assets/enemies/bomber/1.png" id="5_gjjjn"]
+[ext_resource type="Texture2D" uid="uid://cir4f8y1den5d" path="res://assets/enemies/bomber/2.png" id="6_67rd5"]
+[ext_resource type="Texture2D" uid="uid://c6v2uhuh0wpa4" path="res://assets/enemies/bomber/3.png" id="7_mu7qq"]
+[ext_resource type="Texture2D" uid="uid://dsfnmoeer6ckl" path="res://assets/enemies/bomber/4.png" id="8_s2ewd"]
+[ext_resource type="Texture2D" uid="uid://7ovq54y6w47v" path="res://assets/enemies/bomber/5.png" id="9_v6khy"]
+[ext_resource type="Texture2D" uid="uid://du76akp6mi0hi" path="res://assets/enemies/bomber/6.png" id="10_wcurc"]
+[ext_resource type="Texture2D" uid="uid://b21k0pwusnpp4" path="res://assets/enemies/bomber/7.png" id="11_8k7c7"]
+[ext_resource type="Texture2D" uid="uid://j0uwr6w3edej" path="res://assets/enemies/bomber/8.png" id="12_odn80"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_gfd2f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_cqrhr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_blo3n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_2il4y")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_gjjjn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_67rd5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_mu7qq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_s2ewd")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_v6khy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_wcurc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_8k7c7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_odn80")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

@@ -1,0 +1,18 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Local assistant/tooling caches
+.agents/
+.codegraph/
+.codex/
+.tmp/
+.tmp_fire_tornado_gif/
+tmp/
+
+# Generated reports and exported builds
+reports/
+*.exe
+*.console.exe
+*.pck
+*.zip

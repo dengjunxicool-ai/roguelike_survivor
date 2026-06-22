@@ -1,0 +1,1145 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "hunter_bow",
+	"display_name": "猎弓",
+	"character_id": "ranger",
+	"starting_skill_id": "hunter_arrow",
+	"base_attack": {
+		"name": "箭矢",
+		"role": "远距离穿透投射物",
+		"state": "mark"
+	},
+	"branches": [
+		{
+			"branch_id": "hunter_bow_branch_cloud_volley",
+			"display_name": "穿云连射",
+			"archetype": "coverage_clear",
+			"current_runtime_branch_id": "hunter_bow_branch_volley",
+			"levels": {
+				"2": "穿透 +1，穿透衰减从 -15% 改为 -12%",
+				"3": "穿透命中 3 个目标后，末端爆出 3 枚箭片，每枚 6 伤害",
+				"4": "attack_interval -10%，箭速 +20%",
+				"5": "每第 3 箭变为穿云箭，穿透无上限但每次 -18%，最多命中 8 目标"
+			},
+			"damage_ownership": "primary_attack / special",
+			"boss_rule": "Boss 无穿透收益",
+			"limits": "最大 8 目标",
+			"ui_feedback": "长穿透线和箭片",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "覆盖清潮流 Lv2: 穿透 +1，穿透衰减从 -15% 改为 -12%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"tradeoff": "larger_area_lower_single_hit",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "长穿透线和箭片",
+						"level_label": "Lv2",
+						"readable_effect": "穿透 +1，穿透衰减从 -15% 改为 -12%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_cloud_volley:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "覆盖清潮流 Lv3: 穿透命中 3 个目标后，末端爆出 3 枚箭片，每枚 6 伤害",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"core_engine": "spawn_limited_derived_attack",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "长穿透线和箭片",
+						"level_label": "Lv3",
+						"readable_effect": "穿透命中 3 个目标后，末端爆出 3 枚箭片，每枚 6 伤害"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_cloud_volley:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "覆盖清潮流 Lv4: attack_interval -10%，箭速 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "increase_derived_attack_budget",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "长穿透线和箭片",
+						"level_label": "Lv4",
+						"readable_effect": "attack_interval -10%，箭速 +20%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_cloud_volley:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "覆盖清潮流 Lv5: 每第 3 箭变为穿云箭，穿透无上限但每次 -18%，最多命中 8 目标",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_chain_or_area_closure",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"capstone_chain_limiter",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "长穿透线和箭片",
+						"level_label": "Lv5",
+						"readable_effect": "每第 3 箭变为穿云箭，穿透无上限但每次 -18%，最多命中 8 目标"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_cloud_volley:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "hunter_bow_branch_eagle_mark",
+			"display_name": "鹰眼标记",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "hunter_bow_branch_snipe",
+			"levels": {
+				"2": "猎弓命中精英 / Boss 时施加 eagle_mark，持续 6s；同一时间最多 2 个目标",
+				"3": "eagle_mark 目标受到猎弓主攻击伤害 +15%",
+				"4": "命中标记目标时 25% 概率不消耗本次攻击间隔，2.0s CD",
+				"5": "对 Boss 的 eagle_mark 目标每 6 次命中触发鹰眼射击，造成 36 projectile_heavy 伤害"
+			},
+			"damage_ownership": "primary_attack",
+			"boss_rule": "Boss 全额生效",
+			"limits": "鹰眼射击每 6 次命中",
+			"ui_feedback": "明显标记准星",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "精准猎杀流 Lv2: 猎弓命中精英 / Boss 时施加 eagle_mark，持续 6s；同一时间最多 2 个目标",
+					"runtime_modifiers": [
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"targeting_bias": "elite_boss_high_hp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "明显标记准星",
+						"level_label": "Lv2",
+						"readable_effect": "猎弓命中精英 / Boss 时施加 eagle_mark，持续 6s；同一时间最多 2 个目标"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_eagle_mark:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "精准猎杀流 Lv3: 标记目标受到猎弓主攻击伤害 +15%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "same_target_mark_stack",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "明显标记准星",
+						"level_label": "Lv3",
+						"readable_effect": "标记目标受到猎弓主攻击伤害 +15%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_eagle_mark:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "精准猎杀流 Lv4: 命中标记目标时 25% 概率不消耗本次攻击间隔，2.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "marked_target_direct_damage_amp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "明显标记准星",
+						"level_label": "Lv4",
+						"readable_effect": "命中标记目标时 25% 概率不消耗本次攻击间隔，2.0s CD"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_eagle_mark:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "精准猎杀流 Lv5: 对 Boss 标记目标每 6 次命中触发鹰眼射击，造成 36 projectile_heavy 伤害",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "full_stack_single_target_burst",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "明显标记准星",
+						"level_label": "Lv5",
+						"readable_effect": "对 Boss 标记目标每 6 次命中触发鹰眼射击，造成 36 projectile_heavy 伤害"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_eagle_mark:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "hunter_bow_branch_explosive_rain",
+			"display_name": "爆裂箭雨",
+			"archetype": "status_reaction",
+			"current_runtime_branch_id": "hunter_bow_branch_explosive",
+			"levels": {
+				"2": "箭矢命中后爆炸，半径 75，爆炸伤害为主箭 35%",
+				"3": "爆炸命中的普通怪获得 burst_mark，持续 3s，最多 3 目标",
+				"4": "爆炸半径 +20%，最多命中 6 目标",
+				"5": "burst_mark 目标死亡时触发小爆炸"
+			},
+			"damage_ownership": "primary_attack / reaction",
+			"boss_rule": "小爆炸 Boss ×75%",
+			"limits": "死亡爆炸不连锁",
+			"ui_feedback": "爆裂箭片视觉",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "状态反应流 Lv2: 箭矢命中后爆炸，半径 75，爆炸伤害为主箭 35%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"tradeoff": "lower_direct_damage_higher_status_pressure",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "爆裂箭片视觉",
+						"level_label": "Lv2",
+						"readable_effect": "箭矢命中后爆炸，半径 75，爆炸伤害为主箭 35%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_explosive_rain:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "状态反应流 Lv3: 爆炸命中的普通怪获得 burst_mark，持续 3s，最多 3 目标",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"reaction_damage_multiplier": 0.7,
+						"required_status_stacks": 3,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "status_threshold_reaction",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "爆裂箭片视觉",
+						"level_label": "Lv3",
+						"readable_effect": "爆炸命中的普通怪获得 burst_mark，持续 3s，最多 3 目标"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_explosive_rain:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "状态反应流 Lv4: 爆炸半径 +20%，最多命中 6 目标",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "refresh_and_strengthen_status",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "爆裂箭片视觉",
+						"level_label": "Lv4",
+						"readable_effect": "爆炸半径 +20%，最多命中 6 目标"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_explosive_rain:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "状态反应流 Lv5: 标记目标死亡触发小爆炸，0.25s 同源 CD，不能连锁",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"death_transfer_ratio": 0.5,
+						"reaction_chain_max_steps": 3,
+						"chain_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_death_or_multitarget_reaction_chain",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"death_reaction_source_filter",
+						"reaction_chain_limiter"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "爆裂箭片视觉",
+						"level_label": "Lv5",
+						"readable_effect": "标记目标死亡触发小爆炸，0.25s 同源 CD，不能连锁"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_explosive_rain:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "hunter_bow_branch_windstep",
+			"display_name": "风步猎弓",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "hunter_bow_branch_boomerang",
+			"levels": {
+				"2": "移动时箭速 +20%",
+				"3": "移动 2.5s 后进入风步，猎弓 attack_interval -12%",
+				"4": "停止移动后保留风步 0.6s",
+				"5": "风步状态下每第 4 箭发射双箭，每箭伤害 -25%"
+			},
+			"damage_ownership": "primary_attack / special",
+			"boss_rule": "Boss 正常",
+			"limits": "需持续移动",
+			"ui_feedback": "风步轨迹和节奏提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "生存控制流 Lv2: 移动时箭速 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"survival_hook": "spawn_player_centered_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "风步轨迹和节奏提示",
+						"level_label": "Lv2",
+						"readable_effect": "移动时箭速 +20%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_windstep:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "生存控制流 Lv3: 移动 2.5s 后进入风步，猎弓 attack_interval -12%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"control_strength": 0.25,
+						"control_duration": 0.6,
+						"boss_control_effectiveness": 0.35
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "near_player_control",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"boss_control_fallback"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "风步轨迹和节奏提示",
+						"level_label": "Lv3",
+						"readable_effect": "移动 2.5s 后进入风步，猎弓 attack_interval -12%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_windstep:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "生存控制流 Lv4: 停止移动后保留风步 0.6s",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"player_damage_reduction": 0.12,
+						"player_buff_duration": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "grant_player_temporary_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "风步轨迹和节奏提示",
+						"level_label": "Lv4",
+						"readable_effect": "停止移动后保留风步 0.6s"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_windstep:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "生存控制流 Lv5: 风步状态下每第 4 箭发射双箭，每箭伤害 -25%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "low_hp_emergency_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "风步轨迹和节奏提示",
+						"level_label": "Lv5",
+						"readable_effect": "风步状态下每第 4 箭发射双箭，每箭伤害 -25%"
+					},
+					"modifier_source": "weapon_branch:hunter_bow_branch_windstep:lv5"
+				}
+			}
+		}
+	]
+}

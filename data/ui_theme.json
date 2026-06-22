@@ -1,0 +1,61 @@
+{
+	"tokens": {
+		"colors": {
+			"screen_background": "#0e0f12f5",
+			"modal_background": "#06070bee",
+			"panel": "#0d0f15b8",
+			"panel_strong": "#151923f2",
+			"stroke": "#99b3eb38",
+			"accent": "#bdb26be6",
+			"text": "#ffffffff",
+			"text_muted": "#c7d1ebff"
+		},
+		"radius": {
+			"small": 6,
+			"medium": 8,
+			"large": 10
+		},
+		"spacing": {
+			"small": 8,
+			"medium": 12,
+			"large": 18
+		}
+	},
+	"choice_cards": {
+		"default_background_texture": "res://assets/ui/skills/skill_card_bg.png"
+	},
+	"buttons": {
+		"default": {
+			"font_color": "#ffffff",
+			"font_disabled_color": "#ffffff99",
+			"content_margin": {
+				"left": 14,
+				"top": 8,
+				"right": 14,
+				"bottom": 8
+			},
+			"corner_radius": 6,
+			"border_width": 1,
+			"normal": {
+				"background_color": "#263044f2",
+				"border_color": "#556071e6",
+				"background_texture": ""
+			},
+			"hover": {
+				"background_color": "#31405df5",
+				"border_color": "#8ea6ccff",
+				"background_texture": ""
+			},
+			"pressed": {
+				"background_color": "#1d2538ff",
+				"border_color": "#b2c8eeff",
+				"background_texture": ""
+			},
+			"disabled": {
+				"background_color": "#1b202a99",
+				"border_color": "#40465399",
+				"background_texture": ""
+			}
+		}
+	}
+}

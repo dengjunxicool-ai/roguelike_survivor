@@ -1,0 +1,68 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://dmps6rbnt4prw"]
+
+[ext_resource type="Texture2D" uid="uid://blflwomwtxrjb" path="res://assets/enemies/archer_skeleton/9.png" id="1_oc5ie"]
+[ext_resource type="Texture2D" uid="uid://dfgi2kkix61rt" path="res://assets/enemies/archer_skeleton/10.png" id="2_n3dik"]
+[ext_resource type="Texture2D" uid="uid://lg78ij01fnlf" path="res://assets/enemies/archer_skeleton/11.png" id="3_pri2l"]
+[ext_resource type="Texture2D" uid="uid://d0b47a45jis6g" path="res://assets/enemies/archer_skeleton/12.png" id="4_6akcj"]
+[ext_resource type="Texture2D" uid="uid://cb2pdwxyx0b2f" path="res://assets/enemies/archer_skeleton/1.png" id="5_gcndm"]
+[ext_resource type="Texture2D" uid="uid://txj2g84y7c6v" path="res://assets/enemies/archer_skeleton/2.png" id="6_gpo3v"]
+[ext_resource type="Texture2D" uid="uid://d3artdte54lm2" path="res://assets/enemies/archer_skeleton/3.png" id="7_m8td7"]
+[ext_resource type="Texture2D" uid="uid://dd6gfcrfsrje7" path="res://assets/enemies/archer_skeleton/4.png" id="8_sn2yc"]
+[ext_resource type="Texture2D" uid="uid://exyw7bipcyng" path="res://assets/enemies/archer_skeleton/5.png" id="9_23fin"]
+[ext_resource type="Texture2D" uid="uid://cg3rwg6ww0lkd" path="res://assets/enemies/archer_skeleton/6.png" id="10_mwcsb"]
+[ext_resource type="Texture2D" uid="uid://e8v4qfkuwcen" path="res://assets/enemies/archer_skeleton/7.png" id="11_hihqg"]
+[ext_resource type="Texture2D" uid="uid://c0y5fl2egbxmq" path="res://assets/enemies/archer_skeleton/8.png" id="12_yh4iq"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_oc5ie")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_n3dik")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_pri2l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_6akcj")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_gcndm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_gpo3v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_m8td7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_sn2yc")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_23fin")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_mwcsb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_hihqg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_yh4iq")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

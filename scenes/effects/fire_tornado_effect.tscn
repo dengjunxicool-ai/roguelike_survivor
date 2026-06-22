@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/fire_tornado_effect.gd" id="1_8d45t"]
+
+[node name="FireTornadoEffect" type="Node2D"]
+z_index = 12
+script = ExtResource("1_8d45t")
+
+[node name="HeatCore" type="Node2D" parent="."]
+z_index = 1
+
+[node name="LowerGlow" type="Polygon2D" parent="HeatCore"]
+color = Color(1, 0.239216, 0.0392157, 0.16)
+polygon = PackedVector2Array(0, -40, 23, -28, 40, 0, 23, 28, 0, 40, -23, 28, -40, 0, -23, -28)
+
+[node name="UpperGlow" type="Polygon2D" parent="HeatCore"]
+position = Vector2(0, -52)
+scale = Vector2(0.72, 0.72)
+color = Color(1, 0.737255, 0.160784, 0.12)
+polygon = PackedVector2Array(0, -32, 18, -23, 32, 0, 18, 23, 0, 32, -18, 23, -32, 0, -18, -23)
+
+[node name="BaseFireRing" type="GPUParticles2D" parent="."]
+z_index = 2
+
+[node name="SpiralEmitterA" type="GPUParticles2D" parent="."]
+z_index = 3
+
+[node name="SpiralEmitterB" type="GPUParticles2D" parent="."]
+z_index = 4
+
+[node name="EmberSpray" type="GPUParticles2D" parent="."]
+z_index = 5
+
+[node name="SmokeWisps" type="GPUParticles2D" parent="."]
+z_index = 1
+
+[node name="OuterEmbers" type="GPUParticles2D" parent="."]
+z_index = 6

@@ -1,0 +1,136 @@
+{
+	"gods": [
+		{
+			"id": "fire",
+			"display_name": "火焰",
+			"title": "火之神",
+			"description": "以燃烧、爆发、余烬循环和凤凰复生为核心的进攻神系。第一版已提供完整可学习技能数据。",
+			"tags": [
+				"fire",
+				"burn",
+				"burst",
+				"implemented"
+			],
+			"color": {
+				"hex": "#ff6a1a",
+				"rgba": [
+					1,
+					0.42,
+					0.1,
+					1
+				]
+			},
+			"implemented": true
+		},
+		{
+			"id": "thunder",
+			"display_name": "雷霆",
+			"title": "雷之神",
+			"description": "规划中的电荷、跳电、过载和高速触发神系。",
+			"tags": [
+				"thunder",
+				"charge",
+				"chain",
+				"planned"
+			],
+			"color": {
+				"hex": "#5bbcff",
+				"rgba": [
+					0.36,
+					0.74,
+					1,
+					1
+				]
+			},
+			"implemented": false
+		},
+		{
+			"id": "frost",
+			"display_name": "寒霜",
+			"title": "冰之神",
+			"description": "规划中的冻结、减速、碎冰和控场神系。",
+			"tags": [
+				"frost",
+				"slow",
+				"control",
+				"planned"
+			],
+			"color": {
+				"hex": "#8ee8ff",
+				"rgba": [
+					0.56,
+					0.91,
+					1,
+					1
+				]
+			},
+			"implemented": false
+		},
+		{
+			"id": "curse",
+			"display_name": "诅咒",
+			"title": "暗之神",
+			"description": "规划中的诅咒、债务、牺牲和暗影清算神系。",
+			"tags": [
+				"curse",
+				"shadow",
+				"debt",
+				"planned"
+			],
+			"color": {
+				"hex": "#8b4dff",
+				"rgba": [
+					0.55,
+					0.3,
+					1,
+					1
+				]
+			},
+			"implemented": false
+		},
+		{
+			"id": "holy",
+			"display_name": "神圣",
+			"title": "圣之神",
+			"description": "规划中的治疗、护盾、圣印和审判神系。",
+			"tags": [
+				"holy",
+				"shield",
+				"judgement",
+				"planned"
+			],
+			"color": {
+				"hex": "#ffd86b",
+				"rgba": [
+					1,
+					0.85,
+					0.42,
+					1
+				]
+			},
+			"implemented": false
+		},
+		{
+			"id": "chaos",
+			"display_name": "混沌",
+			"title": "混沌之神",
+			"description": "规划中的随机、熵变、多神系混搭和概率强化神系。",
+			"tags": [
+				"chaos",
+				"random",
+				"entropy",
+				"planned"
+			],
+			"color": {
+				"hex": "#d35cff",
+				"rgba": [
+					0.83,
+					0.36,
+					1,
+					1
+				]
+			},
+			"implemented": false
+		}
+	]
+}

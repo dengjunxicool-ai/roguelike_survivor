@@ -1,0 +1,907 @@
+{
+	"rarity_weights": {
+		"common": 60,
+		"rare": 28,
+		"epic": 10,
+		"legendary": 2
+	},
+	"curse_choices": [
+		{
+			"rarity": "rare",
+			"tags": [
+				"threat"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "curse_greedy_horde",
+			"display_name": "贪婪怪潮",
+			"description": "贪婪怪潮",
+			"enabled": true,
+			"base_weight": 20,
+			"weight_decay": 0.85,
+			"max_level": 1,
+			"modifiers": [
+				{
+					"stat": "enemy_spawn_count",
+					"op": "multiplier_add",
+					"value": 0.2,
+					"scope": {
+						"domain": "enemy_spawn"
+					}
+				},
+				{
+					"stat": "coin_gain",
+					"op": "multiplier_add",
+					"value": 0.25,
+					"scope": {
+						"domain": "economy"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "enemy_spawn_count",
+						"op": "multiplier_add",
+						"value": 0.2,
+						"scope": {
+							"domain": "enemy_spawn"
+						}
+					},
+					{
+						"stat": "coin_gain",
+						"op": "multiplier_add",
+						"value": 0.25,
+						"scope": {
+							"domain": "economy"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"贪婪怪潮"
+			]
+		},
+		{
+			"rarity": "epic",
+			"tags": [
+				"boss",
+				"threat"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "curse_boss_bounty",
+			"display_name": "Boss 悬赏",
+			"description": "Boss 悬赏",
+			"enabled": true,
+			"base_weight": 12,
+			"weight_decay": 0.85,
+			"max_level": 1,
+			"modifiers": [
+				{
+					"stat": "boss_hp",
+					"op": "multiplier_add",
+					"value": 0.2,
+					"scope": {
+						"domain": "enemy_spawn"
+					}
+				},
+				{
+					"stat": "soul_gain",
+					"op": "multiplier_add",
+					"value": 0.25,
+					"scope": {
+						"domain": "economy"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "boss_hp",
+						"op": "multiplier_add",
+						"value": 0.2,
+						"scope": {
+							"domain": "enemy_spawn"
+						}
+					},
+					{
+						"stat": "soul_gain",
+						"op": "multiplier_add",
+						"value": 0.25,
+						"scope": {
+							"domain": "economy"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"Boss 悬赏"
+			]
+		}
+	],
+	"permanent_upgrades": [
+		{
+			"rarity": "common",
+			"tags": [
+				"meta",
+				"survival"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_health",
+			"display_name": "生命强化",
+			"description": "生命上限增加20",
+			"enabled": true,
+			"base_weight": 100,
+			"weight_decay": 0.85,
+			"max_level": 20,
+			"modifiers": [
+				{
+					"stat": "max_hp",
+					"op": "add",
+					"value": 20,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "max_hp",
+						"op": "add",
+						"value": 20,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"生命强化"
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"meta",
+				"weapon"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_attack",
+			"display_name": "攻击强化",
+			"description": "攻击强化+1.5%",
+			"enabled": true,
+			"base_weight": 100,
+			"weight_decay": 0.85,
+			"max_level": 15,
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.015,
+					"scope": {
+						"domain": "damage"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "damage",
+						"op": "multiplier_add",
+						"value": 0.015,
+						"scope": {
+							"domain": "damage"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"攻击强化"
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"meta",
+				"economy"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_pickup",
+			"display_name": "拾取强化",
+			"description": "拾取范围+40%",
+			"enabled": true,
+			"base_weight": 90,
+			"weight_decay": 0.85,
+			"max_level": 40,
+			"modifiers": [
+				{
+					"stat": "pickup_radius",
+					"op": "multiplier_add",
+					"value": 0.04,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "pickup_radius",
+						"op": "multiplier_add",
+						"value": 0.04,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"拾取强化"
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"meta",
+				"rare"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_luck",
+			"display_name": "幸运强化",
+			"description": "幸运值+1",
+			"enabled": true,
+			"base_weight": 50,
+			"weight_decay": 0.85,
+			"max_level": 10,
+			"modifiers": [
+				{
+					"stat": "luck",
+					"op": "add",
+					"value": 0.01,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "luck",
+						"op": "add",
+						"value": 0.01,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"幸运强化"
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"meta",
+				"boss"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_combat_intuition",
+			"display_name": "战斗直觉",
+			"description": "BOSS增伤1",
+			"enabled": true,
+			"base_weight": 30,
+			"weight_decay": 0.85,
+			"max_level": 1,
+			"modifiers": [
+				{
+					"stat": "pre_boss_blessing_options",
+					"op": "add",
+					"value": 1,
+					"scope": {
+						"domain": "progression"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "pre_boss_blessing_options",
+						"op": "add",
+						"value": 1,
+						"scope": {
+							"domain": "progression"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"战斗直觉"
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"meta",
+				"weapon"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "meta_stable_growth",
+			"display_name": "稳定成长",
+			"description": "稳定成长",
+			"enabled": true,
+			"base_weight": 30,
+			"weight_decay": 0.85,
+			"max_level": 10,
+			"modifiers": [
+				{
+					"stat": "main_progression_weight",
+					"op": "add",
+					"value": 0.1,
+					"scope": {
+						"domain": "progression"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "main_progression_weight",
+						"op": "add",
+						"value": 0.1,
+						"scope": {
+							"domain": "progression"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"稳定成长"
+			]
+		}
+	],
+	"level_up_upgrades": [
+		{
+			"rarity": "common",
+			"tags": [
+				"weapon",
+				"adaptive",
+				"damage"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "weapon_damage_focus",
+			"display_name": "武器伤害",
+			"description": "主武器伤害提高。",
+			"enabled": true,
+			"base_weight": 100,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.08,
+					"scope": {
+						"domain": "damage"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "damage",
+						"op": "multiplier_add",
+						"value": 0.08,
+						"scope": {
+							"domain": "damage"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"主武器伤害提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.08,
+					"scope": {
+						"domain": "skill"
+					}
+				}
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"weapon",
+				"adaptive",
+				"speed"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "weapon_attack_speed",
+			"display_name": "武器节奏",
+			"description": "主武器攻击频率提高。",
+			"enabled": true,
+			"base_weight": 90,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "attack_speed",
+					"op": "multiplier_add",
+					"value": 0.08,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "attack_speed",
+						"op": "multiplier_add",
+						"value": 0.08,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"主武器攻击频率提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "attack_speed",
+					"op": "multiplier_add",
+					"value": 0.08,
+					"scope": {
+						"domain": "skill"
+					}
+				}
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"weapon",
+				"adaptive",
+				"area"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "weapon_area",
+			"display_name": "范围扩张",
+			"description": "主武器影响范围提高。",
+			"enabled": true,
+			"base_weight": 70,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "radius",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "radius",
+						"op": "multiplier_add",
+						"value": 0.12,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"主武器影响范围提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "radius",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"weapon",
+				"adaptive",
+				"status"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "weapon_status",
+			"display_name": "状态增幅",
+			"description": "状态持续时间提高。",
+			"enabled": true,
+			"base_weight": 55,
+			"weight_decay": 0.85,
+			"max_level": 4,
+			"modifiers": [
+				{
+					"stat": "status_duration",
+					"op": "multiplier_add",
+					"value": 0.15,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "status_duration",
+						"op": "multiplier_add",
+						"value": 0.15,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"状态持续时间提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "status_duration",
+					"op": "multiplier_add",
+					"value": 0.15,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"survival"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "survival_health",
+			"display_name": "生命强化",
+			"description": "最大生命提高。",
+			"enabled": true,
+			"base_weight": 85,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "max_hp",
+					"op": "add",
+					"value": 18,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "max_hp",
+						"op": "add",
+						"value": 18,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"最大生命提高。"
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"survival"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "survival_defense",
+			"display_name": "防御强化",
+			"description": "防御提高。",
+			"enabled": true,
+			"base_weight": 70,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "armor",
+					"op": "add",
+					"value": 2,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "armor",
+						"op": "add",
+						"value": 2,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"防御提高。"
+			]
+		},
+		{
+			"rarity": "common",
+			"tags": [
+				"survival",
+				"economy"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "survival_pickup",
+			"display_name": "拾取强化",
+			"description": "拾取范围提高。",
+			"enabled": true,
+			"base_weight": 65,
+			"weight_decay": 0.85,
+			"max_level": 5,
+			"modifiers": [
+				{
+					"stat": "pickup_radius",
+					"op": "add",
+					"value": 18,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "pickup_radius",
+						"op": "add",
+						"value": 18,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"拾取范围提高。"
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"survival",
+				"heal"
+			],
+			"required_weapon_tags": [],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "survival_heal",
+			"display_name": "应急治疗",
+			"description": "立即恢复生命。",
+			"enabled": true,
+			"base_weight": 35,
+			"weight_decay": 0.85,
+			"max_level": 3,
+			"modifiers": [
+				{
+					"stat": "heal",
+					"op": "add",
+					"value": 30,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "heal",
+						"op": "add",
+						"value": 30,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"立即恢复生命。"
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"boss",
+				"weapon"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "boss_damage",
+			"display_name": "Boss 压制",
+			"description": "对 Boss 伤害提高。",
+			"enabled": true,
+			"base_weight": 45,
+			"weight_decay": 0.85,
+			"max_level": 3,
+			"modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "damage",
+						"target_type": [
+							"boss"
+						]
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "damage",
+						"op": "multiplier_add",
+						"value": 0.12,
+						"scope": {
+							"domain": "damage",
+							"target_type": [
+								"boss"
+							]
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"对 Boss 伤害提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "damage",
+					"op": "multiplier_add",
+					"value": 0.12,
+					"scope": {
+						"domain": "damage",
+						"target_type": [
+							"boss"
+						]
+					}
+				}
+			]
+		},
+		{
+			"rarity": "rare",
+			"tags": [
+				"rare",
+				"weapon",
+				"crit"
+			],
+			"required_weapon_tags": [
+				"weapon"
+			],
+			"required_branch_id": "",
+			"required_player_state": {},
+			"exclude_tags": [],
+			"id": "rare_crit",
+			"display_name": "精准打击",
+			"description": "暴击率提高。",
+			"enabled": true,
+			"base_weight": 40,
+			"weight_decay": 0.85,
+			"max_level": 4,
+			"modifiers": [
+				{
+					"stat": "crit_chance",
+					"op": "add",
+					"value": 0.08,
+					"scope": {
+						"domain": "player"
+					}
+				}
+			],
+			"level_modifiers": [
+				[
+					{
+						"stat": "crit_chance",
+						"op": "add",
+						"value": 0.08,
+						"scope": {
+							"domain": "player"
+						}
+					}
+				]
+			],
+			"level_descriptions": [
+				"暴击率提高。"
+			],
+			"skill_modifiers": [
+				{
+					"stat": "crit_chance",
+					"op": "add",
+					"value": 0.08,
+					"scope": {
+						"domain": "skill"
+					}
+				}
+			]
+		}
+	]
+}

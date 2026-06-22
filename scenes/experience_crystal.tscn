@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dj0pi8e3jb47m"]
+
+[ext_resource type="Script" uid="uid://b5ihr8w8sbeam" path="res://scripts/drops/exp_gem.gd" id="1_lm35p"]
+[ext_resource type="Texture2D" uid="uid://no2y3kkl1c8k" path="res://assets/icon/exp.png" id="2_c1oh3"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xda27"]
+radius = 16.0
+
+[node name="ExperienceCrystal" type="Area2D" unique_id=619750088]
+script = ExtResource("1_lm35p")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=920322056]
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("2_c1oh3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=939427998]
+shape = SubResource("CircleShape2D_xda27")

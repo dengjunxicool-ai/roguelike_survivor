@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dr01ug3ixfehx"]
+
+[ext_resource type="PackedScene" uid="uid://bxxmyd7pal4o3" path="res://scenes/ui/ui_prototype.tscn" id="1_qytja"]
+
+[node name="AppBootstrap" type="Node" unique_id=167997749]
+
+[node name="UIManager" parent="." unique_id=2092238991 instance=ExtResource("1_qytja")]

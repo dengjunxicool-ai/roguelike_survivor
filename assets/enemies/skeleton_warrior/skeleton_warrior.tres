@@ -1,0 +1,64 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://b6dadx72r8aji"]
+
+[ext_resource type="Texture2D" uid="uid://2eqw27i8hwp4" path="res://assets/enemies/skeleton_warrior/9.png" id="1_mnyd1"]
+[ext_resource type="Texture2D" uid="uid://bkvn1tuec1nl6" path="res://assets/enemies/skeleton_warrior/10.png" id="2_srct0"]
+[ext_resource type="Texture2D" uid="uid://d1il4tmo5fg22" path="res://assets/enemies/skeleton_warrior/11.png" id="3_dmxhi"]
+[ext_resource type="Texture2D" uid="uid://dyhfwiltbq0lw" path="res://assets/enemies/skeleton_warrior/1.png" id="4_q85ml"]
+[ext_resource type="Texture2D" uid="uid://bx0krr5o8k1w0" path="res://assets/enemies/skeleton_warrior/2.png" id="5_khsmy"]
+[ext_resource type="Texture2D" uid="uid://do1ireeojun0i" path="res://assets/enemies/skeleton_warrior/3.png" id="6_6v5ku"]
+[ext_resource type="Texture2D" uid="uid://bbrvpe64p0aa1" path="res://assets/enemies/skeleton_warrior/4.png" id="7_vslnq"]
+[ext_resource type="Texture2D" uid="uid://rgpt71lc3cy5" path="res://assets/enemies/skeleton_warrior/5.png" id="8_rhfxk"]
+[ext_resource type="Texture2D" uid="uid://bcacbvpxyd6dn" path="res://assets/enemies/skeleton_warrior/6.png" id="9_c1pw2"]
+[ext_resource type="Texture2D" uid="uid://b605x4ycfidwn" path="res://assets/enemies/skeleton_warrior/7.png" id="10_koj7f"]
+[ext_resource type="Texture2D" uid="uid://bx21uvnpeq3a2" path="res://assets/enemies/skeleton_warrior/8.png" id="11_yyjg6"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_mnyd1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_srct0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_dmxhi")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_q85ml")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_khsmy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_6v5ku")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_vslnq")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_rhfxk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_c1pw2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_koj7f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_yyjg6")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

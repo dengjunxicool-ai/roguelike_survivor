@@ -1,0 +1,64 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://cae0nkt3wvvdh"]
+
+[ext_resource type="Texture2D" uid="uid://r7mb72ybl20w" path="res://assets/enemies/bat/9.png" id="1_hw540"]
+[ext_resource type="Texture2D" uid="uid://5nvj3sm5sbfs" path="res://assets/enemies/bat/10.png" id="2_ux1nu"]
+[ext_resource type="Texture2D" uid="uid://dnlmohe8xa2v7" path="res://assets/enemies/bat/11.png" id="3_hflj5"]
+[ext_resource type="Texture2D" uid="uid://xusu5lgq6sty" path="res://assets/enemies/bat/1.png" id="4_mrid6"]
+[ext_resource type="Texture2D" uid="uid://bykp2tn608oyv" path="res://assets/enemies/bat/2.png" id="5_eoqnl"]
+[ext_resource type="Texture2D" uid="uid://1qfcee4cwprv" path="res://assets/enemies/bat/3.png" id="6_feacs"]
+[ext_resource type="Texture2D" uid="uid://bg3irm4olaj6c" path="res://assets/enemies/bat/4.png" id="7_fr3a7"]
+[ext_resource type="Texture2D" uid="uid://ju5j310m6eji" path="res://assets/enemies/bat/5.png" id="8_feysg"]
+[ext_resource type="Texture2D" uid="uid://btpn3b1fao6mc" path="res://assets/enemies/bat/6.png" id="9_04kut"]
+[ext_resource type="Texture2D" uid="uid://1ffywqty4122" path="res://assets/enemies/bat/7.png" id="10_a0c7u"]
+[ext_resource type="Texture2D" uid="uid://d2yxdka15oaph" path="res://assets/enemies/bat/8.png" id="11_80ff2"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_hw540")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ux1nu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_hflj5")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_mrid6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_eoqnl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_feacs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_fr3a7")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_feysg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_04kut")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_a0c7u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_80ff2")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

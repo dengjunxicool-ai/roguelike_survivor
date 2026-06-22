@@ -1,0 +1,52 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://dp3d1jsdt8ts0"]
+
+[ext_resource type="Texture2D" uid="uid://cean3fylyfdwh" path="res://assets/enemies/skeleton_priest/9.png" id="1_xavv5"]
+[ext_resource type="Texture2D" uid="uid://cn7vtpiqrv47l" path="res://assets/enemies/skeleton_priest/10.png" id="2_h2fnd"]
+[ext_resource type="Texture2D" uid="uid://0xf6us5mf8n3" path="res://assets/enemies/skeleton_priest/11.png" id="3_7a28l"]
+[ext_resource type="Texture2D" uid="uid://c8ge1iu1hwryr" path="res://assets/enemies/skeleton_priest/12.png" id="4_nv8dk"]
+[ext_resource type="Texture2D" uid="uid://cjg3yhl06rx0k" path="res://assets/enemies/skeleton_priest/1.png" id="5_1pkmh"]
+[ext_resource type="Texture2D" uid="uid://cjgtsf6n24tka" path="res://assets/enemies/skeleton_priest/2.png" id="6_riqqm"]
+[ext_resource type="Texture2D" uid="uid://dd7qo560gv7a8" path="res://assets/enemies/skeleton_priest/3.png" id="7_tn7ew"]
+[ext_resource type="Texture2D" uid="uid://cogwgnvr646eu" path="res://assets/enemies/skeleton_priest/4.png" id="8_7mscs"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_xavv5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_h2fnd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_7a28l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_nv8dk")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_1pkmh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_riqqm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_tn7ew")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_7mscs")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]

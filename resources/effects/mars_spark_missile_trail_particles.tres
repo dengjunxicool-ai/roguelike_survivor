@@ -1,0 +1,31 @@
+[gd_resource type="ParticleProcessMaterial" format=3 uid="uid://cafdwq4blgip6"]
+
+[sub_resource type="Gradient" id="Gradient_trail_fire"]
+offsets = PackedFloat32Array(0, 0.2, 0.5, 0.8, 1)
+colors = PackedColorArray(1, 0.94, 0.58, 1, 1, 0.68, 0.12, 0.95, 1, 0.28, 0.035, 0.72, 0.34, 0.035, 0.012, 0.36, 0.06, 0, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_trail_fire"]
+gradient = SubResource("Gradient_trail_fire")
+
+[sub_resource type="Curve" id="Curve_trail_scale"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.18, 0.58), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_trail_scale"]
+curve = SubResource("Curve_trail_scale")
+
+[resource]
+emission_shape = 1
+emission_sphere_radius = 4.2
+direction = Vector3(-1, 0, 0)
+spread = 15.0
+initial_velocity_min = 48.0
+initial_velocity_max = 150.0
+angular_velocity_min = -160.0
+angular_velocity_max = 160.0
+gravity = Vector3(0, 0, 0)
+damping_min = 14.0
+damping_max = 42.0
+scale_max = 2.0
+scale_curve = SubResource("CurveTexture_trail_scale")
+color_ramp = SubResource("GradientTexture1D_trail_fire")

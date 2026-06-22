@@ -1,0 +1,1145 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "spellbook",
+	"display_name": "魔法书",
+	"character_id": "mage",
+	"starting_skill_id": "arcane_page",
+	"base_attack": {
+		"name": "书页",
+		"role": "自动飞行法术弹",
+		"state": "arcane_mark"
+	},
+	"branches": [
+		{
+			"branch_id": "spellbook_branch_copy_page",
+			"display_name": "复制书页",
+			"archetype": "coverage_clear",
+			"current_runtime_branch_id": "spellbook_branch_copy",
+			"levels": {
+				"2": "书页命中后 25% 概率复制 1 次，复制伤害 45%",
+				"3": "复制概率提高至 40%，复制书页优先攻击未命中目标",
+				"4": "复制伤害提高至 60%",
+				"5": "每第 5 次主攻击生成双书页；复制书页不能继续复制自身"
+			},
+			"damage_ownership": "primary_attack",
+			"boss_rule": "复制书页 Boss ×90%",
+			"limits": "复制不能复制自身",
+			"ui_feedback": "分裂书页轨迹",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "覆盖清潮流 Lv2: 书页命中后 25% 概率复制 1 次，复制伤害 45%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"tradeoff": "larger_area_lower_single_hit",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "分裂书页轨迹",
+						"level_label": "Lv2",
+						"readable_effect": "书页命中后 25% 概率复制 1 次，复制伤害 45%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_copy_page:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "覆盖清潮流 Lv3: 复制概率提高至 40%，复制书页优先攻击未命中目标",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"core_engine": "spawn_limited_derived_attack",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "分裂书页轨迹",
+						"level_label": "Lv3",
+						"readable_effect": "复制概率提高至 40%，复制书页优先攻击未命中目标"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_copy_page:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "覆盖清潮流 Lv4: 复制伤害提高至 60%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "increase_derived_attack_budget",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "分裂书页轨迹",
+						"level_label": "Lv4",
+						"readable_effect": "复制伤害提高至 60%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_copy_page:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "覆盖清潮流 Lv5: 每第 5 次主攻击生成双书页；复制书页不能继续复制自身",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_chain_or_area_closure",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"capstone_chain_limiter",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "分裂书页轨迹",
+						"level_label": "Lv5",
+						"readable_effect": "每第 5 次主攻击生成双书页；复制书页不能继续复制自身"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_copy_page:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "spellbook_branch_arcane_seal",
+			"display_name": "奥术爆印",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "spellbook_branch_barrage",
+			"levels": {
+				"2": "书页命中精英 / Boss 施加 arcane_seal，最多 5 层，5s，同目标 0.4s CD",
+				"3": "命中 5 层 arcane_seal 目标时消耗 3 层，造成 20 reaction arcane",
+				"4": "爆印对精英 / Boss 伤害 +20%",
+				"5": "爆印后目标 2s 内受到魔法书主攻击伤害 +12%，计入易伤上限"
+			},
+			"damage_ownership": "reaction / primary_attack",
+			"boss_rule": "爆印 Boss ×75%",
+			"limits": "消耗 3 层印记",
+			"ui_feedback": "arcane_mark 层数和爆印文字",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "精准猎杀流 Lv2: 书页命中精英 / Boss 施加 arcane_seal，最多 5 层，5s，同目标 0.4s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"targeting_bias": "elite_boss_high_hp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "arcane_mark 层数和爆印文字",
+						"level_label": "Lv2",
+						"readable_effect": "arcane_mark 上限 +1"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_arcane_seal:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "精准猎杀流 Lv3: 命中 5 层 arcane_seal 目标时消耗 3 层，造成 20 reaction arcane",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "same_target_mark_stack",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "arcane_mark 层数和爆印文字",
+						"level_label": "Lv3",
+						"readable_effect": "命中 5 层 arcane_mark 目标时消耗 3 层，造成 20 reaction arcane"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_arcane_seal:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "精准猎杀流 Lv4: 爆印对精英 / Boss 伤害 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "marked_target_direct_damage_amp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "arcane_mark 层数和爆印文字",
+						"level_label": "Lv4",
+						"readable_effect": "爆印对精英 / Boss 伤害 +20%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_arcane_seal:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "精准猎杀流 Lv5: 爆印后目标 2s 内受到魔法书主攻击伤害 +12%，计入易伤上限",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "full_stack_single_target_burst",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "arcane_mark 层数和爆印文字",
+						"level_label": "Lv5",
+						"readable_effect": "爆印后目标 2s 内受到魔法书主攻击伤害 +12%，计入易伤上限"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_arcane_seal:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "spellbook_branch_forbidden_page",
+			"display_name": "禁忌书页",
+			"archetype": "status_reaction",
+			"current_runtime_branch_id": "spellbook_branch_forbidden",
+			"levels": {
+				"2": "主攻击伤害 +15%，玩家受到伤害 +5%",
+				"3": "每第 4 次书页变为禁忌书页，伤害 +60%，命中后玩家失去 2 HP",
+				"4": "自损降至 1 HP，禁忌书页暴击率 +20%",
+				"5": "禁忌书页命中 Boss 获得 1 层禁忌，最多 5 层；每层对 Boss 伤害 +2%，玩家受伤 +1%"
+			},
+			"damage_ownership": "primary_attack / special",
+			"boss_rule": "Boss 伤害可叠但有上限",
+			"limits": "禁忌最多 5 层",
+			"ui_feedback": "禁忌书页深色特效",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "状态反应流 Lv2: 主攻击伤害 +15%，玩家受到伤害 +5%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"tradeoff": "lower_direct_damage_higher_status_pressure",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "禁忌书页深色特效",
+						"level_label": "Lv2",
+						"readable_effect": "主攻击伤害 +15%，玩家受到伤害 +5%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_forbidden_page:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "状态反应流 Lv3: 每第 4 次书页变为禁忌书页，伤害 +60%，命中后玩家失去 2 HP",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"reaction_damage_multiplier": 0.7,
+						"required_status_stacks": 3,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "status_threshold_reaction",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "禁忌书页深色特效",
+						"level_label": "Lv3",
+						"readable_effect": "每第 4 次书页变为禁忌书页，伤害 +60%，命中后玩家失去 2 HP"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_forbidden_page:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "状态反应流 Lv4: 自损降至 1 HP，禁忌书页暴击率 +20%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "refresh_and_strengthen_status",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "禁忌书页深色特效",
+						"level_label": "Lv4",
+						"readable_effect": "自损降至 1 HP，禁忌书页暴击率 +20%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_forbidden_page:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "状态反应流 Lv5: 禁忌书页命中 Boss 获得 1 层禁忌，最多 5 层；每层对 Boss 伤害 +2%，玩家受伤 +1%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"death_transfer_ratio": 0.5,
+						"reaction_chain_max_steps": 3,
+						"chain_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "limited_death_or_multitarget_reaction_chain",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"death_reaction_source_filter",
+						"reaction_chain_limiter"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "禁忌书页深色特效",
+						"level_label": "Lv5",
+						"readable_effect": "禁忌书页命中 Boss 获得 1 层禁忌，最多 5 层；每层对 Boss 伤害 +2%，玩家受伤 +1%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_forbidden_page:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "spellbook_branch_page_spirit",
+			"display_name": "页灵守护",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "spellbook_branch_guardian_page",
+			"levels": {
+				"2": "每 8s 生成 1 个页灵，最多 2 个",
+				"3": "页灵自动攻击最近敌人，造成 5 summon arcane，间隔 1.2s",
+				"4": "页灵存在时，玩家受到远程伤害 -8%",
+				"5": "页灵可替玩家抵挡一次 Boss 弹幕或远程伤害后消失，12s CD"
+			},
+			"damage_ownership": "summon_damage / special",
+			"boss_rule": "召唤伤害 Boss ×80%",
+			"limits": "页灵最多 2 个",
+			"ui_feedback": "页灵环绕玩家",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "生存控制流 Lv2: 每 8s 生成 1 个页灵，最多 2 个",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"survival_hook": "spawn_player_centered_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "页灵环绕玩家",
+						"level_label": "Lv2",
+						"readable_effect": "每 8s 生成 1 个页灵，最多 2 个"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_page_spirit:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "生存控制流 Lv3: 页灵自动攻击最近敌人，造成 5 summon arcane，间隔 1.2s",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"control_strength": 0.25,
+						"control_duration": 0.6,
+						"boss_control_effectiveness": 0.35
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "near_player_control",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"boss_control_fallback"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "页灵环绕玩家",
+						"level_label": "Lv3",
+						"readable_effect": "页灵自动攻击最近敌人，造成 5 summon arcane，间隔 1.2s"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_page_spirit:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "生存控制流 Lv4: 页灵存在时，玩家受到远程伤害 -8%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"player_damage_reduction": 0.12,
+						"player_buff_duration": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "grant_player_temporary_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "页灵环绕玩家",
+						"level_label": "Lv4",
+						"readable_effect": "页灵存在时，玩家受到远程伤害 -8%"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_page_spirit:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "生存控制流 Lv5: 页灵可替玩家抵挡一次 Boss 弹幕或远程伤害后消失，12s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "low_hp_emergency_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "页灵环绕玩家",
+						"level_label": "Lv5",
+						"readable_effect": "页灵可替玩家抵挡一次 Boss 弹幕或远程伤害后消失，12s CD"
+					},
+					"modifier_source": "weapon_branch:spellbook_branch_page_spirit:lv5"
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://d3u1w1qqv68ql"]
+
+[ext_resource type="Script" uid="uid://dws0tscovvx57" path="res://scripts/player/player_controller.gd" id="1_0kxdb"]
+[ext_resource type="Texture2D" uid="uid://bp5ctfthcpcf8" path="res://icon.svg" id="2_g07ov"]
+[ext_resource type="Script" uid="uid://cmv5ryvttv12v" path="res://scripts/skills/skill_manager.gd" id="5_8c1jq"]
+[ext_resource type="Script" uid="uid://5anyea388npu" path="res://scripts/skills/skill_executor.gd" id="6_t7n2k"]
+[ext_resource type="Script" uid="uid://bbbjy15wic4fd" path="res://scripts/relics/relic_manager.gd" id="7_0qpw5"]
+[ext_resource type="Script" uid="uid://c05ix3j8jddip" path="res://scripts/skills/synergy_manager.gd" id="8_c2e1a"]
+[ext_resource type="Script" uid="uid://b5ip3ai72vkig" path="res://scripts/skills/skill_event_bus.gd" id="9_o3efm"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4s6dn"]
+radius = 24.0
+
+[node name="Player" type="CharacterBody2D" unique_id=1324607348]
+script = ExtResource("1_0kxdb")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=362152166]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("2_g07ov")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=519255442]
+shape = SubResource("CircleShape2D_4s6dn")
+
+[node name="SkillManager" type="Node" parent="." unique_id=1004790742]
+script = ExtResource("5_8c1jq")
+
+[node name="RelicManager" type="Node" parent="." unique_id=962736691]
+script = ExtResource("7_0qpw5")
+
+[node name="SynergyManager" type="Node" parent="." unique_id=539222031]
+script = ExtResource("8_c2e1a")
+
+[node name="SkillEventBus" type="Node" parent="." unique_id=594184729]
+script = ExtResource("9_o3efm")
+
+[node name="SkillExecutor" type="Node" parent="." unique_id=599635622]
+script = ExtResource("6_t7n2k")

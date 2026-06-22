@@ -1,0 +1,228 @@
+{
+	"enemy_skills": [
+		{
+			"id": "arrow_shot",
+			"display_name": "Arrow Shot",
+			"cooldown": 2.2,
+			"actions": [
+				{
+					"type": "projectile",
+					"params": {
+						"speed": 280.0,
+						"pierce": 0,
+						"radius": 8.0,
+						"lifetime": 3.0,
+						"spawn_offset": 20.0,
+						"element": "physical",
+						"damage_type": "direct_physical",
+						"visual_color": [1.0, 0.9, 0.08, 1.0]
+					}
+				}
+			]
+		},
+		{
+			"id": "minor_summon",
+			"display_name": "Minor Summon",
+			"cooldown": 5.0,
+			"actions": [
+				{
+					"type": "summon",
+					"params": {
+						"enemy_id": "small_slime",
+						"count": 1,
+						"radius": 72.0
+					}
+				}
+			]
+		},
+		{
+			"id": "war_drum",
+			"display_name": "War Drum",
+			"cooldown": 4.0,
+			"actions": [
+				{
+					"type": "damage_area",
+					"params": {
+						"duration": 3.0,
+						"tick_interval": 0.5,
+						"radius": 72.0,
+						"element": "physical",
+						"damage_type": "area_direct",
+						"visual_color": [0.95, 0.75, 0.18, 0.28]
+					}
+				}
+			]
+		},
+		{
+			"id": "toxic_pool",
+			"display_name": "Toxic Pool",
+			"cooldown": 4.0,
+			"actions": [
+				{
+					"type": "damage_area",
+					"params": {
+						"duration": 3.0,
+						"tick_interval": 0.5,
+						"radius": 72.0,
+						"element": "poison",
+						"damage_type": "area_direct",
+						"visual_color": [0.35, 0.95, 0.2, 0.32]
+					}
+				}
+			]
+		},
+		{
+			"id": "lava_pool",
+			"display_name": "Lava Pool",
+			"cooldown": 4.0,
+			"actions": [
+				{
+					"type": "damage_area",
+					"params": {
+						"duration": 3.0,
+						"tick_interval": 0.5,
+						"radius": 72.0,
+						"element": "fire",
+						"damage_type": "area_direct",
+						"visual_color": [1.0, 0.28, 0.05, 0.34]
+					}
+				}
+			]
+		},
+		{
+			"id": "poison_contact",
+			"display_name": "Poison Contact",
+			"actions": [
+				{
+					"type": "contact_status",
+					"params": {
+						"status_id": "poison",
+						"duration": 3.0,
+						"damage": 3,
+						"tick_interval": 0.5,
+						"stack": 1
+					}
+				}
+			]
+		},
+		{
+			"id": "self_explode",
+			"display_name": "Self Explode",
+			"actions": [
+				{
+					"type": "self_explode",
+					"params": {}
+				}
+			]
+		},
+		{
+			"id": "shadow_dash",
+			"display_name": "Shadow Dash",
+			"actions": [
+				{
+					"type": "dash",
+					"params": {}
+				}
+			]
+		},
+		{
+			"id": "captain_charge",
+			"display_name": "Captain Charge",
+			"actions": [
+				{
+					"type": "dash",
+					"params": {}
+				}
+			]
+		},
+		{
+			"id": "red_circle",
+			"display_name": "Red Circle",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "delayed_area_blast",
+					"params": {
+						"element": "arcane",
+						"damage_type": "area_direct",
+						"visual_color": [0.9, 0.12, 0.8, 0.35]
+					}
+				}
+			]
+		},
+		{
+			"id": "ring_bullets",
+			"display_name": "Ring Bullets",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "ring_projectiles",
+					"params": {
+						"element": "arcane",
+						"damage_type": "direct_magic",
+						"visual_color": [0.72, 0.05, 0.86, 1.0]
+					}
+				}
+			]
+		},
+		{
+			"id": "summon_minions",
+			"display_name": "Summon Minions",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "summon",
+					"params": {
+						"enemy_id": "skeleton",
+						"count": 3,
+						"radius": 112.0
+					}
+				}
+			]
+		},
+		{
+			"id": "shockwave",
+			"display_name": "Shockwave",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "shockwave",
+					"params": {
+						"element": "arcane",
+						"damage_type": "area_direct",
+						"visual_color": [0.85, 0.08, 0.95, 0.28]
+					}
+				}
+			]
+		},
+		{
+			"id": "corruption_gaze",
+			"display_name": "Corruption Gaze",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "corruption_gaze",
+					"params": {
+						"element": "arcane",
+						"damage_type": "area_direct",
+						"visual_color": [0.72, 0.05, 0.86, 0.24]
+					}
+				}
+			]
+		},
+		{
+			"id": "corrupted_cores",
+			"display_name": "Corrupted Cores",
+			"runtime": "boss_phase",
+			"actions": [
+				{
+					"type": "corrupted_cores",
+					"params": {
+						"count": 2,
+						"hp": 120
+					}
+				}
+			]
+		}
+	]
+}

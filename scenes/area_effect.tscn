@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/area_effect.gd" id="1_p0k3i"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_h5pni"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_s4q3h"]
+radius = 52.0
+
+[node name="AreaEffect" type="Area2D"]
+z_index = 5
+monitoring = false
+monitorable = false
+script = ExtResource("1_p0k3i")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.35, 0.95, 0.2, 0.32)
+texture = ExtResource("2_h5pni")
+scale = Vector2(0.8, 0.8)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+disabled = true
+shape = SubResource("CircleShape2D_s4q3h")

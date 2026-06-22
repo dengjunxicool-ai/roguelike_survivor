@@ -1,0 +1,833 @@
+{
+	"monsters": [
+		{
+			"move_speed": 45.0,
+			"contact_damage": 6.0,
+			"contact_interval": 0.8,
+			"collision_radius": 18.0,
+			"resistances": {},
+			"id": "small_slime",
+			"display_name": "小史莱姆",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 18.0,
+				"move_speed": 45.0,
+				"contact_damage": 6.0,
+				"armor": 0.0,
+				"defense": 0.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 3.0,
+				"soul_drop": 0.0,
+				"collision_radius": 18.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {
+				"texture": "res://assets/enemies/small_slime/23.png",
+				"sprite_frames": "res://assets/enemies/small_slime/slime.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 52.0,
+			"contact_damage": 9.0,
+			"contact_interval": 0.9,
+			"collision_radius": 20.0,
+			"resistances": {},
+			"id": "skeleton",
+			"display_name": "骷髅兵",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 30.0,
+				"move_speed": 52.0,
+				"contact_damage": 9.0,
+				"armor": 1.0,
+				"defense": 1.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 5.0,
+				"soul_drop": 0.0,
+				"collision_radius": 20.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {
+				"texture": "res://assets/enemies/skeleton_warrior/1.png",
+				"sprite_frames": "res://assets/enemies/skeleton_warrior/skeleton_warrior.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 82.0,
+			"contact_damage": 7.0,
+			"contact_interval": 0.7,
+			"collision_radius": 14.0,
+			"resistances": {},
+			"id": "bat",
+			"display_name": "蝙蝠",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 22.0,
+				"move_speed": 82.0,
+				"contact_damage": 7.0,
+				"armor": 0.0,
+				"defense": 0.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 4.0,
+				"soul_drop": 0.0,
+				"collision_radius": 14.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {
+				"texture": "res://assets/enemies/bat/1.png",
+				"sprite_frames": "res://assets/enemies/bat/bat.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 42.0,
+			"contact_damage": 8.0,
+			"contact_interval": 1.1,
+			"collision_radius": 18.0,
+			"resistances": {},
+			"id": "archer_skeleton",
+			"display_name": "弓箭骷髅",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 38.0,
+				"move_speed": 42.0,
+				"contact_damage": 8.0,
+				"armor": 1.0,
+				"defense": 1.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 7.0,
+				"soul_drop": 0.0,
+				"collision_radius": 18.0
+			},
+			"behavior": {
+				"type": "keep_distance_and_shoot",
+				"projectile_warning_time": 0.45,
+				"projectile_warning_width": 8.0,
+				"projectile_warning_range": 420.0
+			},
+			"skills": [
+				{
+					"skill_id": "arrow_shot",
+					"cooldown": 2.2
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/archer_skeleton/1.png",
+				"sprite_frames": "res://assets/enemies/archer_skeleton/archer_skeleton.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 58.0,
+			"contact_damage": 7.0,
+			"contact_interval": 0.8,
+			"collision_radius": 16.0,
+			"resistances": {},
+			"id": "toxic_bug",
+			"display_name": "毒虫",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 36.0,
+				"move_speed": 58.0,
+				"contact_damage": 7.0,
+				"armor": 0.0,
+				"defense": 0.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 5.0,
+				"soul_drop": 0.0,
+				"collision_radius": 16.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [
+				{
+					"skill_id": "poison_contact"
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/poison_bug/1.png",
+				"sprite_frames": "res://assets/enemies/poison_bug/poison_bug.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 54.0,
+			"contact_damage": 18.0,
+			"contact_interval": 1.0,
+			"collision_radius": 20.0,
+			"resistances": {},
+			"id": "bomber",
+			"display_name": "炸弹怪",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 45.0,
+				"move_speed": 54.0,
+				"contact_damage": 18.0,
+				"armor": 0.0,
+				"defense": 0.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 6.0,
+				"soul_drop": 0.0,
+				"collision_radius": 20.0
+			},
+			"behavior": {
+				"type": "explode_near_player"
+			},
+			"skills": [
+				{
+					"skill_id": "self_explode"
+				}
+			],
+			"death_policy": {
+				"self_explosion": {
+					"drop_experience": false,
+					"award_soul": false,
+					"run_death_effect": false,
+					"notify_kill_events": true,
+					"emit_died_signal": true
+				}
+			},
+			"visual": {
+				"texture": "res://assets/enemies/bomber/1.png",
+				"sprite_frames": "res://assets/enemies/bomber/bomber.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 38.0,
+			"contact_damage": 14.0,
+			"contact_interval": 1.0,
+			"collision_radius": 24.0,
+			"resistances": {},
+			"id": "armored_skeleton",
+			"display_name": "重甲骷髅",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 70.0,
+				"move_speed": 38.0,
+				"contact_damage": 14.0,
+				"armor": 5.0,
+				"defense": 5.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 9.0,
+				"soul_drop": 0.0,
+				"collision_radius": 24.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {}
+		},
+		{
+			"move_speed": 40.0,
+			"contact_damage": 10.0,
+			"contact_interval": 1.1,
+			"collision_radius": 20.0,
+			"resistances": {},
+			"id": "skeleton_priest",
+			"display_name": "骷髅祭司",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 55.0,
+				"move_speed": 40.0,
+				"contact_damage": 10.0,
+				"armor": 2.0,
+				"defense": 2.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 10.0,
+				"soul_drop": 0.0,
+				"collision_radius": 20.0
+			},
+			"behavior": {
+				"type": "summon_and_chase"
+			},
+			"skills": [
+				{
+					"skill_id": "minor_summon"
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/skeleton_priest/1.png",
+				"sprite_frames": "res://assets/enemies/skeleton_priest/skeleton_priest.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 46.0,
+			"contact_damage": 10.0,
+			"contact_interval": 1.0,
+			"collision_radius": 20.0,
+			"resistances": {},
+			"id": "war_drum_goblin",
+			"display_name": "战鼓哥布林",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 65.0,
+				"move_speed": 46.0,
+				"contact_damage": 10.0,
+				"armor": 2.0,
+				"defense": 2.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 10.0,
+				"soul_drop": 0.0,
+				"collision_radius": 20.0
+			},
+			"behavior": {
+				"type": "chase_and_cast_pool"
+			},
+			"skills": [
+				{
+					"skill_id": "war_drum"
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/drum_goblin/1.png",
+				"sprite_frames": "res://assets/enemies/drum_goblin/drum_goblin.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 55.0,
+			"contact_damage": 8.0,
+			"contact_interval": 0.8,
+			"collision_radius": 18.0,
+			"resistances": {},
+			"id": "gem_slime",
+			"display_name": "宝石史莱姆",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 80.0,
+				"move_speed": 55.0,
+				"contact_damage": 8.0,
+				"armor": 1.0,
+				"defense": 1.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 24.0,
+				"soul_drop": 0.0,
+				"collision_radius": 18.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {
+				"texture": "res://assets/enemies/gem_slime/1.png",
+				"sprite_frames": "res://assets/enemies/gem_slime/gem_slime.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 78.0,
+			"contact_damage": 16.0,
+			"contact_interval": 0.8,
+			"collision_radius": 18.0,
+			"resistances": {},
+			"id": "shadow_hunter",
+			"display_name": "暗影猎手",
+			"type": "normal",
+			"base_stats": {
+				"max_hp": 95.0,
+				"move_speed": 78.0,
+				"contact_damage": 16.0,
+				"armor": 3.0,
+				"defense": 3.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 12.0,
+				"soul_drop": 0.0,
+				"collision_radius": 18.0
+			},
+			"behavior": {
+				"type": "dash_attack",
+				"dash_trigger_range": 180.0,
+				"dash_stop_distance": 44.0
+			},
+			"skills": [
+				{
+					"skill_id": "shadow_dash"
+				}
+			],
+			"visual": {}
+		},
+		{
+			"move_speed": 42.0,
+			"contact_damage": 16.0,
+			"contact_interval": 1.1,
+			"collision_radius": 34.0,
+			"resistances": {},
+			"id": "giant_slime",
+			"display_name": "巨型史莱姆",
+			"type": "elite",
+			"base_stats": {
+				"max_hp": 560.0,
+				"move_speed": 42.0,
+				"contact_damage": 16.0,
+				"armor": 5.0,
+				"defense": 5.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 90.0,
+				"soul_drop": 20.0,
+				"collision_radius": 34.0
+			},
+			"behavior": {
+				"type": "chase_player"
+			},
+			"skills": [],
+			"visual": {
+				"texture": "res://assets/enemies/giant_slime/1.png",
+				"sprite_frames": "res://assets/enemies/giant_slime/giant_slime.tres",
+				"scale": [
+					0.65,
+					0.65
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					},
+					"hurt": {
+						"animation": "hurt"
+					},
+					"death": {
+						"animation": "death"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 52.0,
+			"contact_damage": 22.0,
+			"contact_interval": 1.0,
+			"collision_radius": 28.0,
+			"resistances": {},
+			"id": "skeleton_captain",
+			"display_name": "骷髅队长",
+			"type": "elite",
+			"base_stats": {
+				"max_hp": 1150.0,
+				"move_speed": 52.0,
+				"contact_damage": 22.0,
+				"armor": 9.0,
+				"defense": 9.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 150.0,
+				"soul_drop": 35.0,
+				"collision_radius": 28.0
+			},
+			"behavior": {
+				"type": "dash_attack"
+			},
+			"skills": [
+				{
+					"skill_id": "captain_charge"
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/skeleton_captain/preview.png",
+				"scale": [
+					0.5,
+					0.5
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					},
+					"hurt": {
+						"animation": "hurt"
+					},
+					"death": {
+						"animation": "death"
+					}
+				}
+			}
+		},
+		{
+			"move_speed": 48.0,
+			"contact_damage": 22.0,
+			"contact_interval": 1.0,
+			"collision_radius": 30.0,
+			"resistances": {},
+			"id": "toxic_matriarch",
+			"display_name": "毒虫女王",
+			"type": "elite",
+			"base_stats": {
+				"max_hp": 1050.0,
+				"move_speed": 48.0,
+				"contact_damage": 22.0,
+				"armor": 9.0,
+				"defense": 9.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 140.0,
+				"soul_drop": 35.0,
+				"collision_radius": 30.0
+			},
+			"behavior": {
+				"type": "chase_and_cast_pool"
+			},
+			"skills": [
+				{
+					"skill_id": "toxic_pool"
+				}
+			],
+			"visual": {
+
+			}
+		},
+		{
+			"move_speed": 36.0,
+			"contact_damage": 28.0,
+			"contact_interval": 1.1,
+			"collision_radius": 36.0,
+			"resistances": {},
+			"id": "lava_golem",
+			"display_name": "熔岩魔像",
+			"type": "elite",
+			"base_stats": {
+				"max_hp": 1400.0,
+				"move_speed": 36.0,
+				"contact_damage": 28.0,
+				"armor": 12.0,
+				"defense": 12.0,
+				"resistances": {},
+				"attack_range": 48.0,
+				"exp_drop": 170.0,
+				"soul_drop": 45.0,
+				"collision_radius": 36.0
+			},
+			"behavior": {
+				"type": "chase_and_cast_pool"
+			},
+			"skills": [
+				{
+					"skill_id": "lava_pool"
+				}
+			],
+			"visual": {}
+		},
+		{
+			"move_speed": 24.0,
+			"contact_damage": 30.0,
+			"contact_interval": 1.0,
+			"collision_radius": 62.0,
+			"resistances": {
+				"armor": 0.08,
+				"magic": 0.08,
+				"poison": 0.18,
+				"acid": 0.1,
+				"holy": 0.0
+			},
+			"id": "dungeon_heart",
+			"display_name": "地牢之心",
+			"type": "boss",
+			"base_stats": {
+				"max_hp": 5000.0,
+				"move_speed": 24.0,
+				"contact_damage": 30.0,
+				"armor": 10.0,
+				"defense": 10.0,
+				"resistances": {
+					"armor": 0.08,
+					"magic": 0.08,
+					"poison": 0.18,
+					"acid": 0.1,
+					"holy": 0.0
+				},
+				"attack_range": 760.0,
+				"exp_drop": 0.0,
+				"soul_drop": 200.0,
+				"collision_radius": 62.0
+			},
+			"behavior": {
+				"type": "boss_dungeon_heart",
+				"rage_after_seconds": 300.0,
+				"skill_range": 760.0,
+				"phases": [
+					{
+						"hp_percent_min": 0.7,
+						"hp_percent_max": 1.01,
+						"max_concurrent_skills": 1.0,
+						"skills": [
+							{
+								"skill_id": "red_circle",
+								"type": "delayed_area_blast",
+								"radius": 78.0,
+								"damage": 22.0,
+								"delay": 0.9,
+								"cooldown": 5.0
+							},
+							{
+								"skill_id": "ring_bullets",
+								"type": "ring_projectiles",
+								"projectile_count": 12.0,
+								"speed": 230.0,
+								"damage": 12.0,
+								"safe_gap_count": 2.0,
+								"cooldown": 7.0
+							}
+						]
+					},
+					{
+						"hp_percent_min": 0.35,
+						"hp_percent_max": 0.7,
+						"max_concurrent_skills": 2.0,
+						"skills": [
+							{
+								"skill_id": "red_circle",
+								"type": "delayed_area_blast",
+								"radius": 86.0,
+								"damage": 24.0,
+								"delay": 0.85,
+								"cooldown": 4.4
+							},
+							{
+								"skill_id": "corrupted_cores",
+								"type": "corrupted_cores",
+								"count": 2.0,
+								"hp": 120.0,
+								"cooldown": 18.0
+							},
+							{
+								"skill_id": "corruption_gaze",
+								"type": "corruption_gaze",
+								"radius": 52.0,
+								"damage": 7.0,
+								"delay": 1.2,
+								"duration": 2.5,
+								"tick_interval": 0.5,
+								"cooldown": 10.0
+							}
+						]
+					},
+					{
+						"hp_percent_min": 0.0,
+						"hp_percent_max": 0.35,
+						"max_concurrent_skills": 2.0,
+						"skills": [
+							{
+								"skill_id": "red_circle",
+								"type": "delayed_area_blast",
+								"radius": 94.0,
+								"damage": 28.0,
+								"delay": 0.8,
+								"cooldown": 3.8
+							},
+							{
+								"skill_id": "ring_bullets",
+								"type": "ring_projectiles",
+								"projectile_count": 20.0,
+								"speed": 290.0,
+								"damage": 16.0,
+								"safe_gap_count": 3.0,
+								"cooldown": 6.0
+							},
+							{
+								"skill_id": "shockwave",
+								"type": "shockwave",
+								"radius": 360.0,
+								"damage": 28.0,
+								"warning_time": 0.8,
+								"cooldown": 7.0
+							},
+							{
+								"skill_id": "corruption_gaze",
+								"type": "corruption_gaze",
+								"radius": 52.0,
+								"damage": 7.0,
+								"delay": 1.2,
+								"duration": 2.5,
+								"tick_interval": 0.5,
+								"cooldown": 9.0
+							}
+						]
+					}
+				]
+			},
+			"skills": [
+				{
+					"skill_id": "red_circle"
+				},
+				{
+					"skill_id": "ring_bullets"
+				},
+				{
+					"skill_id": "summon_minions"
+				},
+				{
+					"skill_id": "shockwave"
+				},
+				{
+					"skill_id": "corruption_gaze"
+				},
+				{
+					"skill_id": "corrupted_cores"
+				}
+			],
+			"visual": {
+				"texture": "res://assets/enemies/boss_heart/preview.png"
+			}
+		}
+	]
+}

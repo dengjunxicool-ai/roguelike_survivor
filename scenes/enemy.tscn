@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://btw53n4c7yis2"]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_base.gd" id="1_l48y0"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_ri3ux"]
+[ext_resource type="Script" path="res://scripts/combat/status_effect_manager.gd" id="3_r6vs4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_jdy4g"]
+radius = 24.0
+
+[node name="EnemyBase" type="CharacterBody2D"]
+script = ExtResource("1_l48y0")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.9, 0.18, 0.12, 1)
+texture = ExtResource("2_ri3ux")
+scale = Vector2(0.22, 0.22)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_jdy4g")
+
+[node name="StatusEffectManager" type="Node" parent="."]
+script = ExtResource("3_r6vs4")

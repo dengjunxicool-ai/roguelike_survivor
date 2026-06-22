@@ -1,0 +1,1030 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "fire_oil_canister",
+	"display_name": "火油罐",
+	"character_id": "alchemist",
+	"starting_skill_id": "fire_oil",
+	"base_attack": {
+		"name": "火油罐",
+		"role": "投掷油区与点燃反应",
+		"state": "oil"
+	},
+	"branches": [
+		{
+			"branch_id": "fire_oil_canister_branch_inferno_sea",
+			"display_name": "地狱油海",
+			"archetype": "coverage_clear",
+			"current_runtime_branch_id": "fire_oil_canister_branch_carpet",
+			"levels": {
+				"2": "火油区域持续 +1s",
+				"3": "相邻火油区域合并，最多 4 区域；合并油海中的敌人每 1.5s 获得 1 层 burn",
+				"4": "合并区域半径 +20%，tick 伤害 +15%",
+				"5": "大油海内 burn 伤害 +30%"
+			},
+			"damage_ownership": "field / status_dot",
+			"boss_rule": "Boss 只享受 70% burn 加成",
+			"limits": "合并区最多 4 个",
+			"ui_feedback": "大油海范围显示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "火油区域持续 +1s",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"fire_oil_duration_tuning": {
+							"duration_add": 1
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "大油海范围显示",
+						"level_label": "Lv2",
+						"readable_effect": "火油区域持续 +1s"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_inferno_sea:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "相邻火油区域合并，最多 4 区域；合并油海中的敌人每 1.5s 获得 1 层 burn",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"fire_oil_merge_zones": {
+							"enabled": true,
+							"merge_radius": 120,
+							"max_active": 4
+						},
+						"burn_in_merged_oil": {
+							"status_id": "burn",
+							"stacks": 1,
+							"max_stacks": 1,
+							"duration": 3,
+							"interval": 1.5
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "大油海范围显示",
+						"level_label": "Lv3",
+						"readable_effect": "相邻火油区域合并，最多 4 区域"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_inferno_sea:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "合并区域半径 +20%，tick 伤害 +15%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"fire_oil_merge_upgrade": {
+							"radius_multiplier_add": 0.2,
+							"tick_damage_multiplier_add": 0.15
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "大油海范围显示",
+						"level_label": "Lv4",
+						"readable_effect": "合并区域半径 +20%，tick 伤害 +15%"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_inferno_sea:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "大油海内 burn 伤害 +30%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"fire_oil_burn_damage_in_big_oil": {
+							"burn_damage_multiplier_add": 0.3,
+							"boss_burn_damage_multiplier": 0.7
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"capstone_chain_limiter",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "大油海范围显示",
+						"level_label": "Lv5",
+						"readable_effect": "大油海内 burn 伤害 +30%，Boss ×70%"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_inferno_sea:lv5"
+				}
+			},
+			"name": "地狱油海",
+			"core_experience": "大范围火油区域覆盖怪潮，并持续点燃敌人",
+			"trigger_limit": "合并区最多 4 个",
+			"role": "覆盖清潮流：大范围火油区域覆盖怪潮，并持续点燃敌人"
+		},
+		{
+			"branch_id": "fire_oil_canister_branch_flammable_mark",
+			"display_name": "易燃标记",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "fire_oil_canister_branch_sticky",
+			"levels": {
+				"2": "火油区域 tick 对精英 / Boss 施加 1 层 flammable_mark，最多 5 层；每层使其受到 fire 伤害 +1%，计入易伤上限",
+				"3": "满 flammable_mark 的精英 / Boss 被火油 tick 命中时，触发易燃爆发，造成 14 reaction fire，1.5s CD",
+				"4": "flammable_mark 对 Boss 持续 +1s；易燃爆发对 Boss 伤害 +15%",
+				"5": "Boss 被易燃爆发命中时获得 1 层 poise_break"
+			},
+			"damage_ownership": "reaction / vulnerability",
+			"boss_rule": "易伤受 Boss 上限",
+			"limits": "破势 2.5s CD",
+			"ui_feedback": "flammable_mark 层数和易燃提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "火油区域 tick 对精英 / Boss 施加 1 层 flammable_mark，最多 5 层；每层使其受到 fire 伤害 +1%，计入易伤上限",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"flammable_mark_on_strong_oil_tick": {
+							"status_id": "flammable_mark",
+							"stacks": 1,
+							"max_stacks": 5,
+							"duration": 4,
+							"elite_boss_only": true
+						},
+						"flammable_mark_fire_vulnerability": {
+							"fire_damage_taken_multiplier_add_per_stack": 0.01
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "oil 层数和易燃标记",
+						"level_label": "Lv2",
+						"readable_effect": "oil 目标受到 fire 伤害 +1% / 层，计入易伤上限"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_flammable_mark:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "满 flammable_mark 的精英 / Boss 被火油 tick 命中时，触发易燃爆发，造成 14 reaction fire，1.5s CD",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"flammable_mark_burst_on_full_mark_tick": {
+							"required_status_id": "flammable_mark",
+							"required_stacks": 5,
+							"amount": 14,
+							"same_target_cooldown": 1.5,
+							"damage_origin": "reaction",
+							"damage_type": "reaction_damage",
+							"element": "fire"
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "oil 层数和易燃标记",
+						"level_label": "Lv3",
+						"readable_effect": "精英 / Boss 满 oil 时，受到火焰主攻击额外 14 reaction fire，1.5s CD"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_flammable_mark:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "flammable_mark 对 Boss 持续 +1s；易燃爆发对 Boss 伤害 +15%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"flammable_mark_boss_tuning": {
+							"duration_add": 1,
+							"burst_boss_damage_multiplier_add": 0.15
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "oil 层数和易燃标记",
+						"level_label": "Lv4",
+						"readable_effect": "oil 对 Boss 持续 +1s"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_flammable_mark:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "Boss 被易燃爆发命中时获得 1 层 poise_break",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"flammable_burst_boss_poise": {
+							"stacks": 1,
+							"same_target_cooldown": 2.5
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "oil 层数和易燃标记",
+						"level_label": "Lv5",
+						"readable_effect": "Boss 满 oil 被爆燃命中时获得 1 层破势，2.5s CD"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_flammable_mark:lv5"
+				}
+			},
+			"name": "易燃标记",
+			"core_experience": "对强敌叠 flammable_mark，触发易燃爆发和破势",
+			"trigger_limit": "poise_break 2.5s CD",
+			"role": "精准猎杀流：对强敌叠 flammable_mark，触发易燃爆发和破势"
+		},
+		{
+			"branch_id": "fire_oil_canister_branch_deflagration",
+			"display_name": "爆燃油罐",
+			"archetype": "status_reaction",
+			"current_runtime_branch_id": "fire_oil_canister_branch_detonate",
+			"levels": {
+				"2": "火油区域 tick 对敌人施加 1 层 oil_stack，最多 3 层，持续 4s；满 3 层后下一次火油 tick 触发爆燃，爆燃伤害 +15%",
+				"3": "爆燃施加 1 层 burn，最多 5 目标",
+				"4": "爆燃半径 +20%，同源 CD 1.0s",
+				"5": "满 oil_stack 目标被爆燃命中时触发二次爆燃，伤害为原爆燃 50%"
+			},
+			"damage_ownership": "reaction / status_dot",
+			"boss_rule": "爆燃 Boss ×75%",
+			"limits": "二次爆燃不继续触发",
+			"ui_feedback": "“爆燃”强反馈",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "火油区域 tick 对敌人施加 1 层 oil_stack，最多 3 层，持续 4s；满 3 层后下一次火油 tick 触发爆燃，爆燃伤害 +15%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"oil_fire_deflagration": {
+							"amount": 18,
+							"radius": 90,
+							"damage_multiplier_add": 0.15,
+							"same_source_cooldown": 1.2,
+							"damage_origin": "reaction",
+							"damage_type": "reaction_damage",
+							"element": "fire",
+							"boss_damage_multiplier": 0.75,
+							"required_status_id": "oil_stack",
+							"required_stacks": 3
+						},
+						"oil_stack_on_fire_oil_tick": {
+							"status_id": "oil_stack",
+							"stacks": 1,
+							"max_stacks": 3,
+							"duration": 4
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "“爆燃”强反馈",
+						"level_label": "Lv2",
+						"readable_effect": "oil 遇火爆燃伤害 +20%"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_deflagration:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "爆燃施加 1 层 burn，最多 5 目标",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"reaction_damage_multiplier": 0.7,
+						"required_status_stacks": 3,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"deflagration_apply_burn": {
+							"burn_stacks": 1,
+							"max_targets": 5,
+							"burn_duration": 3,
+							"burn_max_stacks": 1
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "“爆燃”强反馈",
+						"level_label": "Lv3",
+						"readable_effect": "爆燃施加 1 层 burn，最多 5 目标"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_deflagration:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "爆燃半径 +20%，同源 CD 1.0s",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"deflagration_upgrade": {
+							"radius_multiplier_add": 0.2,
+							"same_source_cooldown": 1
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "“爆燃”强反馈",
+						"level_label": "Lv4",
+						"readable_effect": "爆燃半径 +20%，同源 CD 1.0s"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_deflagration:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "满 oil_stack 目标被爆燃命中时触发二次爆燃，伤害为原爆燃 50%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"death_transfer_ratio": 0.5,
+						"reaction_chain_max_steps": 3,
+						"chain_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"full_oil_secondary_deflagration": {
+							"damage_multiplier": 0.5,
+							"can_trigger_self": false,
+							"required_status_id": "oil_stack"
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"death_reaction_source_filter",
+						"reaction_chain_limiter"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "“爆燃”强反馈",
+						"level_label": "Lv5",
+						"readable_effect": "满层 oil 目标被爆燃命中时触发二次爆燃，伤害 50%，不能继续触发"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_deflagration:lv5"
+				}
+			},
+			"name": "爆燃油罐",
+			"core_experience": "oil_stack 满层后爆燃，并触发二次爆燃",
+			"trigger_limit": "二次爆燃不能继续触发",
+			"role": "状态反应流：oil_stack 满层后爆燃，并触发二次爆燃"
+		},
+		{
+			"branch_id": "fire_oil_canister_branch_smoke_guard",
+			"display_name": "烟雾防身",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "fire_oil_canister_branch_blackfire",
+			"levels": {
+				"2": "火油区域到期生成烟雾，持续 1.2s",
+				"3": "烟雾内普通怪伤害 -15%",
+				"4": "烟雾内玩家移速 +8%",
+				"5": "受伤时在脚下生成小烟雾"
+			},
+			"damage_ownership": "special / field",
+			"boss_rule": "不提升 Boss 伤害",
+			"limits": "烟雾 16s CD",
+			"ui_feedback": "烟雾半透明安全区",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "火油区域到期生成烟雾，持续 1.2s",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"smoke_cloud_on_oil_expire": {
+							"duration": 1.2,
+							"radius": 95
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "烟雾半透明安全区",
+						"level_label": "Lv2",
+						"readable_effect": "火油区域到期生成烟雾，持续 1.2s"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_smoke_guard:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "烟雾内普通怪伤害 -15%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"control_strength": 0.25,
+						"control_duration": 0.6,
+						"boss_control_effectiveness": 0.35
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"smoke_enemy_damage_down": {
+							"damage_multiplier_add": -0.15,
+							"duration": 0.6,
+							"normal_only": true
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"boss_control_fallback"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "烟雾半透明安全区",
+						"level_label": "Lv3",
+						"readable_effect": "烟雾内普通怪伤害 -15%"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_smoke_guard:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "烟雾内玩家移速 +8%",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"player_damage_reduction": 0.12,
+						"player_buff_duration": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"smoke_player_speed_buff": {
+							"move_speed_multiplier_add": 0.08,
+							"duration": 0.6
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "烟雾半透明安全区",
+						"level_label": "Lv4",
+						"readable_effect": "烟雾内玩家移速 +8%"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_smoke_guard:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "受伤时在脚下生成小烟雾",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"smoke_cloud_on_player_damaged": {
+							"radius": 85,
+							"duration": 1.2,
+							"same_source_cooldown": 16
+						}
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "烟雾半透明安全区",
+						"level_label": "Lv5",
+						"readable_effect": "受伤时在脚下生成小烟雾，16s CD"
+					},
+					"modifier_source": "weapon_branch:fire_oil_canister_branch_smoke_guard:lv5"
+				}
+			},
+			"name": "烟雾防身",
+			"core_experience": "火油结束后生成烟雾保护玩家",
+			"trigger_limit": "小烟雾 16s CD",
+			"role": "生存控制流：火油结束后生成烟雾保护玩家"
+		}
+	],
+	"base": {
+		"state": "none",
+		"branch_mechanic_entry": "由具体分支创建"
+	}
+}

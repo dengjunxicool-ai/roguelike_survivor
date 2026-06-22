@@ -1,0 +1,4 @@
+[PASS] hailstorm second projectile hit event uses 70 percent runtime packet
+[PASS] hit event damage packet preserves 70 percent modifier
+[PASS] hit event writes debug damage record
+[PASS] debug trace final damage is 8 for second hailstorm projectile

@@ -1,0 +1,1199 @@
+{
+	"schema": "weapon_branch_design_v2",
+	"weapon_id": "fire_staff",
+	"display_name": "火焰法杖",
+	"character_id": "mage",
+	"starting_skill_id": "fireball",
+	"base_attack": {
+		"name": "火球",
+		"damage": 16,
+		"interval": 1.1,
+		"range": 540,
+		"explosion_radius": 82,
+		"state": "heat"
+	},
+	"branches": [
+		{
+			"branch_id": "fire_staff_branch_burst",
+			"display_name": "爆裂火球",
+			"archetype": "coverage_clear",
+			"levels": {
+				"2": "爆炸半径 +15%",
+				"3": "爆炸半径额外 +10%，爆炸伤害 +18%，攻击间隔 +8%",
+				"4": "爆炸最大命中目标 +2，爆炸半径 +15%",
+				"5": "燃烧目标死亡时产生小爆炸，造成火球基础伤害 35%；最多命中 6 目标，0.25s 同源 CD，不递归"
+			},
+			"damage_ownership": "primary_attack / reaction",
+			"boss_rule": "小爆炸对 Boss ×75%",
+			"limits": "小爆炸不能触发小爆炸",
+			"ui_feedback": "更大火焰爆炸和“爆裂”提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "覆盖清潮流 Lv2: 爆炸半径 +15%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "object",
+								"object_type": [
+									"explosion"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"coverage_radius_multiplier_add": 0.15,
+						"primary_target_damage_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"tradeoff": "larger_area_lower_single_hit",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "更大火焰爆炸和“爆裂”提示",
+						"level_label": "Lv2",
+						"readable_effect": "爆炸半径 +15%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_burst:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "覆盖清潮流 Lv3: 爆炸半径额外 +10%，爆炸伤害 +18%，攻击间隔 +8%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "object",
+								"object_type": [
+									"explosion"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "object",
+								"object_type": [
+									"explosion"
+								]
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": -0.0741,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_trigger_chance": 0.35,
+						"derived_damage_multiplier": 0.45,
+						"derived_max_per_cast": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"core_engine": "spawn_limited_derived_attack",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"derived_attack_executor",
+						"per_source_derived_limit"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "更大火焰爆炸和“爆裂”提示",
+						"level_label": "Lv3",
+						"readable_effect": "爆炸半径额外 +10%，爆炸伤害 +18%，攻击间隔 +8%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_burst:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "覆盖清潮流 Lv4: 爆炸最大命中目标 +2，爆炸半径 +15%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "object",
+								"object_type": [
+									"explosion"
+								]
+							}
+						},
+						{
+							"stat": "max_targets",
+							"op": "add",
+							"value": 2,
+							"scope": {
+								"domain": "object",
+								"object_type": [
+									"explosion"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"derived_max_per_cast_add": 1,
+						"derived_search_radius_multiplier_add": 0.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "increase_derived_attack_budget",
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"derived_attack_budget_scaling"
+					],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "更大火焰爆炸和“爆裂”提示",
+						"level_label": "Lv4",
+						"readable_effect": "爆炸最大命中目标 +2，爆炸半径 +15%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_burst:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "覆盖清潮流 Lv5: 燃烧目标死亡时产生小爆炸，造成火球基础伤害 35%；最多命中 6 目标，0.25s 同源 CD，不递归",
+					"runtime_modifiers": [],
+					"design_modifiers": {
+						"capstone_chain_max_steps": 4,
+						"capstone_damage_multiplier": 0.55,
+						"capstone_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.6,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_hit_or_kill",
+							"condition": "enemy_density_or_area_contact",
+							"max_triggers_per_source": 4
+						}
+					],
+					"special_rules": {
+						"same_target_explosion_hits_required": 4,
+						"same_target_explosion_apply_status": {
+							"status_id": "burn",
+							"stack": 1,
+							"chance": 1
+						},
+						"burning_target_death_explosion": {
+							"enabled": true,
+							"radius_multiplier": 0.55,
+							"damage_multiplier": 0.35,
+							"max_targets": 6,
+							"same_source_cooldown": 0.25,
+							"can_trigger_self": false
+						},
+						"branch_archetype": "coverage_clear",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0
+					},
+					"limits": {
+						"max_targets": 6,
+						"max_chain_steps": 4,
+						"same_source_cooldown": 0.25,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [],
+					"ui_feedback": {
+						"icon": "coverage_clear",
+						"hint": "更大火焰爆炸和“爆裂”提示",
+						"level_label": "Lv5",
+						"readable_effect": "燃烧目标死亡时产生小爆炸，造成火球基础伤害 35%；最多命中 6 目标，0.25s 同源 CD，不递归"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_burst:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "fire_staff_branch_core",
+			"display_name": "聚核火球",
+			"archetype": "precision_hunt",
+			"current_runtime_branch_id": "fire_staff_branch_rapid",
+			"levels": {
+				"2": "直接命中伤害 +12%，爆炸半径 -10%",
+				"3": "直接命中精英 / Boss 施加 flame_core，最多 5 层，每层使火球直接伤害 +3%",
+				"4": "flame_core 持续 +2s；5 层目标额外承受 60% 爆炸伤害",
+				"5": "对 5 层 Boss 每第 4 次直接命中触发聚核爆发，造成 32 点 fire direct_magical 伤害，2.0s CD"
+			},
+			"damage_ownership": "primary_attack",
+			"boss_rule": "Boss 全额生效",
+			"limits": "聚核爆发 2.0s CD",
+			"ui_feedback": "Boss 血条下显示 flame_core 层数",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "精准猎杀流 Lv2: 直接命中伤害 +12%，爆炸半径 -10%",
+					"runtime_modifiers": [
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"priority_target_weight_add": 0.35,
+						"aoe_radius_multiplier_add": -0.08
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"targeting_bias": "elite_boss_high_hp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"priority_targeting_weight"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "Boss 血条下显示 flame_core 层数",
+						"level_label": "Lv2",
+						"readable_effect": "直接命中伤害 +12%，爆炸半径 -10%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_core:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "精准猎杀流 Lv3: 直接命中精英 / Boss 施加 flame_core，最多 5 层，每层使火球直接伤害 +3%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"mark_stack_max": 3,
+						"mark_stack_per_hit": 1,
+						"mark_duration": 5
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "same_target_mark_stack",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"target_mark_state",
+						"same_target_stack_tracker"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "Boss 血条下显示 flame_core 层数",
+						"level_label": "Lv3",
+						"readable_effect": "直接命中精英 / Boss 施加 flame_core，最多 5 层，每层使火球直接伤害 +3%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_core:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "精准猎杀流 Lv4: flame_core 持续 +2s；5 层目标额外承受 60% 爆炸伤害",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.18,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"marked_target_damage_taken_multiplier_add": 0.12,
+						"boss_mark_effectiveness": 0.6
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "marked_target_direct_damage_amp",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"target_scoped_damage_amp"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "Boss 血条下显示 flame_core 层数",
+						"level_label": "Lv4",
+						"readable_effect": "flame_core 持续 +2s；5 层目标额外承受 60% 爆炸伤害"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_core:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "精准猎杀流 Lv5: 对 5 层 Boss 每第 4 次直接命中触发聚核爆发，造成 32 点 fire direct_magical 伤害，2.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"full_stack_burst_damage_multiplier": 2.2,
+						"boss_burst_damage_multiplier": 1.35,
+						"same_target_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.75,
+						"dot": 0,
+						"reaction": 0.2,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_same_target_hit",
+							"condition": "elite_boss_or_high_hp_target",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "full_stack_single_target_burst",
+						"branch_archetype": "precision_hunt",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 1,
+						"boss_dot_multiplier": 0.75,
+						"boss_reaction_multiplier": 0.85,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"max_targets": 1,
+						"max_mark_stacks": 5,
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"full_stack_burst_executor",
+						"boss_specific_burst_multiplier"
+					],
+					"ui_feedback": {
+						"icon": "precision_hunt",
+						"hint": "Boss 血条下显示 flame_core 层数",
+						"level_label": "Lv5",
+						"readable_effect": "对 5 层 Boss 每第 4 次直接命中触发聚核爆发，造成 32 点 fire direct_magical 伤害，2.0s CD"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_core:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "fire_staff_branch_soulburn",
+			"display_name": "灼魂火球",
+			"archetype": "status_reaction",
+			"levels": {
+				"2": "火球直接命中施加 1 层 soul_ember，最多 4 层，4s；同目标 0.4s CD",
+				"3": "每 2 层 soul_ember 转换成 1 层 burn，burn 最多 5 层；火球直接伤害 -15%，burn 伤害 +30%",
+				"4": "burn 最大层数 +2；Boss 只提高 +1 层；burn 持续 +1s",
+				"5": "5 层 burn 目标被火球直接命中时触发灼魂爆发，并消耗所有 burn 层数：普通怪 3% 最大生命，精英 1%，Boss 0.25%；2.0s CD，不暴击，不吃主攻击加成"
+			},
+			"damage_ownership": "status_dot / reaction",
+			"boss_rule": "DOT ×65%，百分比封顶",
+			"limits": "灼魂每目标 2.0s CD",
+			"ui_feedback": "burn 层数和“灼魂”提示",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "状态反应流 Lv2: 火球直接命中施加 1 层 soul_ember，最多 4 层，4s；同目标 0.4s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_apply_chance_add": 0.2,
+						"status_stack_add": 1
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"tradeoff": "lower_direct_damage_higher_status_pressure",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"status_apply_chance_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "burn 层数和“灼魂”提示",
+						"level_label": "Lv2",
+						"readable_effect": "heat 持续 +1s；命中满 heat 目标时，将 2 层 heat 转为 1 层 burn"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_soulburn:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "状态反应流 Lv3: 每 2 层 soul_ember 转换成 1 层 burn，burn 最多 5 层；火球直接伤害 -15%，burn 伤害 +30%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.15,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "status_damage",
+							"op": "multiplier_add",
+							"value": 0.3,
+							"scope": {
+								"domain": "status",
+								"status_id": [
+									"burn"
+								]
+							}
+						}
+					],
+					"design_modifiers": {
+						"burn_damage_multiplier_add": 0.3,
+						"required_status_stacks": 2,
+						"consume_status_stacks": 2,
+						"apply_burn_stacks": 1,
+						"burn_max_stacks": 5,
+						"same_target_cooldown": 1.2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "status_threshold_reaction",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 2,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 2
+					},
+					"runtime_requirements": [
+						"status_reaction_executor",
+						"reaction_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "burn 层数和“灼魂”提示",
+						"level_label": "Lv3",
+						"readable_effect": "每 2 层 soul_ember 转换成 1 层 burn，burn 最多 5 层；火球直接伤害 -15%，burn 伤害 +30%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_soulburn:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "状态反应流 Lv4: burn 最大层数 +2；Boss 只提高 +1 层；burn 持续 +1s",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.06,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_duration_add": 1,
+						"status_max_stacks_add": 2,
+						"reaction_refreshes_status": true
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_status_threshold_or_death",
+							"condition": "required_status_stacks_met",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "refresh_and_strengthen_status",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_status_stacks": 3,
+						"max_chain_steps": 3,
+						"same_target_cooldown": 1.5,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"generic_status_duration_modifier",
+						"generic_status_max_stack_modifier"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "burn 层数和“灼魂”提示",
+						"level_label": "Lv4",
+						"readable_effect": "burn 最大层数 +2；Boss 只提高 +1 层"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_soulburn:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "状态反应流 Lv5: 5 层 burn 目标被火球直接命中时触发灼魂爆发，并消耗所有 burn 层数：普通怪 3% 最大生命，精英 1%，Boss 0.25%；2.0s CD，不暴击，不吃主攻击加成",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"required_burn_stacks": 5,
+						"consume_burn_stacks": "all",
+						"normal_max_hp_damage": 0.03,
+						"elite_max_hp_damage": 0.01,
+						"boss_max_hp_damage": 0.0025,
+						"same_target_cooldown": 2
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0.25,
+						"reaction": 0.3,
+						"field": 0,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.05
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_projectile_hit",
+							"condition": "target_has_at_least_5_burn_stacks",
+							"max_triggers_per_target": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "direct_hit_percent_burst_consume_burn",
+						"branch_archetype": "status_reaction",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.85,
+						"boss_dot_multiplier": 0.65,
+						"boss_reaction_multiplier": 0.75,
+						"boss_percent_damage_cap": 0.0025,
+						"boss_control_multiplier": 0.15
+					},
+					"limits": {
+						"required_burn_stacks": 5,
+						"consume_burn_stacks": "all",
+						"same_target_cooldown": 2,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"direct_hit_source_filter",
+						"burn_stack_consume"
+					],
+					"ui_feedback": {
+						"icon": "status_reaction",
+						"hint": "burn 层数和“灼魂”提示",
+						"level_label": "Lv5",
+						"readable_effect": "5 层 burn 目标被火球直接命中时触发灼魂爆发，并消耗所有 burn 层数：普通怪 3% 最大生命，精英 1%，Boss 0.25%；2.0s CD，不暴击，不吃主攻击加成"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_soulburn:lv5"
+				}
+			}
+		},
+		{
+			"branch_id": "fire_staff_branch_lava_ring",
+			"display_name": "熔岩护圈",
+			"archetype": "survival_control",
+			"current_runtime_branch_id": "fire_staff_branch_lava",
+			"levels": {
+				"2": "火球落点残留熔岩 1.0s，每 0.5s 造成火球基础伤害 20%",
+				"3": "玩家 160 范围内敌人被火球命中时，在玩家脚下生成小熔岩：持续 2s，0.5s tick，每 tick 造成火球伤害 20%，3.0s CD",
+				"4": "熔岩区域内敌人移速 -30%；Boss 转为 -15% slow",
+				"5": "玩家受伤时生成护身熔岩圈，半径 130，持续 3s，12s CD；圈内玩家所受伤害 -50%"
+			},
+			"damage_ownership": "field / primary_attack",
+			"boss_rule": "field 对 Boss ×85%",
+			"limits": "场上最多 4 个熔岩区",
+			"ui_feedback": "熔岩圈明确标记安全区域",
+			"level_path": {
+				"2": {
+					"upgrade_role": "direction",
+					"summary": "生存控制流 Lv2: 火球落点残留熔岩 1.0s，每 0.5s 造成火球基础伤害 20%",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"defense_zone_duration": 2,
+						"defense_zone_radius": 90
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"survival_hook": "spawn_player_centered_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "direction"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false
+					},
+					"runtime_requirements": [
+						"player_centered_field_spawn"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "熔岩圈明确标记安全区域",
+						"level_label": "Lv2",
+						"readable_effect": "火球落点残留熔岩 1.0s，每 0.5s 造成火球基础伤害 20%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_lava_ring:lv2"
+				},
+				"3": {
+					"upgrade_role": "core_engine",
+					"summary": "生存控制流 Lv3: 玩家 160 范围内敌人被火球命中时，在玩家脚下生成小熔岩：持续 2s，0.5s tick，每 tick 造成火球伤害 20%，3.0s CD",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.04,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"spawn_position": "player",
+						"near_player_radius": 160,
+						"duration": 2,
+						"tick_interval": 0.5,
+						"damage_from_fireball_base": 0.2,
+						"same_source_cooldown": 3
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_projectile_hit",
+							"condition": "target_within_160_of_player",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"core_engine": "player_lava_on_nearby_fireball_hit",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "core_engine"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"near_player_radius": 160,
+						"same_source_cooldown": 3,
+						"recursive": false,
+						"max_triggers_per_source": 1
+					},
+					"runtime_requirements": [
+						"player_positioned_lava_spawn",
+						"same_source_cooldown_tracker"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "熔岩圈明确标记安全区域",
+						"level_label": "Lv3",
+						"readable_effect": "玩家 160 范围内敌人被火球命中时，在玩家脚下生成小熔岩：持续 2s，0.5s tick，每 tick 造成火球伤害 20%，3.0s CD"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_lava_ring:lv3"
+				},
+				"4": {
+					"upgrade_role": "efficiency",
+					"summary": "生存控制流 Lv4: 熔岩区域内敌人移速 -30%；Boss 转为 -15% slow",
+					"runtime_modifiers": [
+						{
+							"stat": "radius",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"status_id": "slow",
+						"slow_percent": 0.3,
+						"boss_slow_percent": 0.15,
+						"duration": 0.5
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"efficiency_upgrade": "grant_player_temporary_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "efficiency"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"max_triggers_per_source": 3
+					},
+					"runtime_requirements": [
+						"player_temporary_modifier_bridge"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "熔岩圈明确标记安全区域",
+						"level_label": "Lv4",
+						"readable_effect": "熔岩区域内敌人移速 -30%；Boss 转为 -15% slow"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_lava_ring:lv4"
+				},
+				"5": {
+					"upgrade_role": "capstone",
+					"summary": "生存控制流 Lv5: 玩家受伤时生成护身熔岩圈，半径 130，持续 3s，12s CD；圈内玩家所受伤害 -50%",
+					"runtime_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.05,
+							"scope": {
+								"domain": "skill"
+							}
+						}
+					],
+					"design_modifiers": {
+						"low_hp_threshold": 0.35,
+						"emergency_cooldown": 18,
+						"empowered_duration": 4
+					},
+					"damage_profile": {
+						"primary_attack": 0.4,
+						"dot": 0,
+						"reaction": 0.1,
+						"field": 0.15,
+						"trap": 0,
+						"summon": 0,
+						"survival": 0.35
+					},
+					"trigger_rules": [
+						{
+							"trigger": "on_near_player_or_low_hp",
+							"condition": "defense_window_available",
+							"max_triggers_per_cooldown": 1
+						}
+					],
+					"special_rules": {
+						"capstone": "low_hp_emergency_defense",
+						"branch_archetype": "survival_control",
+						"upgrade_role": "capstone"
+					},
+					"boss_rules": {
+						"boss_damage_multiplier": 0.75,
+						"boss_field_multiplier": 0.85,
+						"boss_control_multiplier": 0.25,
+						"boss_strong_control_conversion": "slow_or_poise"
+					},
+					"limits": {
+						"max_active_defense_fields": 1,
+						"emergency_cooldown": 18,
+						"same_target_cooldown": 1,
+						"recursive": false,
+						"capstone_enabled": true
+					},
+					"runtime_requirements": [
+						"low_hp_trigger",
+						"emergency_effect_cooldown"
+					],
+					"ui_feedback": {
+						"icon": "survival_control",
+						"hint": "熔岩圈明确标记安全区域",
+						"level_label": "Lv5",
+						"readable_effect": "玩家受伤时生成护身熔岩圈，半径 130，持续 3s，12s CD；圈内玩家所受伤害 -50%"
+					},
+					"modifier_source": "weapon_branch:fire_staff_branch_lava_ring:lv5"
+				}
+			}
+		}
+	],
+	"implementation_notes": [
+		"当前运行时已有 fire_staff_branch_burst、fire_staff_branch_rapid、fire_staff_branch_lava、fire_staff_branch_soulburn；设计配置保留语义更清晰的新分支名，并标注 current_runtime_branch_id。",
+		"Fireball explosion max_targets is implemented through create_explosion -> AreaEffect and explosion_max_targets modifiers."
+	]
+}

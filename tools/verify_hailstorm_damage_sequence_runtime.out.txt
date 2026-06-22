@@ -1,0 +1,39 @@
+[PASS] Hailstorm spawns target-selected projectiles
+[PASS] Hailstorm creates three projectiles for three targets
+[PASS] Hailstorm different-target projectile 1 stores multiplier
+[PASS] Hailstorm different-target projectile 1 targets expected enemy
+[PASS] Hailstorm different-target projectile 1 final damage
+[PASS] Hailstorm different-target projectile 2 stores multiplier
+[PASS] Hailstorm different-target projectile 2 targets expected enemy
+[PASS] Hailstorm different-target projectile 2 final damage
+[PASS] Hailstorm different-target projectile 3 stores multiplier
+[PASS] Hailstorm different-target projectile 3 targets expected enemy
+[PASS] Hailstorm different-target projectile 3 final damage
+[PASS] Hailstorm spawns against a single target
+[PASS] Hailstorm still creates three projectiles for one target
+[PASS] Hailstorm same-target projectile 1 stores multiplier
+[PASS] Hailstorm same-target projectile 1 targets expected enemy
+[PASS] Hailstorm same-target projectile 1 final damage
+[PASS] Hailstorm same-target projectile 2 stores multiplier
+[PASS] Hailstorm same-target projectile 2 targets expected enemy
+[PASS] Hailstorm same-target projectile 2 final damage
+[PASS] Hailstorm same-target projectile 3 stores multiplier
+[PASS] Hailstorm same-target projectile 3 targets expected enemy
+[PASS] Hailstorm same-target projectile 3 final damage
+[PASS] Hailstorm same-target projectile 2 uses a distinct curve start
+[PASS] Hailstorm same-target projectile 3 uses a distinct curve start
+[PASS] Hailstorm repeated same-target starts do not overlap
+[PASS] Hailstorm same-target projectile 2 uses a distinct curve endpoint
+[PASS] Hailstorm same-target projectile 3 uses a distinct curve endpoint
+[PASS] Hailstorm repeated same-target endpoints do not overlap
+[PASS] Hailstorm Lv4 spawns against a single target
+[PASS] Hailstorm Lv4 still creates three projectiles for one target
+[PASS] Hailstorm lv4 same-target projectile 1 stores multiplier
+[PASS] Hailstorm lv4 same-target projectile 1 targets expected enemy
+[PASS] Hailstorm lv4 same-target projectile 1 final damage
+[PASS] Hailstorm lv4 same-target projectile 2 stores multiplier
+[PASS] Hailstorm lv4 same-target projectile 2 targets expected enemy
+[PASS] Hailstorm lv4 same-target projectile 2 final damage
+[PASS] Hailstorm lv4 same-target projectile 3 stores multiplier
+[PASS] Hailstorm lv4 same-target projectile 3 targets expected enemy
+[PASS] Hailstorm lv4 same-target projectile 3 final damage

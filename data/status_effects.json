@@ -1,0 +1,548 @@
+{
+	"statuses": [
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "heat",
+			"display_name": "heat",
+			"type": "base",
+			"max_stacks": 5,
+			"effect": {
+				"fire_damage_taken_multiplier_add_per_stack": 0.03
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "flame_core",
+			"display_name": "flame_core",
+			"type": "mark",
+			"max_stacks": 5,
+			"effect": {}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "soul_ember",
+			"display_name": "soul_ember",
+			"type": "mark",
+			"max_stacks": 4,
+			"effect": {}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "frost_lock",
+			"display_name": "frost_lock",
+			"type": "mark",
+			"max_stacks": 4,
+			"effect": {}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "frostbite",
+			"display_name": "frostbite",
+			"type": "mark",
+			"max_stacks": 3,
+			"effect": {}
+		},
+		{
+			"duration": 3,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "slow_poise",
+			"id": "chill",
+			"display_name": "chill",
+			"type": "base",
+			"max_stacks": 5,
+			"effect": {
+				"move_slow_per_stack": 0.06
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "charge",
+			"display_name": "charge",
+			"type": "base",
+			"max_stacks": 4,
+			"effect": {
+				"lightning_damage_taken_multiplier_add_per_stack": 0.04
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "voltage",
+			"display_name": "voltage",
+			"type": "mark",
+			"max_stacks": 5,
+			"effect": {}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "arcane_mark",
+			"display_name": "arcane_mark",
+			"type": "base",
+			"max_stacks": 5,
+			"effect": {
+				"arcane_damage_taken_multiplier_add_per_stack": 0.03
+			}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "arcane_seal",
+			"display_name": "arcane_seal",
+			"type": "mark",
+			"max_stacks": 5,
+			"effect": {}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "wound",
+			"display_name": "wound",
+			"type": "base",
+			"max_stacks": 5,
+			"effect": {}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "judgment",
+			"display_name": "judgment",
+			"type": "base",
+			"max_stacks": 4,
+			"effect": {
+				"holy_damage_taken_multiplier_add_per_stack": 0.05
+			}
+		},
+		{
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"id": "hunter_mark",
+			"display_name": "hunter_mark",
+			"type": "mark",
+			"max_stacks": 5,
+			"effect": {
+				"all_damage_taken_multiplier_add_per_stack": 0.04
+			}
+		},
+		{
+			"duration": 2,
+			"tick_interval": 0,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "slow_poise",
+			"id": "snare_mark",
+			"display_name": "snare_mark",
+			"type": "mark",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 0.45
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"id": "holy_mark",
+			"display_name": "holy_mark",
+			"type": "mark",
+			"max_stacks": 1,
+			"effect": {
+				"holy_damage_taken_multiplier_add_per_stack": 0.05
+			}
+		},
+		{
+			"duration": 3,
+			"tick_interval": 0.5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "dot_resist",
+			"id": "burn",
+			"display_name": "burn",
+			"type": "dot",
+			"max_stacks": 5,
+			"effect": {
+				"dot": true
+			},
+			"damage": 1.6,
+			"damage_origin": "status_dot",
+			"damage_type": "status_dot",
+			"element": "fire",
+			"can_crit": false,
+			"boss_modifiers": {
+				"dot_damage_multiplier": 0.65
+			},
+			"visual": {
+				"sprite_frames": "res://assets/effect/burn/burn.tres",
+				"scale": [
+					0.45,
+					0.45
+				],
+				"offset": [
+					0,
+					-22
+				],
+				"priority": 30,
+				"animations": {
+					"burn": {
+						"animation": "burn"
+					}
+				}
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0.5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "dot_resist",
+			"id": "poison",
+			"display_name": "poison",
+			"type": "dot",
+			"max_stacks": 3,
+			"effect": {
+				"dot": true
+			},
+			"damage": 6,
+			"damage_type": "status_dot",
+			"element": "poison",
+			"boss_modifiers": {
+				"dot_damage_multiplier": 0.65,
+				"max_stacks": 3
+			},
+			"elite_modifiers": {
+				"dot_damage_multiplier": 0.8
+			}
+		},
+		{
+			"duration": 4,
+			"tick_interval": 0.5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "dot_resist",
+			"id": "bleed",
+			"display_name": "bleed",
+			"type": "dot",
+			"max_stacks": 1,
+			"effect": {
+				"dot": true
+			},
+			"damage": 4,
+			"damage_type": "status_dot",
+			"element": "physical"
+		},
+		{
+			"duration": 3,
+			"tick_interval": 0.5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "dot_resist",
+			"id": "blackfire",
+			"display_name": "blackfire",
+			"type": "dot",
+			"max_stacks": 1,
+			"effect": {
+				"dot": true
+			},
+			"damage": 6,
+			"damage_type": "status_dot",
+			"element": "fire"
+		},
+		{
+			"duration": 0.8,
+			"tick_interval": 0,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "reaction_resist",
+			"id": "shock",
+			"display_name": "shock",
+			"type": "reaction",
+			"max_stacks": 1,
+			"effect": {}
+		},
+		{
+			"duration": 2,
+			"tick_interval": 0,
+			"refresh_rule": "strongest_only",
+			"boss_conversion_rule": "poise",
+			"id": "slow",
+			"display_name": "slow",
+			"type": "control",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 0.35
+			}
+		},
+		{
+			"duration": 1.2,
+			"tick_interval": 0,
+			"refresh_rule": "strongest_only",
+			"boss_conversion_rule": "poise",
+			"id": "root",
+			"display_name": "root",
+			"type": "control",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 1
+			}
+		},
+		{
+			"duration": 0.8,
+			"tick_interval": 0,
+			"refresh_rule": "strongest_only",
+			"boss_conversion_rule": "poise",
+			"id": "freeze",
+			"display_name": "freeze",
+			"type": "hard_control",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 1
+			},
+			"visual": {
+				"texture": "res://assets/weapon/frost_staff.png",
+				"modulate": [
+					0.55,
+					0.85,
+					1,
+					0.8
+				],
+				"scale": [
+					0.42,
+					0.42
+				],
+				"offset": [
+					0,
+					-24
+				],
+				"priority": 40
+			}
+		},
+		{
+			"duration": 0.7,
+			"tick_interval": 0,
+			"refresh_rule": "strongest_only",
+			"boss_conversion_rule": "poise",
+			"id": "stun",
+			"display_name": "stun",
+			"type": "hard_control",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 1
+			}
+		},
+		{
+			"duration": 0.7,
+			"tick_interval": 0,
+			"refresh_rule": "strongest_only",
+			"boss_conversion_rule": "poise",
+			"id": "paralyze",
+			"display_name": "paralyze",
+			"type": "hard_control",
+			"max_stacks": 1,
+			"effect": {
+				"move_slow_per_stack": 1
+			}
+		},
+		{
+			"duration": 3,
+			"tick_interval": 0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "weaken",
+			"display_name": "weaken",
+			"type": "debuff",
+			"max_stacks": 1,
+			"effect": {}
+		},
+		{
+			"duration": 0.5,
+			"tick_interval": 0.5,
+			"refresh_rule": "field_tick",
+			"boss_conversion_rule": "none",
+			"id": "radiance",
+			"display_name": "radiance",
+			"type": "field",
+			"max_stacks": 1,
+			"effect": {
+				"dot": true
+			},
+			"damage": 6,
+			"damage_type": "status_dot",
+			"element": "holy"
+		},
+		{
+			"id": "hunter_snare",
+			"display_name": "hunter_snare",
+			"type": "control",
+			"max_stacks": 1,
+			"duration": 5,
+			"tick_interval": 0,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "poise",
+			"effect": {
+				"move_slow_per_stack": 0.55
+			}
+		},
+		{
+			"id": "eagle_mark",
+			"display_name": "eagle_mark",
+			"type": "mark",
+			"duration": 6,
+			"tick_interval": 0,
+			"max_stacks": 1,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "burst_mark",
+			"display_name": "burst_mark",
+			"type": "mark",
+			"duration": 3,
+			"tick_interval": 0,
+			"max_stacks": 1,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "prey_mark",
+			"display_name": "prey_mark",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 1,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "impurity",
+			"display_name": "impurity",
+			"type": "mark",
+			"duration": 4,
+			"tick_interval": 0,
+			"max_stacks": 3,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "toxin_seed",
+			"display_name": "toxin_seed",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 4,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "toxic_core",
+			"display_name": "toxic_core",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 4,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "flammable_mark",
+			"display_name": "flammable_mark",
+			"type": "mark",
+			"duration": 4,
+			"tick_interval": 0,
+			"max_stacks": 5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {
+				"fire_damage_taken_multiplier_add_per_stack": 0.01
+			}
+		},
+		{
+			"id": "oil_stack",
+			"display_name": "oil_stack",
+			"type": "mark",
+			"duration": 4,
+			"tick_interval": 0,
+			"max_stacks": 3,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "acid_mark",
+			"display_name": "acid_mark",
+			"type": "mark",
+			"duration": 4,
+			"tick_interval": 0,
+			"max_stacks": 5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {
+				"damage_taken_multiplier_add_per_stack": 0.005
+			}
+		},
+		{
+			"id": "forbidden",
+			"display_name": "forbidden",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "execution_mark",
+			"display_name": "execution_mark",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 1,
+			"refresh_rule": "replace",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		},
+		{
+			"id": "acid_residue",
+			"display_name": "acid_residue",
+			"type": "mark",
+			"duration": 5,
+			"tick_interval": 0,
+			"max_stacks": 5,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"effect": {}
+		}
+	]
+}

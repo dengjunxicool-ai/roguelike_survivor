@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bxxmyd7pal4o3"]
+
+[ext_resource type="Script" uid="uid://c7h3ukjm3qr1l" path="res://scripts/ui/ui_manager.gd" id="1_rg0xw"]
+
+[node name="UIManager" type="CanvasLayer" unique_id=2056208056]
+process_mode = 3
+layer = 200
+script = ExtResource("1_rg0xw")

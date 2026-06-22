@@ -1,0 +1,396 @@
+{
+	"characters": [
+		{
+			"visual": {
+				"texture": "res://assets/hero/mege.png",
+				"sprite_frames": "res://assets/hero/mage_spriteframes.tres",
+				"scale": [
+					0.1,
+					0.1
+				]
+			},
+			"id": "mage",
+			"display_name": "法师",
+			"description": "以主武器伤害和元素状态推进节奏，但过载后更脆弱。",
+			"role": "高爆发元素施法者",
+			"allowed_weapon_ids": [
+				"fire_staff",
+				"frost_staff",
+				"lightning_whip",
+				"spellbook"
+			],
+			"unlock": {
+				"type": "default"
+			},
+			"trait": {
+				"id": "arcane_overload",
+				"display_name": "奥术过载",
+				"description": "每次攻击叠加过载状态，提升武器伤害，但会增加人物层数，并降低移速和拾取范围，最多可叠6层。受击会损失一半层数。",
+				"type": "weapon_cast_stack",
+				"params": {
+					"casts_per_stack": 3,
+					"modifiers_per_stack": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage_taken",
+							"op": "multiplier_add",
+							"value": 0.01,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "move_speed",
+							"op": "multiplier_add",
+							"value": -0.015,
+							"scope": {
+								"domain": "player"
+							}
+						}
+					],
+					"full_stack_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.12,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						},
+						{
+							"stat": "damage_taken",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "pickup_radius",
+							"op": "multiplier_add",
+							"value": -0.15,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": -0.08,
+							"scope": {
+								"domain": "player"
+							}
+						}
+					],
+					"on_damaged": {
+						"lose_stack_percent": 0.5,
+						"clear_below_stack": 2
+					},
+					"max_stacks": 6
+				}
+			},
+			"base_stats": {
+				"max_hp": 75,
+				"move_speed": 98,
+				"damage_multiplier": 1.08,
+				"attack_speed_multiplier": 1,
+				"crit_chance": 0.06,
+				"crit_damage": 1.5,
+				"armor": 0,
+				"pickup_radius": 85,
+				"soul_gain_multiplier": 1
+			},
+			"starting_skill_id": "fireball"
+		},
+		{
+			"visual": {
+				"texture": "res://assets/hero/ranger.png",
+				"scale": [
+					0.1,
+					0.1
+				]
+			},
+			"id": "ranger",
+			"display_name": "游侠",
+			"description": "保持移动能进入猎手节奏，停顿、受击或硬控会中断节奏。",
+			"role": "高速暴击与陷阱猎手",
+			"allowed_weapon_ids": [
+				"throwing_knife_belt",
+				"hunter_bow",
+				"trap_kit"
+			],
+			"unlock": {
+				"type": "default"
+			},
+			"trait": {
+				"id": "hunters_rhythm",
+				"display_name": "猎手节奏",
+				"description": "持续移动进入猎手节奏，获得暴击、弹道速度、陷阱间隔和移速收益；停顿、受击或控制会进入短暂惩罚。",
+				"type": "moving_bonus",
+				"params": {
+					"moving_seconds_required": 2.5,
+					"stop_break_seconds": 1,
+					"active_modifiers": [
+						{
+							"stat": "crit_chance",
+							"op": "add",
+							"value": 0.12,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "projectile_speed",
+							"op": "multiplier_add",
+							"value": 0.15,
+							"scope": {
+								"domain": "skill"
+							}
+						},
+						{
+							"stat": "trap_interval",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "skill",
+								"tag": [
+									"trap"
+								]
+							}
+						},
+						{
+							"stat": "move_speed",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "player"
+							}
+						}
+					],
+					"penalty_duration": 3,
+					"penalty_modifiers": [
+						{
+							"stat": "crit_chance",
+							"op": "add",
+							"value": -0.08,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "move_speed",
+							"op": "multiplier_add",
+							"value": -0.35,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "trap_interval",
+							"op": "multiplier_add",
+							"value": 0.08,
+							"scope": {
+								"domain": "skill",
+								"tag": [
+									"trap"
+								]
+							}
+						}
+					]
+				}
+			},
+			"base_stats": {
+				"max_hp": 85,
+				"move_speed": 118,
+				"damage_multiplier": 0.95,
+				"attack_speed_multiplier": 1.12,
+				"crit_chance": 0.12,
+				"crit_damage": 1.6,
+				"armor": 0,
+				"pickup_radius": 80,
+				"soul_gain_multiplier": 1
+			},
+			"starting_skill_id": "fireball"
+		},
+		{
+			"visual": {
+				"texture": "res://assets/hero/paladin.png",
+				"scale": [
+					0.1,
+					0.1
+				]
+			},
+			"id": "paladin",
+			"display_name": "圣骑士",
+			"description": "更稳定地承受伤害，并在护盾存在时强化神圣伤害。",
+			"role": "护盾与神圣前线",
+			"allowed_weapon_ids": [
+				"holy_shield",
+				"warhammer",
+				"cross_relic"
+			],
+			"unlock": {
+				"type": "default"
+			},
+			"trait": {
+				"id": "holy_burden",
+				"display_name": "神圣重负",
+				"description": "定期获得护盾，整体承伤更稳；护盾存在时装备武器伤害提升，但节奏更慢。",
+				"type": "passive_with_periodic_shield",
+				"params": {
+					"shield_amount": 20,
+					"shield_interval": 18,
+					"shield_duration": 18,
+					"base_modifiers": [
+						{
+							"stat": "damage_taken",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "move_speed",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "player"
+							}
+						},
+						{
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"value": -0.05,
+							"scope": {
+								"domain": "player"
+							}
+						}
+					],
+					"shield_active_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					]
+				}
+			},
+			"base_stats": {
+				"max_hp": 135,
+				"move_speed": 90,
+				"damage_multiplier": 0.92,
+				"attack_speed_multiplier": 0.95,
+				"crit_chance": 0.04,
+				"crit_damage": 1.5,
+				"armor": 6,
+				"pickup_radius": 78,
+				"soul_gain_multiplier": 1
+			},
+			"starting_skill_id": "fireball"
+		},
+		{
+			"visual": {
+				"texture": "res://assets/hero/alchemist.png",
+				"scale": [
+					0.1,
+					0.1
+				]
+			},
+			"id": "alchemist",
+			"display_name": "炼金术士",
+			"description": "直接主攻击较弱，但持续伤害与状态反应更强。",
+			"role": "异常状态与反应专家",
+			"allowed_weapon_ids": [
+				"toxic_vial",
+				"fire_oil_canister",
+				"acid_sprayer"
+			],
+			"unlock": {
+				"type": "default"
+			},
+			"trait": {
+				"id": "unstable_potion",
+				"display_name": "不稳定药剂",
+				"type": "status_kill_random_area",
+				"description": "击杀带状态的敌人时有概率生成随机药剂区域，强化持续伤害、状态和反应路线。",
+				"params": {
+					"kill_chance": 0.15,
+					"same_source_cooldown": 0.5,
+					"max_zones": 3,
+					"boss_minion_chance_multiplier": 0.5,
+					"area_damage": 6,
+					"area_duration": 2.5,
+					"area_tick_interval": 0.5,
+					"area_radius": 56,
+					"base_modifiers": [
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.25,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"status_dot"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": 0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"reaction"
+								]
+							}
+						},
+						{
+							"stat": "damage",
+							"op": "multiplier_add",
+							"value": -0.1,
+							"scope": {
+								"domain": "damage",
+								"damage_origin": [
+									"primary_attack"
+								]
+							}
+						}
+					]
+				}
+			},
+			"base_stats": {
+				"max_hp": 95,
+				"move_speed": 100,
+				"damage_multiplier": 0.9,
+				"attack_speed_multiplier": 1,
+				"crit_chance": 0.05,
+				"crit_damage": 1.5,
+				"armor": 2,
+				"pickup_radius": 90,
+				"soul_gain_multiplier": 1
+			},
+			"starting_skill_id": "fireball"
+		}
+	]
+}

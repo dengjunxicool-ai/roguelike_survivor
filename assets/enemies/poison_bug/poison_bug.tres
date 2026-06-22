@@ -1,0 +1,68 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://dnhmvnac655at"]
+
+[ext_resource type="Texture2D" uid="uid://yavqm3rwofcs" path="res://assets/enemies/poison_bug/9.png" id="1_jcdml"]
+[ext_resource type="Texture2D" uid="uid://b4xpdx30mj6hf" path="res://assets/enemies/poison_bug/10.png" id="2_85w0m"]
+[ext_resource type="Texture2D" uid="uid://5tn752rv3x42" path="res://assets/enemies/poison_bug/11.png" id="3_6bc3h"]
+[ext_resource type="Texture2D" uid="uid://da2v2e7q6r8ra" path="res://assets/enemies/poison_bug/12.png" id="4_b3d6t"]
+[ext_resource type="Texture2D" uid="uid://d2lq8r1fvv2ie" path="res://assets/enemies/poison_bug/1.png" id="5_w5ted"]
+[ext_resource type="Texture2D" uid="uid://cteloltmq6blf" path="res://assets/enemies/poison_bug/2.png" id="6_oewft"]
+[ext_resource type="Texture2D" uid="uid://da8nh0ihy83wa" path="res://assets/enemies/poison_bug/3.png" id="7_1hylp"]
+[ext_resource type="Texture2D" uid="uid://dygrs0f45qque" path="res://assets/enemies/poison_bug/4.png" id="8_61ocg"]
+[ext_resource type="Texture2D" uid="uid://dhwnp5lfhfb72" path="res://assets/enemies/poison_bug/5.png" id="9_7ljcc"]
+[ext_resource type="Texture2D" uid="uid://dylnvi13flnd5" path="res://assets/enemies/poison_bug/6.png" id="10_2qs5r"]
+[ext_resource type="Texture2D" uid="uid://cg0njc5tckfwa" path="res://assets/enemies/poison_bug/7.png" id="11_4rpfi"]
+[ext_resource type="Texture2D" uid="uid://dqvx7om04ny1c" path="res://assets/enemies/poison_bug/8.png" id="12_im7wl"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_jcdml")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_85w0m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_6bc3h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_b3d6t")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_w5ted")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_oewft")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_1hylp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_61ocg")
+}],
+"loop": true,
+"name": &"move_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_7ljcc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_2qs5r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_4rpfi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_im7wl")
+}],
+"loop": true,
+"name": &"move_right",
+"speed": 5.0
+}]
