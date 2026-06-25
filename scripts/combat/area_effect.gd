@@ -48,6 +48,11 @@ var skill_instance: RefCounted
 var caster: Node
 var skill_manager: Node
 var relic_manager: Node
+var actions_on_apply: Array = []
+var actions_on_tick: Array = []
+var actions_on_hit: Array = []
+var actions_on_expire: Array = []
+var actions_on_death: Array = []
 
 
 func _ready() -> void:
@@ -77,6 +82,11 @@ func setup(params: Dictionary) -> void:
 	source_id = StringName(String(params.get("source_id", source_id)))
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	event_on_expire = StringName(String(params.get("event_on_expire", event_on_expire)))
+	actions_on_apply = _get_array(params.get("actions_on_apply", []))
+	actions_on_tick = _get_array(params.get("actions_on_tick", []))
+	actions_on_hit = _get_array(params.get("actions_on_hit", []))
+	actions_on_expire = _get_array(params.get("actions_on_expire", []))
+	actions_on_death = _get_array(params.get("actions_on_death", []))
 	finish_after_damage = bool(params.get("finish_after_damage", finish_after_damage))
 	damage_once_per_body = bool(params.get("damage_once_per_body", damage_once_per_body))
 	impact_target_id = String(params.get("impact_target_id", impact_target_id))
@@ -111,6 +121,7 @@ func setup(params: Dictionary) -> void:
 		radius = maxf(_expand_from_radius, 1.0)
 	_apply_radius(radius)
 	_apply_visual(params)
+	_execute_adapted_actions(actions_on_apply, null)
 
 
 func extend_duration(target_duration: float, max_duration: float = 5.0) -> void:
@@ -237,6 +248,10 @@ func _damage_body(body: Node) -> bool:
 		body.call(&"take_damage", _get_damage_payload(body), damage_type)
 	_apply_status(body)
 	_emit_area_event(event_on_hit, body)
+	_execute_adapted_actions(actions_on_tick, body)
+	_execute_adapted_actions(actions_on_hit, body)
+	if body.has_method("is_dead") and bool(body.call("is_dead")):
+		_execute_adapted_actions(actions_on_death, body)
 	if damage_once_per_body:
 		_damaged_body_ids[body_id] = true
 	if finish_after_damage:
@@ -556,6 +571,7 @@ func _finish_damage_window() -> void:
 	_damage_window_finished = true
 	if not _finished_by_damage:
 		_emit_area_event(event_on_expire, null)
+		_execute_adapted_actions(actions_on_expire, null)
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
@@ -622,6 +638,39 @@ func _get_dictionary(value: Variant) -> Dictionary:
 		return dictionary.duplicate(true)
 
 	return {}
+
+
+func _get_array(value: Variant) -> Array:
+	if value is Array:
+		var items: Array = value
+		return items.duplicate(true)
+	return []
+
+
+func _execute_adapted_actions(actions: Array, target: Node) -> void:
+	if actions.is_empty() or event_bus == null or not event_bus.has_method("execute_adapted_actions"):
+		return
+	event_bus.call("execute_adapted_actions", actions, DamageTraceContextScript.normalize_event_context({
+		"caster": caster,
+		"owner": caster,
+		"target": target,
+		"enemy": target,
+		"area": self,
+		"source": self,
+		"source_id": source_id,
+		"source_key": String(damage_packet.get("source_id", source_id)),
+		"source_instance_id": String(damage_packet.get("source_instance_id", str(get_instance_id()))),
+		"skill_instance": skill_instance,
+		"skill_id": StringName(skill_instance.get("skill_id")) if skill_instance != null else &"",
+		"skill_manager": skill_manager,
+		"relic_manager": relic_manager,
+		"event_bus": event_bus,
+		"parent": get_parent(),
+		"target_group": target_group,
+		"damage_type": damage_type,
+		"damage_packet": damage_packet,
+		"position": global_position
+	}))
 
 
 func _get_color(value: Variant, fallback: Color) -> Color:

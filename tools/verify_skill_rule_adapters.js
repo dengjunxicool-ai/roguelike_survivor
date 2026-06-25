@@ -16,8 +16,31 @@ function assert(condition, message) {
 const effectAdapter = read("scripts/skills/skill_effect_adapter.gd");
 const triggerAdapter = read("scripts/skills/skill_trigger_rule_adapter.gd");
 const eventBus = read("scripts/skills/skill_event_bus.gd");
+const actionExecutor = read("scripts/skills/skill_action_executor.gd");
+const areaEffect = read("scripts/combat/area_effect.gd");
+const projectile = read("scripts/combat/projectile.gd");
 
-for (const effectType of ["damage", "apply_status", "spawn_area", "spawn_projectile", "spawn_summon", "grant_shield", "pull", "transfer_status"]) {
+for (const effectType of [
+  "damage",
+  "apply_status",
+  "spawn_area",
+  "spawn_projectile",
+  "spawn_summon",
+  "add_modifier",
+  "grant_shield",
+  "heal",
+  "pull",
+  "knockback",
+  "repeat_skill",
+  "transform_area",
+  "transfer_status",
+  "consume_status_duration",
+  "trigger_overload",
+  "shatter_frozen",
+  "spawn_projectile_burst",
+  "repeat_area_path",
+  "spawn_area_from_existing_area",
+]) {
   assert(effectAdapter.includes(`"${effectType}"`), `SkillEffectAdapter must map ${effectType}`);
 }
 
@@ -30,7 +53,16 @@ assert(effectAdapter.includes("actions_on_tick"), "SkillEffectAdapter must adapt
 assert(triggerAdapter.includes("counter_key"), "SkillTriggerRuleAdapter must support counters");
 assert(triggerAdapter.includes("cooldown"), "SkillTriggerRuleAdapter must support cooldown");
 assert(triggerAdapter.includes("_normalize_conditions"), "SkillTriggerRuleAdapter must normalize flat conditions");
+assert(triggerAdapter.includes('"enemy_death": &"on_enemy_killed"'), "enemy_death must map to existing kill event");
+assert(triggerAdapter.includes('"player_damage_taken": &"on_player_damaged"'), "player_damage_taken must map to existing player damage event");
 assert(eventBus.includes("SkillTriggerRuleAdapterScript"), "SkillEventBus must use SkillTriggerRuleAdapter");
 assert(eventBus.includes("can_execute_rule_event"), "SkillEventBus must apply rule counter/cooldown guards");
+assert(eventBus.includes("get_all_skills"), "SkillEventBus must evaluate owned trigger rules");
+assert(eventBus.includes("execute_adapted_actions"), "SkillEventBus must expose inline adapted action execution");
+assert(areaEffect.includes("actions_on_tick") && areaEffect.includes("execute_adapted_actions"), "AreaEffect must consume nested area actions");
+assert(projectile.includes("actions_on_hit") && projectile.includes("execute_adapted_actions"), "Projectile must consume nested hit actions");
+for (const existingAction of ["deal_damage", "apply_status", "spawn_area", "spawn_projectile", "spawn_summon", "heal_owner", "knockback", "add_temporary_modifier"]) {
+  assert(actionExecutor.includes(`"${existingAction}"`), `SkillActionExecutor must support existing action ${existingAction}`);
+}
 
 console.log("[verify_skill_rule_adapters] PASS");

@@ -603,7 +603,8 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
 		return
 	var parent_node: Node = get_tree().current_scene if get_tree() != null else get_parent()
-	FireSkillRuntimeScript.execute_passive_event(&"on_player_damaged", {
+	var event_bus: Node = get_node_or_null("SkillEventBus")
+	var damage_context: Dictionary = {
 		"player": self,
 		"caster": self,
 		"owner": self,
@@ -613,9 +614,14 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 		"amount": amount,
 		"skill_manager": skill_manager,
 		"relic_manager": get_node_or_null("RelicManager"),
-		"event_bus": get_node_or_null("SkillEventBus"),
+		"event_bus": event_bus,
 		"target_group": &"enemies"
-	}, skill_manager)
+	}
+	FireSkillRuntimeScript.execute_passive_event(&"on_player_damaged", damage_context, skill_manager)
+	if event_bus != null and event_bus.has_method("emit_skill_event"):
+		var skill_rule_context: Dictionary = damage_context.duplicate(true)
+		skill_rule_context["skip_fire_passive_runtime"] = true
+		event_bus.call("emit_skill_event", &"on_player_damaged", skill_rule_context)
 	for skill_variant: Variant in skill_manager.call("get_all_skills"):
 		var skill_instance: RefCounted = skill_variant as RefCounted
 		if skill_instance == null:

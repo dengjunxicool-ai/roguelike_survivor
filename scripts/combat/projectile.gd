@@ -32,6 +32,7 @@ var skill_instance: RefCounted
 var caster: Node
 var skill_manager: Node
 var relic_manager: Node
+var actions_on_hit: Array = []
 var _visual_config: Dictionary = {}
 var _visual_style: String = ""
 var _visual_color: Color = Color(1.0, 0.45, 0.12, 0.9)
@@ -75,6 +76,7 @@ func setup(params: Dictionary) -> void:
 	visual_effect_scene = String(params.get("visual_effect_scene", visual_effect_scene))
 	_stabilize_damage_packet_source("projectile")
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
+	actions_on_hit = _get_array(params.get("actions_on_hit", []))
 	event_bus = params.get("event_bus") as Node
 	skill_instance = params.get("skill_instance") as RefCounted
 	caster = params.get("caster") as Node
@@ -153,7 +155,7 @@ func _emit_hit_event(body: Node) -> bool:
 	if event_bus == null or event_on_hit == &"" or not event_bus.has_method("emit_skill_event"):
 		return false
 
-	event_bus.call_deferred("emit_skill_event", event_on_hit, DamageTraceContextScript.normalize_event_context({
+	var event_context: Dictionary = DamageTraceContextScript.normalize_event_context({
 		"caster": caster,
 		"owner": caster,
 		"target": body,
@@ -172,7 +174,9 @@ func _emit_hit_event(body: Node) -> bool:
 		"damage_type": damage_type,
 		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit", false)),
 		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add", 0.0))
-	}))
+	})
+	event_bus.call_deferred("emit_skill_event", event_on_hit, event_context)
+	_execute_adapted_actions(actions_on_hit, event_context)
 	return true
 
 
@@ -583,6 +587,19 @@ func _get_dictionary(value: Variant) -> Dictionary:
 		return dictionary.duplicate(true)
 
 	return {}
+
+
+func _get_array(value: Variant) -> Array:
+	if value is Array:
+		var items: Array = value
+		return items.duplicate(true)
+	return []
+
+
+func _execute_adapted_actions(actions: Array, context: Dictionary) -> void:
+	if actions.is_empty() or event_bus == null or not event_bus.has_method("execute_adapted_actions"):
+		return
+	event_bus.call("execute_adapted_actions", actions, context)
 
 
 func _get_color(value: Variant, fallback: Color) -> Color:
