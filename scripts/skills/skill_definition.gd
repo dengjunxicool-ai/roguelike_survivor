@@ -36,7 +36,7 @@ func _init(data: Dictionary = {}) -> void:
 	school = StringName(String(data.get("school", data.get("god_id", ""))))
 	var fusion_value: Variant = data.get("fusion_school", null)
 	fusion_school = null if fusion_value == null else StringName(String(fusion_value))
-	skill_type = String(data.get("type", _category_to_skill_type(String(data.get("category", "")))))
+	skill_type = String(data.get("skill_type", data.get("type", _category_to_skill_type(String(data.get("category", ""))))))
 	rarity = String(data.get("rarity", "normal"))
 	exclusive_group = String(data.get("exclusive_group", ""))
 	mechanic_family = String(data.get("mechanic_family", ""))
