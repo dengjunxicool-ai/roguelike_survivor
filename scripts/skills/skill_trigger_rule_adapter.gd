@@ -128,7 +128,11 @@ static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_insta
 	if cooldown <= 0.0:
 		return true
 
-	var key: String = "trigger_cd:%s:%s" % [String(event.get("trigger", "")), String(event.get("source_id", ""))]
+	var source_key: String = String(event.get("source_id", ""))
+	var key: String = "trigger_cd_%s_%s" % [
+		_metadata_token(String(event.get("trigger", ""))),
+		_metadata_token(source_key if source_key != "" else "global")
+	]
 	var now: float = float(Time.get_ticks_msec()) / 1000.0
 	var ready_at: float = float(skill_instance.get_meta(key, 0.0))
 	if now < ready_at:
@@ -136,6 +140,18 @@ static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_insta
 	skill_instance.set_meta(key, now + cooldown)
 	context["last_trigger_cooldown_key"] = key
 	return true
+
+
+static func _metadata_token(value: String) -> String:
+	var token: String = value.strip_edges()
+	for character: String in [":", "-", ".", "/", " "]:
+		token = token.replace(character, "_")
+	if token == "":
+		return "global"
+	var first_character: String = token.substr(0, 1)
+	if first_character >= "0" and first_character <= "9":
+		token = "v_%s" % token
+	return token
 
 
 static func _get_array(value: Variant) -> Array:

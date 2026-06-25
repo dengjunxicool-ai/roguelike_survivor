@@ -18,6 +18,11 @@ const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_s
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 
+const ELEMENT_ALIASES: Dictionary = {
+	"frost": "ice",
+	"thunder": "lightning"
+}
+
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 
 
@@ -1181,10 +1186,15 @@ func _resolve_area_tick_interval(area_source_id: StringName, params: Dictionary,
 
 func _get_damage_type(params: Dictionary, context: Dictionary, source_type: String = "skill", damage_origin: String = "") -> StringName:
 	if params.has("damage_type"):
-		return _normalize_configured_damage_type(String(params["damage_type"]), _get_element(params, context), source_type, damage_origin)
+		var configured_damage_type: String = String(params["damage_type"])
+		if _is_element_name(configured_damage_type):
+			return _infer_damage_type(_get_element(params, context), source_type, damage_origin)
+		return _normalize_configured_damage_type(configured_damage_type, _get_element(params, context), source_type, damage_origin)
 
 	var context_damage_type: String = String(context.get("damage_type", ""))
 	if context_damage_type != "":
+		if _is_element_name(context_damage_type):
+			return _infer_damage_type(StringName(_normalize_element_name(context_damage_type)), source_type, damage_origin)
 		return _normalize_configured_damage_type(context_damage_type, _get_element(params, context), source_type, damage_origin)
 
 	return _infer_damage_type(_get_element(params, context), source_type, damage_origin)
@@ -1192,10 +1202,15 @@ func _get_damage_type(params: Dictionary, context: Dictionary, source_type: Stri
 
 func _get_element(params: Dictionary, context: Dictionary) -> StringName:
 	if params.has("element"):
-		return StringName(String(params["element"]))
+		return StringName(_normalize_element_name(String(params["element"])))
+	if params.has("damage_type") and _is_element_name(String(params["damage_type"])):
+		return StringName(_normalize_element_name(String(params["damage_type"])))
 	var context_element: String = String(context.get("element", ""))
 	if context_element != "":
-		return StringName(context_element)
+		return StringName(_normalize_element_name(context_element))
+	var context_damage_type: String = String(context.get("damage_type", ""))
+	if _is_element_name(context_damage_type):
+		return StringName(_normalize_element_name(context_damage_type))
 	return &"physical"
 
 
@@ -1225,12 +1240,20 @@ func _infer_damage_type(element: StringName, source_type: String, damage_origin:
 	return DamageRuleRegistryScript.infer_damage_type(element, source_type, damage_origin)
 
 
+func _is_element_name(value: String) -> bool:
+	return DamageRuleRegistryScript.is_element(value) or ELEMENT_ALIASES.has(value)
+
+
+func _normalize_element_name(value: String) -> String:
+	return String(ELEMENT_ALIASES.get(value, value))
+
+
 func _build_damage_packet(params: Dictionary, context: Dictionary, amount: int, source_type: String) -> Dictionary:
 	var damage_origin: String = _get_damage_origin(params, context, source_type)
 	var damage_type: StringName = _get_damage_type(params, context, source_type, damage_origin)
 	var element: StringName = _get_element(params, context)
 	var caster: Node = context.get("caster") as Node
-	var uses_skill_level: bool = bool(params.get("uses_skill_level_coefficient", damage_origin == "primary_attack"))
+	var uses_skill_level: bool = bool(params.get("uses_skill_level_coefficient", damage_origin == "primary_attack" and context.get("skill_instance") != null))
 	var packet: Dictionary = DamagePacketBuilderScript.from_skill_action({
 		"params": params,
 		"context": context,
@@ -1335,7 +1358,6 @@ func _get_skill_level_coefficient(context: Dictionary) -> float:
 			scaling = scaling_variant
 	var coefficients: Array = _get_array(scaling.get("skill_level_coefficients", []))
 	if coefficients.is_empty():
-		push_warning("[SkillActionExecutor] Missing damage_scaling.skill_level_coefficients for %s; defaulting to 1.0." % String(skill_instance.get("skill_id")))
 		return 1.0
 
 	var level_index: int = maxi(int(skill_instance.get("current_level")) - 1, 0)
