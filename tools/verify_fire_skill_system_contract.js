@@ -116,7 +116,7 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-function validateSkill(skill, expectedIds) {
+function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   for (const field of REQUIRED_SKILL_FIELDS) {
     assert(Object.prototype.hasOwnProperty.call(skill, field), `${skill.id || "missing id"} missing field ${field}`);
   }
@@ -127,6 +127,14 @@ function validateSkill(skill, expectedIds) {
     assert(ALLOWED_SCHOOLS.has(skill.fusion_school), `${skill.id} invalid fusion_school`);
   }
   assert(ALLOWED_TYPES.has(skill.type), `${skill.id} invalid type`);
+  if (fireFusionIds.has(skill.id)) {
+    assert(skill.type === "fusion", `${skill.id} fusion skill id must set type fusion`);
+    assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
+    assert(skill.offer_rule.required_min_skill_count, `${skill.id} must set offer_rule.required_min_skill_count`);
+  }
+  if (fireBaseIds.has(skill.id)) {
+    assert(skill.type !== "fusion", `${skill.id} base skill id must not set type fusion`);
+  }
   assert(ALLOWED_RARITIES.has(skill.rarity), `${skill.id} invalid rarity`);
   assert(Number.isInteger(skill.max_level) && skill.max_level >= 1, `${skill.id} invalid max_level`);
   assert(Array.isArray(skill.tags) && skill.tags.length > 0, `${skill.id} must have non-empty tags`);
@@ -148,6 +156,8 @@ function validateSkill(skill, expectedIds) {
 function main() {
   const document = readJson("data/skills.json");
   const skills = asArray(document.skills);
+  const fireBaseIds = new Set(FIRE_BASE_IDS);
+  const fireFusionIds = new Set(FIRE_FUSION_IDS);
   const expectedIds = new Set([...FIRE_BASE_IDS, ...FIRE_FUSION_IDS]);
   const actualIds = new Set(skills.map((skill) => skill.id));
 
@@ -156,11 +166,7 @@ function main() {
     assert(actualIds.has(id), `missing skill ${id}`);
   }
   for (const skill of skills) {
-    validateSkill(skill, expectedIds);
-    if (skill.type === "fusion") {
-      assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
-      assert(skill.offer_rule.required_min_skill_count, `${skill.id} must set offer_rule.required_min_skill_count`);
-    }
+    validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds);
   }
 
   console.log("[verify_fire_skill_system_contract] PASS");
