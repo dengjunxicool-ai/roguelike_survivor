@@ -136,7 +136,8 @@
       ],
       "effects": [
         { "type": "add_modifier", "modifier": "attack_damage_multiplier", "value": 0.2, "damage_type": "fire" }
-      ]
+      ],
+      "description": "攻击变强，命中施加 Burning，并有概率在目标脚下生成短暂火焰路径"
     },
     {
       "id": "fire_dash_blazing_run",
@@ -175,7 +176,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning"
     },
     {
       "id": "fire_cast_meteor_rain",
@@ -222,7 +224,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面"
     },
     {
       "id": "fire_cast_lava_rift",
@@ -260,7 +263,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害"
     },
     {
       "id": "fire_cast_scorching_vortex",
@@ -298,7 +302,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人"
     },
     {
       "id": "fire_summon_crimson_dragon",
@@ -332,7 +337,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning"
     },
     {
       "id": "fire_summon_ember_fox_pack",
@@ -368,7 +374,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花"
     },
     {
       "id": "fire_passive_burning_focus",
@@ -390,7 +397,8 @@
       "effects": [
         { "type": "add_modifier", "modifier": "burning_damage_multiplier", "value": 0.25 },
         { "type": "add_modifier", "modifier": "burning_duration_multiplier", "value": 0.2 }
-      ]
+      ],
+      "description": "Burning 持续时间和伤害提高"
     },
     {
       "id": "fire_passive_overheated_casting",
@@ -419,7 +427,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围"
     },
     {
       "id": "fire_passive_scorched_ground_affinity",
@@ -446,7 +455,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高"
     },
     {
       "id": "fire_power_combustion_chain",
@@ -476,7 +486,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆"
     },
     {
       "id": "fire_power_ember_attachment",
@@ -512,7 +523,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标"
     },
     {
       "id": "fire_power_ignite_core",
@@ -541,7 +553,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发"
     },
     {
       "id": "fire_core_inferno_cycle",
@@ -584,7 +597,8 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [],
+      "description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨"
     },
     {
       "id": "fusion_fire_frost_steam_mist",
