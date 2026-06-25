@@ -89,6 +89,19 @@ const SUPPORTED_TRIGGERS = new Set([
   "summon_attack_hit",
   "always",
 ]);
+const SUPPORTED_CONDITIONS = new Set([
+  "target_has_status",
+  "target_has_tag",
+  "owner_has_skill",
+  "owner_has_relic",
+  "skill_has_tag",
+  "random_chance",
+  "target_hp_below",
+  "is_critical_hit",
+  "enemy_count_in_radius",
+  "always",
+  "",
+]);
 const SUPPORTED_EFFECTS = new Set([
   "damage",
   "apply_status",
@@ -237,6 +250,20 @@ function validateRequiredMinSkillCount(skill, expectedMetadata) {
   }
 }
 
+function validateTriggerRuleConditions(rule, skillId, ruleIndex) {
+  if (!Object.prototype.hasOwnProperty.call(rule, "conditions")) {
+    return;
+  }
+  const location = `trigger_rules[${ruleIndex}].conditions`;
+  assert(Array.isArray(rule.conditions), `${skillId} ${location} must be an array`);
+  rule.conditions.forEach((condition, conditionIndex) => {
+    const conditionLocation = `${location}[${conditionIndex}]`;
+    assert(isObject(condition), `${skillId} ${conditionLocation} must be a non-array object`);
+    const conditionType = Object.prototype.hasOwnProperty.call(condition, "type") ? condition.type : "always";
+    assert(SUPPORTED_CONDITIONS.has(conditionType), `${skillId} unsupported condition ${conditionType} at ${conditionLocation}`);
+  });
+}
+
 function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById) {
   for (const field of REQUIRED_SKILL_FIELDS) {
     assert(Object.prototype.hasOwnProperty.call(skill, field), `${skill.id || "missing id"} missing field ${field}`);
@@ -271,6 +298,7 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   skill.trigger_rules.forEach((rule, index) => {
     assert(isObject(rule), `${skill.id} trigger_rules[${index}] must be an object`);
     assert(SUPPORTED_TRIGGERS.has(rule.trigger), `${skill.id} unsupported trigger ${rule.trigger}`);
+    validateTriggerRuleConditions(rule, skill.id, index);
     validateEffectArray(rule.effects, skill.id, `trigger_rules[${index}].effects`);
   });
   validateEffectArray(skill.effects, skill.id, "effects");
