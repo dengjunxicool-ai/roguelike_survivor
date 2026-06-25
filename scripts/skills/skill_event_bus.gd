@@ -5,6 +5,7 @@ class_name SkillEventBus
 const ConditionEvaluatorScript: Script = preload("res://scripts/skills/condition_evaluator.gd")
 const HitEventResultScript: Script = preload("res://scripts/skills/hit_event_result.gd")
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
+const SkillTriggerRuleAdapterScript: Script = preload("res://scripts/skills/skill_trigger_rule_adapter.gd")
 const FireSkillRuntimeScript: Script = preload("res://scripts/skills/fire_skill_runtime.gd")
 const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/skill_special_rule_executor.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
@@ -82,6 +83,8 @@ func _execute_skill_events(event_name: StringName, context: Dictionary) -> void:
 		var conditions: Array = _get_array(event.get("conditions", []))
 		if not ConditionEvaluatorScript.evaluate_all(conditions, context):
 			continue
+		if not SkillTriggerRuleAdapterScript.can_execute_rule_event(event, context, skill_instance):
+			continue
 
 		var actions: Array = _get_array(event.get("actions", []))
 		_action_executor.call("execute_actions", actions, context)
@@ -92,6 +95,7 @@ func _get_skill_events(skill_instance: RefCounted, definition: RefCounted) -> Ar
 	var definition_events_variant: Variant = definition.get("events")
 	if definition_events_variant is Array:
 		events.append_array(definition_events_variant)
+	events.append_array(SkillTriggerRuleAdapterScript.to_events(skill_instance, definition))
 
 	var runtime_events_variant: Variant = skill_instance.get("runtime_events")
 	if runtime_events_variant is Array:
