@@ -86,6 +86,7 @@ const SUPPORTED_TRIGGERS = new Set([
   "status_max_stack_reached",
   "shield_gained",
   "shield_broken",
+  "player_damage_taken",
   "summon_attack_hit",
   "always",
 ]);

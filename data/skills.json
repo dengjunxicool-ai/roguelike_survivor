@@ -318,7 +318,7 @@
       },
       "trigger_rules": [
         {
-          "trigger": "shield_broken",
+          "trigger": "player_damage_taken",
           "cooldown": 12.0,
           "conditions": [{ "type": "target_has_tag", "tag": "player" }],
           "effects": [
