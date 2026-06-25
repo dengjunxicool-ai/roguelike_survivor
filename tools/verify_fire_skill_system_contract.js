@@ -313,28 +313,47 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
 }
 
 function main() {
-  const expectedMetadataById = buildExpectedSkillMetadata();
+	const expectedMetadataById = buildExpectedSkillMetadata();
 
-  const document = readJson("data/skills.json");
-  assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
-  const skills = document.skills;
-  skills.forEach((skill, index) => {
-    assert(isObject(skill), `data/skills.json skills[${index}] must be a non-array object`);
-  });
+	const document = readJson("data/skills.json");
+	const charactersDocument = readJson("data/characters.json");
+	assert(Array.isArray(document.starting_skills), "data/skills.json starting_skills must be an array");
+	assert(document.starting_skills.length === 1, `data/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
+	const fireball = document.starting_skills[0];
+	assert(isObject(fireball), "data/skills.json starting_skills[0] must be an object");
+	assert(fireball.id === "fireball", "data/skills.json starting skill must be fireball");
+	assert(fireball.is_starting_skill === true, "fireball must be marked as a starting skill");
+	assert(fireball.offer_in_upgrade_pool === false, "fireball must not appear in the upgrade offer pool");
+
+	assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
+	const skills = document.skills;
+	skills.forEach((skill, index) => {
+		assert(isObject(skill), `data/skills.json skills[${index}] must be a non-array object`);
+	});
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
   const expectedIds = new Set(expectedMetadataById.keys());
   const actualIds = new Set(skills.map((skill) => skill.id));
 
-  assert(skills.length === 34, `data/skills.json must contain exactly 34 first-version skills, got ${skills.length}`);
-  for (const id of expectedIds) {
-    assert(actualIds.has(id), `missing skill ${id}`);
-  }
-  for (const skill of skills) {
-    validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
-  }
+	assert(skills.length === 34, `data/skills.json must contain exactly 34 first-version skills, got ${skills.length}`);
+	assert(!actualIds.has("fireball"), "fireball belongs in starting_skills, not the first-version fire skill pool");
+	for (const id of expectedIds) {
+		assert(actualIds.has(id), `missing skill ${id}`);
+	}
+	for (const skill of skills) {
+		validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
+	}
 
-  console.log("[verify_fire_skill_system_contract] PASS");
+	const allSkillIds = new Set([...document.starting_skills, ...skills].map((skill) => skill.id));
+	assert(Array.isArray(charactersDocument.characters), "data/characters.json characters must be an array");
+	for (const character of charactersDocument.characters) {
+		assert(isObject(character), "data/characters.json characters entries must be objects");
+		const startingSkillId = character.starting_skill_id;
+		assert(typeof startingSkillId === "string" && startingSkillId !== "", `${character.id || "missing character"} must set starting_skill_id`);
+		assert(allSkillIds.has(startingSkillId), `${character.id || "missing character"} references missing starting_skill_id ${startingSkillId}`);
+	}
+
+	console.log("[verify_fire_skill_system_contract] PASS");
 }
 
 main();

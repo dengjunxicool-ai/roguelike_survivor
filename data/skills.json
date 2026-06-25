@@ -1,4 +1,96 @@
 {
+  "starting_skills": [
+    {
+      "id": "fireball",
+      "display_name": "火球",
+      "description": "发射火焰法球攻击敌人",
+      "tags": [
+        "fire",
+        "projectile",
+        "burn",
+        "ranged"
+      ],
+      "max_level": 5,
+      "base": {
+        "damage": 16,
+        "damage_type": "direct_magical",
+        "element": "fire",
+        "cooldown": 1.1,
+        "range": 540,
+        "projectile_speed": 420,
+        "projectile_count": 1,
+        "spread_angle": 0,
+        "area_radius": 82
+      },
+      "components": [
+        {
+          "type": "cooldown",
+          "params": {
+            "seconds": 1.1
+          }
+        },
+        {
+          "type": "targeting",
+          "params": {
+            "mode": "nearest_enemy",
+            "range": 520
+          }
+        }
+      ],
+      "events": [
+        {
+          "trigger": "on_cast",
+          "actions": [
+            {
+              "type": "spawn_projectile",
+              "params": {
+                "projectile_id": "fireball_projectile",
+                "count": 1,
+                "speed": 420,
+                "spread_angle": 0,
+                "lifetime": 2,
+                "collision_radius": 10,
+                "element": "fire"
+              }
+            }
+          ]
+        },
+        {
+          "trigger": "on_projectile_hit",
+          "source_id": "fireball_projectile",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "params": {
+                "amount": 16,
+                "damage_type": "direct_magical",
+                "element": "fire",
+                "can_crit": true,
+                "damage_origin": "primary_attack"
+              }
+            }
+          ]
+        }
+      ],
+      "damage_scaling": {
+        "skill_level_coefficients": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "category": "active",
+      "god_id": "fire",
+      "runtime_family": "projectile",
+      "is_starting_skill": true,
+      "offer_in_upgrade_pool": false,
+      "particle": {
+        "profile": "fire_projectile"
+      }
+    }
+  ],
   "skills": [
     {
       "id": "fire_attack_searing",

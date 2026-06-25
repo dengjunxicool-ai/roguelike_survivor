@@ -20,6 +20,8 @@ func _init() -> void:
 	_assert(screen.find_child("CharacterStartingSkillLabel", true, false) != null, "CharacterStartingSkillLabel exists")
 	_assert(screen.find_child("CharacterConfirmButton", true, false) != null, "CharacterConfirmButton exists")
 	_assert(screen.find_child("CharacterWeaponList", true, false) == null, "old weapon list removed")
+	var confirm_button: Button = screen.find_child("CharacterConfirmButton", true, false) as Button
+	_assert(confirm_button != null and not confirm_button.disabled, "character confirm is enabled when starting skill resolves")
 
 	var text_dump: String = _collect_text(screen)
 	_assert(text_dump.contains("选择角色"), "screen title is readable")
