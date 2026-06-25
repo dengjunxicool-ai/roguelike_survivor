@@ -4,8 +4,9 @@ class_name UpgradePool
 
 const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_option.gd")
 const UpgradeOfferPolicyScript: Script = preload("res://scripts/upgrades/upgrade_offer_policy.gd")
+const SkillOfferServiceScript: Script = preload("res://scripts/skills/skill_offer_service.gd")
 const SKILLS_DATA_PATH: String = "res://data/skills.json"
-const GOD_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_god_skill_"
+const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
 
 var rarity_weights: Dictionary = {
 	"common": 60.0,
@@ -16,6 +17,7 @@ var rarity_weights: Dictionary = {
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _offer_policy: RefCounted = UpgradeOfferPolicyScript.new()
+var _skill_offer_service: RefCounted = SkillOfferServiceScript.new()
 
 
 func _init() -> void:
@@ -164,9 +166,11 @@ func _build_level_up_upgrade_options(player: Node) -> Array:
 
 func _build_god_skill_learn_options(player: Node, god_id: StringName = &"fire") -> Array:
 	var options: Array = []
-	for skill: Dictionary in _get_debug_god_skill_definitions(god_id):
+	for skill: Dictionary in _get_skill_learn_definitions():
 		var skill_id: StringName = StringName(String(skill.get("id", "")))
 		if not _is_learn_skill_upgrade_available(player, skill_id):
+			continue
+		if not bool(_skill_offer_service.call("is_skill_available", player, skill)):
 			continue
 
 		var upgrade: Dictionary = _make_god_skill_learn_upgrade(skill, god_id)
@@ -194,6 +198,17 @@ func _build_god_skill_learn_options(player: Node, god_id: StringName = &"fire") 
 
 	return options
 	
+
+func _get_skill_learn_definitions() -> Array[Dictionary]:
+	var skills: Array[Dictionary] = []
+	for skill: Dictionary in GameData.get_skill_pool():
+		if StringName(String(skill.get("id", ""))) == &"":
+			continue
+		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
+			continue
+		skills.append(skill.duplicate(true))
+	return skills
+
 
 func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: StringName) -> RefCounted:
 	var upgrade_id: StringName = StringName(String(upgrade.get("id", "")))
@@ -277,7 +292,7 @@ func _make_god_skill_learn_upgrade(skill: Dictionary, god_id: StringName) -> Dic
 		tags.push_front(god_text)
 	var description: String = String(skill.get("description", "Learn %s." % skill_id))
 	return {
-		"id": "%s%s" % [GOD_SKILL_LEARN_UPGRADE_PREFIX, skill_id],
+		"id": "%s%s" % [FIRE_SKILL_LEARN_UPGRADE_PREFIX, skill_id],
 		"display_name": String(skill.get("display_name", skill_id)),
 		"description": description,
 		"rarity": String(skill.get("rarity", "common")),
@@ -573,6 +588,12 @@ func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
+
+
+func _get_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		return value
+	return {}
 
 
 func _to_string_array(value: Array) -> Array[String]:

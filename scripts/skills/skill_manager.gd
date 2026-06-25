@@ -26,7 +26,7 @@ func add_skill(skill_id: Variant) -> bool:
 		return false
 
 	var definition_data: Dictionary = _get_skill_definition_data(id)
-	var category: String = String(definition_data.get("category", ""))
+	var category: String = _category_from_skill_type(definition_data)
 	if definition_data.is_empty():
 		return false
 	if category != "active" and category != "passive":
@@ -192,7 +192,33 @@ func _can_current_character_learn(skill_data: Dictionary) -> bool:
 
 
 func _is_pool_learnable_skill(skill_data: Dictionary) -> bool:
-	return bool(skill_data.get("learnable_from_pool", false)) or bool(skill_data.get("offer_in_upgrade_pool", false))
+	return (
+		bool(skill_data.get("learnable_from_pool", false))
+		or bool(skill_data.get("offer_in_upgrade_pool", false))
+		or not _get_dictionary(skill_data.get("offer_rule", {})).is_empty()
+	)
+
+
+func _category_from_skill_type(skill_data: Dictionary) -> String:
+	var category: String = String(skill_data.get("category", ""))
+	if category == "active" or category == "passive":
+		return category
+
+	var skill_type: String = String(skill_data.get("skill_type", skill_data.get("type", "")))
+	match skill_type:
+		"passive":
+			return "passive"
+		"attack", "dash", "cast", "summon", "power", "core", "fusion":
+			return "active"
+		_:
+			return category
+
+
+func _get_dictionary(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary: Dictionary = value
+		return dictionary
+	return {}
 
 
 func _to_skill_id(skill_id: Variant) -> StringName:

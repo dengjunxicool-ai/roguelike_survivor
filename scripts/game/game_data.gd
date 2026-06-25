@@ -13,7 +13,7 @@ const MAPS_PATH: String = "res://data/maps.json"
 const RELICS_PATH: String = "res://data/relics.json"
 const PROGRESSION_GOALS_PATH: String = "res://data/progression_goals.json"
 const CHALLENGES_PATH: String = "res://data/challenges.json"
-const GOD_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_god_skill_"
+const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
 
 static var _document_cache: Dictionary = {}
 
@@ -147,9 +147,9 @@ static func get_upgrade(upgrade_id: StringName) -> Dictionary:
 		return data
 
 	var upgrade_id_text: String = String(upgrade_id)
-	if upgrade_id_text.begins_with(GOD_SKILL_LEARN_UPGRADE_PREFIX):
-		var skill_id: StringName = StringName(upgrade_id_text.substr(GOD_SKILL_LEARN_UPGRADE_PREFIX.length()))
-		return _make_god_skill_learn_upgrade(upgrade_id_text, skill_id)
+	if upgrade_id_text.begins_with(FIRE_SKILL_LEARN_UPGRADE_PREFIX):
+		var skill_id: StringName = StringName(upgrade_id_text.substr(FIRE_SKILL_LEARN_UPGRADE_PREFIX.length()))
+		return _make_fire_skill_learn_upgrade(upgrade_id_text, skill_id)
 
 	var categories: Array[String] = [
 		"curse_choices",
@@ -165,16 +165,15 @@ static func get_upgrade(upgrade_id: StringName) -> Dictionary:
 	return {}
 
 
-static func _make_god_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
+static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
 	if skill_id == &"":
 		return {}
 	var skill: Dictionary = get_skill(skill_id)
 	if skill.is_empty():
 		return {}
-	var god_id: StringName = StringName(String(skill.get("god_id", "")))
-	if god_id == &"":
+	if not _is_fire_related_skill(skill):
 		return {}
-	if not bool(skill.get("offer_in_upgrade_pool", false)):
+	if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary_from_value(skill.get("offer_rule", {})).is_empty():
 		return {}
 
 	var tags: Array = []
@@ -183,10 +182,10 @@ static func _make_god_skill_learn_upgrade(upgrade_id: String, skill_id: StringNa
 			continue
 		var candidate: Dictionary = tag_variant
 		if StringName(String(candidate.get("id", ""))) == skill_id:
-			tags = _build_god_skill_learn_tags(candidate, god_id)
+			tags = _build_fire_skill_learn_tags(candidate)
 			break
 	if tags.is_empty():
-		tags = _build_god_skill_learn_tags(skill, god_id)
+		tags = _build_fire_skill_learn_tags(skill)
 
 	var description: String = String(skill.get("description", "Learn %s." % String(skill_id)))
 	return {
@@ -198,20 +197,39 @@ static func _make_god_skill_learn_upgrade(upgrade_id: String, skill_id: StringNa
 		"enabled": true,
 		"max_level": 1,
 		"learn_skill_id": String(skill_id),
-		"god_id": god_id,
+		"god_id": "fire",
 		"level_descriptions": [description]
 	}
 
 
-static func _build_god_skill_learn_tags(skill: Dictionary, god_id: StringName) -> Array:
+static func _is_fire_related_skill(skill: Dictionary) -> bool:
+	if StringName(String(skill.get("god_id", ""))) == &"fire":
+		return true
+	if StringName(String(skill.get("school", ""))) == &"fire":
+		return true
+	if StringName(String(skill.get("fusion_school", ""))) == &"fire":
+		return true
+	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
+		if String(tag_variant) == "fire":
+			return true
+	return false
+
+
+static func _get_dictionary_from_value(value: Variant) -> Dictionary:
+	if value is Dictionary:
+		var dictionary: Dictionary = value
+		return dictionary
+	return {}
+
+
+static func _build_fire_skill_learn_tags(skill: Dictionary) -> Array:
 	var tags: Array = []
 	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
 		var tag: String = String(tag_variant)
 		if tag != "" and not tags.has(tag):
 			tags.append(tag)
-	var god_tag: String = String(god_id)
-	if god_tag != "" and not tags.has(god_tag):
-		tags.push_front(god_tag)
+	if not tags.has("fire"):
+		tags.push_front("fire")
 	if not tags.has("skill"):
 		tags.push_front("skill")
 	return tags
