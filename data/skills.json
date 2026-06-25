@@ -20,7 +20,6 @@
         {
           "trigger": "attack_hit",
           "effects": [
-            { "type": "add_modifier", "modifier": "attack_damage_multiplier", "value": 0.2, "damage_type": "fire" },
             { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
           ]
         },
@@ -43,7 +42,9 @@
           ]
         }
       ],
-      "effects": []
+      "effects": [
+        { "type": "add_modifier", "modifier": "attack_damage_multiplier", "value": 0.2, "damage_type": "fire" }
+      ]
     },
     {
       "id": "fire_dash_blazing_run",
@@ -160,11 +161,8 @@
               "duration": 1.5,
               "tick_interval": 0.5,
               "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 0.54 },
+                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 0.533333 },
                 { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ],
-              "effects_on_apply": [
-                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 1.6 }
               ]
             }
           ]
@@ -320,9 +318,9 @@
       },
       "trigger_rules": [
         {
-          "trigger": "status_applied",
+          "trigger": "shield_broken",
           "cooldown": 12.0,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "conditions": [{ "type": "target_has_tag", "tag": "player" }],
           "effects": [
             { "type": "add_modifier", "modifier": "cast_damage_multiplier", "value": 0.3, "duration": 5.0 },
             { "type": "add_modifier", "modifier": "cast_radius_multiplier", "value": 0.15, "duration": 5.0 }
@@ -517,7 +515,10 @@
         {
           "trigger": "area_tick",
           "cooldown": 1.0,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "skill_has_tag", "tag": "frost_area" }
+          ],
           "effects": [
             {
               "type": "spawn_area",
@@ -677,7 +678,17 @@
             { "type": "target_has_status", "status": "cursed" }
           ],
           "effects": [
-            { "type": "consume_status_duration", "status": "cursed", "duration": 0.25 },
+            { "type": "consume_status_duration", "status": "cursed", "duration": 0.25, "tag_on_expire": "ash_curse_rune_fireground_pending" }
+          ]
+        },
+        {
+          "trigger": "status_expired",
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "target_has_tag", "tag": "expired_status_cursed" },
+            { "type": "target_has_tag", "tag": "ash_curse_rune_fireground_pending" }
+          ],
+          "effects": [
             {
               "type": "spawn_area",
               "area_id": "ash_curse_rune_fireground",
@@ -788,6 +799,7 @@
       "trigger_rules": [
         {
           "trigger": "area_tick",
+          "conditions": [{ "type": "skill_has_tag", "tag": "holy_barrier" }],
           "effects": [
             {
               "type": "spawn_area",
@@ -829,7 +841,10 @@
         {
           "trigger": "area_tick",
           "cooldown": 2.0,
-          "conditions": [{ "type": "skill_has_tag", "tag": "ground_path" }],
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "fire_path" },
+            { "type": "target_has_tag", "tag": "chaos_rift" }
+          ],
           "effects": [
             { "type": "repeat_area_path", "delay": 1.0, "reverse": true, "duration": 2.0, "tick_interval": 0.5, "effects_on_tick": [{ "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.13 }] }
           ]
@@ -894,7 +909,10 @@
       "trigger_rules": [
         {
           "trigger": "area_tick",
-          "conditions": [{ "type": "skill_has_tag", "tag": "frost" }],
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "frost_area" },
+            { "type": "target_has_tag", "tag": "fire_path" }
+          ],
           "effects": [
             {
               "type": "spawn_projectile_burst",
@@ -1184,7 +1202,10 @@
       "trigger_rules": [
         {
           "trigger": "projectile_hit",
-          "conditions": [{ "type": "skill_has_tag", "tag": "fire" }],
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "fire_projectile" },
+            { "type": "target_has_tag", "tag": "chaos_rift" }
+          ],
           "effects": [
             {
               "type": "spawn_projectile_burst",
@@ -1221,7 +1242,10 @@
       "trigger_rules": [
         {
           "trigger": "area_tick",
-          "conditions": [{ "type": "skill_has_tag", "tag": "rift" }],
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "lava_rift" },
+            { "type": "target_has_tag", "tag": "chaos_rift" }
+          ],
           "effects": [
             {
               "type": "repeat_area_path",
