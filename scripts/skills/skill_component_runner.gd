@@ -12,7 +12,7 @@ func tick(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool
 
 	var components: Array = _get_components(skill_instance)
 	if components.is_empty():
-		return false
+		return _tick_trigger_rule_cast_skill(skill_instance, delta, context)
 
 	if _has_component(components, "persistent_orbit"):
 		_ensure_persistent_orbit(skill_instance, components, context)
@@ -33,6 +33,27 @@ func tick(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool
 		event_bus.call("emit_skill_event", &"on_cast", cast_context)
 
 	skill_instance.set("cooldown_remaining", _get_cooldown(skill_instance, components, context))
+	return true
+
+
+func _tick_trigger_rule_cast_skill(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool:
+	if not _has_cast_skill_trigger_rule(skill_instance):
+		return false
+
+	var cooldown_remaining: float = maxf(float(skill_instance.get("cooldown_remaining")) - delta, 0.0)
+	skill_instance.set("cooldown_remaining", cooldown_remaining)
+	if cooldown_remaining > 0.0:
+		return true
+
+	var cast_context: Dictionary = context.duplicate(true)
+	if cast_context.get("target") == null:
+		cast_context["target"] = _find_default_target(cast_context)
+
+	var event_bus: Node = context.get("event_bus") as Node
+	if event_bus != null and event_bus.has_method("emit_skill_event"):
+		event_bus.call("emit_skill_event", &"on_cast", cast_context)
+
+	skill_instance.set("cooldown_remaining", _get_cast_skill_trigger_cooldown(skill_instance, context))
 	return true
 
 
@@ -82,6 +103,14 @@ func _find_target(components: Array, context: Dictionary) -> Node2D:
 	return null
 
 
+func _find_default_target(context: Dictionary) -> Node2D:
+	var caster: Node = context.get("caster") as Node
+	return TargetingServiceScript.find_target(caster, "nearest_enemy", {
+		"origin": caster,
+		"range": ModifierResolverScript.get_stat(context, "range", INF)
+	})
+
+
 func _get_cooldown(_skill_instance: RefCounted, components: Array, context: Dictionary) -> float:
 	for component_variant: Variant in components:
 		if not (component_variant is Dictionary):
@@ -96,6 +125,20 @@ func _get_cooldown(_skill_instance: RefCounted, components: Array, context: Dict
 	return maxf(float(ModifierResolverScript.get_stat(context, "cooldown", 1.0)), 0.05)
 
 
+func _get_cast_skill_trigger_cooldown(skill_instance: RefCounted, context: Dictionary) -> float:
+	var definition: RefCounted = skill_instance.get("definition") as RefCounted
+	if definition == null:
+		return maxf(float(ModifierResolverScript.get_stat(context, "cooldown", 1.0)), 0.05)
+	var fallback: float = float(ModifierResolverScript.get_stat(context, "cooldown", 1.0))
+	for rule_variant: Variant in _get_array(definition.get("trigger_rules")):
+		if not (rule_variant is Dictionary):
+			continue
+		var rule: Dictionary = rule_variant
+		if String(rule.get("trigger", "")) == "cast_skill" and rule.has("cooldown"):
+			return maxf(float(ModifierResolverScript.resolve_value(context, "cooldown", rule.get("cooldown"))), 0.05)
+	return maxf(fallback, 0.05)
+
+
 func _requires_target(components: Array) -> bool:
 	return _has_component(components, "targeting")
 
@@ -107,6 +150,16 @@ func _has_component(components: Array, component_type: String) -> bool:
 	return false
 
 
+func _has_cast_skill_trigger_rule(skill_instance: RefCounted) -> bool:
+	var definition: RefCounted = skill_instance.get("definition") as RefCounted
+	if definition == null:
+		return false
+	for rule_variant: Variant in _get_array(definition.get("trigger_rules")):
+		if rule_variant is Dictionary and String((rule_variant as Dictionary).get("trigger", "")) == "cast_skill":
+			return true
+	return false
+
+
 func _get_components(skill_instance: RefCounted) -> Array:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition == null:
@@ -114,6 +167,13 @@ func _get_components(skill_instance: RefCounted) -> Array:
 
 	var components_variant: Variant = definition.get("components")
 	return components_variant if components_variant is Array else []
+
+
+func _get_array(value: Variant) -> Array:
+	if value is Array:
+		var items: Array = value
+		return items
+	return []
 
 
 func _get_dictionary(value: Variant) -> Dictionary:

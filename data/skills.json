@@ -123,7 +123,7 @@
             {
               "type": "spawn_area",
               "area_id": "searing_fire_path",
-              "radius": 0.8,
+              "radius": 67.2,
               "duration": 2.5,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -162,7 +162,26 @@
             {
               "type": "spawn_area",
               "area_id": "blazing_run_path",
-              "radius": 0.75,
+              "radius": 63.0,
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.14 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ],
+              "effects_on_apply": [
+                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.8 }
+              ]
+            }
+          ]
+        },
+        {
+          "trigger": "dash_tick",
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "blazing_run_path",
+              "radius": 63.0,
               "duration": 3.0,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -204,14 +223,18 @@
               "type": "spawn_projectile_burst",
               "projectile_id": "meteor_rain_meteor",
               "count": 3,
-              "radius": 1.6,
+              "collision_radius": 18.0,
+              "trajectory_mode": "linear",
+              "speed": 640.0,
+              "visual_start_relative_to": "target",
+              "visual_start_offset": [-360.0, -360.0],
               "on_hit": [
-                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 2.2, "radius": 1.6 },
+                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 2.2, "radius": 134.4 },
                 { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 },
                 {
                   "type": "spawn_area",
                   "area_id": "meteor_burning_ground",
-                  "radius": 1.0,
+                  "radius": 134.4,
                   "duration": 3.0,
                   "tick_interval": 0.5,
                   "effects_on_tick": [
@@ -251,8 +274,8 @@
             {
               "type": "spawn_area",
               "area_id": "lava_rift",
-              "length": 6.0,
-              "width": 0.8,
+              "length": 504.0,
+              "width": 67.2,
               "duration": 1.5,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -290,13 +313,17 @@
             {
               "type": "spawn_area",
               "area_id": "scorching_vortex",
-              "radius": 2.2,
+              "position_mode": "caster",
+              "position_offset_direction": "towards_target",
+              "position_offset_distance": 72.0,
+              "move_direction": "towards_target",
+              "move_speed": 120.0,
+              "radius": 184.8,
               "duration": 4.0,
               "tick_interval": 0.5,
               "effects_on_tick": [
                 { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.25 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 },
-                { "type": "pull", "radius": 2.2, "strength": 0.2 }
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
               ]
             }
           ]
@@ -325,14 +352,14 @@
         {
           "trigger": "cast_skill",
           "effects": [
-            { "type": "spawn_summon", "summon_id": "crimson_dragon", "count": 1, "attack_interval": 3.0, "duration": 999.0 }
+            { "type": "spawn_summon", "summon_id": "crimson_dragon", "summon_definition_id": "crimson_dragon" }
           ]
         },
         {
           "trigger": "summon_attack_hit",
           "cooldown": 3.0,
           "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 1.4, "length": 4.0, "angle": 45 },
+            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 1.4, "length": 336.0, "angle": 45 },
             { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
           ]
         }
@@ -370,7 +397,7 @@
           "trigger": "summon_attack_hit",
           "effects": [
             { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.6 },
-            { "type": "spawn_area", "area_id": "ember_fox_burst", "radius": 1.2, "duration": 0.2, "effects_on_apply": [{ "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.8 }, { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }] }
+            { "type": "spawn_area", "area_id": "ember_fox_burst", "radius": 100.8, "duration": 0.2, "effects_on_apply": [{ "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.8 }, { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }] }
           ]
         }
       ],
@@ -481,7 +508,7 @@
           "threshold": 12,
           "conditions": [{ "type": "target_has_status", "status": "burning" }],
           "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 2.4, "radius": 2.2 },
+            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 2.4, "radius": 184.8 },
             { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
           ]
         }
@@ -549,7 +576,16 @@
           "conditions": [{ "type": "target_has_status", "status": "burning" }],
           "effects": [
             { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
-            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 1.2 }
+            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 100.8 }
+          ]
+        },
+        {
+          "trigger": "area_tick",
+          "cooldown": 0.4,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
+            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 100.8 }
           ]
         }
       ],
@@ -577,7 +613,7 @@
           "trigger": "enemy_death",
           "conditions": [{ "type": "target_has_status", "status": "burning" }],
           "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "core", "power_scale": 0.8, "radius": 1.4 },
+            { "type": "damage", "damage_type": "fire", "source_type": "core", "power_scale": 0.8, "radius": 117.6 },
             { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
           ]
         },
@@ -591,6 +627,10 @@
               "type": "spawn_projectile",
               "projectile_id": "inferno_cycle_meteor",
               "count": 1,
+              "trajectory_mode": "linear",
+              "speed": 680.0,
+              "visual_start_relative_to": "target",
+              "visual_start_offset": [-360.0, -360.0],
               "damage": { "damage_type": "fire", "source_type": "core", "power_scale": 2.2 },
               "on_hit": [{ "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }]
             }
@@ -629,7 +669,7 @@
             {
               "type": "spawn_area",
               "area_id": "steam_mist",
-              "radius": 2.0,
+              "radius": 168.0,
               "duration": 3.0,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -670,7 +710,7 @@
               "type": "spawn_projectile_burst",
               "projectile_id": "shattered_ember",
               "count": 3,
-              "radius": 3.5,
+              "radius": 294.0,
               "on_hit": [
                 { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.3 },
                 { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
@@ -798,7 +838,7 @@
             {
               "type": "spawn_area",
               "area_id": "ash_curse_rune_fireground",
-              "radius": 1.2,
+              "radius": 100.8,
               "duration": 2.0,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -839,7 +879,7 @@
             {
               "type": "spawn_area",
               "area_id": "blackflame_serpent_path",
-              "radius": 0.6,
+              "radius": 50.4,
               "duration": 2.5,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -879,7 +919,7 @@
           "effects": [
             { "type": "consume_status_duration", "status": "burning", "duration": 1.5 },
             { "type": "grant_shield", "shield_type": "holy_flame", "max_health_ratio": 0.04 },
-            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 1.1, "length": 4.0 }
+            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 1.1, "length": 336.0 }
           ]
         }
       ],
@@ -910,7 +950,7 @@
             {
               "type": "spawn_area",
               "area_id": "burning_light_barrier_edge",
-              "radius": 2.3,
+              "radius": 193.2,
               "duration": 0.5,
               "tick_interval": 0.5,
               "effects_on_tick": [
@@ -1274,7 +1314,7 @@
             {
               "type": "spawn_area",
               "area_id": "solar_hammer_cross_path",
-              "radius": 0.8,
+              "radius": 67.2,
               "duration": 3.0,
               "tick_interval": 0.5,
               "effects_on_tick": [

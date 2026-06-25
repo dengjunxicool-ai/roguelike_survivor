@@ -38,6 +38,50 @@
 			]
 		},
 		{
+			"id": "meteor_rain_meteor",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 18.0,
+			"destroy_on_wall": false,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "meteor",
+			"visual_color": [
+				1.0,
+				0.25,
+				0.04,
+				0.92
+			],
+			"visual_ring_color": [
+				1.0,
+				0.76,
+				0.14,
+				0.95
+			]
+		},
+		{
+			"id": "inferno_cycle_meteor",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 16.0,
+			"destroy_on_wall": false,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "meteor",
+			"visual_color": [
+				1.0,
+				0.18,
+				0.04,
+				0.9
+			],
+			"visual_ring_color": [
+				1.0,
+				0.58,
+				0.08,
+				0.92
+			]
+		},
+		{
 			"id": "hailstorm_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
@@ -312,6 +356,126 @@
 				1.0,
 				0.8,
 				0.16,
+				0.78
+			]
+		},
+		{
+			"id": "searing_fire_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 48.0,
+			"visual_mode": "programmatic",
+			"visual_style": "lava_zone",
+			"visual_color": [
+				1.0,
+				0.28,
+				0.03,
+				0.34
+			],
+			"visual_ring_color": [
+				1.0,
+				0.72,
+				0.12,
+				0.76
+			]
+		},
+		{
+			"id": "blazing_run_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 45.0,
+			"visual_mode": "programmatic",
+			"visual_style": "lava_zone",
+			"visual_color": [
+				1.0,
+				0.22,
+				0.02,
+				0.38
+			],
+			"visual_ring_color": [
+				1.0,
+				0.78,
+				0.14,
+				0.82
+			]
+		},
+		{
+			"id": "meteor_burning_ground",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 60.0,
+			"visual_mode": "programmatic",
+			"visual_style": "meteor_crater",
+			"visual_color": [
+				0.96,
+				0.22,
+				0.04,
+				0.34
+			],
+			"visual_ring_color": [
+				1.0,
+				0.62,
+				0.10,
+				0.82
+			]
+		},
+		{
+			"id": "lava_rift",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 72.0,
+			"visual_mode": "programmatic",
+			"visual_style": "lava_zone",
+			"visual_color": [
+				0.95,
+				0.12,
+				0.02,
+				0.36
+			],
+			"visual_ring_color": [
+				1.0,
+				0.68,
+				0.1,
+				0.8
+			]
+		},
+		{
+			"id": "scorching_vortex",
+			"type": "area",
+			"scene": "res://scenes/scorching_vortex_area.tscn",
+			"collision_radius": 132.0,
+			"visual_mode": "programmatic",
+			"visual_style": "fire_burst",
+			"visual_color": [
+				1.0,
+				0.24,
+				0.04,
+				0.28
+			],
+			"visual_ring_color": [
+				1.0,
+				0.7,
+				0.14,
+				0.72
+			]
+		},
+		{
+			"id": "ember_fox_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 72.0,
+			"visual_mode": "programmatic",
+			"visual_style": "fire_burst",
+			"visual_color": [
+				1.0,
+				0.36,
+				0.05,
+				0.34
+			],
+			"visual_ring_color": [
+				1.0,
+				0.82,
+				0.18,
 				0.78
 			]
 		},

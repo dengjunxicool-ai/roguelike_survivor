@@ -13,6 +13,15 @@ function assert(condition, message) {
   }
 }
 
+function assertClose(actual, expected, message) {
+  assert(typeof actual === "number", `${message}: actual value must be a number`);
+  assert(Math.abs(actual - expected) <= 0.0001, `${message}: expected ${expected}, got ${actual}`);
+}
+
+function rangePx(units) {
+  return units * RANGE_UNIT_PX;
+}
+
 const FIRE_BASE_IDS = [
   "fire_attack_searing",
   "fire_dash_blazing_run",
@@ -75,6 +84,7 @@ const ALLOWED_RARITIES = new Set(["normal", "rare", "epic", "legendary"]);
 const SUPPORTED_TRIGGERS = new Set([
   "attack_hit",
   "dash_start",
+  "dash_tick",
   "dash_end",
   "cast_skill",
   "projectile_hit",
@@ -124,6 +134,19 @@ const SUPPORTED_EFFECTS = new Set([
   "spawn_area_from_existing_area",
 ]);
 const OBSOLETE_FIRE_IDS = new Set(["mars_spark_missile", "fire_tornado", "soulburn"]);
+const RANGE_UNIT_PX = 84.0;
+const REQUIRED_FIRE_AREA_VISUAL_IDS = new Set([
+  "searing_fire_path",
+  "blazing_run_path",
+  "meteor_burning_ground",
+  "lava_rift",
+  "scorching_vortex",
+  "ember_fox_burst",
+]);
+const REQUIRED_METEOR_PROJECTILE_IDS = new Set([
+  "meteor_rain_meteor",
+  "inferno_cycle_meteor",
+]);
 const NESTED_EFFECT_ARRAY_FIELDS = new Set([
   "effects",
   "effects_on_tick",
@@ -312,10 +335,93 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   assert(skill.trigger_rules.length > 0 || skill.effects.length > 0, `${skill.id} has no runtime payload`);
 }
 
+function findSkill(skills, id) {
+  return skills.find((skill) => skill.id === id);
+}
+
+function firstEffect(skill) {
+  assert(skill.trigger_rules.length > 0, `${skill.id} must have trigger rules`);
+  assert(skill.trigger_rules[0].effects.length > 0, `${skill.id} first trigger rule must have effects`);
+  return skill.trigger_rules[0].effects[0];
+}
+
+function validateMeteorRainSkill(skills) {
+  const skill = findSkill(skills, "fire_cast_meteor_rain");
+  assert(isObject(skill), "fire_cast_meteor_rain must exist");
+  const effect = firstEffect(skill);
+  assert(effect.type === "spawn_projectile_burst", "fire_cast_meteor_rain must spawn a projectile burst");
+  assert(effect.projectile_id === "meteor_rain_meteor", "fire_cast_meteor_rain must spawn meteor_rain_meteor");
+  assert(effect.trajectory_mode === "linear", "fire_cast_meteor_rain meteors must fall in a straight line");
+  assert(!Object.prototype.hasOwnProperty.call(effect, "curve_height"), "fire_cast_meteor_rain meteors must not use curve_height");
+  assert(Array.isArray(effect.visual_start_offset), "fire_cast_meteor_rain must set a visual_start_offset");
+  assert(effect.visual_start_offset[0] === -360.0 && effect.visual_start_offset[1] === -360.0, "fire_cast_meteor_rain must use a 45-degree fall offset");
+  assert(effect.collision_radius === 18.0, "fire_cast_meteor_rain projectile collision radius must remain focused");
+  assert(!Object.prototype.hasOwnProperty.call(effect, "radius"), "fire_cast_meteor_rain projectile collision must not be stored as skill range radius");
+  const damageEffect = effect.on_hit.find((child) => child.type === "damage");
+  assert(isObject(damageEffect), "fire_cast_meteor_rain must deal impact damage on hit");
+  assertClose(damageEffect.radius, rangePx(1.6), "fire_cast_meteor_rain impact damage radius must be 1.6R");
+  const areaEffect = effect.on_hit.find((child) => child.type === "spawn_area" && child.area_id === "meteor_burning_ground");
+  assert(isObject(areaEffect), "fire_cast_meteor_rain must spawn meteor_burning_ground on hit");
+  assertClose(areaEffect.radius, rangePx(1.6), "fire_cast_meteor_rain crater area radius must be 1.6R");
+}
+
+function requireEffect(skill, ruleIndex, effectIndex) {
+  assert(isObject(skill), "required skill must exist");
+  assert(Array.isArray(skill.trigger_rules), `${skill.id} trigger_rules must be an array`);
+  const rule = skill.trigger_rules[ruleIndex];
+  assert(isObject(rule), `${skill.id} trigger_rules[${ruleIndex}] must exist`);
+  assert(Array.isArray(rule.effects), `${skill.id} trigger_rules[${ruleIndex}].effects must be an array`);
+  const effect = rule.effects[effectIndex];
+  assert(isObject(effect), `${skill.id} trigger_rules[${ruleIndex}].effects[${effectIndex}] must exist`);
+  return effect;
+}
+
+function validateBaseFireRangePixels(skills) {
+  const byId = new Map(skills.map((skill) => [skill.id, skill]));
+
+  assertClose(requireEffect(byId.get("fire_attack_searing"), 1, 0).radius, rangePx(0.8), "fire_attack_searing fire path radius must be 0.8R");
+  assertClose(requireEffect(byId.get("fire_dash_blazing_run"), 0, 0).radius, rangePx(0.75), "fire_dash_blazing_run dash_start path radius must be 0.75R");
+  assertClose(requireEffect(byId.get("fire_dash_blazing_run"), 1, 0).radius, rangePx(0.75), "fire_dash_blazing_run dash_tick path radius must be 0.75R");
+
+  const lavaRift = requireEffect(byId.get("fire_cast_lava_rift"), 0, 0);
+  assertClose(lavaRift.length, rangePx(6.0), "fire_cast_lava_rift length must be 6R");
+  assertClose(lavaRift.width, rangePx(0.8), "fire_cast_lava_rift width must be 0.8R");
+
+  const vortex = requireEffect(byId.get("fire_cast_scorching_vortex"), 0, 0);
+  assertClose(vortex.radius, rangePx(2.2), "fire_cast_scorching_vortex radius must be 2.2R");
+  const vortexPull = vortex.effects_on_tick.find((child) => child.type === "pull");
+  assert(!isObject(vortexPull), "fire_cast_scorching_vortex must not pull enemies back toward the player");
+
+  assertClose(requireEffect(byId.get("fire_summon_crimson_dragon"), 1, 0).length, rangePx(4.0), "fire_summon_crimson_dragon breath length must be 4R");
+  assertClose(requireEffect(byId.get("fire_summon_ember_fox_pack"), 1, 1).radius, rangePx(1.2), "fire_summon_ember_fox_pack burst radius must be 1.2R");
+  assertClose(requireEffect(byId.get("fire_power_combustion_chain"), 0, 0).radius, rangePx(2.2), "fire_power_combustion_chain radius must be 2.2R");
+  assertClose(requireEffect(byId.get("fire_power_ignite_core"), 0, 1).radius, rangePx(1.2), "fire_power_ignite_core projectile hit radius must be 1.2R");
+  assertClose(requireEffect(byId.get("fire_power_ignite_core"), 1, 1).radius, rangePx(1.2), "fire_power_ignite_core area tick radius must be 1.2R");
+  assertClose(requireEffect(byId.get("fire_core_inferno_cycle"), 0, 0).radius, rangePx(1.4), "fire_core_inferno_cycle burst radius must be 1.4R");
+}
+
+function validateNoRawRangeUnits(value, location) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => validateNoRawRangeUnits(item, `${location}[${index}]`));
+    return;
+  }
+  if (!isObject(value)) {
+    return;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    const childLocation = `${location}.${key}`;
+    if ((key === "radius" || key === "length" || key === "width") && typeof child === "number") {
+      assert(child > 10.0, `${childLocation} appears to still be stored in raw R units: ${child}`);
+    }
+    validateNoRawRangeUnits(child, childLocation);
+  }
+}
+
 function main() {
 	const expectedMetadataById = buildExpectedSkillMetadata();
 
 	const document = readJson("data/skills.json");
+	const combatObjectsDocument = readJson("data/combat_objects.json");
 	const charactersDocument = readJson("data/characters.json");
 	assert(Array.isArray(document.starting_skills), "data/skills.json starting_skills must be an array");
 	assert(document.starting_skills.length === 1, `data/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
@@ -342,6 +448,28 @@ function main() {
 	}
 	for (const skill of skills) {
 		validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
+	}
+	validateMeteorRainSkill(skills);
+	validateBaseFireRangePixels(skills);
+	validateNoRawRangeUnits(skills, "data/skills.json.skills");
+
+	const combatObjects = Array.isArray(combatObjectsDocument.combat_objects) ? combatObjectsDocument.combat_objects : [];
+	const combatObjectById = new Map(combatObjects.map((object) => [object.id, object]));
+	for (const areaId of REQUIRED_FIRE_AREA_VISUAL_IDS) {
+		const object = combatObjectById.get(areaId);
+		assert(isObject(object), `fire area ${areaId} must have a combat object definition`);
+		assert(object.type === "area", `fire area ${areaId} must be an area combat object`);
+		assert(object.visual_mode === "programmatic", `fire area ${areaId} must use programmatic visuals`);
+		assert(typeof object.visual_style === "string" && object.visual_style !== "", `fire area ${areaId} must set visual_style`);
+	}
+	const meteorGround = combatObjectById.get("meteor_burning_ground");
+	assert(meteorGround.visual_style === "meteor_crater", "meteor_burning_ground must draw a meteor crater impact visual");
+	for (const projectileId of REQUIRED_METEOR_PROJECTILE_IDS) {
+		const object = combatObjectById.get(projectileId);
+		assert(isObject(object), `meteor projectile ${projectileId} must have a combat object definition`);
+		assert(object.type === "projectile", `meteor projectile ${projectileId} must be a projectile combat object`);
+		assert(object.visual_mode === "programmatic", `meteor projectile ${projectileId} must use programmatic visuals`);
+		assert(object.visual_style === "meteor", `meteor projectile ${projectileId} must draw the meteor visual style`);
 	}
 
 	const allSkillIds = new Set([...document.starting_skills, ...skills].map((skill) => skill.id));

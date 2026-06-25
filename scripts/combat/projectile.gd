@@ -34,6 +34,7 @@ var skill_manager: Node
 var relic_manager: Node
 var actions_on_hit: Array = []
 var _visual_config: Dictionary = {}
+var _visual_mode: String = ""
 var _visual_style: String = ""
 var _visual_color: Color = Color(1.0, 0.45, 0.12, 0.9)
 var _visual_ring_color: Color = Color(1.0, 0.9, 0.35, 0.95)
@@ -82,6 +83,7 @@ func setup(params: Dictionary) -> void:
 	caster = params.get("caster") as Node
 	skill_manager = params.get("skill_manager") as Node
 	relic_manager = params.get("relic_manager") as Node
+	_visual_mode = String(params.get("visual_mode", _visual_mode))
 	_visual_style = String(params.get("visual_style", _visual_style))
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
 	_visual_ring_color = _get_color(params.get("visual_ring_color", _visual_ring_color), _visual_ring_color)
@@ -132,7 +134,7 @@ func _physics_process(delta: float) -> void:
 		if homing_enabled and _resolve_swept_homing_hit(previous_position, next_position):
 			return
 		global_position = next_position
-	if _visual_style == "lightning_orb":
+	if _visual_style == "lightning_orb" or _visual_style == "meteor":
 		queue_redraw()
 
 
@@ -171,13 +173,23 @@ func _emit_hit_event(body: Node) -> bool:
 		"event_bus": event_bus,
 		"parent": get_parent(),
 		"target_group": target_group,
+		"damage_packet": damage_packet,
 		"damage_type": damage_type,
 		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit", false)),
 		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add", 0.0))
 	})
+	_emit_primary_attack_hit_event(event_context)
 	event_bus.call_deferred("emit_skill_event", event_on_hit, event_context)
 	_execute_adapted_actions(actions_on_hit, event_context)
 	return true
+
+
+func _emit_primary_attack_hit_event(event_context: Dictionary) -> void:
+	if String(damage_packet.get("damage_origin", "")) != "primary_attack":
+		return
+	if event_on_hit == &"attack_hit":
+		return
+	event_bus.call_deferred("emit_skill_event", &"attack_hit", event_context.duplicate(true))
 
 
 func _consume_pierce() -> void:
@@ -431,6 +443,9 @@ func _apply_area_radius(radius: float) -> void:
 
 
 func _apply_visual_config(params: Dictionary) -> void:
+	if _visual_mode == "programmatic":
+		_hide_sprite_nodes()
+		return
 	_visual_config = _get_dictionary(params.get("visual", {}))
 	if _visual_config.is_empty() and params.has("visual_color"):
 		_visual_config["modulate"] = params["visual_color"]
@@ -492,6 +507,8 @@ func _draw() -> void:
 			_draw_poison_bottle()
 		"oil_pot":
 			_draw_oil_pot()
+		"meteor":
+			_draw_meteor()
 
 
 func _draw_fireball_orb() -> void:
@@ -558,6 +575,25 @@ func _draw_oil_pot() -> void:
 	draw_rect(Rect2(Vector2(-5.0, -15.0), Vector2(10.0, 9.0)), Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, 0.86), false, 2.0)
 	draw_line(Vector2(-13.0, 8.0), Vector2(-24.0, 14.0), Color(1.0, 0.28, 0.05, 0.42), 3.0, true)
 	draw_arc(Vector2(1.0, 2.0), 13.0, 0.0, TAU, 28, _visual_ring_color, 2.0, true)
+
+
+func _draw_meteor() -> void:
+	var pulse: float = 0.5 + 0.5 * sin(_age * 18.0 + _visual_seed)
+	draw_line(Vector2(-38.0, -9.0), Vector2(-9.0, -3.0), Color(1.0, 0.2, 0.02, 0.32 + pulse * 0.16), 10.0, true)
+	draw_line(Vector2(-34.0, 9.0), Vector2(-8.0, 3.0), Color(1.0, 0.72, 0.12, 0.28 + pulse * 0.12), 6.0, true)
+	draw_circle(Vector2.ZERO, 18.0 + pulse * 2.0, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * 0.58))
+	draw_circle(Vector2(-4.0, -3.0), 11.0, Color(1.0, 0.72, 0.18, 0.78))
+	draw_arc(Vector2.ZERO, 19.0 + pulse, 0.0, TAU, 40, _visual_ring_color, 2.2, true)
+	var rock: PackedVector2Array = PackedVector2Array([
+		Vector2(-11.0, -13.0),
+		Vector2(7.0, -15.0),
+		Vector2(16.0, -3.0),
+		Vector2(10.0, 12.0),
+		Vector2(-7.0, 15.0),
+		Vector2(-17.0, 3.0)
+	])
+	draw_colored_polygon(rock, Color(0.26, 0.11, 0.07, 0.9))
+	draw_polyline(rock + PackedVector2Array([rock[0]]), Color(1.0, 0.48, 0.08, 0.72), 1.6, true)
 
 
 func _hide_sprite_nodes() -> void:

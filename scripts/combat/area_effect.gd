@@ -21,6 +21,8 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 @export var damage_packet: Dictionary = {}
 @export var target_group: StringName = &"enemies"
 @export var source_id: StringName = &""
+@export var move_direction: Vector2 = Vector2.ZERO
+@export_range(0.0, 2000.0, 1.0, "or_greater") var move_speed: float = 0.0
 @export var event_on_hit: StringName = &""
 @export var event_on_expire: StringName = &""
 @export var finish_after_damage: bool = false
@@ -81,6 +83,9 @@ func setup(params: Dictionary) -> void:
 	damage_packet = _get_dictionary(params.get("damage_packet", damage_packet))
 	target_group = StringName(String(params.get("target_group", target_group)))
 	source_id = StringName(String(params.get("source_id", source_id)))
+	move_direction = _get_vector2(params.get("move_direction", move_direction), Vector2.ZERO)
+	move_direction = move_direction.normalized() if move_direction.length_squared() > 0.0001 else Vector2.ZERO
+	move_speed = maxf(float(params.get("move_speed", move_speed)), 0.0)
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	event_on_expire = StringName(String(params.get("event_on_expire", event_on_expire)))
 	actions_on_apply = _get_array(params.get("actions_on_apply", []))
@@ -150,6 +155,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_age += delta
+	if move_speed > 0.0 and move_direction.length_squared() > 0.0001:
+		global_position += move_direction * move_speed * delta
 	_update_expanding_radius()
 	if _uses_programmatic_visual():
 		queue_redraw()
@@ -249,6 +256,7 @@ func _damage_body(body: Node) -> bool:
 	if damage > 0 and body.has_method("take_damage"):
 		body.call(&"take_damage", _get_damage_payload(body), damage_type)
 	_apply_status(body)
+	_emit_area_event(&"area_tick", body)
 	_emit_area_event(event_on_hit, body)
 	_execute_adapted_actions(actions_on_tick, body)
 	_execute_adapted_actions(actions_on_hit, body)
@@ -400,6 +408,9 @@ func _draw() -> void:
 		"lava_zone":
 			_draw_lava_zone()
 			return
+		"meteor_crater":
+			_draw_meteor_crater()
+			return
 		"protective_lava_zone":
 			_draw_protective_lava_zone()
 			return
@@ -518,6 +529,26 @@ func _draw_lava_zone() -> void:
 		var angle: float = _visual_seed + float(index) * TAU / 6.0 - _age * 0.28
 		var pos: Vector2 = Vector2(cos(angle), sin(angle)) * radius * (0.2 + float(index % 3) * 0.16)
 		draw_circle(pos, radius * (0.05 + pulse * 0.018), Color(1.0, 0.84, 0.18, 0.28 * fade))
+
+
+func _draw_meteor_crater() -> void:
+	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
+	var fade: float = clampf(1.0 - life_ratio * life_ratio, 0.0, 1.0)
+	var pulse: float = 0.5 + 0.5 * sin(_age * 7.0 + _visual_seed)
+	draw_circle(Vector2.ZERO, radius, Color(0.12, 0.07, 0.05, 0.46 * fade))
+	draw_circle(Vector2.ZERO, radius * 0.70, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * fade))
+	draw_circle(Vector2.ZERO, radius * (0.38 + pulse * 0.025), Color(1.0, 0.28, 0.04, 0.28 * fade))
+	draw_arc(Vector2.ZERO, radius * 0.96, 0.0, TAU, 96, Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, _visual_ring_color.a * fade), 2.8, true)
+	draw_arc(Vector2.ZERO, radius * 0.58, _visual_seed - _age * 0.32, _visual_seed - _age * 0.32 + TAU * 0.72, 64, Color(1.0, 0.62, 0.10, 0.48 * fade), 2.0, true)
+	for index: int in range(7):
+		var angle: float = _visual_seed + float(index) * TAU / 7.0
+		var start: Vector2 = Vector2(cos(angle), sin(angle)) * radius * (0.18 + float(index % 2) * 0.05)
+		var end: Vector2 = Vector2(cos(angle + 0.08 * sin(_visual_seed + float(index))), sin(angle + 0.08 * sin(_visual_seed + float(index)))) * radius * (0.72 + float(index % 3) * 0.06)
+		draw_line(start, end, Color(1.0, 0.34, 0.06, 0.30 * fade), 2.0, true)
+	for ember_index: int in range(5):
+		var ember_angle: float = _visual_seed + float(ember_index) * TAU / 5.0 + _age * 0.25
+		var ember_pos: Vector2 = Vector2(cos(ember_angle), sin(ember_angle)) * radius * (0.22 + float(ember_index % 3) * 0.12)
+		draw_circle(ember_pos, radius * (0.035 + pulse * 0.012), Color(1.0, 0.78, 0.16, 0.34 * fade))
 
 
 func _draw_protective_lava_zone() -> void:
@@ -744,8 +775,8 @@ func _uses_programmatic_visual() -> bool:
 		"poison_zone",
 		"poison_cloud",
 		"lava_zone",
+		"meteor_crater",
 		"protective_lava_zone",
 		"smoke_zone",
 		"acid_cone"
 	].has(_visual_style)
-

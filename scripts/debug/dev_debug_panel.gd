@@ -244,6 +244,9 @@ func _build_panel() -> void:
 	var skill_cards_page: VBoxContainer = _add_category_page(page_root, "skill_cards", "Skill Cards")
 	var god_skill_button_row: HBoxContainer = _add_row(skill_cards_page)
 	god_skill_button_row.name = "GodSkillButtons"
+	var skill_tools_row: HBoxContainer = _add_row(skill_cards_page)
+	var clear_skills_button: Button = _add_button(skill_tools_row, "Clear Skills", Callable(self, "_clear_player_skills"), 124)
+	clear_skills_button.name = "ClearSkillsButton"
 
 	_god_skill_cards_scroll = ScrollContainer.new()
 	_god_skill_cards_scroll.name = "GodSkillCardsScroll"
@@ -1201,6 +1204,25 @@ func _clear_enemies() -> void:
 		cleared += 1
 	_enemy_range_overlays.clear()
 	_log("Cleared %d enemies." % cleared)
+
+
+func _clear_player_skills() -> void:
+	if not OS.is_debug_build() and not _is_developer_mode_enabled():
+		_log_warn("Clear Skills is only available in debug mode.")
+		return
+	var player: Node = _get_player()
+	if player == null:
+		_log_error("Player missing.")
+		return
+	var skill_manager: Node = _get_skill_manager(player)
+	if skill_manager == null or not skill_manager.has_method("clear_skills"):
+		_log_error("SkillManager.clear_skills missing.")
+		return
+	skill_manager.call("clear_skills")
+	if player.has_method("_refresh_synergies"):
+		player.call("_refresh_synergies")
+	_refresh_state()
+	_log("Cleared current skill slots.")
 
 
 func _manual_cast_player_skills() -> void:

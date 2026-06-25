@@ -29,9 +29,9 @@ func apply_enemy_config(enemy_config: Dictionary) -> void:
 
 
 func show_hurt(duration: float = 0.12) -> void:
-	if _visual_config.is_empty() or _get_lod() != 0:
+	if _get_lod() != 0:
 		return
-	if _is_normal_enemy():
+	if _visual_config.is_empty() or _is_normal_enemy():
 		_start_hurt_flash()
 		return
 	play_state("hurt")
@@ -39,6 +39,10 @@ func show_hurt(duration: float = 0.12) -> void:
 
 func update(state: Dictionary, delta: float) -> void:
 	if _visual_config.is_empty():
+		if bool(state.get("is_hurt", false)):
+			_start_hurt_flash()
+		else:
+			_end_hurt_flash()
 		return
 
 	if _apply_lod(state):

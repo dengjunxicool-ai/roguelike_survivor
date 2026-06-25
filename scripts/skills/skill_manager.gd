@@ -27,18 +27,26 @@ func add_skill(skill_id: Variant) -> bool:
 		return false
 
 	var definition_data: Dictionary = _get_skill_definition_data(id)
-	var category: String = _category_from_skill_type(definition_data)
 	if definition_data.is_empty():
 		return false
+	var category: String = _category_from_skill_type(definition_data)
 	if category != "active" and category != "passive":
 		return false
 	if not _can_current_character_learn(definition_data):
 		return false
-	if category == "active" and is_active_skill_full():
-		return false
+	var replaced_active_skill_id: StringName = &""
+	if category == "active":
+		replaced_active_skill_id = _find_replaced_active_skill_id(id, definition_data)
+		if _is_attack_replacement_definition(definition_data):
+			definition_data = _with_inherited_attack_runtime(definition_data, replaced_active_skill_id)
+		if replaced_active_skill_id == &"" and is_active_skill_full():
+			return false
 
 	var definition: RefCounted = SkillDefinitionScript.new(definition_data)
 	var skill_instance: RefCounted = SkillInstanceScript.new(definition)
+	if replaced_active_skill_id != &"":
+		_remove_active_skill(replaced_active_skill_id)
+
 	_apply_skill_effect_payload(id, definition)
 	if category == "passive":
 		passive_skills[id] = skill_instance
@@ -74,6 +82,116 @@ func get_skill(skill_id: Variant) -> RefCounted:
 		return passive_skills[id] as RefCounted
 
 	return null
+
+
+func _find_replaced_active_skill_id(new_skill_id: StringName, definition_data: Dictionary) -> StringName:
+	if not _is_attack_replacement_definition(definition_data):
+		return &""
+	var explicit_id: StringName = _to_skill_id(definition_data.get("replaces_skill", definition_data.get("replaces_starting_skill", "")))
+	if explicit_id != &"" and explicit_id != new_skill_id and active_skills.has(explicit_id):
+		return explicit_id
+	for active_id_variant: Variant in active_skills.keys():
+		var active_id: StringName = _to_skill_id(active_id_variant)
+		if active_id == new_skill_id:
+			continue
+		if _is_active_attack_slot_skill(active_id):
+			return active_id
+	return &""
+
+
+func _is_attack_replacement_definition(definition_data: Dictionary) -> bool:
+	return (
+		_string_or(definition_data.get("exclusive_group", ""), "") == "attack_school"
+		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "attack"
+	)
+
+
+func _is_active_attack_slot_skill(skill_id: StringName) -> bool:
+	var skill_instance: RefCounted = active_skills.get(skill_id, null) as RefCounted
+	if skill_instance != null:
+		if _string_or(skill_instance.get("exclusive_group"), "") == "attack_school":
+			return true
+		if _string_or(skill_instance.get("skill_type"), "") == "attack":
+			return true
+	var definition_data: Dictionary = _get_skill_definition_data(skill_id)
+	return bool(definition_data.get("is_starting_skill", false)) or _is_attack_replacement_definition(definition_data)
+
+
+func _with_inherited_attack_runtime(definition_data: Dictionary, replaced_active_skill_id: StringName) -> Dictionary:
+	var inherited: Dictionary = definition_data.duplicate(true)
+	var source_data: Dictionary = {}
+	if replaced_active_skill_id != &"":
+		source_data = _get_skill_definition_data(replaced_active_skill_id)
+	if source_data.is_empty():
+		source_data = _get_primary_starting_skill_data()
+	for key: String in ["base", "components", "events", "damage_scaling", "runtime_family", "particle"]:
+		if not source_data.has(key) or not _definition_value_is_empty(inherited.get(key, null)):
+			continue
+		inherited[key] = _duplicate_definition_value(source_data[key])
+	if _string_or(inherited.get("category", ""), "") == "":
+		inherited["category"] = "active"
+	return inherited
+
+
+func _get_primary_starting_skill_data() -> Dictionary:
+	var skills_document: Dictionary = _load_skills_document()
+	var section_variant: Variant = skills_document.get("starting_skills", [])
+	if not (section_variant is Array):
+		return {}
+	for skill_variant: Variant in section_variant:
+		if skill_variant is Dictionary:
+			return (skill_variant as Dictionary).duplicate(true)
+	return {}
+
+
+func _definition_value_is_empty(value: Variant) -> bool:
+	if value == null:
+		return true
+	if value is Dictionary:
+		return (value as Dictionary).is_empty()
+	if value is Array:
+		return (value as Array).is_empty()
+	if value is String:
+		return (value as String) == ""
+	if value is StringName:
+		return StringName(value) == &""
+	return false
+
+
+func _duplicate_definition_value(value: Variant) -> Variant:
+	if value is Dictionary:
+		return (value as Dictionary).duplicate(true)
+	if value is Array:
+		return (value as Array).duplicate(true)
+	return value
+
+
+func _remove_active_skill(skill_id: StringName) -> void:
+	if skill_id == &"":
+		return
+	active_skills.erase(skill_id)
+	_remove_skill_effect_modifier_source(skill_id)
+	_remove_passive_modifiers_for_skill(skill_id)
+
+
+func _remove_passive_modifiers_for_skill(skill_id: StringName) -> void:
+	var id_text: String = _string_or(skill_id, "")
+	for index: int in range(passive_modifiers.size() - 1, -1, -1):
+		var modifier: Variant = passive_modifiers[index]
+		if modifier is Dictionary and _string_or((modifier as Dictionary).get("source_skill_id", ""), "") == id_text:
+			passive_modifiers.remove_at(index)
+
+
+func _remove_skill_effect_modifier_source(skill_id: StringName) -> void:
+	var source_id: String = "skill:%s:effects" % _string_or(skill_id, "")
+	var owner: Node = get_parent()
+	if owner != null and owner.has_method("clear_run_modifier_source"):
+		owner.call("clear_run_modifier_source", source_id)
+	_skill_effect_modifier_source_ids.erase(source_id)
+
+
+func _string_or(value: Variant, default_value: String = "") -> String:
+	return default_value if value == null else String(value)
 
 
 func upgrade_skill(skill_id: Variant) -> bool:
@@ -147,6 +265,7 @@ func _apply_skill_effect_payload(skill_id: StringName, definition: RefCounted) -
 			continue
 		var modifier: Dictionary = _modifier_effect_to_source(effect)
 		if not modifier.is_empty():
+			modifier["source_skill_id"] = String(skill_id)
 			modifiers.append(modifier)
 	if not modifiers.is_empty():
 		add_passive_modifier(modifiers)
@@ -165,9 +284,6 @@ func _modifier_effect_to_source(effect: Dictionary) -> Dictionary:
 		match modifier_name:
 			"attack_damage_multiplier":
 				values["primary_attack_damage_multiplier_add"] = value
-				var damage_type: String = String(effect.get("damage_type", ""))
-				if damage_type != "":
-					values["%s_damage_multiplier_add" % damage_type] = value
 			"burning_damage_multiplier":
 				values["dot_damage_multiplier_add"] = value
 			"burning_duration_multiplier":

@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/scorching_vortex_area.gd" id="1_2bkos"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_sm6k3"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_5kbn7"]
+radius = 52.0
+
+[node name="ScorchingVortexArea" type="Area2D"]
+z_index = 5
+monitoring = false
+monitorable = false
+script = ExtResource("1_2bkos")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 0.24, 0.04, 0.28)
+texture = ExtResource("2_sm6k3")
+scale = Vector2(0.8, 0.8)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+disabled = true
+shape = SubResource("CircleShape2D_5kbn7")

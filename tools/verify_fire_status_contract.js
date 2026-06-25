@@ -39,6 +39,7 @@ assert(burning.max_stacks === 5, "burning max_stacks");
 assert(burning.damage_type === "status_dot", "burning damage_type");
 assert(burning.element === "fire", "burning element");
 assert(burning.can_crit === false, "burning can_crit");
+assert(burning.visual && burning.visual.sprite_frames === "res://assets/effect/burn/burn.tres", "burning visual sprite_frames");
 assert(Array.isArray(burning.on_tick_effects), "burning must use on_tick_effects");
 assert(
   burning.on_tick_effects.some((effect) =>

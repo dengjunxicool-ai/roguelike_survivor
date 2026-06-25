@@ -56,6 +56,8 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	status["tick_damage"] = configured_tick_damage
 	status["damage_type"] = StringName(String(params.get("damage_type", definition.get("damage_type", id))))
 	status["element"] = StringName(String(params.get("element", definition.get("element", id))))
+	if params.has("power"):
+		status["power"] = maxf(float(params.get("power", 0.0)), 0.0)
 	status["on_tick_effects"] = _get_array(definition.get("on_tick_effects", definition.get("on_tick", [])))
 	status["on_expire_effects"] = _get_array(definition.get("on_expire", definition.get("on_expire_effects", [])))
 	status = DamageTraceContextScript.apply_to_status_params(status, params)
@@ -133,6 +135,23 @@ func get_status_stack(status_id: Variant) -> int:
 
 	var status: Dictionary = _statuses[id]
 	return int(status.get("stacks", 0))
+
+
+func merge_status_fields(status_id: Variant, fields: Dictionary, duration: float = 0.0) -> bool:
+	var id: StringName = StringName(String(status_id))
+	if id == &"" or not _statuses.has(id):
+		return false
+
+	var status: Dictionary = _statuses[id]
+	for key_variant: Variant in fields.keys():
+		var key: String = String(key_variant)
+		if key == "" or key == "id" or key == "definition" or key == "stacks":
+			continue
+		status[key] = fields[key_variant]
+	if duration > 0.0:
+		status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), duration)
+	_statuses[id] = status
+	return true
 
 
 func consume_shock_stack() -> bool:
@@ -360,6 +379,7 @@ func _build_status_event_context(status_id: StringName, status: Dictionary) -> D
 		"owner": player,
 		"status_id": status_id,
 		"status": status.duplicate(true),
+		"power": float(status.get("power", status.get("tick_damage", 0.0))),
 		"position": position,
 		"parent": target.get_parent() if target != null else null,
 		"event_bus": _get_skill_event_bus(),

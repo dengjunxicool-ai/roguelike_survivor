@@ -38,7 +38,7 @@ signal upgrade_applied(upgrade_id: StringName)
 @export_range(0.0, 1000.0, 10.0, "or_greater") var move_speed: float = 220.0
 @export_range(0.0, 2000.0, 10.0, "or_greater") var dash_speed: float = 780.0
 @export_range(0.0, 2.0, 0.01, "or_greater") var dash_duration: float = 0.16
-@export_range(0.0, 5.0, 0.01, "or_greater") var dash_cooldown: float = 0.55
+@export_range(0.0, 5.0, 0.01, "or_greater") var dash_cooldown: float = 2.6
 @export_range(0.01, 1.0, 0.01, "or_greater") var dash_afterimage_interval: float = 0.035
 @export_range(0.01, 2.0, 0.01, "or_greater") var dash_afterimage_fade_duration: float = 0.22
 @export_range(1, 1000, 1, "or_greater") var max_health: int = 100
@@ -92,6 +92,7 @@ var _dash_direction: Vector2 = Vector2.DOWN
 var _dash_time_remaining: float = 0.0
 var _dash_cooldown_remaining: float = 0.0
 var _dash_afterimage_timer: float = 0.0
+var _dash_collision_exceptions: Array[PhysicsBody2D] = []
 var _last_boss_skill_hit_time: float = -10.0
 var _last_contact_damage_time: float = -10.0
 var _last_area_damage_times: Dictionary = {}
@@ -321,6 +322,7 @@ func _reset_runtime_stats() -> void:
 	_dash_time_remaining = 0.0
 	_dash_cooldown_remaining = 0.0
 	_dash_afterimage_timer = 0.0
+	_clear_dash_collision_exceptions()
 	set_meta("level_up_upgrade_levels", {})
 	_experience_formula_type = "exponential"
 	_experience_formula_base = 100
@@ -357,14 +359,18 @@ func _physics_process(delta: float) -> void:
 		_last_move_direction = input_direction.normalized()
 	if Input.is_action_just_pressed("dash") and not _is_movement_frozen():
 		start_dash(input_direction)
-	if is_dash_active():
+	var was_dash_active: bool = is_dash_active()
+	if was_dash_active:
+		_apply_dash_collision_exceptions()
 		velocity = _dash_direction * dash_speed
 		_update_dash_afterimage(delta)
 		_dash_time_remaining = maxf(_dash_time_remaining - delta, 0.0)
 	else:
 		velocity = input_direction * _get_effective_move_speed()
-	_limit_actor_motion(delta)
+		_limit_actor_motion(delta)
 	move_and_slide()
+	if was_dash_active and not is_dash_active():
+		_clear_dash_collision_exceptions()
 	_clamp_to_movement_bounds()
 	_update_trait_movement(input_direction, delta)
 	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
@@ -382,8 +388,32 @@ func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
 	_dash_time_remaining = dash_duration
 	_dash_cooldown_remaining = dash_cooldown
 	_dash_afterimage_timer = 0.0
+	_apply_dash_collision_exceptions()
 	_spawn_dash_afterimage()
+	_emit_dash_skill_event(&"dash_start")
 	return true
+
+
+func _emit_dash_skill_event(event_name: StringName) -> void:
+	var event_bus: Node = get_node_or_null("SkillEventBus")
+	if event_bus == null or not event_bus.has_method("emit_skill_event"):
+		return
+	var skill_manager: Node = _get_skill_manager()
+	if skill_manager == null:
+		return
+	var parent_node: Node = get_tree().current_scene if get_tree() != null else get_parent()
+	event_bus.call("emit_skill_event", event_name, {
+		"player": self,
+		"caster": self,
+		"owner": self,
+		"position": global_position,
+		"dash_direction": _dash_direction,
+		"skill_manager": skill_manager,
+		"relic_manager": get_node_or_null("RelicManager"),
+		"event_bus": event_bus,
+		"parent": parent_node,
+		"target_group": &"enemies"
+	})
 
 
 func is_dash_active() -> bool:
@@ -394,11 +424,33 @@ func _update_dash_cooldown(delta: float) -> void:
 	_dash_cooldown_remaining = maxf(_dash_cooldown_remaining - delta, 0.0)
 
 
+func _apply_dash_collision_exceptions() -> void:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+	for node: Node in tree.get_nodes_in_group(&"enemies"):
+		var body: PhysicsBody2D = node as PhysicsBody2D
+		if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
+			continue
+		if _dash_collision_exceptions.has(body):
+			continue
+		add_collision_exception_with(body)
+		_dash_collision_exceptions.append(body)
+
+
+func _clear_dash_collision_exceptions() -> void:
+	for body: PhysicsBody2D in _dash_collision_exceptions:
+		if body != null and is_instance_valid(body):
+			remove_collision_exception_with(body)
+	_dash_collision_exceptions.clear()
+
+
 func _update_dash_afterimage(delta: float) -> void:
 	_dash_afterimage_timer -= delta
 	if _dash_afterimage_timer > 0.0:
 		return
 	_spawn_dash_afterimage()
+	_emit_dash_skill_event(&"dash_tick")
 	_dash_afterimage_timer = dash_afterimage_interval
 
 

@@ -7,6 +7,7 @@ const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_eff
 const TRIGGER_ALIASES: Dictionary = {
 	"attack_hit": &"attack_hit",
 	"dash_start": &"dash_start",
+	"dash_tick": &"dash_tick",
 	"dash_end": &"dash_end",
 	"cast_skill": &"on_cast",
 	"projectile_hit": &"on_projectile_hit",

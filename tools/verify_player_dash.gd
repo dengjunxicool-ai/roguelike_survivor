@@ -27,6 +27,7 @@ func _init() -> void:
 	_expect(_has_property(player, "dash_speed"), "Player exposes dash_speed")
 	_expect(_has_property(player, "dash_duration"), "Player exposes dash_duration")
 	_expect(_has_property(player, "dash_cooldown"), "Player exposes dash_cooldown")
+	_expect(is_equal_approx(float(player.get("dash_cooldown")), 2.6), "Player dash cooldown defaults to 2.6s")
 
 	if player.has_method("start_dash"):
 		player.global_position = Vector2.ZERO
@@ -37,6 +38,36 @@ func _init() -> void:
 		var afterimage: Node = world.find_child("DashAfterimage", true, false)
 		_expect(afterimage is CanvasItem, "Player dash creates a visible afterimage")
 		_expect(player.global_position.x > 0.0, "Player moves forward during dash")
+		player.global_position = Vector2.ZERO
+		player.set("_dash_time_remaining", 0.0)
+		player.set("_dash_cooldown_remaining", 0.0)
+		var blocker := Node2D.new()
+		blocker.name = "DashPathEnemy"
+		blocker.global_position = Vector2(70.0, 0.0)
+		blocker.add_to_group(&"enemies")
+		world.add_child(blocker)
+		_expect(bool(player.call("start_dash", Vector2.RIGHT)), "Player starts dash toward enemy blocker")
+		player.call("_physics_process", 0.12)
+		_expect(player.global_position.x > blocker.global_position.x, "Player dash passes through enemies on the path")
+		blocker.queue_free()
+		player.global_position = Vector2.ZERO
+		player.set("_dash_time_remaining", 0.0)
+		player.set("_dash_cooldown_remaining", 0.0)
+		var body_blocker := CharacterBody2D.new()
+		body_blocker.name = "DashBodyEnemy"
+		body_blocker.global_position = Vector2(70.0, 0.0)
+		body_blocker.add_to_group(&"enemies")
+		var body_shape := CollisionShape2D.new()
+		var circle := CircleShape2D.new()
+		circle.radius = 24.0
+		body_shape.shape = circle
+		body_blocker.add_child(body_shape)
+		world.add_child(body_blocker)
+		var original_enemy_position: Vector2 = body_blocker.global_position
+		_expect(bool(player.call("start_dash", Vector2.RIGHT)), "Player starts dash toward physics enemy body")
+		player.call("_physics_process", 0.12)
+		_expect(player.global_position.x > body_blocker.global_position.x, "Player dash passes through physics enemy body")
+		_expect(body_blocker.global_position.distance_to(original_enemy_position) <= 0.01, "Player dash does not push enemy body")
 
 	world.queue_free()
 	if _failed:

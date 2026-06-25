@@ -319,7 +319,24 @@
 			],
 			"damage_type": "status_dot",
 			"element": "fire",
-			"can_crit": false
+			"can_crit": false,
+			"visual": {
+				"sprite_frames": "res://assets/effect/burn/burn.tres",
+				"scale": [
+					0.45,
+					0.45
+				],
+				"offset": [
+					0.0,
+					-22.0
+				],
+				"priority": 30.0,
+				"animations": {
+					"burn": {
+						"animation": "burn"
+					}
+				}
+			}
 		},
 		{
 			"duration": 4.0,

@@ -17,6 +17,8 @@ const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_qu
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
+const SummonManagerScript: Script = preload("res://scripts/summons/summon_manager.gd")
 
 const ELEMENT_ALIASES: Dictionary = {
 	"frost": "ice",
@@ -108,11 +110,31 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 	var base_amount: Variant = params.get("amount", ModifierResolverScript.get_stat(context, "damage", 0))
 	var amount: int = maxi(roundi(_resolve_scaled_amount(base_amount, context, "damage")), 0)
 	var damage_type: StringName = _get_damage_type(params, context, "skill", _get_damage_origin(params, context, "skill"))
-	var packet: Dictionary = _build_damage_packet(params, context, amount, "skill")
-	_inherit_projectile_runtime_damage_packet(packet, context, target)
-	packet = _special_rule_executor.call("adjust_damage_packet", packet, context)
-	target.call("take_damage", packet, damage_type)
-	return true
+	var targets: Array[Node] = _resolve_damage_targets(params, context, target)
+	var damaged_any: bool = false
+	for damage_target: Node in targets:
+		if damage_target == null or not damage_target.has_method("take_damage"):
+			continue
+		var target_context: Dictionary = context.duplicate(true)
+		target_context["target"] = damage_target
+		var packet: Dictionary = _build_damage_packet(params, target_context, amount, "skill")
+		_inherit_projectile_runtime_damage_packet(packet, target_context, damage_target)
+		packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
+		damage_target.call("take_damage", packet, damage_type)
+		damaged_any = true
+	return damaged_any
+
+
+func _resolve_damage_targets(params: Dictionary, context: Dictionary, primary_target: Node) -> Array[Node]:
+	var targets: Array[Node] = [primary_target]
+	var radius: float = maxf(float(params.get("radius", 0.0)), 0.0)
+	var center: Node2D = primary_target as Node2D
+	if radius <= 0.0 or center == null:
+		return targets
+	var target_group: StringName = StringName(String(params.get("target_group", context.get("target_group", &"enemies"))))
+	for candidate: Node2D in _find_targets_around(center.global_position, radius, target_group, primary_target):
+		targets.append(candidate)
+	return targets
 
 
 func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dictionary, target: Node) -> void:
@@ -155,6 +177,10 @@ func _apply_status(params: Dictionary, context: Dictionary) -> bool:
 		status_params["stacks"] = int(params["stack"])
 	if params.has("max_stacks"):
 		status_params["max_stacks"] = int(params["max_stacks"])
+	if not status_params.has("power"):
+		var status_power: float = _get_status_power_from_context(context)
+		if status_power > 0.0:
+			status_params["power"] = status_power
 	status_params = DamageTraceContextScript.apply_to_status_params(status_params, context)
 	status_params = _special_rule_executor.call("get_status_params", status_id, status_params, context)
 
@@ -202,6 +228,16 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 		var use_hot_rapid_fire: bool = hot_rapid_fire_pending and projectile_index == 0
 		var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
 		var projectile_position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
+		var curve_target_position: Vector2 = target.global_position
+		if params.has("visual_start_offset"):
+			var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
+			if String(params.get("visual_start_relative_to", "caster")) == "target":
+				projectile_position = curve_target_position + visual_start_offset
+			else:
+				projectile_position += visual_start_offset
+			direction = projectile_position.direction_to(curve_target_position)
+			if direction == Vector2.ZERO:
+				direction = base_direction
 		var trajectory_mode: String = String(params.get("trajectory_mode", "linear"))
 		CombatObjectFactoryScript.create_projectile({
 			"parent": parent,
@@ -233,7 +269,7 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 			"forbidden_page": forbidden_page_pending and projectile_index == 0,
 			"trajectory_mode": trajectory_mode,
 			"curve_start_position": projectile_position,
-			"curve_target_position": target.global_position,
+			"curve_target_position": curve_target_position,
 			"curve_height": float(params.get("curve_height", 64.0)),
 			"homing_enabled": bool(params.get("homing_enabled", false)),
 			"homing_turn_rate": float(params.get("homing_turn_rate", 8.0)),
@@ -284,6 +320,12 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		target_hit_counts[target_key] = same_target_hit_index + 1
 		var visual_start_position: Vector2 = _resolve_projectile_visual_start_position(caster.global_position, target.global_position, same_target_hit_index, params)
 		var visual_target_position: Vector2 = _resolve_projectile_visual_target_position(target.global_position, same_target_hit_index, params)
+		if params.has("visual_start_offset"):
+			var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
+			if String(params.get("visual_start_relative_to", "caster")) == "target":
+				visual_start_position = visual_target_position + visual_start_offset
+			else:
+				visual_start_position += visual_start_offset
 
 		var direction: Vector2 = visual_start_position.direction_to(visual_target_position)
 		if direction == Vector2.ZERO:
@@ -506,6 +548,8 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		"radius": radius,
 		"cone_width_degrees": float(area_params.get("cone_width_degrees", 0.0)),
 		"cone_direction": _resolve_cone_direction(area_params, context, position),
+		"move_direction": _resolve_area_move_direction(area_params, context, position),
+		"move_speed": maxf(float(area_params.get("move_speed", 0.0)), 0.0),
 		"max_targets": max_targets,
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_color": area_params.get("visual_color", Color(1.0, 0.38, 0.05, 0.32)),
@@ -695,11 +739,23 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 	var parent: Node = _get_parent_node(context)
 	if caster == null or parent == null:
 		return false
+	if params.has("summon_definition_id"):
+		return _spawn_managed_summon(params, context, caster, parent)
 
-	var summon: Node2D = Node2D.new()
+	var summon: Node2D = _create_summon_node(params)
 	summon.name = String(params.get("summon_id", "skill_summon"))
 	summon.global_position = caster.global_position + Vector2(float(params.get("spawn_offset", 48.0)), 0.0).rotated(randf() * TAU)
 	parent.add_child(summon)
+	if summon.has_method("setup"):
+		var summon_params: Dictionary = params.duplicate(true)
+		summon_params["caster"] = caster
+		summon_params["parent"] = parent
+		summon_params["action_executor"] = self
+		summon_params["context"] = context.duplicate(true)
+		summon.call("setup", summon_params)
+		if summon.has_method("uses_internal_summon_runtime") and bool(summon.call("uses_internal_summon_runtime")):
+			return true
+	_attach_summon_visual(summon, params)
 
 	var particles: GPUParticles2D = GPUParticles2D.new()
 	particles.name = "SummonParticles"
@@ -726,6 +782,37 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+func _spawn_managed_summon(params: Dictionary, context: Dictionary, caster: Node2D, parent: Node) -> bool:
+	var manager: Node = caster.get_node_or_null("SummonManager")
+	if manager == null:
+		manager = SummonManagerScript.new()
+		manager.name = "SummonManager"
+		caster.add_child(manager)
+	var definition: RefCounted = SummonDefinitionScript.from_id(params.get("summon_definition_id"))
+	if definition == null:
+		return false
+	var summon_context: Dictionary = context.duplicate(true)
+	summon_context["owner"] = caster
+	summon_context["caster"] = caster
+	summon_context["parent"] = parent
+	summon_context["target_group"] = context.get("target_group", &"enemies")
+	summon_context["action_executor"] = self
+	summon_context["player_power"] = _get_caster_attack_power(context)
+	var summon: Node2D = manager.call("spawn_summon", definition, summon_context) as Node2D
+	return summon != null
+
+
+func _create_summon_node(params: Dictionary) -> Node2D:
+	var script_path: String = String(params.get("summon_script", ""))
+	if script_path != "" and ResourceLoader.exists(script_path):
+		var summon_script: Script = load(script_path) as Script
+		if summon_script != null:
+			var scripted_summon: Node2D = summon_script.new() as Node2D
+			if scripted_summon != null:
+				return scripted_summon
+	return Node2D.new()
+
+
 func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> void:
 	if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
 		return
@@ -740,6 +827,8 @@ func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> vo
 		var summon_context: Dictionary = context.duplicate(true)
 		summon_context["target"] = target
 		summon_context["source"] = summon
+		_update_summon_visual_facing(summon, target)
+		_spawn_summon_breath_particles(summon, target, params)
 		var damage_params: Dictionary = params.duplicate(true)
 		if not damage_params.has("damage_type"):
 			damage_params["damage_type"] = "summon_damage"
@@ -747,6 +836,70 @@ func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> vo
 			damage_params["damage_origin"] = "special"
 		_deal_damage(damage_params, summon_context)
 		affected += 1
+
+
+func _attach_summon_visual(summon: Node2D, params: Dictionary) -> void:
+	var texture_path: String = String(params.get("visual_texture", ""))
+	if summon == null or texture_path == "":
+		return
+	if not ResourceLoader.exists(texture_path):
+		push_warning("[SkillActionExecutor] Missing summon visual_texture: %s" % texture_path)
+		return
+	var texture: Texture2D = load(texture_path) as Texture2D
+	if texture == null:
+		return
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = "SummonVisual"
+	sprite.texture = texture
+	sprite.centered = true
+	var visual_scale: float = maxf(float(params.get("visual_scale", 0.12)), 0.01)
+	sprite.scale = Vector2(visual_scale, visual_scale)
+	sprite.z_index = int(params.get("visual_z_index", 4))
+	summon.add_child(sprite)
+	summon.set_meta("summon_visual_texture", texture_path)
+
+
+func _update_summon_visual_facing(summon: Node2D, target: Node2D) -> void:
+	if summon == null or target == null:
+		return
+	var direction: Vector2 = target.global_position - summon.global_position
+	if direction.length_squared() <= 0.0001:
+		return
+	var sprite: Sprite2D = summon.get_node_or_null("SummonVisual") as Sprite2D
+	if sprite == null:
+		return
+	sprite.rotation = direction.angle() - PI * 0.5
+
+
+func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dictionary) -> void:
+	if summon == null or target == null or not bool(params.get("breath_particles", false)):
+		return
+	var particles: GPUParticles2D = GPUParticles2D.new()
+	particles.name = "DragonBreathParticles"
+	summon.add_child(particles)
+	var direction: Vector2 = (target.global_position - summon.global_position).normalized()
+	if direction.length_squared() <= 0.0001:
+		direction = Vector2.RIGHT
+	particles.position = direction * float(params.get("breath_offset", 48.0))
+	particles.rotation = direction.angle()
+	_configure_gpu_particles(particles, {
+		"profile": "targeted_fire_breath",
+		"amount": int(params.get("breath_particle_amount", 54)),
+		"lifetime": 0.45,
+		"particle_lifetime": 0.35,
+		"emission_radius": 12.0,
+		"velocity_min": 80.0,
+		"velocity_max": 180.0,
+		"spread": 28.0,
+		"gravity_y": -2.0,
+		"scale_min": 0.35,
+		"scale_max": 1.1
+	}, Color(1.0, 0.26, 0.03, 0.82))
+	particles.restart()
+	particles.emitting = true
+	var tree: SceneTree = summon.get_tree()
+	if tree != null:
+		tree.create_timer(0.55).timeout.connect(Callable(particles, "queue_free"))
 
 
 func _configure_gpu_particles(particles: GPUParticles2D, params: Dictionary, color: Color) -> void:
@@ -934,6 +1087,9 @@ func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
 	if modifier.is_empty():
 		return false
 
+	if String(params.get("modifier", "")) == "burning_damage_taken_multiplier":
+		return _add_status_damage_taken_modifier(&"burning", modifier, params, context)
+
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	if skill_instance != null:
 		var runtime_modifiers: Dictionary = {}
@@ -949,6 +1105,25 @@ func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
 		skill_manager.call("add_passive_modifier", modifier)
 		return true
 	return false
+
+
+func _add_status_damage_taken_modifier(status_id: StringName, modifier: Dictionary, params: Dictionary, context: Dictionary) -> bool:
+	var target: Node = context.get("target") as Node
+	if target == null or status_id == &"":
+		return false
+	var manager: Node = _get_status_manager(target)
+	if manager == null or not manager.has_method("apply_status"):
+		return false
+	var values: Dictionary = ModifierSourceScript.flatten(modifier)
+	if values.is_empty():
+		return false
+	var duration: float = maxf(float(params.get("duration", 0.6)), 0.05)
+	if manager.has_method("merge_status_fields"):
+		return bool(manager.call("merge_status_fields", status_id, values, duration))
+	var status_params: Dictionary = values.duplicate(true)
+	status_params["stacks"] = 1
+	status_params["duration"] = duration
+	return bool(manager.call("apply_status", status_id, status_params))
 
 
 func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
@@ -1150,7 +1325,8 @@ func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
 	var position_mode: String = String(params.get("position_mode", "target"))
 	if position_mode == "caster" or position_mode == "owner" or position_mode == "self":
 		var caster_for_mode: Node2D = context.get("caster") as Node2D
-		return caster_for_mode.global_position if caster_for_mode != null else Vector2.ZERO
+		var base_position: Vector2 = caster_for_mode.global_position if caster_for_mode != null else Vector2.ZERO
+		return base_position + _resolve_position_offset(params, context, base_position)
 
 	var target: Node2D = context.get("target") as Node2D
 	if target != null:
@@ -1158,6 +1334,15 @@ func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
 
 	var caster: Node2D = context.get("caster") as Node2D
 	return caster.global_position if caster != null else Vector2.ZERO
+
+
+func _resolve_position_offset(params: Dictionary, context: Dictionary, base_position: Vector2) -> Vector2:
+	if params.has("position_offset"):
+		return _get_vector2(params["position_offset"], Vector2.ZERO)
+	var distance: float = float(params.get("position_offset_distance", 0.0))
+	if distance <= 0.0:
+		return Vector2.ZERO
+	return _resolve_named_direction(String(params.get("position_offset_direction", "towards_target")), context, base_position) * distance
 
 
 func _resolve_cone_direction(params: Dictionary, context: Dictionary, area_position: Vector2) -> Vector2:
@@ -1174,6 +1359,39 @@ func _resolve_cone_direction(params: Dictionary, context: Dictionary, area_posit
 		var forward: Vector2 = area_position - caster.global_position
 		if forward.length_squared() > 0.0001:
 			return forward.normalized()
+	return Vector2.RIGHT
+
+
+func _resolve_area_move_direction(params: Dictionary, context: Dictionary, area_position: Vector2) -> Vector2:
+	if not params.has("move_direction"):
+		return Vector2.ZERO
+	var direction_value: Variant = params.get("move_direction")
+	if direction_value is String:
+		return _resolve_named_direction(String(direction_value), context, area_position)
+	var direction: Vector2 = _get_vector2(direction_value, Vector2.ZERO)
+	return direction.normalized() if direction.length_squared() > 0.0001 else Vector2.ZERO
+
+
+func _resolve_named_direction(name: String, context: Dictionary, origin: Vector2) -> Vector2:
+	match name:
+		"towards_target", "target":
+			var target: Node2D = context.get("target") as Node2D
+			if target != null:
+				var target_direction: Vector2 = target.global_position - origin
+				if target_direction.length_squared() > 0.0001:
+					return target_direction.normalized()
+		"away_from_target":
+			var target_for_away: Node2D = context.get("target") as Node2D
+			if target_for_away != null:
+				var away_direction: Vector2 = origin - target_for_away.global_position
+				if away_direction.length_squared() > 0.0001:
+					return away_direction.normalized()
+		"caster_forward":
+			var caster: Node2D = context.get("caster") as Node2D
+			if caster != null:
+				var caster_forward: Vector2 = origin - caster.global_position
+				if caster_forward.length_squared() > 0.0001:
+					return caster_forward.normalized()
 	return Vector2.RIGHT
 
 
@@ -1219,11 +1437,15 @@ func _get_damage_origin(params: Dictionary, context: Dictionary, source_type: St
 	match configured:
 		"primary_attack", "status_dot", "reaction", "field", "trap", "special", "healing":
 			return configured
+		"status":
+			return "status_dot"
 
 	if source_type == "trap":
 		return "trap"
 	if source_type == "explosion":
 		return "primary_attack"
+	if source_type == "status":
+		return "status_dot"
 	var field_model: String = String(params.get("field_damage_model", ""))
 	if field_model == "dot_tick":
 		return "status_dot"
@@ -1523,6 +1745,8 @@ func _resolve_scaled_amount(value: Variant, context: Dictionary, stat_name: Stri
 	if value is Dictionary:
 		var data: Dictionary = value
 		if String(data.get("stat", "")) == "power":
+			if context.has("power"):
+				return float(context.get("power", 0.0)) * float(data.get("scale", 1.0))
 			var power: float = float(ModifierResolverScript.resolve_value(context, stat_name, ModifierResolverScript.get_stat(context, "power", _get_caster_attack_power(context))))
 			return power * float(data.get("scale", 1.0))
 	return float(ModifierResolverScript.resolve_value(context, stat_name, value))
@@ -1541,9 +1765,8 @@ func _build_modifier_from_params(params: Dictionary) -> Dictionary:
 	match modifier_name:
 		"attack_damage_multiplier":
 			values["primary_attack_damage_multiplier_add"] = value
-			var damage_type: String = String(params.get("damage_type", ""))
-			if damage_type != "":
-				values["%s_damage_multiplier_add" % damage_type] = value
+		"burning_damage_taken_multiplier":
+			values["status_dot_damage_taken_multiplier_add_per_stack"] = value
 		_:
 			var key: String = modifier_name
 			if key.ends_with("_multiplier") and not key.ends_with("_multiplier_add"):
@@ -1566,6 +1789,20 @@ func _get_caster_attack_power(context: Dictionary) -> float:
 		if _has_property(caster, property_name):
 			return float(caster.get(property_name))
 	return 1.0
+
+
+func _get_status_power_from_context(context: Dictionary) -> float:
+	for packet_key: String in ["damage_packet", "source_packet", "packet"]:
+		var packet_variant: Variant = context.get(packet_key)
+		if packet_variant is Dictionary:
+			var packet: Dictionary = packet_variant
+			var amount: float = float(packet.get("raw_amount", packet.get("amount", 0.0)))
+			if amount > 0.0:
+				return amount
+	var amount: float = float(context.get("amount", 0.0))
+	if amount > 0.0:
+		return amount
+	return _get_caster_attack_power(context)
 
 
 func _apply_status_to_target(target: Node, status_id: StringName, status_params: Dictionary = {}) -> bool:

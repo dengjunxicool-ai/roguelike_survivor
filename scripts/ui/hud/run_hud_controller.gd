@@ -33,6 +33,8 @@ var _bars: Dictionary = {}
 var _panels: Dictionary = {}
 var _textures: Dictionary = {}
 var _debug_labels: Dictionary = {}
+var _skill_slot_panel: Control
+var _skill_slot_nodes: Array[Dictionary] = []
 var _last_layout_size: Vector2 = Vector2.ZERO
 
 
@@ -49,6 +51,11 @@ func build(tree: SceneTree) -> CanvasLayer:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_screen.add_child(_root)
 
+	_build_player_status()
+	_build_boss_status()
+	_build_top_center()
+	_build_skill_bar()
+	_build_exp_bar()
 	_build_pause_button()
 
 	return _screen
@@ -79,6 +86,7 @@ func update_layout() -> void:
 		if not is_instance_valid(label):
 			continue
 		label.add_theme_font_size_override("font_size", int(item.size))
+	_layout_skill_slots(_get_current_skill_count())
 	_enforce_fixed_panel_spacing(viewport_size)
 
 
@@ -91,6 +99,18 @@ func update(first: Variant, second: Variant = null, current_wave: int = 0, wave_
 			update_layout()
 	if first is SceneTree:
 		_tree = first
+	var run_state: Dictionary = {}
+	if second is Dictionary:
+		run_state = second
+	elif first is Dictionary:
+		run_state = first
+	if not run_state.is_empty():
+		_update_player_bars(run_state)
+		_update_runtime_labels(run_state, current_wave, wave_time_remaining, run_seconds)
+		_update_boss_bar(run_state)
+		_update_hud_visuals(run_state)
+		_update_skill_slots(run_state)
+		_update_debug_stats(run_state)
 	_enforce_fixed_panel_spacing(_last_layout_size)
 
 
@@ -158,11 +178,9 @@ func _build_top_center() -> void:
 
 
 func _build_skill_bar() -> void:
-	var panel := _create_panel("SkillBar", Rect2(0, 28, 268, 88), false, "bottom_center")
+	var panel := _create_panel("SkillBar", Rect2(0, 28, 520, 96), false, "bottom_center")
+	_skill_slot_panel = panel
 	panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.025, 0.022, 0.032, 0.18), Color(0, 0, 0, 0), 1))
-	_create_skill_slot(panel, "SkillSlotStarting", "skill_starting_icon", Rect2(8, 6, 76, 76), "")
-	_create_skill_slot(panel, "SkillSlotPrimary", "skill_primary_icon", Rect2(96, 0, 84, 84), "")
-	_create_skill_slot(panel, "SkillSlotUltimate", "skill_ultimate_icon", Rect2(192, 6, 76, 76), "")
 
 
 func _build_exp_bar() -> void:
@@ -235,6 +253,34 @@ func _create_icon_rect(parent: Control, name: String, rect: Rect2) -> TextureRec
 	_textures[name] = icon
 	_register_layout(icon, rect)
 	return icon
+
+
+func _create_direct_label(parent: Control, name: String, text: String, rect: Rect2, font_size: int, h_align: HorizontalAlignment, v_align: VerticalAlignment, color: Color = COLOR_TEXT) -> Label:
+	var label := Label.new()
+	label.name = name
+	label.text = text
+	label.horizontal_alignment = h_align
+	label.vertical_alignment = v_align
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.clip_text = true
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", font_size)
+	parent.add_child(label)
+	_set_control_rect(label, rect)
+	return label
+
+
+func _create_direct_texture_rect(parent: Control, name: String, rect: Rect2, texture_path: String = "") -> TextureRect:
+	var texture_rect := TextureRect.new()
+	texture_rect.name = name
+	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_rect.texture = _load_texture(texture_path)
+	parent.add_child(texture_rect)
+	_set_control_rect(texture_rect, rect)
+	return texture_rect
 
 
 func _create_progress_bar(parent: Control, name: String, rect: Rect2, color: Color, anchor: String = "top_left") -> TextureProgressBar:
@@ -412,6 +458,134 @@ func _update_hud_visuals(run_state: Dictionary) -> void:
 	_update_ultimate_slot_visual()
 
 
+func _update_skill_slots(run_state: Dictionary) -> void:
+	var skills: Array = _get_array(run_state.get("skills", []))
+	_ensure_skill_slot_count(skills.size())
+	_layout_skill_slots(skills.size())
+	for index: int in range(_skill_slot_nodes.size()):
+		var nodes: Dictionary = _skill_slot_nodes[index]
+		var slot: Control = nodes.get("slot", null) as Control
+		if not is_instance_valid(slot):
+			continue
+		var has_skill: bool = index < skills.size() and skills[index] is Dictionary
+		slot.visible = has_skill
+		if not has_skill:
+			continue
+		var skill: Dictionary = skills[index]
+		var display_name: String = String(skill.get("display_name", skill.get("id", "")))
+		if display_name == "":
+			display_name = "-"
+		var name_label: Label = nodes.get("name_label", null) as Label
+		if is_instance_valid(name_label):
+			name_label.text = display_name
+		var icon: TextureRect = nodes.get("icon", null) as TextureRect
+		if is_instance_valid(icon):
+			var texture: Texture2D = _load_texture(String(skill.get("icon", "")))
+			icon.texture = texture
+			icon.self_modulate = Color.WHITE if texture != null else Color(1.0, 1.0, 1.0, 0.12)
+		var cooldown_remaining: float = maxf(float(skill.get("cooldown_remaining", 0.0)), 0.0)
+		var cooldown_total: float = maxf(float(skill.get("cooldown_total", 0.0)), cooldown_remaining)
+		var cooldown_label: Label = nodes.get("cooldown_label", null) as Label
+		var cooldown_mask: ColorRect = nodes.get("cooldown_mask", null) as ColorRect
+		var show_cooldown: bool = cooldown_remaining > 0.05 and cooldown_total > 0.0
+		if is_instance_valid(cooldown_label):
+			cooldown_label.visible = show_cooldown
+			cooldown_label.text = _format_cooldown(cooldown_remaining)
+		if is_instance_valid(cooldown_mask):
+			cooldown_mask.visible = show_cooldown
+			var slot_size: Vector2 = slot.size
+			var progress: float = clampf(cooldown_remaining / cooldown_total, 0.0, 1.0) if cooldown_total > 0.0 else 0.0
+			_set_control_rect(cooldown_mask, Rect2(0.0, slot_size.y * (1.0 - progress), slot_size.x, slot_size.y * progress))
+
+
+func _ensure_skill_slot_count(count: int) -> void:
+	if not is_instance_valid(_skill_slot_panel):
+		return
+	while _skill_slot_nodes.size() < count:
+		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size()))
+	for index: int in range(_skill_slot_nodes.size()):
+		var nodes: Dictionary = _skill_slot_nodes[index]
+		var slot: Control = nodes.get("slot", null) as Control
+		if is_instance_valid(slot):
+			slot.visible = index < count
+
+
+func _create_dynamic_skill_slot(index: int) -> Dictionary:
+	var slot := Control.new()
+	slot.name = "SkillSlot%d" % index
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skill_slot_panel.add_child(slot)
+
+	var frame := _create_direct_texture_rect(slot, "SkillSlot%dFrame" % index, Rect2(0, 0, 72, 72), HUD_SKILL_SLOT_TEXTURE)
+	var icon := _create_direct_texture_rect(slot, "SkillSlot%dIcon" % index, Rect2(14, 10, 44, 44))
+	var cooldown_mask := ColorRect.new()
+	cooldown_mask.name = "SkillSlot%dCooldownMask" % index
+	cooldown_mask.color = Color(0.02, 0.025, 0.035, 0.68)
+	cooldown_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cooldown_mask.visible = false
+	slot.add_child(cooldown_mask)
+	_set_control_rect(cooldown_mask, Rect2(0, 0, 72, 72))
+	var name_label := _create_direct_label(slot, "SkillSlot%dName" % index, "", Rect2(4, 50, 64, 20), 11, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
+	var cooldown_label := _create_direct_label(slot, "SkillSlot%dCooldown" % index, "", Rect2(0, 0, 72, 72), 18, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
+	cooldown_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
+	cooldown_label.add_theme_constant_override("shadow_offset_x", 1)
+	cooldown_label.add_theme_constant_override("shadow_offset_y", 1)
+	cooldown_label.visible = false
+	return {
+		"slot": slot,
+		"frame": frame,
+		"icon": icon,
+		"cooldown_mask": cooldown_mask,
+		"name_label": name_label,
+		"cooldown_label": cooldown_label
+	}
+
+
+func _layout_skill_slots(count: int) -> void:
+	if not is_instance_valid(_skill_slot_panel):
+		return
+	var visible_count: int = maxi(count, 0)
+	if visible_count <= 0:
+		return
+	var panel_size: Vector2 = _skill_slot_panel.size
+	if panel_size == Vector2.ZERO:
+		panel_size = Vector2(520.0, 96.0)
+	var gap: float = 8.0
+	var max_slot_size: float = 76.0
+	var slot_size: float = minf(max_slot_size, floorf((panel_size.x - gap * float(maxi(visible_count - 1, 0)) - 16.0) / float(visible_count)))
+	slot_size = clampf(slot_size, 48.0, max_slot_size)
+	var total_width: float = slot_size * float(visible_count) + gap * float(maxi(visible_count - 1, 0))
+	var start_x: float = (panel_size.x - total_width) * 0.5
+	var top: float = (panel_size.y - slot_size) * 0.5
+	for index: int in range(_skill_slot_nodes.size()):
+		var nodes: Dictionary = _skill_slot_nodes[index]
+		var slot: Control = nodes.get("slot", null) as Control
+		if not is_instance_valid(slot):
+			continue
+		var should_show: bool = index < visible_count
+		slot.visible = should_show
+		if not should_show:
+			continue
+		_set_control_rect(slot, Rect2(start_x + float(index) * (slot_size + gap), top, slot_size, slot_size))
+		_set_control_rect(nodes.get("frame", null) as Control, Rect2(0, 0, slot_size, slot_size))
+		var icon_inset: float = maxf(8.0, slot_size * 0.18)
+		_set_control_rect(nodes.get("icon", null) as Control, Rect2(icon_inset, icon_inset * 0.75, slot_size - icon_inset * 2.0, slot_size - icon_inset * 2.2))
+		_set_control_rect(nodes.get("name_label", null) as Control, Rect2(3, slot_size - 24.0, slot_size - 6.0, 22.0))
+		_set_control_rect(nodes.get("cooldown_label", null) as Control, Rect2(0, 0, slot_size, slot_size))
+		var cooldown_mask: ColorRect = nodes.get("cooldown_mask", null) as ColorRect
+		if is_instance_valid(cooldown_mask) and not cooldown_mask.visible:
+			_set_control_rect(cooldown_mask, Rect2(0, 0, slot_size, slot_size))
+
+
+func _get_current_skill_count() -> int:
+	var count: int = 0
+	for nodes: Dictionary in _skill_slot_nodes:
+		var slot: Control = nodes.get("slot", null) as Control
+		if is_instance_valid(slot) and slot.visible:
+			count += 1
+	return count
+
+
 func _update_character_visual(run_state: Dictionary) -> void:
 	var character_id: StringName = StringName(String(run_state.get("character_id", "")))
 	var character_data: Dictionary = GameData.get_character(character_id)
@@ -507,9 +681,21 @@ func _variant_to_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+func _get_array(value: Variant) -> Array:
+	if value is Array:
+		return value
+	return []
+
+
 func _format_time(seconds: float) -> String:
 	var total: int = maxi(0, int(seconds))
 	return "%02d:%02d" % [int(total / 60), total % 60]
+
+
+func _format_cooldown(seconds: float) -> String:
+	if seconds >= 10.0:
+		return "%d" % int(ceilf(seconds))
+	return "%.1f" % seconds
 
 
 func _get_label_for_external_key(key: String) -> Label:
