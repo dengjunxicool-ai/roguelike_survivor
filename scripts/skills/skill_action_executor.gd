@@ -492,6 +492,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		"actions_on_expire": _get_array(area_params.get("actions_on_expire", [])),
 		"actions_on_death": _get_array(area_params.get("actions_on_death", [])),
 		"finish_after_damage": bool(area_params.get("finish_after_damage", false)),
+		"impact_target": impact_target,
 		"impact_target_id": str(impact_target.get_instance_id()) if impact_target != null else "",
 		"impact_target_damage_multiplier": float(area_params.get("impact_target_damage_multiplier", 1.0)),
 		"event_bus": context.get("event_bus"),

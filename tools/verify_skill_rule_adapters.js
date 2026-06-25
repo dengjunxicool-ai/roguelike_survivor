@@ -62,10 +62,12 @@ assert(eventBus.includes("get_all_skills"), "SkillEventBus must evaluate owned t
 assert(eventBus.includes("execute_adapted_actions"), "SkillEventBus must expose inline adapted action execution");
 assert(playerController.includes('emit_skill_event", &"on_player_damaged"'), "Player damage must emit skill rule events");
 assert(playerController.includes('"skip_fire_passive_runtime"'), "Player damage rule event must avoid FireSkillRuntime double-run");
+assert(playerController.includes('"target": self'), "Player damage rule context must expose the player as target");
 for (const actionField of ["actions_on_apply", "actions_on_tick", "actions_on_hit", "actions_on_expire", "actions_on_death"]) {
   assert(areaEffect.includes(actionField), `AreaEffect must store ${actionField}`);
   assert(areaEffect.includes(`_execute_adapted_actions(${actionField}`), `AreaEffect must consume ${actionField}`);
 }
+assert(areaEffect.includes("func _execute_apply_actions") && areaEffect.includes("impact_target"), "AreaEffect apply actions must run with a concrete target");
 assert(areaEffect.includes("actions_on_tick.is_empty()") && areaEffect.includes("actions_on_hit.is_empty()") && areaEffect.includes("actions_on_death.is_empty()"), "AreaEffect tick path must not skip action-only areas");
 assert(projectile.includes("actions_on_hit") && projectile.includes("_execute_adapted_actions(actions_on_hit"), "Projectile must consume nested hit actions");
 for (const existingAction of ["deal_damage", "apply_status", "spawn_area", "spawn_projectile", "spawn_summon", "heal_owner", "knockback", "add_temporary_modifier"]) {

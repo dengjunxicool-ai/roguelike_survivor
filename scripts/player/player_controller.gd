@@ -608,6 +608,7 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 		"player": self,
 		"caster": self,
 		"owner": self,
+		"target": self,
 		"parent": parent_node,
 		"source_packet": source_packet,
 		"damage_result": damage_result,

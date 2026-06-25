@@ -48,6 +48,7 @@ var skill_instance: RefCounted
 var caster: Node
 var skill_manager: Node
 var relic_manager: Node
+var impact_target: Node
 var actions_on_apply: Array = []
 var actions_on_tick: Array = []
 var actions_on_hit: Array = []
@@ -99,6 +100,7 @@ func setup(params: Dictionary) -> void:
 	caster = params.get("caster") as Node
 	skill_manager = params.get("skill_manager") as Node
 	relic_manager = params.get("relic_manager") as Node
+	impact_target = params.get("impact_target") as Node
 	_visual_mode = String(params.get("visual_mode", _visual_mode))
 	_visual_style = String(params.get("visual_style", ""))
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
@@ -121,7 +123,7 @@ func setup(params: Dictionary) -> void:
 		radius = maxf(_expand_from_radius, 1.0)
 	_apply_radius(radius)
 	_apply_visual(params)
-	_execute_adapted_actions(actions_on_apply, null)
+	_execute_apply_actions()
 
 
 func extend_duration(target_duration: float, max_duration: float = 5.0) -> void:
@@ -671,6 +673,16 @@ func _execute_adapted_actions(actions: Array, target: Node) -> void:
 		"damage_packet": damage_packet,
 		"position": global_position
 	}))
+
+
+func _execute_apply_actions() -> void:
+	if actions_on_apply.is_empty():
+		return
+	if impact_target != null:
+		_execute_adapted_actions(actions_on_apply, impact_target)
+		return
+	for target: Node in _collect_tick_damage_targets():
+		_execute_adapted_actions(actions_on_apply, target)
 
 
 func _get_color(value: Variant, fallback: Color) -> Color:
