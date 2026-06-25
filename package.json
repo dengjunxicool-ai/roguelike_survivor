@@ -8,6 +8,7 @@
     "verify:skill-rule-adapters": "node tools\\verify_skill_rule_adapters.js",
     "verify:fire-skill-offer-rules": "node tools\\verify_fire_skill_offer_rules.js",
     "verify:fire-effect-actions": "node tools\\verify_fire_effect_action_support.js",
+    "verify:fire-status-runtime": "node tools\\verify_fire_status_runtime_support.js",
     "test:combat:smoke": "node tools\\run_full_weapon_branch_matrix_runtime.js smoke",
     "test:combat:rules": "node tools\\run_full_weapon_branch_matrix_runtime.js rules",
     "report:combat:spotlights": "node tools\\generate_combat_scene_spotlight_report.js",

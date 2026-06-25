@@ -7,8 +7,9 @@ const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_lim
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
-const DOT_STATUS_IDS: Array[StringName] = [&"burn", &"poison", &"bleed"]
-const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"stun", &"paralyze"]
+const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
+const DOT_STATUS_IDS: Array[StringName] = [&"burn", &"burning", &"poison", &"bleed"]
+const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"frozen", &"stun", &"paralyze"]
 const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
 
 var _statuses: Dictionary = {}
@@ -55,6 +56,8 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	status["tick_damage"] = configured_tick_damage
 	status["damage_type"] = StringName(String(params.get("damage_type", definition.get("damage_type", id))))
 	status["element"] = StringName(String(params.get("element", definition.get("element", id))))
+	status["on_tick_effects"] = _get_array(definition.get("on_tick_effects", definition.get("on_tick", [])))
+	status["on_expire_effects"] = _get_array(definition.get("on_expire", definition.get("on_expire_effects", [])))
 	status = DamageTraceContextScript.apply_to_status_params(status, params)
 	status["slow_percent"] = clampf(float(params.get("slow_percent", definition.get("slow_percent", _get_effect_value(definition, "slow_percent", 0.0)))), 0.0, 0.95)
 	if _is_boss() and params.has("boss_slow_percent"):
@@ -83,6 +86,8 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	_refresh_status_visual()
 
 	_notify_status_applied(id, status)
+	if new_stacks >= max_stacks and current_stacks < max_stacks:
+		_handle_max_stack_reached(id, status)
 	_apply_poison_slow_synergy()
 	return true
 
@@ -92,6 +97,7 @@ func update_status_effects(delta: float) -> void:
 		return
 
 	var expired_statuses: Array[StringName] = []
+	var expired_snapshots: Dictionary = {}
 	for id_variant: Variant in _statuses.keys():
 		var id: StringName = StringName(String(id_variant))
 		var status: Dictionary = _statuses[id]
@@ -102,11 +108,15 @@ func update_status_effects(delta: float) -> void:
 
 		if float(status.get("duration_remaining", 0.0)) <= 0.0:
 			expired_statuses.append(id)
+			expired_snapshots[id] = status.duplicate(true)
 		else:
 			_statuses[id] = status
 
 	for id: StringName in expired_statuses:
 		_statuses.erase(id)
+		var expired_status: Dictionary = _get_dictionary(expired_snapshots.get(id, {}))
+		_execute_status_effects(expired_status, "on_expire_effects")
+		_emit_status_skill_event(&"status_expired", id, expired_status)
 	if not expired_statuses.is_empty():
 		_refresh_status_visual()
 	_apply_poison_slow_synergy()
@@ -143,6 +153,25 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 		_statuses[id] = status
 
 	_refresh_status_visual()
+	return true
+
+
+func consume_status_duration(status_id: Variant, seconds: float) -> bool:
+	var id: StringName = StringName(String(status_id))
+	if id == &"" or not _statuses.has(id):
+		return false
+
+	var status: Dictionary = _statuses[id]
+	status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - maxf(seconds, 0.0)
+	if float(status.get("duration_remaining", 0.0)) <= 0.0:
+		_statuses.erase(id)
+		_execute_status_effects(status, "on_expire_effects")
+		_emit_status_skill_event(&"status_expired", id, status)
+	else:
+		_statuses[id] = status
+
+	_refresh_status_visual()
+	_apply_poison_slow_synergy()
 	return true
 
 
@@ -243,8 +272,11 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 	var tick_damage: float = float(status.get("tick_damage", 0.0))
 	var stacks: int = int(status.get("stacks", 1))
 
-	while tick_timer <= 0.0 and tick_damage > 0 and float(status.get("duration_remaining", 0.0)) > 0.0:
-		_apply_tick_damage(_get_tier_scaled_dot_damage(status, tick_damage * stacks), status)
+	while tick_timer <= 0.0 and _has_status_tick_work(status) and float(status.get("duration_remaining", 0.0)) > 0.0:
+		if tick_damage > 0:
+			_apply_tick_damage(_get_tier_scaled_dot_damage(status, tick_damage * stacks), status)
+		_execute_status_effects(status, "on_tick_effects")
+		_emit_status_skill_event(&"status_tick", StringName(String(status.get("id", ""))), status)
 		tick_timer += tick_interval
 
 	status["tick_timer"] = tick_timer
@@ -265,6 +297,99 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 	}
 	if owning_node.has_method("take_damage"):
 		owning_node.call(&"take_damage", DamagePacketBuilderScript.from_status_dot(tick_packet_args))
+
+
+func _has_status_tick_work(status: Dictionary) -> bool:
+	return float(status.get("tick_damage", 0.0)) > 0.0 or not _get_array(status.get("on_tick_effects", [])).is_empty()
+
+
+func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:
+	_emit_status_skill_event(&"status_max_stack_reached", status_id, status)
+	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
+	var max_stack_status: StringName = StringName(String(definition.get("max_stack_status", "")))
+	if max_stack_status != &"" and max_stack_status != status_id:
+		apply_status(max_stack_status, {})
+	var max_stack_event: StringName = StringName(String(definition.get("max_stack_event", "")))
+	if max_stack_event != &"":
+		var event_context: Dictionary = _build_status_event_context(status_id, status)
+		event_context["max_stack_event"] = max_stack_event
+		var event_bus: Node = _get_skill_event_bus()
+		if event_bus != null and event_bus.has_method("emit_skill_event"):
+			event_bus.call("emit_skill_event", max_stack_event, event_context)
+
+
+func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
+	var effects: Array = _get_array(status.get(effects_key, []))
+	if effects.is_empty():
+		return
+	var event_bus: Node = _get_skill_event_bus()
+	if event_bus == null or not event_bus.has_method("execute_adapted_actions"):
+		return
+	var status_id: StringName = StringName(String(status.get("id", "")))
+	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, status))
+	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, status))
+
+
+func _prepare_status_effects(effects: Array, status: Dictionary) -> Array:
+	var prepared: Array = []
+	var stacks: float = float(maxi(int(status.get("stacks", 1)), 1))
+	for effect_variant: Variant in effects:
+		if not (effect_variant is Dictionary):
+			continue
+		var effect: Dictionary = (effect_variant as Dictionary).duplicate(true)
+		if effect.has("power_scale_per_stack") and not effect.has("power_scale"):
+			effect["power_scale"] = float(effect.get("power_scale_per_stack", 0.0)) * stacks
+		prepared.append(effect)
+	return prepared
+
+
+func _emit_status_skill_event(event_name: StringName, status_id: StringName, status: Dictionary) -> void:
+	var event_bus: Node = _get_skill_event_bus()
+	if event_bus != null and event_bus.has_method("emit_skill_event"):
+		event_bus.call("emit_skill_event", event_name, _build_status_event_context(status_id, status))
+
+
+func _build_status_event_context(status_id: StringName, status: Dictionary) -> Dictionary:
+	var target: Node = get_parent()
+	var position: Vector2 = (target as Node2D).global_position if target is Node2D else Vector2.ZERO
+	var player: Node = _get_player()
+	return {
+		"target": target,
+		"enemy": target,
+		"caster": player,
+		"owner": player,
+		"status_id": status_id,
+		"status": status.duplicate(true),
+		"position": position,
+		"parent": target.get_parent() if target != null else null,
+		"event_bus": _get_skill_event_bus(),
+		"skill_manager": player.get_node_or_null("SkillManager") if player != null else null,
+		"relic_manager": player.get_node_or_null("RelicManager") if player != null else null,
+		"target_group": &"enemies"
+	}
+
+
+func _get_skill_event_bus() -> Node:
+	var owner: Node = get_parent()
+	if owner != null:
+		var local_bus: Node = owner.get_node_or_null("SkillEventBus")
+		if local_bus != null:
+			return local_bus
+	var player: Node = _get_player()
+	return player.get_node_or_null("SkillEventBus") if player != null else null
+
+
+func _get_player() -> Node:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return null
+	var player: Node = tree.get_first_node_in_group(&"player")
+	if player != null:
+		return player
+	var owner: Node = get_parent()
+	if owner != null and owner.has_node("SkillEventBus"):
+		return owner
+	return null
 
 
 func _refresh_status_visual() -> void:
@@ -484,6 +609,8 @@ func _get_effect_bool(definition: Dictionary, key: String, fallback: bool) -> bo
 
 
 func _notify_status_applied(status_id: StringName, status: Dictionary) -> void:
+	_emit_status_skill_event(&"status_applied", status_id, status)
+
 	var tracker: Node = RunStatsTrackerScript.get_active(get_tree())
 	if tracker != null and tracker.has_method("record_status_applied"):
 		tracker.call("record_status_applied", status_id, get_parent())
@@ -542,3 +669,10 @@ func _get_dictionary(value: Variant) -> Dictionary:
 		var dictionary: Dictionary = value
 		return dictionary
 	return {}
+
+
+func _get_array(value: Variant) -> Array:
+	if value is Array:
+		var array: Array = value
+		return array.duplicate(true)
+	return []
