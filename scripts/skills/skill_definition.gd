@@ -5,7 +5,17 @@ class_name SkillDefinition
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 
 var id: StringName = &""
+var name: String = ""
 var display_name: String = ""
+var school: StringName = &""
+var fusion_school: Variant = null
+var skill_type: String = ""
+var rarity: String = "normal"
+var exclusive_group: String = ""
+var mechanic_family: String = ""
+var offer_rule: Dictionary = {}
+var trigger_rules: Array[Dictionary] = []
+var effects: Array[Dictionary] = []
 var category: String = ""
 var tags: Array[String] = []
 var max_level: int = 1
@@ -21,7 +31,18 @@ var events: Array[Dictionary] = []
 
 func _init(data: Dictionary = {}) -> void:
 	id = StringName(String(data.get("id", "")))
-	display_name = String(data.get("display_name", ""))
+	name = String(data.get("name", data.get("display_name", "")))
+	display_name = String(data.get("display_name", name))
+	school = StringName(String(data.get("school", data.get("god_id", ""))))
+	var fusion_value: Variant = data.get("fusion_school", null)
+	fusion_school = null if fusion_value == null else StringName(String(fusion_value))
+	skill_type = String(data.get("type", _category_to_skill_type(String(data.get("category", "")))))
+	rarity = String(data.get("rarity", "normal"))
+	exclusive_group = String(data.get("exclusive_group", ""))
+	mechanic_family = String(data.get("mechanic_family", ""))
+	offer_rule = _parse_dictionary(data.get("offer_rule", {}))
+	trigger_rules = _parse_dictionary_array(data.get("trigger_rules", []))
+	effects = _parse_dictionary_array(data.get("effects", []))
 	category = String(data.get("category", ""))
 	tags = _parse_string_array(data.get("tags", []))
 	max_level = maxi(int(data.get("max_level", 1)), 1)
@@ -75,6 +96,16 @@ func _parse_dictionary_array(value: Variant) -> Array[Dictionary]:
 			parsed.append(item.duplicate(true))
 
 	return parsed
+
+
+func _category_to_skill_type(value: String) -> String:
+	match value:
+		"active":
+			return "cast"
+		"passive":
+			return "passive"
+		_:
+			return value
 
 
 func _parse_runtime_rules(value: Variant) -> Dictionary:

@@ -6,6 +6,10 @@ const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skil
 
 var definition: RefCounted
 var skill_id: StringName = &""
+var school: StringName = &""
+var fusion_school: Variant = null
+var skill_type: String = ""
+var exclusive_group: String = ""
 var current_level: int = 1
 var runtime_modifiers: Dictionary = {}
 var runtime_special_rules: Dictionary = {}
@@ -18,6 +22,10 @@ func _init(skill_definition: RefCounted) -> void:
 	definition = skill_definition
 	if definition != null:
 		skill_id = definition.id
+		school = StringName(String(definition.get("school")))
+		fusion_school = definition.get("fusion_school")
+		skill_type = String(definition.get("skill_type"))
+		exclusive_group = String(definition.get("exclusive_group"))
 		var definition_modifiers: Variant = definition.get("modifiers")
 		if definition_modifiers is Dictionary:
 			runtime_modifiers = (definition_modifiers as Dictionary).duplicate(true)
