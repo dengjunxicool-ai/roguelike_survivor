@@ -1,19 +1,19 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cv6ymxn84ckmj"]
 
-[ext_resource type="Script" path="res://scripts/combat/damage_area.gd" id="1_ps508"]
-[ext_resource type="Texture2D" path="res://icon.svg" id="2_wjt31"]
+[ext_resource type="Script" uid="uid://ce3qw5b1ych" path="res://scripts/combat/damage_area.gd" id="1_ps508"]
+[ext_resource type="Texture2D" uid="uid://bp5ctfthcpcf8" path="res://icon.svg" id="2_wjt31"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_28swp"]
 radius = 52.0
 
-[node name="DamageArea" type="Area2D"]
+[node name="DamageArea" type="Area2D" unique_id=271890228]
 z_index = 5
 script = ExtResource("1_ps508")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=234258564]
 modulate = Color(0.35, 0.95, 0.2, 0.32)
-texture = ExtResource("2_wjt31")
 scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_wjt31")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=594029241]
 shape = SubResource("CircleShape2D_28swp")
