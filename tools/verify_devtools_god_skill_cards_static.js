@@ -34,6 +34,12 @@ const panel = read("scripts/debug/dev_debug_panel.gd");
 const godsData = readJson("data/gods.json");
 const skillsData = readJson("data/skills.json");
 
+assert(panel.includes("func _string_or(value: Variant"), "DevDebugPanel must use a safe Variant-to-String helper");
+assert(!panel.includes("String(god_id)"), "DevDebugPanel must not call the removed String constructor on god_id");
+assert(!panel.includes('StringName(String(skill.get("god_id"'), "DevDebugPanel god filter must not wrap skill god_id with String(...)");
+assert(!panel.includes('StringName(String(skill.get("school"'), "DevDebugPanel god filter must not wrap skill school with String(...)");
+assert(!panel.includes('StringName(String(skill.get("fusion_school"'), "DevDebugPanel god filter must not wrap skill fusion_school with String(...)");
+
 const gods = Array.isArray(godsData.gods) ? godsData.gods : [];
 assert(gods.length === 6, "data/gods.json must define exactly 6 gods");
 for (const god of gods) {

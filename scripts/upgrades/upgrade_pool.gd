@@ -40,21 +40,22 @@ func generate_debug_fire_skill_options(player: Node, god_id: StringName = &"fire
 	var seen_option_ids: Dictionary = {}
 
 	for upgrade: Dictionary in GameData.get_level_up_upgrade_pool():
-		var skill_id: StringName = StringName(String(upgrade.get("learn_skill_id", "")))
+		var skill_id: StringName = StringName(_string_or(upgrade.get("learn_skill_id", ""), ""))
 		if skill_id == &"" or not _is_debug_god_skill(skill_id, god_id):
 			continue
-		if seen_skill_ids.has(skill_id) or seen_option_ids.has(String(upgrade.get("id", ""))):
+		var upgrade_option_id: String = _string_or(upgrade.get("id", ""), "")
+		if seen_skill_ids.has(skill_id) or seen_option_ids.has(upgrade_option_id):
 			continue
 		options.append(_make_debug_god_skill_option(player, upgrade, god_id))
 		seen_skill_ids[skill_id] = true
-		seen_option_ids[String(upgrade.get("id", ""))] = true
+		seen_option_ids[upgrade_option_id] = true
 
 	for skill: Dictionary in _get_debug_god_skill_definitions(god_id):
-		var skill_id: StringName = StringName(String(skill.get("id", "")))
+		var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 		if skill_id == &"" or seen_skill_ids.has(skill_id):
 			continue
 		var synthetic_upgrade: Dictionary = _make_god_skill_learn_upgrade(skill, god_id)
-		var option_id: String = String(synthetic_upgrade.get("id", ""))
+		var option_id: String = _string_or(synthetic_upgrade.get("id", ""), "")
 		if option_id == "" or seen_option_ids.has(option_id):
 			continue
 		options.append(_make_debug_god_skill_option(player, synthetic_upgrade, god_id))
@@ -100,7 +101,7 @@ func _build_skill_level_up_options(player: Node) -> Array:
 		var skill_id: StringName = StringName(skill_instance.get("skill_id"))
 		var next_level: int = int(skill_instance.get("current_level")) + 1
 		var definition: RefCounted = skill_instance.get("definition") as RefCounted
-		var skill_name: String = String(skill_id)
+		var skill_name: String = _string_or(skill_id, "")
 		var rarity: String = "common"
 		var description: String = "提升 %s 至 Lv%d。" % [skill_name, next_level]
 		var max_level: int = next_level
@@ -111,7 +112,7 @@ func _build_skill_level_up_options(player: Node) -> Array:
 			description = _get_skill_level_description(definition, next_level, description)
 
 		options.append(_make_option({
-			"id": "skill_level_up:%s:%d" % [String(skill_id), next_level],
+			"id": "skill_level_up:%s:%d" % [_string_or(skill_id, ""), next_level],
 			"type": "skill_level_up",
 			"display_name": "%s Lv%d" % [skill_name, next_level],
 			"description": description,
@@ -140,24 +141,24 @@ func _build_level_up_upgrade_options(player: Node) -> Array:
 			continue
 
 		var payload: Dictionary = {
-			"upgrade_id": StringName(String(upgrade.get("id", ""))),
+			"upgrade_id": StringName(_string_or(upgrade.get("id", ""), "")),
 			"weight": weight
 		}
 		if upgrade.has("learn_skill_id"):
-			payload["learn_skill_id"] = StringName(String(upgrade.get("learn_skill_id", "")))
+			payload["learn_skill_id"] = StringName(_string_or(upgrade.get("learn_skill_id", ""), ""))
 
 		options.append(_make_option({
-			"id": "level_up_upgrade:%s" % String(upgrade.get("id", "")),
+			"id": "level_up_upgrade:%s" % _string_or(upgrade.get("id", ""), ""),
 			"type": "level_up_upgrade",
-			"display_name": String(upgrade.get("display_name", upgrade.get("id", ""))),
+			"display_name": _string_or(upgrade.get("display_name", upgrade.get("id", "")), _string_or(upgrade.get("id", ""), "")),
 			"description": _get_level_up_upgrade_description(upgrade),
-			"rarity": String(upgrade.get("rarity", "common")),
+			"rarity": _string_or(upgrade.get("rarity", "common"), "common"),
 			"background_texture": _get_option_background_texture(upgrade),
 			"tags": _get_array(upgrade.get("tags", [])),
 			"affected_origin": _infer_affected_origin(upgrade),
 			"does_not_affect": _infer_does_not_affect(upgrade),
-			"recommended_reason": String(_offer_policy.call("build_recommended_reason", player, upgrade)),
-			"level_text": "Lv%d / %d" % [_get_upgrade_level(player, String(upgrade.get("id", ""))) + 1, maxi(int(upgrade.get("max_level", 1)), 1)],
+			"recommended_reason": _string_or(_offer_policy.call("build_recommended_reason", player, upgrade), ""),
+			"level_text": "Lv%d / %d" % [_get_upgrade_level(player, _string_or(upgrade.get("id", ""), "")) + 1, maxi(int(upgrade.get("max_level", 1)), 1)],
 			"payload": payload
 		}))
 
@@ -167,23 +168,23 @@ func _build_level_up_upgrade_options(player: Node) -> Array:
 func _build_fire_skill_learn_options(player: Node, god_id: StringName = &"fire") -> Array:
 	var options: Array = []
 	for skill: Dictionary in _get_skill_learn_definitions():
-		var skill_id: StringName = StringName(String(skill.get("id", "")))
+		var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 		if not _is_learn_skill_upgrade_available(player, skill_id):
 			continue
 		if not bool(_skill_offer_service.call("is_skill_available", player, skill)):
 			continue
 
 		var upgrade: Dictionary = _make_god_skill_learn_upgrade(skill, god_id)
-		var upgrade_id: StringName = StringName(String(upgrade.get("id", "")))
+		var upgrade_id: StringName = StringName(_string_or(upgrade.get("id", ""), ""))
 		if upgrade_id == &"":
 			continue
 
 		options.append(_make_option({
-			"id": "level_up_upgrade:%s" % String(upgrade_id),
+			"id": "level_up_upgrade:%s" % _string_or(upgrade_id, ""),
 			"type": "level_up_upgrade",
-			"display_name": String(upgrade.get("display_name", skill.get("display_name", skill_id))),
+			"display_name": _string_or(upgrade.get("display_name", skill.get("display_name", skill_id)), _string_or(skill_id, "")),
 			"description": _get_level_up_upgrade_description(upgrade),
-			"rarity": String(upgrade.get("rarity", skill.get("rarity", "common"))),
+			"rarity": _string_or(upgrade.get("rarity", skill.get("rarity", "common")), "common"),
 			"background_texture": _get_option_background_texture(skill),
 			"tags": _get_array(upgrade.get("tags", [])),
 			"affected_origin": "神系技能",
@@ -202,7 +203,7 @@ func _build_fire_skill_learn_options(player: Node, god_id: StringName = &"fire")
 func _get_skill_learn_definitions() -> Array[Dictionary]:
 	var skills: Array[Dictionary] = []
 	for skill: Dictionary in GameData.get_skill_pool():
-		if StringName(String(skill.get("id", ""))) == &"":
+		if StringName(_string_or(skill.get("id", ""), "")) == &"":
 			continue
 		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
 			continue
@@ -211,14 +212,14 @@ func _get_skill_learn_definitions() -> Array[Dictionary]:
 
 
 func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: StringName) -> RefCounted:
-	var upgrade_id: StringName = StringName(String(upgrade.get("id", "")))
-	var current_level: int = _get_upgrade_level(player, String(upgrade_id))
+	var upgrade_id: StringName = StringName(_string_or(upgrade.get("id", ""), ""))
+	var current_level: int = _get_upgrade_level(player, _string_or(upgrade_id, ""))
 	var option: RefCounted = _make_option({
-		"id": "level_up_upgrade:%s" % String(upgrade_id),
+		"id": "level_up_upgrade:%s" % _string_or(upgrade_id, ""),
 		"type": "level_up_upgrade",
-		"display_name": String(upgrade.get("display_name", upgrade_id)),
+		"display_name": _string_or(upgrade.get("display_name", upgrade_id), _string_or(upgrade_id, "")),
 		"description": _get_debug_upgrade_description(upgrade, current_level),
-		"rarity": String(upgrade.get("rarity", "common")),
+		"rarity": _string_or(upgrade.get("rarity", "common"), "common"),
 		"background_texture": _get_option_background_texture(upgrade),
 		"tags": _get_array(upgrade.get("tags", [])),
 		"affected_origin": "Dev / God skill pool",
@@ -227,7 +228,7 @@ func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: Str
 		"level_text": "Lv%d / %d" % [current_level + 1, maxi(int(upgrade.get("max_level", 1)), 1)],
 		"payload": {
 			"upgrade_id": upgrade_id,
-			"learn_skill_id": StringName(String(upgrade.get("learn_skill_id", ""))),
+			"learn_skill_id": StringName(_string_or(upgrade.get("learn_skill_id", ""), "")),
 			"debug_god_id": god_id
 		}
 	})
@@ -244,13 +245,13 @@ func _is_debug_god_skill(skill_id: StringName, god_id: StringName) -> bool:
 func _is_debug_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
 	if skill.is_empty():
 		return false
-	if StringName(String(skill.get("id", ""))) == &"":
+	if StringName(_string_or(skill.get("id", ""), "")) == &"":
 		return false
-	if StringName(String(skill.get("god_id", ""))) == god_id:
+	if StringName(_string_or(skill.get("god_id", ""), "")) == god_id:
 		return true
-	if StringName(String(skill.get("school", ""))) == god_id:
+	if StringName(_string_or(skill.get("school", ""), "")) == god_id:
 		return true
-	if StringName(String(skill.get("fusion_school", ""))) == god_id:
+	if StringName(_string_or(skill.get("fusion_school", ""), "")) == god_id:
 		return true
 	if god_id == &"fire" and _to_string_array(_get_array(skill.get("tags", []))).has("fire"):
 		return true
@@ -279,27 +280,27 @@ func _get_debug_skill_definition_from_file(skill_id: StringName) -> Dictionary:
 			if not (skill_variant is Dictionary):
 				continue
 			var skill: Dictionary = skill_variant
-			if StringName(String(skill.get("id", ""))) == skill_id:
+			if StringName(_string_or(skill.get("id", ""), "")) == skill_id:
 				return skill.duplicate(true)
 	return {}
 
 
 func _make_god_skill_learn_upgrade(skill: Dictionary, god_id: StringName) -> Dictionary:
-	var skill_id: String = String(skill.get("id", ""))
+	var skill_id: String = _string_or(skill.get("id", ""), "")
 	if skill_id == "":
 		return {}
 	var tags: Array[String] = _to_string_array(_get_array(skill.get("tags", [])))
 	if not tags.has("skill"):
 		tags.push_front("skill")
-	var god_text: String = String(god_id)
+	var god_text: String = _string_or(god_id, "")
 	if god_text != "" and not tags.has(god_text):
 		tags.push_front(god_text)
-	var description: String = String(skill.get("description", "Learn %s." % skill_id))
+	var description: String = _string_or(skill.get("description", "Learn %s." % skill_id), "Learn %s." % skill_id)
 	return {
 		"id": "%s%s" % [FIRE_SKILL_LEARN_UPGRADE_PREFIX, skill_id],
-		"display_name": String(skill.get("display_name", skill_id)),
+		"display_name": _string_or(skill.get("display_name", skill_id), skill_id),
 		"description": description,
-		"rarity": String(skill.get("rarity", "common")),
+		"rarity": _string_or(skill.get("rarity", "common"), "common"),
 		"tags": tags,
 		"enabled": true,
 		"max_level": 1,
@@ -349,7 +350,7 @@ func _add_unique_options(target: Array, source: Array, max_count: int) -> void:
 	for option_variant: Variant in target:
 		var option: RefCounted = option_variant as RefCounted
 		if option != null:
-			existing_ids[String(option.get("id"))] = true
+			existing_ids[_string_or(option.get("id"), "")] = true
 			var learn_skill_id: StringName = _get_option_learn_skill_id(option)
 			if learn_skill_id != &"":
 				existing_learn_skill_ids[learn_skill_id] = true
@@ -360,7 +361,7 @@ func _add_unique_options(target: Array, source: Array, max_count: int) -> void:
 		var option: RefCounted = option_variant as RefCounted
 		if option == null:
 			continue
-		var option_id: String = String(option.get("id"))
+		var option_id: String = _string_or(option.get("id"), "")
 		if existing_ids.has(option_id):
 			continue
 		var learn_skill_id: StringName = _get_option_learn_skill_id(option)
@@ -415,14 +416,14 @@ func _get_option_weight(option: RefCounted) -> float:
 		var payload: Dictionary = payload_variant
 		if payload.has("weight"):
 			return maxf(float(payload.get("weight", 0.0)), 0.0)
-	return maxf(float(rarity_weights.get(String(option.get("rarity")), 1.0)), 0.0)
+	return maxf(float(rarity_weights.get(_string_or(option.get("rarity"), ""), 1.0)), 0.0)
 
 
 func _is_level_up_upgrade_available(player: Node, upgrade: Dictionary) -> bool:
-	var upgrade_id: String = String(upgrade.get("id", ""))
+	var upgrade_id: String = _string_or(upgrade.get("id", ""), "")
 	if upgrade_id == "" or not bool(upgrade.get("enabled", true)):
 		return false
-	if upgrade.has("learn_skill_id") and not _is_learn_skill_upgrade_available(player, StringName(String(upgrade.get("learn_skill_id", "")))):
+	if upgrade.has("learn_skill_id") and not _is_learn_skill_upgrade_available(player, StringName(_string_or(upgrade.get("learn_skill_id", ""), ""))):
 		return false
 	var max_level: int = maxi(int(upgrade.get("max_level", 1)), 1)
 	if _get_upgrade_level(player, upgrade_id) >= max_level:
@@ -452,12 +453,12 @@ func _get_option_learn_skill_id(option: RefCounted) -> StringName:
 	if payload_variant is Dictionary:
 		var payload: Dictionary = payload_variant
 		if payload.has("learn_skill_id"):
-			return StringName(String(payload.get("learn_skill_id", "")))
+			return StringName(_string_or(payload.get("learn_skill_id", ""), ""))
 	return &""
 
 
 func _get_level_up_upgrade_weight(player: Node, upgrade: Dictionary) -> float:
-	var upgrade_level: int = _get_upgrade_level(player, String(upgrade.get("id", "")))
+	var upgrade_level: int = _get_upgrade_level(player, _string_or(upgrade.get("id", ""), ""))
 	var main_level: int = _get_highest_owned_skill_level(player)
 	return float(_offer_policy.call("get_upgrade_weight", player, upgrade, upgrade_level, main_level))
 
@@ -513,8 +514,8 @@ func _get_definition_string(definition: RefCounted, property_name: String, fallb
 func _get_level_up_upgrade_description(upgrade: Dictionary) -> String:
 	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
 	if not descriptions.is_empty():
-		return String(descriptions[0])
-	return String(upgrade.get("description", ""))
+		return _string_or(descriptions[0], "")
+	return _string_or(upgrade.get("description", ""), "")
 
 
 func _infer_affected_origin(upgrade: Dictionary) -> String:
@@ -554,10 +555,10 @@ func _infer_does_not_affect(upgrade: Dictionary) -> String:
 func _get_debug_upgrade_description(upgrade: Dictionary, current_level: int) -> String:
 	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
 	if current_level >= 0 and current_level < descriptions.size():
-		return String(descriptions[current_level])
+		return _string_or(descriptions[current_level], "")
 	if not descriptions.is_empty():
-		return String(descriptions[0])
-	return String(upgrade.get("description", ""))
+		return _string_or(descriptions[0], "")
+	return _string_or(upgrade.get("description", ""), "")
 
 
 func _get_upgrade_level(player: Node, upgrade_id: String) -> int:
@@ -576,12 +577,12 @@ func _make_option(data: Dictionary) -> RefCounted:
 
 func _get_option_background_texture(primary: Dictionary, fallback: Dictionary = {}) -> String:
 	for key: String in ["background_texture", "card_background_texture"]:
-		var value: String = String(primary.get(key, ""))
+		var value: String = _string_or(primary.get(key, ""), "")
 		if value != "":
 			return value
 
 	for key: String in ["background_texture", "card_background_texture"]:
-		var value: String = String(fallback.get(key, ""))
+		var value: String = _string_or(fallback.get(key, ""), "")
 		if value != "":
 			return value
 
@@ -600,8 +601,12 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+func _string_or(value: Variant, default_value: String = "") -> String:
+	return default_value if value == null else str(value)
+
+
 func _to_string_array(value: Array) -> Array[String]:
 	var strings: Array[String] = []
 	for item: Variant in value:
-		strings.append(String(item))
+		strings.append(_string_or(item, ""))
 	return strings

@@ -48,6 +48,19 @@ const fireSkills = skillDefinitions.filter(
   (skill) => skill.school === "fire" || skill.fusion_school === "fire" || (skill.tags || []).includes("fire")
 );
 
+assert(panel.includes("func _string_or(value: Variant"), "DevDebugPanel must use a safe Variant-to-String helper");
+assert(pool.includes("func _string_or(value: Variant"), "UpgradePool must use a safe Variant-to-String helper");
+for (const [label, text] of [
+  ["DevDebugPanel", panel],
+  ["UpgradePool", pool],
+]) {
+  assert(!text.includes("String(god_id)"), `${label} must not call the removed String constructor on god_id`);
+  assert(!text.includes('StringName(String(skill.get("id"'), `${label} must not wrap skill id with String(...)`);
+  assert(!text.includes('StringName(String(skill.get("god_id"'), `${label} must not wrap skill god_id with String(...)`);
+  assert(!text.includes('StringName(String(skill.get("school"'), `${label} must not wrap skill school with String(...)`);
+  assert(!text.includes('StringName(String(skill.get("fusion_school"'), `${label} must not wrap skill fusion_school with String(...)`);
+}
+
 assert(fireSkills.length === 34, "expected 34 first-version fire-related skills from data/skills.json");
 assert(fireSkills[0].id === "fire_attack_searing", "fire_attack_searing must be the first fire skill card");
 assert(!fireSkills.some((skill) => skill.id === "mars_spark_missile"), "old mars_spark_missile card must be removed");

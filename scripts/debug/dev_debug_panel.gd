@@ -422,12 +422,12 @@ func _populate_god_skill_buttons() -> void:
 
 	var gods: Array[Dictionary] = _get_god_definitions()
 	for god: Dictionary in gods:
-		var god_id: String = String(god.get("id", ""))
+		var god_id: String = _string_or(god.get("id", ""), "")
 		if god_id == "":
 			continue
 		var button: Button = _add_button(
 			button_row,
-			String(god.get("display_name", god_id)),
+			_string_or(god.get("display_name", god_id), god_id),
 			Callable(self, "_select_god_skill_cards").bind(StringName(god_id)),
 			68
 		)
@@ -435,7 +435,7 @@ func _populate_god_skill_buttons() -> void:
 		button.toggle_mode = true
 		_god_skill_buttons[StringName(god_id)] = button
 	if not _god_skill_buttons.has(_selected_god_id) and not gods.is_empty():
-		_selected_god_id = StringName(String(gods[0].get("id", "fire")))
+		_selected_god_id = StringName(_string_or(gods[0].get("id", "fire"), "fire"))
 	_update_god_skill_button_states()
 
 
@@ -475,7 +475,7 @@ func _select_god_skill_cards(god_id: StringName) -> void:
 
 func _update_god_skill_button_states() -> void:
 	for god_id_variant: Variant in _god_skill_buttons.keys():
-		var god_id: StringName = StringName(String(god_id_variant))
+		var god_id: StringName = StringName(_string_or(god_id_variant, ""))
 		var button: Button = _god_skill_buttons[god_id_variant] as Button
 		if button != null:
 			button.set_pressed_no_signal(god_id == _selected_god_id)
@@ -486,9 +486,9 @@ func _sync_selected_god_skill_id() -> void:
 		_selected_god_skill_id = &""
 		return
 	for skill: Dictionary in _god_skill_definitions:
-		if StringName(String(skill.get("id", ""))) == _selected_god_skill_id:
+		if StringName(_string_or(skill.get("id", ""), "")) == _selected_god_skill_id:
 			return
-	_selected_god_skill_id = StringName(String(_god_skill_definitions[0].get("id", "")))
+	_selected_god_skill_id = StringName(_string_or(_god_skill_definitions[0].get("id", ""), ""))
 
 
 func _load_json_document(path: String) -> Dictionary:
@@ -545,14 +545,14 @@ func _get_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
 
 
 func _is_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
-	if StringName(String(skill.get("god_id", ""))) == god_id:
+	if StringName(_string_or(skill.get("god_id", ""), "")) == god_id:
 		return true
-	if StringName(String(skill.get("school", ""))) == god_id:
+	if StringName(_string_or(skill.get("school", ""), "")) == god_id:
 		return true
-	if StringName(String(skill.get("fusion_school", ""))) == god_id:
+	if StringName(_string_or(skill.get("fusion_school", ""), "")) == god_id:
 		return true
 	var tags: Array = _get_array(skill.get("tags", []))
-	return tags.has(String(god_id)) or tags.has(god_id)
+	return tags.has(_string_or(god_id, "")) or tags.has(god_id)
 
 
 func _populate_fire_skill_options() -> void:
@@ -1403,25 +1403,25 @@ func _refresh_state() -> void:
 
 
 func _add_god_skill_card(parent: VBoxContainer, skill: Dictionary, skill_index: int) -> void:
-	var skill_id: StringName = StringName(String(skill.get("id", "")))
+	var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 	var button: Button = Button.new()
-	button.name = "GodSkillCard_%s" % String(skill_id)
+	button.name = "GodSkillCard_%s" % _string_or(skill_id, "")
 	button.set_meta("skill_index", skill_index)
 	button.text = _format_god_skill_card_text(skill)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.custom_minimum_size = Vector2(0, 118)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.tooltip_text = String(skill.get("description", ""))
+	button.tooltip_text = _string_or(skill.get("description", ""), "")
 	UIButtonSkin.apply(button)
 	button.pressed.connect(Callable(self, "_on_god_skill_card_pressed").bind(skill_id))
 	parent.add_child(button)
 
 
 func _format_god_skill_card_text(skill: Dictionary) -> String:
-	var title: String = String(skill.get("display_name", skill.get("id", "")))
-	var description: String = String(skill.get("description", ""))
-	var vfx_description: String = String(skill.get("vfx_description", ""))
+	var title: String = _string_or(skill.get("display_name", skill.get("id", "")), "")
+	var description: String = _string_or(skill.get("description", ""), "")
+	var vfx_description: String = _string_or(skill.get("vfx_description", ""), "")
 	var effect_description: String = _get_god_skill_effect_description(skill)
 	return "%s\n描述：%s\n特效：%s\n效果：%s" % [
 		title,
@@ -1432,13 +1432,13 @@ func _format_god_skill_card_text(skill: Dictionary) -> String:
 
 
 func _get_god_skill_effect_description(skill: Dictionary) -> String:
-	var effect_description: String = String(skill.get("effect_description", ""))
+	var effect_description: String = _string_or(skill.get("effect_description", ""), "")
 	if effect_description != "":
 		return effect_description
 
 	var parts: Array[String] = []
 	for key: String in ["category", "runtime_family", "rarity"]:
-		var value: String = String(skill.get(key, ""))
+		var value: String = _string_or(skill.get(key, ""), "")
 		if value != "":
 			parts.append("%s:%s" % [key, value])
 
@@ -1448,7 +1448,7 @@ func _get_god_skill_effect_description(skill: Dictionary) -> String:
 			if not (event_variant is Dictionary):
 				continue
 			var event: Dictionary = event_variant
-			var trigger: String = String(event.get("trigger", ""))
+			var trigger: String = _string_or(event.get("trigger", ""), "")
 			var actions_variant: Variant = event.get("actions", [])
 			var action_count: int = actions_variant.size() if actions_variant is Array else 0
 			if trigger != "" and action_count > 0:
@@ -1465,7 +1465,7 @@ func _on_god_skill_card_pressed(skill_id: StringName) -> void:
 
 func _select_god_skill_card(skill_id: StringName) -> void:
 	_selected_god_skill_id = skill_id
-	_log("God skill card selected: %s." % String(skill_id))
+	_log("God skill card selected: %s." % _string_or(skill_id, ""))
 
 
 func debug_select_god_skill_cards(god_id: StringName) -> Dictionary:
@@ -1474,9 +1474,9 @@ func debug_select_god_skill_cards(god_id: StringName) -> Dictionary:
 	var button_tree_count: int = 0
 	var selected_button_pressed: bool = false
 	for button_id_variant: Variant in _god_skill_buttons.keys():
-		var button_id: StringName = StringName(String(button_id_variant))
+		var button_id: StringName = StringName(_string_or(button_id_variant, ""))
 		var button: Button = _god_skill_buttons[button_id_variant] as Button
-		button_ids.append(String(button_id))
+		button_ids.append(_string_or(button_id, ""))
 		if button != null and button.is_inside_tree():
 			button_tree_count += 1
 		if button_id == god_id and button != null:
@@ -1503,16 +1503,16 @@ func _run_god_skill_card(skill_id: StringName) -> Dictionary:
 	if option.is_empty():
 		var fallback: Dictionary = _build_fire_skill_chain_result(skill_id)
 		fallback["option_generated"] = false
-		fallback["error"] = "No god skill debug option for %s." % String(skill_id)
+		fallback["error"] = "No god skill debug option for %s." % _string_or(skill_id, "")
 		_update_fire_skill_chain_log(fallback)
 		return fallback
 	var selected_skill_id: StringName = _get_option_learn_skill_id(option)
 	var result: Dictionary = _build_fire_skill_chain_result(selected_skill_id)
 	result["option_generated"] = true
-	result["option_id"] = String(option.get("id", ""))
+	result["option_id"] = _string_or(option.get("id", ""), "")
 	result["granted"] = _grant_fire_skill_option(option)
 	if not bool(result.get("granted", false)):
-		result["error"] = "Could not grant %s." % String(selected_skill_id)
+		result["error"] = "Could not grant %s." % _string_or(selected_skill_id, "")
 		_update_fire_skill_chain_log(result)
 		return result
 	result["target_spawned"] = false
@@ -1521,7 +1521,7 @@ func _run_god_skill_card(skill_id: StringName) -> Dictionary:
 	for key_variant: Variant in cast_result.keys():
 		result[key_variant] = cast_result[key_variant]
 	result["skill_id"] = selected_skill_id
-	result["option_id"] = String(option.get("id", ""))
+	result["option_id"] = _string_or(option.get("id", ""), "")
 	result["option_generated"] = true
 	result["granted"] = true
 	result["target_spawned"] = false
@@ -1551,11 +1551,11 @@ func _grant_selected_fire_skill() -> void:
 	var granted: bool = _grant_fire_skill_option(option)
 	_update_fire_skill_chain_log({
 		"skill_id": _get_option_learn_skill_id(option),
-		"option_id": String(option.get("id", "")),
+		"option_id": _string_or(option.get("id", ""), ""),
 		"option_generated": true,
 		"granted": granted
 	})
-	_log("Grant fire skill %s: %s." % [String(_get_option_learn_skill_id(option)), str(granted)])
+	_log("Grant fire skill %s: %s." % [_string_or(_get_option_learn_skill_id(option), ""), str(granted)])
 
 
 func _cast_selected_fire_skill() -> void:
@@ -1567,14 +1567,14 @@ func _cast_selected_fire_skill() -> void:
 	var granted: bool = _grant_fire_skill_option(option)
 	if not granted:
 		_update_fire_skill_chain_log({"skill_id": skill_id, "option_generated": true, "granted": false})
-		_log_warn("Cannot cast %s: grant failed." % String(skill_id))
+		_log_warn("Cannot cast %s: grant failed." % _string_or(skill_id, ""))
 		return
 	var cast_result: Dictionary = await _cast_fire_skill_once(skill_id)
 	cast_result["option_generated"] = true
 	cast_result["granted"] = true
 	_update_fire_skill_chain_log(cast_result)
 	_log("Cast fire skill %s; cast_count=%d damage_records=%d." % [
-		String(skill_id),
+		_string_or(skill_id, ""),
 		int(cast_result.get("cast_count", 0)),
 		int(cast_result.get("damage_record_count", 0))
 	])
@@ -1608,7 +1608,7 @@ func _grant_fire_skill_option(option: Dictionary) -> bool:
 	if skill_manager != null and skill_manager.has_method("has_skill") and bool(skill_manager.call("has_skill", skill_id)):
 		return true
 
-	var option_id: StringName = StringName(String(option.get("id", "")))
+	var option_id: StringName = StringName(_string_or(option.get("id", ""), ""))
 	if option_id != &"" and player.has_method("apply_upgrade"):
 		player.call("apply_upgrade", option_id)
 		if skill_manager != null and skill_manager.has_method("has_skill") and bool(skill_manager.call("has_skill", skill_id)):
@@ -1749,12 +1749,12 @@ func _get_god_skill_option(skill_id: StringName) -> Dictionary:
 func _get_option_learn_skill_id(option: Dictionary) -> StringName:
 	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
 	if payload.has("learn_skill_id"):
-		return StringName(String(payload.get("learn_skill_id", "")))
-	var option_id: String = String(option.get("id", ""))
+		return StringName(_string_or(payload.get("learn_skill_id", ""), ""))
+	var option_id: String = _string_or(option.get("id", ""), "")
 	if option_id.begins_with("level_up_upgrade:"):
 		var upgrade_id: StringName = StringName(option_id.substr("level_up_upgrade:".length()))
 		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
-		return StringName(String(upgrade.get("learn_skill_id", "")))
+		return StringName(_string_or(upgrade.get("learn_skill_id", ""), ""))
 	return &""
 
 
@@ -2114,6 +2114,10 @@ func _get_array(value: Variant) -> Array:
 	return []
 
 
+func _string_or(value: Variant, default_value: String = "") -> String:
+	return default_value if value == null else str(value)
+
+
 func _is_number(value: Variant) -> bool:
 	var value_type: int = typeof(value)
 	return value_type == TYPE_INT or value_type == TYPE_FLOAT
@@ -2123,7 +2127,7 @@ func _to_string_array(value: Variant) -> Array[String]:
 	var result: Array[String] = []
 	if value is Array:
 		for item: Variant in value:
-			result.append(String(item))
+			result.append(_string_or(item, ""))
 	return result
 
 
