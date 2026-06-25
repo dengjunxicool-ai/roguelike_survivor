@@ -135,9 +135,9 @@ function isObject(value) {
 
 function validateEffectArray(effects, skillId, location) {
   assert(Array.isArray(effects), `${skillId} ${location} must be an array`);
-  for (const effect of effects) {
-    validateEffect(effect, skillId, location);
-  }
+  effects.forEach((effect, index) => {
+    validateEffect(effect, skillId, `${location}[${index}]`);
+  });
 }
 
 function validateEffect(effect, skillId, location) {
@@ -164,7 +164,7 @@ function validateNestedEffectArrays(value, skillId, location) {
   }
 }
 
-function validateExpectedIdLists() {
+function buildExpectedSkillMetadata() {
   assert(FIRE_BASE_IDS.length === 14, `FIRE_BASE_IDS must contain exactly 14 ids, got ${FIRE_BASE_IDS.length}`);
   assert(FIRE_FUSION_IDS.length === 20, `FIRE_FUSION_IDS must contain exactly 20 ids, got ${FIRE_FUSION_IDS.length}`);
 
@@ -176,20 +176,68 @@ function validateExpectedIdLists() {
   for (const id of FIRE_BASE_IDS) {
     assert(!fireFusionIds.has(id), `fire skill id must not be both base and fusion: ${id}`);
   }
+
+  const metadata = new Map();
+  for (const id of FIRE_BASE_IDS) {
+    metadata.set(id, { school: "fire", fusion_school: null, required_min_skill_count: null });
+  }
+  for (const id of FIRE_FUSION_IDS) {
+    const match = /^fusion_(fire|frost|thunder|curse|holy|chaos)_(fire|frost|thunder|curse|holy|chaos)_/.exec(id);
+    assert(match, `fusion skill id must encode school pair: ${id}`);
+    const school = match[1];
+    const fusionSchool = match[2];
+    assert(school !== fusionSchool, `fusion skill id must encode two different schools: ${id}`);
+    metadata.set(id, {
+      school,
+      fusion_school: fusionSchool,
+      required_min_skill_count: { [school]: 2, [fusionSchool]: 1 },
+    });
+  }
+
+  assert(metadata.size === FIRE_BASE_IDS.length + FIRE_FUSION_IDS.length, "expected fire skill metadata must cover every unique id");
+  return metadata;
 }
 
-function validateRequiredMinSkillCount(skill) {
+function validateOfferRuleArrays(skill) {
+  const offerRule = skill.offer_rule;
+  if (Object.prototype.hasOwnProperty.call(offerRule, "required_schools")) {
+    assert(Array.isArray(offerRule.required_schools), `${skill.id} offer_rule.required_schools must be an array`);
+    offerRule.required_schools.forEach((school, index) => {
+      assert(typeof school === "string", `${skill.id} offer_rule.required_schools[${index}] must be a string`);
+      assert(ALLOWED_SCHOOLS.has(school), `${skill.id} offer_rule.required_schools[${index}] invalid school ${school}`);
+    });
+  }
+  if (Object.prototype.hasOwnProperty.call(offerRule, "required_skills")) {
+    assert(Array.isArray(offerRule.required_skills), `${skill.id} offer_rule.required_skills must be an array`);
+    offerRule.required_skills.forEach((requiredSkill, index) => {
+      assert(typeof requiredSkill === "string", `${skill.id} offer_rule.required_skills[${index}] must be a string`);
+    });
+  }
+  if (Object.prototype.hasOwnProperty.call(offerRule, "blocked_by_exclusive_group")) {
+    assert(Array.isArray(offerRule.blocked_by_exclusive_group), `${skill.id} offer_rule.blocked_by_exclusive_group must be an array`);
+    offerRule.blocked_by_exclusive_group.forEach((group, index) => {
+      assert(typeof group === "string", `${skill.id} offer_rule.blocked_by_exclusive_group[${index}] must be a string`);
+    });
+  }
+}
+
+function validateRequiredMinSkillCount(skill, expectedMetadata) {
   const requiredMinSkillCount = skill.offer_rule.required_min_skill_count;
   assert(isObject(requiredMinSkillCount), `${skill.id} offer_rule.required_min_skill_count must be a non-array object`);
   const entries = Object.entries(requiredMinSkillCount);
   assert(entries.length > 0, `${skill.id} offer_rule.required_min_skill_count must not be empty`);
+  const expectedCounts = expectedMetadata.required_min_skill_count;
+  const expectedSchools = Object.keys(expectedCounts);
+  assert(entries.length === expectedSchools.length, `${skill.id} offer_rule.required_min_skill_count must not contain extra schools`);
   for (const [school, count] of entries) {
     assert(ALLOWED_SCHOOLS.has(school), `${skill.id} offer_rule.required_min_skill_count invalid school ${school}`);
     assert(Number.isInteger(count) && count > 0, `${skill.id} offer_rule.required_min_skill_count.${school} must be a positive integer`);
+    assert(Object.prototype.hasOwnProperty.call(expectedCounts, school), `${skill.id} offer_rule.required_min_skill_count unexpected school ${school}`);
+    assert(expectedCounts[school] === count, `${skill.id} offer_rule.required_min_skill_count.${school} must equal ${expectedCounts[school]}`);
   }
 }
 
-function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
+function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById) {
   for (const field of REQUIRED_SKILL_FIELDS) {
     assert(Object.prototype.hasOwnProperty.call(skill, field), `${skill.id || "missing id"} missing field ${field}`);
   }
@@ -206,10 +254,14 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   assert(Number.isInteger(skill.max_level) && skill.max_level >= 1, `${skill.id} invalid max_level`);
   assert(Array.isArray(skill.tags) && skill.tags.length > 0, `${skill.id} must have non-empty tags`);
   assert(isObject(skill.offer_rule), `${skill.id} invalid offer_rule`);
+  validateOfferRuleArrays(skill);
+  const expectedMetadata = expectedMetadataById.get(skill.id);
+  assert(skill.school === expectedMetadata.school, `${skill.id} must set school ${expectedMetadata.school}`);
+  assert(skill.fusion_school === expectedMetadata.fusion_school, `${skill.id} must set fusion_school ${expectedMetadata.fusion_school}`);
   if (fireFusionIds.has(skill.id)) {
     assert(skill.type === "fusion", `${skill.id} fusion skill id must set type fusion`);
     assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
-    validateRequiredMinSkillCount(skill);
+    validateRequiredMinSkillCount(skill, expectedMetadata);
   }
   if (fireBaseIds.has(skill.id)) {
     assert(skill.type !== "fusion", `${skill.id} base skill id must not set type fusion`);
@@ -227,7 +279,7 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
 }
 
 function main() {
-  validateExpectedIdLists();
+  const expectedMetadataById = buildExpectedSkillMetadata();
 
   const document = readJson("data/skills.json");
   assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
@@ -237,7 +289,7 @@ function main() {
   });
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
-  const expectedIds = new Set([...FIRE_BASE_IDS, ...FIRE_FUSION_IDS]);
+  const expectedIds = new Set(expectedMetadataById.keys());
   const actualIds = new Set(skills.map((skill) => skill.id));
 
   assert(skills.length === 34, `data/skills.json must contain exactly 34 first-version skills, got ${skills.length}`);
@@ -245,7 +297,7 @@ function main() {
     assert(actualIds.has(id), `missing skill ${id}`);
   }
   for (const skill of skills) {
-    validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds);
+    validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
   }
 
   console.log("[verify_fire_skill_system_contract] PASS");
