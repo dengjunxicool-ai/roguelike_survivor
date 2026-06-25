@@ -4,7 +4,7 @@
 			"id": "fireball_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10,
+			"collision_radius": 10.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -15,7 +15,7 @@
 					0.34
 				],
 				"flip_h": true,
-				"rotation_degrees": -42,
+				"rotation_degrees": -42.0,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -25,13 +25,13 @@
 			"visual_style": "fireball_shader",
 			"visual_mode": "asset",
 			"visual_color": [
-				1,
+				1.0,
 				0.34,
 				0.05,
 				0.9
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.84,
 				0.18,
 				0.95
@@ -41,15 +41,15 @@
 			"id": "hailstorm_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10,
+			"collision_radius": 10.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					0,
-					0,
-					255,
+					0.0,
+					0.0,
+					255.0,
 					0.5
 				],
 				"scale": [
@@ -66,13 +66,13 @@
 			"visual_color": [
 				0.62,
 				0.86,
-				1,
+				1.0,
 				0.88
 			],
 			"visual_ring_color": [
 				0.94,
-				1,
-				1,
+				1.0,
+				1.0,
 				0.95
 			]
 		},
@@ -80,7 +80,7 @@
 			"id": "lightning_orb_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10,
+			"collision_radius": 10.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -88,8 +88,8 @@
 				"modulate": [
 					0.68,
 					0.9,
-					1,
-					1
+					1.0,
+					1.0
 				],
 				"scale": [
 					0.1,
@@ -108,13 +108,13 @@
 			"visual_color": [
 				0.34,
 				0.78,
-				1,
+				1.0,
 				0.82
 			],
 			"visual_ring_color": [
 				0.95,
-				1,
-				1,
+				1.0,
+				1.0,
 				0.95
 			]
 		},
@@ -122,7 +122,7 @@
 			"id": "arcane_page_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9,
+			"collision_radius": 9.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -130,8 +130,8 @@
 				"modulate": [
 					0.78,
 					0.5,
-					1,
-					1
+					1.0,
+					1.0
 				],
 				"scale": [
 					0.095,
@@ -150,13 +150,13 @@
 			"visual_color": [
 				0.68,
 				0.38,
-				1,
+				1.0,
 				0.78
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.74,
-				1,
+				1.0,
 				0.9
 			]
 		},
@@ -164,7 +164,7 @@
 			"id": "throwing_knife_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 8,
+			"collision_radius": 8.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
 			"visual": {
@@ -172,14 +172,14 @@
 				"modulate": [
 					0.88,
 					0.9,
-					1,
-					1
+					1.0,
+					1.0
 				],
 				"scale": [
 					0.075,
 					0.075
 				],
-				"rotation_degrees": 0,
+				"rotation_degrees": 0.0,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -193,13 +193,13 @@
 			"visual_color": [
 				0.9,
 				0.94,
-				1,
+				1.0,
 				0.95
 			],
 			"visual_ring_color": [
 				0.58,
 				0.75,
-				1,
+				1.0,
 				0.85
 			]
 		},
@@ -207,16 +207,16 @@
 			"id": "poison_bottle_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9,
+			"collision_radius": 9.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
 					0.45,
-					1,
+					1.0,
 					0.25,
-					1
+					1.0
 				],
 				"scale": [
 					0.085,
@@ -234,13 +234,13 @@
 			"visual_style": "poison_bottle",
 			"visual_color": [
 				0.45,
-				1,
+				1.0,
 				0.25,
 				0.86
 			],
 			"visual_ring_color": [
 				0.82,
-				1,
+				1.0,
 				0.36,
 				0.95
 			]
@@ -249,7 +249,7 @@
 			"id": "spinning_sword_blade",
 			"type": "orbit_object",
 			"scene": "res://scenes/orbit_object.tscn",
-			"collision_radius": 18,
+			"collision_radius": 18.0,
 			"persistent": true,
 			"follow_owner": true,
 			"visual_mode": "programmatic",
@@ -258,14 +258,14 @@
 				"modulate": [
 					0.85,
 					0.9,
-					1,
-					1
+					1.0,
+					1.0
 				],
 				"scale": [
 					0.28,
 					0.28
 				],
-				"rotation_degrees": -24,
+				"rotation_degrees": -24.0,
 				"animations": {
 					"loop": {
 						"animation": "loop"
@@ -280,14 +280,14 @@
 			"id": "generic_explosion_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 82,
+			"collision_radius": 82.0,
 			"visual_mode": "programmatic",
 			"visual": {
 				"texture": "res://icon.svg",
 				"sprite_frames": "res://assets/effect/fireball/fireball.tres",
 				"scale": [
-					2,
-					2
+					2.0,
+					2.0
 				],
 				"animations": {
 					"start": {
@@ -303,13 +303,13 @@
 			},
 			"visual_style": "fire_burst",
 			"visual_color": [
-				1,
+				1.0,
 				0.24,
 				0.04,
 				0.38
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.8,
 				0.16,
 				0.78
@@ -319,7 +319,7 @@
 			"id": "hunter_arrow_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9,
+			"collision_radius": 9.0,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
 			"visual": {
@@ -328,13 +328,13 @@
 					0.92,
 					0.82,
 					0.48,
-					1
+					1.0
 				],
 				"scale": [
 					0.11,
 					0.11
 				],
-				"rotation_degrees": 0,
+				"rotation_degrees": 0.0,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -346,13 +346,13 @@
 			},
 			"visual_style": "hunter_arrow",
 			"visual_color": [
-				1,
+				1.0,
 				0.75,
 				0.22,
 				0.95
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.92,
 				0.48,
 				0.95
@@ -362,7 +362,7 @@
 			"id": "bear_trap_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 90,
+			"collision_radius": 90.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -405,11 +405,11 @@
 			"id": "holy_field_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 130,
+			"collision_radius": 130.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1,
+					1.0,
 					0.92,
 					0.38,
 					0.58
@@ -432,14 +432,14 @@
 			},
 			"visual_style": "holy_field",
 			"visual_color": [
-				1,
+				1.0,
 				0.92,
 				0.38,
 				0.22
 			],
 			"visual_ring_color": [
-				1,
-				1,
+				1.0,
+				1.0,
 				0.82,
 				0.68
 			]
@@ -448,7 +448,7 @@
 			"id": "poison_cloud_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 105,
+			"collision_radius": 105.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -482,7 +482,7 @@
 			],
 			"visual_ring_color": [
 				0.75,
-				1,
+				1.0,
 				0.25,
 				0.66
 			]
@@ -491,11 +491,11 @@
 			"id": "fire_oil_pot_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10,
+			"collision_radius": 10.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1,
+					1.0,
 					0.46,
 					0.08,
 					0.88
@@ -515,13 +515,13 @@
 			},
 			"visual_style": "oil_pot",
 			"visual_color": [
-				1,
+				1.0,
 				0.42,
 				0.08,
 				0.9
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.78,
 				0.28,
 				0.95
@@ -531,11 +531,11 @@
 			"id": "fire_oil_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 110,
+			"collision_radius": 110.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1,
+					1.0,
 					0.42,
 					0.08,
 					0.62
@@ -558,13 +558,13 @@
 			},
 			"visual_style": "lava_zone",
 			"visual_color": [
-				1,
+				1.0,
 				0.3,
 				0.04,
 				0.3
 			],
 			"visual_ring_color": [
-				1,
+				1.0,
 				0.72,
 				0.12,
 				0.72
@@ -574,7 +574,7 @@
 			"id": "smoke_cloud_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 95,
+			"collision_radius": 95.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -584,8 +584,8 @@
 					0.35
 				],
 				"scale": [
-					1,
-					1
+					1.0,
+					1.0
 				],
 				"animations": {
 					"start": {
@@ -617,7 +617,7 @@
 			"id": "acid_spray_cone_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 320,
+			"collision_radius": 320.0,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -651,7 +651,7 @@
 			],
 			"visual_ring_color": [
 				0.86,
-				1,
+				1.0,
 				0.28,
 				0.72
 			]

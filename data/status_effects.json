@@ -1,78 +1,86 @@
 {
 	"statuses": [
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "heat",
 			"display_name": "heat",
 			"type": "base",
-			"max_stacks": 5,
+			"max_stacks": 5.0,
 			"effect": {
 				"fire_damage_taken_multiplier_add_per_stack": 0.03
 			}
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "flame_core",
 			"display_name": "flame_core",
 			"type": "mark",
-			"max_stacks": 5,
-			"effect": {}
+			"max_stacks": 5.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "soul_ember",
 			"display_name": "soul_ember",
 			"type": "mark",
-			"max_stacks": 4,
-			"effect": {}
+			"max_stacks": 4.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 5,
-			"tick_interval": 0,
+			"duration": 5.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "frost_lock",
 			"display_name": "frost_lock",
 			"type": "mark",
-			"max_stacks": 4,
-			"effect": {}
+			"max_stacks": 4.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "frostbite",
 			"display_name": "frostbite",
 			"type": "mark",
-			"max_stacks": 3,
-			"effect": {}
+			"max_stacks": 3.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 3,
-			"tick_interval": 0,
+			"duration": 3.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "slow_poise",
 			"id": "chill",
 			"display_name": "chill",
 			"type": "base",
-			"max_stacks": 5,
+			"max_stacks": 5.0,
 			"effect": {
 				"move_slow_per_stack": 0.06
 			}
 		},
 		{
-			"duration": 6,
-			"tick_interval": 0,
+			"duration": 6.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "slow_poise",
 			"id": "chilled",
@@ -85,21 +93,21 @@
 			"max_stack_status": "frozen"
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "charge",
 			"display_name": "charge",
 			"type": "base",
-			"max_stacks": 4,
+			"max_stacks": 4.0,
 			"effect": {
 				"lightning_damage_taken_multiplier_add_per_stack": 0.04
 			}
 		},
 		{
-			"duration": 5,
-			"tick_interval": 0,
+			"duration": 5.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "conductive",
@@ -112,73 +120,83 @@
 			"max_stack_status": "overload"
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "voltage",
 			"display_name": "voltage",
 			"type": "mark",
-			"max_stacks": 5,
-			"effect": {}
-		},
-		{
-			"duration": 5,
-			"tick_interval": 0,
-			"refresh_rule": "refresh_duration",
-			"boss_conversion_rule": "none",
-			"id": "arcane_mark",
-			"display_name": "arcane_mark",
-			"type": "base",
-			"max_stacks": 5,
+			"max_stacks": 5.0,
 			"effect": {
-				"arcane_damage_taken_multiplier_add_per_stack": 0.03
+
 			}
 		},
 		{
-			"duration": 5,
-			"tick_interval": 0,
-			"refresh_rule": "refresh_duration",
-			"boss_conversion_rule": "none",
-			"id": "arcane_seal",
-			"display_name": "arcane_seal",
-			"type": "mark",
-			"max_stacks": 5,
-			"effect": {}
-		},
-		{
-			"duration": 6,
-			"tick_interval": 0,
+			"duration": 6.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "instability",
 			"display_name": "Instability",
 			"type": "mark",
 			"max_stacks": 4,
-			"effect": {},
+			"effect": {
+
+			},
 			"max_stack_event": "fission"
 		},
 		{
-			"duration": 5,
-			"tick_interval": 0,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "arcane_mark",
+			"display_name": "arcane_mark",
+			"type": "base",
+			"max_stacks": 5.0,
+			"effect": {
+				"arcane_damage_taken_multiplier_add_per_stack": 0.03
+			}
+		},
+		{
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"refresh_rule": "refresh_duration",
+			"boss_conversion_rule": "none",
+			"id": "arcane_seal",
+			"display_name": "arcane_seal",
+			"type": "mark",
+			"max_stacks": 5.0,
+			"effect": {
+
+			}
+		},
+		{
+			"duration": 5.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "wound",
 			"display_name": "wound",
 			"type": "base",
-			"max_stacks": 5,
-			"effect": {}
+			"max_stacks": 5.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 3,
-			"tick_interval": 0,
+			"duration": 3.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "cursed",
 			"display_name": "Cursed",
 			"type": "debuff",
 			"max_stacks": 3,
-			"effect": {},
+			"effect": {
+
+			},
 			"on_expire": [
 				{
 					"type": "damage",
@@ -189,8 +207,8 @@
 			]
 		},
 		{
-			"duration": 6,
-			"tick_interval": 0,
+			"duration": 6.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "judgment",
@@ -203,53 +221,53 @@
 			"max_stack_event": "divine_punishment"
 		},
 		{
-			"duration": 5,
-			"tick_interval": 0,
+			"duration": 5.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
 			"id": "hunter_mark",
 			"display_name": "hunter_mark",
 			"type": "mark",
-			"max_stacks": 5,
+			"max_stacks": 5.0,
 			"effect": {
 				"all_damage_taken_multiplier_add_per_stack": 0.04
 			}
 		},
 		{
-			"duration": 2,
-			"tick_interval": 0,
+			"duration": 2.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "slow_poise",
 			"id": "snare_mark",
 			"display_name": "snare_mark",
 			"type": "mark",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"move_slow_per_stack": 0.45
 			}
 		},
 		{
-			"duration": 4,
-			"tick_interval": 0,
+			"duration": 4.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
 			"id": "holy_mark",
 			"display_name": "holy_mark",
 			"type": "mark",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"holy_damage_taken_multiplier_add_per_stack": 0.05
 			}
 		},
 		{
-			"duration": 3,
+			"duration": 3.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "burn",
 			"display_name": "burn",
 			"type": "dot",
-			"max_stacks": 5,
+			"max_stacks": 5.0,
 			"effect": {
 				"dot": true
 			},
@@ -268,10 +286,10 @@
 					0.45
 				],
 				"offset": [
-					0,
-					-22
+					0.0,
+					-22.0
 				],
-				"priority": 30,
+				"priority": 30.0,
 				"animations": {
 					"burn": {
 						"animation": "burn"
@@ -280,7 +298,7 @@
 			}
 		},
 		{
-			"duration": 4,
+			"duration": 4.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
@@ -304,126 +322,130 @@
 			"can_crit": false
 		},
 		{
-			"duration": 4,
+			"duration": 4.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "poison",
 			"display_name": "poison",
 			"type": "dot",
-			"max_stacks": 3,
+			"max_stacks": 3.0,
 			"effect": {
 				"dot": true
 			},
-			"damage": 6,
+			"damage": 6.0,
 			"damage_type": "status_dot",
 			"element": "poison",
 			"boss_modifiers": {
 				"dot_damage_multiplier": 0.65,
-				"max_stacks": 3
+				"max_stacks": 3.0
 			},
 			"elite_modifiers": {
 				"dot_damage_multiplier": 0.8
 			}
 		},
 		{
-			"duration": 4,
+			"duration": 4.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "bleed",
 			"display_name": "bleed",
 			"type": "dot",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"dot": true
 			},
-			"damage": 4,
+			"damage": 4.0,
 			"damage_type": "status_dot",
 			"element": "physical"
 		},
 		{
-			"duration": 3,
+			"duration": 3.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "blackfire",
 			"display_name": "blackfire",
 			"type": "dot",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"dot": true
 			},
-			"damage": 6,
+			"damage": 6.0,
 			"damage_type": "status_dot",
 			"element": "fire"
 		},
 		{
 			"duration": 0.8,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "reaction_resist",
 			"id": "shock",
 			"display_name": "shock",
 			"type": "reaction",
-			"max_stacks": 1,
-			"effect": {}
+			"max_stacks": 1.0,
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 0,
-			"tick_interval": 0,
+			"duration": 0.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "reaction_resist",
 			"id": "overload",
 			"display_name": "Overload",
 			"type": "instant",
 			"max_stacks": 1,
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
-			"duration": 2,
-			"tick_interval": 0,
+			"duration": 2.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "slow",
 			"display_name": "slow",
 			"type": "control",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"move_slow_per_stack": 0.35
 			}
 		},
 		{
 			"duration": 1.2,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "root",
 			"display_name": "root",
 			"type": "control",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
-				"move_slow_per_stack": 1
+				"move_slow_per_stack": 1.0
 			}
 		},
 		{
 			"duration": 0.8,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "freeze",
 			"display_name": "freeze",
 			"type": "hard_control",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
-				"move_slow_per_stack": 1
+				"move_slow_per_stack": 1.0
 			},
 			"visual": {
 				"texture": "res://assets/weapon/frost_staff.png",
 				"modulate": [
 					0.55,
 					0.85,
-					1,
+					1.0,
 					0.8
 				],
 				"scale": [
@@ -431,15 +453,15 @@
 					0.42
 				],
 				"offset": [
-					0,
-					-24
+					0.0,
+					-24.0
 				],
-				"priority": 40
+				"priority": 40.0
 			}
 		},
 		{
 			"duration": 1.2,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "frozen",
@@ -449,45 +471,47 @@
 			"elite_duration": 0.5,
 			"boss_duration": 0.15,
 			"effect": {
-				"move_slow_per_stack": 1
+				"move_slow_per_stack": 1.0
 			}
 		},
 		{
 			"duration": 0.7,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "stun",
 			"display_name": "stun",
 			"type": "hard_control",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
-				"move_slow_per_stack": 1
+				"move_slow_per_stack": 1.0
 			}
 		},
 		{
 			"duration": 0.7,
-			"tick_interval": 0,
+			"tick_interval": 0.0,
 			"refresh_rule": "strongest_only",
 			"boss_conversion_rule": "poise",
 			"id": "paralyze",
 			"display_name": "paralyze",
 			"type": "hard_control",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
-				"move_slow_per_stack": 1
+				"move_slow_per_stack": 1.0
 			}
 		},
 		{
-			"duration": 3,
-			"tick_interval": 0,
+			"duration": 3.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"id": "weaken",
 			"display_name": "weaken",
 			"type": "debuff",
-			"max_stacks": 1,
-			"effect": {}
+			"max_stacks": 1.0,
+			"effect": {
+
+			}
 		},
 		{
 			"duration": 0.5,
@@ -497,11 +521,11 @@
 			"id": "radiance",
 			"display_name": "radiance",
 			"type": "field",
-			"max_stacks": 1,
+			"max_stacks": 1.0,
 			"effect": {
 				"dot": true
 			},
-			"damage": 6,
+			"damage": 6.0,
 			"damage_type": "status_dot",
 			"element": "holy"
 		},
@@ -509,9 +533,9 @@
 			"id": "hunter_snare",
 			"display_name": "hunter_snare",
 			"type": "control",
-			"max_stacks": 1,
-			"duration": 5,
-			"tick_interval": 0,
+			"max_stacks": 1.0,
+			"duration": 5.0,
+			"tick_interval": 0.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "poise",
 			"effect": {
@@ -522,75 +546,87 @@
 			"id": "eagle_mark",
 			"display_name": "eagle_mark",
 			"type": "mark",
-			"duration": 6,
-			"tick_interval": 0,
-			"max_stacks": 1,
+			"duration": 6.0,
+			"tick_interval": 0.0,
+			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "burst_mark",
 			"display_name": "burst_mark",
 			"type": "mark",
-			"duration": 3,
-			"tick_interval": 0,
-			"max_stacks": 1,
+			"duration": 3.0,
+			"tick_interval": 0.0,
+			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "prey_mark",
 			"display_name": "prey_mark",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 1,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "impurity",
 			"display_name": "impurity",
 			"type": "mark",
-			"duration": 4,
-			"tick_interval": 0,
-			"max_stacks": 3,
+			"duration": 4.0,
+			"tick_interval": 0.0,
+			"max_stacks": 3.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "toxin_seed",
 			"display_name": "toxin_seed",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 4,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 4.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "toxic_core",
 			"display_name": "toxic_core",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 4,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 4.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "flammable_mark",
 			"display_name": "flammable_mark",
 			"type": "mark",
-			"duration": 4,
-			"tick_interval": 0,
-			"max_stacks": 5,
+			"duration": 4.0,
+			"tick_interval": 0.0,
+			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"effect": {
@@ -601,20 +637,22 @@
 			"id": "oil_stack",
 			"display_name": "oil_stack",
 			"type": "mark",
-			"duration": 4,
-			"tick_interval": 0,
-			"max_stacks": 3,
+			"duration": 4.0,
+			"tick_interval": 0.0,
+			"max_stacks": 3.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "acid_mark",
 			"display_name": "acid_mark",
 			"type": "mark",
-			"duration": 4,
-			"tick_interval": 0,
-			"max_stacks": 5,
+			"duration": 4.0,
+			"tick_interval": 0.0,
+			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
 			"effect": {
@@ -625,34 +663,40 @@
 			"id": "forbidden",
 			"display_name": "forbidden",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 5,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "execution_mark",
 			"display_name": "execution_mark",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 1,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		},
 		{
 			"id": "acid_residue",
 			"display_name": "acid_residue",
 			"type": "mark",
-			"duration": 5,
-			"tick_interval": 0,
-			"max_stacks": 5,
+			"duration": 5.0,
+			"tick_interval": 0.0,
+			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {}
+			"effect": {
+
+			}
 		}
 	]
 }

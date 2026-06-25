@@ -22,7 +22,7 @@
 				"description": "每次攻击叠加过载状态，提升武器伤害，但会增加人物层数，并降低移速和拾取范围，最多可叠6层。受击会损失一半层数。",
 				"type": "skill_cast_stack",
 				"params": {
-					"casts_per_stack": 3,
+					"casts_per_stack": 3.0,
 					"modifiers_per_stack": [
 						{
 							"stat": "damage",
@@ -91,21 +91,21 @@
 					],
 					"on_damaged": {
 						"lose_stack_percent": 0.5,
-						"clear_below_stack": 2
+						"clear_below_stack": 2.0
 					},
-					"max_stacks": 6
+					"max_stacks": 6.0
 				}
 			},
 			"base_stats": {
-				"max_hp": 75,
-				"move_speed": 98,
+				"max_hp": 75.0,
+				"move_speed": 98.0,
 				"damage_multiplier": 1.08,
-				"attack_speed_multiplier": 1,
+				"attack_speed_multiplier": 1.0,
 				"crit_chance": 0.06,
 				"crit_damage": 1.5,
-				"armor": 0,
-				"pickup_radius": 85,
-				"soul_gain_multiplier": 1
+				"armor": 0.0,
+				"pickup_radius": 85.0,
+				"soul_gain_multiplier": 1.0
 			},
 			"starting_skill_id": "fireball"
 		},
@@ -131,7 +131,7 @@
 				"type": "moving_bonus",
 				"params": {
 					"moving_seconds_required": 2.5,
-					"stop_break_seconds": 1,
+					"stop_break_seconds": 1.0,
 					"active_modifiers": [
 						{
 							"stat": "crit_chance",
@@ -169,7 +169,7 @@
 							}
 						}
 					],
-					"penalty_duration": 3,
+					"penalty_duration": 3.0,
 					"penalty_modifiers": [
 						{
 							"stat": "crit_chance",
@@ -202,15 +202,15 @@
 				}
 			},
 			"base_stats": {
-				"max_hp": 85,
-				"move_speed": 118,
+				"max_hp": 85.0,
+				"move_speed": 118.0,
 				"damage_multiplier": 0.95,
 				"attack_speed_multiplier": 1.12,
 				"crit_chance": 0.12,
 				"crit_damage": 1.6,
-				"armor": 0,
-				"pickup_radius": 80,
-				"soul_gain_multiplier": 1
+				"armor": 0.0,
+				"pickup_radius": 80.0,
+				"soul_gain_multiplier": 1.0
 			},
 			"starting_skill_id": "fireball"
 		},
@@ -235,9 +235,9 @@
 				"description": "定期获得护盾，整体承伤更稳；护盾存在时装备武器伤害提升，但节奏更慢。",
 				"type": "passive_with_periodic_shield",
 				"params": {
-					"shield_amount": 20,
-					"shield_interval": 18,
-					"shield_duration": 18,
+					"shield_amount": 20.0,
+					"shield_interval": 18.0,
+					"shield_duration": 18.0,
 					"base_modifiers": [
 						{
 							"stat": "damage_taken",
@@ -280,15 +280,15 @@
 				}
 			},
 			"base_stats": {
-				"max_hp": 135,
-				"move_speed": 90,
+				"max_hp": 135.0,
+				"move_speed": 90.0,
 				"damage_multiplier": 0.92,
 				"attack_speed_multiplier": 0.95,
 				"crit_chance": 0.04,
 				"crit_damage": 1.5,
-				"armor": 6,
-				"pickup_radius": 78,
-				"soul_gain_multiplier": 1
+				"armor": 6.0,
+				"pickup_radius": 78.0,
+				"soul_gain_multiplier": 1.0
 			},
 			"starting_skill_id": "fireball"
 		},
@@ -315,12 +315,12 @@
 				"params": {
 					"kill_chance": 0.15,
 					"same_source_cooldown": 0.5,
-					"max_zones": 3,
+					"max_zones": 3.0,
 					"boss_minion_chance_multiplier": 0.5,
-					"area_damage": 6,
+					"area_damage": 6.0,
 					"area_duration": 2.5,
 					"area_tick_interval": 0.5,
-					"area_radius": 56,
+					"area_radius": 56.0,
 					"base_modifiers": [
 						{
 							"stat": "damage",
@@ -359,15 +359,15 @@
 				}
 			},
 			"base_stats": {
-				"max_hp": 95,
-				"move_speed": 100,
+				"max_hp": 95.0,
+				"move_speed": 100.0,
 				"damage_multiplier": 0.9,
-				"attack_speed_multiplier": 1,
+				"attack_speed_multiplier": 1.0,
 				"crit_chance": 0.05,
 				"crit_damage": 1.5,
-				"armor": 2,
-				"pickup_radius": 90,
-				"soul_gain_multiplier": 1
+				"armor": 2.0,
+				"pickup_radius": 90.0,
+				"soul_gain_multiplier": 1.0
 			},
 			"starting_skill_id": "fireball"
 		}
