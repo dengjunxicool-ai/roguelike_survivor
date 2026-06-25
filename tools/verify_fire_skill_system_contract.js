@@ -101,7 +101,6 @@ const SUPPORTED_CONDITIONS = new Set([
   "is_critical_hit",
   "enemy_count_in_radius",
   "always",
-  "",
 ]);
 const SUPPORTED_EFFECTS = new Set([
   "damage",
