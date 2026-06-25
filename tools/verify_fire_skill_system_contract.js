@@ -111,9 +111,57 @@ const SUPPORTED_EFFECTS = new Set([
   "spawn_area_from_existing_area",
 ]);
 const OBSOLETE_FIRE_IDS = new Set(["mars_spark_missile", "fire_tornado", "soulburn"]);
+const NESTED_EFFECT_ARRAY_FIELDS = new Set([
+  "effects",
+  "effects_on_tick",
+  "effects_on_expire",
+  "effects_on_apply",
+  "effects_on_remove",
+  "effects_on_death",
+  "effects_on_status_applied",
+  "effects_on_status_tick",
+  "effects_on_status_expired",
+  "effects_on_status_max_stack_reached",
+  "on_hit",
+  "on_tick_effects",
+  "on_expire",
+  "on_apply",
+  "on_death",
+]);
 
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
+function isObject(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validateEffectArray(effects, skillId, location) {
+  assert(Array.isArray(effects), `${skillId} ${location} must be an array`);
+  for (const effect of effects) {
+    validateEffect(effect, skillId, location);
+  }
+}
+
+function validateEffect(effect, skillId, location) {
+  assert(isObject(effect), `${skillId} ${location} effect must be an object`);
+  assert(SUPPORTED_EFFECTS.has(effect.type), `${skillId} unsupported effect ${effect.type} at ${location}`);
+  validateNestedEffectArrays(effect, skillId, location);
+}
+
+function validateNestedEffectArrays(value, skillId, location) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => validateNestedEffectArrays(item, skillId, `${location}[${index}]`));
+    return;
+  }
+  if (!isObject(value)) {
+    return;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    const childLocation = `${location}.${key}`;
+    if (NESTED_EFFECT_ARRAY_FIELDS.has(key)) {
+      validateEffectArray(child, skillId, childLocation);
+    } else if (isObject(child) || Array.isArray(child)) {
+      validateNestedEffectArrays(child, skillId, childLocation);
+    }
+  }
 }
 
 function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
@@ -122,11 +170,17 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   }
   assert(expectedIds.has(skill.id), `unexpected first-version fire skill id: ${skill.id}`);
   assert(!OBSOLETE_FIRE_IDS.has(skill.id), `obsolete fire card id still present: ${skill.id}`);
+  assert(Array.isArray(skill.trigger_rules), `${skill.id} trigger_rules must be an array`);
+  assert(Array.isArray(skill.effects), `${skill.id} effects must be an array`);
   assert(ALLOWED_SCHOOLS.has(skill.school), `${skill.id} invalid school`);
   if (skill.fusion_school !== null) {
     assert(ALLOWED_SCHOOLS.has(skill.fusion_school), `${skill.id} invalid fusion_school`);
   }
   assert(ALLOWED_TYPES.has(skill.type), `${skill.id} invalid type`);
+  assert(ALLOWED_RARITIES.has(skill.rarity), `${skill.id} invalid rarity`);
+  assert(Number.isInteger(skill.max_level) && skill.max_level >= 1, `${skill.id} invalid max_level`);
+  assert(Array.isArray(skill.tags) && skill.tags.length > 0, `${skill.id} must have non-empty tags`);
+  assert(isObject(skill.offer_rule), `${skill.id} invalid offer_rule`);
   if (fireFusionIds.has(skill.id)) {
     assert(skill.type === "fusion", `${skill.id} fusion skill id must set type fusion`);
     assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
@@ -135,27 +189,21 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   if (fireBaseIds.has(skill.id)) {
     assert(skill.type !== "fusion", `${skill.id} base skill id must not set type fusion`);
   }
-  assert(ALLOWED_RARITIES.has(skill.rarity), `${skill.id} invalid rarity`);
-  assert(Number.isInteger(skill.max_level) && skill.max_level >= 1, `${skill.id} invalid max_level`);
-  assert(Array.isArray(skill.tags) && skill.tags.length > 0, `${skill.id} must have non-empty tags`);
-  assert(typeof skill.offer_rule === "object" && skill.offer_rule !== null && !Array.isArray(skill.offer_rule), `${skill.id} invalid offer_rule`);
 
-  for (const rule of asArray(skill.trigger_rules)) {
+  skill.trigger_rules.forEach((rule, index) => {
+    assert(isObject(rule), `${skill.id} trigger_rules[${index}] must be an object`);
     assert(SUPPORTED_TRIGGERS.has(rule.trigger), `${skill.id} unsupported trigger ${rule.trigger}`);
-    for (const effect of asArray(rule.effects)) {
-      assert(SUPPORTED_EFFECTS.has(effect.type), `${skill.id} unsupported trigger effect ${effect.type}`);
-    }
-  }
-  for (const effect of asArray(skill.effects)) {
-    assert(SUPPORTED_EFFECTS.has(effect.type), `${skill.id} unsupported effect ${effect.type}`);
-  }
+    validateEffectArray(rule.effects, skill.id, `trigger_rules[${index}].effects`);
+  });
+  validateEffectArray(skill.effects, skill.id, "effects");
 
-  assert(asArray(skill.trigger_rules).length > 0 || asArray(skill.effects).length > 0, `${skill.id} has no runtime payload`);
+  assert(skill.trigger_rules.length > 0 || skill.effects.length > 0, `${skill.id} has no runtime payload`);
 }
 
 function main() {
   const document = readJson("data/skills.json");
-  const skills = asArray(document.skills);
+  assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
+  const skills = document.skills;
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
   const expectedIds = new Set([...FIRE_BASE_IDS, ...FIRE_FUSION_IDS]);
