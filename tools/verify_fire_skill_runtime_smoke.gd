@@ -6,6 +6,10 @@ const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bu
 const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_effect_manager.gd")
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
+const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
+const ModifierStoreScript: Script = preload("res://scripts/modifiers/modifier_store.gd")
+const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
+const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 const SKILLS_DATA_PATH: String = "res://data/skills.json"
 
 
@@ -21,6 +25,27 @@ class SmokePlayer:
 
 	func _init() -> void:
 		add_to_group(&"player")
+
+	func _ready() -> void:
+		if get_node_or_null("ModifierStore") == null:
+			var modifier_store: Node = ModifierStoreScript.new()
+			modifier_store.name = "ModifierStore"
+			add_child(modifier_store)
+
+	func set_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
+		var modifier_store: Node = get_node_or_null("ModifierStore")
+		if modifier_store != null and modifier_store.has_method("set_source"):
+			modifier_store.call("set_source", source_id, modifiers, _get_run_modifier_scopes(modifiers))
+
+	func _get_run_modifier_scopes(modifiers: Variant) -> Array[StringName]:
+		var scopes: Array[StringName] = [ModifierQueryScript.SCOPE_PLAYER]
+		var flat_modifiers: Dictionary = ModifierSourceScript.flatten(modifiers)
+		for key_variant: Variant in flat_modifiers.keys():
+			var key: String = String(key_variant)
+			if (key == "damage_multiplier" or key == "damage_multiplier_add" or key.ends_with("_damage_multiplier_add")) and key != "damage_taken_multiplier_add":
+				if not scopes.has(ModifierQueryScript.SCOPE_DAMAGE):
+					scopes.append(ModifierQueryScript.SCOPE_DAMAGE)
+		return scopes
 
 
 class SmokeEnemy:
@@ -71,6 +96,18 @@ func _run() -> void:
 	for skill_id: StringName in skill_ids:
 		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % String(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 34, "SkillManager learned 34 skills", _skill_manager.call("get_all_skills").size())
+	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.2, "fire_attack_searing applies primary attack modifier")
+	_expect_skill_modifier("fire_damage_multiplier_add", 0.2, "fire_attack_searing applies fire damage modifier")
+	_expect_damage_modifier("primary_attack_damage_multiplier_add", 0.2, "fire_attack_searing exposes primary attack modifier to damage runtime")
+	_expect_damage_modifier("fire_damage_multiplier_add", 0.2, "fire_attack_searing exposes fire modifier to damage runtime")
+	_expect_skill_modifier("dot_damage_multiplier_add", 0.25, "fire_passive_burning_focus applies DOT damage modifier")
+	_expect_skill_modifier("status_duration_multiplier_add", 0.2, "fire_passive_burning_focus applies status duration modifier")
+	_expect_damage_modifier("dot_damage_multiplier_add", 0.25, "fire_passive_burning_focus exposes DOT modifier to damage runtime", {
+		"damage_origin": &"status_dot",
+		"element": &"fire",
+		"status_id": &"burning",
+		"source_skill_id": &"fire_passive_burning_focus"
+	})
 
 	var skill_instance: RefCounted = _skill_manager.call("get_skill", &"fire_attack_searing") as RefCounted
 	_emit(&"attack_hit", skill_instance)
@@ -163,6 +200,24 @@ func _expect(condition: bool, label: String, actual: Variant = "") -> void:
 	if condition:
 		return
 	_fail(label, actual)
+
+
+func _expect_skill_modifier(key: String, expected: float, label: String) -> void:
+	var modifiers: Dictionary = ModifierSourceScript.flatten(_skill_manager.get("passive_modifiers"))
+	var actual: float = float(modifiers.get(key, 0.0))
+	_expect(absf(actual - expected) <= 0.0001, label, actual)
+
+
+func _expect_damage_modifier(key: String, expected: float, label: String, packet: Dictionary = {}) -> void:
+	if packet.is_empty():
+		packet = {
+		"damage_origin": &"primary_attack",
+		"element": &"fire",
+		"source_skill_id": &"fire_attack_searing"
+		}
+	var modifiers: Dictionary = ModifierAggregatorScript.collect(ModifierQueryScript.for_damage(packet, _player), _skill_manager)
+	var actual: float = float(modifiers.get(key, 0.0))
+	_expect(absf(actual - expected) <= 0.0001, label, actual)
 
 
 func _fail(label: String, actual: Variant = "") -> void:

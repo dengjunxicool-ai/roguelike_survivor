@@ -18,6 +18,7 @@ var active_skills: Dictionary = {}
 var passive_skills: Dictionary = {}
 var learned_skill_ids: Dictionary = {}
 var passive_modifiers: Array = []
+var _skill_effect_modifier_source_ids: Array[String] = []
 
 
 func add_skill(skill_id: Variant) -> bool:
@@ -38,6 +39,7 @@ func add_skill(skill_id: Variant) -> bool:
 
 	var definition: RefCounted = SkillDefinitionScript.new(definition_data)
 	var skill_instance: RefCounted = SkillInstanceScript.new(definition)
+	_apply_skill_effect_payload(id, definition)
 	if category == "passive":
 		passive_skills[id] = skill_instance
 		_apply_passive_skill_payload(definition)
@@ -106,6 +108,7 @@ func clear_skills() -> void:
 	passive_skills.clear()
 	learned_skill_ids.clear()
 	passive_modifiers.clear()
+	_clear_skill_effect_modifier_sources()
 	skill_changed.emit()
 
 
@@ -127,6 +130,79 @@ func _apply_passive_skill_payload(definition: RefCounted) -> void:
 	var modifiers_variant: Variant = definition.get("skill_modifiers")
 	if modifiers_variant is Array and not (modifiers_variant as Array).is_empty():
 		add_passive_modifier((modifiers_variant as Array).duplicate(true))
+
+
+func _apply_skill_effect_payload(skill_id: StringName, definition: RefCounted) -> void:
+	if definition == null:
+		return
+	var effects_variant: Variant = definition.get("effects")
+	if not (effects_variant is Array):
+		return
+	var modifiers: Array[Dictionary] = []
+	for effect_variant: Variant in effects_variant:
+		if not (effect_variant is Dictionary):
+			continue
+		var effect: Dictionary = effect_variant
+		if String(effect.get("type", "")) != "add_modifier":
+			continue
+		var modifier: Dictionary = _modifier_effect_to_source(effect)
+		if not modifier.is_empty():
+			modifiers.append(modifier)
+	if not modifiers.is_empty():
+		add_passive_modifier(modifiers)
+		_set_skill_effect_modifier_source(skill_id, modifiers)
+
+
+func _modifier_effect_to_source(effect: Dictionary) -> Dictionary:
+	var values: Dictionary = {}
+	if effect.has("stat") and effect.has("value"):
+		values[String(effect.get("stat", ""))] = effect.get("value")
+	else:
+		var modifier_name: String = String(effect.get("modifier", ""))
+		if modifier_name == "" or not effect.has("value"):
+			return {}
+		var value: Variant = effect.get("value")
+		match modifier_name:
+			"attack_damage_multiplier":
+				values["primary_attack_damage_multiplier_add"] = value
+				var damage_type: String = String(effect.get("damage_type", ""))
+				if damage_type != "":
+					values["%s_damage_multiplier_add" % damage_type] = value
+			"burning_damage_multiplier":
+				values["dot_damage_multiplier_add"] = value
+			"burning_duration_multiplier":
+				values["status_duration_multiplier_add"] = value
+			_:
+				var key: String = modifier_name
+				if key.ends_with("_multiplier") and not key.ends_with("_multiplier_add"):
+					key = "%s_add" % key
+				values[key] = value
+	if values.is_empty():
+		return {}
+	return {
+		"source": "skill",
+		"values": values
+	}
+
+
+func _set_skill_effect_modifier_source(skill_id: StringName, modifiers: Array[Dictionary]) -> void:
+	if skill_id == &"" or modifiers.is_empty():
+		return
+	var owner: Node = get_parent()
+	if owner == null or not owner.has_method("set_run_modifier_source"):
+		return
+	var source_id: String = "skill:%s:effects" % String(skill_id)
+	owner.call("set_run_modifier_source", source_id, modifiers)
+	if not _skill_effect_modifier_source_ids.has(source_id):
+		_skill_effect_modifier_source_ids.append(source_id)
+
+
+func _clear_skill_effect_modifier_sources() -> void:
+	var owner: Node = get_parent()
+	if owner != null and owner.has_method("clear_run_modifier_source"):
+		for source_id: String in _skill_effect_modifier_source_ids:
+			owner.call("clear_run_modifier_source", source_id)
+	_skill_effect_modifier_source_ids.clear()
 
 
 func _get_skill_definition_data(skill_id: StringName) -> Dictionary:
