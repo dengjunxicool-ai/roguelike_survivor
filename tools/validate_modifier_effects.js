@@ -20,7 +20,7 @@ const VALID_DOMAINS = new Set([
 const VALID_SCOPE_KEYS = new Set([
   "domain",
   "skill_id",
-  "weapon_id",
+  "source_origin_id",
   "object_type",
   "damage_origin",
   "element",

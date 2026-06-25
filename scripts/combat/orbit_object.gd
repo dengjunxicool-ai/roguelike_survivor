@@ -159,8 +159,8 @@ func _stabilize_damage_packet_source(default_source_type: String) -> void:
 		damage_packet["source_id"] = source_id
 	if not damage_packet.has("source_skill_id"):
 		damage_packet["source_skill_id"] = StringName(String(source_id))
-	if not damage_packet.has("source_weapon_id"):
-		damage_packet["source_weapon_id"] = StringName("")
+	if not damage_packet.has("source_origin_id"):
+		damage_packet["source_origin_id"] = StringName("")
 
 
 func _emit_hit_event(body: Node) -> bool:

@@ -13,15 +13,9 @@ func _init(context_owner: Node = null, context_runtime: Node = null) -> void:
 	tree = owner.get_tree() if owner != null else null
 
 
-func get_equipped_weapon_skill_id() -> StringName:
+func get_starting_skill_id() -> StringName:
 	if runtime != null:
-		return StringName(String(runtime.call("get_equipped_weapon_skill_id")))
-	return &""
-
-
-func get_equipped_weapon_id() -> StringName:
-	if runtime != null:
-		return StringName(String(runtime.call("get_equipped_weapon_id")))
+		return StringName(String(runtime.call("get_starting_skill_id")))
 	return &""
 
 

@@ -6,7 +6,6 @@ signal event_recorded(event_name: StringName, payload: Dictionary)
 
 
 var selected_character_id: StringName = &""
-var selected_weapon_id: StringName = &""
 var selected_map_id: StringName = &""
 var selected_map_name: String = ""
 
@@ -45,9 +44,8 @@ var boss_core_destroyed_count: int = 0
 var boss_core_total_lifetime: float = 0.0
 
 
-func reset_run(character_id: Variant, weapon_id: Variant, map_id: Variant, map_name: String = "") -> void:
+func reset_run(character_id: Variant, map_id: Variant, map_name: String = "") -> void:
 	selected_character_id = StringName(String(character_id))
-	selected_weapon_id = StringName(String(weapon_id))
 	selected_map_id = StringName(String(map_id))
 	selected_map_name = map_name
 	run_seconds = 0.0
@@ -229,7 +227,6 @@ func get_summary() -> Dictionary:
 	var total_taken: int = _sum_dictionary(damage_taken_by_source)
 	return {
 		"selected_character_id": selected_character_id,
-		"selected_weapon_id": selected_weapon_id,
 		"selected_map_id": selected_map_id,
 		"selected_map_name": selected_map_name,
 		"run_seconds": run_seconds,

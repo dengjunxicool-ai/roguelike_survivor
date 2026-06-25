@@ -513,7 +513,7 @@ func _apply_explosion_burn_rules(rules: Dictionary, context: Dictionary) -> void
 		return
 	var direct_rule: Dictionary = _get_dictionary(rules.get("explosion_direct_hit_burn_on_elite_boss", {}))
 	if not direct_rule.is_empty() and (_is_elite(target) or _is_boss(target)):
-		var key: String = "burst_explosion_burn:%s" % _target_key(target)
+		var key: String = _metadata_key("burst_explosion_burn", _target_key(target))
 		var now_seconds: float = _now_seconds()
 		if now_seconds >= float(target.get_meta(key, 0.0)):
 			target.set_meta(key, now_seconds + maxf(float(direct_rule.get("same_target_cooldown", 1.5)), 0.0))
@@ -1212,7 +1212,7 @@ func _apply_eagle_shot_on_boss_mark_hits(rules: Dictionary, context: Dictionary)
 	var rule: Dictionary = _get_dictionary(rules.get("eagle_shot_on_boss_eagle_mark_hits", rules.get("eagle_shot_on_boss_mark_hits", {})))
 	if not bool(target.call("has_status", StringName(String(rule.get("status_id", "eagle_mark"))))):
 		return
-	var key: String = "eagle_shot_hits:%s" % _target_key(target)
+	var key: String = _metadata_key("eagle_shot_hits", _target_key(target))
 	var hit_count: int = int(target.get_meta(key, 0)) + 1
 	target.set_meta(key, hit_count)
 	if hit_count % maxi(int(rule.get("required_hits", 6)), 1) == 0:
@@ -1825,13 +1825,13 @@ func _is_boss_damage_source(context: Dictionary) -> bool:
 	var source_packet: Variant = context.get("source_packet", {})
 	if source_packet is Dictionary:
 		var packet: Dictionary = source_packet
-		for key in ["source_id", "source_weapon_id", "source_skill_id", "source_instance_id", "attacker_id"]:
+		for key in ["source_id", "source_origin_id", "source_skill_id", "source_instance_id", "attacker_id"]:
 			if String(packet.get(key, "")).to_lower().find("boss") >= 0:
 				return true
 	var result: Variant = context.get("damage_result", {})
 	if result is Dictionary:
 		var result_dict: Dictionary = result
-		for key in ["source_id", "source_weapon_id", "source_skill_id", "source_instance_id", "attacker_id"]:
+		for key in ["source_id", "source_origin_id", "source_skill_id", "source_instance_id", "attacker_id"]:
 			if String(result_dict.get(key, "")).to_lower().find("boss") >= 0:
 				return true
 	return false
@@ -2373,7 +2373,7 @@ func _warhammer_source_once(context: Dictionary, source_namespace: String) -> bo
 	var source_instance_id: String = String(context.get("source_instance_id", context.get("source_key", "")))
 	if source_instance_id == "":
 		source_instance_id = String(context.get("source_id", "warhammer"))
-	var meta_key: String = "%s_sources" % source_namespace
+	var meta_key: String = _metadata_key(source_namespace, "sources")
 	var seen: Dictionary = {}
 	var seen_variant: Variant = skill_instance.get_meta(meta_key, {})
 	if seen_variant is Dictionary:
@@ -2647,7 +2647,7 @@ func _set_dynamic_runtime_modifier(skill_instance: RefCounted, modifier_namespac
 	var modifiers_variant: Variant = skill_instance.get("runtime_modifiers")
 	if modifiers_variant is Dictionary:
 		modifiers = (modifiers_variant as Dictionary).duplicate(true)
-	var originals_key: String = "%s_runtime_originals" % modifier_namespace
+	var originals_key: String = _metadata_key(modifier_namespace, "runtime_originals")
 	var originals: Dictionary = {}
 	var originals_variant: Variant = skill_instance.get_meta(originals_key, {})
 	if originals_variant is Dictionary:
@@ -2732,6 +2732,41 @@ func _is_boss_core(target: Node) -> bool:
 
 func _target_key(target: Node) -> String:
 	return str(target.get_instance_id()) if target != null else "none"
+
+
+func _metadata_key(namespace_text: String, suffix: String) -> String:
+	return _metadata_identifier("%s_%s" % [namespace_text, suffix])
+
+
+func _metadata_identifier(raw_key: String) -> String:
+	var safe_key: String = ""
+	for index: int in range(raw_key.length()):
+		var character: String = raw_key.substr(index, 1)
+		if _is_ascii_identifier_character(character):
+			safe_key += character
+		else:
+			safe_key += "_"
+	if safe_key == "" or not _is_ascii_identifier_start(safe_key.substr(0, 1)):
+		safe_key = "skill_rule_%s" % safe_key
+	return safe_key
+
+
+func _is_ascii_identifier_start(character: String) -> bool:
+	if character == "_":
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return (code >= 65 and code <= 90) or (code >= 97 and code <= 122)
+
+
+func _is_ascii_identifier_character(character: String) -> bool:
+	if _is_ascii_identifier_start(character):
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return code >= 48 and code <= 57
 
 
 func _health_ratio(target: Node) -> float:

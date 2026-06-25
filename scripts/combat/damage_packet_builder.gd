@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name DamagePacketBuilder
 
 
@@ -36,7 +36,7 @@ static func from_skill_action(args: Dictionary) -> Dictionary:
 		"damage_type": damage_type,
 		"element": element,
 		"source_type": source_type,
-		"source_weapon_id": StringName(String(context.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(context.get("source_origin_id", ""))),
 		"source_skill_id": skill_id,
 		"source_instance_id": source_instance_id,
 		"attacker": caster,
@@ -85,7 +85,7 @@ static func from_status_dot(args: Dictionary) -> Dictionary:
 		"element": element,
 		"source_type": "status",
 		"source_id": status_id,
-		"source_weapon_id": StringName(String(args.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(args.get("source_origin_id", ""))),
 		"source_skill_id": status_id,
 		"source_instance_id": source_instance_id,
 		"attacker": args.get("attacker") as Node,
@@ -123,8 +123,8 @@ static func from_reaction(args: Dictionary) -> Dictionary:
 	base_packet["element"] = StringName(String(args.get("element", &"neutral")))
 	base_packet["reaction_type"] = reaction_type
 	base_packet["reaction_depth"] = int(args.get("reaction_depth", int(base_packet.get("reaction_depth", 0)) + 1))
-	if not base_packet.has("source_weapon_id"):
-		base_packet["source_weapon_id"] = StringName("")
+	if not base_packet.has("source_origin_id"):
+		base_packet["source_origin_id"] = StringName("")
 	if not base_packet.has("source_skill_id"):
 		base_packet["source_skill_id"] = StringName(String(base_packet.get("source_id", reaction_type)))
 	base_packet["source_instance_id"] = DamageSourceIdentityScript.for_reaction(
@@ -168,7 +168,7 @@ static func from_enemy_action(args: Dictionary) -> Dictionary:
 		"element": StringName(String(args.get("element", &"physical"))),
 		"source_type": source_type,
 		"source_id": source_id,
-		"source_weapon_id": StringName(String(args.get("source_weapon_id", owner.get("enemy_id") if owner != null else "enemy"))),
+		"source_origin_id": StringName(String(args.get("source_origin_id", owner.get("enemy_id") if owner != null else "enemy"))),
 		"source_skill_id": source_skill_id,
 		"source_instance_id": source_instance_id,
 		"attacker": owner,
@@ -203,7 +203,7 @@ static func from_special_rule(args: Dictionary) -> Dictionary:
 		"damage_type": StringName(String(args.get("damage_type", &"area_direct" if origin != "special" else &"true_damage"))),
 		"element": StringName(String(args.get("element", &"fire"))),
 		"source_id": source_id,
-		"source_weapon_id": StringName(String(args.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(args.get("source_origin_id", ""))),
 		"source_skill_id": StringName(String(args.get("source_skill_id", source_id))),
 		"source_instance_id": String(args.get("source_instance_id", "%s:%d" % [source_id, Time.get_ticks_msec()])),
 		"attacker": args.get("attacker") as Node,
@@ -253,8 +253,8 @@ static func from_combat_object_hit(args: Dictionary) -> Dictionary:
 		template["source_type"] = source_type
 	if not template.has("source_id") and source_id != "":
 		template["source_id"] = source_id
-	if not template.has("source_weapon_id"):
-		template["source_weapon_id"] = StringName(String(args.get("source_weapon_id", "")))
+	if not template.has("source_origin_id"):
+		template["source_origin_id"] = StringName(String(args.get("source_origin_id", "")))
 	if not template.has("source_skill_id"):
 		template["source_skill_id"] = StringName(String(args.get("source_skill_id", source_id)))
 	if not template.has("source_instance_id"):
@@ -370,3 +370,4 @@ static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
+

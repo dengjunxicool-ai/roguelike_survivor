@@ -11,7 +11,6 @@ const STATE_RUNNING: String = "RUNNING"
 const STATE_LEVEL_UP_MODAL: String = "LEVEL_UP_MODAL"
 const STATE_RUN_REWARD_MODAL: String = "RUN_REWARD_MODAL"
 const STATE_CURSE_CHOICE_MODAL: String = "CURSE_CHOICE_MODAL"
-const STATE_BRANCH_CHOICE_MODAL: String = "BRANCH_CHOICE_MODAL"
 const STATE_PAUSE_MENU: String = "PAUSE_MENU"
 const STATE_RESULT_DEFEAT: String = "RESULT_DEFEAT"
 const STATE_RESULT_VICTORY: String = "RESULT_VICTORY"
@@ -113,7 +112,6 @@ func _register_defaults() -> void:
 			STATE_LEVEL_UP_MODAL,
 			STATE_RUN_REWARD_MODAL,
 			STATE_CURSE_CHOICE_MODAL,
-			STATE_BRANCH_CHOICE_MODAL,
 			STATE_PAUSE_MENU,
 			STATE_RESULT_DEFEAT,
 			STATE_RESULT_VICTORY,
@@ -183,8 +181,6 @@ func _get_default_build_method(state: String) -> String:
 			return "_build_run_reward_modal"
 		STATE_CURSE_CHOICE_MODAL:
 			return "_build_curse_choice_modal"
-		STATE_BRANCH_CHOICE_MODAL:
-			return "_build_branch_choice_modal"
 		STATE_PAUSE_MENU:
 			return "_build_pause_menu"
 		STATE_RESULT_DEFEAT, STATE_RESULT_VICTORY:
@@ -198,7 +194,6 @@ func _get_running_child_state_list() -> Array[String]:
 		STATE_LEVEL_UP_MODAL,
 		STATE_RUN_REWARD_MODAL,
 		STATE_CURSE_CHOICE_MODAL,
-		STATE_BRANCH_CHOICE_MODAL,
 		STATE_PAUSE_MENU,
 		STATE_RESULT_DEFEAT,
 		STATE_RESULT_VICTORY

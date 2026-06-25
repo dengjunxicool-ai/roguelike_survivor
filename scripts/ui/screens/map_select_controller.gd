@@ -8,8 +8,6 @@ signal back_requested
 
 const MapRuntimeScript: Script = preload("res://scripts/maps/map_runtime.gd")
 const UIDisplayHelperScript: Script = preload("res://scripts/ui/ui_display_helper.gd")
-const CharacterLoadoutServiceScript: Script = preload("res://scripts/characters/character_loadout_service.gd")
-const MapSelectViewModelBuilderScript: Script = preload("res://scripts/ui/screens/map_select_view_model_builder.gd")
 const THREAT_LOCKED_LEVEL: int = 1
 
 var selected_map_id: StringName = MapRuntimeScript.DEFAULT_MAP_ID
@@ -24,9 +22,6 @@ var _loadout_labels: Dictionary = {}
 var _start_button: Button
 var _layout_controls: Dictionary = {}
 var _selected_character_id: StringName = &"mage"
-var _selected_weapon_id: StringName = &"fire_staff"
-var _view_model_builder: RefCounted = MapSelectViewModelBuilderScript.new()
-var _view_model: Dictionary = {}
 
 
 func build() -> Control:
@@ -58,14 +53,13 @@ func build() -> Control:
 
 	_build_nav_bar(root)
 	_build_body(root)
+	refresh(_selected_character_id)
 	return _screen
 
 
-func refresh(character_id: StringName, weapon_id: StringName) -> void:
+func refresh(character_id: StringName) -> void:
 	_selected_character_id = character_id
-	_selected_weapon_id = weapon_id
 	_select_default_map_if_needed()
-	_view_model = _view_model_builder.call("build", _selected_character_id, _selected_weapon_id, selected_map_id)
 	_refresh_map_cards()
 	_refresh_selected_map_details()
 	_refresh_loadout()
@@ -81,26 +75,14 @@ func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var scale_value: float = 1.0
-
-	var margin: MarginContainer = _layout_controls.get("margin", null) as MarginContainer
-	if margin != null:
-		var horizontal_margin: int = roundi(28.0 * scale_value)
-		var vertical_margin: int = roundi(18.0 * scale_value)
-		margin.add_theme_constant_override("margin_left", horizontal_margin)
-		margin.add_theme_constant_override("margin_top", vertical_margin)
-		margin.add_theme_constant_override("margin_right", horizontal_margin)
-		margin.add_theme_constant_override("margin_bottom", vertical_margin)
-
 	var content_row: HBoxContainer = _layout_controls.get("content_row", null) as HBoxContainer
 	if content_row != null:
 		content_row.custom_minimum_size = Vector2(0, maxf(300.0, viewport_size.y * 0.55))
-		content_row.add_theme_constant_override("separation", roundi(16.0 * scale_value))
 
-	_set_control_min_size("map_list_panel", Vector2(maxf(150.0, 210.0 * scale_value), 0))
-	_set_control_min_size("preview_panel", Vector2(maxf(240.0, 360.0 * scale_value), 0))
-	_set_control_min_size("detail_panel", Vector2(maxf(210.0, 260.0 * scale_value), 0))
-	_set_control_min_size("loadout_panel", Vector2(0, maxf(96.0, 120.0 * scale_value)))
+	_set_control_min_size("map_list_panel", Vector2(maxf(150.0, 210.0), 0))
+	_set_control_min_size("preview_panel", Vector2(maxf(240.0, 360.0), 0))
+	_set_control_min_size("detail_panel", Vector2(maxf(210.0, 260.0), 0))
+	_set_control_min_size("loadout_panel", Vector2(0, maxf(96.0, 120.0)))
 
 
 func _build_nav_bar(root: VBoxContainer) -> void:
@@ -115,12 +97,12 @@ func _build_nav_bar(root: VBoxContainer) -> void:
 	back_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	back_button.pressed.connect(Callable(self, "_emit_back_requested"))
 
-	var title_label: Label = _add_label(nav_bar, "战斗准备", 1)
+	var title_label: Label = _add_label(nav_bar, "战斗准备", HORIZONTAL_ALIGNMENT_CENTER)
 	title_label.add_theme_font_size_override("font_size", 30)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var soul_label: Label = _add_label(nav_bar, "灵魂石：0", 2, "MapSoulLabel")
-	soul_label.custom_minimum_size = Vector2(128, 0)
+	var soul_label: Label = _add_label(nav_bar, "灵魂石：0", HORIZONTAL_ALIGNMENT_RIGHT, "MapSoulLabel")
+	soul_label.custom_minimum_size = Vector2(148, 0)
 	soul_label.size_flags_horizontal = Control.SIZE_SHRINK_END
 
 
@@ -159,6 +141,7 @@ func _build_map_list(parent: HBoxContainer) -> void:
 	panel.add_child(margin)
 
 	_map_list = VBoxContainer.new()
+	_map_list.name = "MapCardList"
 	_map_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_map_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_map_list.add_theme_constant_override("separation", 10)
@@ -180,6 +163,7 @@ func _build_preview(parent: HBoxContainer) -> void:
 	margin.add_child(layout)
 
 	_preview_texture = TextureRect.new()
+	_preview_texture.name = "MapPreviewTexture"
 	_preview_texture.custom_minimum_size = Vector2(0, 250)
 	_preview_texture.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_preview_texture.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -222,11 +206,13 @@ func _build_detail_panel(parent: HBoxContainer) -> void:
 	var preview_title: Label = _add_detail_label(detail_body, "怪物预览")
 	preview_title.add_theme_font_size_override("font_size", 18)
 	_enemy_preview_list = VBoxContainer.new()
+	_enemy_preview_list.name = "MapEnemyPreviewList"
 	_enemy_preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_enemy_preview_list.add_theme_constant_override("separation", 8)
 	detail_body.add_child(_enemy_preview_list)
 
 	_start_button = _add_button(layout, "开始挑战")
+	_start_button.name = "MapStartButton"
 	_start_button.custom_minimum_size = Vector2(0, 56)
 	_start_button.pressed.connect(Callable(self, "_start_selected_map"))
 
@@ -238,14 +224,23 @@ func _build_loadout_panel(parent: VBoxContainer) -> void:
 	_layout_controls["loadout_panel"] = panel
 	var margin: MarginContainer = _create_margin_container(18, 14, 18, 14)
 	panel.add_child(margin)
+
 	var row: HBoxContainer = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 16)
 	margin.add_child(row)
-	for label_key: String in ["character", "weapon", "skill", "threat"]:
-		var label: Label = _add_detail_label(row, "")
-		label.size_flags_stretch_ratio = 1.0
-		_loadout_labels[label_key] = label
+
+	_loadout_labels["character"] = _add_loadout_label(row, "MapLoadoutCharacterLabel")
+	_loadout_labels["skill"] = _add_loadout_label(row, "MapLoadoutSkillLabel")
+	_loadout_labels["threat"] = _add_loadout_label(row, "MapLoadoutThreatLabel")
+
+
+func _add_loadout_label(parent: HBoxContainer, node_name: String) -> Label:
+	var label: Label = _add_detail_label(parent, "")
+	label.name = node_name
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_stretch_ratio = 1.0
+	return label
 
 
 func _select_default_map_if_needed() -> void:
@@ -256,7 +251,7 @@ func _select_default_map_if_needed() -> void:
 
 func _refresh_map_cards() -> void:
 	_clear_children(_map_list)
-	var maps: Array = _view_model.get("maps", [])
+	var maps: Array[Dictionary] = GameData.get_map_pool()
 	if maps.is_empty():
 		_add_detail_label(_map_list, "暂无地图数据")
 		return
@@ -266,13 +261,14 @@ func _refresh_map_cards() -> void:
 
 
 func _add_map_card(map_data: Dictionary) -> void:
-	var map_id: StringName = StringName(String(map_data.get("id", "")))
+	var map_id: StringName = StringName(str(map_data.get("id", "")))
 	if map_id == &"":
 		return
 
 	var is_selected: bool = map_id == selected_map_id
 	var is_unlocked: bool = MapRuntimeScript.is_map_unlocked(map_data)
 	var button: Button = Button.new()
+	button.name = "MapCard_%s" % str(map_id)
 	button.text = _get_map_card_text(map_data, is_unlocked)
 	button.custom_minimum_size = Vector2(0, 74)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -286,7 +282,7 @@ func _add_map_card(map_data: Dictionary) -> void:
 
 
 func _refresh_selected_map_details() -> void:
-	var map_data: Dictionary = _get_dictionary(_view_model.get("selected_map", GameData.get_map(selected_map_id)))
+	var map_data: Dictionary = GameData.get_map(selected_map_id)
 	if map_data.is_empty():
 		_set_detail_label("name", "地图：未配置")
 		if _start_button != null:
@@ -297,7 +293,7 @@ func _refresh_selected_map_details() -> void:
 	_update_preview(map_data)
 	_set_detail_label("name", _get_map_display_name(map_data))
 	_set_detail_label("difficulty", "推荐难度：%s" % _get_star_text(int(map_data.get("difficulty", 1))))
-	_set_detail_label("duration", "预计时长：%s" % _format_time(float(map_data.get("duration_seconds", 600))))
+	_set_detail_label("duration", "预计时长：%s" % _format_time(float(map_data.get("duration_seconds", 300))))
 	_set_detail_label("loadout", _get_loadout_detail_text())
 	_set_detail_label("traits", "场景特性：%s" % _get_map_traits_text(map_data))
 	_set_detail_label("builds", "推荐构筑：%s\n不推荐：%s" % [
@@ -305,7 +301,7 @@ func _refresh_selected_map_details() -> void:
 		_get_map_not_recommended_text(map_data)
 	])
 	_set_detail_label("reward", "奖励倍率：x%.2f" % float(map_data.get("reward_multiplier", 1.0)))
-	_set_detail_label("clear", MapRuntimeScript.get_lock_or_clear_text(map_data))
+	_set_detail_label("clear", _get_lock_or_clear_text(map_data))
 	if _preview_description_label != null:
 		_preview_description_label.text = "地图描述：%s" % _get_map_description(map_data)
 	_refresh_enemy_previews(map_data)
@@ -319,15 +315,13 @@ func _update_preview(map_data: Dictionary) -> void:
 
 
 func _refresh_loadout() -> void:
-	var loadout: Dictionary = _get_dictionary(_view_model.get("loadout", {}))
-	_set_loadout_label("character", String(loadout.get("character", "")))
-	_set_loadout_label("weapon", String(loadout.get("weapon", "")))
-	_set_loadout_label("skill", String(loadout.get("skill", "")))
-	_set_loadout_label("threat", String(loadout.get("threat", "威胁等级\n%d（已锁定，仅 UI）" % THREAT_LOCKED_LEVEL)))
+	_set_loadout_label("character", "角色\n%s" % _get_character_display_name(GameData.get_character(_selected_character_id)))
+	_set_loadout_label("skill", "初始技能\n%s" % _get_starting_skill_display_name())
+	_set_loadout_label("threat", "威胁等级\n%d（已锁定，仅 UI）" % THREAT_LOCKED_LEVEL)
 
 	var soul_label: Label = _screen.find_child("MapSoulLabel", true, false) as Label
 	if soul_label != null:
-		soul_label.text = "灵魂石：%d" % int(_view_model.get("souls", SaveManager.get_soul_stones()))
+		soul_label.text = "灵魂石：%d" % SaveManager.get_soul_stones()
 
 
 func _refresh_enemy_previews(map_data: Dictionary) -> void:
@@ -350,7 +344,7 @@ func _add_enemy_preview_group(title: String, enemy_ids_variant: Variant) -> void
 	row.add_theme_constant_override("separation", 6)
 	_enemy_preview_list.add_child(row)
 	for enemy_id_variant: Variant in enemy_ids:
-		var enemy_id: StringName = StringName(String(enemy_id_variant))
+		var enemy_id: StringName = StringName(str(enemy_id_variant))
 		if enemy_id != &"":
 			row.add_child(_create_enemy_preview_card(enemy_id))
 
@@ -387,67 +381,63 @@ func _create_enemy_preview_card(enemy_id: StringName) -> PanelContainer:
 
 
 func _get_loadout_detail_text() -> String:
-	var character: Dictionary = GameData.get_character(_selected_character_id)
-	var weapon: Dictionary = GameData.get_weapon(_selected_weapon_id)
-	var skill_id: StringName = StringName(String(weapon.get("starting_skill_id", "")))
-	return "当前选择：\n角色：%s\n武器：%s\n初始技能：%s" % [
-		_get_character_display_name(character),
-		_get_weapon_display_name(weapon, _selected_weapon_id),
-		_get_skill_display_name(skill_id) if skill_id != &"" else "未配置"
+	return "当前选择：\n角色：%s\n初始技能：%s" % [
+		_get_character_display_name(GameData.get_character(_selected_character_id)),
+		_get_starting_skill_display_name()
 	]
 
 
 func _update_start_button(map_data: Dictionary) -> void:
-	var button_model: Dictionary = _get_dictionary(_view_model.get("start_button", {}))
-	var can_start: bool = bool(button_model.get("can_start", false))
+	var can_start: bool = _can_start(map_data)
 	_start_button.disabled = not can_start
-	_start_button.text = String(button_model.get("text", _get_start_blocked_text(map_data, GameData.get_character(_selected_character_id))))
+	_start_button.text = "开始挑战" if can_start else _get_start_blocked_text(map_data)
 
 
-func _get_start_blocked_text(map_data: Dictionary, character: Dictionary) -> String:
-	if character.is_empty() or _selected_weapon_id == &"":
-		return "请选择角色和武器"
-	if not _is_weapon_allowed_for_character(_selected_weapon_id, character):
-		return "武器不可用"
+func _can_start(map_data: Dictionary) -> bool:
+	return not GameData.get_character(_selected_character_id).is_empty() and not map_data.is_empty() and MapRuntimeScript.is_map_unlocked(map_data)
+
+
+func _get_start_blocked_text(map_data: Dictionary) -> String:
+	if GameData.get_character(_selected_character_id).is_empty():
+		return "请选择角色"
+	if map_data.is_empty():
+		return "暂无地图"
 	if not MapRuntimeScript.is_map_unlocked(map_data):
 		return "地图未解锁"
 	return "暂不可开始"
 
 
 func _get_map_card_text(map_data: Dictionary, is_unlocked: bool) -> String:
-	var display_name: String = _get_map_display_name(map_data)
-	var difficulty: int = int(map_data.get("difficulty", 1))
-	var map_id: StringName = StringName(String(map_data.get("id", "")))
+	var map_id: StringName = StringName(str(map_data.get("id", "")))
 	var clear_state: String = "已通关" if SaveManager.is_map_cleared(map_id) else "未通关"
 	var lock_state: String = "" if is_unlocked else "\n未解锁"
 	return "%s  %s\n难度 %s / %s%s" % [
-		display_name,
+		_get_map_display_name(map_data),
 		"✓" if clear_state == "已通关" else "",
-		_get_star_text(difficulty),
+		_get_star_text(int(map_data.get("difficulty", 1))),
 		clear_state,
 		lock_state
 	]
 
 
 func _get_map_display_name(map_data: Dictionary) -> String:
-	var map_id: String = String(map_data.get("id", ""))
-	match map_id:
+	match str(map_data.get("id", "")):
 		"abandoned_dungeon":
-			return String(map_data.get("display_name", "Abandoned Dungeon"))
+			return "废弃地牢"
 		"toxic_fog_graveyard":
-			return String(map_data.get("display_name", "Toxic Fog Graveyard"))
+			return "瘟毒墓园"
 		"lava_temple":
-			return String(map_data.get("display_name", "Lava Temple"))
+			return "熔火神殿"
 		"abyss_corridor":
-			return String(map_data.get("display_name", "Abyss Corridor"))
+			return "深渊回廊"
 		_:
-			return String(map_data.get("display_name", map_id))
+			return str(map_data.get("display_name", map_data.get("id", "")))
 
 
 func _get_map_description(map_data: Dictionary) -> String:
-	match String(map_data.get("id", "")):
+	match str(map_data.get("id", "")):
 		"abandoned_dungeon":
-			return "标准开放地形，机制压力低，适合测试主攻击成长和基础构筑。"
+			return "标准开放地形，机制压力低，适合测试初始技能成长和基础构筑。"
 		"toxic_fog_graveyard":
 			return "随机毒雾区会压缩走位空间，毒系敌人与 DOT 压力更高。"
 		"lava_temple":
@@ -455,7 +445,7 @@ func _get_map_description(map_data: Dictionary) -> String:
 		"abyss_corridor":
 			return "窄廊地形提高包围压力，更考验穿透、弹射和区域控制。"
 		_:
-			return String(map_data.get("description", "未配置"))
+			return str(map_data.get("description", "未配置"))
 
 
 func _get_map_traits_text(map_data: Dictionary) -> String:
@@ -463,10 +453,10 @@ func _get_map_traits_text(map_data: Dictionary) -> String:
 	for entry_variant: Variant in _get_array(map_data.get("map_traits", [])):
 		if entry_variant is Dictionary:
 			var entry: Dictionary = entry_variant
-			parts.append("%s - %s" % [String(entry.get("display_name", "")), String(entry.get("description", ""))])
+			parts.append("%s - %s" % [str(entry.get("display_name", "")), str(entry.get("description", ""))])
 	if not parts.is_empty():
 		return "\n".join(parts)
-	match String(_get_dictionary(map_data.get("map_variable", {})).get("type", "open")):
+	match str(_get_dictionary(map_data.get("map_variable", {})).get("type", "open")):
 		"open":
 			return "开放地形：无强机制，标准敌潮和 Boss 节奏。"
 		"toxic_fog":
@@ -483,9 +473,9 @@ func _get_map_recommended_build_text(map_data: Dictionary) -> String:
 	var configured: String = _get_string_list_text(map_data.get("recommended_build_tags", []), "")
 	if configured != "":
 		return configured
-	match String(map_data.get("id", "")):
+	match str(map_data.get("id", "")):
 		"abandoned_dungeon":
-			return "任意主攻击成长、稳定拾取、基础伤害。"
+			return "任意初始技能成长、稳定拾取、基础伤害。"
 		"toxic_fog_graveyard":
 			return "DOT、净化、回复、毒抗或远程范围。"
 		"lava_temple":
@@ -500,7 +490,7 @@ func _get_map_not_recommended_text(map_data: Dictionary) -> String:
 	var configured: String = _get_string_list_text(map_data.get("not_recommended_build_tags", []), "")
 	if configured != "":
 		return configured
-	match String(map_data.get("id", "")):
+	match str(map_data.get("id", "")):
 		"toxic_fog_graveyard":
 			return "纯近战、无回复、低机动。"
 		"lava_temple":
@@ -515,7 +505,7 @@ func _get_map_enemy_preview_ids(map_data: Dictionary) -> Array:
 	var configured: Array = _get_array(map_data.get("enemy_preview_ids", []))
 	if not configured.is_empty():
 		return configured
-	match String(map_data.get("id", "")):
+	match str(map_data.get("id", "")):
 		"toxic_fog_graveyard":
 			return [&"toxic_bug", &"small_slime", &"skeleton_priest"]
 		"lava_temple":
@@ -526,31 +516,45 @@ func _get_map_enemy_preview_ids(map_data: Dictionary) -> Array:
 			return [&"small_slime", &"skeleton", &"bat"]
 
 
+func _get_lock_or_clear_text(map_data: Dictionary) -> String:
+	var map_id: StringName = StringName(str(map_data.get("id", "")))
+	if SaveManager.is_map_cleared(map_id):
+		return "状态：已通关"
+	if MapRuntimeScript.is_map_unlocked(map_data):
+		return "状态：已解锁"
+	var unlock: Dictionary = _get_dictionary(map_data.get("unlock", {}))
+	if str(unlock.get("type", "")) == "clear_map":
+		var required_map_id: StringName = StringName(str(unlock.get("map_id", "")))
+		return "解锁条件：通关 %s" % _get_map_display_name(GameData.get_map(required_map_id))
+	return "状态：未解锁"
+
+
 func _get_character_display_name(character: Dictionary) -> String:
 	return UIDisplayHelperScript.character_name(character, _selected_character_id)
 
-func _get_weapon_display_name(weapon: Dictionary, fallback_id: StringName) -> String:
-	return UIDisplayHelperScript.weapon_name(weapon, fallback_id)
+
+func _get_starting_skill_display_name() -> String:
+	var character: Dictionary = GameData.get_character(_selected_character_id)
+	var starting_skill_id: StringName = StringName(str(character.get("starting_skill_id", "")))
+	if starting_skill_id == &"":
+		return "未配置"
+	return UIDisplayHelperScript.skill_name(starting_skill_id)
+
 
 func _get_enemy_display_name(enemy: Dictionary, fallback_id: StringName) -> String:
 	return UIDisplayHelperScript.enemy_name(enemy, fallback_id)
 
-func _get_skill_display_name(skill_id: StringName) -> String:
-	return UIDisplayHelperScript.skill_name(skill_id)
 
 func _get_enemy_visual_texture(enemy: Dictionary) -> Texture2D:
 	return UIDisplayHelperScript.visual_texture(enemy, "icon")
 
+
 func _get_visual_modulate(definition: Dictionary) -> Color:
 	return UIDisplayHelperScript.visual_modulate(definition)
-
-func _is_weapon_allowed_for_character(weapon_id: StringName, character: Dictionary) -> bool:
-	return CharacterLoadoutServiceScript.is_weapon_allowed(StringName(String(character.get("id", ""))), weapon_id)
 
 
 func _select_map(map_id: StringName) -> void:
 	selected_map_id = map_id
-	_view_model = _view_model_builder.call("build", _selected_character_id, _selected_weapon_id, selected_map_id)
 	_refresh_map_cards()
 	_refresh_selected_map_details()
 	_refresh_loadout()
@@ -558,7 +562,7 @@ func _select_map(map_id: StringName) -> void:
 
 func _start_selected_map() -> void:
 	var map_data: Dictionary = GameData.get_map(selected_map_id)
-	if map_data.is_empty() or not MapRuntimeScript.is_map_unlocked(map_data):
+	if not _can_start(map_data):
 		return
 	start_requested.emit(selected_map_id)
 
@@ -585,12 +589,12 @@ func _set_control_min_size(key: String, size: Vector2) -> void:
 		control.custom_minimum_size = size
 
 
-func _add_label(parent: Node, text: String, alignment: int = 0, node_name: String = "") -> Label:
+func _add_label(parent: Node, text: String, alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, node_name: String = "") -> Label:
 	var label: Label = Label.new()
 	if node_name != "":
 		label.name = node_name
 	label.text = text
-	label.horizontal_alignment = alignment as HorizontalAlignment
+	label.horizontal_alignment = alignment
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(label)
 	return label
@@ -657,7 +661,6 @@ func _create_map_card_style(is_selected: bool, is_hovered: bool, is_unlocked: bo
 		color = Color(0.26, 0.31, 0.25, 0.98)
 	elif is_hovered:
 		color = Color(0.18, 0.205, 0.24, 0.98)
-
 	style.bg_color = color
 	style.border_color = Color(0.76, 0.68, 0.42, 0.95) if is_selected else Color(0.26, 0.29, 0.33, 0.82)
 	style.border_width_left = 2 if is_selected else 1
@@ -693,7 +696,7 @@ func _create_enemy_preview_card_style() -> StyleBoxFlat:
 func _get_string_list_text(value: Variant, fallback: String) -> String:
 	var parts: Array[String] = []
 	for item_variant: Variant in _get_array(value):
-		parts.append(String(item_variant))
+		parts.append(str(item_variant))
 	return "\n".join(parts) if not parts.is_empty() else fallback
 
 
@@ -715,8 +718,10 @@ func _format_time(seconds: float) -> String:
 func _clear_children(parent: Node) -> void:
 	UIDisplayHelperScript.clear_children(parent)
 
+
 func _get_array(value: Variant) -> Array:
 	return UIDisplayHelperScript.array(value)
+
 
 func _get_dictionary(value: Variant) -> Dictionary:
 	return UIDisplayHelperScript.dictionary(value)

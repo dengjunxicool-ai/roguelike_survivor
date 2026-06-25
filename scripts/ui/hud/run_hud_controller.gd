@@ -160,7 +160,7 @@ func _build_top_center() -> void:
 func _build_skill_bar() -> void:
 	var panel := _create_panel("SkillBar", Rect2(0, 28, 268, 88), false, "bottom_center")
 	panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.025, 0.022, 0.032, 0.18), Color(0, 0, 0, 0), 1))
-	_create_skill_slot(panel, "SkillSlotWeapon", "skill_weapon_icon", Rect2(8, 6, 76, 76), "")
+	_create_skill_slot(panel, "SkillSlotStarting", "skill_starting_icon", Rect2(8, 6, 76, 76), "")
 	_create_skill_slot(panel, "SkillSlotPrimary", "skill_primary_icon", Rect2(96, 0, 84, 84), "")
 	_create_skill_slot(panel, "SkillSlotUltimate", "skill_ultimate_icon", Rect2(192, 6, 76, 76), "")
 
@@ -407,7 +407,7 @@ func _update_boss_bar(run_state: Dictionary) -> void:
 
 func _update_hud_visuals(run_state: Dictionary) -> void:
 	_update_character_visual(run_state)
-	_update_weapon_visual(run_state)
+	_update_starting_skill_visual(run_state)
 	_update_primary_attack_visual(run_state)
 	_update_ultimate_slot_visual()
 
@@ -422,10 +422,10 @@ func _update_character_visual(run_state: Dictionary) -> void:
 		avatar.self_modulate = Color.WHITE if texture != null else Color(0.35, 0.30, 0.45, 1.0)
 
 
-func _update_weapon_visual(run_state: Dictionary) -> void:
-	var weapon_data := _get_weapon_data(run_state)
-	var texture: Texture2D = _get_definition_texture(weapon_data, ["icon", "texture"])
-	var icon: TextureRect = _textures.get("skill_weapon_icon", null) as TextureRect
+func _update_starting_skill_visual(run_state: Dictionary) -> void:
+	var skill_data := _get_primary_attack_data(run_state)
+	var texture: Texture2D = _get_definition_texture(skill_data, ["icon", "texture", "background_texture"])
+	var icon: TextureRect = _textures.get("skill_starting_icon", null) as TextureRect
 	if is_instance_valid(icon):
 		icon.texture = texture
 		icon.self_modulate = Color.WHITE if texture != null else Color(1, 1, 1, 0.18)
@@ -457,27 +457,12 @@ func _update_debug_stats(run_state: Dictionary) -> void:
 	_debug_labels.pickup_count.text = "Pickups: %d" % int(debug_stats.get("pickup_count", 0))
 
 
-func _get_weapon_data(run_state: Dictionary) -> Dictionary:
-	var weapon_id: String = str(run_state.get("current_weapon", run_state.get("main_attack", "basic_shot")))
-	var data: Dictionary = GameData.get_weapon(StringName(weapon_id))
-	if not data.is_empty():
-		return data
-	var main_attack: Variant = run_state.get("main_attack_data", {})
-	if main_attack is Dictionary and not main_attack.is_empty():
-		return main_attack
-	return {"name": "鍩虹姝﹀櫒"}
-
-
 func _get_primary_attack_data(run_state: Dictionary) -> Dictionary:
 	var attack_id: StringName = StringName(String(run_state.get("main_attack", "")))
 	if attack_id != &"":
 		var attack: Dictionary = GameData.get_primary_attack(attack_id)
 		if not attack.is_empty():
 			return attack
-	var weapon: Dictionary = _get_weapon_data(run_state)
-	var starting_skill_id: StringName = StringName(String(weapon.get("starting_skill_id", "")))
-	if starting_skill_id != &"":
-		return GameData.get_primary_attack(starting_skill_id)
 	return {}
 
 
@@ -488,7 +473,7 @@ func _get_primary_attack_texture(attack_data: Dictionary, run_state: Dictionary)
 	var texture: Texture2D = _get_definition_texture(attack_data, ["icon", "texture", "background_texture"])
 	if texture != null:
 		return texture
-	return _get_definition_texture(_get_weapon_data(run_state), ["icon", "texture"])
+	return null
 
 
 func _get_definition_texture(definition: Dictionary, visual_keys: Array[String]) -> Texture2D:

@@ -1,9 +1,5 @@
 {
   "scripts": {
-    "validate:combat": "node tools\\validate_weapon_authoring_pipeline.js",
-    "test:combat:smoke": "node tools\\run_full_weapon_branch_matrix_runtime.js smoke",
-    "test:combat:rules": "node tools\\run_full_weapon_branch_matrix_runtime.js rules",
-    "report:combat:spotlights": "node tools\\generate_combat_scene_spotlight_report.js",
-    "test:combat:scenes": "npm run validate:combat && npm run test:combat:smoke && npm run test:combat:rules && npm run report:combat:spotlights"
+    "verify:obsolete-runtime-removed": "node tools\\verify_obsolete_runtime_removed.js"
   }
 }

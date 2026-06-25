@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dyvumhfs1hilh"]
 
-[ext_resource type="Script" path="res://scripts/debug/full_flow_autoplay.gd" id="1_autoplay"]
+[ext_resource type="Script" uid="uid://b2cpiv7dres22" path="res://scripts/debug/full_flow_autoplay.gd" id="1_autoplay"]
 
-[node name="FullFlowAutoplay" type="Node"]
+[node name="FullFlowAutoplay" type="Node" unique_id=613727841]
 script = ExtResource("1_autoplay")

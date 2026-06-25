@@ -51,7 +51,7 @@ const ALLOWED_ORIGINS: Array[String] = [
 const ORIGIN_POLICIES: Dictionary = {
 	"primary_attack": {
 		"default_damage_type": "direct_physical",
-		"bonus_keys": ["primary_attack_damage_multiplier_add", "direct_damage_multiplier_add", "equipped_weapon_damage_add"],
+		"bonus_keys": ["primary_attack_damage_multiplier_add", "direct_damage_multiplier_add", "starting_skill_damage_add"],
 		"uses_skill_level": true,
 		"uses_character_damage": true
 	},

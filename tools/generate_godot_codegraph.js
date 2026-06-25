@@ -489,7 +489,7 @@ function writeSummary(index, summary) {
     lines.push(`- ${file}: ${parts}`);
   }
   lines.push("", "## Main Script Areas", "");
-  for (const folder of ["scripts/core", "scripts/player", "scripts/skills", "scripts/weapons", "scripts/enemies", "scripts/ui", "scripts/maps", "scripts/game"]) {
+  for (const folder of ["scripts/core", "scripts/player", "scripts/skills", "scripts/enemies", "scripts/ui", "scripts/maps", "scripts/game"]) {
     const count = summary.scripts.filter((entry) => entry.file.startsWith(`${folder}/`)).length;
     lines.push(`- ${folder}: ${count} scripts`);
   }

@@ -10,7 +10,6 @@ const STATE_RUNNING: String = "RUNNING"
 const STATE_LEVEL_UP_MODAL: String = "LEVEL_UP_MODAL"
 const STATE_RUN_REWARD_MODAL: String = "RUN_REWARD_MODAL"
 const STATE_CURSE_CHOICE_MODAL: String = "CURSE_CHOICE_MODAL"
-const STATE_BRANCH_CHOICE_MODAL: String = "BRANCH_CHOICE_MODAL"
 const STATE_PAUSE_MENU: String = "PAUSE_MENU"
 const STATE_RESULT_DEFEAT: String = "RESULT_DEFEAT"
 const STATE_RESULT_VICTORY: String = "RESULT_VICTORY"
@@ -36,7 +35,6 @@ const ResultScreenControllerScript: Script = preload("res://scripts/ui/screens/r
 const RunHudControllerScript: Script = preload("res://scripts/ui/hud/run_hud_controller.gd")
 const RunHudStateProviderScript: Script = preload("res://scripts/ui/hud/run_hud_state_provider.gd")
 const RunChoiceModalControllerScript: Script = preload("res://scripts/ui/modals/run_choice_modal_controller.gd")
-const WeaponBranchModalScript: Script = preload("res://scripts/ui/weapon_branch_modal.gd")
 const ModalFlowControllerScript: Script = preload("res://scripts/ui/modals/modal_flow_controller.gd")
 const DevDebugPanelScript: Script = preload("res://scripts/debug/dev_debug_panel.gd")
 const UINodeFactoryScript: Script = preload("res://scripts/ui/ui_node_factory.gd")
@@ -57,7 +55,6 @@ var current_state: String = STATE_BOOT
 
 var _screen_registry: RefCounted = UIScreenRegistryScript.new()
 var _selected_character_id: StringName = &"mage"
-var _selected_weapon_id: StringName = &"fire_staff"
 var _selected_map_id: StringName = DEFAULT_MAP_ID
 var _selected_map_name: String = "废弃地牢"
 var _run_seconds: float = 0.0
@@ -90,7 +87,6 @@ var _result_controller: RefCounted
 var _run_hud_controller: RefCounted
 var _run_hud_state_provider: RefCounted = RunHudStateProviderScript.new()
 var _run_choice_modal_controller: RefCounted
-var _weapon_branch_modal: Control
 var _modal_flow_controller: RefCounted = ModalFlowControllerScript.new()
 var _run_stats_tracker: Node
 var _state_registry: RefCounted = UIStateRegistryScript.new()
@@ -171,16 +167,13 @@ func start_developer_debug_run(setup: Dictionary = {}) -> void:
 		tree.root.set_meta("developer_mode_enabled", true)
 		tree.root.set_meta("debug_control_mode", true)
 		tree.root.set_meta("debug_manual_spawn_only", true)
-		tree.root.set_meta("developer_branch_id", String(setup.get("branch_id", "")))
 
 	_selected_character_id = StringName(String(setup.get("character_id", _selected_character_id)))
-	_selected_weapon_id = StringName(String(setup.get("weapon_id", _selected_weapon_id)))
 	_selected_map_id = StringName(String(setup.get("map_id", _selected_map_id)))
 	var previous_allow_direct: bool = _allow_direct_running_transition
 	_allow_direct_running_transition = true
 	_start_run(_selected_map_id)
 	_allow_direct_running_transition = previous_allow_direct
-	call_deferred("_apply_developer_branch")
 
 
 func _quit_game() -> void:
@@ -206,9 +199,6 @@ func _prepare_state(state: String) -> void:
 		"modal_flow_controller": _modal_flow_controller,
 		"choice_modal": _run_choice_modal_controller
 	})
-	if state == STATE_BRANCH_CHOICE_MODAL:
-		_open_branch_choice_modal()
-
 
 func _apply_visible_hierarchy(state: String) -> void:
 	_screen_host.call("apply_visible_hierarchy", state)
@@ -354,18 +344,6 @@ func _build_curse_choice_modal() -> void:
 	_add_label(body, _tr("panel.curse_hint", "选择一项高风险高收益强化"), 1)
 	_curse_options = _add_vbox(body)
 	_add_state_button(body, _tr("panel.skip", "跳过"), STATE_RUNNING)
-
-
-func _build_branch_choice_modal() -> void:
-	_weapon_branch_modal = WeaponBranchModalScript.new()
-	_weapon_branch_modal.name = STATE_BRANCH_CHOICE_MODAL
-	_weapon_branch_modal.visible = false
-	_weapon_branch_modal.z_index = 25
-	_weapon_branch_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_weapon_branch_modal.branch_selected.connect(Callable(self, "_on_weapon_branch_selected"))
-	_weapon_branch_modal.close_requested.connect(Callable(self, "_on_weapon_branch_closed"))
-	add_child(_weapon_branch_modal)
-	_screen_registry.call("register_screen", STATE_BRANCH_CHOICE_MODAL, _weapon_branch_modal)
 
 
 func _setup_run_choice_modals() -> void:
@@ -593,7 +571,7 @@ func _reset_title_screen() -> void:
 
 func _refresh_character_select_screen() -> void:
 	if _character_loadout_controller != null:
-		_character_loadout_controller.call("refresh", _selected_character_id, _selected_weapon_id)
+		_character_loadout_controller.call("refresh", _selected_character_id)
 
 
 func _update_character_select_layout() -> void:
@@ -608,7 +586,7 @@ func _get_skill_display_name(skill_id: StringName) -> String:
 
 func _refresh_map_select_screen() -> void:
 	if _map_select_controller != null:
-		_map_select_controller.call("refresh", _selected_character_id, _selected_weapon_id)
+		_map_select_controller.call("refresh", _selected_character_id)
 
 
 func _refresh_meta_upgrade_screen() -> void:
@@ -618,16 +596,15 @@ func _refresh_meta_upgrade_screen() -> void:
 
 
 
-func _on_loadout_confirmed(character_id: StringName, weapon_id: StringName) -> void:
+func _on_loadout_confirmed(character_id: StringName) -> void:
 	_selected_character_id = character_id
-	_selected_weapon_id = weapon_id
 	transition_to(STATE_MAP_SELECT)
 
 
 func _start_run(map_id: Variant) -> void:
-	var loadout: RefCounted = CharacterLoadoutServiceScript.build_loadout(_selected_character_id, _selected_weapon_id)
+	var loadout: RefCounted = CharacterLoadoutServiceScript.build_loadout(_selected_character_id)
 	if loadout == null:
-		CharacterLoadoutServiceScript.warn_if_invalid(_selected_character_id, _selected_weapon_id, "[UIManager]")
+		CharacterLoadoutServiceScript.warn_if_invalid(_selected_character_id, "[UIManager]")
 		return
 	var run_setup: Dictionary = _run_scene_coordinator.call("start_run", {
 		"tree": get_tree(),
@@ -665,9 +642,7 @@ func _start_run(map_id: Variant) -> void:
 func _start_developer_mode() -> void:
 	start_developer_debug_run({
 		"character_id": &"mage",
-		"weapon_id": &"fire_staff",
-		"map_id": DEFAULT_MAP_ID,
-		"branch_id": &""
+		"map_id": DEFAULT_MAP_ID
 	})
 
 
@@ -682,23 +657,6 @@ func _open_developer_debug_panel() -> void:
 		parent.add_child(panel)
 	if panel != null and panel.has_method("open_developer_mode"):
 		panel.call("open_developer_mode")
-
-
-func _apply_developer_branch() -> void:
-	var branch_id: StringName = StringName(String(get_tree().root.get_meta("developer_branch_id", "")))
-	if branch_id == &"":
-		return
-	var player: Node = get_tree().get_first_node_in_group(PLAYER_GROUP)
-	if player == null:
-		return
-	var branch_system: Node = player.get_node_or_null("WeaponBranchSystem")
-	if branch_system == null or not branch_system.has_method("apply_branch"):
-		return
-	branch_system.call("apply_branch", player, branch_id)
-	if player.has_method("_refresh_skill_configs"):
-		player.call("_refresh_skill_configs")
-	if player.has_method("_refresh_synergies"):
-		player.call("_refresh_synergies")
 
 
 func _teardown_run_scene() -> void:
@@ -786,29 +744,6 @@ func _show_pending_modal_if_running() -> void:
 	var pending_state: String = String(_modal_flow_controller.call("get_pending_state", _run_choice_modal_controller))
 	if pending_state != "":
 		transition_to(pending_state)
-
-
-func _open_branch_choice_modal() -> void:
-	if _weapon_branch_modal == null:
-		transition_to(STATE_RUNNING)
-		return
-	var player: Node = get_tree().get_first_node_in_group(PLAYER_GROUP)
-	if player == null:
-		transition_to(STATE_RUNNING)
-		return
-	_weapon_branch_modal.call("open_for_player", player, false)
-	if not _weapon_branch_modal.visible:
-		transition_to(STATE_RUNNING)
-
-
-func _on_weapon_branch_selected(_branch_id: StringName) -> void:
-	if current_state == STATE_BRANCH_CHOICE_MODAL:
-		transition_to(STATE_RUNNING)
-
-
-func _on_weapon_branch_closed() -> void:
-	if current_state == STATE_BRANCH_CHOICE_MODAL:
-		transition_to(STATE_RUNNING)
 
 
 func _on_player_died() -> void:
@@ -907,7 +842,6 @@ func _get_result_state() -> Dictionary:
 		"tree": get_tree(),
 		"player_group": PLAYER_GROUP,
 		"selected_character_id": _selected_character_id,
-		"selected_weapon_id": _selected_weapon_id,
 		"selected_map_id": _selected_map_id,
 		"selected_map_name": _selected_map_name,
 		"run_seconds": _run_seconds,
@@ -931,9 +865,8 @@ func _update_run_stats_snapshots() -> void:
 		_run_stats_tracker.call("update_wave_pressure", alive_normal, _wave_total_count, 0.25)
 
 
-func _apply_recommended_loadout(character_id: StringName, weapon_id: StringName, map_id: StringName) -> void:
+func _apply_recommended_loadout(character_id: StringName, map_id: StringName) -> void:
 	_selected_character_id = character_id
-	_selected_weapon_id = weapon_id
 	_selected_map_id = map_id
 	var map_data: Dictionary = GameData.get_map(_selected_map_id)
 	_selected_map_name = String(map_data.get("display_name", _selected_map_id)) if not map_data.is_empty() else String(_selected_map_id)

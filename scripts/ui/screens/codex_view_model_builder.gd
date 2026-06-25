@@ -6,7 +6,7 @@ func build() -> Dictionary:
 	return {
 		"tabs": [
 			{"title": "角色", "rows": _build_character_rows()},
-			{"title": "武器", "rows": _build_weapon_rows()},
+			{"title": "技能", "rows": _build_skill_rows()},
 			{"title": "怪物", "rows": _build_enemy_rows()},
 			{"title": "状态", "rows": _build_status_rows()},
 			{"title": "遗物", "rows": _build_relic_rows()},
@@ -24,13 +24,13 @@ func _build_character_rows() -> Array[String]:
 	return rows
 
 
-func _build_weapon_rows() -> Array[String]:
+func _build_skill_rows() -> Array[String]:
 	var rows: Array[String] = []
-	for weapon: Dictionary in GameData.get_weapon_pool():
+	for skill: Dictionary in GameData.get_skill_pool():
 		rows.append("%s：%s / %s" % [
-			String(weapon.get("display_name", weapon.get("id", ""))),
-			String(weapon.get("starting_skill_id", "")),
-			String(weapon.get("description", ""))
+			String(skill.get("display_name", skill.get("id", ""))),
+			String(skill.get("god_id", "")),
+			String(skill.get("description", ""))
 		])
 	return rows
 
@@ -66,7 +66,6 @@ func _build_relic_rows() -> Array[String]:
 			String(relic.get("description", ""))
 		])
 	return rows
-
 
 
 func _get_dictionary(value: Variant) -> Dictionary:

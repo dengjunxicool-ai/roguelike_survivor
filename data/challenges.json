@@ -3,7 +3,6 @@
 		{
 			"challenge_id": "daily_fixed_fire_mage",
 			"character_id": "mage",
-			"weapon_id": "fire_staff",
 			"map_id": "abandoned_dungeon",
 			"modifiers": [
 				{
@@ -22,7 +21,6 @@
 		{
 			"challenge_id": "weekly_fixed_pure_survival",
 			"character_id": "paladin",
-			"weapon_id": "holy_shield",
 			"map_id": "abyss_corridor",
 			"modifiers": [
 				{

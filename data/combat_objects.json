@@ -655,6 +655,28 @@
 				0.28,
 				0.72
 			]
+		},
+		{
+			"id": "mars_spark_missile_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_effect_scene": "res://scenes/effects/mars_spark_missile_effect.tscn",
+			"visual_style": "fireball_orb",
+			"visual_color": [
+				1,
+				0.42,
+				0.04,
+				0.95
+			],
+			"visual_ring_color": [
+				1,
+				0.88,
+				0.2,
+				1
+			]
 		}
 	]
 }

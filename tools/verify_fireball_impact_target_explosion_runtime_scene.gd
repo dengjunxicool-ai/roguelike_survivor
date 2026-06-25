@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 
 const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
@@ -33,7 +33,7 @@ func _run_check() -> void:
 		},
 		"context": {
 			"skill_id": &"fireball",
-			"source_weapon_id": &"fire_staff",
+			"source_origin_id": &"fire_staff",
 			"debug_attack_trace_id": trace_id
 		},
 		"amount": 20,
@@ -110,3 +110,4 @@ func _write_result() -> void:
 		return
 	file.store_string("\n".join(_lines))
 	file.close()
+

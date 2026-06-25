@@ -4,8 +4,6 @@ class_name ModifierSource
 
 const SOURCE_UNKNOWN: String = "unknown"
 const SOURCE_CHARACTER_TRAIT: String = "character_trait"
-const SOURCE_WEAPON_TRAIT: String = "weapon_trait"
-const SOURCE_WEAPON_BRANCH: String = "weapon_branch"
 const SOURCE_SKILL: String = "skill"
 const SOURCE_UPGRADE: String = "upgrade"
 const SOURCE_RELIC: String = "relic"
@@ -204,7 +202,7 @@ static func _effect_matches_query(effect: Dictionary, query: RefCounted = null) 
 		return true
 	if scope.has("domain") and not _domain_matches(String(scope.get("domain", "")), query):
 		return false
-	for key: String in ["skill_id", "weapon_id", "damage_origin", "element", "object_type", "target_type", "status_id"]:
+	for key: String in ["skill_id", "source_origin_id", "damage_origin", "element", "object_type", "target_type", "status_id"]:
 		if scope.has(key) and not _scope_value_matches(scope.get(key), String(query.get(key))):
 			return false
 	if scope.has("tag") and not _tag_scope_matches(scope.get("tag"), query.get("tags")):

@@ -24,8 +24,8 @@ assert(displayController.includes('get_node_or_null("DebugHpLabel")'), "enemy HP
 assert(displayController.includes("queue_free()"), "stale numeric HP labels must be removed");
 assert(displayController.includes("create_tween()"), "enemy HP bar updates must use a tween");
 assert(displayController.includes('name = "DebugHpLagBar"'), "enemy HP display must name the delayed lighter red bar");
-assert(displayController.includes("Color(0.72, 0.72, 0.72, 0.48"), "enemy HP delayed bar must use a semi-transparent gray color");
-assert(displayController.includes('tween_property(_hp_lag_bar, "value", target_value, 1.0)'), "enemy HP delayed bar should ease over one second");
+assert(displayController.includes("Color(1.0, 0.68, 0.64, 0.78"), "enemy HP delayed bar must use the configured light red color");
+assert(displayController.includes('tween_property(_hp_lag_bar, "value", target_value, 2.0)'), "enemy HP delayed bar should ease over two seconds");
 assert(displayController.includes("show_percentage = false"), "enemy HP bar must not render numeric percentage text");
 assert(visualCheck.includes('enemy.get_node_or_null("DebugHpLabel") == null'), "visual smoke check must expect the numeric HP label to be gone");
 

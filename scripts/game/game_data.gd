@@ -2,8 +2,6 @@ extends RefCounted
 class_name GameData
 
 
-const PRIMARY_ATTACK_PATH: String = "res://data/primary_attack.json"
-const LEARNABLE_SKILLS_PATH: String = "res://data/learnable_skills.json"
 const SKILLS_PATH: String = "res://data/skills.json"
 const ENEMIES_PATH: String = "res://data/enemies.json"
 const ENEMY_SKILLS_PATH: String = "res://data/enemy_skills.json"
@@ -11,13 +9,11 @@ const STATUS_EFFECTS_PATH: String = "res://data/status_effects.json"
 const UPGRADES_PATH: String = "res://data/upgrades.json"
 const WAVES_PATH: String = "res://data/waves.json"
 const CHARACTERS_PATH: String = "res://data/characters.json"
-const WEAPONS_PATH: String = "res://data/weapons.json"
-const WEAPON_BRANCHES_PATH: String = "res://data/weapon_branches.json"
 const MAPS_PATH: String = "res://data/maps.json"
 const RELICS_PATH: String = "res://data/relics.json"
 const PROGRESSION_GOALS_PATH: String = "res://data/progression_goals.json"
 const CHALLENGES_PATH: String = "res://data/challenges.json"
-const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
+const GOD_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_god_skill_"
 
 static var _document_cache: Dictionary = {}
 
@@ -32,10 +28,7 @@ static func get_skill(skill_id: StringName) -> Dictionary:
 	var god_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "skills"), skill_id)
 	if not god_skill.is_empty():
 		return god_skill
-	var primary_attack: Dictionary = _find_by_id(_get_array(PRIMARY_ATTACK_PATH, "primary_attacks"), skill_id)
-	if not primary_attack.is_empty():
-		return primary_attack
-	return _find_by_id(_get_array(LEARNABLE_SKILLS_PATH, "primary_attacks"), skill_id)
+	return {}
 
 
 static func get_primary_attack(attack_id: StringName) -> Dictionary:
@@ -63,20 +56,6 @@ static func get_character(character_id: StringName) -> Dictionary:
 	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id)
 
 
-static func get_weapon(weapon_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_weapon_definition", weapon_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(WEAPONS_PATH, "weapons"), weapon_id)
-
-
-static func get_weapon_branch(branch_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_weapon_branch_definition", branch_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(WEAPON_BRANCHES_PATH, "branches"), branch_id)
-
-
 static func get_map(map_id: StringName) -> Dictionary:
 	var data: Dictionary = _get_definition_from_data_manager("get_map_definition", map_id)
 	if not data.is_empty():
@@ -89,20 +68,6 @@ static func get_character_pool() -> Array[Dictionary]:
 	if not data.is_empty():
 		return data
 	return _get_dictionary_array(CHARACTERS_PATH, "characters")
-
-
-static func get_weapon_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_weapon_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(WEAPONS_PATH, "weapons")
-
-
-static func get_weapon_branch_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_weapon_branch_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(WEAPON_BRANCHES_PATH, "branches")
 
 
 static func get_map_pool() -> Array[Dictionary]:
@@ -131,20 +96,11 @@ static func get_weekly_challenge_pool() -> Array[Dictionary]:
 	return _get_dictionary_array(CHALLENGES_PATH, "weekly_challenges")
 
 
-static func get_weapons_for_character(character_id: StringName) -> Array[Dictionary]:
-	var weapons: Array[Dictionary] = []
-	for weapon: Dictionary in get_weapon_pool():
-		if StringName(String(weapon.get("character_id", ""))) == character_id:
-			weapons.append(weapon)
-	return weapons
-
-
 static func get_skill_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_skill_definitions")
 	if not data.is_empty():
 		return data
-	var skills: Array[Dictionary] = _get_merged_dictionary_array(PRIMARY_ATTACK_PATH, "primary_attacks", LEARNABLE_SKILLS_PATH, "primary_attacks")
-	skills.append_array(_get_dictionary_array(SKILLS_PATH, "starting_skills"))
+	var skills: Array[Dictionary] = _get_dictionary_array(SKILLS_PATH, "starting_skills")
 	skills.append_array(_get_dictionary_array(SKILLS_PATH, "skills"))
 	return skills
 
@@ -182,7 +138,7 @@ static func get_level_up_upgrade_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_level_up_upgrade_definitions")
 	if not data.is_empty():
 		return data
-	return _get_merged_dictionary_array(UPGRADES_PATH, "level_up_upgrades", LEARNABLE_SKILLS_PATH, "level_up_upgrades")
+	return _get_dictionary_array(UPGRADES_PATH, "level_up_upgrades")
 
 
 static func get_upgrade(upgrade_id: StringName) -> Dictionary:
@@ -191,9 +147,9 @@ static func get_upgrade(upgrade_id: StringName) -> Dictionary:
 		return data
 
 	var upgrade_id_text: String = String(upgrade_id)
-	if upgrade_id_text.begins_with(FIRE_SKILL_LEARN_UPGRADE_PREFIX):
-		var skill_id: StringName = StringName(upgrade_id_text.substr(FIRE_SKILL_LEARN_UPGRADE_PREFIX.length()))
-		return _make_fire_skill_learn_upgrade(upgrade_id_text, skill_id)
+	if upgrade_id_text.begins_with(GOD_SKILL_LEARN_UPGRADE_PREFIX):
+		var skill_id: StringName = StringName(upgrade_id_text.substr(GOD_SKILL_LEARN_UPGRADE_PREFIX.length()))
+		return _make_god_skill_learn_upgrade(upgrade_id_text, skill_id)
 
 	var categories: Array[String] = [
 		"curse_choices",
@@ -206,20 +162,17 @@ static func get_upgrade(upgrade_id: StringName) -> Dictionary:
 		if not upgrade.is_empty():
 			return upgrade
 
-	var learnable_skill_upgrade: Dictionary = _find_by_id(_get_array(LEARNABLE_SKILLS_PATH, "level_up_upgrades"), upgrade_id)
-	if not learnable_skill_upgrade.is_empty():
-		return learnable_skill_upgrade
-
 	return {}
 
 
-static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
+static func _make_god_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
 	if skill_id == &"":
 		return {}
 	var skill: Dictionary = get_skill(skill_id)
 	if skill.is_empty():
 		return {}
-	if StringName(String(skill.get("god_id", ""))) != &"fire":
+	var god_id: StringName = StringName(String(skill.get("god_id", "")))
+	if god_id == &"":
 		return {}
 	if not bool(skill.get("offer_in_upgrade_pool", false)):
 		return {}
@@ -230,10 +183,10 @@ static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringN
 			continue
 		var candidate: Dictionary = tag_variant
 		if StringName(String(candidate.get("id", ""))) == skill_id:
-			tags = _build_fire_skill_learn_tags(candidate)
+			tags = _build_god_skill_learn_tags(candidate, god_id)
 			break
 	if tags.is_empty():
-		tags = _build_fire_skill_learn_tags(skill)
+		tags = _build_god_skill_learn_tags(skill, god_id)
 
 	var description: String = String(skill.get("description", "Learn %s." % String(skill_id)))
 	return {
@@ -245,19 +198,20 @@ static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringN
 		"enabled": true,
 		"max_level": 1,
 		"learn_skill_id": String(skill_id),
-		"god_id": "fire",
+		"god_id": god_id,
 		"level_descriptions": [description]
 	}
 
 
-static func _build_fire_skill_learn_tags(skill: Dictionary) -> Array:
+static func _build_god_skill_learn_tags(skill: Dictionary, god_id: StringName) -> Array:
 	var tags: Array = []
 	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
 		var tag: String = String(tag_variant)
 		if tag != "" and not tags.has(tag):
 			tags.append(tag)
-	if not tags.has("fire"):
-		tags.push_front("fire")
+	var god_tag: String = String(god_id)
+	if god_tag != "" and not tags.has(god_tag):
+		tags.push_front(god_tag)
 	if not tags.has("skill"):
 		tags.push_front("skill")
 	return tags
@@ -327,12 +281,6 @@ static func _get_dictionary_array(path: String, key: String) -> Array[Dictionary
 			dictionary_items.append(item)
 
 	return dictionary_items
-
-
-static func _get_merged_dictionary_array(primary_path: String, primary_key: String, extension_path: String, extension_key: String) -> Array[Dictionary]:
-	var items: Array[Dictionary] = _get_dictionary_array(primary_path, primary_key)
-	items.append_array(_get_dictionary_array(extension_path, extension_key))
-	return items
 
 
 static func _find_by_id(items: Array, target_id: StringName) -> Dictionary:

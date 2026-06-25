@@ -100,8 +100,8 @@ func setup(params: Dictionary) -> void:
 		set_meta("arcane_page_hit_ids", params["arcane_page_hit_ids"])
 	_hit_bodies.clear()
 	_is_destroying = false
-	monitoring = true
-	monitorable = true
+	set_deferred("monitoring", true)
+	set_deferred("monitorable", true)
 	_age = 0.0
 	_update_direction_state()
 	_reset_pierce_counter()
@@ -160,7 +160,7 @@ func _emit_hit_event(body: Node) -> bool:
 		"projectile": self,
 		"source": self,
 		"source_id": source_id,
-		"source_weapon_id": StringName(String(damage_packet.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(damage_packet.get("source_origin_id", ""))),
 		"skill_instance": skill_instance,
 		"skill_id": StringName(skill_instance.get("skill_id")) if skill_instance != null else StringName(String(damage_packet.get("source_skill_id", ""))),
 		"source_skill_id": StringName(skill_instance.get("skill_id")) if skill_instance != null else StringName(String(damage_packet.get("source_skill_id", ""))),
@@ -254,8 +254,8 @@ func _stabilize_damage_packet_source(default_source_type: String) -> void:
 		damage_packet["source_id"] = source_id
 	if not damage_packet.has("source_skill_id"):
 		damage_packet["source_skill_id"] = StringName(String(source_id))
-	if not damage_packet.has("source_weapon_id"):
-		damage_packet["source_weapon_id"] = StringName("")
+	if not damage_packet.has("source_origin_id"):
+		damage_packet["source_origin_id"] = StringName("")
 
 
 func _apply_status(body: Node) -> void:

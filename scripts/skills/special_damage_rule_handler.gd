@@ -560,7 +560,7 @@ static func _apply_judgement_beam_on_boss_mark_pulses(rules: Dictionary, context
 	for target: Node2D in _find_targets_in_radius(context, position, radius):
 		if not _is_boss(target) or not _has_status(target, &"holy_mark"):
 			continue
-		var meta_key: String = "holy_judgement_pulses:%s" % skill_key
+		var meta_key: String = _metadata_key("holy_judgement_pulses", skill_key)
 		var count: int = int(target.get_meta(meta_key, 0)) + 1
 		target.set_meta(meta_key, count)
 		if count % required != 0:
@@ -670,10 +670,10 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 		String(rule.get("element", "physical")),
 		String(rule.get("damage_type", "area_direct"))
 	), context)
-	var source_weapon_id: String = String(context.get("source_weapon_id", packet.get("source_weapon_id", "")))
-	if source_weapon_id == "" and caster != null:
-		source_weapon_id = String(caster.get("selected_weapon_id"))
-	packet["source_weapon_id"] = StringName(source_weapon_id)
+	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
+	if source_origin_id == "" and caster != null:
+		source_origin_id = String(caster.get("selected_character_id"))
+	packet["source_origin_id"] = StringName(source_origin_id)
 	packet["source_skill_id"] = StringName(String(context.get("skill_id", packet.get("source_skill_id", ""))))
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.85)) - 1.0
 	var direction: Vector2 = Vector2.ZERO
@@ -688,7 +688,7 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 		"damage": amount,
 		"damage_type": StringName(String(rule.get("damage_type", "area_direct"))),
 		"damage_packet": packet,
-		"source_weapon_id": StringName(String(packet.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(packet.get("source_origin_id", ""))),
 		"source_skill_id": StringName(String(packet.get("source_skill_id", ""))),
 		"duration": duration,
 		"tick_interval": maxf(float(rule.get("tick_interval", 0.4)), 0.05),
@@ -1568,15 +1568,15 @@ static func execute_lightning_chain_bounce(rules: Dictionary, context: Dictionar
 
 
 static func _apply_context_source_identity(packet: Dictionary, context: Dictionary, source_node: Node = null) -> void:
-	var source_weapon_id: String = String(context.get("source_weapon_id", packet.get("source_weapon_id", "")))
-	if source_weapon_id == "":
+	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
+	if source_origin_id == "":
 		var caster: Node = context.get("caster") as Node
 		if caster != null:
-			source_weapon_id = String(caster.get("selected_weapon_id"))
-	if source_weapon_id == "" and source_node != null:
-		source_weapon_id = String(source_node.get_meta("source_weapon_id", ""))
-	if source_weapon_id != "":
-		packet["source_weapon_id"] = StringName(source_weapon_id)
+			source_origin_id = String(caster.get("selected_character_id"))
+	if source_origin_id == "" and source_node != null:
+		source_origin_id = String(source_node.get_meta("source_origin_id", ""))
+	if source_origin_id != "":
+		packet["source_origin_id"] = StringName(source_origin_id)
 
 	var source_skill_id: String = String(context.get("skill_id", packet.get("source_skill_id", "")))
 	if source_skill_id == "" and source_node != null:
@@ -2806,6 +2806,41 @@ static func _health_ratio(target: Node) -> float:
 
 static func _now_seconds() -> float:
 	return float(Time.get_ticks_msec()) / 1000.0
+
+
+static func _metadata_key(namespace_text: String, suffix: String) -> String:
+	return _metadata_identifier("%s_%s" % [namespace_text, suffix])
+
+
+static func _metadata_identifier(raw_key: String) -> String:
+	var safe_key: String = ""
+	for index: int in range(raw_key.length()):
+		var character: String = raw_key.substr(index, 1)
+		if _is_ascii_identifier_character(character):
+			safe_key += character
+		else:
+			safe_key += "_"
+	if safe_key == "" or not _is_ascii_identifier_start(safe_key.substr(0, 1)):
+		safe_key = "skill_rule_%s" % safe_key
+	return safe_key
+
+
+static func _is_ascii_identifier_start(character: String) -> bool:
+	if character == "_":
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return (code >= 65 and code <= 90) or (code >= 97 and code <= 122)
+
+
+static func _is_ascii_identifier_character(character: String) -> bool:
+	if _is_ascii_identifier_start(character):
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return code >= 48 and code <= 57
 
 
 static func _get_root_node() -> Node:

@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name DebugCombatTrace
 
 
@@ -57,7 +57,7 @@ static func record_explosion(root: Node, parent: Node, position: Vector2, radius
 		_copy_packet_field(record, damage_packet, "element")
 		_copy_packet_field(record, damage_packet, "source_type")
 		_copy_packet_field(record, damage_packet, "source_id")
-		_copy_packet_field(record, damage_packet, "source_weapon_id")
+		_copy_packet_field(record, damage_packet, "source_origin_id")
 		_copy_packet_field(record, damage_packet, "source_skill_id")
 		_copy_packet_field(record, damage_packet, "can_crit")
 		_copy_packet_field(record, damage_packet, "uses_character_damage_multiplier")
@@ -84,7 +84,7 @@ static func record_damage(root: Node, target: Node, amount_or_packet: Variant, d
 		"target": target_name,
 		"target_id": str(target.get_instance_id()) if target != null else "",
 		"source_skill_id": String(_packet_value(amount_or_packet, "source_skill_id", damage_result.get("source_skill_id", ""))),
-		"source_weapon_id": String(_packet_value(amount_or_packet, "source_weapon_id", damage_result.get("source_weapon_id", ""))),
+		"source_origin_id": String(_packet_value(amount_or_packet, "source_origin_id", damage_result.get("source_origin_id", ""))),
 		"source_type": String(_packet_value(amount_or_packet, "source_type", "")),
 		"source_instance_id": String(_packet_value(amount_or_packet, "source_instance_id", "")),
 		"raw_amount": float(damage_result.get("raw_amount", _packet_value(amount_or_packet, "raw_amount", 0.0))),
@@ -211,3 +211,4 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
+

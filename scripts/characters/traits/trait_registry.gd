@@ -2,14 +2,14 @@ extends RefCounted
 class_name TraitRegistry
 
 
-const WeaponCastStackTraitScript: Script = preload("res://scripts/characters/traits/weapon_cast_stack_trait.gd")
+const SkillCastStackTraitScript: Script = preload("res://scripts/characters/traits/skill_cast_stack_trait.gd")
 const MovingBonusTraitScript: Script = preload("res://scripts/characters/traits/moving_bonus_trait.gd")
 const PeriodicShieldTraitScript: Script = preload("res://scripts/characters/traits/periodic_shield_trait.gd")
 const StatusKillRandomAreaTraitScript: Script = preload("res://scripts/characters/traits/status_kill_random_area_trait.gd")
 const HpLostStackTraitScript: Script = preload("res://scripts/characters/traits/hp_lost_stack_trait.gd")
 
 static var _types: Dictionary = {
-	"weapon_cast_stack": WeaponCastStackTraitScript,
+	"skill_cast_stack": SkillCastStackTraitScript,
 	"moving_bonus": MovingBonusTraitScript,
 	"passive_with_periodic_shield": PeriodicShieldTraitScript,
 	"status_kill_random_area": StatusKillRandomAreaTraitScript,

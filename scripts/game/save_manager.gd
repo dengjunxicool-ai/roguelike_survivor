@@ -9,7 +9,6 @@ const SECTION_PERMANENT_UPGRADES: String = "permanent_upgrades"
 const SECTION_UNLOCKS: String = "unlocks"
 const SECTION_MAP_CLEAR_RECORDS: String = "map_clear_records"
 const SECTION_RUN_COUNTERS: String = "run_counters"
-const SECTION_WEAPON_MASTERY: String = "weapon_mastery"
 const SECTION_CHARACTER_SPECIALIZATION: String = "character_specialization"
 const SECTION_MAP_CHALLENGES: String = "map_challenges"
 const SECTION_CHALLENGES: String = "challenges"
@@ -97,32 +96,6 @@ static func set_counter_max(counter_id: StringName, value: int) -> int:
 	if new_value != current_value:
 		save_value(SECTION_RUN_COUNTERS, String(counter_id), new_value)
 	return new_value
-
-
-static func get_weapon_mastery_xp(weapon_id: StringName) -> int:
-	return maxi(int(load_value(SECTION_WEAPON_MASTERY, "%s:xp" % String(weapon_id), 0)), 0)
-
-
-static func add_weapon_mastery_xp(weapon_id: StringName, amount: int) -> int:
-	if weapon_id == &"" or amount <= 0:
-		return get_weapon_mastery_xp(weapon_id)
-	var new_xp: int = get_weapon_mastery_xp(weapon_id) + amount
-	save_value(SECTION_WEAPON_MASTERY, "%s:xp" % String(weapon_id), new_xp)
-	save_value(SECTION_WEAPON_MASTERY, "%s:level" % String(weapon_id), get_weapon_mastery_level_from_xp(new_xp))
-	return new_xp
-
-
-static func get_weapon_mastery_level(weapon_id: StringName) -> int:
-	return maxi(int(load_value(SECTION_WEAPON_MASTERY, "%s:level" % String(weapon_id), 0)), 0)
-
-
-static func get_weapon_mastery_level_from_xp(xp: int) -> int:
-	var thresholds: Array[int] = [100, 300, 700, 1200, 1800, 2500, 3300]
-	var level: int = 0
-	for threshold: int in thresholds:
-		if xp >= threshold:
-			level += 1
-	return clampi(level, 0, 7)
 
 
 static func increment_character_specialization(character_id: StringName, goal_id: StringName, amount: int = 1) -> int:

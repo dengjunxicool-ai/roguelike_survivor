@@ -26,7 +26,6 @@ func start_run(context: Dictionary) -> Dictionary:
 		push_error("[RunSceneCoordinator] start_run requires a valid RunLoadout.")
 		return {}
 	var character_id: StringName = StringName(String(loadout.get("character_id")))
-	var weapon_id: StringName = StringName(String(loadout.get("weapon_id")))
 	var selected_map_id: StringName = resolve_map_id(context.get("map_id", &""))
 	var map_data: Dictionary = GameData.get_map(selected_map_id)
 	var selected_map_name: String = String(map_data.get("display_name", selected_map_id)) if not map_data.is_empty() else String(selected_map_id)
@@ -37,7 +36,6 @@ func start_run(context: Dictionary) -> Dictionary:
 		map_data,
 		get_run_scene_parent(tree),
 		character_id,
-		weapon_id,
 		selected_map_id,
 		selected_map_name,
 		context.get("stat_event_callable", Callable())
@@ -171,7 +169,6 @@ func _setup_map_variable_runtime(map_data: Dictionary, parent: Node) -> void:
 ## - map_data: Map dictionary from GameData.
 ## - parent: Node that owns the run stats tracker.
 ## - character_id: Selected character id.
-## - weapon_id: Selected weapon id.
 ## - map_id: Resolved selected map id.
 ## - map_name: Display name for the selected map.
 ## - event_callable: Callback for stat events.
@@ -181,7 +178,6 @@ func _setup_run_stats_tracker(
 	map_data: Dictionary,
 	parent: Node,
 	character_id: StringName,
-	weapon_id: StringName,
 	map_id: StringName,
 	map_name: String,
 	event_callable: Callable
@@ -196,7 +192,7 @@ func _setup_run_stats_tracker(
 		if not _run_stats_tracker.is_connected("event_recorded", event_callable):
 			_run_stats_tracker.connect("event_recorded", event_callable)
 	if _run_stats_tracker.has_method("reset_run"):
-		_run_stats_tracker.call("reset_run", character_id, weapon_id, map_id, String(map_data.get("display_name", map_name)))
+		_run_stats_tracker.call("reset_run", character_id, map_id, String(map_data.get("display_name", map_name)))
 
 
 ## Params:

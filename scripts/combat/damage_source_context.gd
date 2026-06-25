@@ -5,7 +5,7 @@ class_name DamageSourceContext
 var source_type: StringName = &""
 var attacker: Node = null
 var attacker_id: String = ""
-var source_weapon_id: StringName = &""
+var source_origin_id: StringName = &""
 var source_skill_id: StringName = &""
 var source_instance_id: String = ""
 var source_action_id: StringName = &""
@@ -19,7 +19,7 @@ static func from_dictionary(packet: Dictionary) -> RefCounted:
 	context.source_type = StringName(String(packet.get("source_type", "")))
 	context.attacker = packet.get("attacker") as Node
 	context.attacker_id = String(packet.get("attacker_id", ""))
-	context.source_weapon_id = StringName(String(packet.get("source_weapon_id", "")))
+	context.source_origin_id = StringName(String(packet.get("source_origin_id", "")))
 	context.source_skill_id = StringName(String(packet.get("source_skill_id", packet.get("source_id", ""))))
 	context.source_instance_id = String(packet.get("source_instance_id", packet.get("source_id", context.source_skill_id)))
 	context.source_action_id = StringName(String(packet.get("source_action_id", "")))
@@ -34,7 +34,7 @@ func apply_to_dictionary(packet: Dictionary) -> Dictionary:
 	result["source_type"] = source_type
 	result["attacker"] = attacker
 	result["attacker_id"] = attacker_id
-	result["source_weapon_id"] = source_weapon_id
+	result["source_origin_id"] = source_origin_id
 	result["source_skill_id"] = source_skill_id
 	result["source_instance_id"] = source_instance_id
 	if source_action_id != &"":

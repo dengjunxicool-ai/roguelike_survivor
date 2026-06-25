@@ -1,8 +1,6 @@
 extends Node
 
 
-const PRIMARY_ATTACK_PATH: String = "res://data/primary_attack.json"
-const LEARNABLE_SKILLS_PATH: String = "res://data/learnable_skills.json"
 const SKILLS_PATH: String = "res://data/skills.json"
 const ENEMIES_PATH: String = "res://data/enemies.json"
 const ENEMY_SKILLS_PATH: String = "res://data/enemy_skills.json"
@@ -12,19 +10,14 @@ const RELICS_PATH: String = "res://data/relics.json"
 const SYNERGIES_PATH: String = "res://data/synergies.json"
 const COMBAT_OBJECTS_PATH: String = "res://data/combat_objects.json"
 const CHARACTERS_PATH: String = "res://data/characters.json"
-const WEAPONS_PATH: String = "res://data/weapons.json"
-const WEAPON_BRANCHES_PATH: String = "res://data/weapon_branches.json"
 const WAVES_PATH: String = "res://data/waves.json"
 const MAPS_PATH: String = "res://data/maps.json"
 
-const PRIMARY_ATTACK_KEY: String = "primary_attacks"
 const STARTING_SKILLS_KEY: String = "starting_skills"
 const SKILLS_KEY: String = "skills"
 const ENEMIES_KEY: String = "monsters"
 const ENEMY_SKILLS_KEY: String = "enemy_skills"
 const CHARACTERS_KEY: String = "characters"
-const WEAPONS_KEY: String = "weapons"
-const WEAPON_BRANCHES_KEY: String = "branches"
 const STATUS_EFFECTS_KEY: String = "statuses"
 const RELICS_KEY: String = "relics"
 const SYNERGIES_KEY: String = "synergies"
@@ -45,8 +38,6 @@ var _status_definitions: Dictionary = {}
 var _relic_definitions: Dictionary = {}
 var _combat_object_definitions: Dictionary = {}
 var _character_definitions: Dictionary = {}
-var _weapon_definitions: Dictionary = {}
-var _weapon_branch_definitions: Dictionary = {}
 var _map_definitions: Dictionary = {}
 var _synergy_definitions: Array[Dictionary] = []
 var _wave_config: Dictionary = {}
@@ -66,14 +57,9 @@ func load_all() -> void:
 	_relic_definitions.clear()
 	_combat_object_definitions.clear()
 	_character_definitions.clear()
-	_weapon_definitions.clear()
-	_weapon_branch_definitions.clear()
 	_map_definitions.clear()
 	_synergy_definitions.clear()
 	_wave_config.clear()
-
-	var primary_attack_document: Dictionary = _load_json_document(PRIMARY_ATTACK_PATH)
-	_index_definitions(primary_attack_document, PRIMARY_ATTACK_KEY, "id", _skill_definitions, PRIMARY_ATTACK_PATH)
 
 	var enemies_document: Dictionary = _load_json_document(ENEMIES_PATH)
 	_index_definitions(enemies_document, ENEMIES_KEY, "id", _enemy_definitions, ENEMIES_PATH)
@@ -94,23 +80,12 @@ func load_all() -> void:
 	var combat_objects_document: Dictionary = _load_json_document(COMBAT_OBJECTS_PATH)
 	_index_definitions(combat_objects_document, COMBAT_OBJECTS_KEY, "id", _combat_object_definitions, COMBAT_OBJECTS_PATH)
 
-	var learnable_skills_document: Dictionary = _load_json_document(LEARNABLE_SKILLS_PATH)
-	_index_definitions(learnable_skills_document, PRIMARY_ATTACK_KEY, "id", _skill_definitions, LEARNABLE_SKILLS_PATH)
-	_index_upgrade_definitions(learnable_skills_document, "level_up_upgrades", LEARNABLE_SKILLS_PATH)
-	_index_definitions(learnable_skills_document, COMBAT_OBJECTS_KEY, "id", _combat_object_definitions, LEARNABLE_SKILLS_PATH)
-
 	var skills_document: Dictionary = _load_json_document(SKILLS_PATH)
 	_index_definitions(skills_document, STARTING_SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 	_index_definitions(skills_document, SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 
 	var characters_document: Dictionary = _load_json_document(CHARACTERS_PATH)
 	_index_definitions(characters_document, CHARACTERS_KEY, "id", _character_definitions, CHARACTERS_PATH)
-
-	var weapons_document: Dictionary = _load_json_document(WEAPONS_PATH)
-	_index_definitions(weapons_document, WEAPONS_KEY, "id", _weapon_definitions, WEAPONS_PATH)
-
-	var weapon_branches_document: Dictionary = _load_json_document(WEAPON_BRANCHES_PATH)
-	_index_definitions(weapon_branches_document, WEAPON_BRANCHES_KEY, "id", _weapon_branch_definitions, WEAPON_BRANCHES_PATH)
 
 	var maps_document: Dictionary = _load_json_document(MAPS_PATH)
 	_index_definitions(maps_document, MAPS_KEY, "id", _map_definitions, MAPS_PATH)
@@ -123,10 +98,6 @@ func load_all() -> void:
 
 func get_skill_definition(skill_id: Variant) -> Dictionary:
 	return _get_definition(_skill_definitions, skill_id)
-
-
-func get_primary_attack_definition(attack_id: Variant) -> Dictionary:
-	return get_skill_definition(attack_id)
 
 
 func get_enemy_definition(enemy_id: Variant) -> Dictionary:
@@ -157,20 +128,8 @@ func get_character_definition(character_id: Variant) -> Dictionary:
 	return _get_definition(_character_definitions, character_id)
 
 
-func get_weapon_definition(weapon_id: Variant) -> Dictionary:
-	return _get_definition(_weapon_definitions, weapon_id)
-
-
-func get_weapon_branch_definition(branch_id: Variant) -> Dictionary:
-	return _get_definition(_weapon_branch_definitions, branch_id)
-
-
 func get_map_definition(map_id: Variant) -> Dictionary:
 	return _get_definition(_map_definitions, map_id)
-
-
-func get_weapon_branch_definitions() -> Array[Dictionary]:
-	return _get_definition_values(_weapon_branch_definitions)
 
 
 func get_map_definitions() -> Array[Dictionary]:
@@ -179,10 +138,6 @@ func get_map_definitions() -> Array[Dictionary]:
 
 func get_skill_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_skill_definitions)
-
-
-func get_primary_attack_definitions() -> Array[Dictionary]:
-	return get_skill_definitions()
 
 
 func get_relic_definitions() -> Array[Dictionary]:
@@ -207,10 +162,6 @@ func get_level_up_upgrade_definitions() -> Array[Dictionary]:
 
 func get_character_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_character_definitions)
-
-
-func get_weapon_definitions() -> Array[Dictionary]:
-	return _get_definition_values(_weapon_definitions)
 
 
 func get_synergy_definitions() -> Array[Dictionary]:

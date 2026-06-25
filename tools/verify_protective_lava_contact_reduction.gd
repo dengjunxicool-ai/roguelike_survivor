@@ -1,4 +1,4 @@
-extends SceneTree
+﻿extends SceneTree
 
 
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
@@ -98,7 +98,7 @@ func _enemy_packet(amount: int, source_type: String) -> Dictionary:
 		"element": &"physical",
 		"source_type": source_type,
 		"source_id": source_type,
-		"source_weapon_id": &"test_enemy",
+		"source_origin_id": &"test_enemy",
 		"source_skill_id": StringName(source_type),
 		"source_instance_id": "test_enemy:%s" % source_type,
 		"attacker_id": "test_enemy",
@@ -139,3 +139,4 @@ func _write_result() -> void:
 	var file: FileAccess = FileAccess.open("res://tools/verify_protective_lava_contact_reduction.out.txt", FileAccess.WRITE)
 	if file != null:
 		file.store_string(output)
+

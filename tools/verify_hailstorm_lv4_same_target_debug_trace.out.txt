@@ -1,7 +1,0 @@
-[PASS] hailstorm Lv4 debug spawn creates projectiles
-[PASS] hailstorm Lv4 debug spawn creates three projectiles
-[PASS] hailstorm Lv4 debug hit damage sequence is 11/9/6
-[PASS] hailstorm Lv4 writes three debug damage records
-[PASS] hailstorm Lv4 first debug record remains full damage
-[PASS] hailstorm Lv4 second debug record uses 80 percent
-[PASS] hailstorm Lv4 third debug record uses 60 percent

@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name ModifierQuery
 
 
@@ -12,7 +12,7 @@ var scope: StringName = SCOPE_PLAYER
 var owner: Node
 var skill_instance: RefCounted
 var skill_id: StringName = &""
-var weapon_id: StringName = &""
+var source_origin_id: StringName = &""
 var damage_origin: StringName = &""
 var element: StringName = &""
 var object_type: StringName = &""
@@ -25,7 +25,6 @@ static func for_player(player: Node, query_scope: StringName = SCOPE_PLAYER) -> 
 	var query: ModifierQuery = ModifierQuery.new()
 	query.scope = query_scope
 	query.owner = player
-	query.weapon_id = _get_runtime_weapon_id(player)
 	return query
 
 
@@ -34,7 +33,6 @@ static func for_skill(skill: RefCounted, player: Node = null) -> ModifierQuery:
 	query.scope = SCOPE_SKILL
 	query.owner = player
 	query.skill_instance = skill
-	query.weapon_id = _get_runtime_weapon_id(player)
 	if skill != null:
 		query.skill_id = StringName(String(skill.get("skill_id")))
 		var definition: RefCounted = skill.get("definition") as RefCounted
@@ -47,7 +45,7 @@ static func for_damage(packet: Dictionary, attacker: Node = null) -> ModifierQue
 	var query: ModifierQuery = ModifierQuery.new()
 	query.scope = SCOPE_DAMAGE
 	query.owner = attacker
-	query.weapon_id = StringName(String(packet.get("source_weapon_id", _get_runtime_weapon_id(attacker))))
+	query.source_origin_id = StringName(String(packet.get("source_origin_id", "")))
 	query.skill_id = StringName(String(packet.get("source_skill_id", packet.get("skill_id", ""))))
 	query.damage_origin = StringName(String(packet.get("damage_origin", "")))
 	query.element = StringName(String(packet.get("element", "")))
@@ -62,7 +60,7 @@ static func for_damage_any(packet_source: Variant, attacker: Node = null) -> Mod
 	var query: ModifierQuery = ModifierQuery.new()
 	query.scope = SCOPE_DAMAGE
 	query.owner = attacker
-	query.weapon_id = StringName(String(_packet_value(packet_source, "source_weapon_id", _get_runtime_weapon_id(attacker))))
+	query.source_origin_id = StringName(String(_packet_value(packet_source, "source_origin_id", "")))
 	query.skill_id = StringName(String(_packet_value(packet_source, "source_skill_id", _packet_value(packet_source, "skill_id", ""))))
 	query.damage_origin = StringName(String(_packet_value(packet_source, "damage_origin", "")))
 	query.element = StringName(String(_packet_value(packet_source, "element", "")))
@@ -86,16 +84,6 @@ func with_target_type(value: Variant) -> ModifierQuery:
 func with_status_id(value: Variant) -> ModifierQuery:
 	status_id = StringName(String(value))
 	return self
-
-
-static func _get_runtime_weapon_id(player: Node) -> StringName:
-	if player == null:
-		return &""
-	var runtime: Node = player.get_node_or_null("CharacterRuntime")
-	if runtime != null:
-		return StringName(String(runtime.call("get_equipped_weapon_id")))
-	var weapon_variant: Variant = player.get("selected_weapon_id")
-	return StringName(String(weapon_variant)) if weapon_variant != null else &""
 
 
 static func _parse_string_name_array(value: Variant) -> Array[StringName]:
@@ -130,3 +118,4 @@ static func _resolve_target_type(packet_source: Variant) -> StringName:
 	if profile != null:
 		return StringName(String(profile.get("target_type")))
 	return &""
+

@@ -1,4 +1,4 @@
-extends Area2D
+﻿extends Area2D
 class_name AreaEffect
 
 
@@ -257,7 +257,7 @@ func _get_damage_payload(target: Node = null) -> Variant:
 		"amount": adjusted_damage,
 		"source_type": "area",
 		"source_id": source_id,
-		"source_weapon_id": StringName(String(damage_packet.get("source_weapon_id", ""))),
+		"source_origin_id": StringName(String(damage_packet.get("source_origin_id", ""))),
 		"source_skill_id": StringName(String(damage_packet.get("source_skill_id", source_id))),
 		"source_instance_id": str(get_instance_id()),
 		"instance_id": get_instance_id(),
@@ -286,8 +286,8 @@ func _stabilize_damage_packet_source(default_source_type: String, params: Dictio
 		damage_packet["source_id"] = source_id
 	if not damage_packet.has("source_skill_id") or String(damage_packet.get("source_skill_id", "")) == "":
 		damage_packet["source_skill_id"] = StringName(String(params.get("source_skill_id", params.get("skill_id", source_id))))
-	if not damage_packet.has("source_weapon_id") or String(damage_packet.get("source_weapon_id", "")) == "":
-		damage_packet["source_weapon_id"] = StringName(String(params.get("source_weapon_id", "")))
+	if not damage_packet.has("source_origin_id") or String(damage_packet.get("source_origin_id", "")) == "":
+		damage_packet["source_origin_id"] = StringName(String(params.get("source_origin_id", "")))
 
 
 func _apply_status(body: Node) -> void:
@@ -687,3 +687,4 @@ func _uses_programmatic_visual() -> bool:
 		"smoke_zone",
 		"acid_cone"
 	].has(_visual_style)
+

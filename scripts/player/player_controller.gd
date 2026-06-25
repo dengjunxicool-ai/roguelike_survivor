@@ -2,7 +2,6 @@
 
 
 const SKILL_LEVEL_UP_OPTION_PREFIX: String = "skill_level_up:"
-const SKILL_BRANCH_PREFIX: String = "branch_choice:"
 const LEVEL_UP_UPGRADE_PREFIX: String = "level_up_upgrade:"
 const PlayerDebugOverlayScript: Script = preload("res://scripts/debug/player_debug_overlay.gd")
 const CharacterRuntimeScript: Script = preload("res://scripts/characters/character_runtime.gd")
@@ -12,10 +11,6 @@ const CharacterRunInitializerScript: Script = preload("res://scripts/characters/
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 const ModifierStoreScript: Script = preload("res://scripts/modifiers/modifier_store.gd")
-const WeaponEquipSystemScript: Script = preload("res://scripts/weapons/weapon_equip_system.gd")
-const WeaponSkillBindingScript: Script = preload("res://scripts/weapons/weapon_skill_binding.gd")
-const WeaponBranchSystemScript: Script = preload("res://scripts/weapons/weapon_branch_system.gd")
-const WeaponVisualScript: Script = preload("res://scripts/weapons/weapon_visual.gd")
 const PlayerVisualControllerScript: Script = preload("res://scripts/player/player_visual_controller.gd")
 const PlayerModifierApplierScript: Script = preload("res://scripts/player/player_modifier_applier.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
@@ -39,9 +34,13 @@ signal upgrade_applied(upgrade_id: StringName)
 
 
 @export var selected_character_id: StringName = &"mage"
-@export var selected_weapon_id: StringName = &"fire_staff"
 @export var load_config_from_data: bool = true
 @export_range(0.0, 1000.0, 10.0, "or_greater") var move_speed: float = 220.0
+@export_range(0.0, 2000.0, 10.0, "or_greater") var dash_speed: float = 780.0
+@export_range(0.0, 2.0, 0.01, "or_greater") var dash_duration: float = 0.16
+@export_range(0.0, 5.0, 0.01, "or_greater") var dash_cooldown: float = 0.55
+@export_range(0.01, 1.0, 0.01, "or_greater") var dash_afterimage_interval: float = 0.035
+@export_range(0.01, 2.0, 0.01, "or_greater") var dash_afterimage_fade_duration: float = 0.22
 @export_range(1, 1000, 1, "or_greater") var max_health: int = 100
 @export_range(1, 100, 1, "or_greater") var starting_level: int = 1
 @export_range(1, 10000, 1, "or_greater") var base_experience_to_next_level: int = 100
@@ -88,6 +87,11 @@ var _experience_formula_per_level: int = 0
 var _experience_table: Array[int] = []
 var _movement_bounds: Rect2 = Rect2()
 var _has_movement_bounds: bool = false
+var _last_move_direction: Vector2 = Vector2.DOWN
+var _dash_direction: Vector2 = Vector2.DOWN
+var _dash_time_remaining: float = 0.0
+var _dash_cooldown_remaining: float = 0.0
+var _dash_afterimage_timer: float = 0.0
 var _last_boss_skill_hit_time: float = -10.0
 var _last_contact_damage_time: float = -10.0
 var _last_area_damage_times: Dictionary = {}
@@ -109,11 +113,11 @@ func _ready() -> void:
 	_ensure_status_manager()
 	_ensure_debug_overlay()
 	_ensure_character_systems()
-	var default_loadout: RefCounted = CharacterLoadoutServiceScript.build_loadout(selected_character_id, selected_weapon_id)
+	var default_loadout: RefCounted = CharacterLoadoutServiceScript.build_loadout(selected_character_id)
 	if default_loadout != null:
 		reset_for_loadout(default_loadout)
 	else:
-		push_error("[Player] Could not build initial RunLoadout for %s + %s." % [String(selected_character_id), String(selected_weapon_id)])
+		push_error("[Player] Could not build initial RunLoadout for %s." % String(selected_character_id))
 
 
 func _ensure_debug_overlay() -> void:
@@ -131,7 +135,6 @@ func reset_for_loadout(loadout: RefCounted) -> void:
 		return
 	_run_loadout = loadout
 	selected_character_id = StringName(String(loadout.get("character_id")))
-	selected_weapon_id = StringName(String(loadout.get("weapon_id")))
 	_reset_runtime_stats()
 	_ensure_character_systems()
 	_initialize_character_runtime()
@@ -143,7 +146,6 @@ func reset_for_loadout(loadout: RefCounted) -> void:
 	current_experience = 0
 	experience_to_next_level = _get_experience_required_for_level(level)
 	_apply_permanent_upgrade_modifiers()
-	_refresh_weapon_visual()
 	_character_run_initializer.call("configure_starting_skills", self)
 	_refresh_synergies()
 	global_position = Vector2(768, 512)
@@ -158,18 +160,6 @@ func _ensure_character_systems() -> void:
 		var runtime: CharacterRuntime = CharacterRuntimeScript.new()
 		runtime.name = "CharacterRuntime"
 		add_child(runtime)
-	if get_node_or_null("WeaponEquipSystem") == null:
-		var equip_system: WeaponEquipSystem = WeaponEquipSystemScript.new()
-		equip_system.name = "WeaponEquipSystem"
-		add_child(equip_system)
-	if get_node_or_null("WeaponSkillBinding") == null:
-		var binding: WeaponSkillBinding = WeaponSkillBindingScript.new()
-		binding.name = "WeaponSkillBinding"
-		add_child(binding)
-	if get_node_or_null("WeaponVisual") == null:
-		var weapon_visual: Node2D = WeaponVisualScript.new()
-		weapon_visual.name = "WeaponVisual"
-		add_child(weapon_visual)
 	if get_node_or_null("CharacterTraitSystem") == null:
 		var trait_system: Node = CharacterTraitSystemScript.new()
 		trait_system.name = "CharacterTraitSystem"
@@ -178,10 +168,6 @@ func _ensure_character_systems() -> void:
 		var modifier_store: Node = ModifierStoreScript.new()
 		modifier_store.name = "ModifierStore"
 		add_child(modifier_store)
-	if get_node_or_null("WeaponBranchSystem") == null:
-		var branch_system: Node = WeaponBranchSystemScript.new()
-		branch_system.name = "WeaponBranchSystem"
-		add_child(branch_system)
 
 
 func _ensure_status_manager() -> Node:
@@ -291,12 +277,6 @@ func _initialize_character_runtime() -> bool:
 	return false
 
 
-func _refresh_weapon_visual() -> void:
-	var weapon_visual: Node = get_node_or_null("WeaponVisual")
-	if weapon_visual != null and weapon_visual.has_method("refresh_from_player"):
-		weapon_visual.call("refresh_from_player", self)
-
-
 func _reset_runtime_stats() -> void:
 	move_speed = 220.0
 	max_health = 100
@@ -336,6 +316,11 @@ func _reset_runtime_stats() -> void:
 	_last_contact_damage_time = -10.0
 	_last_area_damage_times.clear()
 	_recent_enemy_damage_sources.clear()
+	_last_move_direction = Vector2.DOWN
+	_dash_direction = Vector2.DOWN
+	_dash_time_remaining = 0.0
+	_dash_cooldown_remaining = 0.0
+	_dash_afterimage_timer = 0.0
 	set_meta("level_up_upgrade_levels", {})
 	_experience_formula_type = "exponential"
 	_experience_formula_base = 100
@@ -367,12 +352,109 @@ func _physics_process(delta: float) -> void:
 	if _is_movement_frozen():
 		input_direction = Vector2.ZERO
 
-	velocity = input_direction * _get_effective_move_speed()
+	_update_dash_cooldown(delta)
+	if input_direction.length_squared() > 0.001:
+		_last_move_direction = input_direction.normalized()
+	if Input.is_action_just_pressed("dash") and not _is_movement_frozen():
+		start_dash(input_direction)
+	if is_dash_active():
+		velocity = _dash_direction * dash_speed
+		_update_dash_afterimage(delta)
+		_dash_time_remaining = maxf(_dash_time_remaining - delta, 0.0)
+	else:
+		velocity = input_direction * _get_effective_move_speed()
 	_limit_actor_motion(delta)
 	move_and_slide()
 	_clamp_to_movement_bounds()
 	_update_trait_movement(input_direction, delta)
-	_update_visual_state(input_direction, delta)
+	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
+
+
+func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
+	if dash_speed <= 0.0 or dash_duration <= 0.0 or _dash_cooldown_remaining > 0.0 or is_dash_active():
+		return false
+	var resolved_direction: Vector2 = direction
+	if resolved_direction.length_squared() <= 0.001:
+		resolved_direction = _last_move_direction
+	if resolved_direction.length_squared() <= 0.001:
+		resolved_direction = Vector2.DOWN
+	_dash_direction = resolved_direction.normalized()
+	_dash_time_remaining = dash_duration
+	_dash_cooldown_remaining = dash_cooldown
+	_dash_afterimage_timer = 0.0
+	_spawn_dash_afterimage()
+	return true
+
+
+func is_dash_active() -> bool:
+	return _dash_time_remaining > 0.0
+
+
+func _update_dash_cooldown(delta: float) -> void:
+	_dash_cooldown_remaining = maxf(_dash_cooldown_remaining - delta, 0.0)
+
+
+func _update_dash_afterimage(delta: float) -> void:
+	_dash_afterimage_timer -= delta
+	if _dash_afterimage_timer > 0.0:
+		return
+	_spawn_dash_afterimage()
+	_dash_afterimage_timer = dash_afterimage_interval
+
+
+func _spawn_dash_afterimage() -> void:
+	var source: Node2D = _get_dash_visual_source()
+	if source == null:
+		return
+	var afterimage: Sprite2D = Sprite2D.new()
+	afterimage.name = "DashAfterimage"
+	afterimage.texture = _get_dash_visual_texture(source)
+	if afterimage.texture == null:
+		return
+	if source is Sprite2D:
+		var source_sprite: Sprite2D = source as Sprite2D
+		afterimage.centered = source_sprite.centered
+		afterimage.offset = source_sprite.offset
+		afterimage.flip_h = source_sprite.flip_h
+		afterimage.flip_v = source_sprite.flip_v
+		afterimage.region_enabled = source_sprite.region_enabled
+		afterimage.region_rect = source_sprite.region_rect
+		afterimage.hframes = source_sprite.hframes
+		afterimage.vframes = source_sprite.vframes
+		afterimage.frame = source_sprite.frame
+	afterimage.modulate = Color(0.48, 0.86, 1.0, 0.42)
+	afterimage.z_index = z_index - 1
+	var parent_node: Node = get_parent()
+	if parent_node == null:
+		parent_node = self
+	parent_node.add_child(afterimage)
+	afterimage.global_position = source.global_position
+	afterimage.global_rotation = source.global_rotation
+	afterimage.global_scale = source.global_scale
+	var tween: Tween = afterimage.create_tween()
+	tween.tween_property(afterimage, "modulate:a", 0.0, dash_afterimage_fade_duration)
+	tween.tween_callback(afterimage.queue_free)
+
+
+func _get_dash_visual_source() -> Node2D:
+	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if animated_sprite != null and animated_sprite.visible and animated_sprite.sprite_frames != null:
+		return animated_sprite
+	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null and sprite.visible and sprite.texture != null:
+		return sprite
+	return null
+
+
+func _get_dash_visual_texture(source: Node2D) -> Texture2D:
+	if source is Sprite2D:
+		return (source as Sprite2D).texture
+	if source is AnimatedSprite2D:
+		var animated_sprite: AnimatedSprite2D = source as AnimatedSprite2D
+		if animated_sprite.sprite_frames == null:
+			return null
+		return animated_sprite.sprite_frames.get_frame_texture(animated_sprite.animation, animated_sprite.frame)
+	return null
 
 
 func _limit_actor_motion(delta: float) -> void:
@@ -725,11 +807,6 @@ func add_experience(amount: int) -> void:
 func apply_upgrade(upgrade_id: StringName) -> void:
 	var upgrade_id_text: String = String(upgrade_id)
 	var dev_enabled: bool = _is_dev_run()
-	if upgrade_id_text.begins_with(SKILL_BRANCH_PREFIX):
-		if _apply_branch_upgrade(upgrade_id_text, dev_enabled):
-			upgrade_applied.emit(upgrade_id)
-		return
-
 	if upgrade_id_text.begins_with(SKILL_LEVEL_UP_OPTION_PREFIX):
 		if _apply_skill_level_up_upgrade(upgrade_id_text, dev_enabled):
 			upgrade_applied.emit(upgrade_id)
@@ -971,7 +1048,7 @@ func _is_dynamic_scope_modifier_key(key: String) -> bool:
 
 func _is_damage_scope_modifier_key(key: String) -> bool:
 	match key:
-		"damage_multiplier", "damage_multiplier_add", "crit_chance_add", "crit_damage_add", "equipped_weapon_damage_add":
+		"damage_multiplier", "damage_multiplier_add", "crit_chance_add", "crit_damage_add", "starting_skill_damage_add":
 			return true
 	if key.ends_with("_damage_multiplier_add"):
 		return key != "damage_taken_multiplier_add"
@@ -1038,7 +1115,7 @@ func _apply_environment_modifiers() -> void:
 		})
 
 
-func _upgrade_skill(skill_id: StringName, amount: int, dev_branch_id: Variant = &"", dev_enabled: bool = false) -> bool:
+func _upgrade_skill(skill_id: StringName, amount: int, _dev_level_hint: Variant = &"", _dev_enabled: bool = false) -> bool:
 	if amount <= 0:
 		return false
 
@@ -1050,11 +1127,6 @@ func _upgrade_skill(skill_id: StringName, amount: int, dev_branch_id: Variant = 
 	for _upgrade_index in range(amount):
 		if not bool(skill_manager.call("upgrade_skill", skill_id)):
 			break
-		var skill_instance: RefCounted = _get_skill_instance(skill_id)
-		var new_level: int = int(skill_instance.get("current_level")) if skill_instance != null else 0
-		var branch_system: Node = get_node_or_null("WeaponBranchSystem")
-		if branch_system != null and branch_system.has_method("apply_selected_branch_level"):
-			branch_system.call("apply_selected_branch_level", self, new_level, dev_branch_id, dev_enabled)
 		upgraded = true
 
 	if upgraded:
@@ -1082,27 +1154,6 @@ func _refresh_synergies() -> void:
 		synergy_manager.call("refresh_active_synergies", self)
 
 
-func _apply_branch_upgrade(upgrade_id_text: String, _dev_enabled: bool = false) -> bool:
-	var parts: PackedStringArray = upgrade_id_text.split(":")
-	if parts.size() < 3:
-		return false
-
-	var skill_id: StringName = StringName(parts[1])
-	var branch_id: StringName = StringName(parts[2])
-	var skill_instance: RefCounted = _get_skill_instance(skill_id)
-	if skill_instance == null:
-		return false
-
-	var branch_system: Node = get_node_or_null("WeaponBranchSystem")
-	# Lv2 branch choice defines the run route, so dev Skill Cards must reuse the
-	# same runtime lock as the normal upgrade flow.
-	var applied: bool = branch_system != null and branch_system.has_method("apply_branch") and bool(branch_system.call("apply_branch", self, branch_id, false))
-	if applied:
-		_refresh_skill_configs()
-		_refresh_synergies()
-	return applied
-
-
 func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = false) -> bool:
 	var level_parts: PackedStringArray = upgrade_id_text.split(":")
 	var skill_id_from_option: StringName = StringName(level_parts[1] if level_parts.size() > 1 else "")
@@ -1110,14 +1161,12 @@ func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = 
 		return _upgrade_skill(skill_id_from_option, 1)
 
 	var target_level: int = int(level_parts[2] if level_parts.size() > 2 else "0")
-	var branch_id: StringName = StringName(level_parts[3] if level_parts.size() > 3 else "")
 	var skill_instance: RefCounted = _get_skill_instance(skill_id_from_option)
 	if skill_instance == null:
 		return false
 	if target_level <= int(skill_instance.get("current_level")):
-		var branch_system: Node = get_node_or_null("WeaponBranchSystem")
-		return branch_system != null and branch_system.has_method("apply_selected_branch_level") and bool(branch_system.call("apply_selected_branch_level", self, target_level, branch_id, true))
-	return _upgrade_skill(skill_id_from_option, target_level - int(skill_instance.get("current_level")), branch_id, true)
+		return true
+	return _upgrade_skill(skill_id_from_option, target_level - int(skill_instance.get("current_level")), target_level, true)
 
 
 func _is_dev_run() -> bool:

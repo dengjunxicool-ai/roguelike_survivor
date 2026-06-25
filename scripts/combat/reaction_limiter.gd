@@ -213,9 +213,9 @@ static func _source_key(packet: Dictionary, reaction_type: String, target: Node 
 
 static func _source_key_for_source(packet_source: Variant, reaction_type: String, target: Node = null) -> String:
 	var attacker_id: String = String(_packet_value(packet_source, "attacker_id", ""))
-	var weapon_id: String = String(_packet_value(packet_source, "source_weapon_id", ""))
+	var origin_id: String = String(_packet_value(packet_source, "source_origin_id", ""))
 	var skill_id: String = String(_packet_value(packet_source, "source_skill_id", _packet_value(packet_source, "source_id", "")))
-	var key: String = "%s:%s:%s:%s" % [attacker_id, weapon_id, skill_id, reaction_type]
+	var key: String = "%s:%s:%s:%s" % [attacker_id, origin_id, skill_id, reaction_type]
 	if _uses_instance_scope_for_source(packet_source, reaction_type):
 		var instance_id: String = String(_packet_value(packet_source, "source_instance_id", ""))
 		if instance_id == "":

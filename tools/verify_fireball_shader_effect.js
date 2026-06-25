@@ -35,6 +35,9 @@ for (const uniformName of [
 assert(shader.includes("shader_type canvas_item"), "Shader must be a canvas_item shader");
 assert(shader.includes("TIME * distort_speed"), "Shader must animate UV distortion with TIME");
 assert(shader.includes("smoothstep(0.0, 1.0, uv.x)") || shader.includes("smoothstep(0.0,1.0,uv.x)"), "Shader must stretch glow/trail along forward UV");
+const fragmentBody = shader.slice(shader.indexOf("void fragment()"));
+assert(!/\breturn\s*;/.test(fragmentBody), "Canvas item fragment shader must not use return; Godot rejects return in fragment().");
+assert(!/\bvec[234]\s+source_color\b/.test(fragmentBody), "Canvas item fragment shader must not use source_color as a local variable name; Godot treats source_color as a shader hint keyword.");
 
 const material = read("resources/effects/fireball_flying_material.tres");
 assert(material.includes("fireball_flying_shader.gdshader"), "ShaderMaterial must use fireball_flying_shader.gdshader");

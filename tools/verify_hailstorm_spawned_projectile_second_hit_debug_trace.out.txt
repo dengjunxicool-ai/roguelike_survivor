@@ -1,6 +1,0 @@
-[PASS] hailstorm debug spawn creates projectiles through runtime action
-[PASS] hailstorm debug spawn creates three projectiles against one target
-[PASS] spawned second same-target projectile stores 70 percent modifier
-[PASS] spawned second same-target projectile hit records 8 damage
-[PASS] spawned second projectile writes debug damage record
-[PASS] debug card record final amount is 8 for spawned second same-target projectile

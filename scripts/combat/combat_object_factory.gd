@@ -19,10 +19,15 @@ static func create_projectile(params: Dictionary) -> Node2D:
 	if projectile == null:
 		return null
 
-	parent.add_child(projectile)
-	projectile.global_position = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
 	if projectile.has_method("setup"):
 		projectile.call(&"setup", object_params)
+	var spawn_position: Vector2 = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
+	if Engine.is_in_physics_frame():
+		parent.call_deferred("add_child", projectile)
+		projectile.set_deferred("global_position", spawn_position)
+	else:
+		parent.add_child(projectile)
+		projectile.global_position = spawn_position
 
 	return projectile
 

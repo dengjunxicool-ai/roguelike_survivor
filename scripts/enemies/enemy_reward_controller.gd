@@ -147,7 +147,7 @@ func _emit_skill_enemy_killed(player: Node, event: Dictionary) -> void:
 	var skill_manager: Node = player.get_node_or_null("SkillManager")
 	if runtime == null or skill_manager == null or not skill_manager.has_method("get_skill"):
 		return
-	var skill_id: StringName = StringName(String(runtime.call("get_equipped_weapon_skill_id")))
+	var skill_id: StringName = StringName(String(runtime.call("get_starting_skill_id")))
 	var skill_instance: RefCounted = skill_manager.call("get_skill", skill_id) as RefCounted
 	if skill_instance == null:
 		return

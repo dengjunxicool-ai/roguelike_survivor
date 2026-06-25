@@ -41,14 +41,11 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	state["exp"] = int(player.get("current_experience") if player.get("current_experience") != null else state.get("exp", 0))
 	state["exp_required"] = int(player.get("experience_to_next_level") if player.get("experience_to_next_level") != null else state.get("exp_required", 1))
 	state["character_id"] = String(player.get("selected_character_id") if player.get("selected_character_id") != null else state.get("character_id", ""))
-	state["current_weapon"] = String(player.get("selected_weapon_id") if player.get("selected_weapon_id") != null else state.get("current_weapon", ""))
 	var runtime := player.get_node_or_null("CharacterRuntime")
 	if runtime != null:
 		state["character_id"] = String(runtime.call("get_character_id"))
-		state["current_weapon"] = String(runtime.call("get_equipped_weapon_id"))
-		state["main_attack"] = String(runtime.call("get_equipped_weapon_skill_id"))
-		state["selected_branch"] = String(runtime.call("get_selected_weapon_branch_id"))
-	var skill_level: int = _get_equipped_weapon_skill_level(player)
+		state["main_attack"] = String(runtime.call("get_starting_skill_id"))
+	var skill_level: int = _get_starting_skill_level(player)
 	if skill_level > 0:
 		state["main_attack_level"] = skill_level
 
@@ -79,14 +76,14 @@ func _build_debug_stats(tree: SceneTree) -> Dictionary:
 	}
 
 
-func _get_equipped_weapon_skill_level(player: Node) -> int:
+func _get_starting_skill_level(player: Node) -> int:
 	if not is_instance_valid(player):
 		return 0
 	var runtime := player.get_node_or_null("CharacterRuntime")
 	var skill_manager := player.get_node_or_null("SkillManager")
 	if runtime == null or skill_manager == null or not skill_manager.has_method("get_skill"):
 		return 0
-	var skill_instance := skill_manager.call("get_skill", StringName(String(runtime.call("get_equipped_weapon_skill_id")))) as RefCounted
+	var skill_instance := skill_manager.call("get_skill", StringName(String(runtime.call("get_starting_skill_id")))) as RefCounted
 	if skill_instance == null:
 		return 0
 	return int(skill_instance.get("current_level"))

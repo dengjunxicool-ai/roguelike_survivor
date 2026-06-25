@@ -13,7 +13,7 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 	var run_seconds: float = float(run_state.get("run_seconds", 0.0))
 	var kill_count: int = int(run_state.get("kill_count", 0))
 	var run_souls_earned: int = int(run_state.get("run_souls_earned", 0))
-	var diagnostic: Dictionary = RunDiagnosticServiceScript.build_diagnostic(state, run_state)
+	var diagnostic: Dictionary = RunDiagnosticServiceScript.build_diagnostic(run_state)
 	var selected_character: Dictionary = GameData.get_character(selected_character_id)
 	return {
 		"diagnostic": diagnostic,
@@ -45,8 +45,7 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 
 func _get_progress_text(run_state: Dictionary) -> String:
 	var level: int = int(run_state.get("main_attack_level", 1))
-	var branch_name: String = String(run_state.get("current_branch_name", "未选择"))
-	return "主攻击：Lv.%d / 当前分支：%s" % [level, branch_name]
+	return "初始技能：Lv.%d" % level
 
 
 func _format_percent_dictionary(dictionary: Dictionary) -> String:
@@ -63,14 +62,14 @@ func _format_percent_dictionary(dictionary: Dictionary) -> String:
 
 func _label_for_key(key: String) -> String:
 	match key:
-		"main_attack":
-			return "主攻击"
+		"main_attack", "primary_attack":
+			return "初始技能"
 		"dot", "status_dot":
 			return "DOT"
 		"reaction":
 			return "反应"
 		"field", "area", "area_direct":
-			return "领域"
+			return "区域"
 		"trap":
 			return "陷阱"
 		"contact", "physical":

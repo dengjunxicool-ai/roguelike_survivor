@@ -11,7 +11,6 @@ static func record_run_result(state: String, run_state: Dictionary) -> Dictionar
 
 	SaveManager.save_last_run_summary(summary)
 	_update_global_counters(summary)
-	_update_weapon_mastery(summary, unlocked_items)
 	_update_character_specialization(summary)
 	_update_map_challenges(summary, unlocked_items)
 	_update_fixed_challenges(summary, unlocked_items)
@@ -23,12 +22,10 @@ static func record_run_result(state: String, run_state: Dictionary) -> Dictionar
 static func _build_summary(state: String, run_state: Dictionary) -> Dictionary:
 	var run_seconds: float = float(run_state.get("run_seconds", 0.0))
 	var kill_count: int = maxi(int(run_state.get("kill_count", 0)), 0)
-	var run_stats: Dictionary = _get_dictionary(run_state.get("run_stats", {}))
 	return {
 		"result_state": state,
 		"victory": state == STATE_RESULT_VICTORY,
 		"selected_character_id": StringName(String(run_state.get("selected_character_id", ""))),
-		"selected_weapon_id": StringName(String(run_state.get("selected_weapon_id", ""))),
 		"selected_map_id": StringName(String(run_state.get("selected_map_id", ""))),
 		"selected_map_name": String(run_state.get("selected_map_name", "")),
 		"run_seconds": run_seconds,
@@ -37,8 +34,7 @@ static func _build_summary(state: String, run_state: Dictionary) -> Dictionary:
 		"reached_boss": run_seconds >= 240.0,
 		"challenge_id": StringName(String(run_state.get("challenge_id", ""))),
 		"main_attack_level": int(run_state.get("main_attack_level", 1)),
-		"current_branch_name": String(run_state.get("current_branch_name", "")),
-		"run_stats": run_stats
+		"run_stats": _get_dictionary(run_state.get("run_stats", {}))
 	}
 
 
@@ -54,62 +50,13 @@ static func _update_global_counters(summary: Dictionary) -> void:
 		SaveManager.increment_counter(&"defeats", 1)
 
 	var character_id: StringName = StringName(String(summary.get("selected_character_id", "")))
-	var weapon_id: StringName = StringName(String(summary.get("selected_weapon_id", "")))
 	var map_id: StringName = StringName(String(summary.get("selected_map_id", "")))
 	if character_id != &"":
 		SaveManager.increment_counter(StringName("character:%s:runs" % String(character_id)), 1)
-	if weapon_id != &"":
-		SaveManager.increment_counter(StringName("weapon:%s:runs" % String(weapon_id)), 1)
-		SaveManager.increment_counter(StringName("weapon:%s:kills" % String(weapon_id)), int(summary.get("kill_count", 0)))
 	if map_id != &"":
 		SaveManager.increment_counter(StringName("map:%s:runs" % String(map_id)), 1)
 		if bool(summary.get("victory", false)):
 			SaveManager.increment_counter(StringName("map:%s:clears" % String(map_id)), 1)
-
-
-static func _update_weapon_mastery(summary: Dictionary, unlocked_items: Array[String]) -> void:
-	var weapon_id: StringName = StringName(String(summary.get("selected_weapon_id", "")))
-	if weapon_id == &"":
-		return
-
-	var old_level: int = SaveManager.get_weapon_mastery_level(weapon_id)
-	var earned_xp: int = int(summary.get("kill_count", 0)) + floori(float(summary.get("run_seconds", 0.0)) / 5.0)
-	var stats: Dictionary = _get_dictionary(summary.get("run_stats", {}))
-	var status_counts: Dictionary = _get_dictionary(stats.get("status_counts", {}))
-	earned_xp += mini(floori(float(_sum_dictionary(status_counts)) / 4.0), 60)
-	if bool(summary.get("victory", false)):
-		earned_xp += 80
-
-	var new_xp: int = SaveManager.add_weapon_mastery_xp(weapon_id, earned_xp)
-	var new_level: int = SaveManager.get_weapon_mastery_level_from_xp(new_xp)
-	if new_level > old_level:
-		_apply_weapon_mastery_unlocks(weapon_id, old_level, new_level, unlocked_items)
-
-
-static func _apply_weapon_mastery_unlocks(weapon_id: StringName, old_level: int, new_level: int, unlocked_items: Array[String]) -> void:
-	for level in range(old_level + 1, new_level + 1):
-		match level:
-			1:
-				SaveManager.set_unlocked("weapon_codex", weapon_id)
-				unlocked_items.append("武器图鉴：%s" % String(weapon_id))
-			2:
-				SaveManager.set_unlocked("weapon_skin", StringName("%s_skin_1" % String(weapon_id)))
-				unlocked_items.append("武器皮肤：%s" % String(weapon_id))
-			3:
-				SaveManager.set_unlocked("weapon_branch_records", weapon_id)
-				unlocked_items.append("分支纪录：%s" % String(weapon_id))
-			4:
-				SaveManager.set_unlocked("weapon_exclusive_relic", weapon_id)
-				unlocked_items.append("专属遗物池：%s" % String(weapon_id))
-			5:
-				SaveManager.set_unlocked("weapon_vfx", StringName("%s_master_vfx" % String(weapon_id)))
-				unlocked_items.append("武器特效：%s" % String(weapon_id))
-			6:
-				SaveManager.set_unlocked("weapon_challenge_stage", weapon_id)
-				unlocked_items.append("武器挑战关：%s" % String(weapon_id))
-			7:
-				SaveManager.set_unlocked("weapon_title", StringName("%s_golden_title" % String(weapon_id)))
-				unlocked_items.append("金边称号：%s" % String(weapon_id))
 
 
 static func _update_character_specialization(summary: Dictionary) -> void:
@@ -152,8 +99,6 @@ static func _update_fixed_challenges(summary: Dictionary, unlocked_items: Array[
 	for challenge: Dictionary in pools:
 		if StringName(String(challenge.get("character_id", ""))) != StringName(String(summary.get("selected_character_id", ""))):
 			continue
-		if StringName(String(challenge.get("weapon_id", ""))) != StringName(String(summary.get("selected_weapon_id", ""))):
-			continue
 		if StringName(String(challenge.get("map_id", ""))) != StringName(String(summary.get("selected_map_id", ""))):
 			continue
 		var challenge_id: StringName = StringName(String(challenge.get("challenge_id", "")))
@@ -194,20 +139,18 @@ static func _map_objective_met(objective_id: StringName, summary: Dictionary) ->
 			return victory and run_seconds <= 285.0
 		"clear_without_healing":
 			return victory and int(stats.get("healing_used", 0)) <= 0
-		"avoid_toxic_fog_overdamage":
+		"avoid_toxic_fog_overdamage", "clear_all_toxic_fog_events":
 			return victory and int(stats.get("poison_instances_taken", 0)) < 5
-		"clear_with_dot_branch":
-			return victory and (_has_weapon_tag(summary, "dot") or _damage_origin_share_at_least(stats, "dot", 0.35))
-		"clear_all_toxic_fog_events":
-			return victory and int(stats.get("poison_instances_taken", 0)) < 5
+		"clear_with_dot_damage":
+			return victory and _damage_origin_share_at_least(stats, "dot", 0.35)
 		"survive_lava_fissures":
 			return victory and int(stats.get("lava_hits_taken", 0)) <= 0
-		"clear_with_control_branch":
-			return victory and (_has_weapon_tag(summary, "control") or _has_status_count(stats, ["freeze", "slow", "stun", "paralyze"], 30))
+		"clear_with_control_status":
+			return victory and _has_status_count(stats, ["freeze", "slow", "stun", "paralyze"], 30)
 		"survive_encirclement":
 			return victory and int(stats.get("highest_alive_normal_enemies", 0)) < 120
 		"clear_with_pierce_or_bounce":
-			return victory and (_has_weapon_tag(summary, "pierce") or _has_weapon_tag(summary, "chain") or _has_status_count(stats, ["shock", "overload"], 20))
+			return victory and _has_status_count(stats, ["shock", "overload"], 20)
 		"defeat_toxic_matriarch", "defeat_lava_golem", "defeat_shadow_hunter":
 			return victory and int(stats.get("elite_kill_count", 0)) > 0
 		_:
@@ -228,17 +171,6 @@ static func _character_goal_met(character_id: StringName, _goal_id: StringName, 
 			return int(stats.get("potion_zone_triggers", 0)) >= 50 or int(status_counts.get("poison", 0)) >= 80
 		_:
 			return bool(summary.get("victory", false))
-
-
-static func _has_weapon_tag(summary: Dictionary, tag: String) -> bool:
-	var weapon: Dictionary = GameData.get_weapon(StringName(String(summary.get("selected_weapon_id", ""))))
-	for value: Variant in _get_array(weapon.get("tags", [])):
-		if String(value) == tag:
-			return true
-	for value: Variant in _get_array(weapon.get("upgrade_tag_pool", [])):
-		if String(value) == tag:
-			return true
-	return false
 
 
 static func _damage_origin_share_at_least(stats: Dictionary, origin: String, threshold: float) -> bool:

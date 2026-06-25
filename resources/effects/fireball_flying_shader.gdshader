@@ -19,20 +19,19 @@ void fragment() {
 	vec4 tex = texture(TEXTURE, uv);
 	if (tex.a <= 0.01) {
 		COLOR = vec4(0.0);
-		return;
+	} else {
+		float forward = smoothstep(0.0, 1.0, uv.x);
+		float trail = pow(1.0 - forward, 2.0) * trail_intensity;
+		float source_luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+		float core = smoothstep(0.38, 1.0, source_luma);
+		vec3 base_tex_color = tex.rgb;
+		vec3 heat_tint = mix(color_rim.rgb, color_hot.rgb, core);
+		vec3 color = max(base_tex_color, heat_tint * source_luma);
+		color = mix(color, color_hot.rgb, core * 0.18);
+		color *= 1.0 + glow_strength * (core * 0.5 + trail * 0.32);
+
+		float soft = smoothstep(0.0, edge_softness, tex.a);
+		float alpha = tex.a * soft * (1.0 + trail * 0.35);
+		COLOR = vec4(color, alpha);
 	}
-
-	float forward = smoothstep(0.0, 1.0, uv.x);
-	float trail = pow(1.0 - forward, 2.0) * trail_intensity;
-	float source_luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
-	float core = smoothstep(0.38, 1.0, source_luma);
-	vec3 source_color = tex.rgb;
-	vec3 heat_tint = mix(color_rim.rgb, color_hot.rgb, core);
-	vec3 color = max(source_color, heat_tint * source_luma);
-	color = mix(color, color_hot.rgb, core * 0.18);
-	color *= 1.0 + glow_strength * (core * 0.5 + trail * 0.32);
-
-	float soft = smoothstep(0.0, edge_softness, tex.a);
-	float alpha = tex.a * soft * (1.0 + trail * 0.35);
-	COLOR = vec4(color, alpha);
 }

@@ -10,7 +10,7 @@ static func element_bonus_key(element: Variant) -> String:
 static func origin_bonus_keys(origin: Variant) -> Array[String]:
 	match String(origin):
 		"primary_attack":
-			return ["primary_attack_damage_multiplier_add", "direct_damage_multiplier_add", "equipped_weapon_damage_add"]
+			return ["primary_attack_damage_multiplier_add", "direct_damage_multiplier_add", "starting_skill_damage_add"]
 		"status_dot":
 			return ["dot_damage_multiplier_add"]
 		"reaction":

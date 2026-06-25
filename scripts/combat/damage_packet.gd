@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name DamagePacket
 
 
@@ -87,7 +87,7 @@ func get_value(key: Variant, fallback: Variant = null) -> Variant:
 			return special_rule_tags.duplicate()
 		"source_tags":
 			return source_context.get("tags").duplicate()
-		"source_type", "attacker", "attacker_id", "source_weapon_id", "source_skill_id", "source_instance_id", "source_action_id", "source_slot_id", "owner_character_id":
+		"source_type", "attacker", "attacker_id", "source_origin_id", "source_skill_id", "source_instance_id", "source_action_id", "source_slot_id", "owner_character_id":
 			return source_context.get(field)
 		"can_crit", "can_trigger_reaction", "ignore_defense", "ignore_resistance", "ignore_vulnerability", "ignore_min_damage":
 			return flags.get(field)
@@ -125,7 +125,7 @@ func set_value(key: Variant, value: Variant) -> void:
 			special_rule_tags = _get_array(value)
 		"source_tags":
 			source_context.set("tags", _string_name_array(value))
-		"source_type", "source_weapon_id", "source_skill_id", "source_action_id", "source_slot_id", "owner_character_id":
+		"source_type", "source_origin_id", "source_skill_id", "source_action_id", "source_slot_id", "owner_character_id":
 			source_context.set(field, StringName(String(value)))
 		"attacker":
 			source_context.set("attacker", value as Node)
@@ -195,7 +195,7 @@ static func _is_known_field(field: String) -> bool:
 		"source_type",
 		"attacker",
 		"attacker_id",
-		"source_weapon_id",
+		"source_origin_id",
 		"source_skill_id",
 		"source_instance_id",
 		"source_action_id",
@@ -227,3 +227,4 @@ static func _string_name_array(value: Variant) -> Array[StringName]:
 			if name != &"" and not result.has(name):
 				result.append(name)
 	return result
+

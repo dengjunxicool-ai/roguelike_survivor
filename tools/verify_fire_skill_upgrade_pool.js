@@ -43,21 +43,21 @@ for (const skill of fireSkills) {
 }
 
 const growthBody = bodyOf(upgradePool, "_select_growth_stage_options");
-const formalBuilderBody = bodyOf(upgradePool, "_build_fire_skill_learn_options");
+const formalBuilderBody = bodyOf(upgradePool, "_build_god_skill_learn_options");
 const debugBuilderBody = bodyOf(upgradePool, "generate_debug_fire_skill_options");
 
-assert(formalBuilderBody, "UpgradePool must define a non-debug fire learn option builder");
-assert(growthBody.includes("_build_fire_skill_learn_options(player)"), "generate_options growth stage must include fire learn skill cards");
-assert(!formalBuilderBody.includes("debug_learn_"), "formal fire learn options must not use debug learn ids");
-assert(!formalBuilderBody.includes("_make_debug_learn_skill_upgrade"), "formal fire learn options must not depend on debug-only synthesis");
+assert(formalBuilderBody, "UpgradePool must define a non-debug god learn option builder");
+assert(growthBody.includes("_build_god_skill_learn_options(player)"), "generate_options growth stage must include god learn skill cards");
+assert(!formalBuilderBody.includes("debug_learn_"), "formal god learn options must not use debug learn ids");
+assert(!formalBuilderBody.includes("_make_debug_learn_skill_upgrade"), "formal god learn options must not depend on debug-only synthesis");
 assert(debugBuilderBody && debugBuilderBody.includes("generate_debug_fire_skill_options"), "debug fire skill options should remain separate");
-assert(formalBuilderBody.includes("_get_fire_skill_definitions()"), "formal fire learn options must read data/skills.json dynamically");
-assert(!formalBuilderBody.includes("mars_spark_missile_projectile"), "formal fire learn options must not hardcode a single skill implementation");
-assert(formalBuilderBody.includes('"id": "level_up_upgrade:%s"'), "fire learn cards must use level_up_upgrade option ids");
-assert(formalBuilderBody.includes('"type": "level_up_upgrade"'), "fire learn cards must use level_up_upgrade option type");
-assert(formalBuilderBody.includes('"upgrade_id"'), "fire learn card payload must carry upgrade_id");
-assert(formalBuilderBody.includes('"learn_skill_id"'), "fire learn card payload must carry learn_skill_id");
-assert(formalBuilderBody.includes("_get_option_background_texture(skill)"), "fire learn cards should inherit skill card art/background data");
+assert(formalBuilderBody.includes("_get_debug_god_skill_definitions(god_id)"), "formal god learn options must read data/skills.json dynamically");
+assert(!formalBuilderBody.includes("mars_spark_missile_projectile"), "formal god learn options must not hardcode a single skill implementation");
+assert(formalBuilderBody.includes('"id": "level_up_upgrade:%s"'), "god learn cards must use level_up_upgrade option ids");
+assert(formalBuilderBody.includes('"type": "level_up_upgrade"'), "god learn cards must use level_up_upgrade option type");
+assert(formalBuilderBody.includes('"upgrade_id"'), "god learn card payload must carry upgrade_id");
+assert(formalBuilderBody.includes('"learn_skill_id"'), "god learn card payload must carry learn_skill_id");
+assert(formalBuilderBody.includes("_get_option_background_texture(skill)"), "god learn cards should inherit skill card art/background data");
 assert(
   /_get_option_weight\s*\(\s*option_variant\s+as\s+RefCounted\s*\)/.test(upgradePool),
   "UpgradePool weighted selection must continue using _get_option_weight"
@@ -67,11 +67,11 @@ assert(
   "_get_option_weight must still fall back to rarity_weights"
 );
 
-assert(gameData.includes('const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"'), "GameData must define synthetic fire learn upgrade prefix");
-assert(gameData.includes("_make_fire_skill_learn_upgrade"), "GameData.get_upgrade must synthesize fire learn-skill upgrades");
+assert(gameData.includes('const GOD_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_god_skill_"'), "GameData must define synthetic god learn upgrade prefix");
+assert(gameData.includes("_make_god_skill_learn_upgrade"), "GameData.get_upgrade must synthesize god learn-skill upgrades");
 const getUpgradeBody = bodyOf(gameData, "get_upgrade");
-assert(getUpgradeBody.includes("upgrade_id_text.begins_with(FIRE_SKILL_LEARN_UPGRADE_PREFIX)"), "GameData.get_upgrade must parse synthetic fire learn ids");
-assert(getUpgradeBody.includes("return _make_fire_skill_learn_upgrade"), "GameData.get_upgrade must return synthetic learn-skill upgrade data");
+assert(getUpgradeBody.includes("upgrade_id_text.begins_with(GOD_SKILL_LEARN_UPGRADE_PREFIX)"), "GameData.get_upgrade must parse synthetic god learn ids");
+assert(getUpgradeBody.includes("return _make_god_skill_learn_upgrade"), "GameData.get_upgrade must return synthetic learn-skill upgrade data");
 
 assert(playerController.includes('const LEVEL_UP_UPGRADE_PREFIX: String = "level_up_upgrade:"'), "PlayerController must parse level_up_upgrade option ids");
 assert(playerController.includes("func _apply_level_up_upgrade(upgrade_id: StringName) -> bool:"), "PlayerController must apply level-up upgrades");

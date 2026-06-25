@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name EnemyDamagePacketBuilder
 
 
@@ -15,7 +15,7 @@ static func build(owner: Node, amount: int, source_type: String, source_skill_id
 		"amount": amount,
 		"source_type": source_type,
 		"source_id": source_id_value,
-		"source_weapon_id": enemy_id,
+		"source_origin_id": enemy_id,
 		"source_skill_id": skill_id,
 		"source_instance_id": _source_instance_id(owner, source_type, skill_id),
 		"target_id": str(target.get_instance_id()) if target != null else "",
@@ -44,3 +44,4 @@ static func _source_instance_id(owner: Node, source_type: String, source_skill_i
 	if owner == null:
 		return "enemy:%s:%s" % [source_type, String(source_skill_id)]
 	return "%s:%s:%s" % [str(owner.get_instance_id()), source_type, String(source_skill_id)]
+

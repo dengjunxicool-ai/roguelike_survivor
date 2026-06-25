@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 class_name SkillExecutor
 
 
@@ -92,7 +92,7 @@ func _build_skill_context(skill_instance: RefCounted, debug_attack_trace_id: int
 		"owner": caster,
 		"skill_instance": skill_instance,
 		"skill_id": StringName(skill_instance.get("skill_id")),
-		"source_weapon_id": _get_source_weapon_id(caster),
+		"source_origin_id": _get_source_origin_id(caster),
 		"skill_manager": _skill_manager,
 		"relic_manager": _relic_manager,
 		"event_bus": _event_bus,
@@ -122,13 +122,11 @@ func _get_caster() -> Node2D:
 	return get_parent() as Node2D
 
 
-func _get_source_weapon_id(caster: Node) -> StringName:
+func _get_source_origin_id(caster: Node) -> StringName:
 	if caster == null:
 		return &""
-	var selected_weapon_id: Variant = caster.get("selected_weapon_id")
-	if selected_weapon_id == null:
-		return &""
-	return StringName(String(selected_weapon_id))
+	var character_id: Variant = caster.get("selected_character_id")
+	return StringName(String(character_id)) if character_id != null else &""
 
 
 func _get_object_parent() -> Node:
@@ -216,3 +214,4 @@ func _allow_debug_orbit_pulse(skill_instance: RefCounted) -> void:
 	for orbit_object: Node2D in _get_orbit_objects(parent, caster, skill_id):
 		if orbit_object != null and orbit_object.has_method("debug_allow_current_nonce"):
 			orbit_object.call("debug_allow_current_nonce")
+

@@ -6,14 +6,6 @@ static func character_name(character: Dictionary, fallback_id: Variant = "") -> 
 	return String(character.get("display_name", fallback_id))
 
 
-static func weapon_name(weapon: Dictionary, fallback_id: Variant = "") -> String:
-	return String(weapon.get("display_name", fallback_id))
-
-
-static func branch_name(branch: Dictionary, fallback_id: Variant = "") -> String:
-	return String(branch.get("display_name", fallback_id))
-
-
 static func enemy_name(enemy: Dictionary, fallback_id: Variant = "") -> String:
 	return String(enemy.get("display_name", fallback_id))
 

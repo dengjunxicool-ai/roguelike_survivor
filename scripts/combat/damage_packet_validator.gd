@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name DamagePacketValidator
 
 
@@ -14,7 +14,7 @@ const REQUIRED_PACKET_FIELDS: Array[String] = [
 	"damage_origin",
 	"damage_type",
 	"element",
-	"source_weapon_id",
+	"source_origin_id",
 	"source_skill_id",
 	"source_instance_id",
 	"attacker_id",
@@ -172,26 +172,26 @@ static func _warn_enemy_packet_scaling_for_packet_object(packet_object: RefCount
 
 static func _warn_missing_source_identity(packet: Dictionary, target: Node) -> void:
 	var source_skill_id: String = String(packet.get("source_skill_id", ""))
-	var source_weapon_id: String = String(packet.get("source_weapon_id", ""))
-	if source_skill_id == "" and source_weapon_id == "":
+	var source_origin_id: String = String(packet.get("source_origin_id", ""))
+	if source_skill_id == "" and source_origin_id == "":
 		var target_id: String = str(target.get_instance_id()) if target != null else String(packet.get("target_id", ""))
-		_report("DamagePacket has no source_skill_id or source_weapon_id. target=%s" % target_id)
+		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
 static func _warn_missing_source_identity_for_context(calculation_context: RefCounted, target: Node) -> void:
 	var source_skill_id: String = String(calculation_context.call("packet_value", "source_skill_id", ""))
-	var source_weapon_id: String = String(calculation_context.call("packet_value", "source_weapon_id", ""))
-	if source_skill_id == "" and source_weapon_id == "":
+	var source_origin_id: String = String(calculation_context.call("packet_value", "source_origin_id", ""))
+	if source_skill_id == "" and source_origin_id == "":
 		var target_id: String = str(target.get_instance_id()) if target != null else String(calculation_context.call("packet_value", "target_id", ""))
-		_report("DamagePacket has no source_skill_id or source_weapon_id. target=%s" % target_id)
+		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
 static func _warn_missing_source_identity_for_packet_object(packet_object: RefCounted, target: Node) -> void:
 	var source_skill_id: String = String(packet_object.call("get_value", "source_skill_id", ""))
-	var source_weapon_id: String = String(packet_object.call("get_value", "source_weapon_id", ""))
-	if source_skill_id == "" and source_weapon_id == "":
+	var source_origin_id: String = String(packet_object.call("get_value", "source_origin_id", ""))
+	if source_skill_id == "" and source_origin_id == "":
 		var target_id: String = str(target.get_instance_id()) if target != null else String(packet_object.call("get_value", "target_id", ""))
-		_report("DamagePacket has no source_skill_id or source_weapon_id. target=%s" % target_id)
+		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
 static func _report(message: String) -> void:
@@ -199,3 +199,4 @@ static func _report(message: String) -> void:
 		push_error("[DamagePacketValidator] %s" % message)
 	else:
 		push_warning("[DamagePacketValidator] %s" % message)
+

@@ -11,7 +11,6 @@ var runtime_modifiers: Dictionary = {}
 var runtime_special_rules: Dictionary = {}
 var runtime_tags: Array[StringName] = []
 var runtime_events: Array[Dictionary] = []
-var applied_branch_levels: Dictionary = {}
 var cooldown_remaining: float = 0.0
 
 
@@ -73,23 +72,6 @@ func add_runtime_events(events: Array) -> void:
 
 func add_runtime_special_rules(rules: Dictionary) -> void:
 	_merge_special_rules(runtime_special_rules, rules)
-
-
-func has_applied_branch_level(branch_id: Variant, level: int) -> bool:
-	var branch_key: String = String(branch_id)
-	var levels: Array = applied_branch_levels.get(branch_key, [])
-	return levels.has(level)
-
-
-func mark_branch_level_applied(branch_id: Variant, level: int) -> void:
-	var branch_key: String = String(branch_id)
-	if branch_key == "" or level <= 0:
-		return
-
-	var levels: Array = applied_branch_levels.get(branch_key, [])
-	if not levels.has(level):
-		levels.append(level)
-	applied_branch_levels[branch_key] = levels
 
 
 func get_effective_stat(stat_name: String) -> Variant:

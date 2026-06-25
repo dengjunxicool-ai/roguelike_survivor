@@ -57,7 +57,7 @@ func _ensure_health_display() -> void:
 		if _hp_lag_bar == null:
 			_hp_lag_bar = ProgressBar.new()
 			_hp_lag_bar.name = "DebugHpLagBar"
-			_configure_bar(_hp_lag_bar, Color(0.72, 0.72, 0.72, 0.48), 59)
+			_configure_bar(_hp_lag_bar, Color(1.0, 0.68, 0.64, 0.78), 59)
 			_owner.add_child(_hp_lag_bar)
 	if _hp_bar == null or not is_instance_valid(_hp_bar):
 		_hp_bar = _owner.get_node_or_null("DebugHpBar") as ProgressBar
@@ -96,7 +96,7 @@ func _tween_health_value(target_value: float, force_instant: bool) -> void:
 	_hp_tween = _owner.create_tween()
 	_hp_tween.set_trans(Tween.TRANS_QUAD)
 	_hp_tween.set_ease(Tween.EASE_OUT)
-	_hp_tween.tween_property(_hp_lag_bar, "value", target_value, 1.0)
+	_hp_tween.tween_property(_hp_lag_bar, "value", target_value, 2.0)
 
 
 func _configure_bar(bar: ProgressBar, fill_color: Color, z: int) -> void:

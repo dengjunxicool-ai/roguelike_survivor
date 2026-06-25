@@ -7,23 +7,16 @@ func initialize_loadout(player: Node, loadout: RefCounted) -> bool:
 	if player == null:
 		return false
 
-	var equip_system: Node = player.get_node_or_null("WeaponEquipSystem")
-	if equip_system != null and equip_system.has_method("unlock_for_new_run"):
-		equip_system.call("unlock_for_new_run")
-
 	var runtime: Node = player.get_node_or_null("CharacterRuntime")
 	if runtime == null:
 		return false
 
 	var character_id: StringName = StringName(String(loadout.get("character_id")))
-	var weapon_id: StringName = StringName(String(loadout.get("weapon_id")))
-	var initialized: bool = bool(runtime.call("initialize", String(character_id), String(weapon_id)))
+	var initialized: bool = bool(runtime.call("initialize", String(character_id)))
 	if not initialized:
-		push_warning("[CharacterRunInitializer] Failed to initialize character runtime for %s + %s." % [String(character_id), String(weapon_id)])
+		push_warning("[CharacterRunInitializer] Failed to initialize character runtime for %s." % String(character_id))
 		return false
 
-	var resolved_weapon_id: StringName = StringName(String(runtime.call("get_equipped_weapon_id")))
-	player.set("selected_weapon_id", resolved_weapon_id)
 	_initialize_trait_system(player, runtime)
 	return true
 
@@ -59,11 +52,6 @@ func configure_starting_skills(player: Node) -> void:
 	if starting_skill_id != &"" and skill_manager.has_method("add_skill"):
 		skill_manager.call("add_skill", starting_skill_id)
 	_connect_trait_skill_events(player)
-
-	var equip_system: Node = player.get_node_or_null("WeaponEquipSystem")
-	if equip_system != null and equip_system.has_method("lock_equipped_weapon"):
-		equip_system.call("lock_equipped_weapon")
-
 
 func _initialize_trait_system(player: Node, runtime: Node) -> void:
 	var trait_system: Node = player.get_node_or_null("CharacterTraitSystem")

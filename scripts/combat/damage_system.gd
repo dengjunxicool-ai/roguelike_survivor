@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name DamageSystem
 
 
@@ -60,7 +60,7 @@ const REQUIRED_PACKET_FIELDS: Array[String] = [
 	"damage_origin",
 	"damage_type",
 	"element",
-	"source_weapon_id",
+	"source_origin_id",
 	"source_skill_id",
 	"source_instance_id",
 	"attacker_id",
@@ -353,8 +353,8 @@ static func _normalize_packet_object(amount_or_packet: Variant, legacy_damage_ty
 		packet["ignore_min_damage"] = false
 	if not packet.has("special_rule_tags"):
 		packet["special_rule_tags"] = []
-	if not packet.has("source_weapon_id"):
-		packet["source_weapon_id"] = StringName("")
+	if not packet.has("source_origin_id"):
+		packet["source_origin_id"] = StringName("")
 	if not packet.has("source_skill_id"):
 		packet["source_skill_id"] = StringName(String(packet.get("source_id", "")))
 	if not packet.has("source_instance_id"):
@@ -570,3 +570,4 @@ static func _get_property(object: Object, property: String, fallback: Variant) -
 		if String(property_info.get("name", "")) == property:
 			return object.get(property)
 	return fallback
+

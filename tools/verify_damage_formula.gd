@@ -1,4 +1,4 @@
-extends SceneTree
+﻿extends SceneTree
 
 
 const DamageSystemScript: Script = preload("res://scripts/combat/damage_system.gd")
@@ -147,7 +147,7 @@ func _verify_player_weapon_hits_enemy() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"fire",
-		"source_weapon_id": &"fire_staff",
+		"source_origin_id": &"fire_staff",
 		"source_skill_id": &"fireball",
 		"source_instance_id": "formula_fireball",
 		"attacker": attacker,
@@ -191,7 +191,7 @@ func _verify_enemy_hits_player() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"skeleton",
+		"source_origin_id": &"skeleton",
 		"source_skill_id": &"contact",
 		"source_instance_id": "formula_contact",
 		"attacker_id": "formula_enemy",
@@ -234,7 +234,7 @@ func _verify_dot_fractional_damage() -> bool:
 		"damage_origin": "status_dot",
 		"damage_type": &"status_dot",
 		"element": &"poison",
-		"source_weapon_id": &"toxic_vial",
+		"source_origin_id": &"toxic_vial",
 		"source_skill_id": &"poison",
 		"source_instance_id": "formula_poison_dot",
 		"attacker": attacker,
@@ -278,7 +278,7 @@ func _verify_reaction_damage() -> bool:
 		"damage_origin": "reaction",
 		"damage_type": &"reaction_damage",
 		"element": &"fire",
-		"source_weapon_id": &"fire_staff",
+		"source_origin_id": &"fire_staff",
 		"source_skill_id": &"combustion",
 		"source_instance_id": "formula_reaction",
 		"attacker": attacker,
@@ -314,7 +314,7 @@ func _verify_field_direct_uses_min_damage() -> bool:
 		"damage_origin": "field",
 		"damage_type": &"area_direct",
 		"element": &"fire",
-		"source_weapon_id": &"",
+		"source_origin_id": &"",
 		"source_skill_id": &"field_direct",
 		"source_instance_id": "formula_field_direct",
 		"attacker_id": "",
@@ -347,7 +347,7 @@ func _verify_true_percent_stage_order() -> bool:
 		"damage_origin": "special",
 		"damage_type": &"true_percent_damage",
 		"element": &"neutral",
-		"source_weapon_id": &"",
+		"source_origin_id": &"",
 		"source_skill_id": &"true_percent_contract",
 		"source_instance_id": "formula_true_percent",
 		"attacker_id": "",
@@ -381,7 +381,7 @@ func _verify_reaction_limits() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_weapon_id": &"test_weapon",
+		"source_origin_id": &"test_weapon",
 		"source_skill_id": &"test_lightning_chain",
 		"source_instance_id": "formula_reaction_limit",
 		"attacker_id": str(source.get_instance_id()),
@@ -408,7 +408,7 @@ func _verify_special_rule_boundaries() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"",
+		"source_origin_id": &"",
 		"source_skill_id": &"special_boundary",
 		"source_instance_id": "formula_special_boundary",
 		"attacker_id": "",
@@ -446,7 +446,7 @@ func _verify_lightning_backflow_defense_cap() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_weapon_id": &"lightning_whip",
+		"source_origin_id": &"lightning_whip",
 		"source_skill_id": &"lightning_orb",
 		"source_instance_id": "formula_lightning_backflow",
 		"attacker_id": "",
@@ -540,7 +540,7 @@ func _verify_damage_trace_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"trace_weapon",
+		"source_origin_id": &"trace_weapon",
 		"source_skill_id": &"trace_skill",
 		"source_instance_id": "trace_skill:1",
 		"attacker_id": "trace_attacker",
@@ -599,7 +599,7 @@ func _verify_damage_system_typed_result_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"typed_result_weapon",
+		"source_origin_id": &"typed_result_weapon",
 		"source_skill_id": &"typed_result_skill",
 		"source_instance_id": "typed_result:1",
 		"attacker_id": "typed_result_attacker",
@@ -713,7 +713,7 @@ func _verify_damage_packet_object_contract() -> bool:
 		"damage_type": &"direct_physical",
 		"element": &"physical",
 		"source_type": "skill",
-		"source_weapon_id": &"wand",
+		"source_origin_id": &"wand",
 		"source_skill_id": &"spark",
 		"source_instance_id": "spark:1",
 		"attacker_id": "attacker",
@@ -748,7 +748,7 @@ func _verify_damage_source_context_factory_contract() -> bool:
 	var attacker: FormulaNode = FormulaNode.new()
 	root.add_child(attacker)
 	var source_context: RefCounted = DamageSourceContextFactoryScript.from_packet({
-		"source_weapon_id": &"factory_weapon",
+		"source_origin_id": &"factory_weapon",
 		"source_skill_id": &"factory_skill",
 		"source_instance_id": "factory:1"
 	}, attacker)
@@ -797,7 +797,7 @@ func _verify_damage_validator_typed_contract() -> bool:
 		"damage_origin": "status_dot",
 		"damage_type": &"status_dot",
 		"element": &"poison",
-		"source_weapon_id": &"",
+		"source_origin_id": &"",
 		"source_skill_id": &"typed_validator",
 		"source_instance_id": "typed_validator:1",
 		"attacker_id": "",
@@ -1030,7 +1030,7 @@ func _verify_reaction_damage_builder_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_weapon_id": &"builder_weapon",
+		"source_origin_id": &"builder_weapon",
 		"source_skill_id": &"builder_reaction",
 		"source_instance_id": "builder_reaction:1",
 		"attacker_id": "attacker",
@@ -1061,7 +1061,7 @@ func _verify_reaction_typed_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_weapon_id": &"typed_reaction_weapon",
+		"source_origin_id": &"typed_reaction_weapon",
 		"source_skill_id": &"typed_reaction_skill",
 		"source_instance_id": "typed_reaction:1",
 		"attacker_id": str(source.get_instance_id()),
@@ -1109,7 +1109,7 @@ func _verify_damage_application_service_enemy_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"application",
+		"source_origin_id": &"application",
 		"source_skill_id": &"service",
 		"source_instance_id": "application_service:1",
 		"attacker_id": "",
@@ -1144,7 +1144,7 @@ func _verify_damage_application_service_typed_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"typed_application",
+		"source_origin_id": &"typed_application",
 		"source_skill_id": &"service",
 		"source_instance_id": "typed_application:1",
 		"attacker_id": "",
@@ -1181,7 +1181,7 @@ func _verify_damage_application_pipeline_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_weapon_id": &"application_pipeline",
+		"source_origin_id": &"application_pipeline",
 		"source_skill_id": &"pipeline",
 		"source_instance_id": "application_pipeline:1",
 		"attacker_id": "",
@@ -1215,14 +1215,14 @@ func _verify_damage_modifier_query_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"fire",
-		"source_weapon_id": &"modifier_weapon",
+		"source_origin_id": &"modifier_weapon",
 		"source_skill_id": &"modifier_skill",
 		"source_instance_id": "modifier:1"
 	}, attacker)
 	var damage_query: RefCounted = DamageModifierQueryScript.make(packet_object, attacker)
 	var query: RefCounted = damage_query.call("to_modifier_query")
 	var ok: bool = String(query.get("scope")) == "damage"
-	ok = ok and String(query.get("weapon_id")) == "modifier_weapon"
+	ok = ok and String(query.get("source_origin_id")) == "modifier_weapon"
 	ok = ok and String(query.get("skill_id")) == "modifier_skill"
 	ok = ok and String(query.get("damage_origin")) == "primary_attack"
 	ok = ok and String(query.get("element")) == "fire"
@@ -1239,7 +1239,7 @@ func _verify_skill_packet_builder_contract() -> bool:
 		"caster": attacker,
 		"target": target,
 		"skill_id": &"builder_contract",
-		"source_weapon_id": &"builder_weapon"
+		"source_origin_id": &"builder_weapon"
 	}
 	var packet: Dictionary = executor.call("_build_damage_packet", {
 		"damage_origin": "reaction",
@@ -1252,7 +1252,7 @@ func _verify_skill_packet_builder_contract() -> bool:
 	ok = ok and String(packet.get("damage_origin", "")) == "reaction"
 	ok = ok and String(packet.get("damage_type", "")) == "reaction_damage"
 	ok = ok and String(packet.get("element", "")) == "lightning"
-	ok = ok and String(packet.get("source_weapon_id", "")) == "builder_weapon"
+	ok = ok and String(packet.get("source_origin_id", "")) == "builder_weapon"
 	ok = ok and String(packet.get("source_skill_id", "")) == "builder_contract"
 	ok = ok and String(packet.get("source_instance_id", "")) == "builder_contract:reaction"
 	ok = ok and not bool(packet.get("can_crit", true))
@@ -1301,7 +1301,7 @@ func _verify_reaction_packet_builder_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_weapon_id": &"lightning_whip",
+		"source_origin_id": &"lightning_whip",
 		"source_skill_id": &"lightning_orb",
 		"source_instance_id": "reaction_builder_base",
 		"attacker_id": "attacker",
@@ -1338,7 +1338,7 @@ func _verify_enemy_packet_builder_contract() -> bool:
 	ok = ok and String(packet.get("damage_origin", "")) == "primary_attack"
 	ok = ok and String(packet.get("damage_type", "")) == "direct_physical"
 	ok = ok and String(packet.get("source_id", "")) == "boss"
-	ok = ok and String(packet.get("source_weapon_id", "")) == "skeleton_archer"
+	ok = ok and String(packet.get("source_origin_id", "")) == "skeleton_archer"
 	ok = ok and String(packet.get("source_skill_id", "")) == "enemy_projectile"
 	ok = ok and String(packet.get("target_id", "")) == str(target.get_instance_id())
 	ok = ok and not bool(packet.get("can_crit", true))
@@ -1497,7 +1497,7 @@ func _verify_combat_object_template_source_stabilized() -> bool:
 	var ok: bool = String(packet.get("source_instance_id", "")) == str(area.get_instance_id())
 	ok = ok and String(packet.get("source_type", "")) == "area"
 	ok = ok and String(packet.get("source_skill_id", "")) == "manual_zone"
-	ok = ok and packet.has("source_weapon_id")
+	ok = ok and packet.has("source_origin_id")
 	return _expect_equal("combat object template source stabilized", 1 if ok else 0, 1)
 
 
@@ -1512,7 +1512,7 @@ func _verify_fractional_pool_identity_includes_element() -> bool:
 		"damage_type": &"status_dot",
 		"element": &"poison",
 		"source_skill_id": &"identity_dot",
-		"source_weapon_id": &"",
+		"source_origin_id": &"",
 		"source_instance_id": "shared_dot_source",
 		"ignore_defense": true,
 		"ignore_resistance": true,
@@ -1538,3 +1538,4 @@ func _expect_equal(label: String, actual: int, expected: int) -> bool:
 		return true
 	push_error("[DamageFormula] FAIL %s actual=%d expected=%d" % [label, actual, expected])
 	return false
+

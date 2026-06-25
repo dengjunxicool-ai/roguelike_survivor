@@ -5,20 +5,14 @@
 				"texture": "res://assets/hero/mege.png",
 				"sprite_frames": "res://assets/hero/mage_spriteframes.tres",
 				"scale": [
-					0.1,
-					0.1
+					0.65,
+					0.65
 				]
 			},
 			"id": "mage",
 			"display_name": "法师",
 			"description": "以主武器伤害和元素状态推进节奏，但过载后更脆弱。",
 			"role": "高爆发元素施法者",
-			"allowed_weapon_ids": [
-				"fire_staff",
-				"frost_staff",
-				"lightning_whip",
-				"spellbook"
-			],
 			"unlock": {
 				"type": "default"
 			},
@@ -26,7 +20,7 @@
 				"id": "arcane_overload",
 				"display_name": "奥术过载",
 				"description": "每次攻击叠加过载状态，提升武器伤害，但会增加人物层数，并降低移速和拾取范围，最多可叠6层。受击会损失一半层数。",
-				"type": "weapon_cast_stack",
+				"type": "skill_cast_stack",
 				"params": {
 					"casts_per_stack": 3,
 					"modifiers_per_stack": [
@@ -127,11 +121,6 @@
 			"display_name": "游侠",
 			"description": "保持移动能进入猎手节奏，停顿、受击或硬控会中断节奏。",
 			"role": "高速暴击与陷阱猎手",
-			"allowed_weapon_ids": [
-				"throwing_knife_belt",
-				"hunter_bow",
-				"trap_kit"
-			],
 			"unlock": {
 				"type": "default"
 			},
@@ -237,11 +226,6 @@
 			"display_name": "圣骑士",
 			"description": "更稳定地承受伤害，并在护盾存在时强化神圣伤害。",
 			"role": "护盾与神圣前线",
-			"allowed_weapon_ids": [
-				"holy_shield",
-				"warhammer",
-				"cross_relic"
-			],
 			"unlock": {
 				"type": "default"
 			},
@@ -320,11 +304,6 @@
 			"display_name": "炼金术士",
 			"description": "直接主攻击较弱，但持续伤害与状态反应更强。",
 			"role": "异常状态与反应专家",
-			"allowed_weapon_ids": [
-				"toxic_vial",
-				"fire_oil_canister",
-				"acid_sprayer"
-			],
 			"unlock": {
 				"type": "default"
 			},

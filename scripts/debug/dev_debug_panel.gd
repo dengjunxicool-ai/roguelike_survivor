@@ -1,4 +1,4 @@
-﻿extends CanvasLayer
+extends CanvasLayer
 class_name DevDebugPanel
 
 
@@ -21,9 +21,7 @@ var _state_label: Label
 var _log_label: Label
 var _player_attributes_label: Label
 var _character_option: OptionButton
-var _weapon_option: OptionButton
 var _map_option: OptionButton
-var _branch_option: OptionButton
 var _enemy_option: OptionButton
 var _enemy_state_option: OptionButton
 var _effect_option: OptionButton
@@ -120,9 +118,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_F1:
 			_manual_cast_player_skills()
 		KEY_F2:
-			_apply_selected_branch_to_current_run()
+			_level_starting_skill_to(2)
 		KEY_F3:
-			_level_weapon_skill_to(3)
+			_level_starting_skill_to(3)
 		KEY_F4:
 			_spawn_configured_enemies()
 		KEY_F5:
@@ -206,18 +204,13 @@ func _build_panel() -> void:
 
 	var run_setup_page: VBoxContainer = _add_category_page(page_root, "run_setup", "Run Setup")
 	_character_option = _add_option_row(run_setup_page, "Character")
-	_weapon_option = _add_option_row(run_setup_page, "Weapon")
 	_map_option = _add_option_row(run_setup_page, "Map")
-	_branch_option = _add_option_row(run_setup_page, "Branch")
 	_character_option.item_selected.connect(Callable(self, "_on_character_selected"))
-	_weapon_option.item_selected.connect(Callable(self, "_on_weapon_selected"))
 	_map_option.item_selected.connect(Callable(self, "_on_setup_option_selected"))
-	_branch_option.item_selected.connect(Callable(self, "_on_setup_option_selected"))
 
 	var run_row: HBoxContainer = _add_row(run_setup_page)
 	_add_button(run_row, "Restart Run", Callable(self, "_restart_debug_run"), 132)
-	_add_button(run_row, "Apply Branch", Callable(self, "_apply_selected_branch_to_current_run"), 116)
-	_add_button(run_row, "Lv3", Callable(self, "_level_weapon_skill_to").bind(3), 60)
+	_add_button(run_row, "Lv3", Callable(self, "_level_starting_skill_to").bind(3), 60)
 
 	var runtime_page: VBoxContainer = _add_category_page(page_root, "runtime", "Runtime")
 	var runtime_row: HBoxContainer = _add_row(runtime_page)
@@ -327,8 +320,6 @@ func _build_panel() -> void:
 func _populate_options() -> void:
 	_populate_character_options()
 	_populate_map_options()
-	_refresh_weapon_options()
-	_refresh_branch_options()
 	_populate_enemy_options()
 	_populate_enemy_state_options()
 	_populate_effect_options()
@@ -355,36 +346,6 @@ func _populate_map_options() -> void:
 		if id == "":
 			continue
 		_add_option_item(_map_option, _display_name(map_data, id), id)
-
-
-func _refresh_weapon_options(_index: int = -1) -> void:
-	if _weapon_option == null:
-		return
-	var selected_character: StringName = _get_selected_id(_character_option)
-	_weapon_option.clear()
-	for weapon: Dictionary in GameData.get_weapon_pool():
-		if StringName(String(weapon.get("character_id", ""))) != selected_character:
-			continue
-		var id: String = String(weapon.get("id", ""))
-		if id == "":
-			continue
-		_add_option_item(_weapon_option, _display_name(weapon, id), id)
-	_refresh_branch_options()
-
-
-func _refresh_branch_options(_index: int = -1) -> void:
-	if _branch_option == null:
-		return
-	var selected_weapon: StringName = _get_selected_id(_weapon_option)
-	_branch_option.clear()
-	_add_option_item(_branch_option, "None", "")
-	for branch: Dictionary in GameData.get_weapon_branch_pool():
-		if StringName(String(branch.get("weapon_id", ""))) != selected_weapon:
-			continue
-		var id: String = String(branch.get("id", ""))
-		if id == "":
-			continue
-		_add_option_item(_branch_option, _display_name(branch, id), id)
 
 
 func _populate_enemy_options() -> void:
@@ -721,7 +682,7 @@ func _sync_player_stat_controls() -> void:
 
 func _sync_skill_stat_controls() -> void:
 	var player: Node = _get_player()
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	_skill_stat_active.clear()
 	if player == null or skill == null:
 		return
@@ -781,7 +742,7 @@ func _apply_player_stats_from_panel() -> void:
 
 func _apply_skill_stats_from_panel() -> void:
 	var player: Node = _get_player()
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	if player == null or skill == null:
 		_log_error("Primary attack missing.")
 		return
@@ -868,14 +829,7 @@ func _get_skill_stat_configs() -> Array[Dictionary]:
 
 
 func _on_character_selected(_index: int) -> void:
-	_refresh_weapon_options()
 	_sync_player_stat_controls()
-	_sync_skill_stat_controls()
-	_refresh_state()
-
-
-func _on_weapon_selected(_index: int) -> void:
-	_refresh_branch_options()
 	_sync_skill_stat_controls()
 	_refresh_state()
 
@@ -888,12 +842,6 @@ func _sync_options_from_runtime() -> void:
 	var player: Node = _get_player()
 	if player != null:
 		_select_option_by_id(_character_option, String(player.get("selected_character_id")))
-		_refresh_weapon_options()
-		_select_option_by_id(_weapon_option, String(player.get("selected_weapon_id")))
-		_refresh_branch_options()
-		var runtime: Node = player.get_node_or_null("CharacterRuntime")
-		if runtime != null:
-			_select_option_by_id(_branch_option, String(_get_selected_weapon_branch_id(runtime)))
 
 	var ui_manager: Node = _get_ui_manager()
 	if ui_manager != null:
@@ -910,33 +858,10 @@ func _restart_debug_run() -> void:
 		return
 	ui_manager.call("start_developer_debug_run", {
 		"character_id": _get_selected_id(_character_option),
-		"weapon_id": _get_selected_id(_weapon_option),
-		"map_id": _get_selected_id(_map_option),
-		"branch_id": _get_selected_id(_branch_option)
+		"map_id": _get_selected_id(_map_option)
 	})
 	call_deferred("_refresh_state")
 	_log("Restarted debug run.")
-
-
-func _apply_selected_branch_to_current_run() -> void:
-	var player: Node = _get_player()
-	var branch_id: StringName = _get_selected_id(_branch_option)
-	if player == null or branch_id == &"":
-		_log_warn("No branch selected.")
-		return
-
-	var branch_system: Node = player.get_node_or_null("WeaponBranchSystem")
-	if branch_system == null or not branch_system.has_method("apply_branch"):
-		_log_error("WeaponBranchSystem missing.")
-		return
-
-	var applied: bool = bool(branch_system.call("apply_branch", player, branch_id))
-	if player.has_method("_refresh_skill_configs"):
-		player.call("_refresh_skill_configs")
-	if player.has_method("_refresh_synergies"):
-		player.call("_refresh_synergies")
-	_sync_skill_stat_controls()
-	_log("Apply branch %s: %s." % [String(branch_id), str(applied)])
 
 
 func _toggle_tree_pause() -> void:
@@ -1352,22 +1277,19 @@ func _cast_player_skills_once(trace_id: int = 0) -> int:
 	return cast_count
 
 
-func _level_weapon_skill_to(target_level: int) -> void:
+func _level_starting_skill_to(target_level: int) -> void:
 	var player: Node = _get_player()
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	if player == null or skill == null:
-		_log_error("Weapon skill missing.")
+		_log_error("Starting skill missing.")
 		return
-
-	if int(skill.get("current_level")) < 2 and _get_selected_id(_branch_option) != &"":
-		_apply_selected_branch_to_current_run()
 
 	var skill_id: StringName = StringName(String(skill.get("skill_id")))
 	while int(skill.get("current_level")) < target_level:
 		if not player.has_method("_upgrade_skill") or not bool(player.call("_upgrade_skill", skill_id, 1)):
 			break
 	_sync_skill_stat_controls()
-	_log("Weapon skill %s -> Lv.%d." % [String(skill_id), int(skill.get("current_level"))])
+	_log("Starting skill %s -> Lv.%d." % [String(skill_id), int(skill.get("current_level"))])
 
 
 func _toggle_range_overlay() -> void:
@@ -2012,16 +1934,7 @@ func _damage_component_label(record: Dictionary) -> String:
 	var source_type: String = String(record.get("source_type", ""))
 	var damage_origin: String = String(record.get("damage_origin", ""))
 	var source_skill_id: String = String(record.get("source_skill_id", ""))
-	var special_label: String = _mage_branch_damage_component_label(source_skill_id)
-	if special_label != "":
-		return special_label
-	special_label = _ranger_branch_damage_component_label(source_skill_id)
-	if special_label != "":
-		return special_label
-	special_label = _paladin_branch_damage_component_label(source_skill_id)
-	if special_label != "":
-		return special_label
-	special_label = _alchemist_branch_damage_component_label(source_skill_id)
+	var special_label: String = _legacy_skill_damage_component_label(source_skill_id)
 	if special_label != "":
 		return special_label
 	if source_type == "explosion" or source_skill_id.find("explosion") >= 0:
@@ -2037,7 +1950,7 @@ func _damage_component_label(record: Dictionary) -> String:
 	return "%s伤害" % source_type if not source_type.is_empty() else "未知伤害"
 
 
-func _mage_branch_damage_component_label(source_skill_id: String) -> String:
+func _legacy_skill_damage_component_label(source_skill_id: String) -> String:
 	if source_skill_id.find("fireball_burning_death_explosion") >= 0:
 		return "爆裂小爆炸"
 	if source_skill_id.find("soulburn_burst") >= 0:
@@ -2058,10 +1971,6 @@ func _mage_branch_damage_component_label(source_skill_id: String) -> String:
 		return "磁暴伤害"
 	if source_skill_id.find("arcane_seal_burst") >= 0:
 		return "爆印伤害"
-	return ""
-
-
-func _ranger_branch_damage_component_label(source_skill_id: String) -> String:
 	if source_skill_id.find("throwing_knife_execution_burst") >= 0:
 		return "处决伤害"
 	if source_skill_id.find("throwing_knife_rupture") >= 0:
@@ -2078,10 +1987,6 @@ func _ranger_branch_damage_component_label(source_skill_id: String) -> String:
 		return "猎杀夹伤害"
 	if source_skill_id.find("decoy_trap_explosion") >= 0:
 		return "诱饵爆炸"
-	return ""
-
-
-func _paladin_branch_damage_component_label(source_skill_id: String) -> String:
 	if source_skill_id.find("holy_counter_on_marked_break_hit") >= 0:
 		return "圣裁反击"
 	if source_skill_id.find("holy_judgement_beam") >= 0:
@@ -2100,10 +2005,6 @@ func _paladin_branch_damage_component_label(source_skill_id: String) -> String:
 		return "净化反应"
 	if source_skill_id.find("cross_relic_purify_small_pulse") >= 0:
 		return "小圣光脉冲"
-	return ""
-
-
-func _alchemist_branch_damage_component_label(source_skill_id: String) -> String:
 	if source_skill_id.find("toxic_core_boss_pulse") >= 0:
 		return "剧毒脉冲"
 	if source_skill_id.find("poison_death_explosion") >= 0:
@@ -2285,7 +2186,7 @@ func _build_player_attributes_text() -> String:
 		]
 	]
 
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	if skill != null:
 		var skill_manager: Node = _get_skill_manager(player)
 		var relic_manager: Node = player.get_node_or_null("RelicManager")
@@ -2330,22 +2231,17 @@ func _build_player_attributes_text() -> String:
 func _build_state_text() -> String:
 	var player: Node = _get_player()
 	if player == null:
-		var selected_fields: Array[String] = _build_selected_setup_fields(&"", &"", &"")
+		var selected_fields: Array[String] = _build_selected_setup_fields(&"")
 		if selected_fields.is_empty():
 			return "Player: none"
 		selected_fields.push_front("Player=none")
 		return _format_summary_fields(selected_fields)
 
 	var current_character_id: StringName = StringName(String(player.get("selected_character_id")))
-	var current_weapon_id: StringName = StringName(String(player.get("selected_weapon_id")))
-	var current_branch_id: StringName = &""
 	var selected_character_id: StringName = _get_selected_id(_character_option)
-	var selected_weapon_id: StringName = _get_selected_id(_weapon_option)
 	var display_character_id: StringName = selected_character_id if selected_character_id != &"" else current_character_id
-	var display_weapon_id: StringName = selected_weapon_id if selected_weapon_id != &"" else current_weapon_id
 	var fields: Array[String] = [
 		"Character=%s" % String(display_character_id),
-		"Weapon=%s" % String(display_weapon_id),
 		"HP=%d/%d" % [int(player.get("current_health")), int(player.get("max_health"))],
 		"Level=%d" % int(player.get("level")),
 		"MoveSpeed=%.1f" % _get_player_effective_move_speed(player),
@@ -2356,16 +2252,9 @@ func _build_state_text() -> String:
 		"Enemies=%d" % get_tree().get_nodes_in_group(&"enemy").size()
 	]
 
-	var runtime: Node = player.get_node_or_null("CharacterRuntime")
-	if runtime != null:
-		current_branch_id = _get_selected_weapon_branch_id(runtime)
-		var selected_branch_id: StringName = _get_selected_id(_branch_option)
-		var display_branch_id: StringName = selected_branch_id if selected_branch_id != current_branch_id else current_branch_id
-		fields.append("Branch=%s" % String(display_branch_id))
+	fields.append_array(_build_selected_setup_fields(current_character_id))
 
-	fields.append_array(_build_selected_setup_fields(current_character_id, current_weapon_id, current_branch_id))
-
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	if skill != null:
 		fields.append_array(_build_skill_fields(player, skill))
 
@@ -2382,26 +2271,16 @@ func _build_state_text() -> String:
 	return _format_summary_fields(fields)
 
 
-func _build_selected_setup_fields(current_character_id: StringName, current_weapon_id: StringName, current_branch_id: StringName) -> Array[String]:
+func _build_selected_setup_fields(current_character_id: StringName) -> Array[String]:
 	var fields: Array[String] = []
 	var selected_character_id: StringName = _get_selected_id(_character_option)
-	var selected_weapon_id: StringName = _get_selected_id(_weapon_option)
 	var selected_map_id: StringName = _get_selected_id(_map_option)
-	var selected_branch_id: StringName = _get_selected_id(_branch_option)
 	if selected_character_id != &"" and selected_character_id != current_character_id:
 		var character_key: String = "RunCharacter" if current_character_id != &"" else "SelectedCharacter"
 		var character_value: StringName = current_character_id if current_character_id != &"" else selected_character_id
 		fields.append("%s=%s" % [character_key, String(character_value)])
-	if selected_weapon_id != &"" and selected_weapon_id != current_weapon_id:
-		var weapon_key: String = "RunWeapon" if current_weapon_id != &"" else "SelectedWeapon"
-		var weapon_value: StringName = current_weapon_id if current_weapon_id != &"" else selected_weapon_id
-		fields.append("%s=%s" % [weapon_key, String(weapon_value)])
 	if selected_map_id != &"":
 		fields.append("SelectedMap=%s" % String(selected_map_id))
-	if selected_branch_id != current_branch_id:
-		var branch_key: String = "RunBranch" if current_branch_id != &"" else "SelectedBranch"
-		var branch_value: StringName = current_branch_id if current_branch_id != &"" else selected_branch_id
-		fields.append("%s=%s" % [branch_key, String(branch_value)])
 	return fields
 
 
@@ -2513,7 +2392,7 @@ func _get_status_snapshot(target: Node) -> Array:
 
 
 func _get_debug_spawn_radius(player: Node2D) -> float:
-	var skill: RefCounted = _get_weapon_skill(player)
+	var skill: RefCounted = _get_starting_skill(player)
 	if skill == null:
 		return 120.0
 	var skill_manager: Node = _get_skill_manager(player)
@@ -2550,9 +2429,9 @@ func _get_nearest_enemy() -> Node:
 	return nearest
 
 
-func _get_weapon_skill(player: Node) -> RefCounted:
+func _get_starting_skill(player: Node) -> RefCounted:
 	var skill_manager: Node = _get_skill_manager(player)
-	var skill_id: StringName = _get_current_weapon_skill_id(player)
+	var skill_id: StringName = _get_starting_skill_id(player)
 	if skill_manager == null or skill_id == &"":
 		return null
 	return skill_manager.call("get_skill", skill_id) as RefCounted
@@ -2579,7 +2458,7 @@ func _get_skill_events(skill: RefCounted) -> Array[Dictionary]:
 	return events
 
 
-func _get_current_weapon_skill_id(player: Node) -> StringName:
+func _get_starting_skill_id(player: Node) -> StringName:
 	if player == null:
 		return &""
 	var character_id: StringName = StringName(String(player.get("selected_character_id")))
@@ -2596,12 +2475,6 @@ func _get_current_weapon_skill_id(player: Node) -> StringName:
 			if String(skill.get("skill_id")) == "fireball":
 				return &"fireball"
 	return &""
-
-
-func _get_selected_weapon_branch_id(runtime: Node) -> StringName:
-	if runtime == null:
-		return &""
-	return StringName(String(runtime.call("get_selected_weapon_branch_id")))
 
 
 func _get_player() -> Node:

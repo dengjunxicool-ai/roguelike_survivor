@@ -94,26 +94,26 @@ func get_debug_state() -> Dictionary:
 func _adapt_skill_modifiers(raw_modifiers: Dictionary, query: RefCounted) -> Dictionary:
 	if raw_modifiers.is_empty():
 		return {}
-	var applies_to_equipped: bool = _is_equipped_weapon_skill(query.get("skill_id"))
+	var applies_to_starting_skill: bool = _is_starting_skill(query.get("skill_id"))
 	var modifiers: Dictionary = {}
 	for key_variant: Variant in raw_modifiers.keys():
 		var key: String = String(key_variant)
-		if key.begins_with("equipped_weapon_"):
-			if not applies_to_equipped:
+		if key.begins_with("starting_skill_"):
+			if not applies_to_starting_skill:
 				continue
-			if key == "equipped_weapon_damage_add":
+			if key == "starting_skill_damage_add":
 				modifiers[key] = raw_modifiers[key_variant]
 			else:
-				modifiers[key.trim_prefix("equipped_weapon_")] = raw_modifiers[key_variant]
+				modifiers[key.trim_prefix("starting_skill_")] = raw_modifiers[key_variant]
 		else:
 			modifiers[key] = raw_modifiers[key_variant]
 	return modifiers
 
 
-func _is_equipped_weapon_skill(skill_id: Variant) -> bool:
+func _is_starting_skill(skill_id: Variant) -> bool:
 	if runtime == null:
 		return false
-	return StringName(String(skill_id)) == StringName(String(runtime.call("get_equipped_weapon_skill_id")))
+	return StringName(String(skill_id)) == StringName(String(runtime.call("get_starting_skill_id")))
 
 
 func _sync_runtime_state() -> void:

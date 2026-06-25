@@ -44,7 +44,7 @@
       "objectives": [
         "clear_once",
         "avoid_toxic_fog_overdamage",
-        "clear_with_dot_branch",
+        "clear_with_dot_damage",
         "clear_all_toxic_fog_events",
         "defeat_toxic_matriarch"
       ]
@@ -54,7 +54,7 @@
       "objectives": [
         "clear_once",
         "survive_lava_fissures",
-        "clear_with_control_branch",
+        "clear_with_control_status",
         "defeat_lava_golem"
       ]
     },

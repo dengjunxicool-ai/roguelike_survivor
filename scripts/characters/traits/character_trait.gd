@@ -49,7 +49,7 @@ func _get_modifier_values(value: Variant) -> Dictionary:
 	return ModifierSourceScript.flatten(value, ModifierSourceScript.SOURCE_CHARACTER_TRAIT)
 
 
-func _is_equipped_weapon_skill(skill_id: Variant) -> bool:
-	if context == null or not context.has_method("get_equipped_weapon_skill_id"):
+func _is_starting_skill(skill_id: Variant) -> bool:
+	if context == null or not context.has_method("get_starting_skill_id"):
 		return false
-	return StringName(String(skill_id)) == StringName(String(context.call("get_equipped_weapon_skill_id")))
+	return StringName(String(skill_id)) == StringName(String(context.call("get_starting_skill_id")))

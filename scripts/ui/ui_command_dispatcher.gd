@@ -70,7 +70,7 @@ func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: N
 		player.call("apply_upgrade", StringName("level_up_upgrade:%s" % String(upgrade_id)))
 	elif player.has_method("apply_upgrade"):
 		var option_id: String = String(option.get("id", ""))
-		if option_id.begins_with("level_up_upgrade:") or option_id.begins_with("branch_choice:") or option_id.begins_with("skill_level_up:"):
+		if option_id.begins_with("level_up_upgrade:") or option_id.begins_with("skill_level_up:"):
 			player.call("apply_upgrade", StringName(option_id))
 
 	var tracker: Node = RunStatsTrackerScript.get_active(tree)

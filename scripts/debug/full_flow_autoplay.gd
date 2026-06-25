@@ -4,7 +4,6 @@ extends Node
 const PLAY_SECONDS: float = 90.0
 const POST_FINISH_HOLD_SECONDS: float = 8.0
 const CHARACTER_ID: StringName = &"mage"
-const WEAPON_ID: StringName = &"fire_staff"
 const MAP_ID: StringName = &"abandoned_dungeon"
 const MAP_NAME: String = "废弃地牢"
 
@@ -41,10 +40,9 @@ func _ready() -> void:
 		push_error("[FullFlowAutoplay] Missing Player after starting run.")
 		get_tree().quit(1)
 		return
-	print("[FullFlowAutoplay] combat_started state=%s character=%s weapon=%s map=%s" % [
+	print("[FullFlowAutoplay] combat_started state=%s character=%s map=%s" % [
 		String(_ui.get("current_state")),
 		String(CHARACTER_ID),
-		String(WEAPON_ID),
 		MAP_NAME
 	])
 	_log_status(0.0)
@@ -82,7 +80,7 @@ func _run_menu_flow() -> void:
 	await get_tree().process_frame
 	print("[FullFlowAutoplay] reached_character_select state=%s" % String(_ui.get("current_state")))
 
-	_ui.call("_on_loadout_confirmed", CHARACTER_ID, WEAPON_ID)
+	_ui.call("_on_loadout_confirmed", CHARACTER_ID)
 	await get_tree().process_frame
 	print("[FullFlowAutoplay] confirmed_loadout state=%s" % String(_ui.get("current_state")))
 
@@ -143,19 +141,19 @@ func _get_survival_direction() -> Vector2:
 			attraction += to_gem.normalized() * ((260.0 - gem_distance) / 260.0)
 
 	var orbit_direction: Vector2 = Vector2.RIGHT.rotated(_movement_phase * 1.1)
-	var weapon_spacing: Vector2 = Vector2.ZERO
+	var attack_spacing: Vector2 = Vector2.ZERO
 	if nearest_enemy != null:
 		var to_enemy: Vector2 = nearest_enemy.global_position - _player.global_position
 		var away_from_enemy: Vector2 = -to_enemy.normalized()
 		var tangent: Vector2 = away_from_enemy.orthogonal()
 		if nearest_enemy_distance < 48.0:
-			weapon_spacing = away_from_enemy * 3.0 + tangent * 0.8
+			attack_spacing = away_from_enemy * 3.0 + tangent * 0.8
 		elif nearest_enemy_distance > 88.0 and nearest_enemy_distance < 240.0:
-			weapon_spacing = to_enemy.normalized() * 1.35 + tangent * 0.7
+			attack_spacing = to_enemy.normalized() * 1.35 + tangent * 0.7
 		else:
-			weapon_spacing = tangent * 1.4
+			attack_spacing = tangent * 1.4
 
-	var desired: Vector2 = weapon_spacing * 1.7 + repulsion * 1.2 + attraction * 0.8 + orbit_direction * 0.15
+	var desired: Vector2 = attack_spacing * 1.7 + repulsion * 1.2 + attraction * 0.8 + orbit_direction * 0.15
 	if nearest_enemy_distance < 38.0:
 		desired += repulsion * 2.0
 
@@ -206,10 +204,8 @@ func _log_status(time_value: float) -> void:
 	var exp_current: int = int(player.get("current_experience")) if player != null else -1
 	var exp_next: int = int(player.get("experience_to_next_level")) if player != null else -1
 	var kills: int = int(_ui.get("_kill_count")) if _ui != null else -1
-	var weapon_visual: Node = player.get_node_or_null("WeaponVisual") if player != null else null
-	var weapon_visual_visible: bool = weapon_visual != null and bool(weapon_visual.get("visible"))
 	var orbit_count: int = _count_player_orbit_objects(player)
-	print("[FullFlowAutoplay] t=%.1f state=%s hp=%d/%d level=%d exp=%d/%d kills=%d enemies=%d enemy_projectiles=%d weapon_visual=%s orbit_objects=%d" % [
+	print("[FullFlowAutoplay] t=%.1f state=%s hp=%d/%d level=%d exp=%d/%d kills=%d enemies=%d enemy_projectiles=%d orbit_objects=%d" % [
 		time_value,
 		state,
 		hp,
@@ -220,7 +216,6 @@ func _log_status(time_value: float) -> void:
 		kills,
 		enemy_count,
 		projectile_count,
-		str(weapon_visual_visible),
 		orbit_count
 	])
 

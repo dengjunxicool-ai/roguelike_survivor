@@ -102,11 +102,11 @@ static func _apply_mapped_rule(rule_name: String, rules: Dictionary, context: Di
 			_apply_player_damage_reduction(context, rules)
 		"on_player_damage_taken":
 			_grant_fire_passive_shield(context, rules)
-			_deal_rule_damage(rules, context, executor, int(rules.get("retaliate_damage", rules.get("damage", 0))))
+			_deal_rule_damage(context, executor, int(rules.get("retaliate_damage", rules.get("damage", 0))))
 		"on_fire_related_kill":
 			_apply_kill_trigger(rules, context, skill_manager, executor)
 		"black_sun_fire_spreads_blackflame_on_kill":
-			_deal_rule_damage(rules, context, executor, int(roundi(float(rules.get("spread_damage_multiplier", 0.55)) * 20.0)))
+			_deal_rule_damage(context, executor, int(roundi(float(rules.get("spread_damage_multiplier", 0.55)) * 20.0)))
 		"stack_mark_then_consume":
 			_apply_stack_mark(rules, context, executor)
 		"chance_spawn_weak_flamelet_on_fire_projectile_hit":
@@ -114,7 +114,7 @@ static func _apply_mapped_rule(rule_name: String, rules: Dictionary, context: Di
 		"bonus_fire_damage_against_high_health_ratio_targets":
 			_apply_high_health_bonus(rules, context)
 		"splash_fire_damage_on_fire_critical_hit", "delayed_fire_reckoning", "chance_return_fire_projectile_at_max_range":
-			_deal_rule_damage(rules, context, executor, _scaled_rule_damage(rules, context))
+			_deal_rule_damage(context, executor, _scaled_rule_damage(rules, context))
 		"chance_convert_burn_to_blackflame":
 			_apply_blackflame_conversion(rules, context, executor)
 		"chance_reignite_after_burn_expires":
@@ -186,7 +186,7 @@ static func _is_fire_context(rules: Dictionary, context: Dictionary, event_name:
 		return true
 	if String(_packet_value(source_packet, "source_skill_id", "")).contains("fire"):
 		return true
-	if String(_packet_value(source_packet, "source_weapon_id", "")).contains("fire"):
+	if String(_packet_value(source_packet, "source_origin_id", "")).contains("fire"):
 		return true
 	var damage_result: Variant = context.get("damage_result", {})
 	if damage_result is Dictionary:
@@ -195,13 +195,13 @@ static func _is_fire_context(rules: Dictionary, context: Dictionary, event_name:
 			return true
 		if String(result.get("source_skill_id", "")).contains("fire"):
 			return true
-		if String(result.get("source_weapon_id", "")).contains("fire"):
+		if String(result.get("source_origin_id", "")).contains("fire"):
 			return true
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	if _skill_has_fire_tag(skill_instance):
 		return true
 	var skill_id: String = String(context.get("skill_id", context.get("source_skill_id", "")))
-	return skill_id.contains("fire") or String(context.get("source_weapon_id", "")).contains("fire")
+	return skill_id.contains("fire") or String(context.get("source_origin_id", "")).contains("fire")
 
 
 static func _skill_has_fire_tag(skill_instance: RefCounted) -> bool:
@@ -236,7 +236,7 @@ static func _apply_charge_empower(rules: Dictionary, context: Dictionary) -> voi
 	if passive_skill == null or target_skill == null:
 		return
 	var required: int = maxi(int(rules.get("charges_required", 1)), 1)
-	var key: String = "fire_runtime_charge:%s" % String(passive_skill.get("skill_id"))
+	var key: String = _metadata_key("fire_runtime_charge", String(passive_skill.get("skill_id")))
 	var charges: int = int(passive_skill.get_meta(key, 0)) + 1
 	if charges < required:
 		passive_skill.set_meta(key, charges)
@@ -322,8 +322,9 @@ static func _apply_kill_trigger(rules: Dictionary, context: Dictionary, skill_ma
 	var effect: String = String(rules.get("effect", ""))
 	if effect.contains("empower"):
 		var passive_skill: RefCounted = context.get("passive_skill_instance") as RefCounted
-		var modifier_namespace: String = "kill_trigger:%s" % String(passive_skill.get("skill_id") if passive_skill != null else "fire")
-		var stack_key: String = "%s_stack_count" % modifier_namespace
+		var passive_skill_id: String = String(passive_skill.get("skill_id") if passive_skill != null else "fire")
+		var modifier_namespace: String = "kill_trigger:%s" % passive_skill_id
+		var stack_key: String = _metadata_key("kill_trigger_stack_count", passive_skill_id)
 		var max_stacks: int = maxi(int(rules.get("max_stacks", rules.get("empower_max_stacks", 5))), 1)
 		var stack_count: int = 1
 		if passive_skill != null:
@@ -334,21 +335,21 @@ static func _apply_kill_trigger(rules: Dictionary, context: Dictionary, skill_ma
 			var skill: RefCounted = skill_variant as RefCounted
 			if skill != null and not _is_passive_skill(skill) and _skill_has_fire_tag(skill):
 				_set_runtime_modifier(skill, modifier_namespace, "damage_multiplier_add", damage_add)
-	_deal_rule_damage(rules, context, executor, int(rules.get("damage", 0)))
+	_deal_rule_damage(context, executor, int(rules.get("damage", 0)))
 
 
 static func _apply_stack_mark(rules: Dictionary, context: Dictionary, executor: RefCounted) -> void:
 	var target: Node = _ensure_action_target(context)
 	if target == null:
 		return
-	var stack_id: String = String(rules.get("stack_id", "fire_runtime_stack"))
+	var stack_id: String = _metadata_identifier(String(rules.get("stack_id", "fire_runtime_stack")))
 	var stacks: int = mini(int(target.get_meta(stack_id, 0)) + 1, maxi(int(rules.get("max_stacks", 6)), 1))
 	var required: int = maxi(int(rules.get("stacks_required", 4)), 1)
 	if stacks < required:
 		target.set_meta(stack_id, stacks)
 		return
 	target.set_meta(stack_id, 0)
-	_deal_rule_damage(rules, context, executor, int(rules.get("consume_damage", rules.get("damage", 0))))
+	_deal_rule_damage(context, executor, int(rules.get("consume_damage", rules.get("damage", 0))))
 
 
 static func _spawn_weak_flamelet(rules: Dictionary, context: Dictionary, executor: RefCounted) -> void:
@@ -381,7 +382,7 @@ static func _apply_high_health_bonus(rules: Dictionary, context: Dictionary) -> 
 	_set_runtime_modifier(skill, modifier_namespace, "damage_multiplier_add", float(rules.get("damage_multiplier_add", 0.0)))
 
 
-static func _deal_rule_damage(rules: Dictionary, context: Dictionary, executor: RefCounted, amount: int) -> void:
+static func _deal_rule_damage(context: Dictionary, executor: RefCounted, amount: int) -> void:
 	if amount <= 0 or executor == null:
 		return
 	_ensure_action_target(context)
@@ -480,7 +481,7 @@ static func _apply_revive_once(rules: Dictionary, context: Dictionary, executor:
 	player.set("current_health", maxi(roundi(float(max_health) * float(rules.get("revive_health_ratio", 0.45))), 1))
 	if player.has_signal("health_changed"):
 		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
-	_deal_rule_damage(rules, context, executor, int(rules.get("explosion_damage", 0)))
+	_deal_rule_damage(context, executor, int(rules.get("explosion_damage", 0)))
 	var fire_damage_add: float = float(rules.get("post_revive_fire_damage_multiplier_add", 0.0))
 	if not is_zero_approx(fire_damage_add) and player.has_method("set_run_modifier_source"):
 		player.call("set_run_modifier_source", "fire_runtime:%s:post_revive" % String(passive_skill.get("skill_id")), {
@@ -538,7 +539,7 @@ static func _set_runtime_modifier(skill_instance: RefCounted, modifier_namespace
 	if skill_instance == null or key == "":
 		return
 	var modifiers: Dictionary = _get_dictionary(skill_instance.get("runtime_modifiers"))
-	var originals_key: String = "%s_runtime_originals" % modifier_namespace
+	var originals_key: String = _metadata_key(modifier_namespace, "runtime_originals")
 	var originals: Dictionary = _get_dictionary(skill_instance.get_meta(originals_key, {}))
 	if not originals.has(key):
 		originals[key] = modifiers[key] if modifiers.has(key) else null
@@ -554,6 +555,41 @@ static func _set_runtime_modifier(skill_instance: RefCounted, modifier_namespace
 		modifiers[key] = base_value + float(value)
 	skill_instance.set("runtime_modifiers", modifiers)
 	skill_instance.set_meta(originals_key, originals)
+
+
+static func _metadata_key(namespace_text: String, suffix: String) -> String:
+	return _metadata_identifier("%s_%s" % [namespace_text, suffix])
+
+
+static func _metadata_identifier(raw_key: String) -> String:
+	var safe_key: String = ""
+	for index: int in range(raw_key.length()):
+		var character: String = raw_key.substr(index, 1)
+		if _is_ascii_identifier_character(character):
+			safe_key += character
+		else:
+			safe_key += "_"
+	if safe_key == "" or not _is_ascii_identifier_start(safe_key.substr(0, 1)):
+		safe_key = "fire_runtime_%s" % safe_key
+	return safe_key
+
+
+static func _is_ascii_identifier_start(character: String) -> bool:
+	if character == "_":
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return (code >= 65 and code <= 90) or (code >= 97 and code <= 122)
+
+
+static func _is_ascii_identifier_character(character: String) -> bool:
+	if _is_ascii_identifier_start(character):
+		return true
+	if character.length() != 1:
+		return false
+	var code: int = character.unicode_at(0)
+	return code >= 48 and code <= 57
 
 
 static func _get_player(context: Dictionary) -> Node:
