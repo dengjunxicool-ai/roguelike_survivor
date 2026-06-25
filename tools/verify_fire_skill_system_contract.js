@@ -164,6 +164,20 @@ function validateNestedEffectArrays(value, skillId, location) {
   }
 }
 
+function validateExpectedIdLists() {
+  assert(FIRE_BASE_IDS.length === 14, `FIRE_BASE_IDS must contain exactly 14 ids, got ${FIRE_BASE_IDS.length}`);
+  assert(FIRE_FUSION_IDS.length === 20, `FIRE_FUSION_IDS must contain exactly 20 ids, got ${FIRE_FUSION_IDS.length}`);
+
+  const fireBaseIds = new Set(FIRE_BASE_IDS);
+  const fireFusionIds = new Set(FIRE_FUSION_IDS);
+
+  assert(fireBaseIds.size === FIRE_BASE_IDS.length, "FIRE_BASE_IDS must not contain duplicate ids");
+  assert(fireFusionIds.size === FIRE_FUSION_IDS.length, "FIRE_FUSION_IDS must not contain duplicate ids");
+  for (const id of FIRE_BASE_IDS) {
+    assert(!fireFusionIds.has(id), `fire skill id must not be both base and fusion: ${id}`);
+  }
+}
+
 function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   for (const field of REQUIRED_SKILL_FIELDS) {
     assert(Object.prototype.hasOwnProperty.call(skill, field), `${skill.id || "missing id"} missing field ${field}`);
@@ -201,6 +215,8 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
 }
 
 function main() {
+  validateExpectedIdLists();
+
   const document = readJson("data/skills.json");
   assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
   const skills = document.skills;
