@@ -8,11 +8,13 @@ const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.g
 const DamageRuleRegistryScript: Script = preload("res://scripts/combat/damage_rule_registry.gd")
 const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_source_identity.gd")
 const ModifierResolverScript: Script = preload("res://scripts/skills/modifier_resolver.gd")
+const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/skill_special_rule_executor.gd")
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
+const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 
@@ -66,6 +68,28 @@ func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 			return _destroy_enemy_projectile(params, context)
 		"add_temporary_modifier":
 			return _add_temporary_modifier(params, context)
+		"grant_shield":
+			return _grant_shield(params, context)
+		"pull":
+			return _pull(params, context)
+		"repeat_skill":
+			return _repeat_skill(params, context)
+		"transform_area":
+			return _transform_area(params, context)
+		"transfer_status":
+			return _transfer_status(params, context)
+		"consume_status_duration":
+			return _consume_status_duration(params, context)
+		"trigger_overload":
+			return _trigger_overload(params, context)
+		"shatter_frozen":
+			return _shatter_frozen(params, context)
+		"spawn_projectile_burst":
+			return _spawn_projectile_burst(params, context)
+		"repeat_area_path":
+			return _repeat_area_path(params, context)
+		"spawn_area_from_existing_area":
+			return _spawn_area_from_existing_area(params, context)
 		_:
 			push_warning("[SkillActionExecutor] Unsupported action type: %s" % action_type)
 			return null
@@ -77,7 +101,7 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 		return false
 
 	var base_amount: Variant = params.get("amount", ModifierResolverScript.get_stat(context, "damage", 0))
-	var amount: int = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "damage", base_amount))), 0)
+	var amount: int = maxi(roundi(_resolve_scaled_amount(base_amount, context, "damage")), 0)
 	var damage_type: StringName = _get_damage_type(params, context, "skill", _get_damage_origin(params, context, "skill"))
 	var packet: Dictionary = _build_damage_packet(params, context, amount, "skill")
 	_inherit_projectile_runtime_damage_packet(packet, context, target)
@@ -150,7 +174,7 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	var pierce: int = maxi(int(ModifierResolverScript.resolve_value(context, "pierce", params.get("pierce", 0))), 0)
 	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("collision_radius", params.get("radius", 10.0)))), 1.0)
 	var lifetime: float = maxf(float(params.get("lifetime", 2.0)), 0.1)
-	var damage: int = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "damage", params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0))))), 0)
+	var damage: int = maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0)
 	var source_id: StringName = StringName(String(params.get("projectile_id", params.get("source_id", ""))))
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var base_direction: Vector2 = caster.global_position.direction_to(target.global_position)
@@ -235,7 +259,7 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 	var pierce: int = maxi(int(ModifierResolverScript.resolve_value(context, "pierce", params.get("pierce", 0))), 0)
 	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("collision_radius", params.get("radius", 10.0)))), 1.0)
 	var lifetime: float = maxf(float(params.get("lifetime", 2.0)), 0.1)
-	var damage: int = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "damage", params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0))))), 0)
+	var damage: int = maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0)
 	var source_id: StringName = StringName(String(params.get("projectile_id", params.get("source_id", ""))))
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var parent: Node = _get_parent_node(context)
@@ -416,7 +440,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		damage_multiplier *= maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)
 	var damage: int = maxi(roundi(float(ModifierResolverScript.get_stat(context, "damage", 0)) * damage_multiplier), 0)
 	if params.has("damage"):
-		damage = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "damage", params["damage"]))), 0)
+		damage = maxi(roundi(_resolve_scaled_amount(params["damage"], context, "damage")), 0)
 		if not holy_field_capacity.is_empty():
 			damage = maxi(roundi(float(damage) * maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)), 0)
 		if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_upgrade"):
@@ -900,8 +924,218 @@ func _destroy_enemy_projectile(params: Dictionary, context: Dictionary) -> bool:
 	return destroyed_any
 
 
-func _add_temporary_modifier(_params: Dictionary, _context: Dictionary) -> bool:
+func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
+	var modifier: Dictionary = _build_modifier_from_params(params)
+	if modifier.is_empty():
+		return false
+
+	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
+	if skill_instance != null:
+		var runtime_modifiers: Dictionary = {}
+		var runtime_variant: Variant = skill_instance.get("runtime_modifiers")
+		if runtime_variant is Dictionary or runtime_variant is Array:
+			runtime_modifiers = ModifierSourceScript.flatten(runtime_variant)
+		ModifierSourceScript.merge_flat_values(runtime_modifiers, ModifierSourceScript.flatten(modifier))
+		skill_instance.set("runtime_modifiers", runtime_modifiers)
+		return true
+
+	var skill_manager: Node = context.get("skill_manager") as Node
+	if skill_manager != null and skill_manager.has_method("add_passive_modifier"):
+		skill_manager.call("add_passive_modifier", modifier)
+		return true
 	return false
+
+
+func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
+	var owner: Node = context.get("owner") as Node
+	if owner == null:
+		owner = context.get("caster") as Node
+	if owner == null:
+		return false
+
+	var max_health: float = maxf(_get_float_property(owner, "max_health", 0.0), 0.0)
+	var amount: int = maxi(roundi(_resolve_scaled_amount(params.get("amount", 0.0), context, "shield")), 0)
+	if amount <= 0 and params.has("max_health_ratio"):
+		amount = maxi(roundi(max_health * float(params.get("max_health_ratio", 0.0))), 0)
+	if amount <= 0:
+		return false
+
+	var duration: float = maxf(float(params.get("duration", 6.0)), 0.05)
+	var shield_type: String = String(params.get("shield_type", "fire_skill"))
+	var current: int = int(owner.get_meta("fire_passive_shield", 0))
+	owner.set_meta("fire_passive_shield", current + amount)
+	owner.set_meta("fire_passive_shield_expires_at", _now_seconds() + duration)
+	owner.set_meta("%s_shield" % shield_type, int(owner.get_meta("%s_shield" % shield_type, 0)) + amount)
+	owner.set_meta("%s_shield_expires_at" % shield_type, _now_seconds() + duration)
+	return true
+
+
+func _pull(params: Dictionary, context: Dictionary) -> bool:
+	var target: Node2D = context.get("target") as Node2D
+	if target == null:
+		return false
+	var origin_node: Node2D = context.get("source") as Node2D
+	if origin_node == null:
+		origin_node = context.get("caster") as Node2D
+	if origin_node == null:
+		return false
+
+	var direction: Vector2 = target.global_position.direction_to(origin_node.global_position)
+	if direction == Vector2.ZERO:
+		return false
+	var distance: float = maxf(float(params.get("distance", 0.0)), 0.0)
+	if distance <= 0.0:
+		distance = maxf(float(params.get("strength", 0.2)) * maxf(float(params.get("radius", 64.0)), 1.0), 1.0)
+	if target.has_method("apply_pull"):
+		target.call("apply_pull", direction, distance)
+	else:
+		target.global_position += direction.normalized() * distance
+	return true
+
+
+func _repeat_skill(params: Dictionary, context: Dictionary) -> bool:
+	var actions: Array = _get_array(params.get("actions", []))
+	if actions.is_empty():
+		push_warning("[SkillActionExecutor] repeat_skill needs explicit actions in this runtime.")
+		return false
+	var times: int = maxi(int(params.get("times", params.get("count", 1))), 1)
+	for _index in range(times):
+		execute_actions(actions, context)
+	return true
+
+
+func _transform_area(params: Dictionary, context: Dictionary) -> bool:
+	var area: Node = context.get("area") as Node
+	if area == null:
+		push_warning("[SkillActionExecutor] transform_area has no source area.")
+		return false
+	if params.has("area_id") or params.has("object_id"):
+		var area_params: Dictionary = params.duplicate(true)
+		if not area_params.has("position") and area is Node2D:
+			area_params["position"] = (area as Node2D).global_position
+		var spawned: bool = _spawn_area(area_params, context, "area")
+		if spawned and bool(params.get("remove_source_area", false)) and area.has_method("queue_free"):
+			area.call("queue_free")
+		return spawned
+	for key_variant: Variant in params.keys():
+		var key: String = String(key_variant)
+		if key == "type":
+			continue
+		area.set_meta(key, params[key_variant])
+	return true
+
+
+func _transfer_status(params: Dictionary, context: Dictionary) -> bool:
+	var source: Node = context.get("source") as Node
+	var target: Node = context.get("target") as Node
+	if source == null:
+		source = target
+		target = context.get("caster") as Node
+	if source == null or target == null:
+		return false
+
+	var status_id: StringName = StringName(String(params.get("status_id", params.get("status", ""))))
+	if status_id == &"":
+		return false
+	var stacks: int = maxi(int(params.get("stacks", params.get("stack", 1))), 1)
+	if source.has_method("get_status_stack"):
+		stacks = mini(stacks, maxi(int(source.call("get_status_stack", status_id)), 0))
+	if stacks <= 0:
+		return false
+	if not _apply_status_to_target(target, status_id, {"stacks": stacks}):
+		return false
+	_consume_status_stack_on_target(source, status_id, stacks)
+	return true
+
+
+func _consume_status_duration(params: Dictionary, context: Dictionary) -> bool:
+	var target: Node = context.get("target") as Node
+	if target == null:
+		return false
+	var status_id: StringName = StringName(String(params.get("status_id", params.get("status", ""))))
+	if status_id == &"":
+		return false
+	var seconds: float = maxf(float(params.get("duration", params.get("seconds", 0.0))), 0.0)
+	var manager: Node = _get_status_manager(target)
+	if manager != null and manager.has_method("consume_status_duration"):
+		return bool(manager.call("consume_status_duration", status_id, seconds))
+	if target.has_method("consume_status_duration"):
+		return bool(target.call("consume_status_duration", status_id, seconds))
+	push_warning("[SkillActionExecutor] consume_status_duration requires StatusEffectManager.consume_status_duration.")
+	return false
+
+
+func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
+	var target: Node = context.get("target") as Node
+	if target == null:
+		return false
+	var overload_id: StringName = StringName(String(params.get("status_id", "overload")))
+	return _apply_status_to_target(target, overload_id, {"stacks": 1, "duration": float(params.get("duration", 0.1))})
+
+
+func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
+	var target: Node = context.get("target") as Node
+	if target == null:
+		return false
+	if target.has_method("get_status_stack") and int(target.call("get_status_stack", &"frozen")) <= 0:
+		return false
+	_consume_status_stack_on_target(target, &"frozen", 1)
+
+	var damage_value: Variant = params.get("amount", params.get("damage", {"stat": "power", "scale": 0.25}))
+	var damage_params: Dictionary = params.duplicate(true)
+	damage_params["amount"] = damage_value
+	if damage_value is Dictionary:
+		var damage_dictionary: Dictionary = damage_value
+		if damage_dictionary.has("power_scale"):
+			damage_params["amount"] = {"stat": "power", "scale": float(damage_dictionary.get("power_scale", 0.0))}
+		for key_variant: Variant in damage_dictionary.keys():
+			if not damage_params.has(key_variant):
+				damage_params[key_variant] = damage_dictionary[key_variant]
+	_deal_damage(damage_params, context)
+	if int(params.get("projectile_count", 0)) > 0:
+		var burst_params: Dictionary = params.duplicate(true)
+		burst_params["count"] = int(params.get("projectile_count", 0))
+		burst_params["projectile_id"] = String(params.get("projectile_id", "shattered_ember"))
+		_spawn_projectile_burst(burst_params, context)
+	return true
+
+
+func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
+	var projectile_params: Dictionary = params.duplicate(true)
+	if projectile_params.has("on_hit") and not projectile_params.has("actions_on_hit"):
+		projectile_params["actions_on_hit"] = _effects_to_actions(_get_array(projectile_params.get("on_hit", [])))
+	if projectile_params.has("effects_on_hit") and not projectile_params.has("actions_on_hit"):
+		projectile_params["actions_on_hit"] = _effects_to_actions(_get_array(projectile_params.get("effects_on_hit", [])))
+	if projectile_params.has("angle") and not projectile_params.has("spread_angle"):
+		projectile_params["spread_angle"] = float(projectile_params.get("angle", 0.0))
+	if not projectile_params.has("spawn_offset"):
+		projectile_params["spawn_offset"] = float(projectile_params.get("radius", 24.0))
+	return _spawn_projectile(projectile_params, context)
+
+
+func _repeat_area_path(params: Dictionary, context: Dictionary) -> bool:
+	var area_params: Dictionary = params.duplicate(true)
+	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):
+		area_params["actions_on_tick"] = _effects_to_actions(_get_array(area_params.get("effects_on_tick", [])))
+	if not area_params.has("area_id"):
+		area_params["area_id"] = String(params.get("source_area_tag", "repeated_area_path"))
+	if not area_params.has("duration"):
+		area_params["duration"] = float(params.get("duration", 2.0))
+	return _spawn_area(area_params, context, "area")
+
+
+func _spawn_area_from_existing_area(params: Dictionary, context: Dictionary) -> bool:
+	var source_area: Node2D = context.get("area") as Node2D
+	if source_area == null:
+		source_area = context.get("source") as Node2D
+	var area_params: Dictionary = params.duplicate(true)
+	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):
+		area_params["actions_on_tick"] = _effects_to_actions(_get_array(area_params.get("effects_on_tick", [])))
+	if source_area != null and not area_params.has("position"):
+		area_params["position"] = source_area.global_position
+	if not area_params.has("radius") and source_area != null:
+		area_params["radius"] = float(source_area.get("radius")) if _has_property(source_area, "radius") else 48.0
+	return _spawn_area(area_params, context, "area")
 
 
 func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
@@ -1114,7 +1348,7 @@ func _get_skill_level_coefficient(context: Dictionary) -> float:
 func _build_orbit_params(params: Dictionary, context: Dictionary, caster: Node2D, orbit_radius: float, area_radius: float, source_id: StringName, angle: float) -> Dictionary:
 	var damage: int = 0
 	if params.has("damage"):
-		damage = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "damage", params["damage"]))), 0)
+		damage = maxi(roundi(_resolve_scaled_amount(params["damage"], context, "damage")), 0)
 	var orbit_packet_params: Dictionary = params.duplicate(true)
 	if not orbit_packet_params.has("source_instance_id"):
 		orbit_packet_params["source_instance_id"] = DamageSourceIdentityScript.for_orbit(caster, context.get("skill_id", ""), source_id)
@@ -1261,6 +1495,101 @@ func _get_hot_rapid_fire_crit_chance_add(context: Dictionary) -> float:
 	if skill_instance == null:
 		return 0.0
 	return float(skill_instance.get_meta("hot_rapid_fire_crit_chance_add", 0.0))
+
+
+func _resolve_scaled_amount(value: Variant, context: Dictionary, stat_name: String = "damage") -> float:
+	if value is Dictionary:
+		var data: Dictionary = value
+		if String(data.get("stat", "")) == "power":
+			var power: float = float(ModifierResolverScript.resolve_value(context, stat_name, ModifierResolverScript.get_stat(context, "power", _get_caster_attack_power(context))))
+			return power * float(data.get("scale", 1.0))
+	return float(ModifierResolverScript.resolve_value(context, stat_name, value))
+
+
+func _build_modifier_from_params(params: Dictionary) -> Dictionary:
+	if params.has("stat") and params.has("value"):
+		return params.duplicate(true)
+
+	var modifier_name: String = String(params.get("modifier", ""))
+	if modifier_name == "" or not params.has("value"):
+		return {}
+
+	var value: Variant = params.get("value")
+	var values: Dictionary = {}
+	match modifier_name:
+		"attack_damage_multiplier":
+			values["primary_attack_damage_multiplier_add"] = value
+			var damage_type: String = String(params.get("damage_type", ""))
+			if damage_type != "":
+				values["%s_damage_multiplier_add" % damage_type] = value
+		_:
+			var key: String = modifier_name
+			if key.ends_with("_multiplier") and not key.ends_with("_multiplier_add"):
+				key = "%s_add" % key
+			values[key] = value
+
+	if values.is_empty():
+		return {}
+	return {
+		"source": "skill",
+		"values": values
+	}
+
+
+func _get_caster_attack_power(context: Dictionary) -> float:
+	var caster: Object = context.get("caster") as Object
+	if caster == null:
+		return 1.0
+	for property_name: String in ["attack_power", "damage", "base_damage"]:
+		if _has_property(caster, property_name):
+			return float(caster.get(property_name))
+	return 1.0
+
+
+func _apply_status_to_target(target: Node, status_id: StringName, status_params: Dictionary = {}) -> bool:
+	if target == null or status_id == &"":
+		return false
+	if target.has_method("apply_status"):
+		return bool(target.call("apply_status", status_id, status_params))
+	if target.has_method("add_status_effect"):
+		target.call("add_status_effect", status_id)
+		return true
+	var manager: Node = _get_status_manager(target)
+	if manager != null and manager.has_method("apply_status"):
+		return bool(manager.call("apply_status", status_id, status_params))
+	return false
+
+
+func _consume_status_stack_on_target(target: Node, status_id: StringName, stacks: int) -> bool:
+	if target == null or status_id == &"":
+		return false
+	if target.has_method("consume_status_stack"):
+		return bool(target.call("consume_status_stack", status_id, stacks))
+	var manager: Node = _get_status_manager(target)
+	if manager != null and manager.has_method("consume_status_stack"):
+		return bool(manager.call("consume_status_stack", status_id, stacks))
+	return false
+
+
+func _get_status_manager(target: Node) -> Node:
+	return target.get_node_or_null("StatusEffectManager") if target != null else null
+
+
+func _effects_to_actions(effects: Array) -> Array:
+	return SkillEffectAdapterScript.to_actions(effects)
+
+
+func _now_seconds() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0
+
+
+func _has_property(object: Object, property: String) -> bool:
+	if object == null:
+		return false
+	for property_info: Dictionary in object.get_property_list():
+		if String(property_info.get("name", "")) == property:
+			return true
+	return false
 
 
 func _get_dictionary(value: Variant) -> Dictionary:
