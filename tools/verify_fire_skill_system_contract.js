@@ -171,6 +171,8 @@ function validateNestedEffectArrays(value, skillId, location) {
     const childLocation = `${location}.${key}`;
     if (NESTED_EFFECT_ARRAY_FIELDS.has(key)) {
       validateEffectArray(child, skillId, childLocation);
+    } else if (key === "conditions") {
+      validateConditionArray(child, skillId, childLocation);
     } else if (isObject(child) || Array.isArray(child)) {
       validateNestedEffectArrays(child, skillId, childLocation);
     }
@@ -250,18 +252,22 @@ function validateRequiredMinSkillCount(skill, expectedMetadata) {
   }
 }
 
+function validateConditionArray(conditions, skillId, location) {
+  assert(Array.isArray(conditions), `${skillId} ${location} must be an array`);
+  conditions.forEach((condition, conditionIndex) => {
+    const conditionLocation = `${location}[${conditionIndex}]`;
+    assert(isObject(condition), `${skillId} ${conditionLocation} must be a non-array object`);
+    assert(Object.prototype.hasOwnProperty.call(condition, "type"), `${skillId} ${conditionLocation} missing type`);
+    const conditionType = condition.type;
+    assert(SUPPORTED_CONDITIONS.has(conditionType), `${skillId} unsupported condition ${conditionType} at ${conditionLocation}`);
+  });
+}
+
 function validateTriggerRuleConditions(rule, skillId, ruleIndex) {
   if (!Object.prototype.hasOwnProperty.call(rule, "conditions")) {
     return;
   }
-  const location = `trigger_rules[${ruleIndex}].conditions`;
-  assert(Array.isArray(rule.conditions), `${skillId} ${location} must be an array`);
-  rule.conditions.forEach((condition, conditionIndex) => {
-    const conditionLocation = `${location}[${conditionIndex}]`;
-    assert(isObject(condition), `${skillId} ${conditionLocation} must be a non-array object`);
-    const conditionType = Object.prototype.hasOwnProperty.call(condition, "type") ? condition.type : "always";
-    assert(SUPPORTED_CONDITIONS.has(conditionType), `${skillId} unsupported condition ${conditionType} at ${conditionLocation}`);
-  });
+  validateConditionArray(rule.conditions, skillId, `trigger_rules[${ruleIndex}].conditions`);
 }
 
 function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById) {
