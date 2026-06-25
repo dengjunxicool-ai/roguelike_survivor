@@ -39,5 +39,8 @@ assert(gameData.includes("_is_fire_related_skill"), "GameData must identify fire
 assert(skillManager.includes("_category_from_skill_type"), "SkillManager must map new skill type values to learnable categories");
 assert(skillManager.includes('data.get("type"'), "SkillManager must inspect the new skill type field when learning skills");
 assert(skillManager.includes('skill_data.get("offer_rule"'), "SkillManager must allow offer_rule skills to be learned from the pool");
+assert(service.includes("func _string_or"), "SkillOfferService must use a null-safe string helper");
+assert(service.includes('_string_or(skill.get("exclusive_group"'), "SkillOfferService must tolerate null exclusive_group values");
+assert(service.includes('_string_or(skill_instance.get("fusion_school")'), "SkillOfferService must tolerate null fusion_school values");
 
 console.log("[verify_fire_skill_offer_rules] PASS");

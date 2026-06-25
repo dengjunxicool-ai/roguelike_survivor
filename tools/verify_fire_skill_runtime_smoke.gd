@@ -5,6 +5,7 @@ const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.g
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
 const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_effect_manager.gd")
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
+const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const SKILLS_DATA_PATH: String = "res://data/skills.json"
 
 
@@ -62,6 +63,9 @@ func _init() -> void:
 
 func _run() -> void:
 	_build_nodes()
+	var upgrade_pool: RefCounted = UpgradePoolScript.new()
+	var generated_options: Array = upgrade_pool.call("generate_options", _player, 3)
+	_expect(generated_options is Array, "UpgradePool handles null fire skill offer fields", typeof(generated_options))
 	var skill_ids: Array[StringName] = _load_skill_ids()
 	_expect(skill_ids.size() == 34, "loads all 34 first-version fire skills", skill_ids.size())
 	for skill_id: StringName in skill_ids:

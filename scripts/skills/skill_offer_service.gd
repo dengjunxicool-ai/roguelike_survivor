@@ -10,7 +10,7 @@ const KNOWN_EXCLUSIVE_GROUPS: Array[String] = [
 
 
 func is_skill_available(player: Node, skill: Dictionary) -> bool:
-	var skill_id: StringName = StringName(String(skill.get("id", "")))
+	var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 	if skill_id == &"":
 		return false
 	var skill_manager: Node = _get_skill_manager(player)
@@ -27,25 +27,25 @@ func is_skill_available(player: Node, skill: Dictionary) -> bool:
 
 func _offer_rule_met(skill_manager: Node, offer_rule: Dictionary) -> bool:
 	for school_variant: Variant in _get_array(offer_rule.get("required_schools", [])):
-		if _count_school(skill_manager, StringName(String(school_variant))) <= 0:
+		if _count_school(skill_manager, StringName(_string_or(school_variant, ""))) <= 0:
 			return false
 	for skill_variant: Variant in _get_array(offer_rule.get("required_skills", [])):
-		if not _has_learned(skill_manager, StringName(String(skill_variant))):
+		if not _has_learned(skill_manager, StringName(_string_or(skill_variant, ""))):
 			return false
 	var min_counts: Dictionary = _get_dictionary(offer_rule.get("required_min_skill_count", {}))
 	for school_variant: Variant in min_counts.keys():
-		if _count_school(skill_manager, StringName(String(school_variant))) < int(min_counts[school_variant]):
+		if _count_school(skill_manager, StringName(_string_or(school_variant, ""))) < int(min_counts[school_variant]):
 			return false
 	return true
 
 
 func _is_blocked_by_exclusive_group(skill_manager: Node, skill: Dictionary) -> bool:
 	var blocked_groups: Array = _get_array(_get_dictionary(skill.get("offer_rule", {})).get("blocked_by_exclusive_group", []))
-	var own_group: String = String(skill.get("exclusive_group", ""))
+	var own_group: String = _string_or(skill.get("exclusive_group", ""), "")
 	if own_group != "" or KNOWN_EXCLUSIVE_GROUPS.has(own_group):
 		blocked_groups.append(own_group)
 	for group_variant: Variant in blocked_groups:
-		if _has_exclusive_group(skill_manager, String(group_variant)):
+		if _has_exclusive_group(skill_manager, _string_or(group_variant, "")):
 			return true
 	return false
 
@@ -54,14 +54,14 @@ func _has_exclusive_group(skill_manager: Node, group: String) -> bool:
 	if group == "":
 		return false
 	for skill_instance: RefCounted in _get_all_skills(skill_manager):
-		if skill_instance != null and String(skill_instance.get("exclusive_group")) == group:
+		if skill_instance != null and _string_or(skill_instance.get("exclusive_group"), "") == group:
 			return true
 	return false
 
 
 func _has_any_fusion(skill_manager: Node) -> bool:
 	for skill_instance: RefCounted in _get_all_skills(skill_manager):
-		if skill_instance != null and String(skill_instance.get("skill_type")) == "fusion":
+		if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "fusion":
 			return true
 	return false
 
@@ -79,25 +79,25 @@ func _count_school(skill_manager: Node, school: StringName) -> int:
 
 
 func _skill_instance_has_school(skill_instance: RefCounted, school: StringName) -> bool:
-	if StringName(String(skill_instance.get("school"))) == school:
+	if StringName(_string_or(skill_instance.get("school"), "")) == school:
 		return true
-	if StringName(String(skill_instance.get("fusion_school"))) == school:
+	if StringName(_string_or(skill_instance.get("fusion_school"), "")) == school:
 		return true
 
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition == null:
 		return false
-	if StringName(String(definition.get("school"))) == school:
+	if StringName(_string_or(definition.get("school"), "")) == school:
 		return true
-	if StringName(String(definition.get("fusion_school"))) == school:
+	if StringName(_string_or(definition.get("fusion_school"), "")) == school:
 		return true
 
 	var tags: Array = _get_array(definition.get("tags"))
-	if tags.has(String(school)):
+	if tags.has(_string_or(school, "")):
 		return true
 
 	var base: Dictionary = _get_dictionary(definition.get("base"))
-	return StringName(String(base.get("element", ""))) == school
+	return StringName(_string_or(base.get("element", ""), "")) == school
 
 
 func _has_learned(skill_manager: Node, skill_id: StringName) -> bool:
@@ -130,7 +130,7 @@ func _get_skill_manager(player: Node) -> Node:
 
 
 func _get_skill_type(skill: Dictionary) -> String:
-	return String(skill.get("skill_type", skill.get("type", skill.get("category", ""))))
+	return _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
 
 
 func _get_array(value: Variant) -> Array:
@@ -139,3 +139,7 @@ func _get_array(value: Variant) -> Array:
 
 func _get_dictionary(value: Variant) -> Dictionary:
 	return value if value is Dictionary else {}
+
+
+func _string_or(value: Variant, default_value: String = "") -> String:
+	return default_value if value == null else String(value)
