@@ -54,7 +54,7 @@ const chilled = byId.get("chilled");
 approx(chilled.duration, 6.0, "chilled duration");
 assert(chilled.max_stacks === 7, "chilled max_stacks");
 assert(chilled.effect && chilled.effect.move_slow_per_stack === 0.06, "chilled move slow per stack");
-assert(chilled.convert_to_status === "frozen" || chilled.max_stack_status === "frozen", "chilled must convert to frozen at max stack");
+assert(chilled.max_stack_status === "frozen", "chilled must convert to frozen at max stack");
 
 const frozen = byId.get("frozen");
 assert(frozen.type === "hard_control", "frozen must be hard_control");
