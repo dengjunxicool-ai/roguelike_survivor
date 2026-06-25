@@ -66,6 +66,7 @@ for (const actionField of ["actions_on_apply", "actions_on_tick", "actions_on_hi
   assert(areaEffect.includes(actionField), `AreaEffect must store ${actionField}`);
   assert(areaEffect.includes(`_execute_adapted_actions(${actionField}`), `AreaEffect must consume ${actionField}`);
 }
+assert(areaEffect.includes("actions_on_tick.is_empty()") && areaEffect.includes("actions_on_hit.is_empty()") && areaEffect.includes("actions_on_death.is_empty()"), "AreaEffect tick path must not skip action-only areas");
 assert(projectile.includes("actions_on_hit") && projectile.includes("_execute_adapted_actions(actions_on_hit"), "Projectile must consume nested hit actions");
 for (const existingAction of ["deal_damage", "apply_status", "spawn_area", "spawn_projectile", "spawn_summon", "heal_owner", "knockback", "add_temporary_modifier"]) {
   assert(actionExecutor.includes(`"${existingAction}"`), `SkillActionExecutor must support existing action ${existingAction}`);

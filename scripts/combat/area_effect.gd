@@ -162,7 +162,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _apply_tick_damage() -> void:
-	if damage <= 0 and status_on_hit == &"" and statuses_on_hit.is_empty() and event_on_hit == &"":
+	if damage <= 0 and status_on_hit == &"" and statuses_on_hit.is_empty() and event_on_hit == &"" and actions_on_tick.is_empty() and actions_on_hit.is_empty() and actions_on_death.is_empty():
 		return
 
 	var targets: Array[Node] = _collect_tick_damage_targets()
