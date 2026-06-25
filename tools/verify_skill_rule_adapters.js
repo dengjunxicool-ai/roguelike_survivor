@@ -19,6 +19,7 @@ const eventBus = read("scripts/skills/skill_event_bus.gd");
 const actionExecutor = read("scripts/skills/skill_action_executor.gd");
 const areaEffect = read("scripts/combat/area_effect.gd");
 const projectile = read("scripts/combat/projectile.gd");
+const playerController = read("scripts/player/player_controller.gd");
 
 for (const effectType of [
   "damage",
@@ -59,8 +60,13 @@ assert(eventBus.includes("SkillTriggerRuleAdapterScript"), "SkillEventBus must u
 assert(eventBus.includes("can_execute_rule_event"), "SkillEventBus must apply rule counter/cooldown guards");
 assert(eventBus.includes("get_all_skills"), "SkillEventBus must evaluate owned trigger rules");
 assert(eventBus.includes("execute_adapted_actions"), "SkillEventBus must expose inline adapted action execution");
-assert(areaEffect.includes("actions_on_tick") && areaEffect.includes("execute_adapted_actions"), "AreaEffect must consume nested area actions");
-assert(projectile.includes("actions_on_hit") && projectile.includes("execute_adapted_actions"), "Projectile must consume nested hit actions");
+assert(playerController.includes('emit_skill_event", &"on_player_damaged"'), "Player damage must emit skill rule events");
+assert(playerController.includes('"skip_fire_passive_runtime"'), "Player damage rule event must avoid FireSkillRuntime double-run");
+for (const actionField of ["actions_on_apply", "actions_on_tick", "actions_on_hit", "actions_on_expire", "actions_on_death"]) {
+  assert(areaEffect.includes(actionField), `AreaEffect must store ${actionField}`);
+  assert(areaEffect.includes(`_execute_adapted_actions(${actionField}`), `AreaEffect must consume ${actionField}`);
+}
+assert(projectile.includes("actions_on_hit") && projectile.includes("_execute_adapted_actions(actions_on_hit"), "Projectile must consume nested hit actions");
 for (const existingAction of ["deal_damage", "apply_status", "spawn_area", "spawn_projectile", "spawn_summon", "heal_owner", "knockback", "add_temporary_modifier"]) {
   assert(actionExecutor.includes(`"${existingAction}"`), `SkillActionExecutor must support existing action ${existingAction}`);
 }
