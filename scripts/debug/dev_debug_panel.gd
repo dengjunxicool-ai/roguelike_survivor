@@ -536,12 +536,23 @@ func _get_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
 		if not (skill_variant is Dictionary):
 			continue
 		var skill: Dictionary = skill_variant
-		if StringName(String(skill.get("god_id", ""))) != god_id:
+		if not _is_god_skill_definition(skill, god_id):
 			continue
-		if bool(skill.get("offer_in_upgrade_pool", false)) != true:
+		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
 			continue
 		definitions.append(skill.duplicate(true))
 	return definitions
+
+
+func _is_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
+	if StringName(String(skill.get("god_id", ""))) == god_id:
+		return true
+	if StringName(String(skill.get("school", ""))) == god_id:
+		return true
+	if StringName(String(skill.get("fusion_school", ""))) == god_id:
+		return true
+	var tags: Array = _get_array(skill.get("tags", []))
+	return tags.has(String(god_id)) or tags.has(god_id)
 
 
 func _populate_fire_skill_options() -> void:

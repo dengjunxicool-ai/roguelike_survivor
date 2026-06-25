@@ -2,8 +2,8 @@ extends SceneTree
 
 
 const SKILLS_DATA_PATH: String = "res://data/skills.json"
-const CARD_SKILL_ID: StringName = &"mars_spark_missile"
-const PROJECTILE_SOURCE_ID: StringName = &"mars_spark_missile_projectile"
+const CARD_SKILL_ID: StringName = &"fire_cast_meteor_rain"
+const PROJECTILE_SOURCE_ID: StringName = &"meteor_rain_meteor"
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 const SkillExecutorScript: Script = preload("res://scripts/skills/skill_executor.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
@@ -52,8 +52,8 @@ func _run() -> void:
 		_finish()
 		return
 
-	_expect(String(_selected_skill.get("god_id", "")) == "fire", "card selected")
-	_expect(bool(_selected_skill.get("offer_in_upgrade_pool", false)), "card selected from upgrade pool")
+	_expect(String(_selected_skill.get("school", "")) == "fire", "card selected")
+	_expect(_selected_skill.get("offer_rule", {}) is Dictionary, "card selected from offer_rule pool")
 
 	await process_frame
 	var data_manager: Node = _get_data_manager()
@@ -122,10 +122,10 @@ func _runtime_definition_matches_selected_contract(runtime_definition: Dictionar
 	if runtime_definition.is_empty():
 		return false
 	var keys_to_match: Array[String] = [
-		"god_id",
-		"runtime_family",
-		"offer_in_upgrade_pool",
-		"particle"
+		"school",
+		"type",
+		"offer_rule",
+		"trigger_rules"
 	]
 	for key: String in keys_to_match:
 		if not runtime_definition.has(key):

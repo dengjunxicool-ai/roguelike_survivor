@@ -5,7 +5,7 @@ const APP_BOOTSTRAP_PATH: String = "res://scenes/app_bootstrap.tscn"
 const CHARACTER_ID: StringName = &"mage"
 const WEAPON_ID: StringName = &"fire_staff"
 const MAP_ID: StringName = &"abandoned_dungeon"
-const DEFAULT_SKILL_ID: StringName = &"mars_spark_missile"
+const DEFAULT_SKILL_ID: StringName = &"fire_attack_searing"
 const EXPECTED_GOD_IDS: Array = [&"fire", &"thunder", &"frost", &"curse", &"holy", &"chaos"]
 
 var _failed: bool = false
@@ -109,8 +109,8 @@ func _verify_god_skill_cards_ui(panel: Node) -> void:
 	else:
 		_fail("debug_select_god_skill_cards returns Dictionary for fire", typeof(fire_selection_variant))
 
-	var fire_card: Button = panel.find_child("GodSkillCard_mars_spark_missile", true, false) as Button
-	_expect(fire_card != null, "mars_spark_missile card exists under fire god", fire_card.name if fire_card != null else "missing")
+	var fire_card: Button = panel.find_child("GodSkillCard_fire_attack_searing", true, false) as Button
+	_expect(fire_card != null, "fire_attack_searing card exists under fire god", fire_card.name if fire_card != null else "missing")
 	if fire_card != null:
 		_expect(fire_card.text.contains("描述："), "fire card includes skill description", fire_card.text)
 		_expect(fire_card.text.contains("特效："), "fire card includes vfx description", fire_card.text)

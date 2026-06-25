@@ -203,7 +203,12 @@ function validateRuntimeRules(skill, markdown) {
 }
 
 function collectSkills(document) {
-  return asArray(document.skills).filter((skill) => skill && skill.god_id === "fire" && skill.offer_in_upgrade_pool !== false);
+  return asArray(document.skills).filter(
+    (skill) =>
+      skill &&
+      (skill.school === "fire" || skill.fusion_school === "fire" || asArray(skill.tags).includes("fire")) &&
+      (skill.offer_rule || skill.offer_in_upgrade_pool !== false)
+  );
 }
 
 function validateDocument(document, markdown) {
@@ -215,18 +220,19 @@ function validateDocument(document, markdown) {
   for (const skill of collectSkills(document)) {
     const skillId = String(skill.id || "<missing id>");
     const runtimeFamily = String(skill.runtime_family || "");
+    const usesNewSchema = isNonEmptyObject(skill.offer_rule) || asArray(skill.trigger_rules).length > 0 || asArray(skill.effects).length > 0;
 
-    if (runtimeFamily === "") {
+    if (!usesNewSchema && runtimeFamily === "") {
       errors.push(`${skillId}: missing runtime_family`);
-    } else if (!hasDocumentedHeading(markdown, runtimeFamily)) {
+    } else if (runtimeFamily !== "" && !hasDocumentedHeading(markdown, runtimeFamily)) {
       errors.push(`${skillId}: runtime_family "${runtimeFamily}" is not documented in docs/skills/runtime_families.md`);
     }
 
-    if (!hasEventActions(skill) && !isNonEmptyPayload(skill.skill_modifiers) && !isNonEmptyObject(skill.runtime_rules)) {
+    if (!usesNewSchema && !hasEventActions(skill) && !isNonEmptyPayload(skill.skill_modifiers) && !isNonEmptyObject(skill.runtime_rules)) {
       errors.push(`${skillId}: has no effective runtime payload (events.actions, skill_modifiers, or runtime_rules)`);
     }
 
-    if (!skill.particle || typeof skill.particle.profile !== "string" || skill.particle.profile.trim() === "") {
+    if (!usesNewSchema && (!skill.particle || typeof skill.particle.profile !== "string" || skill.particle.profile.trim() === "")) {
       errors.push(`${skillId}: missing particle.profile`);
     }
 

@@ -66,14 +66,14 @@ func generate_debug_fire_skill_options(player: Node, god_id: StringName = &"fire
 
 func _select_growth_stage_options(player: Node, requested_count: int) -> Array:
 	var skill_level_up_options: Array = _build_skill_level_up_options(player)
-	var god_skill_learn_options: Array = _build_god_skill_learn_options(player)
+	var fire_skill_learn_options: Array = _build_fire_skill_learn_options(player)
 	var priority_options: Array = []
 	priority_options.append_array(_take_options(skill_level_up_options, 1))
 
 	var regular_options: Array = []
 	regular_options.append_array(skill_level_up_options)
 	regular_options.append_array(_build_level_up_upgrade_options(player))
-	regular_options.append_array(god_skill_learn_options)
+	regular_options.append_array(fire_skill_learn_options)
 
 	var selected_options: Array = []
 	_add_unique_options(selected_options, priority_options, requested_count)
@@ -164,7 +164,7 @@ func _build_level_up_upgrade_options(player: Node) -> Array:
 	return options
 
 
-func _build_god_skill_learn_options(player: Node, god_id: StringName = &"fire") -> Array:
+func _build_fire_skill_learn_options(player: Node, god_id: StringName = &"fire") -> Array:
 	var options: Array = []
 	for skill: Dictionary in _get_skill_learn_definitions():
 		var skill_id: StringName = StringName(String(skill.get("id", "")))
@@ -248,6 +248,10 @@ func _is_debug_god_skill_definition(skill: Dictionary, god_id: StringName) -> bo
 		return false
 	if StringName(String(skill.get("god_id", ""))) == god_id:
 		return true
+	if StringName(String(skill.get("school", ""))) == god_id:
+		return true
+	if StringName(String(skill.get("fusion_school", ""))) == god_id:
+		return true
 	if god_id == &"fire" and _to_string_array(_get_array(skill.get("tags", []))).has("fire"):
 		return true
 	return false
@@ -260,7 +264,7 @@ func _get_debug_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
 		if not (skill_variant is Dictionary):
 			continue
 		var skill: Dictionary = (skill_variant as Dictionary).duplicate(true)
-		if not bool(skill.get("offer_in_upgrade_pool", false)):
+		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
 			continue
 		if not _is_debug_god_skill_definition(skill, god_id):
 			continue

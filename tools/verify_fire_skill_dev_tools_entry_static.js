@@ -45,11 +45,12 @@ const skills = readJson("data/skills.json");
 const skillDefinitions = Array.isArray(skills.skills) ? skills.skills : [];
 
 const fireSkills = skillDefinitions.filter(
-  (skill) => skill.god_id === "fire" && skill.offer_in_upgrade_pool === true
+  (skill) => skill.school === "fire" || skill.fusion_school === "fire" || (skill.tags || []).includes("fire")
 );
 
-assert(fireSkills.length > 0, "expected fire upgrade skills from data/skills.json");
-assert(fireSkills[0].id === "mars_spark_missile", "mars_spark_missile must remain the first fire learnable skill");
+assert(fireSkills.length === 34, "expected 34 first-version fire-related skills from data/skills.json");
+assert(fireSkills[0].id === "fire_attack_searing", "fire_attack_searing must be the first fire skill card");
+assert(!fireSkills.some((skill) => skill.id === "mars_spark_missile"), "old mars_spark_missile card must be removed");
 
 const standaloneFireSkillsCategoryPattern = /_add_category_button\s*\([^)]*"fire_skills"[^)]*"Fire Skills"[^)]*\)/;
 assert(!standaloneFireSkillsCategoryPattern.test(panel), "DevDebugPanel must not expose Fire Skills as a standalone category");
@@ -112,8 +113,8 @@ assert(smoke.includes("debug_select_god_skill_cards"), "Godot smoke must exercis
 assert(smoke.includes("EXPECTED_GOD_IDS"), "Godot smoke must enumerate all six god buttons");
 assert(smoke.includes("button_tree_count"), "Godot smoke must assert god buttons are in the scene tree");
 assert(smoke.includes("selected_button_pressed"), "Godot smoke must assert selected god button state");
-assert(smoke.includes("GodSkillCard_mars_spark_missile"), "Godot smoke must inspect the first fire skill card");
-assert(smoke.includes("mars_spark_missile"), "Godot smoke must exercise mars_spark_missile as a fire skill");
+assert(smoke.includes("GodSkillCard_fire_attack_searing"), "Godot smoke must inspect the first fire skill card");
+assert(smoke.includes("fire_attack_searing"), "Godot smoke must exercise fire_attack_searing as a fire skill");
 assert(smoke.includes("enemy_count_after"), "Godot smoke must assert selecting a skill does not spawn enemies");
 
 const fireEffectPaths = [

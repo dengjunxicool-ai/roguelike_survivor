@@ -91,52 +91,31 @@ assert(!godSkillCardRunBody.includes("_prepare_fire_skill_debug_target"), "Selec
 
 const skills = Array.isArray(skillsData.skills) ? skillsData.skills : [];
 const fireSkills = skills.filter(
-  (skill) => skill.god_id === "fire" && skill.offer_in_upgrade_pool === true
+  (skill) => skill.school === "fire" || skill.fusion_school === "fire" || (skill.tags || []).includes("fire")
 );
-assert(fireSkills.length === 60, "data/skills.json must define 60 fire upgrade skills");
+assert(fireSkills.length === 34, "data/skills.json must define 34 first-version fire-related skills");
 assert(
-  fireSkills.some((skill) => skill.id === "mars_spark_missile"),
-  "fire upgrade skills must include mars_spark_missile"
-);
-const marsSparkMissile = fireSkills.find((skill) => skill.id === "mars_spark_missile");
-const marsCastEvent = (marsSparkMissile.events || []).find((event) => event.trigger === "on_cast");
-const marsProjectileAction = ((marsCastEvent && marsCastEvent.actions) || []).find(
-  (action) => action.type === "spawn_projectile"
-);
-assert(marsProjectileAction, "mars_spark_missile must spawn a projectile from data/skills.json");
-assert(
-  marsProjectileAction.params && marsProjectileAction.params.homing_enabled === true,
-  "mars_spark_missile projectile must enable homing in data/skills.json"
+  fireSkills.some((skill) => skill.id === "fire_attack_searing"),
+  "fire skill cards must include fire_attack_searing"
 );
 assert(
-  Number(marsProjectileAction.params.homing_turn_rate || 0) > 0,
-  "mars_spark_missile projectile must configure a positive homing turn rate"
+  !fireSkills.some((skill) => skill.id === "mars_spark_missile"),
+  "old mars_spark_missile fire card must be removed"
+);
+const searing = fireSkills.find((skill) => skill.id === "fire_attack_searing");
+assert(searing.type === "attack", "fire_attack_searing must be an attack skill");
+assert(searing.exclusive_group === "attack_school", "fire_attack_searing must claim attack_school");
+assert(
+  (searing.trigger_rules || []).some((rule) => rule.trigger === "attack_hit"),
+  "fire_attack_searing must react to attack_hit"
 );
 assert(
-  Number(marsProjectileAction.params.homing_seek_range || 0) >= 560,
-  "mars_spark_missile projectile must configure a homing seek range covering its targeting range"
+  (searing.effects || []).some((effect) => effect.type === "add_modifier"),
+  "fire_attack_searing must carry its attack modifier effect"
 );
 assert(
-  Number(marsProjectileAction.params.spread_angle || 0) >= 24,
-  "mars_spark_missile projectile must use a visible launch spread angle"
-);
-assert(
-  marsProjectileAction.params.trajectory_mode === "curve",
-  "mars_spark_missile projectile must use curved trajectories"
-);
-assert(
-  Number(marsProjectileAction.params.curve_height || 0) > 0,
-  "mars_spark_missile projectile must configure visible curve height"
-);
-assert(
-  marsProjectileAction.params.damage_type === "direct_magical",
-  "mars_spark_missile projectile must use a documented damage_type, not element-as-damage_type"
-);
-assert(
-  marsSparkMissile.damage_scaling &&
-    Array.isArray(marsSparkMissile.damage_scaling.skill_level_coefficients) &&
-    marsSparkMissile.damage_scaling.skill_level_coefficients.length > 0,
-  "mars_spark_missile must define skill_level_coefficients in data/skills.json"
+  fireSkills.some((skill) => skill.id === "fusion_fire_frost_steam_mist" && skill.type === "fusion"),
+  "fire skill cards must include fire-related fusion skills"
 );
 
 console.log("[verify_devtools_god_skill_cards_static] PASS");
