@@ -1,2469 +1,1241 @@
 {
-	"starting_skills": [
-		{
-			"id": "fireball",
-			"display_name": "火球",
-			"description": "发射火焰法球攻击敌人",
-			"tags": [
-				"fire",
-				"projectile",
-				"burn",
-				"ranged"
-			],
-			"max_level": 5,
-			"base": {
-				"damage": 16,
-				"damage_type": "direct_magical",
-				"element": "fire",
-				"cooldown": 1.1,
-				"range": 540,
-				"projectile_speed": 420,
-				"projectile_count": 1,
-				"spread_angle": 0,
-				"area_radius": 82
-			},
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.1
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "nearest_enemy",
-						"range": 520
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_projectile",
-							"params": {
-								"projectile_id": "fireball_projectile",
-								"count": 1,
-								"speed": 420,
-								"spread_angle": 0,
-								"lifetime": 2,
-								"collision_radius": 10,
-								"element": "fire"
-							}
-						}
-					]
-				},
-				{
-					"trigger": "on_projectile_hit",
-					"source_id": "fireball_projectile",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 16,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"can_crit": true,
-								"damage_origin": "primary_attack"
-							}
-						}
-					]
-				}
-			],
-			"damage_scaling": {
-				"skill_level_coefficients": [
-					1,
-					1,
-					1,
-					1,
-					1
-				]
-			},
-			"category": "active",
-			"god_id": "fire",
-			"runtime_family": "projectile",
-			"is_starting_skill": true,
-			"offer_in_upgrade_pool": false,
-			"particle": {
-				"profile": "fire_projectile"
-			}
-		}
-	],
-	"skills": [
-		{
-			"id": "mars_spark_missile",
-			"display_name": "火星飞弹",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "周期性发射小型火星弹，自动追踪最近敌人",
-			"vfx_description": "小颗橙红火星拖尾飞行",
-			"build_hint": "弹体数量流、燃烧铺垫",
-			"category": "active",
-			"runtime_family": "projectile",
-			"tags": [
-				"fire",
-				"projectile",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_projectile"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.8
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "nearest_enemy",
-						"range": 560
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_projectile",
-							"params": {
-								"projectile_id": "mars_spark_missile_projectile",
-								"count": 2,
-								"speed": 500,
-								"spread_angle": 30,
-								"trajectory_mode": "curve",
-								"curve_height": 72,
-								"lifetime": 1.8,
-								"collision_radius": 10,
-								"return_to_caster": false,
-								"homing_enabled": true,
-								"homing_turn_rate": 8.5,
-								"homing_seek_range": 560,
-								"damage": 12,
-								"damage_type": "direct_magical",
-								"damage_origin": "skill",
-								"element": "fire"
-							}
-						}
-					]
-				},
-				{
-					"trigger": "on_projectile_hit",
-					"source_id": "mars_spark_missile_projectile",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_projectile"
-							}
-						}
-					]
-				}
-			],
-			"damage_scaling": {
-				"skill_level_coefficients": [
-					1
-				]
-			}
-		},
-		{
-			"id": "flame_tongue_breath",
-			"display_name": "焰舌喷吐",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "向最近敌人方向喷出短距离火焰扇形伤害",
-			"vfx_description": "扇形火舌快速喷吐",
-			"build_hint": "近身火焰流、攻速流",
-			"category": "active",
-			"runtime_family": "cone_area",
-			"tags": [
-				"fire",
-				"cone_area",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_cone_area"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.8
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_area",
-							"params": {
-								"area_id": "flame_tongue_breath_cone",
-								"position_mode": "caster_forward",
-								"radius": 300,
-								"cone_width_degrees": 70,
-								"damage": 12,
-								"duration": 0.55,
-								"tick_interval": 0.25,
-								"damage_type": "area_direct",
-								"element": "fire",
-								"damage_origin": "skill",
-								"visual_style": "fire_cone"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "scorching_pulse",
-			"display_name": "灼热脉冲",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "周期性从玩家身上释放一圈火焰脉冲",
-			"vfx_description": "环形火浪向外扩散",
-			"build_hint": "范围流、防包围流",
-			"category": "active",
-			"runtime_family": "radial_pulse",
-			"tags": [
-				"fire",
-				"radial_pulse",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_radial_pulse"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2.2
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_area",
-							"params": {
-								"area_id": "scorching_pulse_pulse",
-								"position_mode": "caster",
-								"radius": 150,
-								"expand_from_radius": 30,
-								"expand_to_radius": 150,
-								"damage": 12,
-								"duration": 0.35,
-								"tick_interval": 0.1,
-								"knockback": 0,
-								"damage_type": "area_direct",
-								"element": "fire",
-								"damage_origin": "skill",
-								"visual_style": "fire_pulse"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "fire_feather_blade",
-			"display_name": "火羽刃",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "召唤火羽围绕玩家旋转并切割敌人",
-			"vfx_description": "羽毛状火刃环绕飞舞",
-			"build_hint": "环绕流、近身灼烧流",
-			"category": "active",
-			"runtime_family": "orbit",
-			"tags": [
-				"fire",
-				"orbit",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_orbit"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2.6
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_orbitals",
-							"params": {
-								"orbital_id": "fire_feather_blade_orbital",
-								"count": 2,
-								"radius": 84,
-								"rotation_speed": 210,
-								"duration": 7,
-								"hit_interval": 0.45,
-								"damage": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"damage_origin": "skill"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "molten_core_arrow",
-			"display_name": "熔芯箭",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "发射一支慢速高伤火箭，对首个目标伤害较高",
-			"vfx_description": "厚重熔核箭矢穿刺",
-			"build_hint": "Boss单体流、暴击流",
-			"category": "active",
-			"runtime_family": "projectile",
-			"tags": [
-				"fire",
-				"projectile",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_projectile"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.8
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "nearest_enemy",
-						"range": 560
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_projectile",
-							"params": {
-								"projectile_id": "molten_core_arrow_projectile",
-								"count": 1,
-								"speed": 340,
-								"spread_angle": 0,
-								"lifetime": 1.8,
-								"collision_radius": 10,
-								"return_to_caster": false,
-								"element": "fire"
-							}
-						}
-					]
-				},
-				{
-					"trigger": "on_projectile_hit",
-					"source_id": "molten_core_arrow_projectile",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_projectile"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "ember_spark",
-			"display_name": "余烬火花",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "击杀敌人时有概率生成追踪余烬攻击附近敌人",
-			"vfx_description": "小型余烬自动飞向目标",
-			"build_hint": "击杀流、连锁清怪",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"common",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.22,
-				"cooldown": 0.35,
-				"effect": "empower_fire_area",
-				"damage": 12
-			}
-		},
-		{
-			"id": "scorch_mark",
-			"display_name": "焦灼标记",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "火焰命中叠加焦灼层，满层后下一次火伤提高",
-			"vfx_description": "敌人身上出现红热裂纹",
-			"build_hint": "高频铺垫、爆发消耗",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"common",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "scorch_mark_stack",
-				"stacks_required": 4,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 18
-			}
-		},
-		{
-			"id": "fire_rune_armor",
-			"display_name": "火纹护甲",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "玩家周围敌人受到轻微火伤，玩家获得少量减伤",
-			"vfx_description": "身体浮现燃烧符文",
-			"build_hint": "近身坦克流、受击反击",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "nearby_fire_aura_and_player_damage_reduction",
-				"aura_radius": 115,
-				"aura_damage": 4,
-				"aura_tick_interval": 0.5,
-				"damage_taken_multiplier_add": -0.06,
-				"max_targets_per_tick": 8
-			}
-		},
-		{
-			"id": "heatwave_push",
-			"display_name": "热浪推击",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "周期性释放热浪，造成火伤并轻微击退普通敌人",
-			"vfx_description": "半透明橙色热浪波",
-			"build_hint": "防包围流、控制火伤",
-			"category": "active",
-			"runtime_family": "radial_pulse",
-			"tags": [
-				"fire",
-				"radial_pulse",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_radial_pulse"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2.2
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_area",
-							"params": {
-								"area_id": "heatwave_push_pulse",
-								"position_mode": "caster",
-								"radius": 150,
-								"expand_from_radius": 30,
-								"expand_to_radius": 150,
-								"damage": 12,
-								"duration": 0.35,
-								"tick_interval": 0.1,
-								"knockback": 12,
-								"damage_type": "area_direct",
-								"element": "fire",
-								"damage_origin": "skill",
-								"visual_style": "fire_pulse"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "flame_whip_shadow",
-			"display_name": "火焰鞭影",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "周期性抽打附近敌人，优先攻击靠近玩家的目标",
-			"vfx_description": "弯曲火鞭快速甩动",
-			"build_hint": "近身输出、攻速流",
-			"category": "active",
-			"runtime_family": "targeted_strike",
-			"tags": [
-				"fire",
-				"targeted_strike",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_targeted_strike"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "priority_fire_target",
-						"range": 620
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"target_mode": "targeted",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_targeted_strike"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "crimson_flame_combo",
-			"display_name": "赤焰连击",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "连续火焰命中同一目标会短暂提高火系攻速",
-			"vfx_description": "目标身上火光逐层加亮",
-			"build_hint": "高频单体、Boss压制",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"common",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "crimson_flame_combo_stack",
-				"stacks_required": 4,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 18
-			}
-		},
-		{
-			"id": "flamelet_duplication",
-			"display_name": "火苗复制",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "火焰弹体命中时有概率生成一枚弱化小火苗",
-			"vfx_description": "命中后分出小火点",
-			"build_hint": "弹幕流、数量流",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "chance_spawn_weak_flamelet_on_fire_projectile_hit",
-				"chance": 0.18,
-				"flamelet_projectile_id": "flamelet_duplication_projectile",
-				"flamelet_damage_multiplier": 0.45,
-				"flamelet_speed": 420,
-				"max_extra_projectiles_per_hit": 1
-			}
-		},
-		{
-			"id": "bloodburn_spike",
-			"display_name": "燃血刺",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "向低血敌人发射火刺，目标燃烧时伤害提高",
-			"vfx_description": "红橙尖刺穿透目标",
-			"build_hint": "处决流、燃烧收割",
-			"category": "active",
-			"runtime_family": "targeted_strike",
-			"tags": [
-				"fire",
-				"targeted_strike",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_targeted_strike"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "lowest_hp_enemy",
-						"range": 620
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"target_mode": "targeted",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_targeted_strike"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "wick_guardian",
-			"display_name": "灯芯守卫",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "召唤短暂灯火精灵，自动攻击靠近玩家的敌人",
-			"vfx_description": "小火灵围绕玩家飞行",
-			"build_hint": "临时召唤流、防身流",
-			"category": "active",
-			"runtime_family": "summon",
-			"tags": [
-				"fire",
-				"summon",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_summon"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 3.8
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_summon",
-							"params": {
-								"summon_id": "wick_guardian_summon",
-								"duration": 5,
-								"attack_interval": 0.7,
-								"damage": 12,
-								"element": "fire",
-								"target_mode": "near_player"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "spark_counter",
-			"display_name": "火花反击",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "玩家受伤时向周围喷射火花，有触发冷却",
-			"vfx_description": "受击时火花四散",
-			"build_hint": "复仇流、护盾反击",
-			"category": "passive",
-			"runtime_family": "damage_taken_trigger",
-			"tags": [
-				"fire",
-				"damage_taken_trigger",
-				"common",
-				"survival"
-			],
-			"particle": {
-				"profile": "fire_damage_taken_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_player_damage_taken",
-				"cooldown": 3.5,
-				"actions": [
-					{
-						"type": "spawn_projectile",
-						"params": {
-							"projectile_id": "spark_counter_spark",
-							"count": 6,
-							"speed": 420,
-							"element": "fire"
-						}
-					},
-					{
-						"type": "deal_damage",
-						"params": {
-							"amount": 10,
-							"damage_type": "direct_magical",
-							"element": "fire"
-						}
-					}
-				]
-			}
-		},
-		{
-			"id": "heart_scorch_weakness",
-			"display_name": "灼心弱点",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "对高生命比例敌人造成额外火焰伤害",
-			"vfx_description": "目标胸口亮起红点",
-			"build_hint": "Boss开场压血、高血斩削",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "bonus_fire_damage_against_high_health_ratio_targets",
-				"min_health_ratio": 0.7,
-				"damage_multiplier_add": 0.12,
-				"boss_multiplier": 0.65
-			}
-		},
-		{
-			"id": "fire_seed_accumulation",
-			"display_name": "火种积蓄",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "火焰命中积累火种，达到层数后造成小爆发",
-			"vfx_description": "火种在目标身上跳动",
-			"build_hint": "叠层爆发、攻速流",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"common",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "fire_seed_accumulation_stack",
-				"stacks_required": 4,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 18
-			}
-		},
-		{
-			"id": "blazing_boomerang",
-			"display_name": "烈焰回旋",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "发射一枚火轮，飞出后返回玩家并造成两段伤害",
-			"vfx_description": "火轮旋转后折返",
-			"build_hint": "回收弹体流、路径输出",
-			"category": "active",
-			"runtime_family": "projectile",
-			"tags": [
-				"fire",
-				"projectile",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_projectile"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.8
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "nearest_enemy",
-						"range": 560
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_projectile",
-							"params": {
-								"projectile_id": "blazing_boomerang_projectile",
-								"count": 1,
-								"speed": 500,
-								"spread_angle": 0,
-								"lifetime": 2.4,
-								"collision_radius": 10,
-								"return_to_caster": true,
-								"element": "fire"
-							}
-						}
-					]
-				},
-				{
-					"trigger": "on_projectile_hit",
-					"source_id": "blazing_boomerang_projectile",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_projectile"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "ash_reclaim",
-			"display_name": "灰烬回收",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "燃烧敌人死亡时，略微缩短一个火系技能冷却",
-			"vfx_description": "灰烬被吸回玩家身上",
-			"build_hint": "CD循环、燃烧击杀流",
-			"category": "passive",
-			"runtime_family": "cooldown_reducer",
-			"tags": [
-				"fire",
-				"cooldown_reducer",
-				"common",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_cooldown_reducer"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "reduce_fire_cooldown_on_burning_kill",
-				"reduction_seconds": 0.18,
-				"internal_cooldown": 0.5
-			}
-		},
-		{
-			"id": "red_fire_guard_star",
-			"display_name": "赤火护星",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "每隔一段时间生成火星护体，火星会自动撞击敌人",
-			"vfx_description": "小火球绕身后射出",
-			"build_hint": "护体弹体流、数量流",
-			"category": "active",
-			"runtime_family": "orbit",
-			"tags": [
-				"fire",
-				"orbit",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_orbit"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2.6
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_orbitals",
-							"params": {
-								"orbital_id": "red_fire_guard_star_orbital",
-								"count": 3,
-								"radius": 84,
-								"rotation_speed": 210,
-								"duration": 5,
-								"hit_interval": 0.45,
-								"damage": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"damage_origin": "skill"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "molten_splinter_splash",
-			"display_name": "熔屑飞溅",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "火焰技能暴击时溅射少量火伤到附近敌人",
-			"vfx_description": "暴击后熔屑四溅",
-			"build_hint": "暴击火焰流",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "splash_fire_damage_on_fire_critical_hit",
-				"splash_radius": 90,
-				"splash_damage_multiplier": 0.35,
-				"internal_cooldown": 0.15
-			}
-		},
-		{
-			"id": "flame_shadow_step",
-			"display_name": "焰影步",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "移动一定距离后，下一次攻击附带额外火焰伤害",
-			"vfx_description": "脚下闪过短火线",
-			"build_hint": "移动流、火焰普攻强化",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"common",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 1,
-				"damage_multiplier_add": 0.18,
-				"radius_multiplier_add": 0,
-				"projectile_count_add": 0
-			}
-		},
-		{
-			"id": "searing_gaze",
-			"display_name": "炽热凝视",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "周期性锁定一个敌人造成火伤，燃烧目标优先",
-			"vfx_description": "细长红光锁定目标",
-			"build_hint": "单体锁定、燃烧收割",
-			"category": "active",
-			"runtime_family": "targeted_strike",
-			"tags": [
-				"fire",
-				"targeted_strike",
-				"common",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_targeted_strike"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 2
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "priority_fire_target",
-						"range": 620
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 12,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"target_mode": "burning_preferred",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_targeted_strike"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "fire_oil_affinity",
-			"display_name": "火油亲和",
-			"god_id": "fire",
-			"rarity": "common",
-			"source_rarity": "普通",
-			"description": "火焰伤害对已燃烧目标小幅提高",
-			"vfx_description": "燃烧目标火焰变亮",
-			"build_hint": "燃烧专精、DOT流",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"common"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"skill_modifiers": [
-				{
-					"stat": "damage",
-					"op": "multiplier_add",
-					"value": 0.08,
-					"scope": {
-						"domain": "damage",
-						"element": [
-							"fire"
-						],
-						"target_type": [
-							"burning"
-						]
-					}
-				}
-			]
-		},
-		{
-			"id": "twin_flame_cast",
-			"display_name": "双焰施放",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "每隔数次火焰技能释放，额外释放一次弱化火焰副击",
-			"vfx_description": "两道火光先后闪现",
-			"build_hint": "技能复制、火系高频",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"rare",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 4,
-				"damage_multiplier_add": 0.24,
-				"radius_multiplier_add": 0,
-				"projectile_count_add": 1
-			}
-		},
-		{
-			"id": "pyroblast_brand",
-			"display_name": "炎爆火印",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "焦灼层满的目标受到火焰命中时触发小范围炎爆",
-			"vfx_description": "红热符印爆裂",
-			"build_hint": "叠层爆发、范围清怪",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"rare",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "pyroblast_brand_stack",
-				"stacks_required": 5,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 24
-			}
-		},
-		{
-			"id": "furnace_granted_seal",
-			"display_name": "熔炉赐印",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "每累计多次火焰命中，强化下一次火焰技能的伤害和范围",
-			"vfx_description": "玩家头顶出现熔炉印记",
-			"build_hint": "强化循环、爆发窗口",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"rare",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 4,
-				"damage_multiplier_add": 0.24,
-				"radius_multiplier_add": 0.16,
-				"projectile_count_add": 0
-			}
-		},
-		{
-			"id": "blackflame_attachment",
-			"display_name": "黑焰附着",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "燃烧有概率转化为黑焰，黑焰持续更短但伤害更高",
-			"vfx_description": "普通火焰变为黑红色",
-			"build_hint": "高伤DOT、Boss灼烧",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "chance_convert_burn_to_blackflame",
-				"conversion_chance": 0.22,
-				"blackflame_duration_multiplier": 0.65,
-				"blackflame_damage_multiplier": 1.75,
-				"boss_conversion_chance_multiplier": 0.6
-			}
-		},
-		{
-			"id": "inferno_barrage",
-			"display_name": "炼狱连弹",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "火焰弹体数量增加，但单颗伤害降低",
-			"vfx_description": "多枚火弹扇形射出",
-			"build_hint": "弹幕流、状态铺垫",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"skill_modifiers": [
-				{
-					"stat": "projectile_count",
-					"op": "add",
-					"value": 1,
-					"scope": {
-						"domain": "skill",
-						"tag": [
-							"fire",
-							"projectile"
-						]
-					}
-				},
-				{
-					"stat": "damage",
-					"op": "multiplier_add",
-					"value": -0.15,
-					"scope": {
-						"domain": "damage",
-						"element": [
-							"fire"
-						]
-					}
-				}
-			]
-		},
-		{
-			"id": "sun_spear_mark",
-			"display_name": "日矛点名",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "周期性点名数个敌人，短暂延迟后落下太阳火矛",
-			"vfx_description": "金红火矛从天刺落",
-			"build_hint": "点名爆发、减速联动",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.47,
-				"radius": 60,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "armor_melting_burn",
-			"display_name": "融甲灼烧",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "燃烧目标的防御小幅降低，Boss效果衰减",
-			"vfx_description": "目标护甲边缘发红融化",
-			"build_hint": "Boss破甲、燃烧直伤",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "burning_targets_lose_armor",
-				"armor_multiplier_add": -0.1,
-				"boss_effect_multiplier": 0.5,
-				"refresh_on_fire_hit": true
-			}
-		},
-		{
-			"id": "phoenix_feather_guard",
-			"display_name": "凤凰羽护",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "玩家低血时获得火羽护体，火羽会自动反击附近敌人",
-			"vfx_description": "金红羽毛环绕玩家",
-			"build_hint": "低血生存、反击流",
-			"category": "passive",
-			"runtime_family": "shield",
-			"tags": [
-				"fire",
-				"shield",
-				"rare",
-				"survival"
-			],
-			"particle": {
-				"profile": "fire_shield"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "grant_shield_on_low_health",
-				"shield_amount": 24,
-				"duration": 5,
-				"cooldown": 18,
-				"retaliate_damage": 14
-			}
-		},
-		{
-			"id": "fire_raven_swarm",
-			"display_name": "火鸦群袭",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "燃烧目标死亡时有概率召唤火鸦攻击附近敌人",
-			"vfx_description": "火鸦从尸体上飞出",
-			"build_hint": "击杀召唤、燃烧收割",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"rare",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.32,
-				"cooldown": 0.35,
-				"effect": "spawn_fire_summon",
-				"damage": 16
-			}
-		},
-		{
-			"id": "molten_core_echo",
-			"display_name": "熔核回响",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "火焰直接伤害的一部分会在短暂延迟后再次结算",
-			"vfx_description": "命中点延迟闪烁再爆",
-			"build_hint": "延迟伤害、爆发流",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.47,
-				"radius": 60,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "searing_return_flow",
-			"display_name": "炽热回流",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "火焰弹体到达最大距离后有概率折返一次",
-			"vfx_description": "火弹飞至尽头后回旋",
-			"build_hint": "回弹弹幕、路径输出",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "chance_return_fire_projectile_at_max_range",
-				"return_chance": 0.22,
-				"return_damage_multiplier": 0.75,
-				"max_returns": 1
-			}
-		},
-		{
-			"id": "wrathflame_kill_chain",
-			"display_name": "怒焰连杀",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "短时间连续击杀会提高火焰技能数量，持续数秒",
-			"vfx_description": "玩家周围火焰急速膨胀",
-			"build_hint": "连杀数量流",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"rare",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.32,
-				"cooldown": 0.35,
-				"effect": "empower_fire_area",
-				"damage": 16
-			}
-		},
-		{
-			"id": "red_sun_shield",
-			"display_name": "赤阳护盾",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "火焰命中积累热能，满后获得短暂火盾",
-			"vfx_description": "半透明赤色圆盾",
-			"build_hint": "火盾反击、生存输出",
-			"category": "passive",
-			"runtime_family": "shield",
-			"tags": [
-				"fire",
-				"shield",
-				"rare",
-				"survival"
-			],
-			"particle": {
-				"profile": "fire_shield"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "grant_shield_from_fire_hits",
-				"shield_amount": 24,
-				"duration": 5,
-				"cooldown": 8,
-				"retaliate_damage": 14
-			}
-		},
-		{
-			"id": "soul_scorch_reckoning",
-			"display_name": "灼魂清算",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "燃烧目标受到直接火伤时积累清算值，满后爆发",
-			"vfx_description": "目标灵魂被火焰拉扯",
-			"build_hint": "DOT转爆发、Boss流",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"rare",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "soul_scorch_reckoning_stack",
-				"stacks_required": 5,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 24
-			}
-		},
-		{
-			"id": "blazing_deflection",
-			"display_name": "烈焰偏转",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "火焰弹体击杀敌人后会偏转攻击下一个目标",
-			"vfx_description": "火弹转向拖出弧线",
-			"build_hint": "连锁弹体、清怪流",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"rare",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.32,
-				"cooldown": 0.35,
-				"effect": "empower_fire_area",
-				"damage": 16
-			}
-		},
-		{
-			"id": "scorching_fervor",
-			"display_name": "焦热狂热",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "玩家周围燃烧敌人越多，火系冷却越短",
-			"vfx_description": "火焰在玩家周围高速旋转",
-			"build_hint": "近身燃烧、CD流",
-			"category": "passive",
-			"runtime_family": "cooldown_reducer",
-			"tags": [
-				"fire",
-				"cooldown_reducer",
-				"rare",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_cooldown_reducer"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "reduce_fire_cooldown_near_burning_enemies",
-				"reduction_seconds": 0.24,
-				"internal_cooldown": 0.5
-			}
-		},
-		{
-			"id": "pyre_sentence",
-			"display_name": "火刑宣告",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "标记一个高血敌人，标记期间其受到的火焰伤害提高",
-			"vfx_description": "目标头顶出现火刑印",
-			"build_hint": "Boss单体、集火流",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"rare",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "pyre_sentence_stack",
-				"stacks_required": 5,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 24
-			}
-		},
-		{
-			"id": "burnout_aftershock",
-			"display_name": "燃尽余波",
-			"god_id": "fire",
-			"rarity": "rare",
-			"source_rarity": "稀有",
-			"description": "燃烧结束时造成一次小额火焰反应伤害",
-			"vfx_description": "火焰熄灭瞬间爆出火星",
-			"build_hint": "DOT结束流、反应流",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"rare"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.47,
-				"radius": 120,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "ember_cycle",
-			"display_name": "余烬循环",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "火焰命中生成余烬，余烬满后强化下一次火系技能",
-			"vfx_description": "三枚余烬围绕玩家后汇聚",
-			"build_hint": "火系循环核心",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"epic",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 6,
-				"damage_multiplier_add": 0.32,
-				"radius_multiplier_add": 0,
-				"projectile_count_add": 0
-			}
-		},
-		{
-			"id": "heartburn_judgement",
-			"display_name": "焚心裁决",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "高生命目标受到火焰伤害时叠加焚心，满层触发单体爆发",
-			"vfx_description": "目标心口出现燃烧审判纹",
-			"build_hint": "Boss单体、精英击杀",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"epic",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "heartburn_judgement_stack",
-				"stacks_required": 6,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 32
-			}
-		},
-		{
-			"id": "pyroblast_sequence",
-			"display_name": "炎爆序列",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "连续释放三种不同火系技能后，触发一次范围炎爆",
-			"vfx_description": "三重火纹叠加后炸裂",
-			"build_hint": "多技能火系连携",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"epic"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.63,
-				"radius": 120,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "ash_rekindle",
-			"display_name": "灰烬复燃",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "燃烧结束后若目标仍存活，有概率重新点燃并减少持续时间",
-			"vfx_description": "熄灭灰烬重新亮起",
-			"build_hint": "长线DOT、Boss消耗",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"epic"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "chance_reignite_after_burn_expires",
-				"chance": 0.28,
-				"reignite_duration_multiplier": 0.6,
-				"max_reignites_per_target": 1
-			}
-		},
-		{
-			"id": "red_sun_litany",
-			"display_name": "赤日连祷",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "火系暴击累计次数后，召唤连续太阳火矛打击敌人",
-			"vfx_description": "天空落下连续金红光矛",
-			"build_hint": "火系暴击流",
-			"category": "active",
-			"runtime_family": "targeted_strike",
-			"tags": [
-				"fire",
-				"targeted_strike",
-				"epic",
-				"direct_damage"
-			],
-			"particle": {
-				"profile": "fire_targeted_strike"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.54
-					}
-				},
-				{
-					"type": "targeting",
-					"params": {
-						"mode": "priority_fire_target",
-						"range": 620
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "deal_damage",
-							"params": {
-								"amount": 22,
-								"damage_type": "direct_magical",
-								"element": "fire",
-								"target_mode": "targeted",
-								"can_crit": true,
-								"damage_origin": "skill"
-							}
-						},
-						{
-							"type": "spawn_particles",
-							"params": {
-								"profile": "fire_targeted_strike"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "blackfire_debt",
-			"display_name": "黑火债务",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "黑焰伤害会积累债务，下一次直接火伤清算部分债务",
-			"vfx_description": "黑红火焰缠绕目标后爆开",
-			"build_hint": "黑焰DOT、直伤清算",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"epic"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.63,
-				"radius": 60,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "phoenix_return_arc",
-			"display_name": "凤凰回翔",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "火焰弹体命中精英或Boss后，短暂延迟返回并再次命中",
-			"vfx_description": "凤凰形火影折返飞行",
-			"build_hint": "Boss弹体流、回弹流",
-			"category": "passive",
-			"runtime_family": "delayed_damage",
-			"tags": [
-				"fire",
-				"delayed_damage",
-				"epic"
-			],
-			"particle": {
-				"profile": "fire_delayed_damage"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "delayed_fire_reckoning",
-				"delay_seconds": 0.8,
-				"damage_multiplier": 0.63,
-				"radius": 60,
-				"source_damage_portion": 0.35
-			}
-		},
-		{
-			"id": "blazing_feast",
-			"display_name": "烈焰狂宴",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "燃烧敌人死亡时提高火系范围和持续时间，最多叠加",
-			"vfx_description": "死亡处火焰被吸入玩家",
-			"build_hint": "清怪滚雪球",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"epic",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.45,
-				"cooldown": 0.35,
-				"effect": "empower_fire_area",
-				"damage": 22
-			}
-		},
-		{
-			"id": "molten_core_overload",
-			"display_name": "熔芯过载",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "火系技能冷却降低，但连续释放过多会使玩家短暂易伤",
-			"vfx_description": "玩家身上熔芯过热发光",
-			"build_hint": "高频风险流",
-			"category": "passive",
-			"runtime_family": "cooldown_reducer",
-			"tags": [
-				"fire",
-				"cooldown_reducer",
-				"epic",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_cooldown_reducer"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "reduce_fire_cooldown_near_burning_enemies",
-				"reduction_seconds": 0.32,
-				"internal_cooldown": 0.5
-			}
-		},
-		{
-			"id": "corona_burst",
-			"display_name": "日冕爆发",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "周期性释放一次扩大后收缩的日冕火环，造成两段伤害",
-			"vfx_description": "金红日冕先扩散再回缩",
-			"build_hint": "范围爆发、防包围",
-			"category": "active",
-			"runtime_family": "radial_pulse",
-			"tags": [
-				"fire",
-				"radial_pulse",
-				"epic"
-			],
-			"particle": {
-				"profile": "fire_radial_pulse"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.7400000000000002
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_area",
-							"params": {
-								"area_id": "corona_burst_pulse",
-								"position_mode": "caster",
-								"radius": 260,
-								"expand_from_radius": 30,
-								"expand_to_radius": 260,
-								"damage": 22,
-								"duration": 0.35,
-								"tick_interval": 0.1,
-								"knockback": 0,
-								"damage_type": "area_direct",
-								"element": "fire",
-								"damage_origin": "skill",
-								"visual_style": "fire_pulse"
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": "extinguish_to_ash",
-			"display_name": "灭火成灰",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "燃烧目标被击杀时转化为灰烬能量，强化下一次反应伤害",
-			"vfx_description": "敌人化为灰烬被吸收",
-			"build_hint": "反应火系、击杀爆发",
-			"category": "passive",
-			"runtime_family": "kill_trigger",
-			"tags": [
-				"fire",
-				"kill_trigger",
-				"epic",
-				"snowball"
-			],
-			"particle": {
-				"profile": "fire_kill_trigger"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "on_fire_related_kill",
-				"chance": 0.45,
-				"cooldown": 0.35,
-				"effect": "empower_fire_area",
-				"damage": 22
-			}
-		},
-		{
-			"id": "fire_seed_fission",
-			"display_name": "火种裂变",
-			"god_id": "fire",
-			"rarity": "epic",
-			"source_rarity": "史诗",
-			"description": "火种爆发后分裂为多个小火种，寻找附近目标附着",
-			"vfx_description": "爆裂后火种四散追踪",
-			"build_hint": "叠层传播、火种流",
-			"category": "passive",
-			"runtime_family": "stack_mark",
-			"tags": [
-				"fire",
-				"stack_mark",
-				"epic",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_stack_mark"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "stack_mark_then_consume",
-				"stack_id": "fire_seed_fission_stack",
-				"stacks_required": 6,
-				"max_stacks": 6,
-				"consume_effect": "fire_burst_or_empower",
-				"consume_damage": 32
-			}
-		},
-		{
-			"id": "final_flame_crown",
-			"display_name": "终焰王冠",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "所有火系伤害积累终焰值，满后进入终焰状态，短时间火系技能全面强化",
-			"vfx_description": "玩家头顶浮现燃烧王冠",
-			"build_hint": "火系终局、全火专精",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"legendary",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 8,
-				"damage_multiplier_add": 0.45,
-				"radius_multiplier_add": 0.3,
-				"projectile_count_add": 1
-			}
-		},
-		{
-			"id": "phoenix_nirvana",
-			"display_name": "凤凰涅槃",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "每局一次，受到致命伤时保留生命并释放凤凰火爆，之后火系伤害提高",
-			"vfx_description": "巨大凤凰虚影展开双翼",
-			"build_hint": "低血火系、复活流",
-			"category": "passive",
-			"runtime_family": "revive_once",
-			"tags": [
-				"fire",
-				"revive_once",
-				"legendary",
-				"survival"
-			],
-			"particle": {
-				"profile": "fire_revive_once"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "revive_once_per_run",
-				"revive_health_ratio": 0.45,
-				"explosion_radius": 260,
-				"explosion_damage": 138,
-				"post_revive_fire_damage_multiplier_add": 0.25
-			}
-		},
-		{
-			"id": "solar_furnace",
-			"display_name": "太阳熔炉",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "每隔一段时间将下一个火系技能熔铸为强化版本，增加范围、数量或伤害",
-			"vfx_description": "空中出现太阳熔炉锻造技能",
-			"build_hint": "周期爆发、技能强化",
-			"category": "passive",
-			"runtime_family": "empower_next_fire",
-			"tags": [
-				"fire",
-				"empower_next_fire",
-				"legendary",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_empower_next_fire"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "charge_then_empower_next_fire",
-				"charges_required": 8,
-				"damage_multiplier_add": 0.45,
-				"radius_multiplier_add": 0.3,
-				"projectile_count_add": 1
-			}
-		},
-		{
-			"id": "black_sun_descends",
-			"display_name": "黑日降临",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "燃烧可转化为黑日火，黑日火击杀会传播较弱黑焰",
-			"vfx_description": "黑红日轮短暂浮现",
-			"build_hint": "黑焰传播、DOT终局",
-			"category": "passive",
-			"runtime_family": "passive_modifier",
-			"tags": [
-				"fire",
-				"passive_modifier",
-				"legendary"
-			],
-			"particle": {
-				"profile": "fire_passive_modifier"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "black_sun_fire_spreads_blackflame_on_kill",
-				"conversion_chance": 0.3,
-				"spread_radius": 140,
-				"spread_damage_multiplier": 0.55,
-				"max_spread_targets": 4
-			}
-		},
-		{
-			"id": "all_fires_as_one",
-			"display_name": "万火归一",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "本局火系技能越多，所有火系技能获得额外效果；非火系权重降低",
-			"vfx_description": "多道火焰汇入玩家核心",
-			"build_hint": "单系专精、火焰神恩",
-			"category": "passive",
-			"runtime_family": "fire_skill_count_scaling",
-			"tags": [
-				"fire",
-				"fire_skill_count_scaling",
-				"legendary",
-				"scaling"
-			],
-			"particle": {
-				"profile": "fire_fire_skill_count_scaling"
-			},
-			"offer_in_upgrade_pool": true,
-			"runtime_rules": {
-				"trigger_scope": "fire",
-				"element": "fire",
-				"first_version_simplification": "data-driven rule; runtime adapter may resolve exact targeting and stacking semantics later",
-				"rule": "scale_with_owned_fire_skill_count",
-				"per_fire_skill_damage_multiplier_add": 0.04,
-				"per_fire_skill_radius_multiplier_add": 0.02,
-				"per_fire_skill_trigger_chance_add": 0.005,
-				"non_fire_offer_weight_multiplier": 0.75,
-				"cap_fire_skill_count": 20
-			}
-		},
-		{
-			"id": "worldending_flame_wheel",
-			"display_name": "灭世炎轮",
-			"god_id": "fire",
-			"rarity": "legendary",
-			"source_rarity": "传说",
-			"description": "周期性召唤巨大炎轮扫过敌群，炎轮命中燃烧目标会释放额外火爆",
-			"vfx_description": "巨大旋转火轮横扫战场",
-			"build_hint": "终局清场、燃烧爆发",
-			"category": "active",
-			"runtime_family": "radial_pulse",
-			"tags": [
-				"fire",
-				"radial_pulse",
-				"legendary"
-			],
-			"particle": {
-				"profile": "fire_radial_pulse"
-			},
-			"offer_in_upgrade_pool": true,
-			"components": [
-				{
-					"type": "cooldown",
-					"params": {
-						"seconds": 1.54
-					}
-				}
-			],
-			"events": [
-				{
-					"trigger": "on_cast",
-					"actions": [
-						{
-							"type": "spawn_area",
-							"params": {
-								"area_id": "worldending_flame_wheel_pulse",
-								"position_mode": "caster",
-								"radius": 260,
-								"expand_from_radius": 30,
-								"expand_to_radius": 260,
-								"damage": 30,
-								"duration": 0.35,
-								"tick_interval": 0.1,
-								"knockback": 0,
-								"damage_type": "area_direct",
-								"element": "fire",
-								"damage_origin": "skill",
-								"visual_style": "fire_pulse"
-							}
-						}
-					]
-				}
-			]
-		}
-	]
+  "skills": [
+    {
+      "id": "fire_attack_searing",
+      "name": "灼热攻击",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "attack",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": "attack_school",
+      "tags": ["attack", "fire", "status_burning", "ground_path"],
+      "mechanic_family": "attack_status_ground_path",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": ["attack_school"]
+      },
+      "trigger_rules": [
+        {
+          "trigger": "attack_hit",
+          "effects": [
+            { "type": "add_modifier", "modifier": "attack_damage_multiplier", "value": 0.2, "damage_type": "fire" },
+            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+          ]
+        },
+        {
+          "trigger": "attack_hit",
+          "counter_key": "searing_attack_hits",
+          "threshold": 4,
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "searing_fire_path",
+              "radius": 0.8,
+              "duration": 2.5,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.12 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_dash_blazing_run",
+      "name": "烈焰疾行",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "dash",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": "dash_school",
+      "tags": ["dash", "fire", "status_burning", "ground_path"],
+      "mechanic_family": "dash_fire_path",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": ["dash_school"]
+      },
+      "trigger_rules": [
+        {
+          "trigger": "dash_start",
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "blazing_run_path",
+              "radius": 0.75,
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.14 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ],
+              "effects_on_apply": [
+                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.8 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_cast_meteor_rain",
+      "name": "流星火雨",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "cast",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["cast", "fire", "meteor", "status_burning", "ground_area"],
+      "mechanic_family": "cast_meteor_ground_burn",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "cast_skill",
+          "cooldown": 6.5,
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "meteor_rain_meteor",
+              "count": 3,
+              "radius": 1.6,
+              "on_hit": [
+                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 2.2, "radius": 1.6 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 },
+                {
+                  "type": "spawn_area",
+                  "area_id": "meteor_burning_ground",
+                  "radius": 1.0,
+                  "duration": 3.0,
+                  "tick_interval": 0.5,
+                  "effects_on_tick": [
+                    { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.14 },
+                    { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_cast_lava_rift",
+      "name": "熔岩裂涌",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "cast",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["cast", "fire", "rift", "status_burning", "line_area"],
+      "mechanic_family": "cast_line_rift_burn",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "cast_skill",
+          "cooldown": 5.5,
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "lava_rift",
+              "length": 6.0,
+              "width": 0.8,
+              "duration": 1.5,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 0.54 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ],
+              "effects_on_apply": [
+                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 1.6 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_cast_scorching_vortex",
+      "name": "焚风旋涡",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "cast",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["cast", "fire", "vortex", "status_burning", "area"],
+      "mechanic_family": "cast_radial_vortex_burn",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "cast_skill",
+          "cooldown": 7.0,
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "scorching_vortex",
+              "radius": 2.2,
+              "duration": 4.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.25 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 },
+                { "type": "pull", "radius": 2.2, "strength": 0.2 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_summon_crimson_dragon",
+      "name": "赤焰龙",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "summon",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["summon", "fire", "dragon", "cone", "status_burning"],
+      "mechanic_family": "summon_cone_breath_burn",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "cast_skill",
+          "effects": [
+            { "type": "spawn_summon", "summon_id": "crimson_dragon", "count": 1, "attack_interval": 3.0, "duration": 999.0 }
+          ]
+        },
+        {
+          "trigger": "summon_attack_hit",
+          "cooldown": 3.0,
+          "effects": [
+            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 1.4, "length": 4.0, "angle": 45 },
+            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_summon_ember_fox_pack",
+      "name": "余烬狐群",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "summon",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["summon", "fire", "fox", "status_burning", "explosion"],
+      "mechanic_family": "summon_burning_counter_pack",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_applied",
+          "counter_key": "ember_fox_burning_applications",
+          "threshold": 8,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "spawn_summon", "summon_id": "ember_fox", "count": 2, "duration": 12.0, "attack_interval": 1.2 }
+          ]
+        },
+        {
+          "trigger": "summon_attack_hit",
+          "effects": [
+            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.6 },
+            { "type": "spawn_area", "area_id": "ember_fox_burst", "radius": 1.2, "duration": 0.2, "effects_on_apply": [{ "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.8 }, { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }] }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_passive_burning_focus",
+      "name": "炽燃专注",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "passive",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["passive", "fire", "status_burning", "modifier"],
+      "mechanic_family": "passive_burning_amplify",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [],
+      "effects": [
+        { "type": "add_modifier", "modifier": "burning_damage_multiplier", "value": 0.25 },
+        { "type": "add_modifier", "modifier": "burning_duration_multiplier", "value": 0.2 }
+      ]
+    },
+    {
+      "id": "fire_passive_overheated_casting",
+      "name": "过热施法",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "passive",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["passive", "fire", "cast", "damage_boost", "area_boost"],
+      "mechanic_family": "passive_cast_damage_window",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_applied",
+          "cooldown": 12.0,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "add_modifier", "modifier": "cast_damage_multiplier", "value": 0.3, "duration": 5.0 },
+            { "type": "add_modifier", "modifier": "cast_radius_multiplier", "value": 0.15, "duration": 5.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_passive_scorched_ground_affinity",
+      "name": "焦土亲和",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "passive",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["passive", "fire", "ground_area", "status_burning", "modifier"],
+      "mechanic_family": "passive_ground_burning_amplify",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "add_modifier", "modifier": "burning_damage_taken_multiplier", "value": 0.35, "duration": 0.6 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_power_combustion_chain",
+      "name": "燃爆连锁",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "power",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["power", "fire", "status_burning", "enemy_death", "explosion"],
+      "mechanic_family": "power_burning_death_chain",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "enemy_death",
+          "counter_key": "combustion_burning_deaths",
+          "threshold": 12,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 2.4, "radius": 2.2 },
+            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_power_ember_attachment",
+      "name": "余烬附着",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "power",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["power", "fire", "status_burning", "enemy_death", "projectile"],
+      "mechanic_family": "power_burning_death_projectile",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "enemy_death",
+          "cooldown": 0.2,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            {
+              "type": "spawn_projectile",
+              "projectile_id": "ember_attachment_bolt",
+              "count": 1,
+              "speed": 8.0,
+              "targeting": "nearest_enemy",
+              "damage": { "damage_type": "fire", "source_type": "power", "power_scale": 0.45 },
+              "on_hit": [{ "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_power_ignite_core",
+      "name": "引燃核心",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "power",
+      "rarity": "normal",
+      "max_level": 5,
+      "exclusive_group": null,
+      "tags": ["power", "fire", "status_burning", "consume_status", "explosion"],
+      "mechanic_family": "power_consume_burning_burst",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": []
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "cooldown": 0.4,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
+            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 1.2 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fire_core_inferno_cycle",
+      "name": "炼狱循环",
+      "school": "fire",
+      "fusion_school": null,
+      "type": "core",
+      "rarity": "normal",
+      "max_level": 1,
+      "exclusive_group": "core_school",
+      "tags": ["core", "fire", "status_burning", "enemy_death", "cycle"],
+      "mechanic_family": "core_burning_death_cycle",
+      "offer_rule": {
+        "required_schools": ["fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": ["core_school"]
+      },
+      "trigger_rules": [
+        {
+          "trigger": "enemy_death",
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            { "type": "damage", "damage_type": "fire", "source_type": "core", "power_scale": 0.8, "radius": 1.4 },
+            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+          ]
+        },
+        {
+          "trigger": "enemy_death",
+          "counter_key": "inferno_cycle_splits",
+          "threshold": 20,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            {
+              "type": "spawn_projectile",
+              "projectile_id": "inferno_cycle_meteor",
+              "count": 1,
+              "damage": { "damage_type": "fire", "source_type": "core", "power_scale": 2.2 },
+              "on_hit": [{ "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_frost_steam_mist",
+      "name": "蒸灼雾域",
+      "school": "fire",
+      "fusion_school": "frost",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "frost", "status_burning", "status_chilled", "area"],
+      "mechanic_family": "fusion_fire_frost_steam_area",
+      "offer_rule": {
+        "required_schools": ["fire", "frost"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "frost": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "cooldown": 1.0,
+          "conditions": [{ "type": "target_has_status", "status": "burning" }],
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "steam_mist",
+              "radius": 2.0,
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.14 },
+                { "type": "apply_status", "status": "chilled", "stacks": 1, "duration": 6.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_frost_shattered_ember",
+      "name": "碎冰余烬",
+      "school": "fire",
+      "fusion_school": "frost",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "frost", "status_frozen", "status_burning", "projectile"],
+      "mechanic_family": "fusion_fire_frost_shatter_burst",
+      "offer_rule": {
+        "required_schools": ["fire", "frost"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "frost": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "enemy_death",
+          "cooldown": 0.3,
+          "conditions": [{ "type": "target_has_status", "status": "frozen" }],
+          "effects": [
+            { "type": "shatter_frozen", "projectile_count": 6, "damage": { "damage_type": "frost", "power_scale": 0.25 } },
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "shattered_ember",
+              "count": 3,
+              "radius": 3.5,
+              "on_hit": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.3 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_thunder_plasma_fire_path",
+      "name": "等离子火径",
+      "school": "fire",
+      "fusion_school": "thunder",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "thunder", "ground_path", "status_conductive"],
+      "mechanic_family": "fusion_fire_thunder_path_discharge",
+      "offer_rule": {
+        "required_schools": ["fire", "thunder"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "thunder": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "cooldown": 0.8,
+          "conditions": [{ "type": "skill_has_tag", "tag": "thunder" }],
+          "effects": [
+            {
+              "type": "spawn_area_from_existing_area",
+              "source_area_tag": "fire_path",
+              "area_id": "plasma_fire_path",
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.12 },
+                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_thunder_thunderburn_meteor",
+      "name": "雷燃流星",
+      "school": "fire",
+      "fusion_school": "thunder",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "thunder", "meteor", "status_conductive"],
+      "mechanic_family": "fusion_fire_thunder_conductive_arc",
+      "offer_rule": {
+        "required_schools": ["fire", "thunder"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "thunder": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "fire" },
+            { "type": "target_has_status", "status": "conductive" }
+          ],
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "thunderburn_arc",
+              "count": 3,
+              "on_hit": [
+                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.45 },
+                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_curse_ash_curse_rune",
+      "name": "灰烬咒文",
+      "school": "fire",
+      "fusion_school": "curse",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "curse", "status_burning", "status_cursed"],
+      "mechanic_family": "fusion_fire_curse_tick_accelerate",
+      "offer_rule": {
+        "required_schools": ["fire", "curse"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "curse": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_tick",
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "target_has_status", "status": "cursed" }
+          ],
+          "effects": [
+            { "type": "consume_status_duration", "status": "cursed", "duration": 0.25 },
+            {
+              "type": "spawn_area",
+              "area_id": "ash_curse_rune_fireground",
+              "radius": 1.2,
+              "duration": 2.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.12 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_curse_blackflame_serpents",
+      "name": "黑焰蛇群",
+      "school": "fire",
+      "fusion_school": "curse",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "curse", "projectile", "status_burning", "status_cursed"],
+      "mechanic_family": "fusion_fire_curse_blackflame_path",
+      "offer_rule": {
+        "required_schools": ["fire", "curse"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "curse": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "curse" },
+            { "type": "target_has_status", "status": "burning" }
+          ],
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "blackflame_serpent_path",
+              "radius": 0.6,
+              "duration": 2.5,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.12 },
+                { "type": "apply_status", "status": "cursed", "stacks": 1, "duration": 3.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_holy_holy_flame_absolution",
+      "name": "圣焰赦免",
+      "school": "fire",
+      "fusion_school": "holy",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "holy", "status_burning", "status_judgment", "shield"],
+      "mechanic_family": "fusion_fire_holy_absolution_beam",
+      "offer_rule": {
+        "required_schools": ["fire", "holy"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "holy": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_max_stack_reached",
+          "conditions": [
+            { "type": "target_has_status", "status": "judgment" },
+            { "type": "target_has_status", "status": "burning" }
+          ],
+          "effects": [
+            { "type": "consume_status_duration", "status": "burning", "duration": 1.5 },
+            { "type": "grant_shield", "shield_type": "holy_flame", "max_health_ratio": 0.04 },
+            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 1.1, "length": 4.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_holy_burning_light_barrier",
+      "name": "燃光结界",
+      "school": "fire",
+      "fusion_school": "holy",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "holy", "barrier", "status_burning", "shield"],
+      "mechanic_family": "fusion_fire_holy_barrier_edge",
+      "offer_rule": {
+        "required_schools": ["fire", "holy"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "holy": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "burning_light_barrier_edge",
+              "radius": 2.3,
+              "duration": 0.5,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 0.1 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ],
+              "effects_on_death": [
+                { "type": "grant_shield", "shield_type": "burning_light", "max_health_ratio": 0.01 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_chaos_ember_echo",
+      "name": "余烬回声",
+      "school": "fire",
+      "fusion_school": "chaos",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "chaos", "ground_path", "repeat"],
+      "mechanic_family": "fusion_fire_chaos_path_echo",
+      "offer_rule": {
+        "required_schools": ["fire", "chaos"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "chaos": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "cooldown": 2.0,
+          "conditions": [{ "type": "skill_has_tag", "tag": "ground_path" }],
+          "effects": [
+            { "type": "repeat_area_path", "delay": 1.0, "reverse": true, "duration": 2.0, "tick_interval": 0.5, "effects_on_tick": [{ "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.13 }] }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_fire_chaos_molten_split",
+      "name": "熔火分裂",
+      "school": "fire",
+      "fusion_school": "chaos",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "fire", "chaos", "projectile", "status_instability", "status_burning"],
+      "mechanic_family": "fusion_fire_chaos_projectile_split",
+      "offer_rule": {
+        "required_schools": ["fire", "chaos"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "fire": 2, "chaos": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "cooldown": 0.3,
+          "conditions": [{ "type": "target_has_status", "status": "instability" }],
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "molten_split_spark",
+              "count": 2,
+              "on_hit": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.35 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_frost_fire_crystalized_flame",
+      "name": "凝火成晶",
+      "school": "frost",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "frost", "fire", "crystal", "status_chilled"],
+      "mechanic_family": "fusion_frost_fire_crystal_spikes",
+      "offer_rule": {
+        "required_schools": ["frost", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "frost": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "conditions": [{ "type": "skill_has_tag", "tag": "frost" }],
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "crystalized_flame_spike",
+              "count": 5,
+              "on_hit": [
+                { "type": "damage", "damage_type": "frost", "source_type": "fusion", "power_scale": 0.35 },
+                { "type": "apply_status", "status": "chilled", "stacks": 1, "duration": 6.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_frost_fire_frostburn_shards",
+      "name": "霜燃碎片",
+      "school": "frost",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "frost", "fire", "status_burning", "status_frozen", "projectile"],
+      "mechanic_family": "fusion_frost_fire_frostburn_shards",
+      "offer_rule": {
+        "required_schools": ["frost", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "frost": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_applied",
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "target_has_status", "status": "frozen" }
+          ],
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "frostburn_shard",
+              "count": 8,
+              "on_hit": [
+                { "type": "damage", "damage_type": "frost", "source_type": "fusion", "power_scale": 0.22 },
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.15, "conditions": [{ "type": "target_has_status", "status": "burning" }] }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_thunder_fire_arc_ignition",
+      "name": "轰燃电弧",
+      "school": "thunder",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "thunder", "fire", "status_burning", "chain"],
+      "mechanic_family": "fusion_thunder_fire_arc_path",
+      "offer_rule": {
+        "required_schools": ["thunder", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "thunder": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "thunder" },
+            { "type": "target_has_status", "status": "burning" }
+          ],
+          "effects": [
+            {
+              "type": "spawn_projectile",
+              "projectile_id": "arc_ignition_jump",
+              "count": 1,
+              "targeting": "nearest_fire_path",
+              "damage": { "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.55 },
+              "on_hit": [{ "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_thunder_fire_thunderfire_circuit",
+      "name": "雷火回路",
+      "school": "thunder",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "thunder", "fire", "ground_path", "status_conductive"],
+      "mechanic_family": "fusion_thunder_fire_ground_circuit",
+      "offer_rule": {
+        "required_schools": ["thunder", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "thunder": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "conditions": [{ "type": "skill_has_tag", "tag": "fire" }],
+          "effects": [
+            {
+              "type": "spawn_area_from_existing_area",
+              "source_area_tag": "burning_ground",
+              "area_id": "thunderfire_circuit",
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.7 },
+                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_curse_fire_ash_soul_pact",
+      "name": "灰烬魂契",
+      "school": "curse",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "curse", "fire", "status_burning", "status_cursed"],
+      "mechanic_family": "fusion_curse_fire_curse_amplify",
+      "offer_rule": {
+        "required_schools": ["curse", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "curse": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "status_tick",
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "target_has_status", "status": "cursed" }
+          ],
+          "effects": [
+            { "type": "add_modifier", "modifier": "cursed_expire_damage_multiplier", "value": 0.08, "max_stacks": 5, "duration": 3.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_curse_fire_burning_soul_minion",
+      "name": "燃魂仆从",
+      "school": "curse",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "curse", "fire", "summon", "status_burning", "status_cursed"],
+      "mechanic_family": "fusion_curse_fire_death_minion",
+      "offer_rule": {
+        "required_schools": ["curse", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "curse": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "enemy_death",
+          "conditions": [
+            { "type": "target_has_status", "status": "burning" },
+            { "type": "target_has_status", "status": "cursed" }
+          ],
+          "effects": [
+            { "type": "spawn_summon", "summon_id": "burning_soul_minion", "count": 1, "duration": 10.0, "attack_interval": 1.2 },
+            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.6 },
+            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_holy_fire_holy_flame_purification",
+      "name": "圣焰净化",
+      "school": "holy",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "holy", "fire", "status_burning", "shield"],
+      "mechanic_family": "fusion_holy_fire_purify_burning",
+      "offer_rule": {
+        "required_schools": ["holy", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "holy": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "holy" },
+            { "type": "target_has_status", "status": "burning" }
+          ],
+          "effects": [
+            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
+            { "type": "grant_shield", "shield_type": "holy_flame_purification", "max_health_ratio": 0.02 },
+            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 0.4 }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_holy_fire_solar_hammer",
+      "name": "太阳圣锤",
+      "school": "holy",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "holy", "fire", "hammer", "status_burning", "status_judgment", "ground_path"],
+      "mechanic_family": "fusion_holy_fire_solar_cross",
+      "offer_rule": {
+        "required_schools": ["holy", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "holy": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [
+            { "type": "skill_has_tag", "tag": "holy" },
+            { "type": "target_has_status", "status": "burning" }
+          ],
+          "effects": [
+            {
+              "type": "spawn_area",
+              "area_id": "solar_hammer_cross_path",
+              "radius": 0.8,
+              "duration": 3.0,
+              "tick_interval": 0.5,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.14 },
+                { "type": "apply_status", "status": "judgment", "stacks": 1, "duration": 6.0 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_chaos_fire_riftfire_fork",
+      "name": "裂火分叉",
+      "school": "chaos",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "chaos", "fire", "projectile", "rift"],
+      "mechanic_family": "fusion_chaos_fire_projectile_fork",
+      "offer_rule": {
+        "required_schools": ["chaos", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "chaos": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "projectile_hit",
+          "conditions": [{ "type": "skill_has_tag", "tag": "fire" }],
+          "effects": [
+            {
+              "type": "spawn_projectile_burst",
+              "projectile_id": "riftfire_fork",
+              "count": 2,
+              "angle": 25,
+              "on_hit": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.35 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "fusion_chaos_fire_lava_refraction",
+      "name": "熔岩折返",
+      "school": "chaos",
+      "fusion_school": "fire",
+      "type": "fusion",
+      "rarity": "normal",
+      "max_level": 2,
+      "exclusive_group": null,
+      "tags": ["fusion", "chaos", "fire", "rift", "lava", "repeat"],
+      "mechanic_family": "fusion_chaos_fire_lava_refraction",
+      "offer_rule": {
+        "required_schools": ["chaos", "fire"],
+        "required_skills": [],
+        "blocked_by_exclusive_group": [],
+        "required_min_skill_count": { "chaos": 2, "fire": 1 }
+      },
+      "trigger_rules": [
+        {
+          "trigger": "area_tick",
+          "conditions": [{ "type": "skill_has_tag", "tag": "rift" }],
+          "effects": [
+            {
+              "type": "repeat_area_path",
+              "distance": 3.0,
+              "reverse": true,
+              "effects_on_tick": [
+                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.8 },
+                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": []
+    }
+  ]
 }
