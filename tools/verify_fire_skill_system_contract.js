@@ -178,12 +178,23 @@ function validateExpectedIdLists() {
   }
 }
 
+function validateRequiredMinSkillCount(skill) {
+  const requiredMinSkillCount = skill.offer_rule.required_min_skill_count;
+  assert(isObject(requiredMinSkillCount), `${skill.id} offer_rule.required_min_skill_count must be a non-array object`);
+  const entries = Object.entries(requiredMinSkillCount);
+  assert(entries.length > 0, `${skill.id} offer_rule.required_min_skill_count must not be empty`);
+  for (const [school, count] of entries) {
+    assert(ALLOWED_SCHOOLS.has(school), `${skill.id} offer_rule.required_min_skill_count invalid school ${school}`);
+    assert(Number.isInteger(count) && count > 0, `${skill.id} offer_rule.required_min_skill_count.${school} must be a positive integer`);
+  }
+}
+
 function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   for (const field of REQUIRED_SKILL_FIELDS) {
     assert(Object.prototype.hasOwnProperty.call(skill, field), `${skill.id || "missing id"} missing field ${field}`);
   }
-  assert(expectedIds.has(skill.id), `unexpected first-version fire skill id: ${skill.id}`);
   assert(!OBSOLETE_FIRE_IDS.has(skill.id), `obsolete fire card id still present: ${skill.id}`);
+  assert(expectedIds.has(skill.id), `unexpected first-version fire skill id: ${skill.id}`);
   assert(Array.isArray(skill.trigger_rules), `${skill.id} trigger_rules must be an array`);
   assert(Array.isArray(skill.effects), `${skill.id} effects must be an array`);
   assert(ALLOWED_SCHOOLS.has(skill.school), `${skill.id} invalid school`);
@@ -198,10 +209,11 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds) {
   if (fireFusionIds.has(skill.id)) {
     assert(skill.type === "fusion", `${skill.id} fusion skill id must set type fusion`);
     assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
-    assert(skill.offer_rule.required_min_skill_count, `${skill.id} must set offer_rule.required_min_skill_count`);
+    validateRequiredMinSkillCount(skill);
   }
   if (fireBaseIds.has(skill.id)) {
     assert(skill.type !== "fusion", `${skill.id} base skill id must not set type fusion`);
+    assert(skill.fusion_school === null, `${skill.id} base skill id must set fusion_school null`);
   }
 
   skill.trigger_rules.forEach((rule, index) => {
@@ -220,6 +232,9 @@ function main() {
   const document = readJson("data/skills.json");
   assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
   const skills = document.skills;
+  skills.forEach((skill, index) => {
+    assert(isObject(skill), `data/skills.json skills[${index}] must be a non-array object`);
+  });
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
   const expectedIds = new Set([...FIRE_BASE_IDS, ...FIRE_FUSION_IDS]);
