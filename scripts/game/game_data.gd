@@ -187,32 +187,42 @@ static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringN
 	if tags.is_empty():
 		tags = _build_fire_skill_learn_tags(skill)
 
-	var description: String = String(skill.get("description", "Learn %s." % String(skill_id)))
+	var description: String = _string_or(skill.get("description", "Learn %s." % _string_or(skill_id, "")), "")
 	return {
 		"id": upgrade_id,
-		"display_name": String(skill.get("display_name", skill_id)),
+		"display_name": _string_or(skill.get("display_name", skill_id), _string_or(skill_id, "")),
 		"description": description,
-		"rarity": String(skill.get("rarity", "common")),
+		"rarity": _string_or(skill.get("rarity", "common"), "common"),
 		"tags": tags,
 		"enabled": true,
 		"max_level": 1,
-		"learn_skill_id": String(skill_id),
+		"learn_skill_id": _string_or(skill_id, ""),
 		"god_id": "fire",
 		"level_descriptions": [description]
 	}
 
 
 static func _is_fire_related_skill(skill: Dictionary) -> bool:
-	if StringName(String(skill.get("god_id", ""))) == &"fire":
+	if StringName(_string_or(skill.get("god_id", ""), "")) == &"fire":
 		return true
-	if StringName(String(skill.get("school", ""))) == &"fire":
+	if StringName(_string_or(skill.get("school", ""), "")) == &"fire":
 		return true
-	if StringName(String(skill.get("fusion_school", ""))) == &"fire":
+	if StringName(_string_or(skill.get("fusion_school", ""), "")) == &"fire":
 		return true
 	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
-		if String(tag_variant) == "fire":
+		if _string_or(tag_variant, "") == "fire":
 			return true
 	return false
+
+
+static func _string_or(value: Variant, fallback: String = "") -> String:
+	if value == null:
+		return fallback
+	if value is String:
+		return value
+	if value is StringName:
+		return String(value)
+	return str(value)
 
 
 static func _get_dictionary_from_value(value: Variant) -> Dictionary:

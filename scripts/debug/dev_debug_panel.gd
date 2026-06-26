@@ -7,6 +7,7 @@ const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_ac
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const EnemyAttackRangeOverlayScript: Script = preload("res://scripts/debug/enemy_attack_range_overlay.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
+const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/skill_effect_summary_builder.gd")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemy.tscn")
 const FIRE_TORNADO_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/fire_tornado_effect.tscn")
 const MARS_SPARK_MISSILE_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/mars_spark_missile_effect.tscn")
@@ -1317,7 +1318,7 @@ func _level_starting_skill_to(target_level: int) -> void:
 		_log_error("Starting skill missing.")
 		return
 
-	var skill_id: StringName = StringName(String(skill.get("skill_id")))
+	var skill_id: StringName = StringName(_string_or(skill.get("skill_id"), ""))
 	while int(skill.get("current_level")) < target_level:
 		if not player.has_method("_upgrade_skill") or not bool(player.call("_upgrade_skill", skill_id, 1)):
 			break
@@ -1457,27 +1458,10 @@ func _get_god_skill_effect_description(skill: Dictionary) -> String:
 	var effect_description: String = _string_or(skill.get("effect_description", ""), "")
 	if effect_description != "":
 		return effect_description
-
-	var parts: Array[String] = []
-	for key: String in ["category", "runtime_family", "rarity"]:
-		var value: String = _string_or(skill.get(key, ""), "")
-		if value != "":
-			parts.append("%s:%s" % [key, value])
-
-	var events_variant: Variant = skill.get("events", [])
-	if events_variant is Array:
-		for event_variant: Variant in events_variant:
-			if not (event_variant is Dictionary):
-				continue
-			var event: Dictionary = event_variant
-			var trigger: String = _string_or(event.get("trigger", ""), "")
-			var actions_variant: Variant = event.get("actions", [])
-			var action_count: int = actions_variant.size() if actions_variant is Array else 0
-			if trigger != "" and action_count > 0:
-				parts.append("%s:%d actions" % [trigger, action_count])
-	if parts.is_empty():
-		return "No effect summary."
-	return " | ".join(parts)
+	var summary: String = String(SkillEffectSummaryBuilderScript.build_for_skill(skill))
+	if summary != "":
+		return summary
+	return "No effect summary."
 
 
 func _on_god_skill_card_pressed(skill_id: StringName) -> void:
@@ -2325,7 +2309,7 @@ func _build_skill_fields(player: Node, skill: RefCounted) -> Array[String]:
 	var skill_manager: Node = _get_skill_manager(player)
 	var relic_manager: Node = player.get_node_or_null("RelicManager")
 	var parts: Array[String] = [
-		"Skill=%s" % String(skill.get("skill_id")),
+		"Skill=%s" % _string_or(skill.get("skill_id"), ""),
 		"SkillLevel=%d" % int(skill.get("current_level"))
 	]
 	for stat_name: String in ["damage", "cooldown", "projectile_speed", "area_radius", "range", "projectile_count"]:
@@ -2519,7 +2503,7 @@ func _get_starting_skill_id(player: Node) -> StringName:
 			var skill: RefCounted = skill_variant as RefCounted
 			if skill == null:
 				continue
-			if String(skill.get("skill_id")) == "fireball":
+			if _string_or(skill.get("skill_id"), "") == "fireball":
 				return &"fireball"
 	return &""
 

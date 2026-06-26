@@ -439,19 +439,20 @@ function main() {
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
   const expectedIds = new Set(expectedMetadataById.keys());
-  const actualIds = new Set(skills.map((skill) => skill.id));
+  const fireSkills = skills.filter((skill) => expectedIds.has(skill.id));
+  const actualIds = new Set(fireSkills.map((skill) => skill.id));
 
-	assert(skills.length === 34, `data/skills.json must contain exactly 34 first-version skills, got ${skills.length}`);
+	assert(fireSkills.length === 34, `data/skills.json must contain exactly 34 first-version fire skills, got ${fireSkills.length}`);
 	assert(!actualIds.has("fireball"), "fireball belongs in starting_skills, not the first-version fire skill pool");
 	for (const id of expectedIds) {
 		assert(actualIds.has(id), `missing skill ${id}`);
 	}
-	for (const skill of skills) {
+	for (const skill of fireSkills) {
 		validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
 	}
-	validateMeteorRainSkill(skills);
-	validateBaseFireRangePixels(skills);
-	validateNoRawRangeUnits(skills, "data/skills.json.skills");
+	validateMeteorRainSkill(fireSkills);
+	validateBaseFireRangePixels(fireSkills);
+	validateNoRawRangeUnits(fireSkills, "data/skills.json.skills");
 
 	const combatObjects = Array.isArray(combatObjectsDocument.combat_objects) ? combatObjectsDocument.combat_objects : [];
 	const combatObjectById = new Map(combatObjects.map((object) => [object.id, object]));

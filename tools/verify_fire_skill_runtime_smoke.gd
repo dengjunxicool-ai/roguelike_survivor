@@ -214,7 +214,13 @@ func _load_skill_ids() -> Array[StringName]:
 		return result
 	for skill_variant: Variant in (parsed as Dictionary).get("skills", []):
 		if skill_variant is Dictionary:
-			var id: StringName = StringName(String((skill_variant as Dictionary).get("id", "")))
+			var skill: Dictionary = skill_variant as Dictionary
+			var school: String = str(skill.get("school", ""))
+			var fusion_school: String = str(skill.get("fusion_school", ""))
+			var tags: Array = skill.get("tags", []) if skill.get("tags", []) is Array else []
+			if school != "fire" and fusion_school != "fire" and not tags.has("fire"):
+				continue
+			var id: StringName = StringName(str(skill.get("id", "")))
 			if id != &"":
 				result.append(id)
 	return result

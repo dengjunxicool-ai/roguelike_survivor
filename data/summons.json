@@ -1,69 +1,520 @@
 {
-  "summons": [
-    {
-      "id": "summon_frost_wolf",
-      "name": "霜狼",
-      "scene_path": "res://scenes/summon_controller.tscn",
-      "max_count": 2,
-      "duration": 18.0,
-      "movement": {
-        "move_speed": 200,
-        "follow_distance": 80,
-        "min_distance": 40,
-        "leash_distance": 360,
-        "teleport_distance": 720,
-        "separation_radius": 32
-      },
-      "targeting": {
-        "detect_range": 300,
-        "retarget_interval": 0.25,
-        "target_priority": "nearest_to_summon"
-      },
-      "attack": {
-        "attack_type": "melee",
-        "attack_range": 52,
-        "attack_cooldown": 1.1,
-        "damage_type": "frost",
-        "damage_scale": 0.45,
-        "on_hit_effects": [
-          { "type": "apply_status", "status": "chilled", "stacks": 1, "duration": 6.0 }
-        ]
-      }
-    },
-    {
-      "id": "crimson_dragon",
-      "name": "赤焰龙",
-      "scene_path": "res://scenes/summon_controller.tscn",
-      "max_count": 1,
-      "duration": 999.0,
-      "movement": {
-        "move_speed": 360,
-        "follow_distance": 80,
-        "min_distance": 40,
-        "leash_distance": 540,
-        "teleport_distance": 900,
-        "separation_radius": 40
-      },
-      "targeting": {
-        "detect_range": 540,
-        "retarget_interval": 0.25,
-        "target_priority": "nearest_to_summon"
-      },
-      "attack": {
-        "attack_type": "melee",
-        "attack_range": 336,
-        "attack_cooldown": 3.0,
-        "damage_type": "fire",
-        "damage_scale": 1.4,
-        "on_hit_effects": [
-          { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-        ]
-      },
-      "visual": {
-        "texture": "res://assets/effect/crimson_dragon.png",
-        "scale": 0.13,
-        "z_index": 6
-      }
-    }
-  ]
+	"summons": [
+		{
+			"id": "summon_frost_wolf",
+			"name": "霜狼",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 2,
+			"duration": 18,
+			"movement": {
+				"move_speed": 200,
+				"follow_distance": 80,
+				"min_distance": 40,
+				"leash_distance": 360,
+				"teleport_distance": 720,
+				"separation_radius": 32
+			},
+			"targeting": {
+				"detect_range": 300,
+				"retarget_interval": 0.25,
+				"target_priority": "frozen_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 52,
+				"attack_cooldown": 1.1,
+				"damage_type": "frost",
+				"damage_scale": 0.45,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "chilled",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.16,
+				"modulate": [
+					0.62,
+					0.9,
+					1,
+					0.95
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "ice_crystal_guard",
+			"name": "冰晶守卫",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 2,
+			"duration": 16,
+			"movement": {
+				"movement_mode": "stationary",
+				"move_speed": 1,
+				"follow_distance": 96,
+				"min_distance": 40,
+				"leash_distance": 420,
+				"teleport_distance": 760,
+				"separation_radius": 44
+			},
+			"targeting": {
+				"detect_range": 260,
+				"retarget_interval": 0.25,
+				"target_priority": "nearest_to_summon"
+			},
+			"attack": {
+				"attack_type": "area_pulse",
+				"attack_range": 180,
+				"pulse_radius": 180,
+				"pulse_area_id": "frost_ring",
+				"pulse_duration": 0.28,
+				"pulse_tick_interval": 0.1,
+				"attack_cooldown": 1.4,
+				"damage_type": "frost",
+				"damage_scale": 0.34,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "chilled",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.18,
+				"modulate": [
+					0.55,
+					0.9,
+					1,
+					0.95
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "crimson_dragon",
+			"name": "赤焰龙",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 999,
+			"movement": {
+				"move_speed": 360,
+				"follow_distance": 80,
+				"min_distance": 40,
+				"leash_distance": 540,
+				"teleport_distance": 900,
+				"separation_radius": 40
+			},
+			"targeting": {
+				"detect_range": 540,
+				"retarget_interval": 0.25,
+				"target_priority": "nearest_to_summon"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 336,
+				"attack_cooldown": 3,
+				"damage_type": "fire",
+				"damage_scale": 1.4,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "burning",
+						"stacks": 1,
+						"duration": 4
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://assets/effect/crimson_dragon.png",
+				"scale": 0.13,
+				"z_index": 6
+			}
+		},
+		{
+			"id": "storm_lynx",
+			"name": "雷兽猞猁",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 22,
+			"movement": {
+				"move_speed": 260,
+				"follow_distance": 92,
+				"min_distance": 48,
+				"leash_distance": 420,
+				"teleport_distance": 760,
+				"separation_radius": 36
+			},
+			"targeting": {
+				"detect_range": 420,
+				"retarget_interval": 0.2,
+				"target_priority": "conductive_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 64,
+				"attack_cooldown": 1.2,
+				"damage_type": "thunder",
+				"damage_scale": 0.45,
+				"chain_radius": 252,
+				"chain_targets": 3,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "conductive",
+						"stacks": 1,
+						"duration": 5
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.17,
+				"modulate": [
+					0.5,
+					0.9,
+					1,
+					0.96
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "storm_crow",
+			"name": "风暴乌鸦",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 2,
+			"duration": 22,
+			"movement": {
+				"move_speed": 220,
+				"follow_distance": 120,
+				"min_distance": 64,
+				"leash_distance": 460,
+				"teleport_distance": 820,
+				"separation_radius": 52
+			},
+			"targeting": {
+				"detect_range": 540,
+				"retarget_interval": 0.25,
+				"target_priority": "conductive_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "projectile",
+				"attack_range": 520,
+				"attack_cooldown": 2,
+				"projectile_id": "thunder_arc_bolt",
+				"damage_type": "thunder",
+				"damage_scale": 0.7,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "conductive",
+						"stacks": 1,
+						"duration": 5
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.14,
+				"modulate": [
+					0.62,
+					0.82,
+					1,
+					0.95
+				],
+				"z_index": 6
+			}
+		},
+		{
+			"id": "bone_servant",
+			"name": "亡骸仆从",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 4,
+			"duration": 12,
+			"movement": {
+				"move_speed": 170,
+				"follow_distance": 96,
+				"min_distance": 44,
+				"leash_distance": 360,
+				"teleport_distance": 720,
+				"separation_radius": 34
+			},
+			"targeting": {
+				"detect_range": 300,
+				"retarget_interval": 0.25,
+				"target_priority": "nearest_to_summon"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 48,
+				"attack_cooldown": 1.2,
+				"damage_type": "curse",
+				"damage_scale": 0.35,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "cursed",
+						"stacks": 1,
+						"duration": 3
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.15,
+				"modulate": [
+					0.62,
+					0.52,
+					0.72,
+					0.95
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "soul_crow",
+			"name": "魂鸦",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 2,
+			"duration": 18,
+			"movement": {
+				"move_speed": 230,
+				"follow_distance": 124,
+				"min_distance": 62,
+				"leash_distance": 460,
+				"teleport_distance": 820,
+				"separation_radius": 48
+			},
+			"targeting": {
+				"detect_range": 540,
+				"retarget_interval": 0.25,
+				"target_priority": "cursed_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "projectile",
+				"attack_range": 520,
+				"attack_cooldown": 1.8,
+				"projectile_id": "soul_bolt_projectile",
+				"damage_type": "curse",
+				"damage_scale": 0.8,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "cursed",
+						"stacks": 1,
+						"duration": 3
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.13,
+				"modulate": [
+					0.52,
+					0.32,
+					0.72,
+					0.95
+				],
+				"z_index": 6
+			}
+		},
+		{
+			"id": "seraph",
+			"name": "炽天使",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 22,
+			"movement": {
+				"move_speed": 230,
+				"follow_distance": 118,
+				"min_distance": 58,
+				"leash_distance": 480,
+				"teleport_distance": 840,
+				"separation_radius": 44
+			},
+			"targeting": {
+				"detect_range": 520,
+				"retarget_interval": 0.25,
+				"target_priority": "judgment_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "projectile",
+				"attack_range": 520,
+				"attack_cooldown": 1.3,
+				"projectile_id": "seraph_holy_bolt",
+				"damage_type": "holy",
+				"damage_scale": 0.5,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "judgment",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.15,
+				"modulate": [
+					1,
+					0.86,
+					0.42,
+					0.96
+				],
+				"z_index": 6
+			}
+		},
+		{
+			"id": "holy_shield_guardian",
+			"name": "圣盾卫士",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 22,
+			"movement": {
+				"move_speed": 210,
+				"follow_distance": 82,
+				"min_distance": 44,
+				"leash_distance": 380,
+				"teleport_distance": 760,
+				"separation_radius": 42
+			},
+			"targeting": {
+				"detect_range": 260,
+				"retarget_interval": 0.25,
+				"target_priority": "nearest_to_owner"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 58,
+				"attack_cooldown": 2,
+				"damage_type": "holy",
+				"damage_scale": 0.6,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "judgment",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.17,
+				"modulate": [
+					1,
+					0.78,
+					0.34,
+					0.96
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "chaos_clone",
+			"name": "混沌分身",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 8,
+			"movement": {
+				"move_speed": 240,
+				"follow_distance": 96,
+				"min_distance": 46,
+				"leash_distance": 420,
+				"teleport_distance": 760,
+				"separation_radius": 38
+			},
+			"targeting": {
+				"detect_range": 420,
+				"retarget_interval": 0.2,
+				"target_priority": "instability_first_then_nearest"
+			},
+			"attack": {
+				"attack_type": "projectile",
+				"attack_range": 420,
+				"attack_cooldown": 2,
+				"projectile_id": "chaos_orb",
+				"damage_type": "arcane",
+				"damage_scale": 0.35,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "instability",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.15,
+				"modulate": [
+					0.75,
+					0.28,
+					1,
+					0.88
+				],
+				"z_index": 5
+			}
+		},
+		{
+			"id": "void_maw",
+			"name": "虚空巨口",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 1,
+			"duration": 6,
+			"movement": {
+				"movement_mode": "stationary",
+				"move_speed": 1,
+				"follow_distance": 116,
+				"min_distance": 56,
+				"leash_distance": 420,
+				"teleport_distance": 760,
+				"separation_radius": 44
+			},
+			"targeting": {
+				"detect_range": 240,
+				"retarget_interval": 0.2,
+				"target_priority": "nearest_to_summon"
+			},
+			"attack": {
+				"attack_type": "area_pulse",
+				"attack_range": 168,
+				"pulse_radius": 168,
+				"pulse_area_id": "void_rift_field",
+				"pulse_duration": 0.35,
+				"pulse_tick_interval": 0.1,
+				"attack_cooldown": 0.5,
+				"damage_type": "arcane",
+				"damage_scale": 0.2,
+				"on_hit_effects": [
+					{
+						"type": "apply_status",
+						"status": "instability",
+						"stacks": 1,
+						"duration": 6
+					}
+				]
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.2,
+				"modulate": [
+					0.42,
+					0.12,
+					0.7,
+					0.95
+				],
+				"z_index": 4
+			}
+		}
+	]
 }

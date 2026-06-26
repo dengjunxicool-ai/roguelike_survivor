@@ -20,6 +20,7 @@ const actionExecutor = read("scripts/skills/skill_action_executor.gd");
 const areaEffect = read("scripts/combat/area_effect.gd");
 const projectile = read("scripts/combat/projectile.gd");
 const playerController = read("scripts/player/player_controller.gd");
+const enemyHealthApplicationStage = read("scripts/combat/application_stages/enemy_health_application_stage.gd");
 
 for (const effectType of [
   "damage",
@@ -33,19 +34,21 @@ for (const effectType of [
   "pull",
   "knockback",
   "repeat_skill",
+  "swap_targets",
   "transform_area",
   "transfer_status",
   "consume_status_duration",
   "trigger_overload",
   "shatter_frozen",
   "spawn_projectile_burst",
+  "spawn_projectiles_at_targets",
   "repeat_area_path",
   "spawn_area_from_existing_area",
 ]) {
   assert(effectAdapter.includes(`"${effectType}"`), `SkillEffectAdapter must map ${effectType}`);
 }
 
-for (const trigger of ["attack_hit", "enemy_death", "status_max_stack_reached", "projectile_hit", "area_tick", "player_damage_taken"]) {
+for (const trigger of ["attack_hit", "enemy_death", "status_max_stack_reached", "projectile_hit", "area_tick", "player_damage_taken", "post_damage_hit"]) {
   assert(triggerAdapter.includes(`"${trigger}"`), `SkillTriggerRuleAdapter must normalize ${trigger}`);
 }
 
@@ -63,6 +66,7 @@ assert(eventBus.includes("execute_adapted_actions"), "SkillEventBus must expose 
 assert(playerController.includes('emit_skill_event", &"on_player_damaged"'), "Player damage must emit skill rule events");
 assert(playerController.includes('"skip_fire_passive_runtime"'), "Player damage rule event must avoid FireSkillRuntime double-run");
 assert(playerController.includes('"target": self'), "Player damage rule context must expose the player as target");
+assert(enemyHealthApplicationStage.includes('emit_skill_event", &"post_damage_hit"'), "Enemy damage application must emit the unified post_damage_hit event after applying damage");
 for (const actionField of ["actions_on_apply", "actions_on_tick", "actions_on_hit", "actions_on_expire", "actions_on_death"]) {
   assert(areaEffect.includes(actionField), `AreaEffect must store ${actionField}`);
   assert(areaEffect.includes(`_execute_adapted_actions(${actionField}`), `AreaEffect must consume ${actionField}`);

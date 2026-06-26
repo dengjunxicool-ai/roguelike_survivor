@@ -411,6 +411,18 @@ func _draw() -> void:
 		"meteor_crater":
 			_draw_meteor_crater()
 			return
+		"lightning_field":
+			_draw_lightning_field()
+			return
+		"lightning_strike":
+			_draw_lightning_strike()
+			return
+		"thunderstorm_cloud":
+			_draw_thunderstorm_cloud()
+			return
+		"emp_ring":
+			_draw_emp_ring()
+			return
 		"protective_lava_zone":
 			_draw_protective_lava_zone()
 			return
@@ -549,6 +561,64 @@ func _draw_meteor_crater() -> void:
 		var ember_angle: float = _visual_seed + float(ember_index) * TAU / 5.0 + _age * 0.25
 		var ember_pos: Vector2 = Vector2(cos(ember_angle), sin(ember_angle)) * radius * (0.22 + float(ember_index % 3) * 0.12)
 		draw_circle(ember_pos, radius * (0.035 + pulse * 0.012), Color(1.0, 0.78, 0.16, 0.34 * fade))
+
+
+func _draw_lightning_field() -> void:
+	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
+	var fade: float = clampf(1.0 - life_ratio * life_ratio * 0.6, 0.0, 1.0)
+	var pulse: float = 0.5 + 0.5 * sin(_age * 18.0 + _visual_seed)
+	draw_circle(Vector2.ZERO, radius, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * (0.52 + pulse * 0.16) * fade))
+	draw_arc(Vector2.ZERO, radius * (0.88 + pulse * 0.04), 0.0, TAU, 96, Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, _visual_ring_color.a * fade), 2.2, true)
+	for index: int in range(7):
+		var angle: float = _visual_seed + _age * 4.2 + float(index) * TAU / 7.0
+		var bend: float = angle + sin(_age * 7.0 + float(index)) * 0.24
+		var inner: Vector2 = Vector2(cos(angle), sin(angle)) * radius * (0.18 + 0.08 * float(index % 3))
+		var outer: Vector2 = Vector2(cos(bend), sin(bend)) * radius * (0.62 + pulse * 0.18)
+		draw_line(inner, outer, Color(0.82, 0.96, 1.0, 0.38 * fade), 1.6, true)
+
+
+func _draw_lightning_strike() -> void:
+	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
+	var fade: float = clampf(1.0 - life_ratio, 0.0, 1.0)
+	draw_circle(Vector2.ZERO, radius, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * fade))
+	draw_arc(Vector2.ZERO, radius * 0.96, 0.0, TAU, 64, Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, _visual_ring_color.a * fade), 2.5, true)
+	var top: Vector2 = Vector2(0.0, -radius)
+	var bottom: Vector2 = Vector2(0.0, radius * 0.72)
+	for branch: int in range(3):
+		var offset: float = (float(branch) - 1.0) * radius * 0.16
+		draw_polyline([
+			top + Vector2(offset, 0.0),
+			Vector2(radius * 0.12 - offset, -radius * 0.36),
+			Vector2(-radius * 0.08 + offset, radius * 0.06),
+			bottom + Vector2(-offset, 0.0)
+		], Color(0.92, 1.0, 1.0, 0.72 * fade), 2.4, true)
+
+
+func _draw_thunderstorm_cloud() -> void:
+	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
+	var fade: float = clampf(1.0 - life_ratio * life_ratio * 0.25, 0.0, 1.0)
+	var pulse: float = 0.5 + 0.5 * sin(_age * 5.0 + _visual_seed)
+	draw_circle(Vector2.ZERO, radius, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * fade))
+	for layer: int in range(5):
+		var angle: float = _visual_seed + float(layer) * TAU / 5.0 + sin(_age * 1.8 + float(layer)) * 0.12
+		var offset: Vector2 = Vector2(cos(angle), sin(angle)) * radius * (0.12 + float(layer % 2) * 0.08)
+		draw_circle(offset, radius * (0.42 + float(layer) * 0.04), Color(0.28, 0.38, 0.52, 0.18 * fade))
+	draw_arc(Vector2.ZERO, radius * (0.88 + pulse * 0.03), 0.0, TAU, 96, Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, _visual_ring_color.a * 0.7 * fade), 1.8, true)
+	for index: int in range(4):
+		var angle: float = _visual_seed + _age * 3.0 + float(index) * TAU / 4.0
+		draw_line(Vector2(cos(angle), sin(angle)) * radius * 0.38, Vector2(cos(angle + 0.28), sin(angle + 0.28)) * radius * 0.68, Color(0.9, 1.0, 0.7, 0.28 * fade), 1.4, true)
+
+
+func _draw_emp_ring() -> void:
+	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
+	var fade: float = clampf(1.0 - life_ratio * 0.65, 0.0, 1.0)
+	draw_circle(Vector2.ZERO, radius, Color(_visual_color.r, _visual_color.g, _visual_color.b, _visual_color.a * 0.32 * fade))
+	for ring: int in range(3):
+		var ring_radius: float = radius * clampf(life_ratio + float(ring) * 0.18, 0.12, 1.0)
+		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 128, Color(_visual_ring_color.r, _visual_ring_color.g, _visual_ring_color.b, _visual_ring_color.a * fade), 2.0, true)
+	for index: int in range(10):
+		var angle: float = _visual_seed + float(index) * TAU / 10.0
+		draw_line(Vector2(cos(angle), sin(angle)) * radius * 0.28, Vector2(cos(angle), sin(angle)) * radius * 0.88, Color(0.82, 0.96, 1.0, 0.14 * fade), 1.0, true)
 
 
 func _draw_protective_lava_zone() -> void:

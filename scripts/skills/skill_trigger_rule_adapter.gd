@@ -21,6 +21,7 @@ const TRIGGER_ALIASES: Dictionary = {
 	"shield_gained": &"shield_gained",
 	"shield_broken": &"shield_broken",
 	"summon_attack_hit": &"summon_attack_hit",
+	"post_damage_hit": &"post_damage_hit",
 	"always": &"always",
 }
 
@@ -44,7 +45,7 @@ static func to_events(skill_instance: RefCounted, definition: RefCounted) -> Arr
 
 
 static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Dictionary:
-	var trigger_name: String = String(rule.get("trigger", ""))
+	var trigger_name: String = str(rule.get("trigger", ""))
 	var event_name: StringName = TRIGGER_ALIASES.get(trigger_name, StringName(trigger_name))
 	if event_name == &"":
 		return {}
@@ -74,12 +75,15 @@ static func _normalize_conditions(value: Variant) -> Array:
 		if not (condition_variant is Dictionary):
 			continue
 		var condition: Dictionary = condition_variant
-		var condition_type: String = String(condition.get("type", ""))
+		var condition_type: String = str(condition.get("type", ""))
 		var params: Dictionary = _get_dictionary(condition.get("params", {})).duplicate(true)
 		match condition_type:
-			"target_has_status":
+			"target_has_status", "target_missing_status":
 				if condition.has("status") and not params.has("status_id"):
 					params["status_id"] = condition["status"]
+			"target_has_any_status":
+				if condition.has("statuses") and not params.has("statuses"):
+					params["statuses"] = condition["statuses"]
 			"target_has_tag", "skill_has_tag":
 				if condition.has("tag") and not params.has("tag"):
 					params["tag"] = condition["tag"]
@@ -99,6 +103,20 @@ static func _normalize_conditions(value: Variant) -> Array:
 				for key: String in ["count", "radius"]:
 					if condition.has(key) and not params.has(key):
 						params[key] = condition[key]
+			"event_status_is":
+				if condition.has("status") and not params.has("status"):
+					params["status"] = condition["status"]
+				if condition.has("status_id") and not params.has("status_id"):
+					params["status_id"] = condition["status_id"]
+			"damage_element_is":
+				if condition.has("element") and not params.has("element"):
+					params["element"] = condition["element"]
+			"target_has_meta":
+				for key: String in ["key", "meta"]:
+					if condition.has(key) and not params.has(key):
+						params[key] = condition[key]
+			"shield_overflowed":
+				pass
 
 		normalized.append({
 			"type": condition_type,
@@ -108,7 +126,7 @@ static func _normalize_conditions(value: Variant) -> Array:
 
 
 static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bool:
-	var counter_key: String = String(event.get("counter_key", ""))
+	var counter_key: String = str(event.get("counter_key", ""))
 	if counter_key == "" or skill_instance == null:
 		return true
 
@@ -129,9 +147,9 @@ static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_insta
 	if cooldown <= 0.0:
 		return true
 
-	var source_key: String = String(event.get("source_id", ""))
+	var source_key: String = str(event.get("source_id", ""))
 	var key: String = "trigger_cd_%s_%s" % [
-		_metadata_token(String(event.get("trigger", ""))),
+		_metadata_token(str(event.get("trigger", ""))),
 		_metadata_token(source_key if source_key != "" else "global")
 	]
 	var now: float = float(Time.get_ticks_msec()) / 1000.0

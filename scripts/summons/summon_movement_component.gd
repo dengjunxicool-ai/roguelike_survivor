@@ -9,6 +9,7 @@ var leash_distance: float = 360.0
 var teleport_distance: float = 720.0
 var separation_radius: float = 32.0
 var formation_index: int = 0
+var movement_mode: String = "follow"
 
 var _has_owner_position: bool = false
 var _last_owner_position: Vector2 = Vector2.ZERO
@@ -16,6 +17,7 @@ var _follow_direction: Vector2 = Vector2.LEFT
 
 
 func setup(config: Dictionary, index: int) -> void:
+	movement_mode = String(config.get("movement_mode", movement_mode))
 	move_speed = maxf(float(config.get("move_speed", move_speed)), 1.0)
 	follow_distance = maxf(float(config.get("follow_distance", follow_distance)), 0.0)
 	min_distance = maxf(float(config.get("min_distance", min_distance)), 0.0)
@@ -39,10 +41,14 @@ func update_owner_motion(owner: Node2D) -> void:
 
 
 func is_beyond_leash(summon: Node2D, owner: Node2D) -> bool:
+	if is_stationary():
+		return false
 	return summon != null and owner != null and summon.global_position.distance_to(owner.global_position) > leash_distance
 
 
 func is_beyond_teleport(summon: Node2D, owner: Node2D) -> bool:
+	if is_stationary():
+		return false
 	return summon != null and owner != null and summon.global_position.distance_to(owner.global_position) > teleport_distance
 
 
@@ -53,6 +59,8 @@ func teleport_near_owner(summon: Node2D, owner: Node2D) -> void:
 
 
 func move_follow(summon: Node2D, owner: Node2D, delta: float) -> void:
+	if is_stationary():
+		return
 	if summon == null or owner == null:
 		return
 	var desired: Vector2 = owner.global_position + get_follow_offset()
@@ -62,12 +70,16 @@ func move_follow(summon: Node2D, owner: Node2D, delta: float) -> void:
 
 
 func move_chase(summon: Node2D, target: Node2D, delta: float) -> void:
+	if is_stationary():
+		return
 	if summon == null or target == null:
 		return
 	summon.global_position = summon.global_position.move_toward(target.global_position, move_speed * delta)
 
 
 func move_return(summon: Node2D, owner: Node2D, delta: float) -> void:
+	if is_stationary():
+		return
 	if summon == null or owner == null:
 		return
 	var desired: Vector2 = owner.global_position + get_follow_offset()
@@ -86,3 +98,7 @@ func get_follow_offset() -> Vector2:
 		var sign_value: float = -1.0 if formation_index % 2 == 1 else 1.0
 		side_step = sign_value * float(lane) * separation_radius
 	return behind * follow_distance + side * side_step
+
+
+func is_stationary() -> bool:
+	return movement_mode == "stationary"

@@ -29,9 +29,9 @@
 			"description": "规划中的电荷、跳电、过载和高速触发神系。",
 			"tags": [
 				"thunder",
-				"charge",
+				"conductive",
 				"chain",
-				"planned"
+				"implemented"
 			],
 			"color": {
 				"hex": "#5bbcff",
@@ -42,18 +42,18 @@
 					1
 				]
 			},
-			"implemented": false
+			"implemented": true
 		},
 		{
 			"id": "frost",
 			"display_name": "寒霜",
 			"title": "冰之神",
-			"description": "规划中的冻结、减速、碎冰和控场神系。",
+			"description": "以 Chilled、Frozen、碎冰、护盾和控场为核心的冰系神系。",
 			"tags": [
 				"frost",
 				"slow",
 				"control",
-				"planned"
+				"implemented"
 			],
 			"color": {
 				"hex": "#8ee8ff",
@@ -64,7 +64,7 @@
 					1
 				]
 			},
-			"implemented": false
+			"implemented": true
 		},
 		{
 			"id": "curse",
@@ -75,7 +75,7 @@
 				"curse",
 				"shadow",
 				"debt",
-				"planned"
+				"implemented"
 			],
 			"color": {
 				"hex": "#8b4dff",
@@ -86,7 +86,7 @@
 					1
 				]
 			},
-			"implemented": false
+			"implemented": true
 		},
 		{
 			"id": "holy",
@@ -97,7 +97,7 @@
 				"holy",
 				"shield",
 				"judgement",
-				"planned"
+				"implemented"
 			],
 			"color": {
 				"hex": "#ffd86b",
@@ -108,7 +108,7 @@
 					1
 				]
 			},
-			"implemented": false
+			"implemented": true
 		},
 		{
 			"id": "chaos",
@@ -119,7 +119,7 @@
 				"chaos",
 				"random",
 				"entropy",
-				"planned"
+				"implemented"
 			],
 			"color": {
 				"hex": "#d35cff",
@@ -130,7 +130,7 @@
 					1
 				]
 			},
-			"implemented": false
+			"implemented": true
 		}
 	]
 }

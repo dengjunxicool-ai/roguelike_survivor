@@ -4,7 +4,7 @@
 			"id": "fireball_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10.0,
+			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -15,7 +15,7 @@
 					0.34
 				],
 				"flip_h": true,
-				"rotation_degrees": -42.0,
+				"rotation_degrees": -42,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -25,13 +25,13 @@
 			"visual_style": "fireball_shader",
 			"visual_mode": "asset",
 			"visual_color": [
-				1.0,
+				1,
 				0.34,
 				0.05,
 				0.9
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.84,
 				0.18,
 				0.95
@@ -41,19 +41,19 @@
 			"id": "meteor_rain_meteor",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 18.0,
+			"collision_radius": 18,
 			"destroy_on_wall": false,
 			"destroy_on_hit": true,
 			"visual_mode": "programmatic",
 			"visual_style": "meteor",
 			"visual_color": [
-				1.0,
+				1,
 				0.25,
 				0.04,
 				0.92
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.76,
 				0.14,
 				0.95
@@ -63,19 +63,19 @@
 			"id": "inferno_cycle_meteor",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 16.0,
+			"collision_radius": 16,
 			"destroy_on_wall": false,
 			"destroy_on_hit": true,
 			"visual_mode": "programmatic",
 			"visual_style": "meteor",
 			"visual_color": [
-				1.0,
+				1,
 				0.18,
 				0.04,
 				0.9
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.58,
 				0.08,
 				0.92
@@ -85,15 +85,15 @@
 			"id": "hailstorm_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10.0,
+			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					0.0,
-					0.0,
-					255.0,
+					0,
+					0,
+					255,
 					0.5
 				],
 				"scale": [
@@ -110,13 +110,13 @@
 			"visual_color": [
 				0.62,
 				0.86,
-				1.0,
+				1,
 				0.88
 			],
 			"visual_ring_color": [
 				0.94,
-				1.0,
-				1.0,
+				1,
+				1,
 				0.95
 			]
 		},
@@ -124,7 +124,7 @@
 			"id": "lightning_orb_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10.0,
+			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -132,8 +132,8 @@
 				"modulate": [
 					0.68,
 					0.9,
-					1.0,
-					1.0
+					1,
+					1
 				],
 				"scale": [
 					0.1,
@@ -152,13 +152,13 @@
 			"visual_color": [
 				0.34,
 				0.78,
-				1.0,
+				1,
 				0.82
 			],
 			"visual_ring_color": [
 				0.95,
-				1.0,
-				1.0,
+				1,
+				1,
 				0.95
 			]
 		},
@@ -166,7 +166,7 @@
 			"id": "arcane_page_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9.0,
+			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
@@ -174,8 +174,8 @@
 				"modulate": [
 					0.78,
 					0.5,
-					1.0,
-					1.0
+					1,
+					1
 				],
 				"scale": [
 					0.095,
@@ -194,13 +194,13 @@
 			"visual_color": [
 				0.68,
 				0.38,
-				1.0,
+				1,
 				0.78
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.74,
-				1.0,
+				1,
 				0.9
 			]
 		},
@@ -208,7 +208,7 @@
 			"id": "throwing_knife_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 8.0,
+			"collision_radius": 8,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
 			"visual": {
@@ -216,14 +216,14 @@
 				"modulate": [
 					0.88,
 					0.9,
-					1.0,
-					1.0
+					1,
+					1
 				],
 				"scale": [
 					0.075,
 					0.075
 				],
-				"rotation_degrees": 0.0,
+				"rotation_degrees": 0,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -237,13 +237,13 @@
 			"visual_color": [
 				0.9,
 				0.94,
-				1.0,
+				1,
 				0.95
 			],
 			"visual_ring_color": [
 				0.58,
 				0.75,
-				1.0,
+				1,
 				0.85
 			]
 		},
@@ -251,16 +251,16 @@
 			"id": "poison_bottle_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9.0,
+			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
 					0.45,
-					1.0,
+					1,
 					0.25,
-					1.0
+					1
 				],
 				"scale": [
 					0.085,
@@ -278,13 +278,13 @@
 			"visual_style": "poison_bottle",
 			"visual_color": [
 				0.45,
-				1.0,
+				1,
 				0.25,
 				0.86
 			],
 			"visual_ring_color": [
 				0.82,
-				1.0,
+				1,
 				0.36,
 				0.95
 			]
@@ -293,7 +293,7 @@
 			"id": "spinning_sword_blade",
 			"type": "orbit_object",
 			"scene": "res://scenes/orbit_object.tscn",
-			"collision_radius": 18.0,
+			"collision_radius": 18,
 			"persistent": true,
 			"follow_owner": true,
 			"visual_mode": "programmatic",
@@ -302,14 +302,14 @@
 				"modulate": [
 					0.85,
 					0.9,
-					1.0,
-					1.0
+					1,
+					1
 				],
 				"scale": [
 					0.28,
 					0.28
 				],
-				"rotation_degrees": -24.0,
+				"rotation_degrees": -24,
 				"animations": {
 					"loop": {
 						"animation": "loop"
@@ -324,14 +324,14 @@
 			"id": "generic_explosion_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 82.0,
+			"collision_radius": 82,
 			"visual_mode": "programmatic",
 			"visual": {
 				"texture": "res://icon.svg",
 				"sprite_frames": "res://assets/effect/fireball/fireball.tres",
 				"scale": [
-					2.0,
-					2.0
+					2,
+					2
 				],
 				"animations": {
 					"start": {
@@ -347,13 +347,13 @@
 			},
 			"visual_style": "fire_burst",
 			"visual_color": [
-				1.0,
+				1,
 				0.24,
 				0.04,
 				0.38
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.8,
 				0.16,
 				0.78
@@ -363,17 +363,17 @@
 			"id": "searing_fire_path",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 48.0,
+			"collision_radius": 48,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
 			"visual_color": [
-				1.0,
+				1,
 				0.28,
 				0.03,
 				0.34
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.72,
 				0.12,
 				0.76
@@ -383,17 +383,17 @@
 			"id": "blazing_run_path",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 45.0,
+			"collision_radius": 45,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
 			"visual_color": [
-				1.0,
+				1,
 				0.22,
 				0.02,
 				0.38
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.78,
 				0.14,
 				0.82
@@ -403,7 +403,7 @@
 			"id": "meteor_burning_ground",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 60.0,
+			"collision_radius": 60,
 			"visual_mode": "programmatic",
 			"visual_style": "meteor_crater",
 			"visual_color": [
@@ -413,9 +413,9 @@
 				0.34
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.62,
-				0.10,
+				0.1,
 				0.82
 			]
 		},
@@ -423,7 +423,7 @@
 			"id": "lava_rift",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 72.0,
+			"collision_radius": 72,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
 			"visual_color": [
@@ -433,7 +433,7 @@
 				0.36
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.68,
 				0.1,
 				0.8
@@ -443,17 +443,17 @@
 			"id": "scorching_vortex",
 			"type": "area",
 			"scene": "res://scenes/scorching_vortex_area.tscn",
-			"collision_radius": 132.0,
+			"collision_radius": 132,
 			"visual_mode": "programmatic",
 			"visual_style": "fire_burst",
 			"visual_color": [
-				1.0,
+				1,
 				0.24,
 				0.04,
 				0.28
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.7,
 				0.14,
 				0.72
@@ -463,17 +463,17 @@
 			"id": "ember_fox_burst",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 72.0,
+			"collision_radius": 72,
 			"visual_mode": "programmatic",
 			"visual_style": "fire_burst",
 			"visual_color": [
-				1.0,
+				1,
 				0.36,
 				0.05,
 				0.34
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.82,
 				0.18,
 				0.78
@@ -483,7 +483,7 @@
 			"id": "hunter_arrow_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 9.0,
+			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
 			"visual": {
@@ -492,13 +492,13 @@
 					0.92,
 					0.82,
 					0.48,
-					1.0
+					1
 				],
 				"scale": [
 					0.11,
 					0.11
 				],
-				"rotation_degrees": 0.0,
+				"rotation_degrees": 0,
 				"animations": {
 					"fly": {
 						"animation": "fly"
@@ -510,13 +510,13 @@
 			},
 			"visual_style": "hunter_arrow",
 			"visual_color": [
-				1.0,
+				1,
 				0.75,
 				0.22,
 				0.95
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.92,
 				0.48,
 				0.95
@@ -526,7 +526,7 @@
 			"id": "bear_trap_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 90.0,
+			"collision_radius": 90,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -569,11 +569,11 @@
 			"id": "holy_field_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 130.0,
+			"collision_radius": 130,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1.0,
+					1,
 					0.92,
 					0.38,
 					0.58
@@ -596,14 +596,14 @@
 			},
 			"visual_style": "holy_field",
 			"visual_color": [
-				1.0,
+				1,
 				0.92,
 				0.38,
 				0.22
 			],
 			"visual_ring_color": [
-				1.0,
-				1.0,
+				1,
+				1,
 				0.82,
 				0.68
 			]
@@ -612,7 +612,7 @@
 			"id": "poison_cloud_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 105.0,
+			"collision_radius": 105,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -646,7 +646,7 @@
 			],
 			"visual_ring_color": [
 				0.75,
-				1.0,
+				1,
 				0.25,
 				0.66
 			]
@@ -655,11 +655,11 @@
 			"id": "fire_oil_pot_projectile",
 			"type": "projectile",
 			"scene": "res://scenes/fireball_projectile.tscn",
-			"collision_radius": 10.0,
+			"collision_radius": 10,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1.0,
+					1,
 					0.46,
 					0.08,
 					0.88
@@ -679,13 +679,13 @@
 			},
 			"visual_style": "oil_pot",
 			"visual_color": [
-				1.0,
+				1,
 				0.42,
 				0.08,
 				0.9
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.78,
 				0.28,
 				0.95
@@ -695,11 +695,11 @@
 			"id": "fire_oil_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 110.0,
+			"collision_radius": 110,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
-					1.0,
+					1,
 					0.42,
 					0.08,
 					0.62
@@ -722,13 +722,13 @@
 			},
 			"visual_style": "lava_zone",
 			"visual_color": [
-				1.0,
+				1,
 				0.3,
 				0.04,
 				0.3
 			],
 			"visual_ring_color": [
-				1.0,
+				1,
 				0.72,
 				0.12,
 				0.72
@@ -738,7 +738,7 @@
 			"id": "smoke_cloud_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 95.0,
+			"collision_radius": 95,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -748,8 +748,8 @@
 					0.35
 				],
 				"scale": [
-					1.0,
-					1.0
+					1,
+					1
 				],
 				"animations": {
 					"start": {
@@ -781,7 +781,7 @@
 			"id": "acid_spray_cone_area",
 			"type": "area",
 			"scene": "res://scenes/area_effect.tscn",
-			"collision_radius": 320.0,
+			"collision_radius": 320,
 			"visual": {
 				"texture": "res://icon.svg",
 				"modulate": [
@@ -815,7 +815,7 @@
 			],
 			"visual_ring_color": [
 				0.86,
-				1.0,
+				1,
 				0.28,
 				0.72
 			]
@@ -840,6 +840,930 @@
 				0.88,
 				0.2,
 				1
+			]
+		},
+		{
+			"id": "frost_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "frost_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 92.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_path",
+			"visual_color": [
+				0.56,
+				0.9,
+				1,
+				0.26
+			],
+			"visual_ring_color": [
+				0.88,
+				1,
+				1,
+				0.6
+			]
+		},
+		{
+			"id": "ice_shard_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_shard",
+			"visual_color": [
+				0.62,
+				0.9,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.96,
+				1,
+				1,
+				0.95
+			]
+		},
+		{
+			"id": "glacial_lance_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 14,
+			"destroy_on_wall": true,
+			"destroy_on_hit": false,
+			"visual_mode": "programmatic",
+			"visual_style": "glacial_lance",
+			"visual_color": [
+				0.48,
+				0.86,
+				1,
+				0.96
+			],
+			"visual_ring_color": [
+				0.9,
+				1,
+				1,
+				1
+			]
+		},
+		{
+			"id": "shatter_splash",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 100.8,
+			"visual_mode": "programmatic",
+			"visual_style": "shatter_splash",
+			"visual_color": [
+				0.72,
+				0.94,
+				1,
+				0.42
+			],
+			"visual_ring_color": [
+				0.92,
+				1,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "blizzard_cloud",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 168,
+			"visual_mode": "programmatic",
+			"visual_style": "blizzard_cloud",
+			"visual_color": [
+				0.7,
+				0.86,
+				1,
+				0.3
+			],
+			"visual_ring_color": [
+				0.86,
+				0.96,
+				1,
+				0.62
+			]
+		},
+		{
+			"id": "frost_ring",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 151.2,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_ring",
+			"visual_color": [
+				0.5,
+				0.86,
+				1,
+				0.28
+			],
+			"visual_ring_color": [
+				0.9,
+				1,
+				1,
+				0.9
+			]
+		},
+		{
+			"id": "ice_crack_shard",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "absolute_zero_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 84,
+			"visual_mode": "programmatic",
+			"visual_style": "absolute_zero_field",
+			"visual_color": [
+				0.76,
+				0.96,
+				1,
+				0.36
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				1,
+				0.88
+			]
+		},
+		{
+			"id": "chain_lightning_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_orb",
+			"visual_color": [
+				0.42,
+				0.88,
+				1,
+				0.94
+			],
+			"visual_ring_color": [
+				0.96,
+				1,
+				0.62,
+				0.96
+			]
+		},
+		{
+			"id": "thunder_arc_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_orb",
+			"visual_color": [
+				0.5,
+				0.9,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.72,
+				0.95
+			]
+		},
+		{
+			"id": "ball_lightning_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 67.2,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_field",
+			"visual_color": [
+				0.32,
+				0.82,
+				1,
+				0.32
+			],
+			"visual_ring_color": [
+				0.96,
+				1,
+				0.48,
+				0.78
+			]
+		},
+		{
+			"id": "ball_lightning_orb",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 96.6,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_field",
+			"visual_color": [
+				0.28,
+				0.76,
+				1,
+				0.28
+			],
+			"visual_ring_color": [
+				0.96,
+				1,
+				0.58,
+				0.82
+			]
+		},
+		{
+			"id": "thunderstorm_cloud",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 218.4,
+			"visual_mode": "programmatic",
+			"visual_style": "thunderstorm_cloud",
+			"visual_color": [
+				0.36,
+				0.48,
+				0.62,
+				0.32
+			],
+			"visual_ring_color": [
+				0.78,
+				0.95,
+				1,
+				0.68
+			]
+		},
+		{
+			"id": "lightning_strike_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 67.2,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_strike",
+			"visual_color": [
+				0.55,
+				0.92,
+				1,
+				0.42
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.62,
+				0.9
+			]
+		},
+		{
+			"id": "emp_ring",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 235.2,
+			"visual_mode": "programmatic",
+			"visual_style": "emp_ring",
+			"visual_color": [
+				0.34,
+				0.82,
+				1,
+				0.22
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.58,
+				0.86
+			]
+		},
+		{
+			"id": "overload_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 151.2,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_strike",
+			"visual_color": [
+				0.48,
+				0.86,
+				1,
+				0.38
+			],
+			"visual_ring_color": [
+				1,
+				0.96,
+				0.42,
+				0.88
+			]
+		},
+		{
+			"id": "magnetic_pull_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 100.8,
+			"visual_mode": "programmatic",
+			"visual_style": "emp_ring",
+			"visual_color": [
+				0.28,
+				0.64,
+				1,
+				0.24
+			],
+			"visual_ring_color": [
+				0.88,
+				1,
+				0.62,
+				0.74
+			]
+		},
+		{
+			"id": "soul_chain_link",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 37.8,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.45,
+				0.12,
+				0.78,
+				0.34
+			],
+			"visual_ring_color": [
+				0.95,
+				0.62,
+				1,
+				0.72
+			]
+		},
+		{
+			"id": "black_serpent_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.18,
+				0.08,
+				0.24,
+				0.94
+			],
+			"visual_ring_color": [
+				0.82,
+				0.22,
+				1,
+				0.96
+			]
+		},
+		{
+			"id": "death_scythe_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 14,
+			"destroy_on_wall": true,
+			"destroy_on_hit": false,
+			"visual_mode": "programmatic",
+			"visual_style": "throwing_knife",
+			"visual_color": [
+				0.16,
+				0.08,
+				0.22,
+				0.92
+			],
+			"visual_ring_color": [
+				0.92,
+				0.56,
+				1,
+				0.95
+			]
+		},
+		{
+			"id": "doom_circle_delay",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 184.8,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.34,
+				0.05,
+				0.46,
+				0.26
+			],
+			"visual_ring_color": [
+				0.96,
+				0.42,
+				1,
+				0.82
+			]
+		},
+		{
+			"id": "doom_circle_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 184.8,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.6,
+				0.08,
+				0.78,
+				0.38
+			],
+			"visual_ring_color": [
+				1,
+				0.66,
+				1,
+				0.9
+			]
+		},
+		{
+			"id": "curse_whisper_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 184.8,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.22,
+				0.08,
+				0.36,
+				0.32
+			],
+			"visual_ring_color": [
+				0.86,
+				0.48,
+				1,
+				0.74
+			]
+		},
+		{
+			"id": "soul_bolt_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.58,
+				0.22,
+				0.88,
+				0.9
+			],
+			"visual_ring_color": [
+				1,
+				0.78,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "soul_explosion_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 168,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.52,
+				0.08,
+				0.72,
+				0.36
+			],
+			"visual_ring_color": [
+				1,
+				0.58,
+				1,
+				0.88
+			]
+		},
+		{
+			"id": "soul_storm_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.28,
+				1,
+				0.88
+			],
+			"visual_ring_color": [
+				1,
+				0.82,
+				1,
+				0.94
+			]
+		},
+		{
+			"id": "heavenly_wings_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 75.6,
+			"visual_mode": "programmatic",
+			"visual_style": "holy_field",
+			"visual_color": [
+				1,
+				0.9,
+				0.42,
+				0.28
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.82,
+				0.82
+			]
+		},
+		{
+			"id": "holy_ray_beam",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 58.8,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_orb",
+			"visual_color": [
+				1,
+				0.95,
+				0.52,
+				0.95
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.9,
+				0.96
+			]
+		},
+		{
+			"id": "divine_barrier_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 193.2,
+			"visual_mode": "programmatic",
+			"visual_style": "holy_field",
+			"visual_color": [
+				1,
+				0.86,
+				0.32,
+				0.26
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.78,
+				0.86
+			]
+		},
+		{
+			"id": "judgment_hammer_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 117.6,
+			"visual_mode": "programmatic",
+			"visual_style": "hammer_shockwave",
+			"visual_color": [
+				1,
+				0.78,
+				0.25,
+				0.34
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.86,
+				0.9
+			]
+		},
+		{
+			"id": "seraph_holy_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 10,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_orb",
+			"visual_color": [
+				1,
+				0.92,
+				0.44,
+				0.92
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.84,
+				0.95
+			]
+		},
+		{
+			"id": "shield_guardian_counter_wave",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 117.6,
+			"visual_mode": "programmatic",
+			"visual_style": "holy_shield_pulse",
+			"visual_color": [
+				1,
+				0.84,
+				0.34,
+				0.28
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.84,
+				0.88
+			]
+		},
+		{
+			"id": "divine_punishment_strike",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 100.8,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_strike",
+			"visual_color": [
+				1,
+				0.9,
+				0.34,
+				0.42
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.76,
+				0.92
+			]
+		},
+		{
+			"id": "counter_seal_wave",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 184.8,
+			"visual_mode": "programmatic",
+			"visual_style": "holy_shield_pulse",
+			"visual_color": [
+				1,
+				0.82,
+				0.32,
+				0.3
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.78,
+				0.9
+			]
+		},
+		{
+			"id": "absolution_light_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 117.6,
+			"visual_mode": "programmatic",
+			"visual_style": "holy_field",
+			"visual_color": [
+				1,
+				0.95,
+				0.52,
+				0.36
+			],
+			"visual_ring_color": [
+				1,
+				1,
+				0.9,
+				0.94
+			]
+		},
+		{
+			"id": "chaos_rift",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 84,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.48,
+				0.12,
+				0.78,
+				0.26
+			],
+			"visual_ring_color": [
+				0.95,
+				0.45,
+				1,
+				0.82
+			]
+		},
+		{
+			"id": "void_rift_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 210,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.18,
+				0.05,
+				0.34,
+				0.34
+			],
+			"visual_ring_color": [
+				0.74,
+				0.28,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "chaos_orb",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 14,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.18,
+				1,
+				0.95
+			],
+			"visual_ring_color": [
+				0.28,
+				1,
+				0.92,
+				0.9
+			]
+		},
+		{
+			"id": "chaos_weak_hit",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 54.6,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_orb",
+			"visual_color": [
+				0.7,
+				0.2,
+				1,
+				0.32
+			],
+			"visual_ring_color": [
+				0.3,
+				1,
+				0.9,
+				0.72
+			]
+		},
+		{
+			"id": "mutation_pulse_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 252,
+			"visual_mode": "programmatic",
+			"visual_style": "emp_ring",
+			"visual_color": [
+				0.58,
+				0.12,
+				0.9,
+				0.24
+			],
+			"visual_ring_color": [
+				0.2,
+				1,
+				0.86,
+				0.78
+			]
+		},
+		{
+			"id": "instability_fission_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 151.2,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_strike",
+			"visual_color": [
+				0.75,
+				0.16,
+				1,
+				0.42
+			],
+			"visual_ring_color": [
+				0.35,
+				1,
+				0.9,
+				0.92
+			]
+		},
+		{
+			"id": "chaos_exchange_line",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 37.8,
+			"visual_mode": "programmatic",
+			"visual_style": "emp_ring",
+			"visual_color": [
+				0.45,
+				0.08,
+				0.72,
+				0.24
+			],
+			"visual_ring_color": [
+				0.95,
+				0.48,
+				1,
+				0.82
+			]
+		},
+		{
+			"id": "chaos_singularity_field",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 504,
+			"visual_mode": "programmatic",
+			"visual_style": "thunderstorm_cloud",
+			"visual_color": [
+				0.12,
+				0.03,
+				0.22,
+				0.38
+			],
+			"visual_ring_color": [
+				0.82,
+				0.25,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "chaos_singularity_burst",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 504,
+			"visual_mode": "programmatic",
+			"visual_style": "lightning_strike",
+			"visual_color": [
+				0.92,
+				0.25,
+				1,
+				0.46
+			],
+			"visual_ring_color": [
+				0.32,
+				1,
+				0.95,
+				0.94
 			]
 		}
 	]

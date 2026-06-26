@@ -21,6 +21,7 @@ const CARD_TEXT_LINE_HEIGHT_MULTIPLIER: float = 1.2
 
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const RunRewardPoolScript: Script = preload("res://scripts/upgrades/run_reward_pool.gd")
+const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/skill_effect_summary_builder.gd")
 
 var pending_level_up_count: int = 0
 var pending_level: int = 1
@@ -426,7 +427,8 @@ func _get_option_meta_text(option: Dictionary) -> String:
 
 
 func _get_option_effect_text(option: Dictionary) -> String:
-	var lines: Array[String] = ["%s" % String(option.get("description", ""))]
+	var summary: String = String(SkillEffectSummaryBuilderScript.build_for_option(option))
+	var lines: Array[String] = [summary if summary != "" else "%s" % String(option.get("description", ""))]
 	return "\n".join(lines)
 
 

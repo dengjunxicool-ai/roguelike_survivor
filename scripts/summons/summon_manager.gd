@@ -31,6 +31,7 @@ func spawn_summon(definition_variant: Variant, context: Dictionary = {}) -> Node
 	if summon == null:
 		return null
 	parent.add_child(summon)
+	summon.set_meta("summon_definition_id", definition_id)
 	var formation_index: int = active.size()
 	var movement: Dictionary = definition.get("movement")
 	var offset: Vector2 = SummonFormationServiceScript.get_offset(formation_index, float(movement.get("separation_radius", 32.0)), float(movement.get("follow_distance", 80.0)))
@@ -58,8 +59,12 @@ func _resolve_definition(value: Variant) -> RefCounted:
 func _prune(definition_id: StringName) -> void:
 	var active: Array = _active_by_id.get(definition_id, [])
 	for index: int in range(active.size() - 1, -1, -1):
-		var summon: Node = active[index] as Node
-		if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
+		var summon_variant: Variant = active[index]
+		if not is_instance_valid(summon_variant):
+			active.remove_at(index)
+			continue
+		var summon: Node = summon_variant as Node
+		if summon == null or summon.is_queued_for_deletion():
 			active.remove_at(index)
 	_active_by_id[definition_id] = active
 

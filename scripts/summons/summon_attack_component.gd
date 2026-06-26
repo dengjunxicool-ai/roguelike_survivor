@@ -7,16 +7,26 @@ var attack_range: float = 48.0
 var attack_cooldown: float = 1.2
 var damage_type: StringName = &"neutral"
 var damage_scale: float = 0.45
+var projectile_id: StringName = &""
+var pulse_radius: float = 96.0
+var pulse_area_id: StringName = &""
+var pulse_duration: float = 0.28
+var pulse_tick_interval: float = 0.1
 var on_hit_effects: Array = []
 var _cooldown_remaining: float = 0.0
 
 
 func setup(config: Dictionary) -> void:
-	attack_type = String(config.get("attack_type", attack_type))
+	attack_type = str(config.get("attack_type", attack_type))
 	attack_range = maxf(float(config.get("attack_range", attack_range)), 1.0)
 	attack_cooldown = maxf(float(config.get("attack_cooldown", attack_cooldown)), 0.05)
-	damage_type = StringName(String(config.get("damage_type", damage_type)))
+	damage_type = StringName(str(config.get("damage_type", damage_type)))
 	damage_scale = maxf(float(config.get("damage_scale", damage_scale)), 0.0)
+	projectile_id = StringName(str(config.get("projectile_id", projectile_id)))
+	pulse_radius = maxf(float(config.get("pulse_radius", config.get("attack_range", pulse_radius))), 1.0)
+	pulse_area_id = StringName(str(config.get("pulse_area_id", "")))
+	pulse_duration = maxf(float(config.get("pulse_duration", pulse_duration)), 0.05)
+	pulse_tick_interval = maxf(float(config.get("pulse_tick_interval", pulse_tick_interval)), 0.05)
 	on_hit_effects = _array(config.get("on_hit_effects", []))
 	_cooldown_remaining = 0.0
 
@@ -26,7 +36,8 @@ func tick(delta: float) -> void:
 
 
 func is_in_range(summon: Node2D, target: Node2D) -> bool:
-	return summon != null and target != null and summon.global_position.distance_to(target.global_position) <= attack_range
+	var range: float = pulse_radius if attack_type == "area_pulse" else attack_range
+	return summon != null and target != null and summon.global_position.distance_to(target.global_position) <= range
 
 
 func can_attack() -> bool:
@@ -36,12 +47,16 @@ func can_attack() -> bool:
 func attack(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> bool:
 	if summon == null or target == null or not can_attack():
 		return false
-	if not is_in_range(summon, target):
+	if attack_type != "area_pulse" and not is_in_range(summon, target):
 		return false
-	if attack_type == "projectile":
-		_fire_projectile(summon, target, player_power, context)
-	else:
-		_apply_melee(target, player_power)
+	match attack_type:
+		"projectile":
+			_fire_projectile(summon, target, player_power, context)
+		"area_pulse":
+			if not _spawn_area_pulse(summon, player_power, context):
+				_apply_area_pulse(summon, player_power, context)
+		_:
+			_apply_melee(target, player_power)
 	_cooldown_remaining = attack_cooldown
 	return true
 
@@ -60,6 +75,66 @@ func _apply_melee(target: Node2D, player_power: float) -> void:
 	_apply_on_hit_effects(target)
 
 
+func _apply_area_pulse(summon: Node2D, player_power: float, context: Dictionary) -> void:
+	if summon == null:
+		return
+	var target_group: StringName = StringName(str(context.get("target_group", &"enemies")))
+	var tree: SceneTree = summon.get_tree()
+	if tree == null:
+		tree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var radius_squared: float = pulse_radius * pulse_radius
+	for node: Node in tree.get_nodes_in_group(target_group):
+		var target: Node2D = node as Node2D
+		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
+			continue
+		if target.has_method("is_dead") and bool(target.call("is_dead")):
+			continue
+		if summon.global_position.distance_squared_to(target.global_position) > radius_squared:
+			continue
+		_apply_melee(target, player_power)
+
+
+func _spawn_area_pulse(summon: Node2D, player_power: float, context: Dictionary) -> bool:
+	var action_executor: RefCounted = context.get("action_executor") as RefCounted
+	if summon == null or action_executor == null or pulse_area_id == &"":
+		return false
+	var amount: int = maxi(roundi(player_power * damage_scale), 0)
+	var area_context: Dictionary = context.duplicate(true)
+	area_context["caster"] = summon
+	area_context["source"] = summon
+	area_context["parent"] = context.get("parent", summon.get_parent())
+	area_context["target_group"] = context.get("target_group", &"enemies")
+	area_context["power"] = player_power
+	var area_params: Dictionary = {
+		"area_id": pulse_area_id,
+		"position_mode": "caster",
+		"radius": pulse_radius,
+		"duration": pulse_duration,
+		"tick_interval": pulse_tick_interval,
+		"damage": amount,
+		"damage_type": str(damage_type),
+		"damage_origin": "summon",
+		"source_type": "summon"
+	}
+	_apply_pulse_status_params(area_params)
+	return bool(action_executor.call("execute_action", {"type": "spawn_area", "params": area_params}, area_context))
+
+
+func _apply_pulse_status_params(area_params: Dictionary) -> void:
+	for effect_variant: Variant in on_hit_effects:
+		if not (effect_variant is Dictionary):
+			continue
+		var effect: Dictionary = effect_variant
+		if str(effect.get("type", "")) != "apply_status":
+			continue
+		area_params["status_id"] = str(effect.get("status", effect.get("status_id", "")))
+		area_params["stack"] = int(effect.get("stacks", effect.get("stack", 1)))
+		area_params["status_duration"] = float(effect.get("duration", 4.0))
+		return
+
+
 func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
 	var action_executor: RefCounted = context.get("action_executor") as RefCounted
 	if action_executor == null:
@@ -73,8 +148,9 @@ func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, conte
 		"type": "spawn_projectile",
 		"params": {
 			"damage": roundi(player_power * damage_scale),
-			"damage_type": String(damage_type),
+			"damage_type": str(damage_type),
 			"damage_origin": "special",
+			"projectile_id": str(projectile_id) if projectile_id != &"" else "thunder_arc_bolt",
 			"speed": 420.0,
 			"range": attack_range,
 			"on_hit": on_hit_effects
@@ -87,8 +163,8 @@ func _apply_on_hit_effects(target: Node2D) -> void:
 		if not (effect_variant is Dictionary):
 			continue
 		var effect: Dictionary = effect_variant
-		if String(effect.get("type", "")) == "apply_status" and target.has_method("apply_status"):
-			target.call("apply_status", StringName(String(effect.get("status", effect.get("status_id", "")))), {
+		if str(effect.get("type", "")) == "apply_status" and target.has_method("apply_status"):
+			target.call("apply_status", StringName(str(effect.get("status", effect.get("status_id", "")))), {
 				"stacks": int(effect.get("stacks", effect.get("stack", 1))),
 				"duration": float(effect.get("duration", 4.0))
 			})

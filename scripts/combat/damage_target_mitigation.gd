@@ -44,6 +44,7 @@ static func vulnerability_total(target: Node, packet: Dictionary) -> float:
 	var damage_taken_multiplier: float = _get_float_property(target, "damage_taken_multiplier", 1.0)
 	if damage_taken_multiplier > 0.0:
 		total += damage_taken_multiplier - 1.0
+	total += _controlled_target_damage_taken_total(target, {})
 
 	var profile: RefCounted = TargetDamageProfileResolverScript.resolve(target)
 	return clampf(total, float(profile.get("vulnerability_floor")), float(profile.get("vulnerability_cap")))
@@ -64,6 +65,7 @@ static func vulnerability_total_for_context(calculation_context: RefCounted) -> 
 	var damage_taken_multiplier: float = _get_float_property(target, "damage_taken_multiplier", 1.0)
 	if damage_taken_multiplier > 0.0:
 		total += damage_taken_multiplier - 1.0
+	total += _controlled_target_damage_taken_total(target, calculation_context.get("damage_modifiers"))
 
 	var profile: RefCounted = calculation_context.get("target_profile")
 	return clampf(total, float(profile.get("vulnerability_floor")), float(profile.get("vulnerability_cap")))
@@ -125,3 +127,27 @@ static func _get_float_property(node: Object, property_name: String, fallback: f
 	if value == null:
 		return fallback
 	return float(value)
+
+
+static func _controlled_target_damage_taken_total(target: Node, damage_modifiers: Dictionary) -> float:
+	if target == null or damage_modifiers.is_empty():
+		return 0.0
+	var total: float = 0.0
+	if _target_has_any_status(target, [&"frozen", &"root", &"stun"]):
+		total += float(damage_modifiers.get("frozen_damage_taken_multiplier_add", 0.0))
+	return total
+
+
+static func _target_has_any_status(target: Node, status_ids: Array) -> bool:
+	if target == null:
+		return false
+	for status_variant: Variant in status_ids:
+		var status_id: StringName = StringName(str(status_variant))
+		if status_id == &"":
+			continue
+		if target.has_method("has_status") and bool(target.call("has_status", status_id)):
+			return true
+		var status_manager: Node = target.get_node_or_null("StatusEffectManager")
+		if status_manager != null and status_manager.has_method("has_status") and bool(status_manager.call("has_status", status_id)):
+			return true
+	return false

@@ -1,1411 +1,6664 @@
 {
-  "starting_skills": [
-    {
-      "id": "fireball",
-      "display_name": "火球",
-      "description": "发射火焰法球攻击敌人",
-      "tags": [
-        "fire",
-        "projectile",
-        "burn",
-        "ranged"
-      ],
-      "max_level": 5,
-      "base": {
-        "damage": 16,
-        "damage_type": "direct_magical",
-        "element": "fire",
-        "cooldown": 1.1,
-        "range": 540,
-        "projectile_speed": 420,
-        "projectile_count": 1,
-        "spread_angle": 0,
-        "area_radius": 82
-      },
-      "components": [
-        {
-          "type": "cooldown",
-          "params": {
-            "seconds": 1.1
-          }
-        },
-        {
-          "type": "targeting",
-          "params": {
-            "mode": "nearest_enemy",
-            "range": 520
-          }
-        }
-      ],
-      "events": [
-        {
-          "trigger": "on_cast",
-          "actions": [
-            {
-              "type": "spawn_projectile",
-              "params": {
-                "projectile_id": "fireball_projectile",
-                "count": 1,
-                "speed": 420,
-                "spread_angle": 0,
-                "lifetime": 2,
-                "collision_radius": 10,
-                "element": "fire"
-              }
-            }
-          ]
-        },
-        {
-          "trigger": "on_projectile_hit",
-          "source_id": "fireball_projectile",
-          "actions": [
-            {
-              "type": "deal_damage",
-              "params": {
-                "amount": 16,
-                "damage_type": "direct_magical",
-                "element": "fire",
-                "can_crit": true,
-                "damage_origin": "primary_attack"
-              }
-            }
-          ]
-        }
-      ],
-      "damage_scaling": {
-        "skill_level_coefficients": [
-          1,
-          1,
-          1,
-          1,
-          1
-        ]
-      },
-      "category": "active",
-      "god_id": "fire",
-      "runtime_family": "projectile",
-      "is_starting_skill": true,
-      "offer_in_upgrade_pool": false,
-      "particle": {
-        "profile": "fire_projectile"
-      }
-    }
-  ],
-  "skills": [
-    {
-      "id": "fire_attack_searing",
-      "name": "灼热攻击",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "attack",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": "attack_school",
-      "tags": ["attack", "fire", "status_burning", "ground_path"],
-      "mechanic_family": "attack_status_ground_path",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": ["attack_school"]
-      },
-      "trigger_rules": [
-        {
-          "trigger": "attack_hit",
-          "effects": [
-            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-          ]
-        },
-        {
-          "trigger": "attack_hit",
-          "counter_key": "searing_attack_hits",
-          "threshold": 4,
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "searing_fire_path",
-              "radius": 67.2,
-              "duration": 2.5,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.12 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": [
-        { "type": "add_modifier", "modifier": "attack_damage_multiplier", "value": 0.2, "damage_type": "fire" }
-      ],
-      "description": "攻击变强，命中施加 Burning，并有概率在目标脚下生成短暂火焰路径"
-    },
-    {
-      "id": "fire_dash_blazing_run",
-      "name": "烈焰疾行",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "dash",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": "dash_school",
-      "tags": ["dash", "fire", "status_burning", "ground_path"],
-      "mechanic_family": "dash_fire_path",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": ["dash_school"]
-      },
-      "trigger_rules": [
-        {
-          "trigger": "dash_start",
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "blazing_run_path",
-              "radius": 63.0,
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.14 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ],
-              "effects_on_apply": [
-                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.8 }
-              ]
-            }
-          ]
-        },
-        {
-          "trigger": "dash_tick",
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "blazing_run_path",
-              "radius": 63.0,
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.14 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ],
-              "effects_on_apply": [
-                { "type": "damage", "damage_type": "fire", "source_type": "dash", "power_scale": 0.8 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning"
-    },
-    {
-      "id": "fire_cast_meteor_rain",
-      "name": "流星火雨",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "cast",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["cast", "fire", "meteor", "status_burning", "ground_area"],
-      "mechanic_family": "cast_meteor_ground_burn",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "cast_skill",
-          "cooldown": 6.5,
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "meteor_rain_meteor",
-              "count": 3,
-              "collision_radius": 18.0,
-              "trajectory_mode": "linear",
-              "speed": 640.0,
-              "visual_start_relative_to": "target",
-              "visual_start_offset": [-360.0, -360.0],
-              "on_hit": [
-                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 2.2, "radius": 134.4 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 },
-                {
-                  "type": "spawn_area",
-                  "area_id": "meteor_burning_ground",
-                  "radius": 134.4,
-                  "duration": 3.0,
-                  "tick_interval": 0.5,
-                  "effects_on_tick": [
-                    { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.14 },
-                    { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面"
-    },
-    {
-      "id": "fire_cast_lava_rift",
-      "name": "熔岩裂涌",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "cast",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["cast", "fire", "rift", "status_burning", "line_area"],
-      "mechanic_family": "cast_line_rift_burn",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "cast_skill",
-          "cooldown": 5.5,
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "lava_rift",
-              "length": 504.0,
-              "width": 67.2,
-              "duration": 1.5,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "cast", "power_scale": 0.533333 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害"
-    },
-    {
-      "id": "fire_cast_scorching_vortex",
-      "name": "焚风旋涡",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "cast",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["cast", "fire", "vortex", "status_burning", "area"],
-      "mechanic_family": "cast_radial_vortex_burn",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "cast_skill",
-          "cooldown": 7.0,
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "scorching_vortex",
-              "position_mode": "caster",
-              "position_offset_direction": "towards_target",
-              "position_offset_distance": 72.0,
-              "move_direction": "towards_target",
-              "move_speed": 120.0,
-              "radius": 184.8,
-              "duration": 4.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "area", "power_scale": 0.25 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人"
-    },
-    {
-      "id": "fire_summon_crimson_dragon",
-      "name": "赤焰龙",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "summon",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["summon", "fire", "dragon", "cone", "status_burning"],
-      "mechanic_family": "summon_cone_breath_burn",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "cast_skill",
-          "effects": [
-            { "type": "spawn_summon", "summon_id": "crimson_dragon", "summon_definition_id": "crimson_dragon" }
-          ]
-        },
-        {
-          "trigger": "summon_attack_hit",
-          "cooldown": 3.0,
-          "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 1.4, "length": 336.0, "angle": 45 },
-            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning"
-    },
-    {
-      "id": "fire_summon_ember_fox_pack",
-      "name": "余烬狐群",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "summon",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["summon", "fire", "fox", "status_burning", "explosion"],
-      "mechanic_family": "summon_burning_counter_pack",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "status_applied",
-          "counter_key": "ember_fox_burning_applications",
-          "threshold": 8,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "spawn_summon", "summon_id": "ember_fox", "count": 2, "duration": 12.0, "attack_interval": 1.2 }
-          ]
-        },
-        {
-          "trigger": "summon_attack_hit",
-          "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.6 },
-            { "type": "spawn_area", "area_id": "ember_fox_burst", "radius": 100.8, "duration": 0.2, "effects_on_apply": [{ "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.8 }, { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }] }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花"
-    },
-    {
-      "id": "fire_passive_burning_focus",
-      "name": "炽燃专注",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "passive",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["passive", "fire", "status_burning", "modifier"],
-      "mechanic_family": "passive_burning_amplify",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [],
-      "effects": [
-        { "type": "add_modifier", "modifier": "burning_damage_multiplier", "value": 0.25 },
-        { "type": "add_modifier", "modifier": "burning_duration_multiplier", "value": 0.2 }
-      ],
-      "description": "Burning 持续时间和伤害提高"
-    },
-    {
-      "id": "fire_passive_overheated_casting",
-      "name": "过热施法",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "passive",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["passive", "fire", "cast", "damage_boost", "area_boost"],
-      "mechanic_family": "passive_cast_damage_window",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "player_damage_taken",
-          "cooldown": 12.0,
-          "conditions": [{ "type": "target_has_tag", "tag": "player" }],
-          "effects": [
-            { "type": "add_modifier", "modifier": "cast_damage_multiplier", "value": 0.3, "duration": 5.0 },
-            { "type": "add_modifier", "modifier": "cast_radius_multiplier", "value": 0.15, "duration": 5.0 }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围"
-    },
-    {
-      "id": "fire_passive_scorched_ground_affinity",
-      "name": "焦土亲和",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "passive",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["passive", "fire", "ground_area", "status_burning", "modifier"],
-      "mechanic_family": "passive_ground_burning_amplify",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "add_modifier", "modifier": "burning_damage_taken_multiplier", "value": 0.35, "duration": 0.6 }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高"
-    },
-    {
-      "id": "fire_power_combustion_chain",
-      "name": "燃爆连锁",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "power",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["power", "fire", "status_burning", "enemy_death", "explosion"],
-      "mechanic_family": "power_burning_death_chain",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "enemy_death",
-          "counter_key": "combustion_burning_deaths",
-          "threshold": 12,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 2.4, "radius": 184.8 },
-            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆"
-    },
-    {
-      "id": "fire_power_ember_attachment",
-      "name": "余烬附着",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "power",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["power", "fire", "status_burning", "enemy_death", "projectile"],
-      "mechanic_family": "power_burning_death_projectile",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "enemy_death",
-          "cooldown": 0.2,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            {
-              "type": "spawn_projectile",
-              "projectile_id": "ember_attachment_bolt",
-              "count": 1,
-              "speed": 8.0,
-              "targeting": "nearest_enemy",
-              "damage": { "damage_type": "fire", "source_type": "power", "power_scale": 0.45 },
-              "on_hit": [{ "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标"
-    },
-    {
-      "id": "fire_power_ignite_core",
-      "name": "引燃核心",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "power",
-      "rarity": "normal",
-      "max_level": 5,
-      "exclusive_group": null,
-      "tags": ["power", "fire", "status_burning", "consume_status", "explosion"],
-      "mechanic_family": "power_consume_burning_burst",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": []
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "cooldown": 0.4,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
-            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 100.8 }
-          ]
-        },
-        {
-          "trigger": "area_tick",
-          "cooldown": 0.4,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
-            { "type": "damage", "damage_type": "fire", "source_type": "power", "power_scale": 0.9, "radius": 100.8 }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发"
-    },
-    {
-      "id": "fire_core_inferno_cycle",
-      "name": "炼狱循环",
-      "school": "fire",
-      "fusion_school": null,
-      "type": "core",
-      "rarity": "normal",
-      "max_level": 1,
-      "exclusive_group": "core_school",
-      "tags": ["core", "fire", "status_burning", "enemy_death", "cycle"],
-      "mechanic_family": "core_burning_death_cycle",
-      "offer_rule": {
-        "required_schools": ["fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": ["core_school"]
-      },
-      "trigger_rules": [
-        {
-          "trigger": "enemy_death",
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            { "type": "damage", "damage_type": "fire", "source_type": "core", "power_scale": 0.8, "radius": 117.6 },
-            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-          ]
-        },
-        {
-          "trigger": "enemy_death",
-          "counter_key": "inferno_cycle_splits",
-          "threshold": 20,
-          "conditions": [{ "type": "target_has_status", "status": "burning" }],
-          "effects": [
-            {
-              "type": "spawn_projectile",
-              "projectile_id": "inferno_cycle_meteor",
-              "count": 1,
-              "trajectory_mode": "linear",
-              "speed": 680.0,
-              "visual_start_relative_to": "target",
-              "visual_start_offset": [-360.0, -360.0],
-              "damage": { "damage_type": "fire", "source_type": "core", "power_scale": 2.2 },
-              "on_hit": [{ "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }]
-            }
-          ]
-        }
-      ],
-      "effects": [],
-      "description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨"
-    },
-    {
-      "id": "fusion_fire_frost_steam_mist",
-      "name": "蒸灼雾域",
-      "school": "fire",
-      "fusion_school": "frost",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "frost", "status_burning", "status_chilled", "area"],
-      "mechanic_family": "fusion_fire_frost_steam_area",
-      "offer_rule": {
-        "required_schools": ["fire", "frost"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "frost": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "cooldown": 1.0,
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "skill_has_tag", "tag": "frost_area" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "steam_mist",
-              "radius": 168.0,
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.14 },
-                { "type": "apply_status", "status": "chilled", "stacks": 1, "duration": 6.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_frost_shattered_ember",
-      "name": "碎冰余烬",
-      "school": "fire",
-      "fusion_school": "frost",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "frost", "status_frozen", "status_burning", "projectile"],
-      "mechanic_family": "fusion_fire_frost_shatter_burst",
-      "offer_rule": {
-        "required_schools": ["fire", "frost"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "frost": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "enemy_death",
-          "cooldown": 0.3,
-          "conditions": [{ "type": "target_has_status", "status": "frozen" }],
-          "effects": [
-            { "type": "shatter_frozen", "projectile_count": 6, "damage": { "damage_type": "frost", "power_scale": 0.25 } },
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "shattered_ember",
-              "count": 3,
-              "radius": 294.0,
-              "on_hit": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.3 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_thunder_plasma_fire_path",
-      "name": "等离子火径",
-      "school": "fire",
-      "fusion_school": "thunder",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "thunder", "ground_path", "status_conductive"],
-      "mechanic_family": "fusion_fire_thunder_path_discharge",
-      "offer_rule": {
-        "required_schools": ["fire", "thunder"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "thunder": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "cooldown": 0.8,
-          "conditions": [{ "type": "skill_has_tag", "tag": "thunder" }],
-          "effects": [
-            {
-              "type": "spawn_area_from_existing_area",
-              "source_area_tag": "fire_path",
-              "area_id": "plasma_fire_path",
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.12 },
-                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_thunder_thunderburn_meteor",
-      "name": "雷燃流星",
-      "school": "fire",
-      "fusion_school": "thunder",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "thunder", "meteor", "status_conductive"],
-      "mechanic_family": "fusion_fire_thunder_conductive_arc",
-      "offer_rule": {
-        "required_schools": ["fire", "thunder"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "thunder": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "fire" },
-            { "type": "target_has_status", "status": "conductive" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "thunderburn_arc",
-              "count": 3,
-              "on_hit": [
-                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.45 },
-                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_curse_ash_curse_rune",
-      "name": "灰烬咒文",
-      "school": "fire",
-      "fusion_school": "curse",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "curse", "status_burning", "status_cursed"],
-      "mechanic_family": "fusion_fire_curse_tick_accelerate",
-      "offer_rule": {
-        "required_schools": ["fire", "curse"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "curse": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "status_tick",
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "target_has_status", "status": "cursed" }
-          ],
-          "effects": [
-            { "type": "consume_status_duration", "status": "cursed", "duration": 0.25, "tag_on_expire": "ash_curse_rune_fireground_pending" }
-          ]
-        },
-        {
-          "trigger": "status_expired",
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "target_has_tag", "tag": "expired_status_cursed" },
-            { "type": "target_has_tag", "tag": "ash_curse_rune_fireground_pending" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "ash_curse_rune_fireground",
-              "radius": 100.8,
-              "duration": 2.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.12 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_curse_blackflame_serpents",
-      "name": "黑焰蛇群",
-      "school": "fire",
-      "fusion_school": "curse",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "curse", "projectile", "status_burning", "status_cursed"],
-      "mechanic_family": "fusion_fire_curse_blackflame_path",
-      "offer_rule": {
-        "required_schools": ["fire", "curse"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "curse": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "curse" },
-            { "type": "target_has_status", "status": "burning" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "blackflame_serpent_path",
-              "radius": 50.4,
-              "duration": 2.5,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.12 },
-                { "type": "apply_status", "status": "cursed", "stacks": 1, "duration": 3.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_holy_holy_flame_absolution",
-      "name": "圣焰赦免",
-      "school": "fire",
-      "fusion_school": "holy",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "holy", "status_burning", "status_judgment", "shield"],
-      "mechanic_family": "fusion_fire_holy_absolution_beam",
-      "offer_rule": {
-        "required_schools": ["fire", "holy"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "holy": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "status_max_stack_reached",
-          "conditions": [
-            { "type": "target_has_status", "status": "judgment" },
-            { "type": "target_has_status", "status": "burning" }
-          ],
-          "effects": [
-            { "type": "consume_status_duration", "status": "burning", "duration": 1.5 },
-            { "type": "grant_shield", "shield_type": "holy_flame", "max_health_ratio": 0.04 },
-            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 1.1, "length": 336.0 }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_holy_burning_light_barrier",
-      "name": "燃光结界",
-      "school": "fire",
-      "fusion_school": "holy",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "holy", "barrier", "status_burning", "shield"],
-      "mechanic_family": "fusion_fire_holy_barrier_edge",
-      "offer_rule": {
-        "required_schools": ["fire", "holy"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "holy": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "conditions": [{ "type": "skill_has_tag", "tag": "holy_barrier" }],
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "burning_light_barrier_edge",
-              "radius": 193.2,
-              "duration": 0.5,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 0.1 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ],
-              "effects_on_death": [
-                { "type": "grant_shield", "shield_type": "burning_light", "max_health_ratio": 0.01 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_chaos_ember_echo",
-      "name": "余烬回声",
-      "school": "fire",
-      "fusion_school": "chaos",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "chaos", "ground_path", "repeat"],
-      "mechanic_family": "fusion_fire_chaos_path_echo",
-      "offer_rule": {
-        "required_schools": ["fire", "chaos"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "chaos": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "cooldown": 2.0,
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "fire_path" },
-            { "type": "target_has_tag", "tag": "chaos_rift" }
-          ],
-          "effects": [
-            { "type": "repeat_area_path", "delay": 1.0, "reverse": true, "duration": 2.0, "tick_interval": 0.5, "effects_on_tick": [{ "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.13 }] }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_fire_chaos_molten_split",
-      "name": "熔火分裂",
-      "school": "fire",
-      "fusion_school": "chaos",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "fire", "chaos", "projectile", "status_instability", "status_burning"],
-      "mechanic_family": "fusion_fire_chaos_projectile_split",
-      "offer_rule": {
-        "required_schools": ["fire", "chaos"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "fire": 2, "chaos": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "cooldown": 0.3,
-          "conditions": [{ "type": "target_has_status", "status": "instability" }],
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "molten_split_spark",
-              "count": 2,
-              "on_hit": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.35 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_frost_fire_crystalized_flame",
-      "name": "凝火成晶",
-      "school": "frost",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "frost", "fire", "crystal", "status_chilled"],
-      "mechanic_family": "fusion_frost_fire_crystal_spikes",
-      "offer_rule": {
-        "required_schools": ["frost", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "frost": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "frost_area" },
-            { "type": "target_has_tag", "tag": "fire_path" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "crystalized_flame_spike",
-              "count": 5,
-              "on_hit": [
-                { "type": "damage", "damage_type": "frost", "source_type": "fusion", "power_scale": 0.35 },
-                { "type": "apply_status", "status": "chilled", "stacks": 1, "duration": 6.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_frost_fire_frostburn_shards",
-      "name": "霜燃碎片",
-      "school": "frost",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "frost", "fire", "status_burning", "status_frozen", "projectile"],
-      "mechanic_family": "fusion_frost_fire_frostburn_shards",
-      "offer_rule": {
-        "required_schools": ["frost", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "frost": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "status_applied",
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "target_has_status", "status": "frozen" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "frostburn_shard",
-              "count": 8,
-              "on_hit": [
-                { "type": "damage", "damage_type": "frost", "source_type": "fusion", "power_scale": 0.22 },
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.15, "conditions": [{ "type": "target_has_status", "status": "burning" }] }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_thunder_fire_arc_ignition",
-      "name": "轰燃电弧",
-      "school": "thunder",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "thunder", "fire", "status_burning", "chain"],
-      "mechanic_family": "fusion_thunder_fire_arc_path",
-      "offer_rule": {
-        "required_schools": ["thunder", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "thunder": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "thunder" },
-            { "type": "target_has_status", "status": "burning" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_projectile",
-              "projectile_id": "arc_ignition_jump",
-              "count": 1,
-              "targeting": "nearest_fire_path",
-              "damage": { "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.55 },
-              "on_hit": [{ "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_thunder_fire_thunderfire_circuit",
-      "name": "雷火回路",
-      "school": "thunder",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "thunder", "fire", "ground_path", "status_conductive"],
-      "mechanic_family": "fusion_thunder_fire_ground_circuit",
-      "offer_rule": {
-        "required_schools": ["thunder", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "thunder": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "conditions": [{ "type": "skill_has_tag", "tag": "fire" }],
-          "effects": [
-            {
-              "type": "spawn_area_from_existing_area",
-              "source_area_tag": "burning_ground",
-              "area_id": "thunderfire_circuit",
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "thunder", "source_type": "fusion", "power_scale": 0.7 },
-                { "type": "apply_status", "status": "conductive", "stacks": 1, "duration": 5.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_curse_fire_ash_soul_pact",
-      "name": "灰烬魂契",
-      "school": "curse",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "curse", "fire", "status_burning", "status_cursed"],
-      "mechanic_family": "fusion_curse_fire_curse_amplify",
-      "offer_rule": {
-        "required_schools": ["curse", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "curse": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "status_tick",
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "target_has_status", "status": "cursed" }
-          ],
-          "effects": [
-            { "type": "add_modifier", "modifier": "cursed_expire_damage_multiplier", "value": 0.08, "max_stacks": 5, "duration": 3.0 }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_curse_fire_burning_soul_minion",
-      "name": "燃魂仆从",
-      "school": "curse",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "curse", "fire", "summon", "status_burning", "status_cursed"],
-      "mechanic_family": "fusion_curse_fire_death_minion",
-      "offer_rule": {
-        "required_schools": ["curse", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "curse": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "enemy_death",
-          "conditions": [
-            { "type": "target_has_status", "status": "burning" },
-            { "type": "target_has_status", "status": "cursed" }
-          ],
-          "effects": [
-            { "type": "spawn_summon", "summon_id": "burning_soul_minion", "count": 1, "duration": 10.0, "attack_interval": 1.2 },
-            { "type": "damage", "damage_type": "fire", "source_type": "summon", "power_scale": 0.6 },
-            { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_holy_fire_holy_flame_purification",
-      "name": "圣焰净化",
-      "school": "holy",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "holy", "fire", "status_burning", "shield"],
-      "mechanic_family": "fusion_holy_fire_purify_burning",
-      "offer_rule": {
-        "required_schools": ["holy", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "holy": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "holy" },
-            { "type": "target_has_status", "status": "burning" }
-          ],
-          "effects": [
-            { "type": "consume_status_duration", "status": "burning", "duration": 1.0 },
-            { "type": "grant_shield", "shield_type": "holy_flame_purification", "max_health_ratio": 0.02 },
-            { "type": "damage", "damage_type": "holy", "source_type": "fusion", "power_scale": 0.4 }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_holy_fire_solar_hammer",
-      "name": "太阳圣锤",
-      "school": "holy",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "holy", "fire", "hammer", "status_burning", "status_judgment", "ground_path"],
-      "mechanic_family": "fusion_holy_fire_solar_cross",
-      "offer_rule": {
-        "required_schools": ["holy", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "holy": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "holy" },
-            { "type": "target_has_status", "status": "burning" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_area",
-              "area_id": "solar_hammer_cross_path",
-              "radius": 67.2,
-              "duration": 3.0,
-              "tick_interval": 0.5,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.14 },
-                { "type": "apply_status", "status": "judgment", "stacks": 1, "duration": 6.0 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_chaos_fire_riftfire_fork",
-      "name": "裂火分叉",
-      "school": "chaos",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "chaos", "fire", "projectile", "rift"],
-      "mechanic_family": "fusion_chaos_fire_projectile_fork",
-      "offer_rule": {
-        "required_schools": ["chaos", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "chaos": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "projectile_hit",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "fire_projectile" },
-            { "type": "target_has_tag", "tag": "chaos_rift" }
-          ],
-          "effects": [
-            {
-              "type": "spawn_projectile_burst",
-              "projectile_id": "riftfire_fork",
-              "count": 2,
-              "angle": 25,
-              "on_hit": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.35 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    },
-    {
-      "id": "fusion_chaos_fire_lava_refraction",
-      "name": "熔岩折返",
-      "school": "chaos",
-      "fusion_school": "fire",
-      "type": "fusion",
-      "rarity": "normal",
-      "max_level": 2,
-      "exclusive_group": null,
-      "tags": ["fusion", "chaos", "fire", "rift", "lava", "repeat"],
-      "mechanic_family": "fusion_chaos_fire_lava_refraction",
-      "offer_rule": {
-        "required_schools": ["chaos", "fire"],
-        "required_skills": [],
-        "blocked_by_exclusive_group": [],
-        "required_min_skill_count": { "chaos": 2, "fire": 1 }
-      },
-      "trigger_rules": [
-        {
-          "trigger": "area_tick",
-          "conditions": [
-            { "type": "skill_has_tag", "tag": "lava_rift" },
-            { "type": "target_has_tag", "tag": "chaos_rift" }
-          ],
-          "effects": [
-            {
-              "type": "repeat_area_path",
-              "distance": 3.0,
-              "reverse": true,
-              "effects_on_tick": [
-                { "type": "damage", "damage_type": "fire", "source_type": "fusion", "power_scale": 0.8 },
-                { "type": "apply_status", "status": "burning", "stacks": 1, "duration": 4.0 }
-              ]
-            }
-          ]
-        }
-      ],
-      "effects": []
-    }
-  ]
+	"starting_skills": [
+		{
+			"id": "fireball",
+			"display_name": "火球",
+			"description": "发射火焰法球攻击敌人",
+			"tags": [
+				"fire",
+				"projectile",
+				"burn",
+				"ranged"
+			],
+			"max_level": 5,
+			"base": {
+				"damage": 16,
+				"damage_type": "direct_magical",
+				"element": "fire",
+				"cooldown": 1.1,
+				"range": 540,
+				"projectile_speed": 420,
+				"projectile_count": 1,
+				"spread_angle": 0,
+				"area_radius": 82
+			},
+			"components": [
+				{
+					"type": "cooldown",
+					"params": {
+						"seconds": 1.1
+					}
+				},
+				{
+					"type": "targeting",
+					"params": {
+						"mode": "nearest_enemy",
+						"range": 520
+					}
+				}
+			],
+			"events": [
+				{
+					"trigger": "on_cast",
+					"actions": [
+						{
+							"type": "spawn_projectile",
+							"params": {
+								"projectile_id": "fireball_projectile",
+								"count": 1,
+								"speed": 420,
+								"spread_angle": 0,
+								"lifetime": 2,
+								"collision_radius": 10,
+								"element": "fire"
+							}
+						}
+					]
+				},
+				{
+					"trigger": "on_projectile_hit",
+					"source_id": "fireball_projectile",
+					"actions": [
+						{
+							"type": "deal_damage",
+							"params": {
+								"amount": 16,
+								"damage_type": "direct_magical",
+								"element": "fire",
+								"can_crit": true,
+								"damage_origin": "primary_attack"
+							}
+						}
+					]
+				}
+			],
+			"damage_scaling": {
+				"skill_level_coefficients": [
+					1,
+					1,
+					1,
+					1,
+					1
+				]
+			},
+			"category": "active",
+			"god_id": "fire",
+			"runtime_family": "projectile",
+			"is_starting_skill": true,
+			"offer_in_upgrade_pool": false,
+			"particle": {
+				"profile": "fire_projectile"
+			}
+		}
+	],
+	"skills": [
+		{
+			"id": "fire_attack_searing",
+			"name": "灼热攻击",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"fire",
+				"status_burning",
+				"ground_path"
+			],
+			"mechanic_family": "attack_status_ground_path",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"counter_key": "searing_attack_hits",
+					"threshold": 4,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "searing_fire_path",
+							"radius": 67.2,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "area",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.2,
+					"damage_type": "fire"
+				}
+			],
+			"description": "攻击变强，命中施加 Burning，并有概率在目标脚下生成短暂火焰路径"
+		},
+		{
+			"id": "fire_dash_blazing_run",
+			"name": "烈焰疾行",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"fire",
+				"status_burning",
+				"ground_path"
+			],
+			"mechanic_family": "dash_fire_path",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "blazing_run_path",
+							"radius": 63,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "dash",
+									"power_scale": 0.14
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "dash",
+									"power_scale": 0.8
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "dash_tick",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "blazing_run_path",
+							"radius": 63,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "dash",
+									"power_scale": 0.14
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "dash",
+									"power_scale": 0.8
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning"
+		},
+		{
+			"id": "fire_cast_meteor_rain",
+			"name": "流星火雨",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"fire",
+				"meteor",
+				"status_burning",
+				"ground_area"
+			],
+			"mechanic_family": "cast_meteor_ground_burn",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 6.5,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "meteor_rain_meteor",
+							"count": 3,
+							"collision_radius": 18,
+							"trajectory_mode": "linear",
+							"speed": 640,
+							"visual_start_relative_to": "target",
+							"visual_start_offset": [
+								-360,
+								-360
+							],
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "cast",
+									"power_scale": 2.2,
+									"radius": 134.4
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								},
+								{
+									"type": "spawn_area",
+									"area_id": "meteor_burning_ground",
+									"radius": 134.4,
+									"duration": 3,
+									"tick_interval": 0.5,
+									"effects_on_tick": [
+										{
+											"type": "damage",
+											"damage_type": "fire",
+											"source_type": "area",
+											"power_scale": 0.14
+										},
+										{
+											"type": "apply_status",
+											"status": "burning",
+											"stacks": 1,
+											"duration": 4
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面"
+		},
+		{
+			"id": "fire_cast_lava_rift",
+			"name": "熔岩裂涌",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"fire",
+				"rift",
+				"status_burning",
+				"line_area"
+			],
+			"mechanic_family": "cast_line_rift_burn",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5.5,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "lava_rift",
+							"length": 504,
+							"width": 67.2,
+							"duration": 1.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "cast",
+									"power_scale": 0.533333
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害"
+		},
+		{
+			"id": "fire_cast_scorching_vortex",
+			"name": "焚风旋涡",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"fire",
+				"vortex",
+				"status_burning",
+				"area"
+			],
+			"mechanic_family": "cast_radial_vortex_burn",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "scorching_vortex",
+							"position_mode": "caster",
+							"position_offset_direction": "towards_target",
+							"position_offset_distance": 72,
+							"move_direction": "towards_target",
+							"move_speed": 120,
+							"radius": 184.8,
+							"duration": 4,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "area",
+									"power_scale": 0.25
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人"
+		},
+		{
+			"id": "fire_summon_crimson_dragon",
+			"name": "赤焰龙",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"fire",
+				"dragon",
+				"cone",
+				"status_burning"
+			],
+			"mechanic_family": "summon_cone_breath_burn",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "crimson_dragon",
+							"summon_definition_id": "crimson_dragon"
+						}
+					]
+				},
+				{
+					"trigger": "summon_attack_hit",
+					"cooldown": 3,
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "summon",
+							"power_scale": 1.4,
+							"length": 336,
+							"angle": 45
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning"
+		},
+		{
+			"id": "fire_summon_ember_fox_pack",
+			"name": "余烬狐群",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"fire",
+				"fox",
+				"status_burning",
+				"explosion"
+			],
+			"mechanic_family": "summon_burning_counter_pack",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_applied",
+					"counter_key": "ember_fox_burning_applications",
+					"threshold": 8,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "ember_fox",
+							"count": 2,
+							"duration": 12,
+							"attack_interval": 1.2
+						}
+					]
+				},
+				{
+					"trigger": "summon_attack_hit",
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "summon",
+							"power_scale": 0.6
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "ember_fox_burst",
+							"radius": 100.8,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "summon",
+									"power_scale": 0.8
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花"
+		},
+		{
+			"id": "fire_passive_burning_focus",
+			"name": "炽燃专注",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"fire",
+				"status_burning",
+				"modifier"
+			],
+			"mechanic_family": "passive_burning_amplify",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "burning_damage_multiplier",
+					"value": 0.25
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "burning_duration_multiplier",
+					"value": 0.2
+				}
+			],
+			"description": "Burning 持续时间和伤害提高"
+		},
+		{
+			"id": "fire_passive_overheated_casting",
+			"name": "过热施法",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"fire",
+				"cast",
+				"damage_boost",
+				"area_boost"
+			],
+			"mechanic_family": "passive_cast_damage_window",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "player_damage_taken",
+					"cooldown": 12,
+					"conditions": [
+						{
+							"type": "target_has_tag",
+							"tag": "player"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "cast_damage_multiplier",
+							"value": 0.3,
+							"duration": 5
+						},
+						{
+							"type": "add_modifier",
+							"modifier": "cast_radius_multiplier",
+							"value": 0.15,
+							"duration": 5
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围"
+		},
+		{
+			"id": "fire_passive_scorched_ground_affinity",
+			"name": "焦土亲和",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"fire",
+				"ground_area",
+				"status_burning",
+				"modifier"
+			],
+			"mechanic_family": "passive_ground_burning_amplify",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "burning_damage_taken_multiplier",
+							"value": 0.35,
+							"duration": 0.6
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高"
+		},
+		{
+			"id": "fire_power_combustion_chain",
+			"name": "燃爆连锁",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"fire",
+				"status_burning",
+				"enemy_death",
+				"explosion"
+			],
+			"mechanic_family": "power_burning_death_chain",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"counter_key": "combustion_burning_deaths",
+					"threshold": 12,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "power",
+							"power_scale": 2.4,
+							"radius": 184.8
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆"
+		},
+		{
+			"id": "fire_power_ember_attachment",
+			"name": "余烬附着",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"fire",
+				"status_burning",
+				"enemy_death",
+				"projectile"
+			],
+			"mechanic_family": "power_burning_death_projectile",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"cooldown": 0.2,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "ember_attachment_bolt",
+							"count": 1,
+							"speed": 8,
+							"targeting": "nearest_enemy",
+							"damage": {
+								"damage_type": "fire",
+								"source_type": "power",
+								"power_scale": 0.45
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标"
+		},
+		{
+			"id": "fire_power_ignite_core",
+			"name": "引燃核心",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"fire",
+				"status_burning",
+				"consume_status",
+				"explosion"
+			],
+			"mechanic_family": "power_consume_burning_burst",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"cooldown": 0.4,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "consume_status_duration",
+							"status": "burning",
+							"duration": 1
+						},
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "power",
+							"power_scale": 0.9,
+							"radius": 100.8
+						}
+					]
+				},
+				{
+					"trigger": "area_tick",
+					"cooldown": 0.4,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "consume_status_duration",
+							"status": "burning",
+							"duration": 1
+						},
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "power",
+							"power_scale": 0.9,
+							"radius": 100.8
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发"
+		},
+		{
+			"id": "fire_core_inferno_cycle",
+			"name": "炼狱循环",
+			"school": "fire",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"fire",
+				"status_burning",
+				"enemy_death",
+				"cycle"
+			],
+			"mechanic_family": "core_burning_death_cycle",
+			"offer_rule": {
+				"required_schools": [
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "core",
+							"power_scale": 0.8,
+							"radius": 117.6
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"counter_key": "inferno_cycle_splits",
+					"threshold": 20,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "inferno_cycle_meteor",
+							"count": 1,
+							"trajectory_mode": "linear",
+							"speed": 680,
+							"visual_start_relative_to": "target",
+							"visual_start_offset": [
+								-360,
+								-360
+							],
+							"damage": {
+								"damage_type": "fire",
+								"source_type": "core",
+								"power_scale": 2.2
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨"
+		},
+		{
+			"id": "frost_attack_frostbite",
+			"name": "寒霜攻击",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"frost",
+				"status_chilled",
+				"status_frozen"
+			],
+			"mechanic_family": "attack_chilled_freeze_efficiency",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "chilled"
+						}
+					],
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6,
+							"max_stacks": 6
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.18,
+					"damage_type": "frost"
+				}
+			],
+			"description": "攻击变强，并施加 Chilled；对已 Chilled 敌人额外提高冻结效率"
+		},
+		{
+			"id": "frost_dash_ice_shard_assault",
+			"name": "冰片突袭",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"frost",
+				"projectile",
+				"status_chilled"
+			],
+			"mechanic_family": "dash_ice_shard_burst",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "ice_shard_projectile",
+							"count": 6,
+							"speed": 520,
+							"spread_angle": 360,
+							"collision_radius": 10,
+							"damage": {
+								"damage_type": "frost",
+								"source_type": "dash",
+								"power_scale": 0.36
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺时向周围投掷冰片，造成伤害并施加 Chilled"
+		},
+		{
+			"id": "frost_cast_frost_field",
+			"name": "冰霜领域",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"frost",
+				"area",
+				"path",
+				"status_chilled"
+			],
+			"mechanic_family": "cast_frost_field_path",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 6,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "frost_field",
+							"targeting": "nearest_enemy",
+							"radius": 134.4,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "area",
+									"power_scale": 0.22
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							],
+							"effects_on_expire": [
+								{
+									"type": "spawn_area",
+									"area_id": "frost_path",
+									"radius": 92.4,
+									"duration": 3,
+									"tick_interval": 0.5,
+									"effects_on_tick": [
+										{
+											"type": "apply_status",
+											"status": "chilled",
+											"stacks": 1,
+											"duration": 6
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 Chilled"
+		},
+		{
+			"id": "frost_cast_glacial_lance",
+			"name": "极寒冰矛",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"frost",
+				"projectile",
+				"pierce",
+				"status_frozen"
+			],
+			"mechanic_family": "cast_glacial_lance_shatter",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5.8,
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "glacial_lance_projectile",
+							"targeting": "highest_health_or_nearest_elite",
+							"speed": 680,
+							"pierce": 6,
+							"collision_radius": 14,
+							"damage": {
+								"damage_type": "frost",
+								"source_type": "cast",
+								"power_scale": 1.25
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								},
+								{
+									"type": "spawn_area",
+									"area_id": "shatter_splash",
+									"radius": 100.8,
+									"duration": 0.18,
+									"effects_on_apply": [
+										{
+											"type": "damage",
+											"damage_type": "frost",
+											"source_type": "cast",
+											"power_scale": 0.45
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "向生命最高或最近精英发射穿透冰矛；命中 Frozen 敌人时产生碎冰溅射"
+		},
+		{
+			"id": "frost_cast_blizzard_cloud",
+			"name": "暴雪云团",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"frost",
+				"area",
+				"blizzard",
+				"status_chilled"
+			],
+			"mechanic_family": "cast_blizzard_cluster_drift",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "blizzard_cloud",
+							"targeting": "densest_enemy_cluster",
+							"move_direction": "towards_target",
+							"move_speed": 70,
+							"radius": 168,
+							"duration": 5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "area",
+									"power_scale": 0.16
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在怪物密集区域生成移动暴雪，持续施加 Chilled，并降低敌人移动速度"
+		},
+		{
+			"id": "frost_summon_frost_wolf",
+			"name": "霜狼",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"frost",
+				"wolf",
+				"status_chilled",
+				"status_frozen"
+			],
+			"mechanic_family": "summon_frost_wolf_chilled",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "summon_frost_wolf",
+							"summon_definition_id": "summon_frost_wolf"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冰狼协助作战，攻击命中敌人时施加 Chilled；优先扑击 Frozen 目标"
+		},
+		{
+			"id": "frost_summon_ice_crystal_guard",
+			"name": "冰晶守卫",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"frost",
+				"guard",
+				"area",
+				"status_chilled"
+			],
+			"mechanic_family": "summon_stationary_frost_pulse",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "ice_crystal_guard",
+							"summon_definition_id": "ice_crystal_guard"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "召唤固定冰晶守卫，周期性释放冰脉冲，减速附近敌人"
+		},
+		{
+			"id": "frost_power_shatter_execute",
+			"name": "碎冰处决",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"frost",
+				"execute",
+				"status_chilled",
+				"status_frozen"
+			],
+			"mechanic_family": "power_chilled_frozen_execute",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"conditions": [
+						{
+							"type": "target_has_any_status",
+							"statuses": [
+								"chilled",
+								"frozen"
+							]
+						}
+					],
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "frost",
+							"source_type": "power",
+							"power_scale": 1.1,
+							"low_hp_execute_threshold": 0.1
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Chilled / Frozen 敌人低于一定生命阈值时，直接碎裂死亡"
+		},
+		{
+			"id": "frost_passive_frozen_vulnerability",
+			"name": "冰封易伤",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"frost",
+				"vulnerability",
+				"status_frozen"
+			],
+			"mechanic_family": "passive_frozen_damage_taken",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "frozen_damage_taken_multiplier",
+					"value": 0.25
+				}
+			],
+			"description": "被 Frozen、定身或强控的敌人受到更多伤害"
+		},
+		{
+			"id": "frost_passive_chill_extension",
+			"name": "寒意延展",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"frost",
+				"status_chilled",
+				"status_frozen",
+				"area"
+			],
+			"mechanic_family": "passive_chill_frozen_duration",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "chilled_duration_multiplier",
+					"value": 0.2
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "frozen_duration_multiplier",
+					"value": 0.2
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "frost_area_duration_multiplier",
+					"value": 0.2
+				}
+			],
+			"description": "Chilled 和 Frozen 持续时间提高；冰霜区域持续时间提高"
+		},
+		{
+			"id": "frost_power_frost_ring_counter",
+			"name": "霜环反冲",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"frost",
+				"dash",
+				"ring",
+				"status_chilled"
+			],
+			"mechanic_family": "power_dash_or_crowd_frost_ring",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_end",
+					"cooldown": 2,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "frost_ring",
+							"position_mode": "caster",
+							"radius": 151.2,
+							"duration": 0.28,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "power",
+									"power_scale": 0.6
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 2,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周围敌人数量过多或冲刺结束时，有概率从自身释放冰霜环，伤害并冻结敌人"
+		},
+		{
+			"id": "frost_power_ice_crack_chain",
+			"name": "冰裂连锁",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"frost",
+				"projectile",
+				"status_frozen"
+			],
+			"mechanic_family": "power_frozen_damage_ice_shards",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "skill_damage_hit",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "frozen"
+						}
+					],
+					"cooldown": 0.35,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "ice_crack_shard",
+							"count": 4,
+							"spread_angle": 360,
+							"speed": 500,
+							"damage": {
+								"damage_type": "frost",
+								"source_type": "power",
+								"power_scale": 0.28
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Frozen 敌人受到重击或技能伤害时，向周围发射碎冰片"
+		},
+		{
+			"id": "frost_power_ice_mist_guard",
+			"name": "冰雾护身",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"frost",
+				"shield",
+				"status_frozen"
+			],
+			"mechanic_family": "power_freeze_counter_ice_mist_shield",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_applied",
+					"counter_key": "ice_mist_frozen_count",
+					"threshold": 5,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "frozen"
+						}
+					],
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "ice_mist",
+							"amount": {
+								"stat": "power",
+								"scale": 0.8
+							},
+							"max_stacks": 3
+						}
+					]
+				},
+				{
+					"trigger": "shield_break",
+					"conditions": [
+						{
+							"type": "source_has_tag",
+							"tag": "ice_mist"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "frost_ring",
+							"position_mode": "caster",
+							"radius": 126,
+							"duration": 0.25,
+							"effects_on_apply": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 2,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "每冻结一定数量敌人，获得一层冰雾护盾；护盾破裂时冻结附近敌人"
+		},
+		{
+			"id": "frost_core_absolute_zero",
+			"name": "绝对零度",
+			"school": "frost",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"frost",
+				"status_chilled",
+				"status_frozen",
+				"area"
+			],
+			"mechanic_family": "core_absolute_zero_global_chill",
+			"offer_rule": {
+				"required_schools": [
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "absolute_zero_field",
+							"position_mode": "caster",
+							"radius": 1200,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6,
+									"max_stacks": 5
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "frozen"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "absolute_zero_field",
+							"radius": 84,
+							"duration": 2,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6,
+									"max_stacks": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "chilled_freeze_threshold_override",
+					"value": 5
+				}
+			],
+			"description": "敌人被冻结所需的 Chilled 层数降低；每隔数秒，全场敌人获得一层 Chilled；Frozen 敌人碎裂时会在原地生成小型冰霜领域"
+		},
+		{
+			"id": "thunder_attack_thundering",
+			"name": "雷鸣攻击",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"thunder",
+				"lightning",
+				"chain",
+				"status_conductive"
+			],
+			"mechanic_family": "attack_conductive_arc",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "conductive",
+							"stacks": 1,
+							"duration": 5
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"counter_key": "thundering_attack_hits",
+					"threshold": 4,
+					"effects": [
+						{
+							"type": "chain_to_targets",
+							"radius_r": 3,
+							"count": 2,
+							"actions": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "attack",
+									"power_scale": 0.5
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.15,
+					"damage_type": "thunder"
+				}
+			],
+			"description": "攻击变强，命中施加 Conductive；每数次攻击额外向附近敌人弹射一道电弧"
+		},
+		{
+			"id": "thunder_dash_ball_lightning",
+			"name": "球状闪电",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"thunder",
+				"lightning",
+				"area",
+				"status_conductive"
+			],
+			"mechanic_family": "dash_ball_lightning_orb",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "ball_lightning_path",
+							"position_mode": "caster",
+							"radius_r": 0.8,
+							"duration": 0.24,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "dash",
+									"power_scale": 0.8
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "dash_tick",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "ball_lightning_path",
+							"position_mode": "caster",
+							"radius_r": 0.8,
+							"duration": 0.24,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "dash",
+									"power_scale": 0.8
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "dash_end",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "ball_lightning_orb",
+							"position_mode": "caster",
+							"radius_r": 1.15,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "area",
+									"power_scale": 0.18
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺时化作短暂球状闪电，伤害经过敌人，并在终点留下一个放电雷球"
+		},
+		{
+			"id": "thunder_cast_chain_lightning",
+			"name": "连锁闪电",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"thunder",
+				"lightning",
+				"chain",
+				"status_conductive"
+			],
+			"mechanic_family": "cast_chain_lightning_conductive",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 3.5,
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "chain_lightning_bolt",
+							"targeting": "nearest_enemy",
+							"speed": 900,
+							"collision_radius": 9,
+							"damage": {
+								"damage_type": "thunder",
+								"source_type": "cast",
+								"power_scale": 1
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								},
+								{
+									"type": "chain_to_targets",
+									"targeting": "conductive_first_nearest",
+									"radius_r": 3.2,
+									"count": 4,
+									"damage_decay": 0.85,
+									"actions": [
+										{
+											"type": "damage",
+											"damage_type": "thunder",
+											"source_type": "cast",
+											"power_scale": 0.85
+										},
+										{
+											"type": "apply_status",
+											"status": "conductive",
+											"stacks": 1,
+											"duration": 5
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 Conductive 敌人"
+		},
+		{
+			"id": "thunder_cast_storm_circle",
+			"name": "雷暴法阵",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"thunder",
+				"lightning",
+				"area",
+				"status_conductive"
+			],
+			"mechanic_family": "cast_thunderstorm_conductive_priority",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "thunderstorm_cloud",
+							"targeting": "densest_conductive_or_enemy_cluster",
+							"radius_r": 2.6,
+							"duration": 4,
+							"tick_interval": 0.6,
+							"effects_on_tick": [
+								{
+									"type": "spawn_area",
+									"area_id": "lightning_strike_area",
+									"radius_r": 0.8,
+									"duration": 0.16,
+									"effects_on_apply": [
+										{
+											"type": "damage",
+											"damage_type": "thunder",
+											"source_type": "cast",
+											"power_scale": 0.8
+										},
+										{
+											"type": "apply_status",
+											"status": "conductive",
+											"stacks": 1,
+											"duration": 5
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 Conductive 敌人"
+		},
+		{
+			"id": "thunder_cast_emp_ring",
+			"name": "电磁脉冲",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"thunder",
+				"lightning",
+				"ring",
+				"interrupt",
+				"status_conductive"
+			],
+			"mechanic_family": "cast_emp_conductive_bonus",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 6.5,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "emp_ring",
+							"position_mode": "caster",
+							"radius_r": 2.8,
+							"duration": 0.28,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "cast",
+									"power_scale": 1.2
+								},
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "cast",
+									"power_scale": 0.6,
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "conductive"
+										}
+									]
+								},
+								{
+									"type": "apply_status",
+									"status": "stun",
+									"stacks": 1,
+									"duration": 0.2
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 Conductive 敌人伤害更高"
+		},
+		{
+			"id": "thunder_summon_storm_lynx",
+			"name": "雷兽猞猁",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"thunder",
+				"lightning",
+				"status_conductive"
+			],
+			"mechanic_family": "summon_storm_lynx_chain",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "storm_lynx",
+							"summon_definition_id": "storm_lynx"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "雷兽在敌人之间跳跃攻击，优先攻击 Conductive 目标，并补充导电层数"
+		},
+		{
+			"id": "thunder_summon_storm_crow",
+			"name": "风暴乌鸦",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"thunder",
+				"lightning",
+				"status_conductive"
+			],
+			"mechanic_family": "summon_storm_crow_lightning",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "storm_crow",
+							"summon_definition_id": "storm_crow"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "乌鸦盘旋在玩家周围，周期性标记远处敌人并召唤落雷"
+		},
+		{
+			"id": "thunder_passive_high_frequency_discharge",
+			"name": "高频放电",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"thunder",
+				"cooldown"
+			],
+			"mechanic_family": "passive_thunder_cooldown_reduction",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "thunder_cooldown_multiplier_add",
+					"value": -0.15
+				}
+			],
+			"description": "雷电类技能触发间隔降低"
+		},
+		{
+			"id": "thunder_passive_superconductor",
+			"name": "超导体",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"thunder",
+				"lightning",
+				"status_conductive",
+				"chain"
+			],
+			"mechanic_family": "passive_conductive_lightning_bonus",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "conductive_lightning_damage_taken_multiplier",
+					"value": 0.2
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "lightning_chain_range_multiplier",
+					"value": 0.15
+				}
+			],
+			"description": "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高"
+		},
+		{
+			"id": "thunder_passive_static_charge",
+			"name": "静电蓄能",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"thunder",
+				"lightning",
+				"frequency"
+			],
+			"mechanic_family": "passive_lightning_hit_static_burst",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"counter_key": "static_charge_lightning_hits",
+					"threshold": 18,
+					"conditions": [
+						{
+							"type": "damage_element_is",
+							"element": "lightning"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "attack_speed_multiplier",
+							"value": 0.2,
+							"duration": 4
+						},
+						{
+							"type": "add_modifier",
+							"modifier": "thunder_cooldown_multiplier_add",
+							"value": -0.1,
+							"duration": 4
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "每次雷电命中获得静电层数；满层后短时间提高攻击速度和技能触发频率"
+		},
+		{
+			"id": "thunder_power_overload_burst",
+			"name": "过载爆破",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"thunder",
+				"lightning",
+				"status_conductive",
+				"overload"
+			],
+			"mechanic_family": "power_conductive_max_stack_overload",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "conductive"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "overload_burst",
+							"radius_r": 1.8,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "power",
+									"power_scale": 1.5
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 2,
+									"duration": 5
+								}
+							]
+						},
+						{
+							"type": "consume_status_stack",
+							"status": "conductive",
+							"stacks": 5,
+							"retain_stacks_modifier": "overload_conductive_stacks_retained"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive"
+		},
+		{
+			"id": "thunder_power_double_strike",
+			"name": "二重落雷",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"thunder",
+				"lightning",
+				"status_conductive"
+			],
+			"mechanic_family": "power_every_three_lightning_hits_extra_strike",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"counter_key": "double_strike_lightning_hits",
+					"threshold": 3,
+					"conditions": [
+						{
+							"type": "damage_element_is",
+							"element": "lightning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "lightning_strike_area",
+							"targeting": "nearest_enemy",
+							"radius_r": 0.8,
+							"duration": 0.16,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "power",
+									"power_scale": 0.45
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人"
+		},
+		{
+			"id": "thunder_power_magnetic_pull",
+			"name": "雷磁牵引",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"thunder",
+				"lightning",
+				"pull",
+				"status_conductive"
+			],
+			"mechanic_family": "power_conductive_hit_pull",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"cooldown": 0.5,
+					"conditions": [
+						{
+							"type": "damage_element_is",
+							"element": "lightning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "conductive"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "magnetic_pull_field",
+							"radius_r": 1.2,
+							"duration": 0.18,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "power",
+									"power_scale": 0.25
+								},
+								{
+									"type": "pull",
+									"pull_radius_r": 1.2,
+									"strength": 0.28
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中"
+		},
+		{
+			"id": "thunder_core_storm_center",
+			"name": "雷暴中枢",
+			"school": "thunder",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"thunder",
+				"lightning",
+				"overload",
+				"status_conductive"
+			],
+			"mechanic_family": "core_lightning_hit_global_storm",
+			"offer_rule": {
+				"required_schools": [
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"counter_key": "storm_center_lightning_hits",
+					"threshold": 60,
+					"conditions": [
+						{
+							"type": "damage_element_is",
+							"element": "lightning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectiles_at_targets",
+							"projectile_id": "thunder_arc_bolt",
+							"targeting": "random_enemies_around_player",
+							"count": 8,
+							"range_r": 14,
+							"speed": 900,
+							"collision_radius": 10,
+							"damage": {
+								"damage_type": "thunder",
+								"source_type": "core",
+								"power_scale": 0.9
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "overload_conductive_stacks_retained",
+					"value": 2
+				}
+			],
+			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁"
+		},
+		{
+			"id": "curse_attack_cursing",
+			"name": "诅咒攻击",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"curse",
+				"status_cursed"
+			],
+			"mechanic_family": "attack_cursed_low_health_bonus",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 1,
+							"duration": 3
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"conditions": [
+						{
+							"type": "target_hp_below",
+							"percent": 0.35
+						}
+					],
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "curse",
+							"source_type": "attack",
+							"power_scale": 0.2
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.18,
+					"damage_type": "curse"
+				}
+			],
+			"description": "攻击变强，命中施加 Cursed；对低生命敌人施加额外诅咒伤害"
+		},
+		{
+			"id": "curse_dash_soul_chain",
+			"name": "魂链疾行",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"curse",
+				"chain",
+				"status_cursed",
+				"lifesteal"
+			],
+			"mechanic_family": "dash_soul_chain_cursed_lifesteal",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "chain_to_targets",
+							"targeting": "cursed_first_nearest",
+							"radius_r": 3.6,
+							"count": 3,
+							"actions": [
+								{
+									"type": "spawn_area",
+									"area_id": "soul_chain_link",
+									"radius_r": 0.45,
+									"duration": 0.24
+								},
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "dash",
+									"power_scale": 0.6
+								},
+								{
+									"type": "heal",
+									"max_health_ratio": 0.01
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺时向附近 Cursed 敌人连接魂链，造成伤害并吸取少量生命"
+		},
+		{
+			"id": "curse_cast_black_serpent_hunt",
+			"name": "黑蛇追猎",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"curse",
+				"projectile",
+				"status_cursed"
+			],
+			"mechanic_family": "cast_black_serpent_uncursed_priority",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 4.5,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "black_serpent_projectile",
+							"targeting": "uncursed_first_nearest",
+							"count": 2,
+							"spread_angle": 18,
+							"speed": 520,
+							"collision_radius": 10,
+							"damage": {
+								"damage_type": "curse",
+								"source_type": "cast",
+								"power_scale": 0.65
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 Cursed"
+		},
+		{
+			"id": "curse_cast_death_scythe",
+			"name": "死镰回旋",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"curse",
+				"projectile",
+				"status_cursed"
+			],
+			"mechanic_family": "cast_death_scythe_return_bonus",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 6,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "death_scythe_projectile",
+							"targeting": "nearest_enemy",
+							"count": 2,
+							"spread_angle": 10,
+							"speed": 560,
+							"pierce": 4,
+							"collision_radius": 14,
+							"damage": {
+								"damage_type": "curse",
+								"source_type": "cast",
+								"power_scale": 1
+							},
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "cast",
+									"power_scale": 0.3,
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "cursed"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 Cursed 敌人造成额外伤害"
+		},
+		{
+			"id": "curse_cast_doom_circle",
+			"name": "终末法阵",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"curse",
+				"area",
+				"status_cursed"
+			],
+			"mechanic_family": "cast_doom_circle_cursed_stack_burst",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7.5,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "doom_circle_delay",
+							"targeting": "highest_health_or_nearest_elite",
+							"radius_r": 2.2,
+							"duration": 1.2,
+							"effects_on_expire": [
+								{
+									"type": "spawn_area",
+									"area_id": "doom_circle_burst",
+									"radius_r": 2.2,
+									"duration": 0.22,
+									"effects_on_apply": [
+										{
+											"type": "damage",
+											"damage_type": "curse",
+											"source_type": "cast",
+											"power_scale": 2
+										},
+										{
+											"type": "damage_by_status_stack",
+											"statuses": [
+												"cursed"
+											],
+											"power_scale_per_stack": 0.6,
+											"consume": true,
+											"consume_stacks": 3
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高"
+		},
+		{
+			"id": "curse_summon_bone_servant",
+			"name": "亡骸仆从",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"curse",
+				"status_cursed"
+			],
+			"mechanic_family": "summon_bone_servant_cursed_deaths",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"counter_key": "bone_servant_cursed_deaths",
+					"threshold": 5,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "bone_servant",
+							"summon_definition_id": "bone_servant"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间"
+		},
+		{
+			"id": "curse_summon_soul_crow",
+			"name": "魂鸦",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"curse",
+				"projectile",
+				"status_cursed"
+			],
+			"mechanic_family": "summon_soul_crow_cursed_souls",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "soul_crow",
+							"summon_definition_id": "soul_crow"
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"counter_key": "soul_crow_cursed_deaths",
+					"threshold": 3,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "soul_bolt_projectile",
+							"targeting": "nearest_enemy",
+							"speed": 620,
+							"collision_radius": 10,
+							"damage": {
+								"damage_type": "curse",
+								"source_type": "summon",
+								"power_scale": 0.8
+							}
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人"
+		},
+		{
+			"id": "curse_passive_vampiric_ritual",
+			"name": "吸血仪式",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"curse",
+				"lifesteal",
+				"status_cursed"
+			],
+			"mechanic_family": "passive_cursed_damage_lifesteal",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"cooldown": 0.5,
+					"conditions": [
+						{
+							"type": "damage_element_is",
+							"element": "curse"
+						}
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"max_health_ratio": 0.0015
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"max_health_ratio": 0.01
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Cursed 造成伤害或击杀时，为玩家恢复少量生命"
+		},
+		{
+			"id": "curse_passive_plague_spread",
+			"name": "疫咒扩散",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"curse",
+				"chain",
+				"status_cursed"
+			],
+			"mechanic_family": "passive_cursed_death_spread",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "chain_to_targets",
+							"radius_r": 2.5,
+							"count": 3,
+							"actions": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人"
+		},
+		{
+			"id": "curse_passive_deathbed_deepen",
+			"name": "临终加深",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"curse",
+				"status_cursed"
+			],
+			"mechanic_family": "passive_low_health_cursed_damage",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "cursed_low_hp_damage_multiplier",
+					"value": 0.4
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "cursed_low_hp_boss_effect_multiplier",
+					"value": 0.3
+				}
+			],
+			"description": "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低"
+		},
+		{
+			"id": "curse_power_fear_whisper",
+			"name": "恐惧低语",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"curse",
+				"area",
+				"fear",
+				"status_cursed"
+			],
+			"mechanic_family": "power_cursed_near_player_fear",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 1.5,
+					"conditions": [
+						{
+							"type": "enemy_count_in_radius",
+							"count": 1,
+							"radius": 184.8
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "curse_whisper_burst",
+							"position_mode": "caster",
+							"radius_r": 2.2,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "power",
+									"power_scale": 0.3,
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "cursed"
+										}
+									]
+								},
+								{
+									"type": "knockback",
+									"force": 48,
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "cursed"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离"
+		},
+		{
+			"id": "curse_power_soul_harvest",
+			"name": "灵魂收割",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"curse",
+				"status_cursed"
+			],
+			"mechanic_family": "power_cursed_kill_skill_damage_buff",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"counter_key": "soul_harvest_cursed_kills",
+					"threshold": 12,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "direct_damage_multiplier_add",
+							"value": 0.35,
+							"duration": 5
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害"
+		},
+		{
+			"id": "curse_power_death_pact",
+			"name": "死亡契约",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"curse",
+				"mark",
+				"status_cursed"
+			],
+			"mechanic_family": "power_death_pact_mark_explosion",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 8,
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 2,
+							"duration": 5,
+							"targeting": "highest_hp_enemy"
+						},
+						{
+							"type": "mark_target",
+							"mark": "death_pact",
+							"duration": 5,
+							"targeting": "highest_hp_enemy"
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_meta",
+							"key": "death_pact"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "soul_explosion_area",
+							"radius_r": 2,
+							"duration": 0.22,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "power",
+									"power_scale": 1.8
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性标记附近生命最高的敌人；若其在持续时间内死亡，则产生灵魂爆炸"
+		},
+		{
+			"id": "curse_core_grand_coffin",
+			"name": "万咒归棺",
+			"school": "curse",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"curse",
+				"status_cursed",
+				"soul_debt"
+			],
+			"mechanic_family": "core_cursed_death_soul_storm",
+			"offer_rule": {
+				"required_schools": [
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "chain_to_targets",
+							"radius_r": 2.5,
+							"count": 3,
+							"actions": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "enemy_death",
+					"counter_key": "grand_coffin_soul_debt",
+					"threshold": 20,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectiles_at_targets",
+							"projectile_id": "soul_storm_bolt",
+							"targeting": "random_enemies_around_player",
+							"count": 10,
+							"range_r": 14,
+							"speed": 680,
+							"collision_radius": 10,
+							"damage": {
+								"damage_type": "curse",
+								"source_type": "core",
+								"power_scale": 0.5
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人"
+		},
+		{
+			"id": "holy_attack_judgment",
+			"name": "裁决攻击",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"holy",
+				"status_judgment",
+				"shield"
+			],
+			"mechanic_family": "attack_judgment_shield",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"cooldown": 0.2,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "judgment"
+						}
+					],
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "holy_judgment",
+							"max_health_ratio": 0.005,
+							"duration": 6,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.16,
+					"damage_type": "holy"
+				}
+			],
+			"description": "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值"
+		},
+		{
+			"id": "holy_dash_heavenly_wings",
+			"name": "天翼冲刺",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"holy",
+				"shield",
+				"area",
+				"status_judgment"
+			],
+			"mechanic_family": "dash_holy_shield_path",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "heavenly_wings",
+							"max_health_ratio": 0.08,
+							"duration": 1.2,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "heavenly_wings_path",
+							"position_mode": "caster",
+							"radius_r": 0.9,
+							"duration": 0.24,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "dash",
+									"power_scale": 0.7
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "dash_tick",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "heavenly_wings_path",
+							"position_mode": "caster",
+							"radius_r": 0.9,
+							"duration": 0.24,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "dash",
+									"power_scale": 0.7
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment"
+		},
+		{
+			"id": "holy_cast_holy_ray",
+			"name": "圣光射线",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"holy",
+				"projectile",
+				"status_judgment"
+			],
+			"mechanic_family": "cast_holy_ray_judgment_priority",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5.5,
+					"effects": [
+						{
+							"type": "spawn_projectiles_at_targets",
+							"projectile_id": "holy_ray_beam",
+							"targeting": "judgment_stack_highest",
+							"count": 3,
+							"range_r": 12,
+							"speed": 900,
+							"collision_radius": 58.8,
+							"damage": {
+								"damage_type": "holy",
+								"source_type": "cast",
+								"power_scale": 0.9
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人"
+		},
+		{
+			"id": "holy_cast_divine_barrier",
+			"name": "神圣结界",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"holy",
+				"area",
+				"shield",
+				"status_judgment"
+			],
+			"mechanic_family": "cast_divine_barrier_shield_regen",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 10,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "divine_barrier_field",
+							"position_mode": "caster",
+							"radius_r": 2.3,
+							"duration": 5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "area",
+									"power_scale": 0.18
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								},
+								{
+									"type": "grant_shield",
+									"shield_type": "divine_barrier",
+									"max_health_ratio": 0.005,
+									"duration": 6,
+									"respect_shield_cap": true,
+									"shield_cap_health_ratio": 0.35
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复"
+		},
+		{
+			"id": "holy_cast_judgment_hammer",
+			"name": "审判圣锤",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"holy",
+				"area",
+				"stun",
+				"status_judgment"
+			],
+			"mechanic_family": "cast_judgment_hammer_highest_hp",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "judgment_hammer_area",
+							"targeting": "highest_hp_enemy",
+							"radius_r": 1.4,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "cast",
+									"power_scale": 2.4
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 2,
+									"duration": 6
+								},
+								{
+									"type": "apply_status",
+									"status": "stun",
+									"stacks": 1,
+									"duration": 0.25
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "对生命最高的敌人降下圣锤，造成高额伤害并短暂眩晕"
+		},
+		{
+			"id": "holy_summon_seraph",
+			"name": "炽天使",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"holy",
+				"shield",
+				"status_judgment"
+			],
+			"mechanic_family": "summon_seraph_holy_bolt_shield",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "seraph",
+							"summon_definition_id": "seraph"
+						}
+					]
+				},
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5,
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "seraph_blessing",
+							"max_health_ratio": 0.02,
+							"duration": 6,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾"
+		},
+		{
+			"id": "holy_summon_shield_guardian",
+			"name": "圣盾卫士",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"holy",
+				"shield",
+				"counter",
+				"status_judgment"
+			],
+			"mechanic_family": "summon_shield_guardian_counter",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "holy_shield_guardian",
+							"summon_definition_id": "holy_shield_guardian"
+						}
+					]
+				},
+				{
+					"trigger": "player_damage_taken",
+					"cooldown": 2,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "shield_guardian_counter_wave",
+							"position_mode": "caster",
+							"radius_r": 1.4,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "summon",
+									"power_scale": 0.6
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者"
+		},
+		{
+			"id": "holy_passive_sanctuary",
+			"name": "庇护",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"holy",
+				"shield"
+			],
+			"mechanic_family": "passive_holy_shield_sanctuary",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "holy_shield_cap_multiplier",
+					"value": 0.2
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "holy_shield_restore_multiplier",
+					"value": 0.2
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "holy_damage_multiplier_add",
+					"value": 0.15
+				}
+			],
+			"description": "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高"
+		},
+		{
+			"id": "holy_passive_devotion",
+			"name": "虔诚",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"holy",
+				"shield",
+				"damage"
+			],
+			"mechanic_family": "passive_shield_overflow_damage",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "shield_gained",
+					"conditions": [
+						{
+							"type": "shield_overflowed"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "direct_damage_multiplier_add",
+							"value": 0.2,
+							"duration": 4
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "治疗和护盾溢出会转化为短时间伤害加成"
+		},
+		{
+			"id": "holy_passive_weakening_judgment",
+			"name": "弱化审判",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"holy",
+				"status_judgment",
+				"weaken"
+			],
+			"mechanic_family": "passive_judgment_weaken_holy_vulnerability",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "judgment_holy_damage_taken_multiplier",
+					"value": 0.05
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "judgment_damage_dealt_multiplier",
+					"value": -0.03
+				}
+			],
+			"description": "Judgment 敌人造成的伤害降低，并受到更多神圣伤害"
+		},
+		{
+			"id": "holy_power_divine_punishment",
+			"name": "神罚",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"holy",
+				"status_judgment",
+				"stun"
+			],
+			"mechanic_family": "power_judgment_max_stack_punishment",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "judgment"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "divine_punishment_strike",
+							"radius_r": 1.2,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "power",
+									"power_scale": 1.6
+								},
+								{
+									"type": "apply_status",
+									"status": "stun",
+									"stacks": 1,
+									"duration": 0.35
+								}
+							]
+						},
+						{
+							"type": "consume_status_stack",
+							"status": "judgment",
+							"stacks": 5,
+							"retain_stacks_modifier": "divine_punishment_judgment_stacks_retained"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标"
+		},
+		{
+			"id": "holy_power_counter_seal",
+			"name": "反击圣印",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"holy",
+				"shield",
+				"counter",
+				"status_judgment"
+			],
+			"mechanic_family": "power_shield_break_counter_seal",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "shield_broken",
+					"cooldown": 8,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "counter_seal_wave",
+							"position_mode": "caster",
+							"radius_r": 2.2,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "power",
+									"power_scale": 1.2
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "player_damage_taken",
+					"cooldown": 8,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "counter_seal_wave",
+							"position_mode": "caster",
+							"radius_r": 2.2,
+							"duration": 0.2,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "power",
+									"power_scale": 1.2
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment"
+		},
+		{
+			"id": "holy_power_absolution_light",
+			"name": "赦免之光",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"holy",
+				"shield",
+				"status_judgment"
+			],
+			"mechanic_family": "power_judgment_kill_shield_burst",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "judgment"
+						}
+					],
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "absolution_light",
+							"max_health_ratio": 0.02,
+							"duration": 6,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "absolution_light_burst",
+							"radius_r": 1.4,
+							"duration": 0.2,
+							"conditions": [
+								{
+									"type": "shield_overflowed"
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "power",
+									"power_scale": 0.8
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸"
+		},
+		{
+			"id": "holy_core_final_judgment_domain",
+			"name": "终裁神域",
+			"school": "holy",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"holy",
+				"shield",
+				"status_judgment",
+				"weaken"
+			],
+			"mechanic_family": "core_divine_punishment_cycle",
+			"offer_rule": {
+				"required_schools": [
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "judgment"
+						}
+					],
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "final_judgment_domain",
+							"max_health_ratio": 0.03,
+							"duration": 6,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "counter_seal_wave",
+							"radius_r": 1.8,
+							"duration": 0.16,
+							"effects_on_apply": [
+								{
+									"type": "apply_status",
+									"status": "weaken",
+									"stacks": 1,
+									"duration": 1.5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "divine_punishment_judgment_stacks_retained",
+					"value": 2
+				}
+			],
+			"description": "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱"
+		},
+		{
+			"id": "chaos_attack_chaotic",
+			"name": "混沌攻击",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "attack",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "attack_school",
+			"tags": [
+				"attack",
+				"chaos",
+				"void",
+				"projectile",
+				"status_instability"
+			],
+			"mechanic_family": "attack_instability_mutation",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"attack_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "attack_hit",
+					"effects": [
+						{
+							"type": "apply_status",
+							"status": "instability",
+							"stacks": 1,
+							"duration": 6
+						}
+					]
+				},
+				{
+					"trigger": "attack_hit",
+					"counter_key": "chaotic_attack_hits",
+					"threshold": 3,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "chaos_orb",
+							"count": 2,
+							"spread_angle": 52,
+							"speed": 360,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.32
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_weak_hit",
+							"radius_r": 0.65,
+							"duration": 0.12,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "attack",
+									"power_scale": 0.28
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "attack_damage_multiplier",
+					"value": 0.14,
+					"damage_type": "arcane"
+				}
+			],
+			"description": "攻击变强，命中施加 Instability；命中时有概率使弹体分裂、偏转或追加一次弱化命中"
+		},
+		{
+			"id": "chaos_dash_rift_step",
+			"name": "裂隙步",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "dash",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": "dash_school",
+			"tags": [
+				"dash",
+				"chaos",
+				"rift",
+				"ground_path",
+				"status_instability"
+			],
+			"mechanic_family": "dash_start_end_rifts",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"dash_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "dash_start",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_rift",
+							"position_mode": "caster",
+							"radius_r": 1,
+							"duration": 4,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "dash",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				},
+				{
+					"trigger": "dash_end",
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_rift",
+							"position_mode": "caster",
+							"radius_r": 1,
+							"duration": 4,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "dash",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 Instability"
+		},
+		{
+			"id": "chaos_cast_void_rift",
+			"name": "虚空裂缝",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"chaos",
+				"rift",
+				"pull",
+				"status_instability"
+			],
+			"mechanic_family": "cast_void_rift_pull_dot",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 8,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "void_rift_field",
+							"targeting": "densest_enemy_cluster",
+							"radius_r": 2.5,
+							"duration": 4,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "cast",
+									"power_scale": 0.16
+								},
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								},
+								{
+									"type": "pull",
+									"pull_radius_r": 2.5,
+									"strength": 0.24
+								}
+							],
+							"cluster_radius": 90
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "在怪物密集区域打开裂缝，持续吸附附近敌人并造成虚空伤害"
+		},
+		{
+			"id": "chaos_cast_singularity_barrage",
+			"name": "奇点弹幕",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"chaos",
+				"projectile",
+				"bounce",
+				"status_instability"
+			],
+			"mechanic_family": "cast_bouncing_chaos_orbs",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 5,
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "chaos_orb",
+							"count": 5,
+							"spread_angle": 80,
+							"speed": 430,
+							"range_r": 5.5,
+							"bounce": 3,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.5
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								},
+								{
+									"type": "spawn_projectile_burst",
+									"projectile_id": "chaos_orb",
+									"count": 1,
+									"spread_angle": 30,
+									"speed": 360,
+									"range_r": 2.5,
+									"damage": {
+										"damage_type": "arcane",
+										"power_scale": 0.22
+									},
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "instability"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "发射数个会弹跳的混沌球，命中 Instability 敌人时有概率分裂"
+		},
+		{
+			"id": "chaos_cast_mutation_pulse",
+			"name": "异变脉冲",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "cast",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"cast",
+				"chaos",
+				"pulse",
+				"mutation",
+				"status_instability"
+			],
+			"mechanic_family": "cast_mutation_pulse",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 7,
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "mutation_pulse_area",
+							"position_mode": "caster",
+							"radius_r": 3,
+							"duration": 0.24,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "cast",
+									"power_scale": 0.9
+								},
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 2,
+									"duration": 6
+								},
+								{
+									"type": "apply_status",
+									"status": "slow",
+									"stacks": 1,
+									"duration": 1.2
+								},
+								{
+									"type": "add_modifier",
+									"modifier": "chaos_mutation_vulnerability",
+									"value": 0.08,
+									"duration": 3
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性释放脉冲，使敌人随机获得减速、易伤、缩小、沉默中的一种负面异变"
+		},
+		{
+			"id": "chaos_summon_chaos_clone",
+			"name": "混沌分身",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"chaos",
+				"clone",
+				"echo"
+			],
+			"mechanic_family": "summon_chaos_clone_echo",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 8,
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "chaos_clone",
+							"count": 1,
+							"duration": 8,
+							"summon_definition_id": "chaos_clone"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "召唤一个分身，模仿玩家最近一次普攻或技能，但伤害降低"
+		},
+		{
+			"id": "chaos_summon_void_maw",
+			"name": "虚空巨口",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "summon",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"summon",
+				"chaos",
+				"void_maw",
+				"pull",
+				"execute"
+			],
+			"mechanic_family": "summon_void_maw_pull_execute",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 12,
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "void_maw",
+							"count": 1,
+							"duration": 6,
+							"summon_definition_id": "void_maw"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "召唤固定虚空巨口，持续吸附附近敌人，并吞噬低生命小怪"
+		},
+		{
+			"id": "chaos_passive_entropy_growth",
+			"name": "熵增",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"chaos",
+				"entropy",
+				"status_instability"
+			],
+			"mechanic_family": "passive_instability_fission_buff",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "instability"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "chaos_entropy_damage_multiplier",
+							"value": 0.12,
+							"duration": 5
+						},
+						{
+							"type": "add_modifier",
+							"modifier": "chaos_entropy_range_multiplier",
+							"value": 0.12,
+							"duration": 5
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取"
+		},
+		{
+			"id": "chaos_passive_geometric_imbalance",
+			"name": "几何失衡",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"chaos",
+				"projectile",
+				"split"
+			],
+			"mechanic_family": "passive_projectile_geometry",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "chaos_projectile_geometry_chance",
+					"value": 0.25
+				},
+				{
+					"type": "add_modifier",
+					"modifier": "chaos_projectile_damage_multiplier_add",
+					"value": -0.1
+				}
+			],
+			"description": "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低"
+		},
+		{
+			"id": "chaos_passive_anomalous_stability",
+			"name": "反常稳定",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "passive",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"passive",
+				"chaos",
+				"guarantee"
+			],
+			"mechanic_family": "passive_chaos_pity",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "chaos_high_roll_after_triggers",
+					"value": 5
+				}
+			],
+			"description": "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本"
+		},
+		{
+			"id": "chaos_power_fission_burst",
+			"name": "裂变爆发",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"chaos",
+				"fission",
+				"status_instability",
+				"rift"
+			],
+			"mechanic_family": "power_instability_max_stack_fission",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "instability"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "instability_fission_burst",
+							"radius_r": 1.8,
+							"duration": 0.22,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "power",
+									"power_scale": 1.4
+								}
+							]
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_rift",
+							"radius_r": 0.9,
+							"duration": 2,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "power",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "instability",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "consume_status_stack",
+							"status": "instability",
+							"stacks": 4,
+							"retain_stacks_modifier": "instability_fission_stacks_retained"
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙"
+		},
+		{
+			"id": "chaos_power_echo_cast",
+			"name": "回声施法",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"chaos",
+				"echo",
+				"repeat"
+			],
+			"mechanic_family": "power_echo_cast_repeat",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"counter_key": "chaos_echo_casts",
+					"threshold": 4,
+					"effects": [
+						{
+							"type": "repeat_skill",
+							"times": 1,
+							"damage_multiplier": 0.4,
+							"actions": [
+								{
+									"type": "spawn_projectile_burst",
+									"projectile_id": "chaos_orb",
+									"count": 2,
+									"spread_angle": 45,
+									"speed": 360,
+									"range_r": 4,
+									"damage": {
+										"damage_type": "arcane",
+										"power_scale": 0.2
+									},
+									"on_hit": [
+										{
+											"type": "apply_status",
+											"status": "instability",
+											"stacks": 1,
+											"duration": 6
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低"
+		},
+		{
+			"id": "chaos_power_chaos_exchange",
+			"name": "混沌交换",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "power",
+			"rarity": "normal",
+			"max_level": 5,
+			"exclusive_group": null,
+			"tags": [
+				"power",
+				"chaos",
+				"swap",
+				"status_instability"
+			],
+			"mechanic_family": "power_instability_position_swap",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": []
+			},
+			"trigger_rules": [
+				{
+					"trigger": "cast_skill",
+					"cooldown": 6,
+					"effects": [
+						{
+							"type": "swap_targets",
+							"targeting": "instability_stack_highest",
+							"count": 2,
+							"area_id": "chaos_exchange_line",
+							"damage_type": "arcane",
+							"power_scale": 0.8,
+							"radius_r": 0.45
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害"
+		},
+		{
+			"id": "chaos_core_chaos_singularity",
+			"name": "混沌奇点",
+			"school": "chaos",
+			"fusion_school": null,
+			"type": "core",
+			"rarity": "normal",
+			"max_level": 1,
+			"exclusive_group": "core_school",
+			"tags": [
+				"core",
+				"chaos",
+				"singularity",
+				"status_instability"
+			],
+			"mechanic_family": "core_instability_singularity_cycle",
+			"offer_rule": {
+				"required_schools": [
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [
+					"core_school"
+				]
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"counter_key": "chaos_singularity_fissions",
+					"threshold": 25,
+					"conditions": [
+						{
+							"type": "event_status_is",
+							"status": "instability"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_singularity_field",
+							"position_mode": "caster",
+							"radius_r": 6,
+							"duration": 2,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "pull",
+									"pull_radius_r": 6,
+									"strength": 0.32
+								}
+							]
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "chaos_singularity_burst",
+							"position_mode": "caster",
+							"radius_r": 6,
+							"duration": 0.28,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "arcane",
+									"source_type": "core",
+									"power_scale": 3
+								}
+							]
+						},
+						{
+							"type": "repeat_skill",
+							"times": 1,
+							"actions": [
+								{
+									"type": "spawn_projectile_burst",
+									"projectile_id": "chaos_orb",
+									"count": 5,
+									"spread_angle": 90,
+									"speed": 420,
+									"range_r": 5.5,
+									"damage": {
+										"damage_type": "arcane",
+										"power_scale": 0.25
+									}
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"type": "add_modifier",
+					"modifier": "instability_fission_stacks_retained",
+					"value": 1
+				}
+			],
+			"description": "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发"
+		},
+		{
+			"id": "fusion_fire_frost_steam_mist",
+			"name": "蒸灼雾域",
+			"school": "fire",
+			"fusion_school": "frost",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"frost",
+				"status_burning",
+				"status_chilled",
+				"area"
+			],
+			"mechanic_family": "fusion_fire_frost_steam_area",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"frost": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"cooldown": 1,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "frost_area"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "steam_mist",
+							"radius": 168,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.14
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_frost_shattered_ember",
+			"name": "碎冰余烬",
+			"school": "fire",
+			"fusion_school": "frost",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"frost",
+				"status_frozen",
+				"status_burning",
+				"projectile"
+			],
+			"mechanic_family": "fusion_fire_frost_shatter_burst",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"frost"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"frost": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"cooldown": 0.3,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "frozen"
+						}
+					],
+					"effects": [
+						{
+							"type": "shatter_frozen",
+							"projectile_count": 6,
+							"damage": {
+								"damage_type": "frost",
+								"power_scale": 0.25
+							}
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "shattered_ember",
+							"count": 3,
+							"radius": 294,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.3
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_thunder_plasma_fire_path",
+			"name": "等离子火径",
+			"school": "fire",
+			"fusion_school": "thunder",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"thunder",
+				"ground_path",
+				"status_conductive"
+			],
+			"mechanic_family": "fusion_fire_thunder_path_discharge",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"thunder": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"cooldown": 0.8,
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "thunder"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area_from_existing_area",
+							"source_area_tag": "fire_path",
+							"area_id": "plasma_fire_path",
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_thunder_thunderburn_meteor",
+			"name": "雷燃流星",
+			"school": "fire",
+			"fusion_school": "thunder",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"thunder",
+				"meteor",
+				"status_conductive"
+			],
+			"mechanic_family": "fusion_fire_thunder_conductive_arc",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"thunder"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"thunder": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "fire"
+						},
+						{
+							"type": "target_has_status",
+							"status": "conductive"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "thunderburn_arc",
+							"count": 3,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.45
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_curse_ash_curse_rune",
+			"name": "灰烬咒文",
+			"school": "fire",
+			"fusion_school": "curse",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"curse",
+				"status_burning",
+				"status_cursed"
+			],
+			"mechanic_family": "fusion_fire_curse_tick_accelerate",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"curse": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_tick",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "consume_status_duration",
+							"status": "cursed",
+							"duration": 0.25,
+							"tag_on_expire": "ash_curse_rune_fireground_pending"
+						}
+					]
+				},
+				{
+					"trigger": "status_expired",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "expired_status_cursed"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "ash_curse_rune_fireground_pending"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "ash_curse_rune_fireground",
+							"radius": 100.8,
+							"duration": 2,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_curse_blackflame_serpents",
+			"name": "黑焰蛇群",
+			"school": "fire",
+			"fusion_school": "curse",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"curse",
+				"projectile",
+				"status_burning",
+				"status_cursed"
+			],
+			"mechanic_family": "fusion_fire_curse_blackflame_path",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"curse"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"curse": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "curse"
+						},
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "blackflame_serpent_path",
+							"radius": 50.4,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.12
+								},
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_holy_holy_flame_absolution",
+			"name": "圣焰赦免",
+			"school": "fire",
+			"fusion_school": "holy",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"holy",
+				"status_burning",
+				"status_judgment",
+				"shield"
+			],
+			"mechanic_family": "fusion_fire_holy_absolution_beam",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"holy": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_max_stack_reached",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "judgment"
+						},
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "consume_status_duration",
+							"status": "burning",
+							"duration": 1.5
+						},
+						{
+							"type": "grant_shield",
+							"shield_type": "holy_flame",
+							"max_health_ratio": 0.04
+						},
+						{
+							"type": "damage",
+							"damage_type": "holy",
+							"source_type": "fusion",
+							"power_scale": 1.1,
+							"length": 336
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_holy_burning_light_barrier",
+			"name": "燃光结界",
+			"school": "fire",
+			"fusion_school": "holy",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"holy",
+				"barrier",
+				"status_burning",
+				"shield"
+			],
+			"mechanic_family": "fusion_fire_holy_barrier_edge",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"holy"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"holy": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "holy_barrier"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "burning_light_barrier_edge",
+							"radius": 193.2,
+							"duration": 0.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "holy",
+									"source_type": "fusion",
+									"power_scale": 0.1
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							],
+							"effects_on_death": [
+								{
+									"type": "grant_shield",
+									"shield_type": "burning_light",
+									"max_health_ratio": 0.01
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_chaos_ember_echo",
+			"name": "余烬回声",
+			"school": "fire",
+			"fusion_school": "chaos",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"chaos",
+				"ground_path",
+				"repeat"
+			],
+			"mechanic_family": "fusion_fire_chaos_path_echo",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"chaos": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"cooldown": 2,
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "fire_path"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "chaos_rift"
+						}
+					],
+					"effects": [
+						{
+							"type": "repeat_area_path",
+							"delay": 1,
+							"reverse": true,
+							"duration": 2,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.13
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_fire_chaos_molten_split",
+			"name": "熔火分裂",
+			"school": "fire",
+			"fusion_school": "chaos",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"fire",
+				"chaos",
+				"projectile",
+				"status_instability",
+				"status_burning"
+			],
+			"mechanic_family": "fusion_fire_chaos_projectile_split",
+			"offer_rule": {
+				"required_schools": [
+					"fire",
+					"chaos"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"fire": 2,
+					"chaos": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"cooldown": 0.3,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "instability"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "molten_split_spark",
+							"count": 2,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_frost_fire_crystalized_flame",
+			"name": "凝火成晶",
+			"school": "frost",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"frost",
+				"fire",
+				"crystal",
+				"status_chilled"
+			],
+			"mechanic_family": "fusion_frost_fire_crystal_spikes",
+			"offer_rule": {
+				"required_schools": [
+					"frost",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"frost": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "frost_area"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "fire_path"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "crystalized_flame_spike",
+							"count": 5,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_frost_fire_frostburn_shards",
+			"name": "霜燃碎片",
+			"school": "frost",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"frost",
+				"fire",
+				"status_burning",
+				"status_frozen",
+				"projectile"
+			],
+			"mechanic_family": "fusion_frost_fire_frostburn_shards",
+			"offer_rule": {
+				"required_schools": [
+					"frost",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"frost": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_applied",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "frozen"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "frostburn_shard",
+							"count": 8,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.22
+								},
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.15,
+									"conditions": [
+										{
+											"type": "target_has_status",
+											"status": "burning"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_thunder_fire_arc_ignition",
+			"name": "轰燃电弧",
+			"school": "thunder",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"thunder",
+				"fire",
+				"status_burning",
+				"chain"
+			],
+			"mechanic_family": "fusion_thunder_fire_arc_path",
+			"offer_rule": {
+				"required_schools": [
+					"thunder",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"thunder": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "thunder"
+						},
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile",
+							"projectile_id": "arc_ignition_jump",
+							"count": 1,
+							"targeting": "nearest_fire_path",
+							"damage": {
+								"damage_type": "thunder",
+								"source_type": "fusion",
+								"power_scale": 0.55
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_thunder_fire_thunderfire_circuit",
+			"name": "雷火回路",
+			"school": "thunder",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"thunder",
+				"fire",
+				"ground_path",
+				"status_conductive"
+			],
+			"mechanic_family": "fusion_thunder_fire_ground_circuit",
+			"offer_rule": {
+				"required_schools": [
+					"thunder",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"thunder": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "fire"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area_from_existing_area",
+							"source_area_tag": "burning_ground",
+							"area_id": "thunderfire_circuit",
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.7
+								},
+								{
+									"type": "apply_status",
+									"status": "conductive",
+									"stacks": 1,
+									"duration": 5
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_curse_fire_ash_soul_pact",
+			"name": "灰烬魂契",
+			"school": "curse",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"curse",
+				"fire",
+				"status_burning",
+				"status_cursed"
+			],
+			"mechanic_family": "fusion_curse_fire_curse_amplify",
+			"offer_rule": {
+				"required_schools": [
+					"curse",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"curse": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "status_tick",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"modifier": "cursed_expire_damage_multiplier",
+							"value": 0.08,
+							"max_stacks": 5,
+							"duration": 3
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_curse_fire_burning_soul_minion",
+			"name": "燃魂仆从",
+			"school": "curse",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"curse",
+				"fire",
+				"summon",
+				"status_burning",
+				"status_cursed"
+			],
+			"mechanic_family": "fusion_curse_fire_death_minion",
+			"offer_rule": {
+				"required_schools": [
+					"curse",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"curse": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "enemy_death",
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_summon",
+							"summon_id": "burning_soul_minion",
+							"count": 1,
+							"duration": 10,
+							"attack_interval": 1.2
+						},
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "summon",
+							"power_scale": 0.6
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_holy_fire_holy_flame_purification",
+			"name": "圣焰净化",
+			"school": "holy",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"holy",
+				"fire",
+				"status_burning",
+				"shield"
+			],
+			"mechanic_family": "fusion_holy_fire_purify_burning",
+			"offer_rule": {
+				"required_schools": [
+					"holy",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"holy": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
+						},
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "consume_status_duration",
+							"status": "burning",
+							"duration": 1
+						},
+						{
+							"type": "grant_shield",
+							"shield_type": "holy_flame_purification",
+							"max_health_ratio": 0.02
+						},
+						{
+							"type": "damage",
+							"damage_type": "holy",
+							"source_type": "fusion",
+							"power_scale": 0.4
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_holy_fire_solar_hammer",
+			"name": "太阳圣锤",
+			"school": "holy",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"holy",
+				"fire",
+				"hammer",
+				"status_burning",
+				"status_judgment",
+				"ground_path"
+			],
+			"mechanic_family": "fusion_holy_fire_solar_cross",
+			"offer_rule": {
+				"required_schools": [
+					"holy",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"holy": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
+						},
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "solar_hammer_cross_path",
+							"radius": 67.2,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.14
+								},
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_chaos_fire_riftfire_fork",
+			"name": "裂火分叉",
+			"school": "chaos",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"chaos",
+				"fire",
+				"projectile",
+				"rift"
+			],
+			"mechanic_family": "fusion_chaos_fire_projectile_fork",
+			"offer_rule": {
+				"required_schools": [
+					"chaos",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"chaos": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "projectile_hit",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "fire_projectile"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "chaos_rift"
+						}
+					],
+					"effects": [
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "riftfire_fork",
+							"count": 2,
+							"angle": 25,
+							"on_hit": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		},
+		{
+			"id": "fusion_chaos_fire_lava_refraction",
+			"name": "熔岩折返",
+			"school": "chaos",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"chaos",
+				"fire",
+				"rift",
+				"lava",
+				"repeat"
+			],
+			"mechanic_family": "fusion_chaos_fire_lava_refraction",
+			"offer_rule": {
+				"required_schools": [
+					"chaos",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"chaos": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "area_tick",
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "lava_rift"
+						},
+						{
+							"type": "target_has_tag",
+							"tag": "chaos_rift"
+						}
+					],
+					"effects": [
+						{
+							"type": "repeat_area_path",
+							"distance": 3,
+							"reverse": true,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.8
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": []
+		}
+	]
 }

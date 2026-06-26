@@ -13,7 +13,7 @@ static func to_actions(effects: Array) -> Array:
 
 
 static func to_action(effect: Dictionary) -> Dictionary:
-	var effect_type: String = String(effect.get("type", ""))
+	var effect_type: String = str(effect.get("type", ""))
 	var params: Dictionary = effect.duplicate(true)
 	params.erase("type")
 	match effect_type:
@@ -25,8 +25,18 @@ static func to_action(effect: Dictionary) -> Dictionary:
 			return {"type": "spawn_area", "params": _normalize_area_params(params)}
 		"spawn_projectile":
 			return {"type": "spawn_projectile", "params": _normalize_projectile_params(params)}
+		"spawn_projectiles_at_targets":
+			return {"type": "spawn_projectiles_at_targets", "params": _normalize_projectile_params(params)}
 		"spawn_summon":
 			return {"type": "spawn_summon", "params": params}
+		"chain_to_targets":
+			return {"type": "chain_to_targets", "params": _normalize_chain_params(params)}
+		"consume_status_stack":
+			return {"type": "consume_status_stack", "params": _normalize_status_params(params)}
+		"damage_by_status_stack":
+			return {"type": "damage_by_status_stack", "params": _normalize_status_stack_damage_params(params)}
+		"mark_target":
+			return {"type": "mark_target", "params": params}
 		"add_modifier":
 			return {"type": "add_temporary_modifier", "params": params}
 		"grant_shield":
@@ -39,6 +49,8 @@ static func to_action(effect: Dictionary) -> Dictionary:
 			return {"type": "knockback", "params": params}
 		"repeat_skill":
 			return {"type": "repeat_skill", "params": params}
+		"swap_targets":
+			return {"type": "swap_targets", "params": params}
 		"transform_area":
 			return {"type": "transform_area", "params": params}
 		"transfer_status":
@@ -64,7 +76,7 @@ static func _normalize_damage_params(params: Dictionary) -> Dictionary:
 	if params.has("power_scale") and not params.has("amount"):
 		params["amount"] = {"stat": "power", "scale": float(params.get("power_scale", 0.0))}
 	if params.has("source_type") and not params.has("damage_origin"):
-		params["damage_origin"] = String(params.get("source_type"))
+		params["damage_origin"] = str(params.get("source_type"))
 	return params
 
 
@@ -98,9 +110,23 @@ static func _normalize_projectile_params(params: Dictionary) -> Dictionary:
 		if damage.has("power_scale"):
 			params["damage"] = {"stat": "power", "scale": float(damage.get("power_scale", 0.0))}
 		for key_variant: Variant in damage.keys():
-			var key: String = String(key_variant)
+			var key: String = str(key_variant)
 			if not params.has(key):
 				params[key] = damage[key_variant]
+	return params
+
+
+static func _normalize_chain_params(params: Dictionary) -> Dictionary:
+	if params.has("actions"):
+		params["actions"] = to_actions(_get_array(params.get("actions", [])))
+	return params
+
+
+static func _normalize_status_stack_damage_params(params: Dictionary) -> Dictionary:
+	if params.has("status") and not params.has("status_id"):
+		params["status_id"] = params["status"]
+	if params.has("power_scale_per_stack") and not params.has("amount_per_stack"):
+		params["amount_per_stack"] = {"stat": "power", "scale": float(params.get("power_scale_per_stack", 0.0))}
 	return params
 
 

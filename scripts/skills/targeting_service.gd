@@ -24,6 +24,34 @@ static func find_targets(caster: Node, mode: String, params: Dictionary = {}) ->
 		"highest_hp_enemy":
 			var highest_hp_enemy: Node2D = _find_highest_hp_enemy(params)
 			return [highest_hp_enemy] if highest_hp_enemy != null else []
+		"highest_health_or_nearest_elite":
+			var elite_or_highest_health: Node2D = _find_nearest_elite_or_highest_hp(caster_node, params)
+			return [elite_or_highest_health] if elite_or_highest_health != null else []
+		"densest_enemy_cluster":
+			var densest_cluster_enemy: Node2D = _find_densest_enemy_cluster_center(caster_node, params)
+			return [densest_cluster_enemy] if densest_cluster_enemy != null else []
+		"densest_conductive_or_enemy_cluster":
+			var densest_conductive_cluster_enemy: Node2D = _find_densest_enemy_cluster_center(caster_node, _with_status_priority(params, &"conductive"))
+			return [densest_conductive_cluster_enemy] if densest_conductive_cluster_enemy != null else []
+		"conductive_first_nearest":
+			var conductive_first_enemy: Node2D = _find_status_first_nearest(caster_node, params, &"conductive")
+			return [conductive_first_enemy] if conductive_first_enemy != null else []
+		"judgment_first_nearest":
+			var judgment_first_enemy: Node2D = _find_status_first_nearest(caster_node, params, &"judgment")
+			return [judgment_first_enemy] if judgment_first_enemy != null else []
+		"judgment_stack_highest":
+			return _find_status_stack_highest(caster_node, params, &"judgment")
+		"instability_first_nearest":
+			var instability_first_enemy: Node2D = _find_status_first_nearest(caster_node, params, &"instability")
+			return [instability_first_enemy] if instability_first_enemy != null else []
+		"instability_stack_highest":
+			return _find_status_stack_highest(caster_node, params, &"instability")
+		"cursed_first_nearest":
+			var cursed_first_enemy: Node2D = _find_status_first_nearest(caster_node, params, &"cursed")
+			return [cursed_first_enemy] if cursed_first_enemy != null else []
+		"uncursed_first_nearest":
+			var uncursed_first_enemy: Node2D = _find_missing_status_first_nearest(caster_node, params, &"cursed")
+			return [uncursed_first_enemy] if uncursed_first_enemy != null else []
 		"random_enemy":
 			var random_enemy: Node2D = _find_random_enemy(params)
 			return [random_enemy] if random_enemy != null else []
@@ -62,9 +90,9 @@ static func _find_nearest_enemy(caster: Node2D, params: Dictionary) -> Node2D:
 			continue
 
 		var score: float = -distance_squared
-		if enemy.is_in_group(&"boss_cores") or String(enemy.get_meta("enemy_type", "")) == "boss_core":
+		if enemy.is_in_group(&"boss_cores") or str(enemy.get_meta("enemy_type", "")) == "boss_core":
 			score += max_distance_squared * 3.0
-		elif String(enemy.get_meta("enemy_rank", "")) == "boss" or String(enemy.get_meta("enemy_rank", "")) == "elite":
+		elif str(enemy.get_meta("enemy_rank", "")) == "boss" or str(enemy.get_meta("enemy_rank", "")) == "elite":
 			score += max_distance_squared * 0.65
 		if score <= best_score:
 			continue
@@ -94,7 +122,7 @@ static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
 			continue
 
 		var score: float = float(_get_enemy_health(enemy))
-		if enemy.is_in_group(&"boss_cores") or String(enemy.get_meta("enemy_type", "")) == "boss_core":
+		if enemy.is_in_group(&"boss_cores") or str(enemy.get_meta("enemy_type", "")) == "boss_core":
 			score += 100000.0
 		if score <= best_score:
 			continue
@@ -103,6 +131,108 @@ static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
 		best_score = score
 
 	return best_enemy
+
+
+static func _find_nearest_elite_or_highest_hp(caster: Node2D, params: Dictionary) -> Node2D:
+	var max_range: float = float(params.get("range", INF))
+	var origin: Node2D = params.get("origin") as Node2D
+	if origin == null:
+		origin = caster
+	var max_distance_squared: float = max_range * max_range
+	var nearest_elite: Node2D = null
+	var nearest_elite_distance_squared: float = INF
+	for enemy: Node2D in _get_valid_enemies():
+		if origin != null:
+			var distance_squared: float = origin.global_position.distance_squared_to(enemy.global_position)
+			if distance_squared > max_distance_squared:
+				continue
+			if _is_strong_enemy(enemy) and distance_squared < nearest_elite_distance_squared:
+				nearest_elite = enemy
+				nearest_elite_distance_squared = distance_squared
+	if nearest_elite != null:
+		return nearest_elite
+	return _find_highest_hp_enemy(params)
+
+
+static func _find_densest_enemy_cluster_center(caster: Node2D, params: Dictionary) -> Node2D:
+	var max_range: float = float(params.get("range", INF))
+	var origin: Node2D = params.get("origin") as Node2D
+	if origin == null:
+		origin = caster
+	var max_distance_squared: float = max_range * max_range
+	var cluster_radius: float = float(params.get("cluster_radius", params.get("radius", 168.0)))
+	var best_enemy: Node2D = null
+	var best_count: int = -1
+	var best_distance_squared: float = INF
+	for enemy: Node2D in _get_valid_enemies():
+		var distance_squared: float = origin.global_position.distance_squared_to(enemy.global_position) if origin != null else 0.0
+		if origin != null and distance_squared > max_distance_squared:
+			continue
+		var nearby_count: int = _nearby_enemy_count(enemy.global_position, cluster_radius)
+		if StringName(str(params.get("priority_status", ""))) != &"" and _has_any_status(enemy, [StringName(str(params.get("priority_status", "")))]):
+			nearby_count += 1000
+		if nearby_count > best_count or (nearby_count == best_count and distance_squared < best_distance_squared):
+			best_enemy = enemy
+			best_count = nearby_count
+			best_distance_squared = distance_squared
+	return best_enemy
+
+
+static func _find_status_first_nearest(caster: Node2D, params: Dictionary, status_id: StringName) -> Node2D:
+	if caster == null:
+		return null
+	var candidates: Array = _find_enemies_around(caster, params)
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+		var a_has_status: bool = _has_any_status(a, [status_id])
+		var b_has_status: bool = _has_any_status(b, [status_id])
+		if a_has_status != b_has_status:
+			return a_has_status
+		return caster.global_position.distance_squared_to(a.global_position) < caster.global_position.distance_squared_to(b.global_position)
+	)
+	return candidates[0] as Node2D
+
+
+static func _find_missing_status_first_nearest(caster: Node2D, params: Dictionary, status_id: StringName) -> Node2D:
+	if caster == null:
+		return null
+	var candidates: Array = _find_enemies_around(caster, params)
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+		var a_missing_status: bool = not _has_any_status(a, [status_id])
+		var b_missing_status: bool = not _has_any_status(b, [status_id])
+		if a_missing_status != b_missing_status:
+			return a_missing_status
+		return caster.global_position.distance_squared_to(a.global_position) < caster.global_position.distance_squared_to(b.global_position)
+	)
+	return candidates[0] as Node2D
+
+
+static func _find_status_stack_highest(caster: Node2D, params: Dictionary, status_id: StringName) -> Array:
+	if caster == null:
+		return []
+	var candidates: Array = _find_enemies_around(caster, params)
+	if candidates.is_empty():
+		return []
+	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+		var a_stacks: int = _get_status_stack(a, status_id)
+		var b_stacks: int = _get_status_stack(b, status_id)
+		if a_stacks != b_stacks:
+			return a_stacks > b_stacks
+		return caster.global_position.distance_squared_to(a.global_position) < caster.global_position.distance_squared_to(b.global_position)
+	)
+	var count: int = int(params.get("count", candidates.size()))
+	if count > 0 and count < candidates.size():
+		return candidates.slice(0, count)
+	return candidates
+
+
+static func _with_status_priority(params: Dictionary, status_id: StringName) -> Dictionary:
+	var copy: Dictionary = params.duplicate(true)
+	copy["priority_status"] = status_id
+	return copy
 
 
 static func _find_random_enemy(params: Dictionary) -> Node2D:
@@ -163,7 +293,7 @@ static func _is_valid_enemy(enemy: Node2D) -> bool:
 	if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 		return false
 
-	if enemy.has_method("get_runtime_state") and String(enemy.call("get_runtime_state")) == "dead":
+	if enemy.has_method("get_runtime_state") and str(enemy.call("get_runtime_state")) == "dead":
 		return false
 
 	var current_health_variant: Variant = enemy.get("current_health")
@@ -207,8 +337,19 @@ static func _has_any_status(enemy: Node, statuses: Array[StringName]) -> bool:
 	return false
 
 
+static func _get_status_stack(enemy: Node, status_id: StringName) -> int:
+	if enemy == null or status_id == &"":
+		return 0
+	if enemy.has_method("get_status_stack"):
+		return int(enemy.call("get_status_stack", status_id))
+	var manager: Node = enemy.get_node_or_null("StatusEffectManager")
+	if manager != null and manager.has_method("get_status_stack"):
+		return int(manager.call("get_status_stack", status_id))
+	return 1 if _has_any_status(enemy, [status_id]) else 0
+
+
 static func _is_strong_enemy(enemy: Node) -> bool:
-	var rank: String = String(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "")))
+	var rank: String = str(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "")))
 	return rank == "elite" or rank == "boss" or rank == "boss_core"
 
 
