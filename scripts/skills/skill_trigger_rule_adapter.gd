@@ -84,7 +84,7 @@ static func _normalize_conditions(value: Variant) -> Array:
 			"target_has_any_status":
 				if condition.has("statuses") and not params.has("statuses"):
 					params["statuses"] = condition["statuses"]
-			"target_has_tag", "skill_has_tag":
+			"target_has_tag", "skill_has_tag", "source_has_tag":
 				if condition.has("tag") and not params.has("tag"):
 					params["tag"] = condition["tag"]
 			"owner_has_skill":

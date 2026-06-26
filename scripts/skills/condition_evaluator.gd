@@ -36,6 +36,8 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 			return relic_manager != null and relic_manager.has_method("has_relic") and bool(relic_manager.call("has_relic", params.get("relic_id", "")))
 		"skill_has_tag":
 			return _skill_has_tag(context.get("skill_instance") as RefCounted, str(params.get("tag", "")))
+		"source_has_tag":
+			return _source_has_tag(context, str(params.get("tag", "")))
 		"random_chance":
 			return randf() <= clampf(float(params.get("chance", 1.0)), 0.0, 1.0)
 		"target_hp_below":
@@ -67,6 +69,39 @@ static func _skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 		return false
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	return definition != null and definition.has_method("has_tag") and bool(definition.call("has_tag", tag))
+
+
+static func _source_has_tag(context: Dictionary, tag: String) -> bool:
+	if tag == "":
+		return false
+	for key: String in ["source_tags", "area_tags", "tags"]:
+		for tag_variant: Variant in _get_array(context.get(key, [])):
+			if str(tag_variant) == tag:
+				return true
+	var source: Node = context.get("source", context.get("area")) as Node
+	if source != null:
+		if source.is_in_group(StringName(tag)):
+			return true
+		if source.has_meta("tags") and _get_array(source.get_meta("tags")).has(tag):
+			return true
+		if source.has_meta(tag) and bool(source.get_meta(tag)):
+			return true
+	var source_id: String = str(context.get("source_id", context.get("source_key", "")))
+	match tag:
+		"fire_area":
+			return source_id.contains("fire") or source_id.contains("burn") or source_id.contains("lava") or source_id.contains("ember") or source_id.contains("flame")
+		"frost_area":
+			return source_id.contains("frost") or source_id.contains("ice") or source_id.contains("blizzard") or source_id.contains("snow")
+		"thunder_area":
+			return source_id.contains("thunder") or source_id.contains("lightning") or source_id.contains("storm") or source_id.contains("conductive")
+		"curse_area":
+			return source_id.contains("curse") or source_id.contains("cursed") or source_id.contains("soul") or source_id.contains("black")
+		"holy_area":
+			return source_id.contains("holy") or source_id.contains("judgment") or source_id.contains("divine") or source_id.contains("barrier")
+		"chaos_area":
+			return source_id.contains("chaos") or source_id.contains("rift") or source_id.contains("void") or source_id.contains("instability")
+		_:
+			return source_id == tag or source_id.contains(tag)
 
 
 static func _target_hp_percent(target: Node) -> float:
@@ -131,9 +166,13 @@ static func _damage_element_is(context: Dictionary, expected: StringName) -> boo
 	if element == expected:
 		return true
 	var damage_type: StringName = StringName(str(packet.get("damage_type", context.get("damage_type", ""))))
-	if expected == &"lightning" and (damage_type == &"thunder" or damage_type == &"lightning"):
+	if expected == &"lightning" and (damage_type == &"thunder" or damage_type == &"lightning" or element == &"thunder"):
+		return true
+	if expected == &"ice" and (damage_type == &"frost" or damage_type == &"ice" or element == &"frost"):
 		return true
 	if expected == &"curse" and (damage_type == &"curse" or element == &"arcane"):
+		return true
+	if expected == &"arcane" and (damage_type == &"curse" or damage_type == &"arcane" or element == &"curse"):
 		return true
 	return false
 

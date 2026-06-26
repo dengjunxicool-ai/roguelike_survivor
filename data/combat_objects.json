@@ -1765,6 +1765,1596 @@
 				0.95,
 				0.94
 			]
+		},
+		{
+			"id": "steam_mist",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "shattered_ember",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "plasma_fire_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "thunderburn_arc",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "ash_curse_rune_fireground",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "blackflame_serpent_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "burning_light_barrier_edge",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "molten_split_spark",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "crystalized_flame_spike",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "frostburn_shard",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_frost_thunder_lightning_ice_pillar_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_thunder_aurora_frost_channel_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_curse_ice_coffin_curse_burst_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_curse_cold_scythe_harvest_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_frost_holy_holy_frost_anchor_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_holy_judgment_ice_lance_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_chaos_rift_avalanche_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_frost_chaos_inverted_ice_shard_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "arc_ignition_jump",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "thunderfire_circuit",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_frost_shatter_thunder_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_frost_shatter_thunder_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_thunder_frost_cryo_capacitor_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_curse_curse_lightning_rebound_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_curse_black_thunder_convergence_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_holy_judgment_wire_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_holy_shield_capacitor_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_holy_shield_capacitor_shield_break_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_chaos_fractal_arc_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_thunder_chaos_rift_lightning_orb_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_curse_frost_ice_coffin_contract_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_frost_cold_scythe_soul_chase_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_curse_thunder_curse_lightning_backlash_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_thunder_black_serpent_conduction_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_curse_holy_confession_curse_seal_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_holy_absolution_harvest_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_chaos_paradox_curse_mark_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_chaos_rift_funeral_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "solar_hammer_cross_path",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_frost_crystal_shelter_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_frost_holy_frost_beam_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_thunder_thunder_shield_prayer_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_thunder_holy_thunder_judgment_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_curse_purifying_chain_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_curse_penitence_barrier_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_chaos_divine_domain_rift_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_chaos_judgment_echo_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "riftfire_fork",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_chaos_frost_zero_rift_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_frost_shattered_ice_warp_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_chaos_thunder_quantum_overload_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_thunder_warp_lightning_orb_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_chaos_curse_curse_rune_echo_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_curse_rift_curse_exchange_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_holy_void_holy_shield_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_holy_echoing_judgment_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_frost_steam_mist_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_frost_shattered_ember_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_fire_thunder_plasma_fire_path_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_thunder_thunderburn_meteor_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_fire_curse_ash_curse_rune_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_curse_blackflame_serpents_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_fire_holy_holy_flame_absolution_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_fire_holy_burning_light_barrier_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_chaos_ember_echo_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_fire_chaos_molten_split_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_frost_fire_crystalized_flame_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_frost_fire_frostburn_shards_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_thunder_fire_arc_ignition_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_thunder_fire_thunderfire_circuit_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_fire_ash_soul_pact_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_curse_fire_burning_soul_minion_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_fire_holy_flame_purification_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_holy_fire_solar_hammer_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "fusion_chaos_fire_riftfire_fork_projectile",
+			"type": "projectile",
+			"scene": "res://scenes/fireball_projectile.tscn",
+			"collision_radius": 12,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "arcane_page",
+			"visual_color": [
+				0.72,
+				0.32,
+				1,
+				0.92
+			],
+			"visual_ring_color": [
+				0.88,
+				0.95,
+				1,
+				0.86
+			]
+		},
+		{
+			"id": "fusion_chaos_fire_lava_refraction_area",
+			"type": "area",
+			"scene": "res://scenes/area_effect.tscn",
+			"collision_radius": 126,
+			"visual_mode": "programmatic",
+			"visual_style": "smoke_zone",
+			"visual_color": [
+				0.42,
+				0.22,
+				0.72,
+				0.26
+			],
+			"visual_ring_color": [
+				0.7,
+				0.9,
+				1,
+				0.78
+			]
 		}
 	]
 }

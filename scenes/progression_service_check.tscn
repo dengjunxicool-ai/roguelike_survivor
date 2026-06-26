@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/debug/progression_service_check.gd" id="1_0pd41"]
-
-[node name="ProgressionServiceCheck" type="Node"]
-script = ExtResource("1_0pd41")

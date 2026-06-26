@@ -515,6 +515,45 @@
 				],
 				"z_index": 4
 			}
+		},
+		{
+			"id": "burning_soul_minion",
+			"name": "burning_soul_minion",
+			"scene_path": "res://scenes/summon_controller.tscn",
+			"max_count": 2,
+			"duration": 10,
+			"movement": {
+				"move_speed": 180,
+				"follow_distance": 96,
+				"min_distance": 44,
+				"leash_distance": 360,
+				"teleport_distance": 720,
+				"separation_radius": 34
+			},
+			"targeting": {
+				"detect_range": 320,
+				"retarget_interval": 0.25,
+				"target_priority": "nearest_to_summon"
+			},
+			"attack": {
+				"attack_type": "melee",
+				"attack_range": 52,
+				"attack_cooldown": 1.2,
+				"damage_type": "arcane",
+				"damage_scale": 0.35,
+				"on_hit_effects": []
+			},
+			"visual": {
+				"texture": "res://icon.svg",
+				"scale": 0.15,
+				"modulate": [
+					0.72,
+					0.42,
+					1,
+					0.9
+				],
+				"z_index": 5
+			}
 		}
 	]
 }

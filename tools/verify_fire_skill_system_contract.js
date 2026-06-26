@@ -98,6 +98,7 @@ const SUPPORTED_TRIGGERS = new Set([
   "shield_broken",
   "player_damage_taken",
   "summon_attack_hit",
+  "post_damage_hit",
   "always",
 ]);
 const SUPPORTED_CONDITIONS = new Set([
@@ -106,6 +107,9 @@ const SUPPORTED_CONDITIONS = new Set([
   "owner_has_skill",
   "owner_has_relic",
   "skill_has_tag",
+  "source_has_tag",
+  "damage_element_is",
+  "event_status_is",
   "random_chance",
   "target_hp_below",
   "is_critical_hit",
