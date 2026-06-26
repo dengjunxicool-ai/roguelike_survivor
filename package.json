@@ -4,6 +4,7 @@
     "validate:combat": "node tools\\validate_weapon_authoring_pipeline.js",
     "verify:fire-skill-system-contract": "node tools\\verify_fire_skill_system_contract.js",
     "verify:fire-status-contract": "node tools\\verify_fire_status_contract.js",
+    "verify:burning-status-stack-devtools": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_burning_status_stack_decay_devtools.gd",
     "verify:skill-definition-schema": "node tools\\verify_skill_definition_schema.js",
     "verify:skill-rule-adapters": "node tools\\verify_skill_rule_adapters.js",
     "verify:fire-skill-offer-rules": "node tools\\verify_fire_skill_offer_rules.js",

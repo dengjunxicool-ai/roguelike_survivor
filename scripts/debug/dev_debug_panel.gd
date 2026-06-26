@@ -2373,7 +2373,17 @@ func _format_statuses(statuses: Array) -> String:
 		if status_variant is Dictionary:
 			var status: Dictionary = status_variant
 			var status_id: String = String(status.get("id", ""))
-			parts.append("%s(%d)" % [_debug_status_short_name(status_id), int(status.get("stacks", 0))])
+			var stacks: int = int(status.get("stacks", 0))
+			var tick_damage: float = float(status.get("tick_damage_total", 0.0))
+			if tick_damage <= 0.0:
+				tick_damage = float(status.get("tick_damage", 0.0)) * float(maxi(stacks, 1))
+			var duration_remaining: float = maxf(float(status.get("duration_remaining", 0.0)), 0.0)
+			parts.append("%s(%d, %.1f, %.1fs)" % [
+				_debug_status_short_name(status_id),
+				stacks,
+				tick_damage,
+				duration_remaining
+			])
 	return "statuses:%s" % ",".join(parts)
 
 

@@ -306,6 +306,7 @@
 			"display_name": "Burning",
 			"type": "dot",
 			"max_stacks": 5,
+			"consume_stack_on_tick": true,
 			"effect": {
 				"dot": true
 			},

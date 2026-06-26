@@ -108,7 +108,10 @@ func update_status_effects(delta: float) -> void:
 		if _is_dot_status(status):
 			_update_damage_over_time(status, delta)
 
-		if float(status.get("duration_remaining", 0.0)) <= 0.0:
+		if int(status.get("stacks", 1)) <= 0:
+			expired_statuses.append(id)
+			expired_snapshots[id] = status.duplicate(true)
+		elif float(status.get("duration_remaining", 0.0)) <= 0.0:
 			expired_statuses.append(id)
 			expired_snapshots[id] = status.duplicate(true)
 		else:
@@ -206,6 +209,7 @@ func get_status_snapshot() -> Array[Dictionary]:
 			"duration_remaining": float(status.get("duration_remaining", 0.0)),
 			"tick_interval": float(status.get("tick_interval", 0.0)),
 			"tick_damage": float(status.get("tick_damage", 0.0)),
+			"tick_damage_total": _get_status_tick_damage_total(status),
 			"damage_type": StringName(String(status.get("damage_type", ""))),
 			"element": StringName(String(status.get("element", "")))
 		})
@@ -296,6 +300,11 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 			_apply_tick_damage(_get_tier_scaled_dot_damage(status, tick_damage * stacks), status)
 		_execute_status_effects(status, "on_tick_effects")
 		_emit_status_skill_event(&"status_tick", StringName(String(status.get("id", ""))), status)
+		if _should_consume_stack_on_tick(status):
+			stacks = maxi(stacks - 1, 0)
+			status["stacks"] = stacks
+			if stacks <= 0:
+				break
 		tick_timer += tick_interval
 
 	status["tick_timer"] = tick_timer
@@ -320,6 +329,30 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 
 func _has_status_tick_work(status: Dictionary) -> bool:
 	return float(status.get("tick_damage", 0.0)) > 0.0 or not _get_array(status.get("on_tick_effects", [])).is_empty()
+
+
+func _should_consume_stack_on_tick(status: Dictionary) -> bool:
+	if status.has("consume_stack_on_tick"):
+		return bool(status.get("consume_stack_on_tick", false))
+	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
+	return bool(definition.get("consume_stack_on_tick", false))
+
+
+func _get_status_tick_damage_total(status: Dictionary) -> float:
+	var stacks: float = float(maxi(int(status.get("stacks", 1)), 1))
+	var total: float = float(status.get("tick_damage", 0.0)) * stacks
+	var power: float = float(status.get("power", 0.0))
+	for effect_variant: Variant in _get_array(status.get("on_tick_effects", [])):
+		if not (effect_variant is Dictionary):
+			continue
+		var effect: Dictionary = effect_variant
+		if String(effect.get("type", "")) != "damage":
+			continue
+		if effect.has("power_scale"):
+			total += power * float(effect.get("power_scale", 0.0))
+		elif effect.has("power_scale_per_stack"):
+			total += power * float(effect.get("power_scale_per_stack", 0.0)) * stacks
+	return total
 
 
 func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:

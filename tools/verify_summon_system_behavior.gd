@@ -106,6 +106,15 @@ func _run() -> void:
 	summon_a.call("_physics_process", 0.1)
 	_expect(summon_a.global_position.distance_to(player.global_position) >= 35.0, "summon follows near owner without overlapping", summon_a.global_position)
 
+	player.global_position = Vector2.ZERO
+	summon_a.global_position = Vector2(0.0, 80.0)
+	summon_a.call("_physics_process", 0.05)
+	player.global_position = Vector2(100.0, 0.0)
+	summon_a.global_position = player.global_position
+	summon_a.call("_physics_process", 0.5)
+	_expect(summon_a.global_position.x < player.global_position.x - 40.0, "summon follows behind owner movement direction", {"summon": summon_a.global_position, "player": player.global_position})
+	_expect(summon_a.global_position.distance_to(player.global_position) >= 60.0, "summon keeps follow distance instead of hugging owner", {"summon": summon_a.global_position, "player": player.global_position})
+
 	var enemy: SmokeEnemy = SmokeEnemy.new()
 	enemy.global_position = summon_a.global_position + Vector2(180.0, 0.0)
 	root.add_child(enemy)

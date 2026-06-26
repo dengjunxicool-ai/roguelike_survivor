@@ -36,6 +36,7 @@ assert(burning.type === "dot", "burning must be dot");
 approx(burning.duration, 4.0, "burning duration");
 approx(burning.tick_interval, 0.5, "burning tick interval");
 assert(burning.max_stacks === 5, "burning max_stacks");
+assert(burning.consume_stack_on_tick === true, "burning must consume one stack per tick");
 assert(burning.damage_type === "status_dot", "burning damage_type");
 assert(burning.element === "fire", "burning element");
 assert(burning.can_crit === false, "burning can_crit");

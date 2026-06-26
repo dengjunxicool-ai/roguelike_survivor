@@ -60,6 +60,8 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
+	_movement.update_owner_motion(summon_owner)
+
 	if _movement.is_beyond_teleport(self, summon_owner):
 		target = null
 		_movement.teleport_near_owner(self, summon_owner)
