@@ -2312,17 +2312,24 @@ func _build_state_text() -> String:
 	if skill != null:
 		fields.append_array(_build_skill_fields(player, skill))
 
-	var enemy: Node = _get_nearest_enemy()
-	if enemy != null:
-		fields.append("Nearest=%s" % String(enemy.get("enemy_id")))
-		if enemy.has_method("get_runtime_state"):
-			fields.append("EnemyState=%s" % String(enemy.call("get_runtime_state")))
-		fields.append("EnemyHP=%d/%d" % [int(enemy.get("current_health")), int(enemy.get("max_health"))])
-		fields.append("EnemyArmor=%d" % int(enemy.get("armor")))
-		fields.append("EnemyRange=%.1f" % _get_enemy_attack_range(enemy))
-		fields.append("EnemyStatus=%s" % _format_statuses(_get_status_snapshot(enemy)))
+	fields.append_array(_build_nearest_enemy_fields())
 	fields.append("PlayerStatus=%s" % _format_statuses(_get_status_snapshot(player)))
 	return _format_summary_fields(fields)
+
+
+func _build_nearest_enemy_fields() -> Array[String]:
+	var fields: Array[String] = []
+	var enemy: Node = _get_nearest_enemy()
+	if enemy == null:
+		return fields
+	fields.append("Nearest=%s" % String(enemy.get("enemy_id")))
+	if enemy.has_method("get_runtime_state"):
+		fields.append("EnemyState=%s" % String(enemy.call("get_runtime_state")))
+	fields.append("EnemyHP=%d/%d" % [int(enemy.get("current_health")), int(enemy.get("max_health"))])
+	fields.append("EnemyArmor=%d" % int(enemy.get("armor")))
+	fields.append("EnemyRange=%.1f" % _get_enemy_attack_range(enemy))
+	fields.append("EnemyStatus=%s" % _format_statuses(_get_status_snapshot(enemy)))
+	return fields
 
 
 func _build_selected_setup_fields(current_character_id: StringName) -> Array[String]:
