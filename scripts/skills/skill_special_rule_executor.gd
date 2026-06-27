@@ -583,6 +583,11 @@ func _apply_explosion_burn_rules(rules: Dictionary, context: Dictionary) -> void
 	var target: Node = context.get("target") as Node
 	if target == null or not target.has_method("apply_status"):
 		return
+	_apply_explosion_direct_hit_burn(rules, context, target)
+	_apply_explosion_multi_hit_burn(rules, context, target)
+
+
+func _apply_explosion_direct_hit_burn(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var direct_rule: Dictionary = _get_dictionary(rules.get("explosion_direct_hit_burn_on_elite_boss", {}))
 	if not direct_rule.is_empty() and (_is_elite(target) or _is_boss(target)):
 		var key: String = _metadata_key("burst_explosion_burn", _target_key(target))
@@ -594,6 +599,9 @@ func _apply_explosion_burn_rules(rules: Dictionary, context: Dictionary) -> void
 				"duration": float(direct_rule.get("duration", 3.0))
 			}, context)
 			target.call("apply_status", StringName(String(direct_rule.get("status_id", "burn"))), direct_status_params)
+
+
+func _apply_explosion_multi_hit_burn(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var multi_rule: Dictionary = _get_dictionary(rules.get("explosion_multi_hit_burn", {}))
 	if multi_rule.is_empty() or _is_elite(target) or _is_boss(target):
 		return
