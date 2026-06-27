@@ -91,7 +91,7 @@ func _approx(actual: float, expected: float, epsilon: float = 0.001) -> bool:
 
 
 func _write_result() -> void:
-	var file: FileAccess = FileAccess.open("res://tools/verify/verify_burn_status_runtime_scene.out.txt", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open("user://verify_burn_status_runtime_scene.out.txt", FileAccess.WRITE)
 	if file == null:
 		return
 	file.store_string("\n".join(_lines))
