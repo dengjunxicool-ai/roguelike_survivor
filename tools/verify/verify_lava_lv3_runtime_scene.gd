@@ -100,6 +100,6 @@ func _expect(condition: bool, message: String) -> void:
 func _write_result() -> void:
 	var output: String = "\n".join(_lines)
 	print(output)
-	var file: FileAccess = FileAccess.open("res://tools/verify_lava_lv3_runtime_scene.out.txt", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open("res://tools/verify/verify_lava_lv3_runtime_scene.out.txt", FileAccess.WRITE)
 	if file != null:
 		file.store_string(output)

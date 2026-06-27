@@ -36,7 +36,7 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 - `scripts/debug/wave_system_check.gd`
 - `scripts/debug/enemy_skill_system_check.gd`
 - `scripts/debug/enemy_timeline_system_check.gd`
-- `tools/verify_title_screen_runtime.gd`
-- `tools/verify_enemy_health_lag_bar_runtime.gd`
-- `tools/verify_fire_skill_runtime_smoke.gd`
+- `tools/verify/verify_title_screen_runtime.gd`
+- `tools/verify/verify_enemy_health_lag_bar_runtime.gd`
+- `tools/verify/verify_fire_skill_runtime_smoke.gd`
 - `scenes/full_flow_autoplay.tscn`

@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 
 const DamageSystemScript: Script = preload("res://scripts/combat/damage_system.gd")

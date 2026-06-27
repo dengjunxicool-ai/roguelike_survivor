@@ -50,8 +50,8 @@
 | --- | --- | --- |
 | 人物数据 | `data/characters.json` | 定义人物 ID、展示名、定位、基础属性、起始技能、解锁、视觉、Trait。 |
 | 人物文案 | `data/character_texts.json` | 定义人物选择界面的 Trait、短板、难度、起始技能展示文案。 |
-| 数据校验 | `tools/verify_gods_and_skills_contract.js` + `tools/validate_enemy_configs.js` | 校验当前技能、神系、敌人和波次配置入口。 |
-| 冒烟校验 | `tools/verify_fire_skill_runtime_smoke.gd` 等神系 runtime smoke | 验证起始技能、技能触发和关键运行链路。 |
+| 数据校验 | `tools/verify/verify_gods_and_skills_contract.js` + `tools/validate_enemy_configs.js` | 校验当前技能、神系、敌人和波次配置入口。 |
+| 冒烟校验 | `tools/verify/verify_fire_skill_runtime_smoke.gd` 等神系 runtime smoke | 验证起始技能、技能触发和关键运行链路。 |
 | Loadout 服务 | `scripts/characters/character_loadout_service.gd` | 校验人物和起始技能合法性、生成 `RunLoadout`。 |
 | Loadout 载体 | `scripts/characters/run_loadout.gd` | 本局人物的不可散参载体。 |
 | 开局协调 | `scripts/game/run_scene_coordinator.gd` | 接收 `run_loadout`，创建运行场景，重置 spawner 和 player。 |
@@ -333,24 +333,24 @@ Trait 事件入口如下：
 人物相关改造后至少运行：
 
 ```powershell
-node tools\verify_gods_and_skills_contract.js
-node tools\verify_skill_definition_schema.js
-node tools\verify_skill_rule_adapters.js
+node tools\verify\verify_gods_and_skills_contract.js
+node tools\verify\verify_skill_definition_schema.js
+node tools\verify\verify_skill_rule_adapters.js
 node tools\validate_enemy_configs.js
 ```
 
 涉及起始技能或神系运行时时，额外运行：
 
 ```powershell
-node tools\verify_fire_skill_system_contract.js
-node tools\verify_frost_skill_system_contract.js
-node tools\verify_thunder_skill_system_contract.js
+node tools\verify\verify_fire_skill_system_contract.js
+node tools\verify\verify_frost_skill_system_contract.js
+node tools\verify\verify_thunder_skill_system_contract.js
 ```
 
 涉及伤害公式时，额外在 Godot 环境中运行或打开对应验证：
 
 ```powershell
-tools\verify_damage_formula.gd
+tools\verify\verify_damage_formula.gd
 ```
 
 最终还需要在 Godot 编辑器中至少手动验证：

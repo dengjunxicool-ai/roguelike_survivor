@@ -59,7 +59,7 @@ flowchart TD
 | 战斗对象 | `scripts/combat/projectile.gd`, `area_effect.gd`, `orbit_object.gd`, `damage_area.gd` | 命中/tick 时补目标、source_instance_id 和 source_type，再调用目标 `take_damage()`。 |
 | 玩家入口 | `scripts/player/player_controller.gd` | `take_damage()` 委托玩家应用 pipeline；保留命中保护、Boss 连击保护、统计、弹字和死亡。 |
 | 敌人入口 | `scripts/enemies/enemy_base.gd` | `take_damage()` 委托敌人应用 pipeline；保留协同、Boss 核心减伤、统计、弹字和死亡。 |
-| 回归脚本 | `tools/verify_damage_formula.gd` | 伤害公式、packet、pipeline、反应、特殊规则、应用服务的契约测试。 |
+| 回归脚本 | `tools/verify/verify_damage_formula.gd` | 伤害公式、packet、pipeline、反应、特殊规则、应用服务的契约测试。 |
 
 ## 4. 数据对象契约
 
@@ -399,7 +399,7 @@ ReactionService / ReactionLimiter
 
 | 需求 | 首选落点 | 必看边界 |
 | --- | --- | --- |
-| 调整统一公式 | `DamageSystem` 对应 `_apply_*_stage()` 或新增 `scripts/combat/stages/*` | 同步 `tools/verify_damage_formula.gd` 和本文件。 |
+| 调整统一公式 | `DamageSystem` 对应 `_apply_*_stage()` 或新增 `scripts/combat/stages/*` | 同步 `tools/verify/verify_damage_formula.gd` 和本文件。 |
 | 新增计算阶段 | 新建 stage，接入 `DamageSystem` 的对应 pipeline | 保证 `trace.stage_order` 可测。 |
 | 新增 damage_origin | `DamageRuleRegistry.ORIGIN_POLICIES`、合法 origin 列表、构包器默认值 | 决定默认 type、bonus keys、是否吃技能等级和角色伤害。 |
 | 新增 damage_type | `DamageRuleRegistry.TYPE_POLICIES` | 决定防御生效率、暴击、合法 origin、是否忽略抗性/易伤。 |
@@ -432,7 +432,7 @@ ReactionService / ReactionLimiter
 改伤害系统后优先运行：
 
 ```powershell
-& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_damage_formula.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify/verify_damage_formula.gd
 ```
 
 再运行项目级加载检查：
@@ -475,7 +475,7 @@ ReactionService / ReactionLimiter
 3. 新增字段时，先补 `DamagePacketBuilder` 或规则注册表，再补消费点。
 4. 新增公式时，优先新增 stage 或修改单一 `_apply_*_stage()`，不要把整条 pipeline 混在一起改。
 5. 新增受击副作用时，放到 application stage 或目标自己的受击后服务，不要塞进计算层。
-6. 补 `tools/verify_damage_formula.gd` 契约，至少验证金额、stage_order、关键 trace 字段和新规则边界。
+6. 补 `tools/verify/verify_damage_formula.gd` 契约，至少验证金额、stage_order、关键 trace 字段和新规则边界。
 7. 跑伤害公式验证和 headless 加载。
 8. 回到本文档同步新增规则、入口或风险边界。
 
@@ -517,7 +517,7 @@ ReactionService / ReactionLimiter
 3. 看计算：确认目标是不是 player；player 走 incoming pipeline，非 player 且非 true percent 走 standard pipeline。
 4. 看应用：玩家落在 `player_*` application stages，敌人落在 `enemy_*` application stages。
 5. 看副作用：统计、弹字、受击表现、死亡都在 health apply stage 后半段，不要提前手动调用。
-6. 看验证：新增行为必须能在 `tools/verify_damage_formula.gd` 里以 packet、stage order、trace 或 application result 形式断言。
+6. 看验证：新增行为必须能在 `tools/verify/verify_damage_formula.gd` 里以 packet、stage order、trace 或 application result 形式断言。
 
 ## 14. 当前架构状态
 

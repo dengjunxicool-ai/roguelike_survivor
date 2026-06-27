@@ -262,7 +262,7 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | 角色基础数值 | `data/characters.json` | `CharacterRunInitializer`, `PlayerModifierApplier`, HUD |
 | 角色起始技能 | `data/characters.json.starting_skill_id` | `data/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
 | 技能伤害/冷却/投射物 | `data/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
-| 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify_damage_formula.gd`, Damage docs |
+| 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify/verify_damage_formula.gd`, Damage docs |
 | DOT/控制/易伤 | `data/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
 | 新怪物 | `data/enemies.json` | `waves.json`, behavior registry, enemy validators |
 | 新敌方技能 | `data/enemy_skills.json` | `EnemyActionRegistry`, `EnemyDamagePacketBuilder` |
@@ -282,27 +282,27 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 
 ```powershell
 node tools\validate_enemy_configs.js
-node tools\verify_gods_and_skills_contract.js
-node tools\verify_skill_definition_schema.js
-node tools\verify_skill_rule_adapters.js
+node tools\verify\verify_gods_and_skills_contract.js
+node tools\verify\verify_skill_definition_schema.js
+node tools\verify\verify_skill_rule_adapters.js
 node tools\check_text_encoding.js
 ```
 
 技能运行状态相关：
 
 ```powershell
-node tools\verify_fire_skill_system_contract.js
-node tools\verify_frost_skill_system_contract.js
-node tools\verify_thunder_skill_system_contract.js
-node tools\verify_fusion_skill_system_contract.js
+node tools\verify\verify_fire_skill_system_contract.js
+node tools\verify\verify_frost_skill_system_contract.js
+node tools\verify\verify_thunder_skill_system_contract.js
+node tools\verify\verify_fusion_skill_system_contract.js
 ```
 
 Godot 运行逻辑相关，需本机 `godot` 在 PATH：
 
 ```powershell
-godot --headless --path . --script res://tools/verify_damage_formula.gd
-godot --headless --path . --script res://tools/verify_title_screen_runtime.gd
-godot --headless --path . --script res://tools/verify_character_select_ui.gd
+godot --headless --path . --script res://tools/verify/verify_damage_formula.gd
+godot --headless --path . --script res://tools/verify/verify_title_screen_runtime.gd
+godot --headless --path . --script res://tools/verify/verify_character_select_ui.gd
 ```
 
 ## 8. 文档使用方式

@@ -371,7 +371,7 @@ EnemyBase._apply_contact_damage()
 2. 如果是全局公式，先定位到普通输出、玩家受击、true percent、DOT、reaction、field、trap 中哪一类。
 3. 新增公式优先新增 stage 或修改单一 stage。
 4. 同步 `DamageRuleRegistry` 的 origin/type 政策。
-5. 补 `tools/verify_damage_formula.gd` 对金额、stage order、trace 字段和边界的验证。
+5. 补 `tools/verify/verify_damage_formula.gd` 对金额、stage order、trace 字段和边界的验证。
 
 ## 跨系统边界
 
@@ -427,10 +427,10 @@ EnemyBase._apply_contact_damage()
 攻击配置和技能链路：
 
 ```powershell
-node tools\verify_gods_and_skills_contract.js
-node tools\verify_skill_definition_schema.js
-node tools\verify_skill_rule_adapters.js
-node tools\verify_skill_runtime_no_dead_cards.js
+node tools\verify\verify_gods_and_skills_contract.js
+node tools\verify\verify_skill_definition_schema.js
+node tools\verify\verify_skill_rule_adapters.js
+node tools\verify\verify_skill_runtime_no_dead_cards.js
 ```
 
 敌方攻击配置：
@@ -442,7 +442,7 @@ node tools\validate_enemy_configs.js
 伤害公式和构包：
 
 ```powershell
-godot --headless --path . --script res://tools/verify_damage_formula.gd
+godot --headless --path . --script res://tools/verify/verify_damage_formula.gd
 ```
 
 项目加载和编码：
@@ -458,8 +458,8 @@ node tools\check_text_encoding.js --strict-mojibake
 godot --headless --path . -s res://scripts/debug/enemy_skill_system_check.gd
 godot --headless --path . -s res://scripts/debug/enemy_timeline_system_check.gd
 godot --headless --path . -s res://scripts/debug/wave_system_check.gd
-godot --headless --path . --script res://tools/verify_area_effect_visual_mode_runtime_scene.gd
-godot --headless --path . --script res://tools/verify_enemy_health_lag_bar_runtime.gd
+godot --headless --path . --script res://tools/verify/verify_area_effect_visual_mode_runtime_scene.gd
+godot --headless --path . --script res://tools/verify/verify_enemy_health_lag_bar_runtime.gd
 ```
 
 当前环境若没有 `godot` 在 PATH，需要使用本机 Godot 可执行文件的绝对路径运行。

@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 
 const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
@@ -105,7 +105,7 @@ func _expect(condition: bool, message: String) -> void:
 
 
 func _write_result() -> void:
-	var file: FileAccess = FileAccess.open("res://tools/verify_fireball_impact_target_explosion_runtime_scene.out.txt", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open("res://tools/verify/verify_fireball_impact_target_explosion_runtime_scene.out.txt", FileAccess.WRITE)
 	if file == null:
 		return
 	file.store_string("\n".join(_lines))

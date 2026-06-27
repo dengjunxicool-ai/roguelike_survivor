@@ -11,7 +11,7 @@
 - 子屏幕只发信号或 UI command，不主动查找其他屏幕，不直接切换其他屏幕。
 - 展示数据优先由 ViewModel builder 汇总，controller 只构建节点、渲染字段、发出用户意图。
 - 涉及存档、奖励、升级、解锁、运行统计的副作用，优先走 `UICommandDispatcher`、`ResultUnlockService` 或运行时 service。
-- 新 UI 改动完成后必须跑当前存在的 UI smoke（至少 `tools/verify_title_screen_runtime.gd`、`tools/verify_character_select_ui.gd`，涉及地图页时加 `tools/verify_map_select_ui.gd`），涉及运行中 UI 时还要人工走完整战斗链路。
+- 新 UI 改动完成后必须跑当前存在的 UI smoke（至少 `tools/verify/verify_title_screen_runtime.gd`、`tools/verify/verify_character_select_ui.gd`，涉及地图页时加 `tools/verify/verify_map_select_ui.gd`），涉及运行中 UI 时还要人工走完整战斗链路。
 
 ## 0. 快速定位地图
 
@@ -729,8 +729,8 @@ UI 主要消费：
 ```powershell
 D:\nodejs\node.exe tools\check_text_encoding.js
 & 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --quit
-& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_title_screen_runtime.gd
-& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_character_select_ui.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify/verify_title_screen_runtime.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify/verify_character_select_ui.gd
 ```
 
 涉及运行中 UI、HUD、奖励、升级、结算时，还要人工走：

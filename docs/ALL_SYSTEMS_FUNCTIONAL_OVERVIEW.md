@@ -335,11 +335,11 @@ flowchart TD
 
 ```powershell
 node tools\validate_enemy_configs.js
-node tools\verify_gods_and_skills_contract.js
-node tools\verify_skill_definition_schema.js
-node tools\verify_skill_rule_adapters.js
+node tools\verify\verify_gods_and_skills_contract.js
+node tools\verify\verify_skill_definition_schema.js
+node tools\verify\verify_skill_rule_adapters.js
 node tools\check_text_encoding.js
-godot --headless --path . --script res://tools/verify_damage_formula.gd
-godot --headless --path . --script res://tools/verify_title_screen_runtime.gd
-godot --headless --path . --script res://tools/verify_character_select_ui.gd
+godot --headless --path . --script res://tools/verify/verify_damage_formula.gd
+godot --headless --path . --script res://tools/verify/verify_title_screen_runtime.gd
+godot --headless --path . --script res://tools/verify/verify_character_select_ui.gd
 ```

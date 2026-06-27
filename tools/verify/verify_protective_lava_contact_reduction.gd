@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
@@ -136,7 +136,7 @@ func _expect(condition: bool, message: String) -> void:
 func _write_result() -> void:
 	var output: String = "\n".join(_lines)
 	print(output)
-	var file: FileAccess = FileAccess.open("res://tools/verify_protective_lava_contact_reduction.out.txt", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open("res://tools/verify/verify_protective_lava_contact_reduction.out.txt", FileAccess.WRITE)
 	if file != null:
 		file.store_string(output)
 

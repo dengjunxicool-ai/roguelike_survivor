@@ -27,7 +27,7 @@ Removing it directly would change the public damage API and could affect older d
 
 ## Verification Note
 
-`tools/verify_damage_formula.gd` is the broad damage-system regression check and is available as `npm run verify:damage-formula`.
+`tools/verify/verify_damage_formula.gd` is the broad damage-system regression check and is available as `npm run verify:damage-formula`.
 
 ## Removal Path
 
@@ -35,4 +35,4 @@ Removing it directly would change the public damage API and could affect older d
 2. Add a dedicated regression check for the intended rejection behavior.
 3. Convert any discovered compatibility callers to explicit packet builders.
 4. Remove the fallback in a dedicated combat-system change.
-5. Run `tools/verify_damage_formula.gd`, package verification scripts, and full-flow autoplay.
+5. Run `tools/verify/verify_damage_formula.gd`, package verification scripts, and full-flow autoplay.

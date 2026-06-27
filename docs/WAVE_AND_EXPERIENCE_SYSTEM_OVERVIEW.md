@@ -354,7 +354,7 @@ flowchart TD
 
 ```powershell
 node tools\validate_enemy_configs.js
-node tools\verify_gods_and_skills_contract.js
+node tools\verify\verify_gods_and_skills_contract.js
 node tools\check_text_encoding.js
 ```
 
