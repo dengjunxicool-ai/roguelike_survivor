@@ -550,7 +550,7 @@ writeJson("data/skills/skills.json", skillsDocument);
 
 const combatDocument = readJson("data/combat/combat_objects.json");
 const combatObjects = combatDocument.combat_objects || [];
-const summonDocument = readJson("data/summons.json");
+const summonDocument = readJson("data/summons/summons.json");
 const summons = summonDocument.summons || [];
 const summonIds = new Set(summons.map((summon) => summon.id));
 const refs = fusionSkills.flatMap((skill) => collectReferences(skill));
@@ -577,6 +577,6 @@ for (const ref of refs) {
 combatDocument.combat_objects = combatObjects;
 summonDocument.summons = summons;
 writeJson("data/combat/combat_objects.json", combatDocument);
-writeJson("data/summons.json", summonDocument);
+writeJson("data/summons/summons.json", summonDocument);
 
 console.log(`[apply_fusion_skill_catalog] wrote ${fusionSkills.length} fusion skills from docs/skills/skills.md`);

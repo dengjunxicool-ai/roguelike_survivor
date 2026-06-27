@@ -25,7 +25,7 @@ function hasEffect(skill, predicate) {
 const skillsData = readJson("data/skills/skills.json");
 const godsData = readJson("data/skills/gods.json");
 const combatObjects = readJson("data/combat/combat_objects.json").combat_objects || [];
-const summons = readJson("data/summons.json").summons || [];
+const summons = readJson("data/summons/summons.json").summons || [];
 
 const curseSkills = (skillsData.skills || []).filter(
   (skill) => skill.school === "curse" && (skill.fusion_school === null || skill.fusion_school === undefined)

@@ -37,7 +37,7 @@ function firstEffect(skill, type) {
 
 const skillsDocument = readJson("data/skills/skills.json");
 const skills = Array.isArray(skillsDocument.skills) ? skillsDocument.skills : [];
-const summonsDocument = readJson("data/summons.json");
+const summonsDocument = readJson("data/summons/summons.json");
 const summons = Array.isArray(summonsDocument.summons) ? summonsDocument.summons : [];
 const vortex = firstEffect(findSkill(skills, "fire_cast_scorching_vortex"), "spawn_area");
 assert(vortex, "fire_cast_scorching_vortex must spawn an area");

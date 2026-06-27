@@ -29,7 +29,7 @@ function hasChilledEffect(summon) {
   });
 }
 
-const summons = readJson("data/summons.json").summons || [];
+const summons = readJson("data/summons/summons.json").summons || [];
 const frostWolf = findSummon(summons, "summon_frost_wolf");
 assert(frostWolf.scene_path === "res://scenes/summon_controller.tscn", "frost wolf must reuse summon controller scene");
 assert(hasChilledEffect(frostWolf), "frost wolf must apply chilled on hit");

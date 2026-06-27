@@ -23,17 +23,17 @@ const requiredFiles = [
   "scripts/summons/summon_attack_component.gd",
   "scripts/summons/summon_formation_service.gd",
   "scenes/summon_controller.tscn",
-  "data/summons.json",
+  "data/summons/summons.json",
 ];
 
 for (const relativePath of requiredFiles) {
   assert(fs.existsSync(path.join(root, relativePath)), `${relativePath} must exist`);
 }
 
-const summons = readJson("data/summons.json").summons || [];
+const summons = readJson("data/summons/summons.json").summons || [];
 const byId = new Map(summons.map((summon) => [summon.id, summon]));
-assert(byId.has("summon_frost_wolf"), "data/summons.json must include frost wolf example");
-assert(byId.has("crimson_dragon"), "data/summons.json must include crimson dragon summon definition");
+assert(byId.has("summon_frost_wolf"), "data/summons/summons.json must include frost wolf example");
+assert(byId.has("crimson_dragon"), "data/summons/summons.json must include crimson dragon summon definition");
 
 const dragon = byId.get("crimson_dragon");
 assert(dragon.movement && Number(dragon.movement.leash_distance) >= 540, "crimson dragon leash/activity range must support a 540px player attack radius");
