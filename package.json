@@ -41,6 +41,7 @@
     "verify:chaos-skill-system-contract": "node tools\\verify_chaos_skill_system_contract.js",
     "verify:chaos-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_chaos_skill_runtime_smoke.gd",
     "verify:fusion-skill-system-contract": "node tools\\verify_fusion_skill_system_contract.js",
+    "verify:fusion-skill-numeric-contract": "node tools\\verify_fusion_skill_numeric_contract.js",
     "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd",
     "test:combat:smoke": "node tools\\run_full_weapon_branch_matrix_runtime.js smoke",
     "test:combat:rules": "node tools\\run_full_weapon_branch_matrix_runtime.js rules",

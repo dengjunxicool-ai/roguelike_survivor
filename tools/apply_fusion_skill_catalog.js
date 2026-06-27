@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+const { extractNumericSpec, parseFusionNumericRows } = require("./fusion_skill_numeric_spec");
 
 const root = path.resolve(__dirname, "..");
 
 function readJson(relativePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8"));
+  return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8").replace(/^\uFEFF/, ""));
 }
 
 function writeJson(relativePath, value) {
@@ -29,75 +30,24 @@ const DAMAGE_BY_SCHOOL = {
   chaos: "arcane",
 };
 
-const STATUS_WORDS = [
-  ["Burning", "burning", 4.0],
-  ["Chilled", "chilled", 6.0],
-  ["Frozen", "frozen", 1.2],
-  ["Conductive", "conductive", 5.0],
-  ["Cursed", "cursed", 3.0],
-  ["Judgment", "judgment", 6.0],
-  ["Instability", "instability", 6.0],
-];
+const ELEMENT_BY_SCHOOL = {
+  fire: "fire",
+  frost: "ice",
+  thunder: "lightning",
+  curse: "arcane",
+  holy: "holy",
+  chaos: "arcane",
+};
 
-function statusEffectsFor(description) {
-  const effects = [];
-  for (const [word, status, duration] of STATUS_WORDS) {
-    if (!description.includes(word)) {
-      continue;
-    }
-    if (status === "frozen") {
-      effects.push({ type: "apply_status", status: "chilled", stacks: 2, duration: 6.0 });
-    } else {
-      effects.push({ type: "apply_status", status, stacks: 1, duration });
-    }
-  }
-  return effects;
-}
-
-function conditionForStatus(description, status) {
-  const word = STATUS_WORDS.find((entry) => entry[1] === status)?.[0];
-  if (!word || !statusIsPrecondition(description, word)) {
-    return [];
-  }
-  return [{ type: "target_has_status", status }];
-}
-
-function statusIsPrecondition(description, word) {
-  let index = description.indexOf(word);
-  while (index >= 0) {
-    const before = description.slice(Math.max(0, index - 12), index);
-    const after = description.slice(index + word.length, index + word.length + 16);
-    const looksLikeApplication =
-      before.includes("施加") ||
-      before.includes("获得") ||
-      before.includes("传递") ||
-      before.includes("传播") ||
-      before.includes("补充") ||
-      before.includes("保留") ||
-      before.includes("延长") ||
-      before.includes("复制给") ||
-      before.includes("获得一层");
-    if (!looksLikeApplication) {
-      const looksLikeCondition =
-        before.includes("带有") ||
-        before.includes("仍在") ||
-        before.includes("进入") ||
-        before.includes("站在") ||
-        before.includes("被") ||
-        after.includes("敌人") ||
-        after.includes("目标") ||
-        after.includes("身上") ||
-        after.includes("层数") ||
-        after.includes("中") ||
-        after.includes("期间");
-      if (looksLikeCondition) {
-        return true;
-      }
-    }
-    index = description.indexOf(word, index + word.length);
-  }
-  return false;
-}
+const STATUS_DURATIONS = {
+  burning: 4.0,
+  chilled: 6.0,
+  frozen: 1.2,
+  conductive: 5.0,
+  cursed: 3.0,
+  judgment: 6.0,
+  instability: 6.0,
+};
 
 function makeOfferRule(school, fusionSchool) {
   return {
@@ -111,26 +61,7 @@ function makeOfferRule(school, fusionSchool) {
   };
 }
 
-function normalizeExisting(skill, row) {
-  const [id, name, school, fusionSchool, description] = row;
-  skill.id = id;
-  skill.name = name;
-  skill.school = school;
-  skill.fusion_school = fusionSchool;
-  skill.type = "fusion";
-  skill.rarity = skill.rarity || "normal";
-  skill.max_level = 2;
-  skill.exclusive_group = null;
-  skill.tags = Array.from(new Set([...(skill.tags || []), "fusion", school, fusionSchool]));
-  skill.mechanic_family = skill.mechanic_family || id.replace(/^fusion_/, "fusion_");
-  skill.offer_rule = makeOfferRule(school, fusionSchool);
-  skill.trigger_rules = makeTriggerRules(row);
-  skill.effects = [];
-  skill.description = description;
-  return skill;
-}
-
-function makeFusionSkill(row) {
+function makeFusionSkill(row, numericRow) {
   const [id, name, school, fusionSchool, description] = row;
   return {
     id,
@@ -141,176 +72,386 @@ function makeFusionSkill(row) {
     rarity: "normal",
     max_level: 2,
     exclusive_group: null,
-    tags: Array.from(new Set(["fusion", school, fusionSchool, ...statusTags(description), ...mechanicTags(description)])),
+    tags: Array.from(new Set(["fusion", school, fusionSchool, ...statusTags(`${numericRow.triggerText}；${numericRow.numericText}`), ...mechanicTags(numericRow)])),
     mechanic_family: id.replace(/^fusion_/, "fusion_"),
     offer_rule: makeOfferRule(school, fusionSchool),
-    trigger_rules: makeTriggerRules(row),
+    trigger_rules: makeTriggerRules(id, school, fusionSchool, numericRow),
     effects: [],
     description,
   };
 }
 
-function statusTags(description) {
-  return STATUS_WORDS.filter(([word]) => description.includes(word)).map(([, status]) => `status_${status}`);
+function statusTags(text) {
+  const tags = [];
+  for (const status of Object.keys(STATUS_DURATIONS)) {
+    const label = status[0].toUpperCase() + status.slice(1);
+    if (text.includes(label)) {
+      tags.push(`status_${status}`);
+    }
+  }
+  return tags;
 }
 
-function mechanicTags(description) {
+function mechanicTags(numericRow) {
+  const text = `${numericRow.triggerText}；${numericRow.numericText}`;
   const tags = [];
-  if (/区域|路径|结界|裂隙|地面|冰柱|法阵/.test(description)) {
+  if (/区|区域|地面|路径|结界|裂隙|雷线|冰柱|法阵|冲击|爆/.test(text)) {
     tags.push("area");
   }
-  if (/弹|碎片|冰片|电弧|光束|链|雷球|黑蛇|飞向/.test(description)) {
+  if (/弹|碎片|碎冰|余烬|电弧|光束|落雷|飞出|发射|喷出|冰片/.test(text)) {
     tags.push("projectile");
   }
-  if (/护盾/.test(description)) {
+  if (/护盾/.test(text)) {
     tags.push("shield");
   }
   return tags;
 }
 
-function makeTriggerRules(row) {
-  const [id, _name, school, fusionSchool, description] = row;
-  const rules = [];
-  const trigger = triggerFor(description);
-  const eventStatus = eventStatusFor(description, trigger);
+function makeTriggerRules(id, school, fusionSchool, numericRow) {
+  const spec = extractNumericSpec(numericRow);
+  const trigger = triggerFor(numericRow.triggerText);
   const baseRule = {
     trigger,
-    cooldown: cooldownFor(description),
-    conditions: conditionsFor(description, eventStatus),
-    effects: effectsFor(id, school, fusionSchool, description),
+    cooldown: spec.cooldowns[0] ?? defaultCooldown(numericRow.triggerText),
+    conditions: conditionsFor(numericRow, school, fusionSchool, trigger),
+    effects: effectsFor(id, school, fusionSchool, numericRow, spec),
   };
   if (baseRule.cooldown <= 0) {
     delete baseRule.cooldown;
   }
-  if (baseRule.trigger === "area_tick") {
-    baseRule.conditions = baseRule.conditions.map((condition) => {
-      if (condition.type !== "skill_has_tag") {
-        return condition;
-      }
-      return { ...condition, type: "source_has_tag", tag: `${condition.tag}_area` };
-    });
-  }
-  if (baseRule.trigger === "post_damage_hit") {
-    baseRule.conditions = baseRule.conditions.map((condition) => {
-      if (condition.type !== "skill_has_tag") {
-        return condition;
-      }
-      return { type: "damage_element_is", element: damageElementForSchool(condition.tag) };
-    });
-  }
   if (baseRule.conditions.length === 0) {
     delete baseRule.conditions;
   }
-  rules.push(baseRule);
 
-  if (description.includes("护盾破裂")) {
+  const rules = [baseRule];
+  if (numericRow.triggerText.includes("护盾破裂") && trigger !== "shield_broken") {
     rules.push({
       trigger: "shield_broken",
-      cooldown: 1.0,
-      effects: [
-        {
-          type: "spawn_area",
-          area_id: `${id}_shield_break_area`,
-          radius_r: 1.5,
-          duration: 0.2,
-          effects_on_apply: [
-            { type: "damage", damage_type: DAMAGE_BY_SCHOOL[school], source_type: "fusion", power_scale: 0.55 },
-            ...statusEffectsFor(description),
-          ],
-        },
-      ],
+      cooldown: spec.cooldowns[0] ?? 1.0,
+      effects: effectsFor(`${id}_shield_break`, school, fusionSchool, numericRow, spec, { shieldBreak: true }),
     });
   }
   return rules;
 }
 
-function triggerFor(description) {
-  if (description.includes("玩家获得护盾") || description.includes("获得护盾时")) {
+function triggerFor(text) {
+  if (/^每\s*[0-9.]+s$/.test(text.trim())) {
+    return "always";
+  }
+  if (text.includes("获得护盾") || text.includes("玩家获得护盾")) {
     return "shield_gained";
   }
-  if (description.includes("Overload") || description.includes("神罚") || description.includes("裂变")) {
+  if (text.includes("护盾破裂")) {
+    return "shield_broken";
+  }
+  if (text.includes("Overload") || text.includes("神罚") || text.includes("裂变")) {
     return "status_max_stack_reached";
   }
-  if (description.includes("每次造成伤害") || description.includes("结算时")) {
+  if (text.includes("tick") || text.includes("结算")) {
     return "status_tick";
   }
-  if (description.includes("死亡") || description.includes("击杀") || description.includes("碎裂")) {
+  if (text.includes("死亡") || text.includes("击杀") || text.includes("碎裂")) {
     return "enemy_death";
   }
-  if (description.includes("区域") || description.includes("结界") || description.includes("裂隙") || description.includes("路径") || description.includes("地面")) {
+  if (/进入|站在|覆盖|地面|区域|结界|裂隙|路径|接触|穿过|附近/.test(text)) {
     return "area_tick";
   }
   return "post_damage_hit";
 }
 
-function eventStatusFor(description, trigger) {
-  if (trigger === "status_max_stack_reached" && description.includes("Overload")) {
-    return "conductive";
+function defaultCooldown(text) {
+  const each = /^每\s*([0-9.]+)s$/.exec(text.trim());
+  if (each) {
+    return Number(each[1]);
   }
-  if (trigger === "status_max_stack_reached" && description.includes("神罚")) {
-    return "judgment";
-  }
-  if (trigger === "status_max_stack_reached" && description.includes("Instability") && description.includes("裂变")) {
-    return "instability";
-  }
-  if (trigger === "status_tick" && description.includes("Burning")) {
-    return "burning";
-  }
-  if (trigger === "status_tick" && description.includes("Cursed")) {
-    return "cursed";
-  }
-  return "";
-}
-
-function cooldownFor(description) {
-  if (description.includes("同一目标短时间")) {
+  if (text.includes("短时间")) {
     return 0.5;
-  }
-  if (description.includes("每隔")) {
-    return 1.0;
-  }
-  if (description.includes("短暂延迟")) {
-    return 0.4;
   }
   return 0.3;
 }
 
-function damageElementForSchool(school) {
-  if (school === "thunder") {
-    return "lightning";
-  }
-  if (school === "frost") {
-    return "ice";
-  }
-  if (school === "curse" || school === "chaos") {
-    return "arcane";
-  }
-  return school;
-}
-
-function conditionsFor(description, eventStatus) {
+function conditionsFor(numericRow, school, fusionSchool, trigger) {
+  const text = `${numericRow.triggerText}；${numericRow.numericText}`;
   const conditions = [];
-  if (eventStatus) {
-    conditions.push({ type: "event_status_is", status: eventStatus });
-  }
-  for (const [, status] of STATUS_WORDS) {
-    if (status === eventStatus) {
-      continue;
+  if (trigger === "status_max_stack_reached") {
+    if (text.includes("Overload")) {
+      conditions.push({ type: "event_status_is", status: "conductive" });
+    } else if (text.includes("神罚")) {
+      conditions.push({ type: "event_status_is", status: "judgment" });
+    } else if (text.includes("Instability") && text.includes("裂变")) {
+      conditions.push({ type: "event_status_is", status: "instability" });
     }
-    conditions.push(...conditionForStatus(description, status));
   }
-  if (/火焰技能|火焰弹体|熔岩|流星/.test(description)) {
-    conditions.push({ type: "skill_has_tag", tag: "fire" });
-  } else if (/冰系技能|冰霜区域|冰片|冰矛/.test(description)) {
-    conditions.push({ type: "skill_has_tag", tag: "frost" });
-  } else if (/雷电|连锁闪电|雷暴云|雷球/.test(description)) {
-    conditions.push({ type: "skill_has_tag", tag: "thunder" });
-  } else if (/圣光|神圣结界|审判圣锤/.test(description)) {
-    conditions.push({ type: "skill_has_tag", tag: "holy" });
-  } else if (/黑蛇|镰刀|死镰|诅咒弹体/.test(description)) {
-    conditions.push({ type: "skill_has_tag", tag: "curse" });
+  if (trigger === "status_tick") {
+    if (text.includes("Burning tick") || text.includes("Burning 每次")) {
+      conditions.push({ type: "event_status_is", status: "burning" });
+    } else if (text.includes("Cursed 结算")) {
+      conditions.push({ type: "event_status_is", status: "cursed" });
+    }
+  }
+  for (const status of Object.keys(STATUS_DURATIONS)) {
+    if (statusIsPrecondition(text, status)) {
+      conditions.push({ type: "target_has_status", status });
+    }
+  }
+  const sourceTag = sourceAreaTagFor(text);
+  if (trigger === "area_tick" && sourceTag !== "") {
+    conditions.push({ type: "source_has_tag", tag: sourceTag });
+  }
+  const sourceSchool = sourceSchoolFor(text, school, fusionSchool);
+  if (trigger === "post_damage_hit" && sourceSchool !== "") {
+    conditions.push({ type: "damage_element_is", element: ELEMENT_BY_SCHOOL[sourceSchool] ?? sourceSchool });
+  } else if (trigger !== "area_tick" && sourceSchool !== "" && !conditions.some((condition) => condition.type === "damage_element_is")) {
+    conditions.push({ type: "skill_has_tag", tag: sourceSchool });
   }
   return dedupeConditions(conditions);
+}
+
+function statusIsPrecondition(text, status) {
+  const label = status[0].toUpperCase() + status.slice(1);
+  const patterns = [
+    new RegExp(`${label}\\s*(敌人|目标|身上|中|期间|且|被|触发)`),
+    new RegExp(`(敌人|目标|身上|带有|仍在|命中|消耗|缩短|转移|复制|站在|进入|被)\\s*${label}`),
+  ];
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function sourceAreaTagFor(text) {
+  if (/火焰地面|火焰路径|燃烧地面|熔岩|火地/.test(text)) {
+    return "fire_area";
+  }
+  if (/冰霜区域|冰区|冰霜路径/.test(text)) {
+    return "frost_area";
+  }
+  if (/雷球|雷暴/.test(text)) {
+    return "thunder_area";
+  }
+  if (/神圣结界|圣光/.test(text)) {
+    return "holy_area";
+  }
+  if (/裂隙|虚空/.test(text)) {
+    return "chaos_area";
+  }
+  return "";
+}
+
+function sourceSchoolFor(text, school, fusionSchool) {
+  if (/火焰技能|火焰击杀|火焰弹体|流星|熔岩|火焰/.test(text)) {
+    return "fire";
+  }
+  if (/冰系技能|冰片|冰矛|冰霜|Frozen 碎裂/.test(text)) {
+    return "frost";
+  }
+  if (/雷电|连锁闪电|雷球|落雷|Overload/.test(text)) {
+    return "thunder";
+  }
+  if (/诅咒|黑蛇|死镰|Cursed 结算/.test(text)) {
+    return "curse";
+  }
+  if (/圣光|审判圣锤|神罚|护盾/.test(text)) {
+    return "holy";
+  }
+  if (/裂隙|虚空|Instability|混沌/.test(text)) {
+    return "chaos";
+  }
+  return school || fusionSchool || "";
+}
+
+function effectsFor(id, school, fusionSchool, numericRow, spec, options = {}) {
+  const text = `${numericRow.triggerText}；${numericRow.numericText}`;
+  const effects = [];
+  const mainDamageType = damageTypeForText(text, school);
+  const secondaryDamageType = DAMAGE_BY_SCHOOL[fusionSchool] || "arcane";
+  const needsArea = spec.radii.length > 0 || /区|区域|地面|路径|结界|裂隙|雷线|冰柱|法阵|冲击|爆|放电|锚点/.test(text);
+  const needsProjectile = spec.counts.length > 0 || /弹|碎片|碎冰|余烬|电弧|光束|落雷|飞出|发射|喷出|冰片|跳|远处|复制/.test(text);
+  const powers = spec.powers.length > 0 ? spec.powers : [0.25];
+
+  if (needsArea) {
+    effects.push(makeAreaEffect(id, mainDamageType, spec, powers[0], text));
+  }
+  if (needsProjectile) {
+    effects.push(makeProjectileEffect(id, secondaryDamageType, spec, powers[0], text));
+  }
+  if (!needsArea && !needsProjectile) {
+    effects.push({ type: "damage", damage_type: mainDamageType, source_type: "fusion", power_scale: powers[0] });
+  }
+
+  for (let index = 1; index < powers.length; index += 1) {
+    effects.push({ type: "damage", damage_type: index % 2 === 0 ? mainDamageType : secondaryDamageType, source_type: "fusion", power_scale: powers[index] });
+  }
+  for (let index = 1; index < spec.radii.length; index += 1) {
+    effects.push({
+      type: "spawn_area",
+      area_id: `${id}_r${index}_area`,
+      radius_r: spec.radii[index],
+      duration: spec.durations[index] ?? spec.durations[0] ?? 0.24,
+      tick_interval: spec.tickIntervals[0] ?? 0.5,
+      effects_on_apply: [{ type: "damage", damage_type: mainDamageType, source_type: "fusion", power_scale: powers[index] ?? powers[0] }],
+    });
+  }
+  for (let index = 1; index < spec.durations.length; index += 1) {
+    if (!hasDuration(effects, spec.durations[index])) {
+      effects.push({
+        type: "spawn_area",
+        area_id: `${id}_duration_${index}_area`,
+        radius_r: spec.radii[0] ?? 1.0,
+        duration: spec.durations[index],
+        tick_interval: spec.tickIntervals[0] ?? 0.5,
+        effects_on_apply: [{ type: "damage", damage_type: mainDamageType, source_type: "fusion", power_scale: powers[0] }],
+      });
+    }
+  }
+  for (let index = 1; index < spec.tickIntervals.length; index += 1) {
+    if (!hasTickInterval(effects, spec.tickIntervals[index])) {
+      effects.push({
+        type: "spawn_area",
+        area_id: `${id}_tick_${index}_area`,
+        radius_r: spec.radii[0] ?? 1.0,
+        duration: spec.durations[0] ?? defaultDurationForText(text),
+        tick_interval: spec.tickIntervals[index],
+        effects_on_tick: [{ type: "damage", damage_type: mainDamageType, source_type: "fusion", power_scale: powers[0] }],
+      });
+    }
+  }
+  for (let index = 1; index < spec.counts.length; index += 1) {
+    if (!hasCountValue(effects, spec.counts[index])) {
+      effects.push(makeProjectileEffect(`${id}_count_${index}`, secondaryDamageType, { ...spec, counts: [spec.counts[index]] }, powers[index] ?? powers[0], text));
+    }
+  }
+  for (const statusAdd of spec.statusAdds) {
+    effects.push({
+      type: "apply_status",
+      status: statusAdd.status,
+      stacks: statusAdd.stacks,
+      duration: STATUS_DURATIONS[statusAdd.status] ?? 4.0,
+    });
+  }
+  for (const shieldRatio of spec.shieldRatios) {
+    effects.push({
+      type: "grant_shield",
+      shield_type: "fusion_shield",
+      max_health_ratio: shieldRatio,
+      duration: spec.durations[0] ?? 4.0,
+      respect_shield_cap: true,
+      shield_cap_health_ratio: 0.35,
+    });
+  }
+  for (const consume of spec.consumeDurations) {
+    effects.push({ type: "consume_status_duration", status: consume.status, duration: consume.duration });
+  }
+  if (/转移|复制/.test(text)) {
+    effects.push({ type: "transfer_status", status: text.includes("Cursed") ? "cursed" : "instability", stacks: 1, duration: spec.durations[0] });
+  }
+  if (text.includes("Overload")) {
+    effects.push({ type: "trigger_overload", status: "conductive" });
+  }
+  if (/直接碎裂|碎裂/.test(text)) {
+    effects.push({
+      type: "shatter_frozen",
+      projectile_count: spec.counts[0] ?? 3,
+      projectile_id: `${id}_projectile`,
+      damage: { damage_type: secondaryDamageType, power_scale: powers[0] },
+    });
+  }
+  if (options.shieldBreak && !effects.some((effect) => effect.type === "grant_shield")) {
+    effects.push({ type: "apply_status", status: "judgment", stacks: 1, duration: STATUS_DURATIONS.judgment });
+  }
+  return effects;
+}
+
+function makeAreaEffect(id, damageType, spec, powerScale, text) {
+  const tickEffects = [];
+  if (powerScale > 0) {
+    tickEffects.push({ type: "damage", damage_type: damageType, source_type: "fusion", power_scale: powerScale });
+  }
+  for (const statusAdd of spec.statusAdds) {
+    tickEffects.push({ type: "apply_status", status: statusAdd.status, stacks: statusAdd.stacks, duration: STATUS_DURATIONS[statusAdd.status] ?? 4.0 });
+  }
+  return {
+    type: "spawn_area",
+    area_id: `${id}_area`,
+    radius_r: spec.radii[0] ?? defaultRadiusForText(text),
+    duration: spec.durations[0] ?? defaultDurationForText(text),
+    tick_interval: spec.tickIntervals[0] ?? 0.5,
+    count: spec.counts[0],
+    effects_on_tick: tickEffects,
+    effects_on_apply: powerScale > 0 ? [{ type: "damage", damage_type: damageType, source_type: "fusion", power_scale: powerScale }] : [],
+  };
+}
+
+function makeProjectileEffect(id, damageType, spec, powerScale, text) {
+  const onHit = [];
+  for (const statusAdd of spec.statusAdds) {
+    onHit.push({ type: "apply_status", status: statusAdd.status, stacks: statusAdd.stacks, duration: STATUS_DURATIONS[statusAdd.status] ?? 4.0 });
+  }
+  return {
+    type: "spawn_projectile_burst",
+    projectile_id: `${id}_projectile`,
+    count: spec.counts[0] ?? defaultProjectileCountForText(text),
+    spread_angle: 72,
+    speed: 420,
+    range_r: spec.radii[0] ?? 4.0,
+    damage: { damage_type: damageType, power_scale: powerScale },
+    on_hit: onHit,
+  };
+}
+
+function damageTypeForText(text, fallbackSchool) {
+  if (/雷|电|Conductive|Overload/.test(text)) {
+    return "thunder";
+  }
+  if (/冰|霜|Chilled|Frozen/.test(text)) {
+    return "frost";
+  }
+  if (/诅咒|Cursed|魂/.test(text)) {
+    return "curse";
+  }
+  if (/圣|Judgment|护盾/.test(text)) {
+    return "holy";
+  }
+  if (/火|Burning|熔岩|余烬/.test(text)) {
+    return "fire";
+  }
+  return DAMAGE_BY_SCHOOL[fallbackSchool] || "arcane";
+}
+
+function defaultRadiusForText(text) {
+  if (/全屏|大范围|奇点/.test(text)) {
+    return 6.0;
+  }
+  if (/小型|短暂/.test(text)) {
+    return 1.2;
+  }
+  return 1.8;
+}
+
+function defaultDurationForText(text) {
+  if (/持续|地面|路径|区域|结界|裂隙/.test(text)) {
+    return 2.5;
+  }
+  return 0.24;
+}
+
+function defaultProjectileCountForText(text) {
+  if (/两|2/.test(text)) {
+    return 2;
+  }
+  if (/一圈|周围|喷出/.test(text)) {
+    return 6;
+  }
+  return 3;
+}
+
+function hasDuration(effects, duration) {
+  return JSON.stringify(effects).includes(`"duration":${duration}`);
+}
+
+function hasCountValue(effects, count) {
+  return JSON.stringify(effects).includes(`"count":${count}`) || JSON.stringify(effects).includes(`"projectile_count":${count}`);
+}
+
+function hasTickInterval(effects, tickInterval) {
+  return JSON.stringify(effects).includes(`"tick_interval":${tickInterval}`);
 }
 
 function dedupeConditions(conditions) {
@@ -324,108 +465,6 @@ function dedupeConditions(conditions) {
     }
   }
   return result;
-}
-
-function effectsFor(id, school, fusionSchool, description) {
-  const damageType = DAMAGE_BY_SCHOOL[school] || "arcane";
-  const secondaryDamageType = DAMAGE_BY_SCHOOL[fusionSchool] || "arcane";
-  const effects = [];
-  if (/弹|碎片|冰片|电弧|光束|链|雷球|黑蛇|飞向|喷出/.test(description)) {
-    effects.push({
-      type: "spawn_projectile_burst",
-      projectile_id: `${id}_projectile`,
-      count: projectileCount(description),
-      spread_angle: 72,
-      speed: 420,
-      range_r: 4.0,
-      damage: { damage_type: damageType, power_scale: projectilePower(description) },
-      on_hit: [
-        { type: "damage", damage_type: secondaryDamageType, source_type: "fusion", power_scale: 0.25 },
-        ...statusEffectsFor(description),
-      ],
-    });
-  } else {
-    effects.push({
-      type: "spawn_area",
-      area_id: `${id}_area`,
-      radius_r: areaRadius(description),
-      duration: areaDuration(description),
-      tick_interval: 0.5,
-      effects_on_tick: [
-        { type: "damage", damage_type: damageType, source_type: "fusion", power_scale: areaPower(description) },
-        ...statusEffectsFor(description),
-      ],
-      effects_on_apply: [
-        { type: "damage", damage_type: secondaryDamageType, source_type: "fusion", power_scale: 0.35 },
-      ],
-    });
-  }
-  if (description.includes("护盾")) {
-    effects.push({ type: "grant_shield", shield_type: "fusion_shield", max_health_ratio: 0.015, duration: 4.0, respect_shield_cap: true, shield_cap_health_ratio: 0.35 });
-  }
-  if (description.includes("缩短") || description.includes("立即结算")) {
-    effects.push({ type: "consume_status_duration", status: "cursed", duration: 0.5 });
-  }
-  if (description.includes("消耗部分 Burning")) {
-    effects.push({ type: "consume_status_duration", status: "burning", duration: 1.0 });
-  }
-  if (description.includes("转移") || description.includes("复制")) {
-    effects.push({ type: "transfer_status", status: description.includes("Cursed") ? "cursed" : "instability", stacks: 1 });
-  }
-  if (description.includes("Overload")) {
-    effects.push({ type: "trigger_overload", status: "overload" });
-  }
-  if (description.includes("碎裂") || description.includes("直接碎裂")) {
-    effects.push({ type: "shatter_frozen", projectile_count: 3, projectile_id: `${id}_projectile`, damage: { damage_type: secondaryDamageType, power_scale: 0.3 } });
-  }
-  return effects;
-}
-
-function projectileCount(description) {
-  if (/两道|两个|两枚/.test(description)) {
-    return 2;
-  }
-  if (/一圈|周围|喷出/.test(description)) {
-    return 6;
-  }
-  return 3;
-}
-
-function projectilePower(description) {
-  if (/较弱|小/.test(description)) {
-    return 0.35;
-  }
-  if (/高额|圣锤/.test(description)) {
-    return 0.9;
-  }
-  return 0.55;
-}
-
-function areaRadius(description) {
-  if (/大范围|全局|神域/.test(description)) {
-    return 3.0;
-  }
-  if (/小型|短距离|短暂/.test(description)) {
-    return 1.2;
-  }
-  return 1.8;
-}
-
-function areaDuration(description) {
-  if (/持续|区域|路径|地面|结界|裂隙/.test(description)) {
-    return 2.5;
-  }
-  return 0.24;
-}
-
-function areaPower(description) {
-  if (/高额|圣锤|Overload/.test(description)) {
-    return 0.8;
-  }
-  if (/持续|周期性/.test(description)) {
-    return 0.2;
-  }
-  return 0.45;
 }
 
 function collectReferences(value, refs = []) {
@@ -488,17 +527,23 @@ function replaceById(list, item) {
 }
 
 const expectedRows = loadExpectedFusionRows();
+const numericRowsByName = new Map(parseFusionNumericRows().map((row) => [row.name, row]));
 const expectedIds = new Set(expectedRows.map(([id]) => id));
 
 const skillsDocument = readJson("data/skills.json");
 const existingById = new Map((skillsDocument.skills || []).map((skill) => [skill.id, skill]));
 const nonFusionSkills = (skillsDocument.skills || []).filter((skill) => !skill.fusion_school && skill.type !== "fusion");
 const fusionSkills = expectedRows.map((row) => {
-  const existing = existingById.get(row[0]);
-  if (existing && expectedIds.has(existing.id)) {
-    return normalizeExisting(existing, row);
+  const numericRow = numericRowsByName.get(row[1]);
+  if (!numericRow) {
+    throw new Error(`Missing numeric docs row for ${row[1]}`);
   }
-  return makeFusionSkill(row);
+  const existing = existingById.get(row[0]);
+  const skill = makeFusionSkill(row, numericRow);
+  if (existing && expectedIds.has(existing.id)) {
+    return { ...existing, ...skill };
+  }
+  return skill;
 });
 skillsDocument.skills = [...nonFusionSkills, ...fusionSkills];
 writeJson("data/skills.json", skillsDocument);
@@ -534,4 +579,4 @@ summonDocument.summons = summons;
 writeJson("data/combat_objects.json", combatDocument);
 writeJson("data/summons.json", summonDocument);
 
-console.log(`[apply_fusion_skill_catalog] wrote ${fusionSkills.length} fusion skills`);
+console.log(`[apply_fusion_skill_catalog] wrote ${fusionSkills.length} fusion skills from docs/skills/skills.md`);

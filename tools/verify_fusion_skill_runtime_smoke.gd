@@ -75,11 +75,17 @@ func _run() -> void:
 	_emit(&"area_tick", _skill_manager.call("get_skill", &"fusion_fire_frost_steam_mist") as RefCounted, {"target": _enemy, "source_id": &"frost_field"})
 	await process_frame
 	_expect(_count_area_effects(&"fusion_fire_frost_steam_mist_area") > 0, "fire frost steam mist reacts to area_tick", _count_area_effects(&"fusion_fire_frost_steam_mist_area"))
+	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "radius"), 168.0), "steam mist runtime radius uses R2.0", _area_float(&"fusion_fire_frost_steam_mist_area", "radius"))
+	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "duration"), 3.0), "steam mist runtime duration is 3s", _area_float(&"fusion_fire_frost_steam_mist_area", "duration"))
+	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"), 0.5), "steam mist runtime tick is 0.5s", _area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"))
 
 	_enemy.call("apply_status", &"frozen", {"stacks": 1, "duration": 1.2, "power": 24.0})
 	_emit(&"post_damage_hit", _skill_manager.call("get_skill", &"fusion_frost_thunder_lightning_ice_pillar") as RefCounted, {"target": _enemy, "damage_packet": _packet(&"lightning")})
 	await process_frame
 	_expect(_count_area_effects(&"fusion_frost_thunder_lightning_ice_pillar_area") > 0, "frost thunder lightning ice pillar has runtime output", _count_area_effects(&"fusion_frost_thunder_lightning_ice_pillar_area"))
+	_expect(_close(_area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "radius"), 58.8), "lightning ice pillar runtime radius uses R0.7", _area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "radius"))
+	_expect(_close(_area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "duration"), 3.0), "lightning ice pillar runtime duration is 3s", _area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "duration"))
+	_expect(_close(_area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "tick_interval"), 1.0), "lightning ice pillar runtime tick is 1s", _area_float(&"fusion_frost_thunder_lightning_ice_pillar_area", "tick_interval"))
 
 	_enemy.call("apply_status", &"conductive", {"stacks": 1, "duration": 5.0, "power": 24.0})
 	_emit(&"shield_gained", _skill_manager.call("get_skill", &"fusion_thunder_holy_shield_capacitor") as RefCounted, {"target": _enemy})
@@ -200,6 +206,13 @@ func _count_area_effects(source_id: StringName) -> int:
 	return count
 
 
+func _area_float(source_id: StringName, property_name: String) -> float:
+	for child: Node in root.get_children():
+		if StringName(str(child.get_meta("source_id", ""))) == source_id:
+			return snappedf(float(child.get(property_name)), 0.001)
+	return -1.0
+
+
 func _count_projectiles(source_id: StringName) -> int:
 	var count: int = 0
 	for child: Node in root.get_children():
@@ -213,6 +226,10 @@ func _expect(condition: bool, label: String, actual: Variant = "") -> void:
 	if condition:
 		return
 	_fail(label, actual)
+
+
+func _close(actual: float, expected: float, epsilon: float = 0.01) -> bool:
+	return absf(actual - expected) <= epsilon
 
 
 func _fail(label: String, actual: Variant = "") -> void:

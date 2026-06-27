@@ -5294,7 +5294,7 @@
 				"status_chilled",
 				"area"
 			],
-			"mechanic_family": "fusion_fire_frost_steam_area",
+			"mechanic_family": "fusion_fire_frost_steam_mist",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5310,7 +5310,7 @@
 			"trigger_rules": [
 				{
 					"trigger": "area_tick",
-					"cooldown": 0.3,
+					"cooldown": 1,
 					"conditions": [
 						{
 							"type": "target_has_status",
@@ -5325,21 +5325,15 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_fire_frost_steam_mist_area",
-							"radius_r": 1.8,
-							"duration": 2.5,
+							"radius_r": 2,
+							"duration": 3,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.2
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
+									"power_scale": 0.14
 								},
 								{
 									"type": "apply_status",
@@ -5353,9 +5347,30 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.14
 								}
 							]
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "fusion_fire_frost_steam_mist_tick_1_area",
+							"radius_r": 2,
+							"duration": 3,
+							"tick_interval": 1,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.14
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -5377,10 +5392,9 @@
 				"fire",
 				"frost",
 				"status_frozen",
-				"status_burning",
 				"projectile"
 			],
-			"mechanic_family": "fusion_fire_frost_shatter_burst",
+			"mechanic_family": "fusion_fire_frost_shattered_ember",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5409,50 +5423,68 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_fire_frost_shattered_ember_projectile",
+							"type": "spawn_area",
+							"area_id": "fusion_fire_frost_shattered_ember_area",
+							"radius_r": 3.5,
+							"duration": 0.24,
+							"tick_interval": 0.5,
 							"count": 6,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "fire",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
 									"power_scale": 0.25
-								},
+								}
+							],
+							"effects_on_apply": [
 								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.25
 								}
 							]
 						},
 						{
-							"type": "shatter_frozen",
-							"projectile_count": 3,
+							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_fire_frost_shattered_ember_projectile",
+							"count": 6,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 3.5,
+							"damage": {
+								"damage_type": "frost",
+								"power_scale": 0.25
+							},
+							"on_hit": []
+						},
+						{
+							"type": "damage",
+							"damage_type": "frost",
+							"source_type": "fusion",
+							"power_scale": 0.3
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_fire_frost_shattered_ember_count_1_projectile",
+							"count": 4,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 3.5,
 							"damage": {
 								"damage_type": "frost",
 								"power_scale": 0.3
+							},
+							"on_hit": []
+						},
+						{
+							"type": "shatter_frozen",
+							"projectile_count": 6,
+							"projectile_id": "fusion_fire_frost_shattered_ember_projectile",
+							"damage": {
+								"damage_type": "frost",
+								"power_scale": 0.25
 							}
 						}
 					]
@@ -5474,10 +5506,9 @@
 				"fusion",
 				"fire",
 				"thunder",
-				"ground_path",
-				"status_conductive"
+				"area"
 			],
-			"mechanic_family": "fusion_fire_thunder_path_discharge",
+			"mechanic_family": "fusion_fire_thunder_plasma_fire_path",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5493,7 +5524,7 @@
 			"trigger_rules": [
 				{
 					"trigger": "area_tick",
-					"cooldown": 0.3,
+					"cooldown": 0.8,
 					"conditions": [
 						{
 							"type": "source_has_tag",
@@ -5504,15 +5535,15 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_fire_thunder_plasma_fire_path_area",
-							"radius_r": 1.2,
-							"duration": 2.5,
+							"radius_r": 1.8,
+							"duration": 3,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.12
 								}
 							],
 							"effects_on_apply": [
@@ -5520,7 +5551,7 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.12
 								}
 							]
 						}
@@ -5543,10 +5574,10 @@
 				"fusion",
 				"fire",
 				"thunder",
-				"meteor",
-				"status_conductive"
+				"status_conductive",
+				"projectile"
 			],
-			"mechanic_family": "fusion_fire_thunder_conductive_arc",
+			"mechanic_family": "fusion_fire_thunder_thunderburn_meteor",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5566,10 +5597,6 @@
 					"conditions": [
 						{
 							"type": "target_has_status",
-							"status": "burning"
-						},
-						{
-							"type": "target_has_status",
 							"status": "conductive"
 						},
 						{
@@ -5579,6 +5606,30 @@
 					],
 					"effects": [
 						{
+							"type": "spawn_area",
+							"area_id": "fusion_fire_thunder_thunderburn_meteor_area",
+							"radius_r": 1.8,
+							"duration": 0.24,
+							"tick_interval": 0.5,
+							"count": 3,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.45
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.45
+								}
+							]
+						},
+						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_fire_thunder_thunderburn_meteor_projectile",
 							"count": 3,
@@ -5586,29 +5637,10 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "fire",
-								"power_scale": 0.55
+								"damage_type": "thunder",
+								"power_scale": 0.45
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
-								}
-							]
+							"on_hit": []
 						}
 					]
 				}
@@ -5632,7 +5664,7 @@
 				"status_burning",
 				"status_cursed"
 			],
-			"mechanic_family": "fusion_fire_curse_tick_accelerate",
+			"mechanic_family": "fusion_fire_curse_ash_curse_rune",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5657,33 +5689,25 @@
 						{
 							"type": "target_has_status",
 							"status": "cursed"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "curse"
 						}
 					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_fire_curse_ash_curse_rune_area",
-							"radius_r": 1.8,
-							"duration": 2.5,
+							"radius_r": 1.2,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -5691,14 +5715,14 @@
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						},
 						{
 							"type": "consume_status_duration",
 							"status": "cursed",
-							"duration": 0.5
+							"duration": 0.25
 						}
 					]
 				}
@@ -5719,11 +5743,12 @@
 				"fusion",
 				"fire",
 				"curse",
-				"projectile",
 				"status_burning",
-				"status_cursed"
+				"status_cursed",
+				"area",
+				"projectile"
 			],
-			"mechanic_family": "fusion_fire_curse_blackflame_path",
+			"mechanic_family": "fusion_fire_curse_blackflame_serpents",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5738,7 +5763,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -5746,34 +5771,27 @@
 							"status": "burning"
 						},
 						{
-							"type": "source_has_tag",
-							"tag": "curse_area"
+							"type": "target_has_status",
+							"status": "cursed"
+						},
+						{
+							"type": "damage_element_is",
+							"element": "arcane"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_fire_curse_blackflame_serpents_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "fire",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_fire_curse_blackflame_serpents_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
+									"power_scale": 0.12
 								},
 								{
 									"type": "apply_status",
@@ -5781,7 +5799,41 @@
 									"stacks": 1,
 									"duration": 3
 								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "fusion",
+									"power_scale": 0.12
+								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_fire_curse_blackflame_serpents_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "curse",
+								"power_scale": 0.12
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 1,
+							"duration": 3
 						}
 					]
 				}
@@ -5804,9 +5856,10 @@
 				"holy",
 				"status_burning",
 				"status_judgment",
+				"projectile",
 				"shield"
 			],
-			"mechanic_family": "fusion_fire_holy_absolution_beam",
+			"mechanic_family": "fusion_fire_holy_holy_flame_absolution",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5831,6 +5884,14 @@
 						{
 							"type": "target_has_status",
 							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "judgment"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
 						}
 					],
 					"effects": [
@@ -5842,34 +5903,15 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "fire",
-								"power_scale": 0.55
+								"damage_type": "holy",
+								"power_scale": 1.1
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								}
-							]
+							"on_hit": []
 						},
 						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
+							"max_health_ratio": 0.04,
 							"duration": 4,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
@@ -5877,7 +5919,7 @@
 						{
 							"type": "consume_status_duration",
 							"status": "burning",
-							"duration": 1
+							"duration": 1.5
 						}
 					]
 				}
@@ -5898,11 +5940,11 @@
 				"fusion",
 				"fire",
 				"holy",
-				"barrier",
 				"status_burning",
+				"area",
 				"shield"
 			],
-			"mechanic_family": "fusion_fire_holy_barrier_edge",
+			"mechanic_family": "fusion_fire_holy_burning_light_barrier",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -5917,7 +5959,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "enemy_death",
+					"trigger": "area_tick",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -5925,8 +5967,8 @@
 							"status": "burning"
 						},
 						{
-							"type": "skill_has_tag",
-							"tag": "holy"
+							"type": "source_has_tag",
+							"tag": "holy_area"
 						}
 					],
 					"effects": [
@@ -5939,15 +5981,9 @@
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
+									"power_scale": 0.1
 								}
 							],
 							"effects_on_apply": [
@@ -5955,14 +5991,14 @@
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.1
 								}
 							]
 						},
 						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
+							"max_health_ratio": 0.01,
 							"duration": 4,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
@@ -5986,10 +6022,9 @@
 				"fusion",
 				"fire",
 				"chaos",
-				"ground_path",
-				"repeat"
+				"area"
 			],
-			"mechanic_family": "fusion_fire_chaos_path_echo",
+			"mechanic_family": "fusion_fire_chaos_ember_echo",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -6005,28 +6040,34 @@
 			"trigger_rules": [
 				{
 					"trigger": "area_tick",
-					"cooldown": 0.4,
+					"cooldown": 2,
+					"conditions": [
+						{
+							"type": "source_has_tag",
+							"tag": "fire_area"
+						}
+					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_fire_chaos_ember_echo_area",
-							"radius_r": 1.2,
-							"duration": 2.5,
+							"radius_r": 1.8,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.13
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.13
 								}
 							]
 						}
@@ -6049,11 +6090,11 @@
 				"fusion",
 				"fire",
 				"chaos",
-				"projectile",
+				"status_burning",
 				"status_instability",
-				"status_burning"
+				"projectile"
 			],
-			"mechanic_family": "fusion_fire_chaos_projectile_split",
+			"mechanic_family": "fusion_fire_chaos_molten_split",
 			"offer_rule": {
 				"required_schools": [
 					"fire",
@@ -6089,23 +6130,23 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "fire",
+								"damage_type": "arcane",
 								"power_scale": 0.35
 							},
 							"on_hit": [
 								{
-									"type": "damage",
-									"damage_type": "arcane",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
 									"type": "apply_status",
-									"status": "instability",
+									"status": "burning",
 									"stacks": 1,
-									"duration": 6
+									"duration": 4
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
 						}
 					]
 				}
@@ -6126,10 +6167,10 @@
 				"fusion",
 				"frost",
 				"fire",
-				"crystal",
-				"status_chilled"
+				"status_chilled",
+				"area"
 			],
-			"mechanic_family": "fusion_frost_fire_crystal_spikes",
+			"mechanic_family": "fusion_frost_fire_crystalized_flame",
 			"offer_rule": {
 				"required_schools": [
 					"frost",
@@ -6149,7 +6190,7 @@
 					"conditions": [
 						{
 							"type": "source_has_tag",
-							"tag": "frost_area"
+							"tag": "fire_area"
 						}
 					],
 					"effects": [
@@ -6159,12 +6200,13 @@
 							"radius_r": 1.8,
 							"duration": 2.5,
 							"tick_interval": 0.5,
+							"count": 5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.35
 								},
 								{
 									"type": "apply_status",
@@ -6176,11 +6218,37 @@
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "frost",
 									"source_type": "fusion",
 									"power_scale": 0.35
 								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_frost_fire_crystalized_flame_projectile",
+							"count": 5,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "fire",
+								"power_scale": 0.35
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -6240,40 +6308,21 @@
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_frost_fire_frostburn_shards_projectile",
-							"count": 6,
+							"count": 8,
 							"spread_angle": 72,
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "frost",
-								"power_scale": 0.55
+								"damage_type": "fire",
+								"power_scale": 0.22
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "fire",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								}
-							]
+							"on_hit": []
+						},
+						{
+							"type": "damage",
+							"damage_type": "fire",
+							"source_type": "fusion",
+							"power_scale": 0.15
 						}
 					]
 				}
@@ -6314,7 +6363,7 @@
 			"trigger_rules": [
 				{
 					"trigger": "post_damage_hit",
-					"cooldown": 0.3,
+					"cooldown": 1,
 					"conditions": [
 						{
 							"type": "target_has_status",
@@ -6329,26 +6378,20 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_frost_thunder_lightning_ice_pillar_area",
-							"radius_r": 1.2,
-							"duration": 0.24,
-							"tick_interval": 0.5,
+							"radius_r": 0.7,
+							"duration": 3,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "frost",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.2
+									"power_scale": 0.25
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
 									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
 									"duration": 6
 								}
 							],
@@ -6357,9 +6400,30 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
+						},
+						{
+							"type": "spawn_area",
+							"area_id": "fusion_frost_thunder_lightning_ice_pillar_r1_area",
+							"radius_r": 1.8,
+							"duration": 3,
+							"tick_interval": 1,
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.25
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -6399,7 +6463,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -6407,8 +6471,8 @@
 							"status": "conductive"
 						},
 						{
-							"type": "source_has_tag",
-							"tag": "frost_area"
+							"type": "damage_element_is",
+							"element": "ice"
 						}
 					],
 					"effects": [
@@ -6421,21 +6485,15 @@
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "frost",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
 									"stacks": 1,
 									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
 								}
 							],
 							"effects_on_apply": [
@@ -6443,9 +6501,15 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.5
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -6466,7 +6530,8 @@
 				"fusion",
 				"frost",
 				"curse",
-				"status_cursed"
+				"status_cursed",
+				"area"
 			],
 			"mechanic_family": "fusion_frost_curse_ice_coffin_curse_burst",
 			"offer_rule": {
@@ -6489,13 +6554,17 @@
 						{
 							"type": "target_has_status",
 							"status": "cursed"
+						},
+						{
+							"type": "damage_element_is",
+							"element": "ice"
 						}
 					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_frost_curse_ice_coffin_curse_burst_area",
-							"radius_r": 1.8,
+							"radius_r": 1.6,
 							"duration": 0.24,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
@@ -6503,28 +6572,17 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
+									"power_scale": 0.8
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "curse",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.8
 								}
 							]
-						},
-						{
-							"type": "consume_status_duration",
-							"status": "cursed",
-							"duration": 0.5
 						}
 					]
 				}
@@ -6589,29 +6647,10 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "frost",
-								"power_scale": 0.55
+								"damage_type": "curse",
+								"power_scale": 0.3
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							]
+							"on_hit": []
 						}
 					]
 				}
@@ -6657,10 +6696,6 @@
 					"conditions": [
 						{
 							"type": "target_has_status",
-							"status": "chilled"
-						},
-						{
-							"type": "target_has_status",
 							"status": "judgment"
 						},
 						{
@@ -6672,25 +6707,20 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_frost_holy_holy_frost_anchor_area",
-							"radius_r": 1.8,
-							"duration": 2.5,
-							"tick_interval": 0.5,
+							"radius_r": 2,
+							"duration": 3,
+							"tick_interval": 1,
+							"count": 3,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.2
+									"power_scale": 0.25
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
 									"stacks": 1,
 									"duration": 6
 								}
@@ -6698,17 +6728,43 @@
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						},
 						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_frost_holy_holy_frost_anchor_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 2,
+							"damage": {
+								"damage_type": "holy",
+								"power_scale": 0.25
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
+						},
+						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
+							"max_health_ratio": 0.01,
+							"duration": 3,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
 						}
@@ -6757,49 +6813,16 @@
 							"status": "frozen"
 						},
 						{
-							"type": "target_has_status",
-							"status": "judgment"
-						},
-						{
 							"type": "damage_element_is",
 							"element": "ice"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_frost_holy_judgment_ice_lance_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "frost",
+							"source_type": "fusion",
+							"power_scale": 0.9
 						}
 					]
 				}
@@ -6822,7 +6845,8 @@
 				"chaos",
 				"status_chilled",
 				"status_frozen",
-				"area"
+				"area",
+				"projectile"
 			],
 			"mechanic_family": "fusion_frost_chaos_rift_avalanche",
 			"offer_rule": {
@@ -6845,33 +6869,54 @@
 						{
 							"type": "target_has_status",
 							"status": "frozen"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "chaos"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_frost_chaos_rift_avalanche_projectile",
-							"count": 6,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "frost",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_frost_chaos_rift_avalanche_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.9
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
-									"stacks": 1,
+									"stacks": 2,
 									"duration": 6
-								},
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.9
+								}
+							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_frost_chaos_rift_avalanche_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.9
+							},
+							"on_hit": [
 								{
 									"type": "apply_status",
 									"status": "chilled",
@@ -6881,12 +6926,18 @@
 							]
 						},
 						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 2,
+							"duration": 6
+						},
+						{
 							"type": "shatter_frozen",
 							"projectile_count": 3,
 							"projectile_id": "fusion_frost_chaos_rift_avalanche_projectile",
 							"damage": {
 								"damage_type": "arcane",
-								"power_scale": 0.3
+								"power_scale": 0.9
 							}
 						}
 					]
@@ -6932,25 +6983,20 @@
 					"conditions": [
 						{
 							"type": "source_has_tag",
-							"tag": "frost_area"
+							"tag": "chaos_area"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_frost_chaos_inverted_ice_shard_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "frost",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_frost_chaos_inverted_ice_shard_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "frost",
 									"source_type": "fusion",
 									"power_scale": 0.25
 								},
@@ -6960,7 +7006,41 @@
 									"stacks": 1,
 									"duration": 6
 								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.25
+								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_frost_chaos_inverted_ice_shard_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.25
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -6982,9 +7062,9 @@
 				"thunder",
 				"fire",
 				"status_burning",
-				"chain"
+				"area"
 			],
-			"mechanic_family": "fusion_thunder_fire_arc_path",
+			"mechanic_family": "fusion_thunder_fire_arc_ignition",
 			"offer_rule": {
 				"required_schools": [
 					"thunder",
@@ -6999,7 +7079,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -7007,12 +7087,8 @@
 							"status": "burning"
 						},
 						{
-							"type": "target_has_status",
-							"status": "conductive"
-						},
-						{
-							"type": "source_has_tag",
-							"tag": "thunder_area"
+							"type": "damage_element_is",
+							"element": "fire"
 						}
 					],
 					"effects": [
@@ -7027,29 +7103,30 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
+									"power_scale": 0.55
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.55
 								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_fire_arc_ignition_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "fire",
+								"power_scale": 0.55
+							},
+							"on_hit": []
 						}
 					]
 				}
@@ -7070,10 +7147,10 @@
 				"fusion",
 				"thunder",
 				"fire",
-				"ground_path",
-				"status_conductive"
+				"status_conductive",
+				"area"
 			],
-			"mechanic_family": "fusion_thunder_fire_ground_circuit",
+			"mechanic_family": "fusion_thunder_fire_thunderfire_circuit",
 			"offer_rule": {
 				"required_schools": [
 					"thunder",
@@ -7093,7 +7170,7 @@
 					"conditions": [
 						{
 							"type": "source_has_tag",
-							"tag": "thunder_area"
+							"tag": "fire_area"
 						}
 					],
 					"effects": [
@@ -7108,7 +7185,7 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.7
 								},
 								{
 									"type": "apply_status",
@@ -7120,11 +7197,17 @@
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.7
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "conductive",
+							"stacks": 1,
+							"duration": 5
 						}
 					]
 				}
@@ -7185,51 +7268,29 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_frost_shatter_thunder_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.8
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_frost_shatter_thunder_projectile",
+							"count": 4,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "frost",
+								"power_scale": 0.5
+							},
+							"on_hit": []
 						},
 						{
 							"type": "trigger_overload",
-							"status": "overload"
+							"status": "conductive"
 						},
 						{
 							"type": "shatter_frozen",
-							"projectile_count": 3,
+							"projectile_count": 4,
 							"projectile_id": "fusion_thunder_frost_shatter_thunder_projectile",
 							"damage": {
 								"damage_type": "frost",
-								"power_scale": 0.3
+								"power_scale": 0.5
 							}
 						}
 					]
@@ -7283,39 +7344,16 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_frost_cryo_capacitor_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "thunder",
+							"source_type": "fusion",
+							"power_scale": 0.25
+						},
+						{
+							"type": "apply_status",
+							"status": "conductive",
+							"stacks": 1,
+							"duration": 5
 						}
 					]
 				}
@@ -7353,52 +7391,31 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "status_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
-							"type": "event_status_is",
+							"type": "target_has_status",
 							"status": "cursed"
 						},
 						{
-							"type": "skill_has_tag",
-							"tag": "thunder"
+							"type": "damage_element_is",
+							"element": "lightning"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_curse_curse_lightning_rebound_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
-						},
-						{
-							"type": "consume_status_duration",
-							"status": "cursed",
-							"duration": 0.5
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_curse_curse_lightning_rebound_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "curse",
+								"power_scale": 0.25
+							},
+							"on_hit": []
 						}
 					]
 				}
@@ -7419,7 +7436,8 @@
 				"fusion",
 				"thunder",
 				"curse",
-				"status_cursed"
+				"status_cursed",
+				"projectile"
 			],
 			"mechanic_family": "fusion_thunder_curse_black_thunder_convergence",
 			"offer_rule": {
@@ -7437,7 +7455,7 @@
 			"trigger_rules": [
 				{
 					"trigger": "post_damage_hit",
-					"cooldown": 1,
+					"cooldown": 0.3,
 					"conditions": [
 						{
 							"type": "target_has_status",
@@ -7450,38 +7468,17 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_curse_black_thunder_convergence_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
-						},
-						{
-							"type": "consume_status_duration",
-							"status": "cursed",
-							"duration": 0.5
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_curse_black_thunder_convergence_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "curse",
+								"power_scale": 0.55
+							},
+							"on_hit": []
 						}
 					]
 				}
@@ -7502,7 +7499,8 @@
 				"fusion",
 				"thunder",
 				"holy",
-				"status_judgment"
+				"status_judgment",
+				"area"
 			],
 			"mechanic_family": "fusion_thunder_holy_judgment_wire",
 			"offer_rule": {
@@ -7535,29 +7533,23 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_thunder_holy_judgment_wire_area",
-							"radius_r": 1.2,
-							"duration": 0.24,
+							"radius_r": 1.8,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 0.2
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.2
 								}
 							]
 						}
@@ -7580,7 +7572,7 @@
 				"fusion",
 				"thunder",
 				"holy",
-				"status_conductive",
+				"projectile",
 				"shield"
 			],
 			"mechanic_family": "fusion_thunder_holy_shield_capacitor",
@@ -7602,55 +7594,27 @@
 					"cooldown": 0.3,
 					"conditions": [
 						{
-							"type": "target_has_status",
-							"status": "conductive"
-						},
-						{
 							"type": "skill_has_tag",
 							"tag": "thunder"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_holy_shield_capacitor_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.8
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
-						},
-						{
-							"type": "grant_shield",
-							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
-							"respect_shield_cap": true,
-							"shield_cap_health_ratio": 0.35
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_holy_shield_capacitor_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "holy",
+								"power_scale": 0.45
+							},
+							"on_hit": []
 						},
 						{
 							"type": "trigger_overload",
-							"status": "overload"
+							"status": "conductive"
 						}
 					]
 				},
@@ -7659,24 +7623,27 @@
 					"cooldown": 1,
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_thunder_holy_shield_capacitor_shield_break_area",
-							"radius_r": 1.5,
-							"duration": 0.2,
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.55
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
-								}
-							]
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_thunder_holy_shield_capacitor_shield_break_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "holy",
+								"power_scale": 0.45
+							},
+							"on_hit": []
+						},
+						{
+							"type": "trigger_overload",
+							"status": "conductive"
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -7716,7 +7683,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -7724,11 +7691,35 @@
 							"status": "instability"
 						},
 						{
-							"type": "source_has_tag",
-							"tag": "thunder_area"
+							"type": "damage_element_is",
+							"element": "lightning"
 						}
 					],
 					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "fusion_thunder_chaos_fractal_arc_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"count": 2,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								}
+							]
+						},
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_thunder_chaos_fractal_arc_projectile",
@@ -7737,23 +7728,10 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "thunder",
+								"damage_type": "arcane",
 								"power_scale": 0.35
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "arcane",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
-								}
-							]
+							"on_hit": []
 						}
 					]
 				}
@@ -7774,8 +7752,7 @@
 				"fusion",
 				"thunder",
 				"chaos",
-				"area",
-				"projectile"
+				"area"
 			],
 			"mechanic_family": "fusion_thunder_chaos_rift_lightning_orb",
 			"offer_rule": {
@@ -7802,6 +7779,29 @@
 					],
 					"effects": [
 						{
+							"type": "spawn_area",
+							"area_id": "fusion_thunder_chaos_rift_lightning_orb_area",
+							"radius_r": 1.8,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.18
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.18
+								}
+							]
+						},
+						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_thunder_chaos_rift_lightning_orb_projectile",
 							"count": 3,
@@ -7809,17 +7809,10 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "thunder",
-								"power_scale": 0.55
+								"damage_type": "arcane",
+								"power_scale": 0.18
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "arcane",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								}
-							]
+							"on_hit": []
 						}
 					]
 				}
@@ -7843,7 +7836,7 @@
 				"status_burning",
 				"status_cursed"
 			],
-			"mechanic_family": "fusion_curse_fire_curse_amplify",
+			"mechanic_family": "fusion_curse_fire_ash_soul_pact",
 			"offer_rule": {
 				"required_schools": [
 					"curse",
@@ -7864,43 +7857,29 @@
 						{
 							"type": "event_status_is",
 							"status": "burning"
+						},
+						{
+							"type": "target_has_status",
+							"status": "cursed"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "curse"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_fire_ash_soul_pact_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "fire",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_curse_fire_ash_soul_pact_projectile",
+							"count": 5,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "fire",
+								"power_scale": 0.25
+							},
+							"on_hit": []
 						}
 					]
 				}
@@ -7921,11 +7900,10 @@
 				"fusion",
 				"curse",
 				"fire",
-				"summon",
 				"status_burning",
 				"status_cursed"
 			],
-			"mechanic_family": "fusion_curse_fire_death_minion",
+			"mechanic_family": "fusion_curse_fire_burning_soul_minion",
 			"offer_rule": {
 				"required_schools": [
 					"curse",
@@ -7948,45 +7926,22 @@
 							"status": "burning"
 						},
 						{
-							"type": "target_has_status",
-							"status": "cursed"
+							"type": "skill_has_tag",
+							"tag": "curse"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_fire_burning_soul_minion_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "fire",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "curse",
+							"source_type": "fusion",
+							"power_scale": 0.6
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
 						}
 					]
 				}
@@ -8025,7 +7980,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "enemy_death",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -8035,43 +7990,18 @@
 						{
 							"type": "target_has_status",
 							"status": "cursed"
+						},
+						{
+							"type": "damage_element_is",
+							"element": "arcane"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_frost_ice_coffin_contract_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "frost",
+							"source_type": "fusion",
+							"power_scale": 0.25
 						},
 						{
 							"type": "transfer_status",
@@ -8098,8 +8028,7 @@
 				"curse",
 				"frost",
 				"status_frozen",
-				"status_cursed",
-				"projectile"
+				"status_cursed"
 			],
 			"mechanic_family": "fusion_curse_frost_cold_scythe_soul_chase",
 			"offer_rule": {
@@ -8134,36 +8063,10 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_curse_frost_cold_scythe_soul_chase_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "curse",
-								"power_scale": 0.55
-							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							]
+							"type": "damage",
+							"damage_type": "frost",
+							"source_type": "fusion",
+							"power_scale": 0.75
 						}
 					]
 				}
@@ -8220,48 +8123,34 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_thunder_curse_lightning_backlash_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.8
-								},
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_curse_thunder_curse_lightning_backlash_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 0.6
+							},
+							"on_hit": [
 								{
 									"type": "apply_status",
 									"status": "conductive",
 									"stacks": 1,
 									"duration": 5
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.35
 								}
 							]
 						},
 						{
-							"type": "consume_status_duration",
-							"status": "cursed",
-							"duration": 0.5
+							"type": "apply_status",
+							"status": "conductive",
+							"stacks": 1,
+							"duration": 5
 						},
 						{
 							"type": "trigger_overload",
-							"status": "overload"
+							"status": "conductive"
 						}
 					]
 				}
@@ -8283,8 +8172,7 @@
 				"curse",
 				"thunder",
 				"status_conductive",
-				"status_cursed",
-				"projectile"
+				"status_cursed"
 			],
 			"mechanic_family": "fusion_curse_thunder_black_serpent_conduction",
 			"offer_rule": {
@@ -8315,17 +8203,13 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_curse_thunder_black_serpent_conduction_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "curse",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_curse_thunder_black_serpent_conduction_area",
+							"radius_r": 2,
+							"duration": 0.24,
+							"tick_interval": 0.5,
+							"count": 2,
+							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
@@ -8334,10 +8218,32 @@
 								},
 								{
 									"type": "apply_status",
-									"status": "conductive",
+									"status": "cursed",
 									"stacks": 1,
-									"duration": 5
-								},
+									"duration": 3
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.25
+								}
+							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_curse_thunder_black_serpent_conduction_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 2,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 0.25
+							},
+							"on_hit": [
 								{
 									"type": "apply_status",
 									"status": "cursed",
@@ -8345,6 +8251,12 @@
 									"duration": 3
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 1,
+							"duration": 3
 						}
 					]
 				}
@@ -8366,7 +8278,8 @@
 				"curse",
 				"holy",
 				"status_cursed",
-				"status_judgment"
+				"status_judgment",
+				"shield"
 			],
 			"mechanic_family": "fusion_curse_holy_confession_curse_seal",
 			"offer_rule": {
@@ -8391,50 +8304,24 @@
 							"status": "cursed"
 						},
 						{
-							"type": "target_has_status",
-							"status": "judgment"
+							"type": "damage_element_is",
+							"element": "holy"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_holy_confession_curse_seal_area",
-							"radius_r": 1.2,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "curse",
+							"source_type": "fusion",
+							"power_scale": 0.25
 						},
 						{
-							"type": "consume_status_duration",
-							"status": "cursed",
-							"duration": 0.5
+							"type": "grant_shield",
+							"shield_type": "fusion_shield",
+							"max_health_ratio": 0.015,
+							"duration": 4,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
 						}
 					]
 				}
@@ -8474,16 +8361,12 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "shield_gained",
+					"trigger": "enemy_death",
 					"cooldown": 0.3,
 					"conditions": [
 						{
 							"type": "target_has_status",
 							"status": "cursed"
-						},
-						{
-							"type": "target_has_status",
-							"status": "judgment"
 						},
 						{
 							"type": "skill_has_tag",
@@ -8492,44 +8375,15 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_holy_absolution_harvest_area",
-							"radius_r": 1.2,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "curse",
+							"source_type": "fusion",
+							"power_scale": 0.7
 						},
 						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
+							"max_health_ratio": 0.02,
 							"duration": 4,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
@@ -8581,48 +8435,31 @@
 						{
 							"type": "target_has_status",
 							"status": "cursed"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "chaos"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_curse_chaos_paradox_curse_mark_area",
-							"radius_r": 1.8,
-							"duration": 2.5,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.2
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "arcane",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_curse_chaos_paradox_curse_mark_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.25
+							},
+							"on_hit": []
 						},
 						{
 							"type": "transfer_status",
 							"status": "cursed",
-							"stacks": 1
+							"stacks": 1,
+							"duration": 2
 						}
 					]
 				}
@@ -8676,22 +8513,17 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_curse_chaos_rift_funeral_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "curse",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_curse_chaos_rift_funeral_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -8699,7 +8531,41 @@
 									"stacks": 1,
 									"duration": 3
 								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "curse",
+									"source_type": "fusion",
+									"power_scale": 0.5
+								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_curse_chaos_rift_funeral_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "arcane",
+								"power_scale": 0.5
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 1,
+							"duration": 3
 						}
 					]
 				}
@@ -8723,7 +8589,77 @@
 				"status_burning",
 				"shield"
 			],
-			"mechanic_family": "fusion_holy_fire_purify_burning",
+			"mechanic_family": "fusion_holy_fire_holy_flame_purification",
+			"offer_rule": {
+				"required_schools": [
+					"holy",
+					"fire"
+				],
+				"required_skills": [],
+				"blocked_by_exclusive_group": [],
+				"required_min_skill_count": {
+					"holy": 2,
+					"fire": 1
+				}
+			},
+			"trigger_rules": [
+				{
+					"trigger": "post_damage_hit",
+					"cooldown": 0.3,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "burning"
+						},
+						{
+							"type": "damage_element_is",
+							"element": "holy"
+						}
+					],
+					"effects": [
+						{
+							"type": "damage",
+							"damage_type": "holy",
+							"source_type": "fusion",
+							"power_scale": 0.4
+						},
+						{
+							"type": "grant_shield",
+							"shield_type": "fusion_shield",
+							"max_health_ratio": 0.02,
+							"duration": 4,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
+						},
+						{
+							"type": "consume_status_duration",
+							"status": "burning",
+							"duration": 1
+						}
+					]
+				}
+			],
+			"effects": [],
+			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸"
+		},
+		{
+			"id": "fusion_holy_fire_solar_hammer",
+			"name": "太阳圣锤",
+			"school": "holy",
+			"fusion_school": "fire",
+			"type": "fusion",
+			"rarity": "normal",
+			"max_level": 2,
+			"exclusive_group": null,
+			"tags": [
+				"fusion",
+				"holy",
+				"fire",
+				"status_burning",
+				"status_judgment",
+				"area"
+			],
+			"mechanic_family": "fusion_holy_fire_solar_hammer",
 			"offer_rule": {
 				"required_schools": [
 					"holy",
@@ -8753,132 +8689,50 @@
 					"effects": [
 						{
 							"type": "spawn_area",
-							"area_id": "fusion_holy_fire_holy_flame_purification_area",
-							"radius_r": 1.8,
-							"duration": 2.5,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.2
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "fire",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
-						},
-						{
-							"type": "grant_shield",
-							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
-							"respect_shield_cap": true,
-							"shield_cap_health_ratio": 0.35
-						},
-						{
-							"type": "consume_status_duration",
-							"status": "burning",
-							"duration": 1
-						}
-					]
-				}
-			],
-			"effects": [],
-			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸"
-		},
-		{
-			"id": "fusion_holy_fire_solar_hammer",
-			"name": "太阳圣锤",
-			"school": "holy",
-			"fusion_school": "fire",
-			"type": "fusion",
-			"rarity": "normal",
-			"max_level": 2,
-			"exclusive_group": null,
-			"tags": [
-				"fusion",
-				"holy",
-				"fire",
-				"hammer",
-				"status_burning",
-				"status_judgment",
-				"ground_path"
-			],
-			"mechanic_family": "fusion_holy_fire_solar_cross",
-			"offer_rule": {
-				"required_schools": [
-					"holy",
-					"fire"
-				],
-				"required_skills": [],
-				"blocked_by_exclusive_group": [],
-				"required_min_skill_count": {
-					"holy": 2,
-					"fire": 1
-				}
-			},
-			"trigger_rules": [
-				{
-					"trigger": "area_tick",
-					"cooldown": 0.3,
-					"conditions": [
-						{
-							"type": "target_has_status",
-							"status": "burning"
-						},
-						{
-							"type": "source_has_tag",
-							"tag": "holy_area"
-						}
-					],
-					"effects": [
-						{
-							"type": "spawn_area",
 							"area_id": "fusion_holy_fire_solar_hammer_area",
 							"radius_r": 1.8,
-							"duration": 2.5,
+							"duration": 3,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.8
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
+									"power_scale": 0.14
 								},
 								{
 									"type": "apply_status",
 									"status": "judgment",
 									"stacks": 1,
 									"duration": 6
+								},
+								{
+									"type": "apply_status",
+									"status": "burning",
+									"stacks": 1,
+									"duration": 4
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "fire",
+									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.14
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
+						},
+						{
+							"type": "apply_status",
+							"status": "burning",
+							"stacks": 1,
+							"duration": 4
 						}
 					]
 				}
@@ -8919,7 +8773,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "shield_gained",
+					"trigger": "enemy_death",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -8928,34 +8782,22 @@
 						},
 						{
 							"type": "skill_has_tag",
-							"tag": "frost"
+							"tag": "holy"
 						}
 					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_holy_frost_crystal_shelter_area",
-							"radius_r": 1.2,
-							"duration": 2.5,
+							"radius_r": 1.5,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -8963,15 +8805,15 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						},
 						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
+							"max_health_ratio": 0.03,
+							"duration": 2,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
 						}
@@ -9013,7 +8855,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -9025,35 +8867,23 @@
 							"status": "frozen"
 						},
 						{
-							"type": "source_has_tag",
-							"tag": "holy_area"
+							"type": "damage_element_is",
+							"element": "ice"
 						}
 					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_holy_frost_holy_frost_beam_area",
-							"radius_r": 1.2,
-							"duration": 2.5,
+							"radius_r": 1.8,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.2
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "chilled",
-									"stacks": 2,
-									"duration": 6
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -9061,7 +8891,7 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						}
@@ -9086,6 +8916,7 @@
 				"thunder",
 				"status_conductive",
 				"status_judgment",
+				"projectile",
 				"shield"
 			],
 			"mechanic_family": "fusion_holy_thunder_thunder_shield_prayer",
@@ -9105,25 +8936,29 @@
 				{
 					"trigger": "shield_gained",
 					"cooldown": 0.3,
+					"conditions": [
+						{
+							"type": "target_has_status",
+							"status": "conductive"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "thunder"
+						}
+					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_area",
-							"radius_r": 1.8,
+							"radius_r": 2,
 							"duration": 0.24,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "thunder",
 									"source_type": "fusion",
 									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
 								},
 								{
 									"type": "apply_status",
@@ -9137,17 +8972,35 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.45
 								}
 							]
 						},
 						{
-							"type": "grant_shield",
-							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
-							"respect_shield_cap": true,
-							"shield_cap_health_ratio": 0.35
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_holy_thunder_thunder_shield_prayer_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 2,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 0.45
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				},
@@ -9158,20 +9011,15 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_area",
-							"radius_r": 1.5,
-							"duration": 0.2,
-							"effects_on_apply": [
+							"radius_r": 2,
+							"duration": 0.24,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.55
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
+									"power_scale": 0.45
 								},
 								{
 									"type": "apply_status",
@@ -9179,7 +9027,47 @@
 									"stacks": 1,
 									"duration": 6
 								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.45
+								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 2,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 0.45
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "judgment",
+									"stacks": 1,
+									"duration": 6
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -9224,47 +9112,36 @@
 						{
 							"type": "event_status_is",
 							"status": "conductive"
+						},
+						{
+							"type": "target_has_status",
+							"status": "conductive"
+						},
+						{
+							"type": "target_has_status",
+							"status": "judgment"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "thunder"
 						}
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_holy_thunder_holy_thunder_judgment_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.8
-								},
-								{
-									"type": "apply_status",
-									"status": "conductive",
-									"stacks": 1,
-									"duration": 5
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "thunder",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "damage",
+							"damage_type": "thunder",
+							"source_type": "fusion",
+							"power_scale": 0.25
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						},
 						{
 							"type": "trigger_overload",
-							"status": "overload"
+							"status": "conductive"
 						}
 					]
 				}
@@ -9317,38 +9194,22 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_area",
-							"area_id": "fusion_holy_curse_purifying_chain_area",
-							"radius_r": 1.8,
-							"duration": 0.24,
-							"tick_interval": 0.5,
-							"effects_on_tick": [
-								{
-									"type": "damage",
-									"damage_type": "holy",
-									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								}
-							],
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "curse",
-									"source_type": "fusion",
-									"power_scale": 0.35
-								}
-							]
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_holy_curse_purifying_chain_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "curse",
+								"power_scale": 0.45
+							},
+							"on_hit": []
 						},
 						{
 							"type": "grant_shield",
 							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
+							"max_health_ratio": 0.008,
 							"duration": 4,
 							"respect_shield_cap": true,
 							"shield_cap_health_ratio": 0.35
@@ -9390,7 +9251,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "enemy_death",
+					"trigger": "area_tick",
 					"cooldown": 0.3,
 					"conditions": [
 						{
@@ -9398,8 +9259,8 @@
 							"status": "cursed"
 						},
 						{
-							"type": "skill_has_tag",
-							"tag": "holy"
+							"type": "source_has_tag",
+							"tag": "holy_area"
 						}
 					],
 					"effects": [
@@ -9408,19 +9269,13 @@
 							"area_id": "fusion_holy_curse_penitence_barrier_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.2
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -9428,9 +9283,14 @@
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
+						},
+						{
+							"type": "consume_status_duration",
+							"status": "cursed",
+							"duration": 0.3
 						}
 					]
 				}
@@ -9481,15 +9341,15 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_holy_chaos_divine_domain_rift_area",
-							"radius_r": 1.8,
+							"radius_r": 2,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.2
+									"power_scale": 0.4
 								},
 								{
 									"type": "apply_status",
@@ -9501,11 +9361,17 @@
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.4
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -9555,6 +9421,10 @@
 						{
 							"type": "target_has_status",
 							"status": "instability"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
 						}
 					],
 					"effects": [
@@ -9569,27 +9439,15 @@
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "judgment",
-									"stacks": 1,
-									"duration": 6
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						}
@@ -9612,10 +9470,10 @@
 				"fusion",
 				"chaos",
 				"fire",
-				"projectile",
-				"rift"
+				"area",
+				"projectile"
 			],
-			"mechanic_family": "fusion_chaos_fire_projectile_fork",
+			"mechanic_family": "fusion_chaos_fire_riftfire_fork",
 			"offer_rule": {
 				"required_schools": [
 					"chaos",
@@ -9635,10 +9493,34 @@
 					"conditions": [
 						{
 							"type": "source_has_tag",
-							"tag": "fire_area"
+							"tag": "chaos_area"
 						}
 					],
 					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "fusion_chaos_fire_riftfire_fork_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"count": 2,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "fire",
+									"source_type": "fusion",
+									"power_scale": 0.35
+								}
+							]
+						},
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_chaos_fire_riftfire_fork_projectile",
@@ -9647,23 +9529,10 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "arcane",
+								"damage_type": "fire",
 								"power_scale": 0.35
 							},
-							"on_hit": [
-								{
-									"type": "damage",
-									"damage_type": "fire",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
-									"type": "apply_status",
-									"status": "burning",
-									"stacks": 1,
-									"duration": 4
-								}
-							]
+							"on_hit": []
 						}
 					]
 				}
@@ -9684,9 +9553,7 @@
 				"fusion",
 				"chaos",
 				"fire",
-				"rift",
-				"lava",
-				"repeat"
+				"area"
 			],
 			"mechanic_family": "fusion_chaos_fire_lava_refraction",
 			"offer_rule": {
@@ -9721,9 +9588,9 @@
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.8
 								}
 							],
 							"effects_on_apply": [
@@ -9731,7 +9598,7 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.8
 								}
 							]
 						}
@@ -9784,14 +9651,14 @@
 							"type": "spawn_area",
 							"area_id": "fusion_chaos_frost_zero_rift_area",
 							"radius_r": 1.8,
-							"duration": 2.5,
+							"duration": 2,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -9799,14 +9666,28 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						},
 						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_chaos_frost_zero_rift_projectile",
+							"count": 2,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "frost",
+								"power_scale": 0.25
+							},
+							"on_hit": []
+						},
+						{
 							"type": "transfer_status",
 							"status": "instability",
-							"stacks": 1
+							"stacks": 1,
+							"duration": 2
 						}
 					]
 				}
@@ -9827,6 +9708,7 @@
 				"fusion",
 				"chaos",
 				"frost",
+				"status_chilled",
 				"status_frozen",
 				"area",
 				"projectile"
@@ -9850,15 +9732,40 @@
 					"cooldown": 0.3,
 					"conditions": [
 						{
-							"type": "target_has_status",
-							"status": "frozen"
-						},
-						{
 							"type": "skill_has_tag",
 							"tag": "frost"
 						}
 					],
 					"effects": [
+						{
+							"type": "spawn_area",
+							"area_id": "fusion_chaos_frost_shattered_ice_warp_area",
+							"radius_r": 1.8,
+							"duration": 2.5,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.3
+								},
+								{
+									"type": "apply_status",
+									"status": "chilled",
+									"stacks": 1,
+									"duration": 6
+								}
+							],
+							"effects_on_apply": [
+								{
+									"type": "damage",
+									"damage_type": "frost",
+									"source_type": "fusion",
+									"power_scale": 0.3
+								}
+							]
+						},
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "fusion_chaos_frost_shattered_ice_warp_projectile",
@@ -9867,23 +9774,23 @@
 							"speed": 420,
 							"range_r": 4,
 							"damage": {
-								"damage_type": "arcane",
-								"power_scale": 0.55
+								"damage_type": "frost",
+								"power_scale": 0.3
 							},
 							"on_hit": [
 								{
-									"type": "damage",
-									"damage_type": "frost",
-									"source_type": "fusion",
-									"power_scale": 0.25
-								},
-								{
 									"type": "apply_status",
 									"status": "chilled",
-									"stacks": 2,
+									"stacks": 1,
 									"duration": 6
 								}
 							]
+						},
+						{
+							"type": "apply_status",
+							"status": "chilled",
+							"stacks": 1,
+							"duration": 6
 						},
 						{
 							"type": "shatter_frozen",
@@ -9913,7 +9820,8 @@
 				"fusion",
 				"chaos",
 				"thunder",
-				"status_instability"
+				"status_instability",
+				"area"
 			],
 			"mechanic_family": "fusion_chaos_thunder_quantum_overload",
 			"offer_rule": {
@@ -9950,21 +9858,15 @@
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_chaos_thunder_quantum_overload_area",
-							"radius_r": 1.8,
+							"radius_r": 1.6,
 							"duration": 0.24,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.8
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 1
 								}
 							],
 							"effects_on_apply": [
@@ -9972,13 +9874,26 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 1
 								}
 							]
 						},
 						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_chaos_thunder_quantum_overload_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 1.6,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 1
+							},
+							"on_hit": []
+						},
+						{
 							"type": "trigger_overload",
-							"status": "overload"
+							"status": "conductive"
 						}
 					]
 				}
@@ -9999,8 +9914,7 @@
 				"fusion",
 				"chaos",
 				"thunder",
-				"area",
-				"projectile"
+				"area"
 			],
 			"mechanic_family": "fusion_chaos_thunder_warp_lightning_orb",
 			"offer_rule": {
@@ -10027,17 +9941,20 @@
 					],
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
-							"projectile_id": "fusion_chaos_thunder_warp_lightning_orb_projectile",
-							"count": 3,
-							"spread_angle": 72,
-							"speed": 420,
-							"range_r": 4,
-							"damage": {
-								"damage_type": "arcane",
-								"power_scale": 0.55
-							},
-							"on_hit": [
+							"type": "spawn_area",
+							"area_id": "fusion_chaos_thunder_warp_lightning_orb_area",
+							"radius_r": 1.8,
+							"duration": 3,
+							"tick_interval": 0.5,
+							"effects_on_tick": [
+								{
+									"type": "damage",
+									"damage_type": "thunder",
+									"source_type": "fusion",
+									"power_scale": 0.25
+								}
+							],
+							"effects_on_apply": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
@@ -10045,6 +9962,19 @@
 									"power_scale": 0.25
 								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_chaos_thunder_warp_lightning_orb_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "thunder",
+								"power_scale": 0.25
+							},
+							"on_hit": []
 						}
 					]
 				}
@@ -10094,6 +10024,10 @@
 						{
 							"type": "target_has_status",
 							"status": "instability"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "curse"
 						}
 					],
 					"effects": [
@@ -10106,21 +10040,9 @@
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "cursed",
-									"stacks": 1,
-									"duration": 3
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
@@ -10128,7 +10050,7 @@
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						}
@@ -10169,12 +10091,16 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "area_tick",
-					"cooldown": 1,
+					"trigger": "always",
+					"cooldown": 4,
 					"conditions": [
 						{
 							"type": "target_has_status",
 							"status": "cursed"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "chaos"
 						}
 					],
 					"effects": [
@@ -10187,9 +10113,9 @@
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.25
 								},
 								{
 									"type": "apply_status",
@@ -10203,9 +10129,35 @@
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
+						},
+						{
+							"type": "spawn_projectile_burst",
+							"projectile_id": "fusion_chaos_curse_rift_curse_exchange_projectile",
+							"count": 3,
+							"spread_angle": 72,
+							"speed": 420,
+							"range_r": 4,
+							"damage": {
+								"damage_type": "curse",
+								"power_scale": 0.25
+							},
+							"on_hit": [
+								{
+									"type": "apply_status",
+									"status": "cursed",
+									"stacks": 1,
+									"duration": 3
+								}
+							]
+						},
+						{
+							"type": "apply_status",
+							"status": "cursed",
+							"stacks": 1,
+							"duration": 3
 						},
 						{
 							"type": "transfer_status",
@@ -10251,20 +10203,26 @@
 			"trigger_rules": [
 				{
 					"trigger": "shield_gained",
-					"cooldown": 0.3,
+					"cooldown": 1,
+					"conditions": [
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
+						}
+					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_chaos_holy_void_holy_shield_area",
-							"radius_r": 1.8,
+							"radius_r": 2,
 							"duration": 2.5,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
-									"damage_type": "arcane",
+									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.45
+									"power_scale": 0.35
 								},
 								{
 									"type": "apply_status",
@@ -10283,12 +10241,10 @@
 							]
 						},
 						{
-							"type": "grant_shield",
-							"shield_type": "fusion_shield",
-							"max_health_ratio": 0.015,
-							"duration": 4,
-							"respect_shield_cap": true,
-							"shield_cap_health_ratio": 0.35
+							"type": "apply_status",
+							"status": "judgment",
+							"stacks": 1,
+							"duration": 6
 						}
 					]
 				}
@@ -10328,7 +10284,7 @@
 			"trigger_rules": [
 				{
 					"trigger": "status_max_stack_reached",
-					"cooldown": 0.4,
+					"cooldown": 0.3,
 					"conditions": [
 						{
 							"type": "event_status_is",
@@ -10337,13 +10293,17 @@
 						{
 							"type": "target_has_status",
 							"status": "instability"
+						},
+						{
+							"type": "skill_has_tag",
+							"tag": "holy"
 						}
 					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "fusion_chaos_holy_echoing_judgment_area",
-							"radius_r": 1.2,
+							"radius_r": 1.8,
 							"duration": 2.5,
 							"tick_interval": 0.5,
 							"effects_on_tick": [
@@ -10351,21 +10311,15 @@
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "fusion",
-									"power_scale": 0.45
-								},
-								{
-									"type": "apply_status",
-									"status": "instability",
-									"stacks": 1,
-									"duration": 6
+									"power_scale": 0.25
 								}
 							],
 							"effects_on_apply": [
 								{
 									"type": "damage",
-									"damage_type": "holy",
+									"damage_type": "arcane",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.25
 								}
 							]
 						}
