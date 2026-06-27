@@ -6,6 +6,7 @@
     "verify:burning-status-stack-devtools": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_burning_status_stack_decay_devtools.gd",
     "verify:skill-definition-schema": "node tools\\verify_skill_definition_schema.js",
     "verify:skill-rule-adapters": "node tools\\verify_skill_rule_adapters.js",
+    "verify:damage-formula": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_damage_formula.gd",
     "verify:fire-skill-offer-rules": "node tools\\verify_fire_skill_offer_rules.js",
     "verify:fire-effect-actions": "node tools\\verify_fire_effect_action_support.js",
     "verify:fire-status-runtime": "node tools\\verify_fire_status_runtime_support.js",

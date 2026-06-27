@@ -674,13 +674,13 @@ func _verify_damage_rule_registry_contract() -> bool:
 	ok = ok and DamageRuleRegistryScript.can_crit_for_context(crit_context)
 	ok = ok and not DamageRuleRegistryScript.default_uses_character_damage("special", "true_damage")
 	ok = ok and DamageRuleRegistryScript.is_legal_origin_type("field", "status_dot")
-	ok = ok and not DamageRuleRegistryScript.is_legal_origin_type("primary_attack", "status_dot")
+	ok = ok and DamageRuleRegistryScript.is_legal_origin_type("primary_attack", "status_dot")
 	ok = ok and DamageRuleRegistryScript.uses_fractional_buffer({"damage_type": &"status_dot"})
 	ok = ok and DamageRuleRegistryScript.uses_fractional_buffer({"field_damage_model": "dot_tick"})
 	ok = ok and not DamageRuleRegistryScript.uses_fractional_buffer({"damage_type": &"status_dot", "ignore_fractional_buffer": true})
 	ok = ok and is_equal_approx(DamageRuleRegistryScript.true_percent_default_cap("boss"), 0.0025)
 	ok = ok and is_equal_approx(float(DamageRuleRegistryScript.vulnerability_bounds("elite").get("cap", 0.0)), 0.20)
-	ok = ok and DamageRuleRegistryScript.origin_bonus_keys("primary_attack").has("equipped_weapon_damage_add")
+	ok = ok and DamageRuleRegistryScript.origin_bonus_keys("primary_attack").has("primary_attack_damage_multiplier_add")
 	ok = ok and DamageRuleRegistryScript.enemy_type_bonus_key("boss") == "boss_damage_multiplier_add"
 	ok = ok and is_equal_approx(DamageRuleRegistryScript.target_class_origin_modifier("boss", "status_dot", "status_dot"), 0.65)
 	ok = ok and DamageRuleRegistryScript.resistance_keys("fire").has("magical_resistance")
@@ -694,13 +694,13 @@ func _verify_damage_policy_registry_contract() -> bool:
 	var type_policy: RefCounted = DamageRuleRegistryScript.damage_type_policy("true_damage")
 	var ok: bool = String(origin_policy.get("default_damage_type")) == "direct_physical"
 	ok = ok and bool(origin_policy.get("uses_skill_level"))
-	ok = ok and origin_policy.get("bonus_keys").has("equipped_weapon_damage_add")
+	ok = ok and origin_policy.get("bonus_keys").has("primary_attack_damage_multiplier_add")
 	ok = ok and bool(type_policy.get("ignores_resistance"))
 	ok = ok and bool(type_policy.get("ignores_vulnerability"))
 	ok = ok and type_policy.get("allowed_origins").has(&"special")
 	ok = ok and is_equal_approx(float(DamageRuleRegistryScript.damage_type_policy("direct_magical").get("defense_rate")), 0.6)
 	ok = ok and DamageRuleRegistryScript.damage_type_policy("status_dot").call("allows_origin", "field")
-	ok = ok and not DamageRuleRegistryScript.damage_type_policy("status_dot").call("allows_origin", "primary_attack")
+	ok = ok and DamageRuleRegistryScript.damage_type_policy("status_dot").call("allows_origin", "primary_attack")
 	ok = ok and ModifierKeyRegistryScript.element_bonus_key(&"fire") == "fire_damage_multiplier_add"
 	return _expect_equal("damage policy registry contract", 1 if ok else 0, 1)
 
@@ -890,7 +890,7 @@ func _verify_damage_context_outgoing_helpers_contract() -> bool:
 		"uses_skill_level_coefficient": true,
 		"skill_level_coefficient": 1.25,
 		"origin_bonus_total": 0.10,
-		"equipped_weapon_damage_add": 0.20,
+		"primary_attack_damage_multiplier_add": 0.20,
 		"element_bonus_total": 0.05,
 		"fire_damage_multiplier_add": 0.10,
 		"critical_resolved": true,
@@ -1376,7 +1376,7 @@ func _verify_special_damage_rule_handler_contract() -> bool:
 	area_target.global_position = Vector2(32, 16)
 	root.add_child(area_target)
 	var area: Node2D = SpecialDamageRuleHandlerScript.spawn_ground_fire_or_lava({
-		"lava_zone_after_explosion": {"duration": 0.2, "tick_interval": 0.1, "damage_from_fireball_base": 0.5},
+		"player_lava_on_nearby_fireball_hit": {"duration": 0.2, "tick_interval": 0.1, "damage_from_fireball_base": 0.5},
 		"merge_lava_zones": {"enabled": false}
 	}, {
 		"parent": root,
@@ -1538,4 +1538,3 @@ func _expect_equal(label: String, actual: int, expected: int) -> bool:
 		return true
 	push_error("[DamageFormula] FAIL %s actual=%d expected=%d" % [label, actual, expected])
 	return false
-

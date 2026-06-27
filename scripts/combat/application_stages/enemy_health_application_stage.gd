@@ -82,7 +82,7 @@ func _resolve_player(enemy: Node, amount_or_packet: Variant) -> Node:
 		var summon_owner: Node = _get_node_property(attacker, "summon_owner")
 		if summon_owner != null and summon_owner.is_in_group(&"player"):
 			return summon_owner
-	var tree: SceneTree = enemy.get_tree() if enemy != null else Engine.get_main_loop() as SceneTree
+	var tree: SceneTree = enemy.get_tree() if enemy != null and enemy.is_inside_tree() else Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return null
 	var players: Array = tree.get_nodes_in_group(&"player")

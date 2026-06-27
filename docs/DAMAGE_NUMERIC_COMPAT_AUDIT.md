@@ -25,9 +25,9 @@ The numeric fallback inside `DamageSystem._normalize_packet_object()` is a high-
 
 Removing it directly would change the public damage API and could affect older debug callers or external scripts that are not visible from static runtime scans.
 
-## Known Verification Gap
+## Verification Note
 
-`tools/verify_damage_formula.gd` is documented as the broad damage-system regression check, but a direct headless run currently fails on existing damage registry and special-rule contract assertions. Fix that validation script or the underlying contracts before removing the numeric fallback.
+`tools/verify_damage_formula.gd` is the broad damage-system regression check and is available as `npm run verify:damage-formula`.
 
 ## Removal Path
 
