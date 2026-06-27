@@ -5,7 +5,11 @@ function stripBom(text) {
 }
 
 function readJsonFile(filePath) {
-  return JSON.parse(stripBom(fs.readFileSync(filePath, "utf8")));
+  return JSON.parse(readTextFile(filePath));
+}
+
+function readTextFile(filePath) {
+  return stripBom(fs.readFileSync(filePath, "utf8"));
 }
 
 function writeJsonFile(filePath, value) {
@@ -14,6 +18,7 @@ function writeJsonFile(filePath, value) {
 
 module.exports = {
   readJsonFile,
+  readTextFile,
   stripBom,
   writeJsonFile,
 };
