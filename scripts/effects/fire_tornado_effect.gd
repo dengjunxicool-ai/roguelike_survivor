@@ -22,6 +22,13 @@ var _base_modulate: Color = Color.WHITE
 func _ready() -> void:
 	_base_modulate = modulate
 	_warn_missing_children()
+	_configure_particle_emitters()
+	_restart_particles()
+	set_process(true)
+	queue_redraw()
+
+
+func _configure_particle_emitters() -> void:
 	_configure_particles(_base_fire_ring, {
 		"amount": 170,
 		"lifetime": 0.95,
@@ -94,9 +101,6 @@ func _ready() -> void:
 		"scale_min": 0.45,
 		"scale_max": 1.55,
 	})
-	_restart_particles()
-	set_process(true)
-	queue_redraw()
 
 
 func _process(delta: float) -> void:
