@@ -105,9 +105,7 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 
-	_update_status_effects(delta)
-	_update_status_label()
-	_update_debug_health_display()
+	_update_enemy_runtime_tick(delta)
 	_state_controller.call("update", delta)
 	var debug_forced_state: String = _get_debug_enemy_forced_state()
 	if debug_forced_state != "":
@@ -116,34 +114,19 @@ func _physics_process(delta: float) -> void:
 		return
 	_state_controller.call("clear_forced_state")
 	if _is_debug_control_mode():
-		_cancel_ranged_attack_warning()
-		velocity = Vector2.ZERO
-		move_and_slide()
-		_update_enemy_visual_state(delta)
+		_stop_motion_and_update_visual(delta)
 		return
 
 	if _is_movement_frozen():
-		_cancel_ranged_attack_warning()
-		velocity = Vector2.ZERO
-		move_and_slide()
-		_update_enemy_visual_state(delta)
+		_stop_motion_and_update_visual(delta)
 		return
 
 	_behavior_time += delta
-	_damage_cooldown = maxf(_damage_cooldown - delta, 0.0)
-	_shoot_cooldown = maxf(_shoot_cooldown - delta, 0.0)
-	_summon_cooldown = maxf(_summon_cooldown - delta, 0.0)
-	_cast_cooldown = maxf(_cast_cooldown - delta, 0.0)
-	_dash_cooldown = maxf(_dash_cooldown - delta, 0.0)
+	_update_enemy_action_cooldowns(delta)
 	_skill_controller.call("tick", delta)
 
-	if not is_instance_valid(target):
-		target = _find_target_in_group()
-
-	if target == null:
-		_cancel_ranged_attack_warning()
-		velocity = Vector2.ZERO
-		move_and_slide()
+	if not _resolve_current_target():
+		_stop_motion()
 		return
 
 	_update_behavior(delta)
@@ -152,6 +135,37 @@ func _physics_process(delta: float) -> void:
 	_update_enemy_visual_state(delta)
 
 	_apply_contact_damage()
+
+
+func _update_enemy_runtime_tick(delta: float) -> void:
+	_update_status_effects(delta)
+	_update_status_label()
+	_update_debug_health_display()
+
+
+func _update_enemy_action_cooldowns(delta: float) -> void:
+	_damage_cooldown = maxf(_damage_cooldown - delta, 0.0)
+	_shoot_cooldown = maxf(_shoot_cooldown - delta, 0.0)
+	_summon_cooldown = maxf(_summon_cooldown - delta, 0.0)
+	_cast_cooldown = maxf(_cast_cooldown - delta, 0.0)
+	_dash_cooldown = maxf(_dash_cooldown - delta, 0.0)
+
+
+func _resolve_current_target() -> bool:
+	if not is_instance_valid(target):
+		target = _find_target_in_group()
+	return target != null
+
+
+func _stop_motion() -> void:
+	_cancel_ranged_attack_warning()
+	velocity = Vector2.ZERO
+	move_and_slide()
+
+
+func _stop_motion_and_update_visual(delta: float) -> void:
+	_stop_motion()
+	_update_enemy_visual_state(delta)
 
 
 func _update_behavior(delta: float) -> void:
