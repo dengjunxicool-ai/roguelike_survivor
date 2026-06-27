@@ -69,7 +69,7 @@ func _get_scene(request: Dictionary) -> PackedScene:
 		return _boss_scene
 	if _enemy_scene != null:
 		return _enemy_scene
-	return load("res://scenes/enemy.tscn") as PackedScene
+	return load("res://scenes/enemies/enemy.tscn") as PackedScene
 
 
 func _get_parent_node(request: Dictionary) -> Node:

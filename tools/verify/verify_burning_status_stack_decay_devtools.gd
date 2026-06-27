@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var enemy: Node = load("res://scenes/enemy.tscn").instantiate()
+	var enemy: Node = load("res://scenes/enemies/enemy.tscn").instantiate()
 	root.add_child(enemy)
 	await process_frame
 

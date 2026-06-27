@@ -45,7 +45,7 @@
 | 敌方技能数据 | `data/enemies/enemy_skills.json` | 敌方技能定义和 action 参数。普通行为与 Boss phase 都通过这里执行动作。 |
 | 波次数据 | `data/waves/waves.json` | 普通 wave、刷怪组、倍率、精英事件、Boss encounter、Boss 小怪和奖励事件。 |
 | 配置校验 | `tools/validate/validate_enemy_configs.js` | 校验怪物、技能、波次、Boss phase、死亡策略、必需 action 和跨文件引用。 |
-| 场景入口 | `scenes/enemy.tscn`、`scenes/boss.tscn` | 怪物和 Boss 场景。Boss 场景使用 `BossController`，继承 `EnemyBase`。 |
+| 场景入口 | `scenes/enemies/enemy.tscn`、`scenes/enemies/boss.tscn` | 怪物和 Boss 场景。Boss 场景使用 `BossController`，继承 `EnemyBase`。 |
 | 刷怪门面 | `scripts/enemies/enemy_spawner.gd` | 场景节点入口，保留 UI 信号、旧私有包装方法、运行修正和地图刷怪入口。 |
 | 时间线 | `scripts/enemies/timeline/*` | 普通 wave、Boss encounter、Boss 小怪、清场、经验收集、奖励事件、选组。 |
 | 生成服务 | `scripts/enemies/spawning/*` | 统一实例化怪物，写入倍率、分类 meta、来源 meta、奖励策略和位置。 |

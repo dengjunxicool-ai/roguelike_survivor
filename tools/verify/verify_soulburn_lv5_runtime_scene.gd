@@ -75,7 +75,7 @@ func _apply_burn(target: Node, stacks: int) -> void:
 
 
 func _spawn_enemy(is_elite: bool, is_boss: bool) -> Node2D:
-	var enemy: Node2D = load("res://scenes/enemy.tscn").instantiate() as Node2D
+	var enemy: Node2D = load("res://scenes/enemies/enemy.tscn").instantiate() as Node2D
 	enemy.set("enemy_id", &"small_slime")
 	root.add_child(enemy)
 	enemy.set("max_health", 1000)

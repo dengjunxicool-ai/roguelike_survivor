@@ -200,7 +200,7 @@ func _get_damage_source_id() -> String:
 func _sync_spawn_service() -> void:
 	if _spawn_service == null:
 		_spawn_service = EnemySpawnServiceScript.new()
-	var enemy_scene: PackedScene = load("res://scenes/enemy.tscn") as PackedScene
+	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
 	_spawn_service.call("setup", _owner, enemy_scene, null, StringName(String(_owner.get("target_group"))) if _owner != null else &"player")
 
 

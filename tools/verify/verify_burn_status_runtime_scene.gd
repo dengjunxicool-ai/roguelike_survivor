@@ -46,7 +46,7 @@ func _run() -> void:
 
 
 func _spawn_enemy(is_boss: bool) -> Node2D:
-	var enemy: Node2D = load("res://scenes/enemy.tscn").instantiate() as Node2D
+	var enemy: Node2D = load("res://scenes/enemies/enemy.tscn").instantiate() as Node2D
 	enemy.set("enemy_id", &"small_slime")
 	root.add_child(enemy)
 	enemy.set_meta("is_boss", is_boss)

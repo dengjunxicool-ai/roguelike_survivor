@@ -87,7 +87,7 @@ func _run_check() -> void:
 
 
 func _spawn_enemy(enemy_id: StringName, position: Vector2) -> Node2D:
-	var enemy: Node2D = load("res://scenes/enemy.tscn").instantiate() as Node2D
+	var enemy: Node2D = load("res://scenes/enemies/enemy.tscn").instantiate() as Node2D
 	enemy.set("enemy_id", enemy_id)
 	add_child(enemy)
 	enemy.global_position = position

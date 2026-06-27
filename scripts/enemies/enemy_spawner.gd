@@ -19,8 +19,8 @@ signal wave_cleared(wave_id: String, cleared_early: bool)
 signal boss_defeated(elapsed_time: float)
 
 
-@export var enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
-@export var boss_scene: PackedScene = preload("res://scenes/boss.tscn")
+@export var enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
+@export var boss_scene: PackedScene = preload("res://scenes/enemies/boss.tscn")
 @export_range(0.1, 60.0, 0.1, "or_greater") var spawn_interval: float = 2.0
 @export_range(0.0, 3000.0, 10.0, "or_greater") var spawn_radius: float = 650.0
 @export var target_group: StringName = &"player"

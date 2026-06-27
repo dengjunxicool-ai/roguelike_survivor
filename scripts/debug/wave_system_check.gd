@@ -152,7 +152,7 @@ func _check_wave_transition_collects_deferred_experience(main: Node, player: Nod
 
 
 func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
-	var enemy_scene: PackedScene = load("res://scenes/enemy.tscn") as PackedScene
+	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
 	var enemy: Node2D = enemy_scene.instantiate() as Node2D
 	main.add_child(enemy)
 	enemy.set_meta("enemy_type", "normal")
