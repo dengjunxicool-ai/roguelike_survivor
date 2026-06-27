@@ -1,10 +1,10 @@
-const fs = require("fs");
 const path = require("path");
+const { readJsonFile, readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
 function readJson(relativePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8").replace(/^\uFEFF/, ""));
+  return readJsonFile(path.join(root, relativePath));
 }
 
 function assert(condition, message) {
@@ -16,9 +16,9 @@ function assertApprox(actual, expected, message, epsilon = 0.0001) {
 }
 
 const statuses = readJson("data/status_effects.json").statuses || [];
-const statusManagerSource = fs.readFileSync(path.join(root, "scripts", "combat", "status_effect_manager.gd"), "utf8");
-const packetBuilderSource = fs.readFileSync(path.join(root, "scripts", "combat", "damage_packet_builder.gd"), "utf8");
-const mitigationSource = fs.readFileSync(path.join(root, "scripts", "combat", "damage_target_mitigation.gd"), "utf8");
+const statusManagerSource = readTextFile(path.join(root, "scripts", "combat", "status_effect_manager.gd"));
+const packetBuilderSource = readTextFile(path.join(root, "scripts", "combat", "damage_packet_builder.gd"));
+const mitigationSource = readTextFile(path.join(root, "scripts", "combat", "damage_target_mitigation.gd"));
 const burn = statuses.find((item) => item.id === "burn");
 
 assert(burn, "burn status must exist");
