@@ -571,19 +571,23 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	if area_effect != null:
 		_register_area_effect_runtime_metadata(area_effect, area_source_id, area_params, source_type, radius)
 	if area_effect != null and source_type == "explosion":
-		DebugCombatTraceScript.record_explosion(
-			_get_root_node(),
-			parent,
-			position,
-			radius,
-			str(context.get("skill_id", area_params.get("source_id", ""))),
-			str(area_params.get("source_instance_id", "")),
-			debug_trace_id,
-			damage_packet
-		)
+		_record_area_explosion_trace(parent, position, radius, area_params, context, debug_trace_id, damage_packet)
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _record_area_explosion_trace(parent: Node, position: Vector2, radius: float, area_params: Dictionary, context: Dictionary, debug_trace_id: int, damage_packet: Dictionary) -> void:
+	DebugCombatTraceScript.record_explosion(
+		_get_root_node(),
+		parent,
+		position,
+		radius,
+		str(context.get("skill_id", area_params.get("source_id", ""))),
+		str(area_params.get("source_instance_id", "")),
+		debug_trace_id,
+		damage_packet
+	)
 
 
 func _register_area_effect_runtime_metadata(area_effect: Node2D, area_source_id: StringName, area_params: Dictionary, source_type: String, radius: float) -> void:
