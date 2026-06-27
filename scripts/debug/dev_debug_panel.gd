@@ -1469,6 +1469,18 @@ func _select_god_skill_card(skill_id: StringName) -> void:
 
 func debug_select_god_skill_cards(god_id: StringName) -> Dictionary:
 	_select_god_skill_cards(god_id)
+	var button_summary: Dictionary = _build_god_skill_button_summary(god_id)
+	return {
+		"god_id": god_id,
+		"card_count": _god_skill_definitions.size(),
+		"button_count": _god_skill_buttons.size(),
+		"button_ids": button_summary.get("button_ids", []),
+		"button_tree_count": int(button_summary.get("button_tree_count", 0)),
+		"selected_button_pressed": bool(button_summary.get("selected_button_pressed", false))
+	}
+
+
+func _build_god_skill_button_summary(selected_god_id: StringName) -> Dictionary:
 	var button_ids: Array[String] = []
 	var button_tree_count: int = 0
 	var selected_button_pressed: bool = false
@@ -1478,12 +1490,9 @@ func debug_select_god_skill_cards(god_id: StringName) -> Dictionary:
 		button_ids.append(_string_or(button_id, ""))
 		if button != null and button.is_inside_tree():
 			button_tree_count += 1
-		if button_id == god_id and button != null:
+		if button_id == selected_god_id and button != null:
 			selected_button_pressed = button.button_pressed
 	return {
-		"god_id": god_id,
-		"card_count": _god_skill_definitions.size(),
-		"button_count": _god_skill_buttons.size(),
 		"button_ids": button_ids,
 		"button_tree_count": button_tree_count,
 		"selected_button_pressed": selected_button_pressed
@@ -1514,19 +1523,26 @@ func _run_god_skill_card(skill_id: StringName) -> Dictionary:
 		result["error"] = "Could not grant %s." % _string_or(selected_skill_id, "")
 		_update_fire_skill_chain_log(result)
 		return result
+	_mark_god_skill_chain_no_target(result)
+	var cast_result: Dictionary = await _cast_fire_skill_once(selected_skill_id, 0)
+	_apply_god_skill_cast_result(result, cast_result, selected_skill_id, option)
+	_update_fire_skill_chain_log(result)
+	return result
+
+
+func _mark_god_skill_chain_no_target(result: Dictionary) -> void:
 	result["target_spawned"] = false
 	result["silent_no_target_allowed"] = true
-	var cast_result: Dictionary = await _cast_fire_skill_once(selected_skill_id, 0)
+
+
+func _apply_god_skill_cast_result(result: Dictionary, cast_result: Dictionary, selected_skill_id: StringName, option: Dictionary) -> void:
 	for key_variant: Variant in cast_result.keys():
 		result[key_variant] = cast_result[key_variant]
 	result["skill_id"] = selected_skill_id
 	result["option_id"] = _string_or(option.get("id", ""), "")
 	result["option_generated"] = true
 	result["granted"] = true
-	result["target_spawned"] = false
-	result["silent_no_target_allowed"] = true
-	_update_fire_skill_chain_log(result)
-	return result
+	_mark_god_skill_chain_no_target(result)
 
 
 func debug_run_fire_skill_chain(skill_id: StringName) -> Dictionary:
