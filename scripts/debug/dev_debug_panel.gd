@@ -2,6 +2,7 @@ extends CanvasLayer
 class_name DevDebugPanel
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
+const DevDebugDataSourceScript: Script = preload("res://scripts/debug/dev_debug_data_source.gd")
 
 
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
@@ -542,47 +543,15 @@ func _sync_selected_god_skill_id() -> void:
 
 
 func _load_json_document(path: String) -> Dictionary:
-	return JsonDataLoaderScript.load_dictionary(path, "DevDebugPanel", JsonDataLoaderScript.REPORT_SILENT)
+	return DevDebugDataSourceScript.load_json_document(path)
 
 
 func _get_god_definitions() -> Array[Dictionary]:
-	var document: Dictionary = _load_json_document(GODS_DATA_PATH)
-	var gods: Array[Dictionary] = []
-	var god_variants: Variant = document.get("gods", [])
-	if god_variants is Array:
-		for god_variant: Variant in god_variants:
-			if god_variant is Dictionary:
-				var god: Dictionary = god_variant
-				if String(god.get("id", "")) != "":
-					gods.append(god.duplicate(true))
-	if not gods.is_empty():
-		return gods
-	return [
-		{"id": "fire", "display_name": "Fire"},
-		{"id": "thunder", "display_name": "Thunder"},
-		{"id": "frost", "display_name": "Frost"},
-		{"id": "curse", "display_name": "Curse"},
-		{"id": "holy", "display_name": "Holy"},
-		{"id": "chaos", "display_name": "Chaos"}
-	]
+	return DevDebugDataSourceScript.get_god_definitions()
 
 
 func _get_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
-	var document: Dictionary = _load_json_document(SKILLS_DATA_PATH)
-	var definitions: Array[Dictionary] = []
-	var skills_variant: Variant = document.get("skills", [])
-	if not (skills_variant is Array):
-		return definitions
-	for skill_variant: Variant in skills_variant:
-		if not (skill_variant is Dictionary):
-			continue
-		var skill: Dictionary = skill_variant
-		if not _is_god_skill_definition(skill, god_id):
-			continue
-		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
-			continue
-		definitions.append(skill.duplicate(true))
-	return definitions
+	return DevDebugDataSourceScript.get_god_skill_definitions(god_id)
 
 
 func _is_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
@@ -654,20 +623,7 @@ func _is_status_option_available(status_id: Variant) -> bool:
 
 
 func _get_status_definition_for_option(status_id: Variant) -> Dictionary:
-	var id: StringName = StringName(String(status_id))
-	if id == &"":
-		return {}
-
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_status_definition"):
-		var data: Variant = data_manager.call("get_status_definition", id)
-		if data is Dictionary and not (data as Dictionary).is_empty():
-			return (data as Dictionary).duplicate(true)
-
-	for status: Dictionary in GameData.get_status_pool():
-		if StringName(String(status.get("id", ""))) == id:
-			return status.duplicate(true)
-	return {}
+	return DevDebugDataSourceScript.get_status_definition_for_option(self, status_id)
 
 
 func _build_player_stats(parent: VBoxContainer) -> void:
