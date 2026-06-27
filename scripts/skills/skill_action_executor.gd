@@ -602,6 +602,61 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if bool(fire_oil_merge.get("enabled", false)) and _merge_existing_fire_oil_area(parent, position, radius, duration, damage, fire_oil_merge):
 			return true
 
+	var area_effect_params: Dictionary = _build_area_effect_spawn_params(
+		area_params,
+		context,
+		source_type,
+		parent,
+		area_source_id,
+		position,
+		damage,
+		damage_packet,
+		duration,
+		radius,
+		max_targets,
+		statuses_on_hit,
+		special_rules
+	)
+	var area_effect: Node2D = CombatObjectFactoryScript.create_area_effect(area_effect_params)
+	if area_effect != null:
+		area_effect.set_meta("source_type", source_type)
+		area_effect.set_meta("source_id", area_source_id)
+		area_effect.set_meta("source_instance_id", str(area_params.get("source_instance_id", "")))
+		area_effect.add_to_group(&"areas")
+		area_effect.add_to_group(&"area_effects")
+		if source_type == "trap":
+			area_effect.add_to_group(&"traps")
+		if area_source_id == &"holy_field_area":
+			area_effect.set_meta("cross_relic_field", true)
+		if area_source_id == &"poison_cloud_area":
+			area_effect.set_meta("toxic_vial_poison_cloud", true)
+			area_effect.set_meta("toxic_vial_poison_cloud_radius", radius)
+		if area_source_id == &"fire_oil_area":
+			area_effect.set_meta("fire_oil_area", true)
+			area_effect.set_meta("fire_oil_radius", radius)
+		if area_source_id == &"acid_spray_cone_area":
+			area_effect.set_meta("acid_spray_cone_area", true)
+			area_effect.set_meta("acid_spray_radius", radius)
+		if area_source_id == &"smoke_cloud_area":
+			area_effect.set_meta("fire_oil_smoke_cloud", true)
+			area_effect.set_meta("fire_oil_smoke_radius", radius)
+	if area_effect != null and source_type == "explosion":
+		DebugCombatTraceScript.record_explosion(
+			_get_root_node(),
+			parent,
+			position,
+			radius,
+			str(context.get("skill_id", area_params.get("source_id", ""))),
+			str(area_params.get("source_instance_id", "")),
+			debug_trace_id,
+			damage_packet
+		)
+		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
+			area_effect.call("apply_immediate_tick_once")
+	return area_effect != null
+
+
+func _build_area_effect_spawn_params(area_params: Dictionary, context: Dictionary, source_type: String, parent: Node, area_source_id: StringName, position: Vector2, damage: int, damage_packet: Dictionary, duration: float, radius: float, max_targets: int, statuses_on_hit: Array[StringName], special_rules: Dictionary) -> Dictionary:
 	var impact_target: Node = context.get("target") as Node
 	var area_effect_params: Dictionary = {
 		"parent": parent,
@@ -645,43 +700,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	}
 	if area_params.has("visual_style"):
 		area_effect_params["visual_style"] = str(area_params.get("visual_style", ""))
-	var area_effect: Node2D = CombatObjectFactoryScript.create_area_effect(area_effect_params)
-	if area_effect != null:
-		area_effect.set_meta("source_type", source_type)
-		area_effect.set_meta("source_id", area_source_id)
-		area_effect.set_meta("source_instance_id", str(area_params.get("source_instance_id", "")))
-		area_effect.add_to_group(&"areas")
-		area_effect.add_to_group(&"area_effects")
-		if source_type == "trap":
-			area_effect.add_to_group(&"traps")
-		if area_source_id == &"holy_field_area":
-			area_effect.set_meta("cross_relic_field", true)
-		if area_source_id == &"poison_cloud_area":
-			area_effect.set_meta("toxic_vial_poison_cloud", true)
-			area_effect.set_meta("toxic_vial_poison_cloud_radius", radius)
-		if area_source_id == &"fire_oil_area":
-			area_effect.set_meta("fire_oil_area", true)
-			area_effect.set_meta("fire_oil_radius", radius)
-		if area_source_id == &"acid_spray_cone_area":
-			area_effect.set_meta("acid_spray_cone_area", true)
-			area_effect.set_meta("acid_spray_radius", radius)
-		if area_source_id == &"smoke_cloud_area":
-			area_effect.set_meta("fire_oil_smoke_cloud", true)
-			area_effect.set_meta("fire_oil_smoke_radius", radius)
-	if area_effect != null and source_type == "explosion":
-		DebugCombatTraceScript.record_explosion(
-			_get_root_node(),
-			parent,
-			position,
-			radius,
-			str(context.get("skill_id", area_params.get("source_id", ""))),
-			str(area_params.get("source_instance_id", "")),
-			debug_trace_id,
-			damage_packet
-		)
-		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
-			area_effect.call("apply_immediate_tick_once")
-	return area_effect != null
+	return area_effect_params
 
 
 func _spawn_trap(params: Dictionary, context: Dictionary) -> bool:
