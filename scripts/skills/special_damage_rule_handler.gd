@@ -1086,14 +1086,15 @@ static func execute_toxic_vial_small_cloud(rules: Dictionary, context: Dictionar
 	var damage: int = maxi(roundi(float(base_damage) * maxf(float(rule.get("damage_from_poison_bottle_base", 1.0)), 0.0) * maxf(1.0 + float(cooldown_rule.get("damage_multiplier_add", 0.0)), 0.0)), 0)
 	var duration: float = maxf(float(rule.get("duration", 1.5)) + float(upgrade.get("duration_add", 0.0)), 0.05)
 	var radius: float = maxf(float(rule.get("radius", 70.0)), 1.0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"toxic_vial_small_cloud",
 		damage,
 		String(rule.get("damage_origin", "field")),
 		false,
+		context,
 		String(rule.get("element", "poison")),
 		String(rule.get("damage_type", "status_dot"))
-	), context)
+	)
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"area_id": &"poison_cloud_area",
@@ -1160,14 +1161,15 @@ static func execute_poison_death_explosion(rules: Dictionary, context: Dictionar
 	if parent == null:
 		return null
 	var amount: int = maxi(roundi(float(explosion_rule.get("amount", 16)) * maxf(1.0 + float(upgrade.get("damage_multiplier_add", 0.0)), 0.0)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"poison_death_explosion",
 		amount,
 		String(explosion_rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(explosion_rule.get("element", "poison")),
 		String(explosion_rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	packet["boss_damage_multiplier_add"] = float(explosion_rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet["can_trigger_reaction"] = false
 	return CombatObjectFactoryScript.create_area_effect({
@@ -1193,14 +1195,15 @@ static func execute_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary
 	if target == null or amount <= 0:
 		return intents
 	var rule: Dictionary = _get_dictionary(rules.get("toxic_core_boss_pulse", {}))
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"toxic_core_boss_pulse",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "poison")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 1.0)) - 1.0
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
 	return intents
@@ -1256,14 +1259,15 @@ static func cross_relic_echo_intents(rules: Dictionary, context: Dictionary) -> 
 	if target == null:
 		return intents
 	var amount: int = maxi(roundi(float(rule.get("amount", 5)) * maxf(1.0 + float(upgrade.get("damage_multiplier_add", 0.0)), 0.0)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"cross_relic_echo",
 		amount,
 		String(rule.get("damage_origin", "field")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "direct_magical"))
-	), context)
+	)
 	if rules.has("cross_relic_faith_judgement") and _is_boss_core(target):
 		var faith_rule: Dictionary = _get_dictionary(rules.get("cross_relic_faith_judgement", {}))
 		packet["boss_damage_multiplier_add"] = float(packet.get("boss_damage_multiplier_add", 0.0)) + float(faith_rule.get("boss_core_damage_multiplier_add", 0.35))
@@ -1299,14 +1303,15 @@ static func execute_cross_relic_purify_dot(rules: Dictionary, context: Dictionar
 		amount = maxi(roundi(float(amount) * maxf(1.0 + float(upgrade.get("elite_boss_damage_multiplier_add", 0.0)), 0.0)), 0)
 	if _is_boss(target):
 		amount = maxi(roundi(float(amount) * maxf(float(rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"cross_relic_purify_dot",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	apply_intents([DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage"))))])
 
 
@@ -1331,14 +1336,15 @@ static func execute_cross_relic_purify_impurity(rules: Dictionary, context: Dict
 		amount = maxi(roundi(float(amount) * maxf(float(rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
 		if rules.has("cross_relic_purify_boss_poise"):
 			_apply_cross_relic_purify_boss_poise(rules, target)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"cross_relic_purify_impurity",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	var intent: RefCounted = DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage"))))
 	apply_intents([intent])
 	if not _is_boss(target) and int(target.get("current_health")) <= 0:
@@ -1363,14 +1369,15 @@ static func execute_cross_relic_purify_small_pulse(rules: Dictionary, context: D
 	if parent == null:
 		return null
 	var amount: int = maxi(int(rule.get("amount", 6)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"cross_relic_purify_small_pulse",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "area_direct"))
-	), context)
+	)
 	packet["can_trigger_reaction"] = bool(rule.get("can_trigger_self", false))
 	return CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
