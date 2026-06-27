@@ -21,6 +21,7 @@ function main() {
   const playerIncomingResolverPath = "scripts/combat/damage_player_incoming_resolver.gd";
   const defenseResolverPath = "scripts/combat/damage_defense_resolver.gd";
   const truePercentResolverPath = "scripts/combat/damage_true_percent_resolver.gd";
+  const packetNormalizerPath = "scripts/combat/damage_packet_normalizer.gd";
   assert(fs.existsSync(path.join(root, helperPath)), `${helperPath} must exist`);
   assert(fs.existsSync(path.join(root, mitigationPath)), `${mitigationPath} must exist`);
   assert(fs.existsSync(path.join(root, outputScalingPath)), `${outputScalingPath} must exist`);
@@ -29,6 +30,7 @@ function main() {
   assert(fs.existsSync(path.join(root, playerIncomingResolverPath)), `${playerIncomingResolverPath} must exist`);
   assert(fs.existsSync(path.join(root, defenseResolverPath)), `${defenseResolverPath} must exist`);
   assert(fs.existsSync(path.join(root, truePercentResolverPath)), `${truePercentResolverPath} must exist`);
+  assert(fs.existsSync(path.join(root, packetNormalizerPath)), `${packetNormalizerPath} must exist`);
 
   const helper = read(helperPath);
   for (const snippet of [
@@ -141,6 +143,22 @@ function main() {
     assert(truePercentResolver.includes(snippet), `true percent resolver must expose ${snippet}`);
   }
 
+  const packetNormalizer = read(packetNormalizerPath);
+  for (const snippet of [
+    "class_name DamagePacketNormalizer",
+    "static func normalize_to_dictionary",
+    "static func normalize_to_packet",
+    "static func normalize_element",
+    "static func normalize_damage_type",
+    "static func normalize_origin",
+    "static func warn_invalid_origin_type",
+    "static func is_legal_origin_type",
+    "ReactionServiceScript.prepare_damage_packet",
+    "DamagePacketValidatorScript.validate_any",
+  ]) {
+    assert(packetNormalizer.includes(snippet), `packet normalizer must expose ${snippet}`);
+  }
+
   const truePercentStage = read("scripts/combat/stages/true_percent_damage_stage.gd");
   assert(truePercentStage.includes("DamageTruePercentResolverScript"), "TruePercentDamageStage must preload true percent resolver");
   assert(truePercentStage.includes("DamageTruePercentResolverScript.resolve_true_percent"), "TruePercentDamageStage must resolve percent through resolver");
@@ -161,6 +179,7 @@ function main() {
   assert(damageSystem.includes("DamagePlayerIncomingResolverScript"), "DamageSystem must preload player incoming resolver helper");
   assert(damageSystem.includes("DamageDefenseResolverScript"), "DamageSystem must preload defense resolver helper");
   assert(damageSystem.includes("DamageTruePercentResolverScript"), "DamageSystem must preload true percent resolver helper");
+  assert(damageSystem.includes("DamagePacketNormalizerScript"), "DamageSystem must preload packet normalizer helper");
   for (const removed of [
     "static func _apply_acid_boss_defense_reduction",
     "static func _get_protective_lava_player_multiplier",
@@ -181,6 +200,8 @@ function main() {
   assert(!damageSystem.includes("DamageTargetRuntimeModifiersScript.acid_boss_defense"), "DamageSystem should not own acid boss defense modifier");
   assert(!damageSystem.includes("percent_of_max_health"), "DamageSystem should not own true percent parsing");
   assert(!damageSystem.includes("true_percent_damage_cap"), "DamageSystem should not own true percent cap logic");
+  assert(!damageSystem.includes("DamagePacketValidatorScript.validate_any"), "DamageSystem should not own packet validation");
+  assert(!damageSystem.includes("ReactionServiceScript.prepare_damage_packet"), "DamageSystem should not own reaction packet preparation");
 
   assert(damageSystem.includes("DamageTargetMitigationScript.resistance_multiplier"), "DamageSystem must delegate resistance");
   assert(damageSystem.includes("DamageTargetMitigationScript.vulnerability_total"), "DamageSystem must delegate vulnerability");
@@ -227,6 +248,13 @@ function main() {
     ["_resolve_true_percent", "DamageTruePercentResolverScript.resolve_true_percent"],
     ["_apply_true_percent_stage", "DamageTruePercentResolverScript.apply_true_percent_stage"],
     ["_apply_true_percent_cap_stage", "DamageTruePercentResolverScript.apply_true_percent_cap_stage"],
+    ["_normalize_packet", "DamagePacketNormalizerScript.normalize_to_dictionary"],
+    ["_normalize_packet_object", "DamagePacketNormalizerScript.normalize_to_packet"],
+    ["_normalize_element", "DamagePacketNormalizerScript.normalize_element"],
+    ["_normalize_damage_type", "DamagePacketNormalizerScript.normalize_damage_type"],
+    ["_normalize_origin", "DamagePacketNormalizerScript.normalize_origin"],
+    ["_warn_invalid_origin_type", "DamagePacketNormalizerScript.warn_invalid_origin_type"],
+    ["_is_legal_origin_type", "DamagePacketNormalizerScript.is_legal_origin_type"],
   ]) {
     const [name, delegate] = wrapper;
     const pattern = new RegExp(`static func ${name}[\\s\\S]{0,300}${delegate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
