@@ -198,9 +198,13 @@ func _on_cast(rules: Dictionary, context: Dictionary) -> void:
 	_prepare_extra_knife_cast(rules, context)
 	_prepare_hunter_bow_cast(rules, context)
 	_prepare_warhammer_cast(rules, context)
+	_prepare_hot_rapid_fire_cast(rules, context)
 	_apply_toxic_vial_antidote_on_cast(rules, context)
 	_prepare_acid_pressure_cast(rules, context)
 	SpecialDamageRuleHandlerScript.execute_lightning_orbit_before_launch(rules, context, _get_skill_damage(context))
+
+
+func _prepare_hot_rapid_fire_cast(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("hot_rapid_fire"):
 		return
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
