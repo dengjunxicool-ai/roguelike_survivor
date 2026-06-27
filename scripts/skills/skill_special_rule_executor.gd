@@ -1794,9 +1794,8 @@ func _apply_acid_burst_on_full_status(rules: Dictionary, context: Dictionary, ta
 	var cooldown: float = maxf(float(cooldown_rule.get("same_target_cooldown", trigger_rule.get("same_target_cooldown", 2.0))), 0.0)
 	var key: String = "acid_burst:%s:%s:%s" % [String(context.get("source_instance_id", "")), String(status_id), _target_key(target)]
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_acid_burst_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_acid_burst_cooldowns, key, now_seconds, cooldown):
 		return
-	_acid_burst_cooldowns[key] = now_seconds + cooldown
 	SpecialDamageRuleHandlerScript.execute_acid_burst(rules, context)
 
 
@@ -1883,9 +1882,8 @@ func _apply_corrosive_film_on_boss_skill_hit(rules: Dictionary, context: Diction
 	var rule: Dictionary = _get_dictionary(rules.get("corrosive_film_on_boss_skill_hit", {}))
 	var key: String = "corrosive_film_boss:%s" % _target_key(player)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_corrosive_film_boss_hit_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_corrosive_film_boss_hit_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)):
 		return
-	_corrosive_film_boss_hit_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)
 	SpecialDamageRuleHandlerScript.grant_corrosive_film(rules, context, player, int(rule.get("shield_value", 8)), float(rule.get("shield_duration", 4.0)))
 
 
@@ -1950,9 +1948,8 @@ func _apply_burn_in_merged_oil(rules: Dictionary, context: Dictionary, target: N
 	var rule: Dictionary = _get_dictionary(rules.get("burn_in_merged_oil", {}))
 	var key: String = "burn_in_merged_oil:%s:%s" % [str(area.get_instance_id()), _target_key(target)]
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_fire_oil_burn_in_merged_oil_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_fire_oil_burn_in_merged_oil_cooldowns, key, now_seconds, maxf(float(rule.get("interval", 1.5)), 0.05)):
 		return
-	_fire_oil_burn_in_merged_oil_cooldowns[key] = now_seconds + maxf(float(rule.get("interval", 1.5)), 0.05)
 	target.call("apply_status", StringName(String(rule.get("status_id", "burn"))), {
 		"duration": float(rule.get("duration", 3.0)),
 		"stacks": maxi(int(rule.get("stacks", 1)), 1),
@@ -2005,9 +2002,8 @@ func _apply_fire_oil_deflagration(rules: Dictionary, context: Dictionary, target
 		var value: Variant = area.get_meta("fire_oil_deflagration_cooldowns", {})
 		if value is Dictionary:
 			cooldowns = (value as Dictionary).duplicate(true)
-		if now_seconds < float(cooldowns.get(key, 0.0)):
+		if not _reserve_cooldown(cooldowns, key, now_seconds, cooldown):
 			return
-		cooldowns[key] = now_seconds + cooldown
 		area.set_meta("fire_oil_deflagration_cooldowns", cooldowns)
 	SpecialDamageRuleHandlerScript.execute_fire_oil_deflagration(rules, context)
 
@@ -2023,9 +2019,8 @@ func _apply_flammable_mark_burst(rules: Dictionary, context: Dictionary, target:
 		return
 	var key: String = "flammable_burst:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_fire_oil_flammable_burst_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_fire_oil_flammable_burst_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_fire_oil_flammable_burst_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.fire_oil_flammable_burst_intents(rules, context, maxi(int(rule.get("amount", 14)), 0)))
 	if _is_boss(target) and rules.has("flammable_burst_boss_poise"):
 		_apply_flammable_burst_boss_poise(rules, target)
@@ -2057,9 +2052,8 @@ func _apply_smoke_cloud_on_player_damaged(rules: Dictionary, context: Dictionary
 	var rule: Dictionary = _get_dictionary(rules.get("smoke_cloud_on_player_damaged", {}))
 	var key: String = "smoke_damage:%s" % _target_key(player)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_smoke_cloud_player_damaged_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_smoke_cloud_player_damaged_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 16.0)), 0.0)):
 		return
-	_smoke_cloud_player_damaged_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 16.0)), 0.0)
 	SpecialDamageRuleHandlerScript.execute_smoke_cloud(rules, context, rule, "fire_oil_smoke_player_damaged")
 
 
@@ -2116,9 +2110,8 @@ func _apply_flammable_burst_boss_poise(rules: Dictionary, target: Node) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("flammable_burst_boss_poise", {}))
 	var key: String = "flammable_burst_poise:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_fire_oil_flammable_poise_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_fire_oil_flammable_poise_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)):
 		return
-	_fire_oil_flammable_poise_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)
 	for _i in range(maxi(int(rule.get("stacks", 1)), 1)):
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"stun")
 
@@ -2241,9 +2234,8 @@ func _apply_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary, target
 		return
 	var key: String = "toxic_core:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_toxic_core_boss_pulse_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_toxic_core_boss_pulse_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)):
 		return
-	_toxic_core_boss_pulse_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.execute_toxic_core_boss_pulse(rules, context, maxi(int(rule.get("amount", 20)), 0)))
 
 
@@ -2258,9 +2250,8 @@ func _apply_toxic_vial_antidote_on_cast(rules: Dictionary, context: Dictionary) 
 		return
 	var key: String = "antidote:%s" % _target_key(caster)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_antidote_cloud_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_antidote_cloud_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)):
 		return
-	_antidote_cloud_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)
 	_heal_player(caster, maxi(int(rule.get("heal", 6)), 0))
 	SpecialDamageRuleHandlerScript.execute_antidote_cloud(rules, context)
 
@@ -2350,9 +2341,8 @@ func _apply_warhammer_judgment_status(rules: Dictionary, context: Dictionary, ta
 	var rule: Dictionary = _get_dictionary(rules.get("judgment_on_strong_hit", {}))
 	var key: String = "judgment_on_hit:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_judgment_on_strong_hit_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_judgment_on_strong_hit_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)):
 		return
-	_judgment_on_strong_hit_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "judgment"))), {
 		"stacks": maxi(int(rule.get("stack", 1)), 1),
 		"max_stacks": maxi(int(rule.get("max_stacks", 4)), 1),
@@ -2414,9 +2404,8 @@ func _apply_warhammer_judgement_shock(rules: Dictionary, context: Dictionary, ta
 		return
 	var key: String = "warhammer_judgement:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_warhammer_judgement_shock_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_warhammer_judgement_shock_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_warhammer_judgement_shock_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	if _is_boss(target):
 		for _i in range(maxi(int(rule.get("boss_poise_stacks", 0)), 0)):
 			ReactionLimiterScript.apply_boss_control_conversion(target, &"stun")
@@ -2437,9 +2426,8 @@ func _apply_warhammer_boss_poise_judgement_bonus(rules: Dictionary, context: Dic
 	var rule: Dictionary = _get_dictionary(rules.get("warhammer_boss_poise_judgement_bonus", {}))
 	var key: String = "warhammer_boss_poise_judgement:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_warhammer_boss_poise_judgement_bonus_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_warhammer_boss_poise_judgement_bonus_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)):
 		return
-	_warhammer_boss_poise_judgement_bonus_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)
 	target.set_meta("warhammer_poise_judgement_consumed_count", completed_count)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.warhammer_judgement_shock_intents(rules, context, maxi(int(rule.get("amount", 34)), 0), "warhammer_boss_poise_judgement_bonus"))
 
@@ -2528,10 +2516,8 @@ func _apply_cross_relic_periodic_shield(rules: Dictionary, player: Node, now_sec
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_periodic_shield", {}))
 	var key: String = "periodic:%s" % str(player.get_instance_id())
-	var next_at: float = float(_cross_relic_periodic_shield_timers.get(key, 0.0))
-	if now_seconds < next_at:
+	if not _reserve_cooldown(_cross_relic_periodic_shield_timers, key, now_seconds, maxf(float(rule.get("interval", 2.0)), 0.05)):
 		return
-	_cross_relic_periodic_shield_timers[key] = now_seconds + maxf(float(rule.get("interval", 2.0)), 0.05)
 	_grant_cross_relic_shield(player, int(rule.get("shield_value", 5)), rules)
 
 
@@ -2543,9 +2529,8 @@ func _apply_cross_relic_stand_shield(rules: Dictionary, player: Node, now_second
 	if now_seconds - inside_since < float(rule.get("required_stand_time", 2.0)):
 		return
 	var key: String = "stand:%s" % str(player.get_instance_id())
-	if now_seconds < float(_cross_relic_stand_shield_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_cross_relic_stand_shield_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 12.0)), 0.0)):
 		return
-	_cross_relic_stand_shield_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 12.0)), 0.0)
 	_grant_cross_relic_shield(player, int(rule.get("shield_value", 12)), rules)
 
 
@@ -2556,9 +2541,8 @@ func _apply_cross_relic_low_hp_rescue(rules: Dictionary, player: Node, now_secon
 	if _player_health_ratio(player) > float(rule.get("hp_threshold", 0.35)):
 		return
 	var key: String = "rescue:%s" % str(player.get_instance_id())
-	if now_seconds < float(_cross_relic_low_hp_rescue_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_cross_relic_low_hp_rescue_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 20.0)), 0.0)):
 		return
-	_cross_relic_low_hp_rescue_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 20.0)), 0.0)
 	_heal_player(player, int(rule.get("heal", 8)))
 	_grant_cross_relic_shield(player, int(rule.get("shield_value", 12)), rules)
 
