@@ -6,6 +6,8 @@ const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_option.gd")
 const UpgradeOfferPolicyScript: Script = preload("res://scripts/upgrades/upgrade_offer_policy.gd")
+const UpgradeSelectionHelperScript: Script = preload("res://scripts/upgrades/upgrade_selection_helper.gd")
+const SkillLearnDefinitionRepositoryScript: Script = preload("res://scripts/upgrades/skill_learn_definition_repository.gd")
 const SkillOfferServiceScript: Script = preload("res://scripts/skills/skill_offer_service.gd")
 const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
@@ -86,12 +88,7 @@ func _select_growth_stage_options(player: Node, requested_count: int) -> Array:
 
 
 func _fill_from_weighted_pool(selected_options: Array, option_pool: Array, requested_count: int) -> void:
-	_shuffle_options(option_pool)
-	while selected_options.size() < requested_count and not option_pool.is_empty():
-		var option_index: int = _pick_weighted_option_index(option_pool)
-		var option: RefCounted = option_pool[option_index]
-		option_pool.remove_at(option_index)
-		_add_unique_options(selected_options, [option], requested_count)
+	UpgradeSelectionHelperScript.fill_from_weighted_pool(selected_options, option_pool, requested_count, _rng, rarity_weights)
 
 
 func _build_skill_level_up_options(player: Node) -> Array:
@@ -203,14 +200,7 @@ func _build_fire_skill_learn_options(player: Node, god_id: StringName = &"fire")
 	
 
 func _get_skill_learn_definitions() -> Array[Dictionary]:
-	var skills: Array[Dictionary] = []
-	for skill: Dictionary in GameData.get_skill_pool():
-		if StringName(_string_or(skill.get("id", ""), "")) == &"":
-			continue
-		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
-			continue
-		skills.append(skill.duplicate(true))
-	return skills
+	return SkillLearnDefinitionRepositoryScript.get_skill_learn_definitions(GameData.get_skill_pool(), "offer_rule")
 
 
 func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: StringName) -> RefCounted:
@@ -245,19 +235,7 @@ func _is_debug_god_skill(skill_id: StringName, god_id: StringName) -> bool:
 
 
 func _is_debug_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
-	if skill.is_empty():
-		return false
-	if StringName(_string_or(skill.get("id", ""), "")) == &"":
-		return false
-	if StringName(_string_or(skill.get("god_id", ""), "")) == god_id:
-		return true
-	if StringName(_string_or(skill.get("school", ""), "")) == god_id:
-		return true
-	if StringName(_string_or(skill.get("fusion_school", ""), "")) == god_id:
-		return true
-	if god_id == &"fire" and _to_string_array(_get_array(skill.get("tags", []))).has("fire"):
-		return true
-	return false
+	return SkillLearnDefinitionRepositoryScript.is_debug_god_skill_definition(skill, god_id)
 
 
 func _get_debug_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
@@ -288,28 +266,7 @@ func _get_debug_skill_definition_from_file(skill_id: StringName) -> Dictionary:
 
 
 func _make_god_skill_learn_upgrade(skill: Dictionary, god_id: StringName) -> Dictionary:
-	var skill_id: String = _string_or(skill.get("id", ""), "")
-	if skill_id == "":
-		return {}
-	var tags: Array[String] = _to_string_array(_get_array(skill.get("tags", [])))
-	if not tags.has("skill"):
-		tags.push_front("skill")
-	var god_text: String = _string_or(god_id, "")
-	if god_text != "" and not tags.has(god_text):
-		tags.push_front(god_text)
-	var description: String = _string_or(skill.get("description", "Learn %s." % skill_id), "Learn %s." % skill_id)
-	return {
-		"id": "%s%s" % [FIRE_SKILL_LEARN_UPGRADE_PREFIX, skill_id],
-		"display_name": _string_or(skill.get("display_name", skill_id), skill_id),
-		"description": description,
-		"rarity": _string_or(skill.get("rarity", "common"), "common"),
-		"tags": tags,
-		"enabled": true,
-		"max_level": 1,
-		"learn_skill_id": StringName(skill_id),
-		"god_id": god_id,
-		"level_descriptions": [description]
-	}
+	return SkillLearnDefinitionRepositoryScript.make_god_skill_learn_upgrade(skill, god_id, FIRE_SKILL_LEARN_UPGRADE_PREFIX)
 
 
 func _load_debug_skills_document() -> Dictionary:
@@ -339,78 +296,23 @@ func _get_skill_manager(player: Node) -> Node:
 
 
 func _add_unique_options(target: Array, source: Array, max_count: int) -> void:
-	var existing_ids: Dictionary = {}
-	var existing_learn_skill_ids: Dictionary = {}
-	for option_variant: Variant in target:
-		var option: RefCounted = option_variant as RefCounted
-		if option != null:
-			existing_ids[_string_or(option.get("id"), "")] = true
-			var learn_skill_id: StringName = _get_option_learn_skill_id(option)
-			if learn_skill_id != &"":
-				existing_learn_skill_ids[learn_skill_id] = true
-
-	for option_variant: Variant in source:
-		if target.size() >= max_count:
-			return
-		var option: RefCounted = option_variant as RefCounted
-		if option == null:
-			continue
-		var option_id: String = _string_or(option.get("id"), "")
-		if existing_ids.has(option_id):
-			continue
-		var learn_skill_id: StringName = _get_option_learn_skill_id(option)
-		if learn_skill_id != &"" and existing_learn_skill_ids.has(learn_skill_id):
-			continue
-		target.append(option)
-		existing_ids[option_id] = true
-		if learn_skill_id != &"":
-			existing_learn_skill_ids[learn_skill_id] = true
+	UpgradeSelectionHelperScript.add_unique_options(target, source, max_count)
 
 
 func _take_options(options: Array, count: int) -> Array:
-	var taken_options: Array = []
-	var take_count: int = mini(maxi(count, 0), options.size())
-	for option_index in range(take_count):
-		taken_options.append(options[option_index])
-	return taken_options
+	return UpgradeSelectionHelperScript.take_options(options, count)
 
 
 func _shuffle_options(options: Array) -> void:
-	for option_index in range(options.size() - 1, 0, -1):
-		var swap_index: int = _rng.randi_range(0, option_index)
-		var value: Variant = options[option_index]
-		options[option_index] = options[swap_index]
-		options[swap_index] = value
+	UpgradeSelectionHelperScript.shuffle_options(options, _rng)
 
 
 func _pick_weighted_option_index(options: Array) -> int:
-	if options.is_empty():
-		return 0
-
-	var total_weight: float = 0.0
-	for option_variant: Variant in options:
-		total_weight += _get_option_weight(option_variant as RefCounted)
-	if total_weight <= 0.0:
-		return _rng.randi_range(0, options.size() - 1)
-
-	var roll: float = _rng.randf_range(0.0, total_weight)
-	var accumulated: float = 0.0
-	for option_index in range(options.size()):
-		accumulated += _get_option_weight(options[option_index] as RefCounted)
-		if roll <= accumulated:
-			return option_index
-	return options.size() - 1
+	return UpgradeSelectionHelperScript.pick_weighted_option_index(options, _rng, rarity_weights)
 
 
 func _get_option_weight(option: RefCounted) -> float:
-	if option == null:
-		return 0.0
-	var payload_variant: Variant = option.get("payload")
-	if payload_variant is Dictionary:
-		var payload: Dictionary = payload_variant
-		if payload.has("weight"):
-			return maxf(float(payload.get("weight", 0.0)), 0.0)
-	return maxf(float(rarity_weights.get(_string_or(option.get("rarity"), ""), 1.0)), 0.0)
+	return UpgradeSelectionHelperScript.get_option_weight(option, rarity_weights)
 
 
 func _is_level_up_upgrade_available(player: Node, upgrade: Dictionary) -> bool:
@@ -441,14 +343,7 @@ func _is_learn_skill_upgrade_available(player: Node, skill_id: StringName) -> bo
 
 
 func _get_option_learn_skill_id(option: RefCounted) -> StringName:
-	if option == null:
-		return &""
-	var payload_variant: Variant = option.get("payload")
-	if payload_variant is Dictionary:
-		var payload: Dictionary = payload_variant
-		if payload.has("learn_skill_id"):
-			return StringName(_string_or(payload.get("learn_skill_id", ""), ""))
-	return &""
+	return UpgradeSelectionHelperScript.get_option_learn_skill_id(option)
 
 
 func _get_level_up_upgrade_weight(player: Node, upgrade: Dictionary) -> float:
