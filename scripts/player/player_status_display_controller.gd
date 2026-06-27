@@ -2,6 +2,8 @@ extends RefCounted
 class_name PlayerStatusDisplayController
 
 
+const StatusShortNameFormatterScript: Script = preload("res://scripts/ui/status_short_name_formatter.gd")
+
 var _owner: Node2D
 var _status_label: Label
 
@@ -76,84 +78,4 @@ func _ensure_label() -> void:
 
 
 func _get_status_short_name(status_id: String) -> String:
-	match status_id:
-		"burn":
-			return "Brn"
-		"poison":
-			return "Psn"
-		"bleed":
-			return "Bld"
-		"freeze":
-			return "Frz"
-		"slow":
-			return "Slw"
-		"stun":
-			return "Stn"
-		"paralyze":
-			return "Prz"
-		"armor_break":
-			return "Arm"
-		"shock":
-			return "Shk"
-		"heat":
-			return "Heat"
-		"soul_ember":
-			return "Embr"
-		"flame_core":
-			return "Core"
-		"chill":
-			return "Chil"
-		"frost_lock":
-			return "Lock"
-		"frostbite":
-			return "Fbt"
-		"charge":
-			return "Chg"
-		"voltage":
-			return "Volt"
-		"arcane_mark":
-			return "Arc"
-		"arcane_seal":
-			return "Seal"
-		"wound":
-			return "Wnd"
-		"eagle_mark":
-			return "Egl"
-		"burst_mark":
-			return "Bst"
-		"prey_mark":
-			return "Prey"
-		"impurity":
-			return "Imp"
-		"toxin_seed":
-			return "Seed"
-		"toxic_core":
-			return "TCore"
-		"flammable_mark":
-			return "Fla"
-		"oil_stack":
-			return "Oil"
-		"acid_mark":
-			return "Acid"
-		"acid_residue":
-			return "ARes"
-		"judgment":
-			return "Jdg"
-		"residue":
-			return "Res"
-		"hunter_mark":
-			return "Hnt"
-		"snare_mark":
-			return "Snr"
-		"holy_mark":
-			return "Hol"
-		"blackfire":
-			return "Blk"
-		"root":
-			return "Root"
-		"weaken":
-			return "Wkn"
-		"radiance":
-			return "Rad"
-		_:
-			return status_id.substr(0, mini(status_id.length(), 4))
+	return StatusShortNameFormatterScript.short_name(status_id)

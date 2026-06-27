@@ -10,6 +10,7 @@ const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.g
 const EnemyAttackRangeOverlayScript: Script = preload("res://scripts/debug/enemy_attack_range_overlay.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/skill_effect_summary_builder.gd")
+const StatusShortNameFormatterScript: Script = preload("res://scripts/ui/status_short_name_formatter.gd")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/enemy.tscn")
 const FIRE_TORNADO_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/fire_tornado_effect.tscn")
 const MARS_SPARK_MISSILE_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/mars_spark_missile_effect.tscn")
@@ -2455,45 +2456,7 @@ func _format_statuses(statuses: Array) -> String:
 
 
 func _debug_status_short_name(status_id: String) -> String:
-	match status_id:
-		"soul_ember":
-			return "Embr"
-		"flame_core":
-			return "Core"
-		"frost_lock":
-			return "Lock"
-		"frostbite":
-			return "Fbt"
-		"voltage":
-			return "Volt"
-		"arcane_seal":
-			return "Seal"
-		"eagle_mark":
-			return "Egl"
-		"burst_mark":
-			return "Bst"
-		"prey_mark":
-			return "Prey"
-		"holy_mark":
-			return "Hol"
-		"judgment":
-			return "Jdg"
-		"impurity":
-			return "Imp"
-		"toxin_seed":
-			return "Seed"
-		"toxic_core":
-			return "TCore"
-		"flammable_mark":
-			return "Fla"
-		"oil_stack":
-			return "Oil"
-		"acid_mark":
-			return "Acid"
-		"acid_residue":
-			return "ARes"
-		_:
-			return status_id
+	return StatusShortNameFormatterScript.short_name(status_id, -1)
 
 
 func _get_status_snapshot(target: Node) -> Array:
