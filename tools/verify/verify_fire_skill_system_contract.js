@@ -425,7 +425,7 @@ function main() {
 	const expectedMetadataById = buildExpectedSkillMetadata();
 
 	const document = readJson("data/skills/skills.json");
-	const combatObjectsDocument = readJson("data/combat_objects.json");
+	const combatObjectsDocument = readJson("data/combat/combat_objects.json");
 	const charactersDocument = readJson("data/characters/characters.json");
 	assert(Array.isArray(document.starting_skills), "data/skills/skills.json starting_skills must be an array");
 	assert(document.starting_skills.length === 1, `data/skills/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);

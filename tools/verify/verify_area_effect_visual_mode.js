@@ -23,7 +23,7 @@ assert(areaEffect.includes("var _visual_mode: String"), "AreaEffect must store v
 assert(areaEffect.includes('_visual_mode = String(params.get("visual_mode"'), "AreaEffect.setup must read visual_mode from params");
 assert(areaEffect.includes('if _visual_mode == "asset":') && areaEffect.includes("return false"), "AreaEffect must let asset mode use configured visual resources instead of programmatic drawing");
 
-const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
+const combatObjects = readJson("data/combat/combat_objects.json").combat_objects || [];
 const genericExplosion = combatObjects.find((object) => object.id === "generic_explosion_area");
 assert(genericExplosion, "generic_explosion_area must exist");
 assert(genericExplosion.visual_mode === "programmatic", "generic_explosion_area must declare programmatic fallback mode explicitly");

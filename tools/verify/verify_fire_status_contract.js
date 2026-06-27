@@ -17,7 +17,7 @@ function approx(actual, expected, message) {
   assert(Math.abs(Number(actual) - expected) <= 0.0001, `${message}: expected ${expected}, got ${actual}`);
 }
 
-const statuses = readJson("data/status_effects.json").statuses || [];
+const statuses = readJson("data/combat/status_effects.json").statuses || [];
 const byId = new Map();
 for (const status of statuses) {
   assert(status && typeof status === "object" && !Array.isArray(status), "every status must be an object");

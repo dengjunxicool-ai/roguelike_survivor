@@ -548,7 +548,7 @@ const fusionSkills = expectedRows.map((row) => {
 skillsDocument.skills = [...nonFusionSkills, ...fusionSkills];
 writeJson("data/skills/skills.json", skillsDocument);
 
-const combatDocument = readJson("data/combat_objects.json");
+const combatDocument = readJson("data/combat/combat_objects.json");
 const combatObjects = combatDocument.combat_objects || [];
 const summonDocument = readJson("data/summons.json");
 const summons = summonDocument.summons || [];
@@ -576,7 +576,7 @@ for (const ref of refs) {
 }
 combatDocument.combat_objects = combatObjects;
 summonDocument.summons = summons;
-writeJson("data/combat_objects.json", combatDocument);
+writeJson("data/combat/combat_objects.json", combatDocument);
 writeJson("data/summons.json", summonDocument);
 
 console.log(`[apply_fusion_skill_catalog] wrote ${fusionSkills.length} fusion skills from docs/skills/skills.md`);

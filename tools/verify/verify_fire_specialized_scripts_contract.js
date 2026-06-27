@@ -36,7 +36,7 @@ function firstEffect(skill, type) {
 }
 
 const skills = readJson("data/skills/skills.json").skills || [];
-const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
+const combatObjects = readJson("data/combat/combat_objects.json").combat_objects || [];
 const summons = readJson("data/summons.json").summons || [];
 
 const dragonSummon = firstEffect(findSkill(skills, "fire_summon_crimson_dragon"), "spawn_summon");

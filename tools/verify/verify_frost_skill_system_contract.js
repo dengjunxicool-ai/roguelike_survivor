@@ -92,7 +92,7 @@ assert(shatterExecuteTriggers.length === 1 && shatterExecuteTriggers[0] === "pos
 assert(shatterExecuteDamage, "frost_power_shatter_execute must have a damage effect");
 assert(Number(shatterExecuteDamage.low_hp_execute_threshold) === 0.1, "frost_power_shatter_execute execute threshold must be 10%");
 
-const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
+const combatObjects = readJson("data/combat/combat_objects.json").combat_objects || [];
 for (const id of requiredCombatObjects) {
   const object = findById(combatObjects, id, "combat object");
   assert(object.visual_mode || object.visual || object.visual_style, `${id} must define a visible representation`);

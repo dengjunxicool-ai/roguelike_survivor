@@ -15,7 +15,7 @@ function assertApprox(actual, expected, message, epsilon = 0.0001) {
   assert(Math.abs(Number(actual) - expected) <= epsilon, `${message}: expected ${expected}, got ${actual}`);
 }
 
-const statuses = readJson("data/status_effects.json").statuses || [];
+const statuses = readJson("data/combat/status_effects.json").statuses || [];
 const statusManagerSource = readTextFile(path.join(root, "scripts", "combat", "status_effect_manager.gd"));
 const packetBuilderSource = readTextFile(path.join(root, "scripts", "combat", "damage_packet_builder.gd"));
 const mitigationSource = readTextFile(path.join(root, "scripts", "combat", "damage_target_mitigation.gd"));

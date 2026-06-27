@@ -94,7 +94,7 @@ combat object 分布：
 | 玩家技能数据 | `data/skills/skills.json` | 起始技能和可学习技能定义，包含 school、type、components、events、trigger_rules、effects、base。 |
 | 神系数据 | `data/skills/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
 | 角色起始技能 | `data/characters/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
-| 战斗对象数据 | `data/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
+| 战斗对象数据 | `data/combat/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
 | 敌方攻击数据 | `data/enemies/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
 | 怪物行为数据 | `data/enemies/enemies.json` | 行为类型、技能引用、接触伤害、行为范围、Boss phase 配置。 |
 | 玩家技能实例 | `scripts/skills/skill_manager.gd` | 持有 active skill instance。 |
@@ -319,7 +319,7 @@ EnemyBase._apply_contact_damage()
 3. 若会造成伤害，必须走 `_build_damage_packet()` 或等价完整 DamagePacket。
 4. 若生成新对象，优先接入 `CombatObjectFactory` 和 `combat_objects.json`。
 5. 若需要 modifier，补 `ModifierResolver` / `SkillStatService` / `DamageSystem` 消费点。
-6. 在 `data/combat_objects.json` 表达可配置字段，并补对应 JS/Godot 验证。
+6. 在 `data/combat/combat_objects.json` 表达可配置字段，并补对应 JS/Godot 验证。
 7. 补最小配置样例或验证，跑当前神系/技能契约验证。
 8. 同步本文档；旧武器系统说明只保留在 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md` 作为历史记录。
 
@@ -360,7 +360,7 @@ EnemyBase._apply_contact_damage()
 ### 新增状态、DOT 或反应攻击
 
 1. 能用 action `apply_status` 或 `statuses_on_hit` 表达时，优先只改配置。
-2. 状态定义改 `data/status_effects.json`，DOT tick 由 `StatusEffectManager` 走 `DamagePacketBuilder.from_status_dot()`。
+2. 状态定义改 `data/combat/status_effects.json`，DOT tick 由 `StatusEffectManager` 走 `DamagePacketBuilder.from_status_dot()`。
 3. 新 DOT 必须保证 `source_instance_id` 稳定，否则小数池、统计和 Boss/Elite 承伤会不稳定。
 4. 新反应先定义触发条件和限制，再接 `ReactionLimiter` / `ReactionDamageBuilder`。
 5. 反应伤害不要再次触发反应。
@@ -418,7 +418,7 @@ EnemyBase._apply_contact_damage()
 | 敌方区域 | `enemy_skills.json` action `damage_area` | `DamageArea`、玩家 area 命中保护、Boss phase 参数。 |
 | Boss 技能 | `enemies.json.behavior.phases[].skills[]` | `runtime=boss_phase`、并发数、cooldown、胜利结算。 |
 | 新敌方 action | `EnemyActionRegistry.execute()` | `validate_enemy_configs.js`、enemy skill debug check。 |
-| 新玩家 action | `SkillActionExecutor.execute_action()` | `data/combat_objects.json`、配置验证、authoring pipeline。 |
+| 新玩家 action | `SkillActionExecutor.execute_action()` | `data/combat/combat_objects.json`、配置验证、authoring pipeline。 |
 | 新伤害类型/origin | `DamageRuleRegistry` | `DamagePacketBuilder`、`verify_damage_formula.gd`。 |
 | 攻击统计 | `RunStatsTracker` 和 application stage | source 字段、HUD/result 展示。 |
 

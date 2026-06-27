@@ -77,7 +77,7 @@ const expected = [
 ];
 
 const skillsData = readJson("data/skills/skills.json");
-const combatObjects = new Set((readJson("data/combat_objects.json").combat_objects || []).map((object) => object.id));
+const combatObjects = new Set((readJson("data/combat/combat_objects.json").combat_objects || []).map((object) => object.id));
 const summons = new Set((readJson("data/summons.json").summons || []).map((summon) => summon.id));
 const fusionSkills = (skillsData.skills || []).filter((skill) => skill.type === "fusion" || skill.fusion_school);
 

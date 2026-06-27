@@ -405,7 +405,7 @@ ReactionService / ReactionLimiter
 | 新增 damage_type | `DamageRuleRegistry.TYPE_POLICIES` | 决定防御生效率、暴击、合法 origin、是否忽略抗性/易伤。 |
 | 新增技能出伤 | 数据配置 + `SkillActionExecutor` 现有 action | 能用 `deal_damage`、`spawn_projectile`、`spawn_area`、`spawn_orbit_object` 就不要新建入口。 |
 | 新增敌方技能伤害 | `enemy_skills.json` + `EnemyActionRegistry` + `EnemyDamagePacketBuilder` | 不要走玩家技能构包器。 |
-| 新增 DOT | `data/status_effects.json` + `StatusEffectManager` | 保证 source_instance_id 稳定，确认 Boss/Elite 双层修正。 |
+| 新增 DOT | `data/combat/status_effects.json` + `StatusEffectManager` | 保证 source_instance_id 稳定，确认 Boss/Elite 双层修正。 |
 | 新增反应 | `ReactionLimiter.DEFAULT_REACTION_LIMITS` + 触发方 + `ReactionDamageBuilder` | 先定义 cooldown、次数、target 限制、Boss 倍率和 reaction_depth。 |
 | 新增玩家受伤前逻辑 | `CharacterTraitSystem.absorb_damage()` 或 `PlayerAbsorbApplicationStage` | 不要绕过命中保护和吸收顺序。 |
 | 新增玩家受伤后逻辑 | Trait `handle_player_damaged()` 或 `PlayerHealthApplicationStage` | 保证死亡、统计、弹字顺序不被破坏。 |

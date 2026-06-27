@@ -263,7 +263,7 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | 角色起始技能 | `data/characters/characters.json.starting_skill_id` | `data/skills/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
 | 技能伤害/冷却/投射物 | `data/skills/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
 | 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify/verify_damage_formula.gd`, Damage docs |
-| DOT/控制/易伤 | `data/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
+| DOT/控制/易伤 | `data/combat/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
 | 新怪物 | `data/enemies/enemies.json` | `waves.json`, behavior registry, enemy validators |
 | 新敌方技能 | `data/enemies/enemy_skills.json` | `EnemyActionRegistry`, `EnemyDamagePacketBuilder` |
 | 波次节奏 | `data/waves/waves.json` | `WaveDirector`, `BossEncounterController`, HUD timer |

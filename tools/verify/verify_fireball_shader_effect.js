@@ -51,7 +51,7 @@ assert(material.includes("shader_parameter/edge_softness = 0.12"), "Material mus
 assert(material.includes("shader_parameter/color_hot = Color(1, 0.92, 0.35, 1)"), "Material must use a brighter yellow-white hot color");
 assert(material.includes("shader_parameter/color_rim = Color(1, 0.48, 0.08, 1)"), "Material must use a warmer orange rim color");
 
-const combatObjects = readJsonFile(path.join(root, "data", "combat_objects.json")).combat_objects || [];
+const combatObjects = readJsonFile(path.join(root, "data", "combat", "combat_objects.json")).combat_objects || [];
 const fireball = combatObjects.find((object) => object.id === "fireball_projectile");
 assert(fireball, "fireball_projectile must exist");
 assert(fireball.visual?.texture === "res://assets/effect/fireball/core.png", "fireball_projectile must use core.png texture");
