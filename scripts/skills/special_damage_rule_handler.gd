@@ -252,26 +252,20 @@ static func execute_protective_lava_ring_on_player_damaged(rules: Dictionary, co
 	var rule: Dictionary = _get_dictionary(rules.get("protective_lava_ring_on_player_damaged", {}))
 	if rule.is_empty():
 		return null
-	var player: Node2D = context.get("player", context.get("caster")) as Node2D
+	var player: Node2D = _context_player(context)
 	if player == null:
 		return null
 	var key: String = "protective_lava:%s" % str(player.get_instance_id())
 	var now_seconds: float = _now_seconds()
 	var cooldown: float = maxf(float(rule.get("same_source_cooldown", 12.0)), 0.0)
-	if now_seconds < float(_protective_lava_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_protective_lava_cooldowns, key, now_seconds, cooldown):
 		return null
-	_protective_lava_cooldowns[key] = now_seconds + cooldown
-	var parent: Node = context.get("parent") as Node
-	if parent == null:
-		parent = player.get_parent()
+	var parent: Node = _context_parent_for_actor(context, player)
 	if parent == null:
 		return null
 	var duration: float = maxf(float(rule.get("duration", 2.0)), 0.05)
 	var radius: float = float(rule.get("radius", 130.0))
-	player.set_meta("protective_lava_reduction_until", now_seconds + duration)
-	player.set_meta("protective_lava_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.2)))
-	player.set_meta("protective_lava_center", player.global_position)
-	player.set_meta("protective_lava_radius", radius)
+	_apply_protective_lava_player_state(rule, player, now_seconds, duration, radius)
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": player.global_position,
@@ -294,30 +288,19 @@ static func execute_frost_ring_on_player_damaged(rules: Dictionary, context: Dic
 	var rule: Dictionary = _get_dictionary(rules.get("frost_ring_on_player_damaged", {}))
 	if rule.is_empty():
 		return null
-	var player: Node2D = context.get("player", context.get("caster")) as Node2D
+	var player: Node2D = _context_player(context)
 	if player == null:
 		return null
 	var key: String = "frost_ring:%s" % str(player.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_frost_ring_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_frost_ring_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 12.0)), 0.0)):
 		return null
-	_frost_ring_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 12.0)), 0.0)
-	var parent: Node = context.get("parent") as Node
-	if parent == null:
-		parent = player.get_parent()
+	var parent: Node = _context_parent_for_actor(context, player)
 	if parent == null:
 		return null
 	var amount: int = maxi(int(rule.get("amount", 8)), 0)
 	var radius: float = maxf(float(rule.get("radius", 120.0)), 1.0)
-	var status_params: Dictionary = {}
-	var status_id: StringName = &""
-	if int(rule.get("status_stacks", 0)) > 0:
-		status_id = StringName(String(rule.get("status_id", "frostbite")))
-		status_params = {
-			"stacks": int(rule.get("status_stacks", 1)),
-			"max_stacks": 3,
-			"duration": float(rule.get("status_duration", 3.0))
-		}
+	var status_data: Dictionary = _build_frost_ring_status_data(rule)
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": player.global_position,
@@ -329,11 +312,52 @@ static func execute_frost_ring_on_player_damaged(rules: Dictionary, context: Dic
 		"radius": radius,
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_color": Color(0.55, 0.82, 1.0, 0.35),
-		"status_on_hit": status_id,
-		"status_params": status_params
+		"status_on_hit": status_data.get("status_id", &""),
+		"status_params": _get_dictionary(status_data.get("status_params", {}))
 	})
 	_knockback_targets(parent, player.global_position, radius, float(rule.get("knockback", 45.0)), context.get("target_group", &"enemies"))
 	return area
+
+
+static func _context_player(context: Dictionary) -> Node2D:
+	return context.get("player", context.get("caster")) as Node2D
+
+
+static func _context_parent_for_actor(context: Dictionary, actor: Node) -> Node:
+	var parent: Node = context.get("parent") as Node
+	if parent == null and actor != null:
+		parent = actor.get_parent()
+	return parent
+
+
+static func _reserve_rule_cooldown_at(cooldowns: Dictionary, key: String, now_seconds: float, cooldown: float) -> bool:
+	if now_seconds < float(cooldowns.get(key, 0.0)):
+		return false
+	cooldowns[key] = now_seconds + maxf(cooldown, 0.0)
+	return true
+
+
+static func _apply_protective_lava_player_state(rule: Dictionary, player: Node2D, now_seconds: float, duration: float, radius: float) -> void:
+	player.set_meta("protective_lava_reduction_until", now_seconds + duration)
+	player.set_meta("protective_lava_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.2)))
+	player.set_meta("protective_lava_center", player.global_position)
+	player.set_meta("protective_lava_radius", radius)
+
+
+static func _build_frost_ring_status_data(rule: Dictionary) -> Dictionary:
+	if int(rule.get("status_stacks", 0)) <= 0:
+		return {
+			"status_id": &"",
+			"status_params": {}
+		}
+	return {
+		"status_id": StringName(String(rule.get("status_id", "frostbite"))),
+		"status_params": {
+			"stacks": int(rule.get("status_stacks", 1)),
+			"max_stacks": 3,
+			"duration": float(rule.get("status_duration", 3.0))
+		}
+	}
 
 
 static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pulse_count: int) -> void:
