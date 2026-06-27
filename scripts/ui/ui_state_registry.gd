@@ -79,6 +79,13 @@ func should_pause_for_state(state: String) -> bool:
 
 
 func _register_defaults() -> void:
+	_register_boot_flow_states()
+	_register_running_state()
+	_register_running_child_states()
+	_register_secondary_menu_states()
+
+
+func _register_boot_flow_states() -> void:
 	_register_descriptor({
 		"id": STATE_BOOT,
 		"allowed_to": [STATE_TITLE],
@@ -106,6 +113,9 @@ func _register_defaults() -> void:
 		"prepare_method": "_refresh_map_select_screen",
 		"pause_mode": UIStateDescriptorScript.PAUSE_MODE_PAUSE
 	})
+
+
+func _register_running_state() -> void:
 	_register_descriptor({
 		"id": STATE_RUNNING,
 		"allowed_to": [
@@ -120,6 +130,9 @@ func _register_defaults() -> void:
 		"build_method": "_build_run_hud",
 		"pause_mode": UIStateDescriptorScript.PAUSE_MODE_RUNNING
 	})
+
+
+func _register_running_child_states() -> void:
 	var running_child_targets: Array = [
 		STATE_RUNNING,
 		STATE_TITLE,
@@ -137,6 +150,9 @@ func _register_defaults() -> void:
 			"build_method": _get_default_build_method(state),
 			"pause_mode": UIStateDescriptorScript.PAUSE_MODE_PAUSE
 		})
+
+
+func _register_secondary_menu_states() -> void:
 	_register_descriptor({
 		"id": STATE_META_UPGRADE,
 		"allowed_to": [STATE_TITLE],
