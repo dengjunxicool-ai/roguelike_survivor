@@ -38,8 +38,7 @@ static func direct_hit_extra_explosion_intents(rules: Dictionary, context: Dicti
 	var amount: int = maxi(roundi(float(base_damage) * float(rules.get("direct_hit_extra_explosion_bonus", 0.0))), 0)
 	if amount <= 0:
 		return intents
-	var packet: Dictionary = build_special_packet("fireball_direct_explosion_bonus", amount, "primary_attack", true)
-	packet = DamageTraceContextScript.apply_to_packet(packet, context)
+	var packet: Dictionary = _build_traced_special_packet("fireball_direct_explosion_bonus", amount, "primary_attack", true, context)
 	intents.append(DamageIntentScript.create(target, packet, &"area_direct"))
 	return intents
 
@@ -49,8 +48,7 @@ static func soulburn_burst_intents(rules: Dictionary, context: Dictionary, amoun
 	var target: Node = context.get("target") as Node
 	if target == null or amount <= 0:
 		return intents
-	var packet: Dictionary = build_special_packet("soulburn_burst", amount, "special", false)
-	packet = DamageTraceContextScript.apply_to_packet(packet, context)
+	var packet: Dictionary = _build_traced_special_packet("soulburn_burst", amount, "special", false, context)
 	intents.append(DamageIntentScript.create(target, packet, &"true_percent_damage"))
 	return intents
 
@@ -81,8 +79,7 @@ static func frost_bonus_hit_intents(rules: Dictionary, context: Dictionary, amou
 	if target == null or amount <= 0:
 		return intents
 	var rule: Dictionary = _get_dictionary(rules.get(rule_key, {}))
-	var packet: Dictionary = build_special_packet("frost_lock_bonus_hit", amount, String(rule.get("damage_origin", "primary_attack")), true, String(rule.get("element", "ice")), String(rule.get("damage_type", "direct_magical")))
-	packet = DamageTraceContextScript.apply_to_packet(packet, context)
+	var packet: Dictionary = _build_traced_special_packet("frost_lock_bonus_hit", amount, String(rule.get("damage_origin", "primary_attack")), true, context, String(rule.get("element", "ice")), String(rule.get("damage_type", "direct_magical")))
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
 	return intents
 
@@ -2591,6 +2588,10 @@ static func build_special_packet(source_id: String, amount: int, origin: String,
 		"can_crit": args["can_crit"],
 		"special_rule_tags": args["special_rule_tags"]
 	})
+
+
+static func _build_traced_special_packet(source_id: String, amount: int, origin: String, can_crit: bool, context: Dictionary, element: String = "fire", damage_type: String = "") -> Dictionary:
+	return DamageTraceContextScript.apply_to_packet(build_special_packet(source_id, amount, origin, can_crit, element, damage_type), context)
 
 
 static func _get_skill_base_damage(context: Dictionary, fallback: int) -> int:
