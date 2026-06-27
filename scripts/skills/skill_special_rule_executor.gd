@@ -720,7 +720,8 @@ func _apply_flame_core_boss_burst(rules: Dictionary, context: Dictionary) -> voi
 	target.set_meta("flame_core_boss_direct_hits", hit_count)
 	if hit_count % hit_interval != 0:
 		return
-	_flame_core_burst_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)
+	if not _reserve_cooldown(_flame_core_burst_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)):
+		return
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.flame_core_burst_intents(rules, context, maxi(int(rule.get("amount", 32)), 0)))
 
 
@@ -827,8 +828,9 @@ func _apply_frost_core_crack_on_boss_poise(rules: Dictionary, context: Dictionar
 	var now_seconds: float = _now_seconds()
 	if now_seconds < float(_frost_core_crack_cooldowns.get(key, 0.0)):
 		return
+	if not _reserve_cooldown(_frost_core_crack_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)):
+		return
 	target.set_meta("frost_core_crack_consumed_poise_count", completed_count)
-	_frost_core_crack_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.frost_core_crack_intents(rules, context, maxi(int(rule.get("amount", 30)), 0)))
 
 
@@ -972,7 +974,8 @@ func _apply_shock_on_lightning_orb_hit(rules: Dictionary, context: Dictionary) -
 		return
 	if randf() > clampf(float(rule.get("chance", 0.2)), 0.0, 1.0):
 		return
-	_shock_hit_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.8)), 0.0)
+	if not _reserve_cooldown(_shock_hit_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.8)), 0.0)):
+		return
 	target.call("apply_status", StringName(String(rule.get("shock_status_id", "shock"))), {
 		"duration": float(rule.get("shock_duration", 0.8)) + float(_get_dictionary(rules.get("shock_upgrade", {})).get("duration_add", 0.0)),
 		"stacks": 1,
@@ -2190,7 +2193,8 @@ func _apply_poison_on_cloud_tick_chance(rules: Dictionary, context: Dictionary, 
 		return
 	if randf() > clampf(float(rule.get("chance", 0.2)), 0.0, 1.0):
 		return
-	_poison_cloud_tick_poison_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)
+	if not _reserve_cooldown(_poison_cloud_tick_poison_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)):
+		return
 	_apply_poison_status_from_toxic_vial(rules, context, target, maxi(int(rule.get("stacks", 1)), 1))
 
 
@@ -2645,9 +2649,8 @@ func _apply_freeze_frostbite_near_player(rules: Dictionary, context: Dictionary)
 			continue
 		var key: String = "near_freeze:%s" % _target_key(enemy)
 		var now_seconds: float = _now_seconds()
-		if now_seconds < float(_near_player_freeze_cooldowns.get(key, 0.0)):
+		if not _reserve_cooldown(_near_player_freeze_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 5.0)), 0.0)):
 			continue
-		_near_player_freeze_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 5.0)), 0.0)
 		if _is_boss(enemy) and bool(rule.get("boss_converts_to_poise", true)):
 			ReactionLimiterScript.apply_boss_control_conversion(enemy, &"freeze")
 			_apply_frost_core_crack_on_boss_poise(rules, context.merged({"target": enemy}))
