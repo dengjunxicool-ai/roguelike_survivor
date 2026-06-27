@@ -75,34 +75,36 @@ func execute_event(event_name: StringName, context: Dictionary) -> void:
 
 func get_status_params(status_id: StringName, base_params: Dictionary, context: Dictionary) -> Dictionary:
 	var params: Dictionary = base_params.duplicate(true)
-	if status_id == &"chill":
-		return _get_chill_status_params(params, context)
-	if status_id == &"freeze":
-		_apply_boss_poise_upgrade_meta(context)
-		return params
-	if status_id == &"charge":
-		return _get_charge_status_params(params, context)
-	if status_id == &"shock":
-		return _get_shock_status_params(params, context)
-	if status_id == &"arcane_mark":
-		return _get_arcane_mark_status_params(params, context)
-	if status_id == &"arcane_seal":
-		return _get_arcane_seal_status_params(params, context)
-	if status_id == &"hunter_mark":
-		return _get_hunter_mark_status_params(params, context)
-	if status_id == &"holy_mark":
-		return _get_holy_mark_status_params(params, context)
-	if status_id == &"wound":
-		return _get_wound_status_params(params, context)
-	if status_id == &"bleed":
-		return _get_bleed_status_params(params, context)
-	if status_id == &"poison":
-		return _get_poison_status_params(params, context)
-	if status_id == &"flammable_mark":
-		return _get_flammable_mark_status_params(params, context)
-	if status_id == &"burn":
-		return _get_burn_status_params(params, context)
-	return params
+	match status_id:
+		&"chill":
+			return _get_chill_status_params(params, context)
+		&"freeze":
+			_apply_boss_poise_upgrade_meta(context)
+			return params
+		&"charge":
+			return _get_charge_status_params(params, context)
+		&"shock":
+			return _get_shock_status_params(params, context)
+		&"arcane_mark":
+			return _get_arcane_mark_status_params(params, context)
+		&"arcane_seal":
+			return _get_arcane_seal_status_params(params, context)
+		&"hunter_mark":
+			return _get_hunter_mark_status_params(params, context)
+		&"holy_mark":
+			return _get_holy_mark_status_params(params, context)
+		&"wound":
+			return _get_wound_status_params(params, context)
+		&"bleed":
+			return _get_bleed_status_params(params, context)
+		&"poison":
+			return _get_poison_status_params(params, context)
+		&"flammable_mark":
+			return _get_flammable_mark_status_params(params, context)
+		&"burn":
+			return _get_burn_status_params(params, context)
+		_:
+			return params
 
 
 func _get_burn_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
