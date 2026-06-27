@@ -10,6 +10,8 @@ const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
+const StatusEffectQueryScript: Script = preload("res://scripts/combat/status_effect_query.gd")
+const StatusEffectTickHelperScript: Script = preload("res://scripts/combat/status_effect_tick_helper.gd")
 const DOT_STATUS_IDS: Array[StringName] = [&"burn", &"burning", &"poison", &"bleed"]
 const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"frozen", &"stun", &"paralyze"]
 const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
@@ -138,13 +140,13 @@ func update_status_effects(delta: float) -> void:
 
 
 func _advance_status_tick(status: Dictionary, delta: float) -> void:
-	status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - delta
+	StatusEffectTickHelperScript.advance_duration(status, delta)
 	if _is_dot_status(status):
 		_update_damage_over_time(status, delta)
 
 
 func _is_status_expired(status: Dictionary) -> bool:
-	return int(status.get("stacks", 1)) <= 0 or float(status.get("duration_remaining", 0.0)) <= 0.0
+	return StatusEffectTickHelperScript.is_status_expired(status)
 
 
 func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Dictionary) -> void:
@@ -156,16 +158,11 @@ func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Di
 
 
 func has_status(status_id: Variant) -> bool:
-	return _statuses.has(StringName(String(status_id)))
+	return StatusEffectQueryScript.has_status(_statuses, status_id)
 
 
 func get_status_stack(status_id: Variant) -> int:
-	var id: StringName = StringName(String(status_id))
-	if not _statuses.has(id):
-		return 0
-
-	var status: Dictionary = _statuses[id]
-	return int(status.get("stacks", 0))
+	return StatusEffectQueryScript.get_status_stack(_statuses, status_id)
 
 
 func merge_status_fields(status_id: Variant, fields: Dictionary, duration: float = 0.0) -> bool:
@@ -226,22 +223,7 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 
 
 func get_status_snapshot() -> Array[Dictionary]:
-	var snapshot: Array[Dictionary] = []
-	for status_variant: Variant in _statuses.values():
-		if not (status_variant is Dictionary):
-			continue
-		var status: Dictionary = status_variant
-		snapshot.append({
-			"id": StringName(String(status.get("id", ""))),
-			"stacks": int(status.get("stacks", 0)),
-			"duration_remaining": float(status.get("duration_remaining", 0.0)),
-			"tick_interval": float(status.get("tick_interval", 0.0)),
-			"tick_damage": float(status.get("tick_damage", 0.0)),
-			"tick_damage_total": _get_status_tick_damage_total(status),
-			"damage_type": StringName(String(status.get("damage_type", ""))),
-			"element": StringName(String(status.get("element", "")))
-		})
-	return snapshot
+	return StatusEffectQueryScript.get_status_snapshot(_statuses)
 
 
 func clear_statuses() -> void:
@@ -257,23 +239,7 @@ func is_movement_frozen() -> bool:
 
 
 func get_move_speed_multiplier() -> float:
-	var slow_percent: float = 0.0
-	for id_variant: Variant in _statuses.keys():
-		var status: Dictionary = _statuses[id_variant]
-		var definition: Dictionary = _get_dictionary(status.get("definition", {}))
-		var stacks: int = maxi(int(status.get("stacks", 1)), 1)
-		if _get_effect_bool(definition, "locks_movement", false) and not MOVEMENT_LOCK_STATUS_IDS.has(StringName(String(id_variant))):
-			return 0.0
-		slow_percent += float(status.get("slow_percent", 0.0))
-		slow_percent += _get_effect_value(definition, "move_slow_per_stack", 0.0) * float(stacks)
-
-	var max_slow: float = 0.60
-	if _is_boss():
-		max_slow = 0.35
-	elif _is_elite():
-		max_slow = 0.35
-
-	return maxf(1.0 - clampf(slow_percent, 0.0, max_slow), 0.05)
+	return StatusEffectQueryScript.movement_speed_multiplier(_statuses, MOVEMENT_LOCK_STATUS_IDS, _is_boss(), _is_elite())
 
 
 func get_damage_taken_multiplier(damage_type: Variant = &"", category: Variant = &"") -> float:
@@ -281,37 +247,7 @@ func get_damage_taken_multiplier(damage_type: Variant = &"", category: Variant =
 
 
 func get_vulnerability_total(damage_type: Variant = &"", category: Variant = &"", packet: Variant = {}) -> float:
-	var type_name: String = String(damage_type)
-	var category_name: String = String(category)
-	var multiplier_add: float = 0.0
-	for status_variant: Variant in _statuses.values():
-		var status: Dictionary = status_variant
-		var definition: Dictionary = _get_dictionary(status.get("definition", {}))
-		var stacks: float = float(maxi(int(status.get("stacks", 1)), 1))
-		var effect: Dictionary = _get_dictionary(definition.get("effect", {}))
-
-		multiplier_add += float(effect.get("all_damage_taken_multiplier_add_per_stack", 0.0)) * stacks
-		multiplier_add += float(effect.get("%s_damage_taken_multiplier_add_per_stack" % type_name, 0.0)) * stacks
-		multiplier_add += float(status.get("all_damage_taken_multiplier_add_per_stack", 0.0)) * stacks
-		multiplier_add += float(status.get("%s_damage_taken_multiplier_add_per_stack" % type_name, 0.0)) * stacks
-		if category_name != "":
-			multiplier_add += float(effect.get("%s_damage_taken_multiplier_add_per_stack" % category_name, 0.0)) * stacks
-			multiplier_add += float(status.get("%s_damage_taken_multiplier_add_per_stack" % category_name, 0.0)) * stacks
-		if type_name == "physical" or category_name == "direct_physical":
-			multiplier_add += float(status.get("armor_break_multiplier_add", 0.0)) * stacks
-		if effect.has("next_damage_taken_multiplier_add") and _can_consume_next_damage_taken(packet):
-			multiplier_add += float(effect.get("next_damage_taken_multiplier_add", 0.0))
-		if _is_full_stack_explosion_vulnerability_active(status, packet):
-			multiplier_add += float(status.get("full_stack_explosion_damage_taken_multiplier_add", 0.0))
-
-	var cap_add: float = 0.30
-	var floor_value: float = -0.60
-	if _is_boss():
-		cap_add = 0.15
-		floor_value = -0.50
-	elif _is_elite():
-		cap_add = 0.20
-	return clampf(multiplier_add, floor_value, cap_add)
+	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite())
 
 
 func _update_damage_over_time(status: Dictionary, delta: float) -> void:
@@ -356,31 +292,15 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 
 
 func _has_status_tick_work(status: Dictionary) -> bool:
-	return float(status.get("tick_damage", 0.0)) > 0.0 or not _get_array(status.get("on_tick_effects", [])).is_empty()
+	return StatusEffectTickHelperScript.has_status_tick_work(status)
 
 
 func _should_consume_stack_on_tick(status: Dictionary) -> bool:
-	if status.has("consume_stack_on_tick"):
-		return bool(status.get("consume_stack_on_tick", false))
-	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
-	return bool(definition.get("consume_stack_on_tick", false))
+	return StatusEffectTickHelperScript.should_consume_stack_on_tick(status)
 
 
 func _get_status_tick_damage_total(status: Dictionary) -> float:
-	var stacks: float = float(maxi(int(status.get("stacks", 1)), 1))
-	var total: float = float(status.get("tick_damage", 0.0)) * stacks
-	var power: float = float(status.get("power", 0.0))
-	for effect_variant: Variant in _get_array(status.get("on_tick_effects", [])):
-		if not (effect_variant is Dictionary):
-			continue
-		var effect: Dictionary = effect_variant
-		if String(effect.get("type", "")) != "damage":
-			continue
-		if effect.has("power_scale"):
-			total += power * float(effect.get("power_scale", 0.0))
-		elif effect.has("power_scale_per_stack"):
-			total += power * float(effect.get("power_scale_per_stack", 0.0)) * stacks
-	return total
+	return StatusEffectTickHelperScript.tick_damage_total(status)
 
 
 func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:
@@ -629,38 +549,15 @@ func _apply_enemy_tier_rules(_status_id: StringName, definition: Dictionary) -> 
 
 
 func _can_consume_next_damage_taken(packet: Variant) -> bool:
-	if packet is Dictionary and (packet as Dictionary).is_empty():
-		return true
-	var damage_type: String = String(_damage_packet_value(packet, "damage_type", ""))
-	var damage_origin: String = String(_damage_packet_value(packet, "damage_origin", ""))
-	if damage_type == "status_dot" or damage_origin == "field":
-		return false
-	if damage_origin == "reaction" and String(_damage_packet_value(packet, "reaction_tier", "minor")) == "minor":
-		return false
-	return true
+	return StatusEffectQueryScript.can_consume_next_damage_taken(packet)
 
 
 func _is_full_stack_explosion_vulnerability_active(status: Dictionary, packet: Variant) -> bool:
-	if not status.has("full_stack_explosion_damage_taken_multiplier_add"):
-		return false
-	var required_stacks: int = maxi(int(status.get("full_stack_required_stacks", status.get("stacks", 1))), 1)
-	if int(status.get("stacks", 0)) < required_stacks:
-		return false
-	var damage_origin: String = String(_damage_packet_value(packet, "damage_origin", ""))
-	var damage_type: String = String(_damage_packet_value(packet, "damage_type", ""))
-	var source_type: String = String(_damage_packet_value(packet, "source_type", ""))
-	return damage_origin == "reaction" or damage_type == "reaction_damage" or source_type == "explosion"
+	return StatusEffectQueryScript.is_full_stack_explosion_vulnerability_active(status, packet)
 
 
 func _damage_packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
-	if packet is Dictionary:
-		return (packet as Dictionary).get(key, fallback)
-	if packet is RefCounted:
-		if packet.has_method("packet_value"):
-			return packet.call("packet_value", key, fallback)
-		if packet.has_method("get_value"):
-			return packet.call("get_value", key, fallback)
-	return fallback
+	return StatusEffectQueryScript.damage_packet_value(packet, key, fallback)
 
 
 func _get_status_definition(status_id: StringName) -> Dictionary:
