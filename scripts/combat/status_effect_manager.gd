@@ -41,17 +41,45 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 				converted_params[key] = definition[key]
 		return apply_status(converted_status_id, converted_params)
 
+	var stack_data: Dictionary = _resolve_status_stack_data(id, definition, params)
+	var status: Dictionary = _build_status_runtime_data(id, definition, params, stack_data)
+	var current_stacks: int = int(stack_data.get("current_stacks", 0))
+	var new_stacks: int = int(stack_data.get("new_stacks", 0))
+	var max_stacks: int = int(stack_data.get("max_stacks", 1))
+
+	var next_tick_interval: float = float(status["tick_interval"])
+	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
+	_statuses[id] = status
+	_refresh_status_visual()
+
+	_notify_status_applied(id, status)
+	if new_stacks >= max_stacks and current_stacks < max_stacks:
+		_handle_max_stack_reached(id, status)
+	_apply_poison_slow_synergy()
+	return true
+
+
+func _resolve_status_stack_data(id: StringName, definition: Dictionary, params: Dictionary) -> Dictionary:
 	var status: Dictionary = _statuses.get(id, {}).duplicate(true)
 	var stacks_to_add: int = maxi(int(params.get("stacks", params.get("stack", 1))), 1)
 	var max_stacks: int = maxi(int(params.get("max_stacks", definition.get("max_stacks", 1))), 1)
 	var current_stacks: int = int(status.get("stacks", 0))
-	var new_stacks: int = mini(current_stacks + stacks_to_add, max_stacks)
-	var duration: float = maxf(float(params.get("duration", definition.get("duration", 1.0))), 0.05)
+	return {
+		"status": status,
+		"current_stacks": current_stacks,
+		"new_stacks": mini(current_stacks + stacks_to_add, max_stacks),
+		"max_stacks": max_stacks,
+		"duration": maxf(float(params.get("duration", definition.get("duration", 1.0))), 0.05)
+	}
 
+
+func _build_status_runtime_data(id: StringName, definition: Dictionary, params: Dictionary, stack_data: Dictionary) -> Dictionary:
+	var status: Dictionary = stack_data.get("status", {}).duplicate(true)
+	var max_stacks: int = int(stack_data.get("max_stacks", 1))
 	status["id"] = id
 	status["definition"] = definition
-	status["stacks"] = new_stacks
-	status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), duration)
+	status["stacks"] = int(stack_data.get("new_stacks", 0))
+	status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), float(stack_data.get("duration", 1.0)))
 	status["tick_interval"] = maxf(float(params.get("tick_interval", definition.get("tick_interval", 0.5))), 0.05)
 	var configured_tick_damage: float = maxf(float(params.get("tick_damage", params.get("damage", definition.get("damage", 0.0)))), 0.0)
 	configured_tick_damage = maxf(configured_tick_damage * maxf(1.0 + float(params.get("damage_multiplier_add", 0.0)), 0.0), 0.0)
@@ -83,17 +111,7 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	if params.has("full_stack_explosion_damage_taken_multiplier_add"):
 		status["full_stack_explosion_damage_taken_multiplier_add"] = float(params.get("full_stack_explosion_damage_taken_multiplier_add", 0.0))
 		status["full_stack_required_stacks"] = int(params.get("full_stack_required_stacks", max_stacks))
-
-	var next_tick_interval: float = float(status["tick_interval"])
-	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
-	_statuses[id] = status
-	_refresh_status_visual()
-
-	_notify_status_applied(id, status)
-	if new_stacks >= max_stacks and current_stacks < max_stacks:
-		_handle_max_stack_reached(id, status)
-	_apply_poison_slow_synergy()
-	return true
+	return status
 
 
 func update_status_effects(delta: float) -> void:
