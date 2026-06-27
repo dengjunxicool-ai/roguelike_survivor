@@ -356,13 +356,10 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		var target_key: String = str(target.get_instance_id())
 		var same_target_hit_index: int = int(target_hit_counts.get(target_key, 0))
 		target_hit_counts[target_key] = same_target_hit_index + 1
-		var visual_start_position: Vector2 = _resolve_projectile_visual_start_position(caster.global_position, target.global_position, same_target_hit_index, params)
-		var visual_target_position: Vector2 = _resolve_projectile_visual_target_position(target.global_position, same_target_hit_index, params)
-		visual_start_position = _apply_projectile_visual_start_offset(visual_start_position, visual_target_position, params)
-
-		var direction: Vector2 = visual_start_position.direction_to(visual_target_position)
-		if direction == Vector2.ZERO:
-			direction = Vector2.RIGHT
+		var launch_data: Dictionary = _build_targeted_projectile_launch_data(params, caster.global_position, target.global_position, same_target_hit_index)
+		var visual_start_position: Vector2 = launch_data.get("position", caster.global_position)
+		var visual_target_position: Vector2 = launch_data.get("target_position", target.global_position)
+		var direction: Vector2 = launch_data.get("direction", Vector2.RIGHT)
 		var projectile_context: Dictionary = context.duplicate(true)
 		projectile_context["target"] = target
 		var projectile_params: Dictionary = params.duplicate(true)
@@ -405,6 +402,20 @@ func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) 
 		"lifetime": maxf(float(params.get("lifetime", 2.0)), 0.1),
 		"damage": maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0),
 		"source_id": StringName(str(params.get("projectile_id", params.get("source_id", ""))))
+	}
+
+
+func _build_targeted_projectile_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
+	var visual_start_position: Vector2 = _resolve_projectile_visual_start_position(caster_position, target_position, same_target_hit_index, params)
+	var visual_target_position: Vector2 = _resolve_projectile_visual_target_position(target_position, same_target_hit_index, params)
+	visual_start_position = _apply_projectile_visual_start_offset(visual_start_position, visual_target_position, params)
+	var direction: Vector2 = visual_start_position.direction_to(visual_target_position)
+	if direction == Vector2.ZERO:
+		direction = Vector2.RIGHT
+	return {
+		"position": visual_start_position,
+		"target_position": visual_target_position,
+		"direction": direction
 	}
 
 
