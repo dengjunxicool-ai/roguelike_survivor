@@ -264,9 +264,9 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | 技能伤害/冷却/投射物 | `data/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
 | 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify/verify_damage_formula.gd`, Damage docs |
 | DOT/控制/易伤 | `data/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
-| 新怪物 | `data/enemies.json` | `waves.json`, behavior registry, enemy validators |
-| 新敌方技能 | `data/enemy_skills.json` | `EnemyActionRegistry`, `EnemyDamagePacketBuilder` |
-| 波次节奏 | `data/waves.json` | `WaveDirector`, `BossEncounterController`, HUD timer |
+| 新怪物 | `data/enemies/enemies.json` | `waves.json`, behavior registry, enemy validators |
+| 新敌方技能 | `data/enemies/enemy_skills.json` | `EnemyActionRegistry`, `EnemyDamagePacketBuilder` |
+| 波次节奏 | `data/waves/waves.json` | `WaveDirector`, `BossEncounterController`, HUD timer |
 | Boss 胜利条件 | `EnemySpawner._on_boss_died()` | `UIManager._on_boss_defeated`, result/progression |
 | 地图环境机制 | `data/maps/maps.json`, `MapVariableRuntime` | `EnemySpawner.spawn_map_enemy`, hazard damage |
 | 升级选项 | `UpgradePool` | `Player.apply_upgrade`, SkillManager |

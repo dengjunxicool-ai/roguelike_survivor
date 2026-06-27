@@ -195,7 +195,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 怪物定义、生成、波次时间线、Boss encounter、怪物行为、敌方技能/action、状态、受击、死亡奖励和击杀事件。 |
-| 主要文件 | `scripts/enemies/*`, `scripts/enemies/timeline/*`, `spawning/*`, `behaviors/*`, `skills/*`, `actions/*`, `death/*`, `data/enemies.json`, `enemy_skills.json`, `waves.json` |
+| 主要文件 | `scripts/enemies/*`, `scripts/enemies/timeline/*`, `spawning/*`, `behaviors/*`, `skills/*`, `actions/*`, `death/*`, `data/enemies/enemies.json`, `enemy_skills.json`, `waves.json` |
 | 做了什么 | `EnemySpawner` 是场景门面；`EnemyTimelineController` 推进波次、奖励事件和 Boss；`EnemySpawnService` 统一实例化怪物；`EnemyBase` 聚合配置、行为、技能、状态、视觉、奖励和受击入口；行为层决定移动和触发动作；敌方技能/action 层生成投射物、范围、召唤、自爆、Boss 技能等；死亡统一走 `EnemyDeathPipeline`。 |
 | 怎么做 | Spawner 每帧调用 timeline；WaveDirector 按 wave 配置刷怪；BossEncounterController 到时生成 Boss 和小怪；SpawnRequest 携带 enemy id、来源、倍数、奖励策略；EnemyBase ready 后读配置并初始化行为/技能/状态；死亡 pipeline 根据 death policy 发奖励、经验、魂石、击杀事件、`died`。 |
 | 接收 | `EnemySpawner.reset_for_run()`、`apply_run_modifiers()`、`spawn_map_enemy()`；EnemyBase 接收 `take_damage()`、`apply_status()`；行为每帧 tick；敌方技能接收 action type 或 skill id。 |

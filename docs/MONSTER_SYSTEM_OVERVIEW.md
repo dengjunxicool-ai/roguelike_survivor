@@ -1,6 +1,6 @@
 # 怪物系统梳理
 
-本文档用于后续快速、安全地改造所有怪物相关功能。目标不是重复函数索引，而是明确“改什么应该先看哪里、会影响哪些系统、验证什么才算安全”。当前怪物系统已经从早期集中式逻辑拆成数据驱动结构：怪物定义在 `data/enemies.json`，敌方技能定义在 `data/enemy_skills.json`，波次和 Boss encounter 定义在 `data/waves.json`；运行时由 `EnemySpawner` 作为场景门面，委托 `timeline/`、`spawning/`、`behaviors/`、`skills/`、`actions/`、`death/` 等模块完成实际工作。
+本文档用于后续快速、安全地改造所有怪物相关功能。目标不是重复函数索引，而是明确“改什么应该先看哪里、会影响哪些系统、验证什么才算安全”。当前怪物系统已经从早期集中式逻辑拆成数据驱动结构：怪物定义在 `data/enemies/enemies.json`，敌方技能定义在 `data/enemies/enemy_skills.json`，波次和 Boss encounter 定义在 `data/waves/waves.json`；运行时由 `EnemySpawner` 作为场景门面，委托 `timeline/`、`spawning/`、`behaviors/`、`skills/`、`actions/`、`death/` 等模块完成实际工作。
 
 本文档按 2026-06-12 当前项目代码梳理。后续任何敌人相关需求，优先按下面顺序定位：先判断是数据调参、生成时间线、行为决策、技能动作、伤害应用、死亡副作用，还是跨系统展示/统计；再进入对应文件。不要从 `EnemyBase` 或 `EnemySpawner` 直接扩散改动，除非需求本身就是改生命周期入口或场景门面信号。
 
@@ -19,9 +19,9 @@
 
 | 需求类型 | 优先落点 | 不要优先改 |
 | --- | --- | --- |
-| 只改数值、出现时间、怪物组合 | `data/enemies.json`、`data/waves.json` | `EnemyBase`、`EnemySpawner` |
-| 新增普通/精英怪 | `data/enemies.json` + 复用现有 behavior/skill | 新增硬编码 ID 分支 |
-| 新增敌方动作效果 | `data/enemy_skills.json` + `EnemyActionRegistry` | `EnemyActionExecutor` 或行为类里直接实例化效果 |
+| 只改数值、出现时间、怪物组合 | `data/enemies/enemies.json`、`data/waves/waves.json` | `EnemyBase`、`EnemySpawner` |
+| 新增普通/精英怪 | `data/enemies/enemies.json` + 复用现有 behavior/skill | 新增硬编码 ID 分支 |
+| 新增敌方动作效果 | `data/enemies/enemy_skills.json` + `EnemyActionRegistry` | `EnemyActionExecutor` 或行为类里直接实例化效果 |
 | 新增行为模式 | `scripts/enemies/behaviors/*` + `EnemyBehaviorRegistry` + 校验脚本 | 在 `EnemyBase._physics_process()` 写分支 |
 | 新增 Boss 阶段机制 | `behavior.phases` + `boss_phase` enemy skill/action | 恢复隐式 phase 或按血量写死逻辑 |
 | 改敌人受击/承伤 | `DamageSystem`、敌人 application stages、承伤配置 | 直接改 `current_health` |
@@ -41,9 +41,9 @@
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 怪物数据 | `data/enemies.json` | 怪物 ID、类型、基础属性、行为、技能引用、死亡策略、视觉配置。 |
-| 敌方技能数据 | `data/enemy_skills.json` | 敌方技能定义和 action 参数。普通行为与 Boss phase 都通过这里执行动作。 |
-| 波次数据 | `data/waves.json` | 普通 wave、刷怪组、倍率、精英事件、Boss encounter、Boss 小怪和奖励事件。 |
+| 怪物数据 | `data/enemies/enemies.json` | 怪物 ID、类型、基础属性、行为、技能引用、死亡策略、视觉配置。 |
+| 敌方技能数据 | `data/enemies/enemy_skills.json` | 敌方技能定义和 action 参数。普通行为与 Boss phase 都通过这里执行动作。 |
+| 波次数据 | `data/waves/waves.json` | 普通 wave、刷怪组、倍率、精英事件、Boss encounter、Boss 小怪和奖励事件。 |
 | 配置校验 | `tools/validate/validate_enemy_configs.js` | 校验怪物、技能、波次、Boss phase、死亡策略、必需 action 和跨文件引用。 |
 | 场景入口 | `scenes/enemy.tscn`、`scenes/boss.tscn` | 怪物和 Boss 场景。Boss 场景使用 `BossController`，继承 `EnemyBase`。 |
 | 刷怪门面 | `scripts/enemies/enemy_spawner.gd` | 场景节点入口，保留 UI 信号、旧私有包装方法、运行修正和地图刷怪入口。 |
@@ -61,7 +61,7 @@
 
 ### 启动与数据读取
 
-1. `DataManager.load_all()` 读取 `data/enemies.json`、`data/enemy_skills.json`、`data/waves.json` 并按 id 建索引。
+1. `DataManager.load_all()` 读取 `data/enemies/enemies.json`、`data/enemies/enemy_skills.json`、`data/waves/waves.json` 并按 id 建索引。
 2. `GameData` 是静态数据门面，优先从 `/root/DataManager` 取深拷贝；缺失时直接读 JSON。
 3. 运行时不要直接修改 `GameData` 返回的配置 Dictionary。动态倍率应走实例属性、Spawner modifier 或 `EnemySpawnRequest`。
 
@@ -115,7 +115,7 @@
 
 ## 数据契约
 
-### `data/enemies.json`
+### `data/enemies/enemies.json`
 
 | 字段 | 消费方 | 改造注意 |
 | --- | --- | --- |
@@ -139,7 +139,7 @@
 | `death_effect` | `EnemyActionExecutor.apply_death_effect()` | 当前支持 `poison_pool`、`spawn_enemies`。复杂死亡效果建议后续 action 化。 |
 | `visual` | `EnemyVisualController` | 空配置使用场景默认视觉；非空配置按状态播放。 |
 
-### `data/enemy_skills.json`
+### `data/enemies/enemy_skills.json`
 
 | 字段 | 消费方 | 改造注意 |
 | --- | --- | --- |
@@ -149,7 +149,7 @@
 | `actions[].type` | `EnemyActionRegistry` | 新增 action 必须同时扩展 registry 和校验 schema。 |
 | `actions[].params.element` / `damage_type` | `EnemyDamagePacketBuilder` | 敌方 projectile 和 area 必须显式表达元素和伤害类型，避免吃错玩家规则。 |
 
-### `data/waves.json`
+### `data/waves/waves.json`
 
 | 字段 | 消费方 | 改造注意 |
 | --- | --- | --- |
@@ -206,15 +206,15 @@
 
 | 要改的功能 | 先看 | 需要同步 | 必跑验证 |
 | --- | --- | --- | --- |
-| 敌人基础属性 | `data/enemies.json.base_stats` | `tools/validate/validate_enemy_configs.js` 必填字段 | `node tools\validate\validate_enemy_configs.js` |
+| 敌人基础属性 | `data/enemies/enemies.json.base_stats` | `tools/validate/validate_enemy_configs.js` 必填字段 | `node tools\validate\validate_enemy_configs.js` |
 | 敌人移动/攻击节奏 | 对应 `scripts/enemies/behaviors/*`、`behavior` 参数 | 行为必需 action、冷却字段、预警表现 | `enemy_skill_system_check.gd` |
 | 敌人远程弹幕 | `enemy_skills.json` 的 `projectile`/`ring_projectiles` action | `EnemyActionRegistry`、`EnemyDamagePacketBuilder` 参数 | `enemy_skill_system_check.gd` |
 | 敌人地面范围 | `enemy_skills.json` 的 `damage_area`/Boss area action | action 参数 schema、元素/伤害类型 | `enemy_skill_system_check.gd` |
 | 召唤物 | `summon` action、`EnemySpawnRequest.summon()` | 奖励策略、经验倍率、source meta | `enemy_skill_system_check.gd` |
 | 自爆怪 | `explode_near_player`、`self_explode` action、`death_policy.self_explosion` | 是否掉经验/魂石/击杀事件 | `enemy_skill_system_check.gd` |
-| 普通波次 | `data/waves.json.waves[]`、`WaveDirector` | wave UI 信号、经验自动收集、生成上限 | `wave_system_check.gd` |
+| 普通波次 | `data/waves/waves.json.waves[]`、`WaveDirector` | wave UI 信号、经验自动收集、生成上限 | `wave_system_check.gd` |
 | 精英事件 | `waves[].events[]`、`EnemySpawner._start_wave_event()` | `VALID_WAVE_EVENT_TYPES`、event 倍率 | `validate_enemy_configs.js` |
-| Boss 出场 | `data/waves.json.boss_event`、`BossEncounterController` | Boss 死亡信号、UI 胜利、Boss 小怪 | `enemy_timeline_system_check.gd` |
+| Boss 出场 | `data/waves/waves.json.boss_event`、`BossEncounterController` | Boss 死亡信号、UI 胜利、Boss 小怪 | `enemy_timeline_system_check.gd` |
 | Boss 阶段技能 | `enemies.json.behavior.phases`、`enemy_skills.json` 的 `boss_phase` | `checkBossBehaviorConfig()`、action schema | `enemy_skill_system_check.gd` |
 | 敌人承伤 | `DamageApplicationPipeline._enemy_stages()`、`EnemyRewardController` | 统计、弹字、Boss 核心减伤 | 伤害专项 + `wave_system_check.gd` |
 | 死亡奖励/击杀事件 | `EnemyDeathPipeline`、`EnemyRewardController`、`death_policy` | 经验晶体、魂石、协同、角色特质、技能事件 | `enemy_timeline_system_check.gd` |
@@ -224,17 +224,17 @@
 
 ### 新增普通怪或精英怪
 
-1. 在 `data/enemies.json.monsters` 增加唯一 `id`、`type`、`base_stats`、`behavior`、`skills`、`visual`。
+1. 在 `data/enemies/enemies.json.monsters` 增加唯一 `id`、`type`、`base_stats`、`behavior`、`skills`、`visual`。
 2. 如果复用现有行为，只改 `behavior` 参数和 `skills` 引用。
-3. 如果需要新动作，先在 `data/enemy_skills.json` 增加 action，再在怪物 `skills` 中引用。
+3. 如果需要新动作，先在 `data/enemies/enemy_skills.json` 增加 action，再在怪物 `skills` 中引用。
 4. 如果需要新行为，新建 `scripts/enemies/behaviors/xxx_behavior.gd`，在 `EnemyBehaviorRegistry` 注册，并在 `tools/validate/validate_enemy_configs.js` 加入合法类型和必需 action。
-5. 在 `data/waves.json` 的 `groups[].enemy_ids` 或 `events[]` 中引用新怪。
+5. 在 `data/waves/waves.json` 的 `groups[].enemy_ids` 或 `events[]` 中引用新怪。
 6. 需要地图预览时，补 `data/maps/maps.json` 的 `enemy_preview_ids`、`elite_preview_ids` 或 `boss_id`。
 7. 跑 `node tools/validate/validate_enemy_configs.js` 和相关 Godot debug check。
 
 ### 新增敌方技能或 action
 
-1. 优先在 `data/enemy_skills.json` 新增技能，不要把具体动作写回 `EnemyBase`。
+1. 优先在 `data/enemies/enemy_skills.json` 新增技能，不要把具体动作写回 `EnemyBase`。
 2. 现有 action 能表达时只加数据：`projectile`、`damage_area`、`summon`、`contact_status`、`self_explode`、Boss phase action 等。
 3. 现有 action 不够时，扩展 `EnemyActionRegistry.execute()` 和参数执行逻辑。
 4. 同步扩展 `tools/validate/validate_enemy_configs.js` 的 `VALID_ENEMY_ACTION_TYPES` 和 `ENEMY_ACTION_PARAM_SCHEMAS`。
@@ -243,10 +243,10 @@
 
 ### 新增 Boss 或 Boss 阶段机制
 
-1. 在 `data/enemies.json` 增加 `type="boss"` 怪物。
+1. 在 `data/enemies/enemies.json` 增加 `type="boss"` 怪物。
 2. 复用 `boss_dungeon_heart` 时，必须配置显式 `behavior.phases`；每个 phase 的 `skills[].skill_id` 必须引用 `runtime="boss_phase"` 的 enemy skill。
 3. 如果是全新 Boss 行为，新建 behavior 类并注册，不要在 `EnemyBase` 增加 Boss 专用分发。
-4. 在 `data/waves.json.boss_event.boss_id` 指向新 Boss，必要时调整 `boss_multipliers`、`fairness` 和 `minion_spawn`。
+4. 在 `data/waves/waves.json.boss_event.boss_id` 指向新 Boss，必要时调整 `boss_multipliers`、`fairness` 和 `minion_spawn`。
 5. 验证 Boss `died` 信号能触发 `EnemySpawner._on_boss_died()` 和 UI 胜利结算。
 
 ### 调整波次节奏

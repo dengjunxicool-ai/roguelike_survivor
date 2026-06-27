@@ -13,7 +13,7 @@
 ## 核心结论
 
 1. 玩家攻击由 `data/skills.json` 的 `starting_skills` / `skills`、components、events 和 actions 驱动；角色只决定起始技能，不直接执行攻击。
-2. 敌方攻击由 `data/enemy_skills.json` 的 actions 驱动；怪物行为只决定何时触发技能，不应承载具体 projectile / area / summon 逻辑。
+2. 敌方攻击由 `data/enemies/enemy_skills.json` 的 actions 驱动；怪物行为只决定何时触发技能，不应承载具体 projectile / area / summon 逻辑。
 3. 玩家攻击和敌方攻击的构包路径必须分开：玩家走 `DamagePacketBuilder.from_skill_action()`，敌方走 `EnemyDamagePacketBuilder.build()`。
 4. 战斗对象只负责移动、命中、tick、事件回调、source 稳定和状态转发；不要在 projectile / area / orbit 内写公式或直接扣血。
 5. 真正扣血只发生在目标 `take_damage()` 后的 `DamageApplicationService` / application pipeline 中。
@@ -95,8 +95,8 @@ combat object 分布：
 | 神系数据 | `data/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
 | 角色起始技能 | `data/characters/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
 | 战斗对象数据 | `data/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
-| 敌方攻击数据 | `data/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
-| 怪物行为数据 | `data/enemies.json` | 行为类型、技能引用、接触伤害、行为范围、Boss phase 配置。 |
+| 敌方攻击数据 | `data/enemies/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
+| 怪物行为数据 | `data/enemies/enemies.json` | 行为类型、技能引用、接触伤害、行为范围、Boss phase 配置。 |
 | 玩家技能实例 | `scripts/skills/skill_manager.gd` | 持有 active skill instance。 |
 | 玩家技能 tick | `scripts/skills/skill_executor.gd` | 每帧遍历技能，构造上下文，交给 component runner。 |
 | 玩家触发时机 | `scripts/skills/skill_component_runner.gd` | 处理 cooldown、targeting、persistent_orbit，并触发 `on_cast`。 |
@@ -333,8 +333,8 @@ EnemyBase._apply_contact_damage()
 
 ### 新增敌方攻击
 
-1. 优先在 `data/enemy_skills.json` 新增技能和 action。
-2. 在 `data/enemies.json.skills` 或 Boss phase `behavior.phases[].skills[]` 引用技能。
+1. 优先在 `data/enemies/enemy_skills.json` 新增技能和 action。
+2. 在 `data/enemies/enemies.json.skills` 或 Boss phase `behavior.phases[].skills[]` 引用技能。
 3. 复用现有 action：`projectile`、`damage_area`、`ring_projectiles`、`summon`、`contact_status`、`self_explode` 等。
 4. 如果现有 action 不够，扩展 `EnemyActionRegistry.execute()`。
 5. 新敌方伤害必须用 `EnemyDamagePacketBuilder.build()`，不要走玩家 `SkillActionExecutor`。
@@ -343,7 +343,7 @@ EnemyBase._apply_contact_damage()
 
 ### 调整敌人接触/近战攻击
 
-1. 基础伤害改 `data/enemies.json.base_stats.contact_damage`。
+1. 基础伤害改 `data/enemies/enemies.json.base_stats.contact_damage`。
 2. 接触频率改 `base_stats.contact_interval`。
 3. 范围/触发距离改 `base_stats.attack_range` 或对应 `behavior` 参数。
 4. 接触附加状态用 `enemy_skills.json` 的 `contact_status` action，并从怪物技能引用。

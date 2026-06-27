@@ -6,12 +6,12 @@
 
 ## 当前结论
 
-- 当前波次配置入口是 `data/waves.json`，运行时门面是 `scripts/enemies/enemy_spawner.gd`，实际推进逻辑已拆到 `scripts/enemies/timeline/*`。
+- 当前波次配置入口是 `data/waves/waves.json`，运行时门面是 `scripts/enemies/enemy_spawner.gd`，实际推进逻辑已拆到 `scripts/enemies/timeline/*`。
 - 当前共有 8 个普通波次：`wave_1` 到 `wave_8`，普通阶段合计 240 秒；普通阶段结束后进入 `boss_event`，Boss 是 `dungeon_heart`。
 - `run.duration_seconds` 当前为 300 秒，`run.boss_spawn_time` 当前为 240 秒；离散波次实际以 `waves[].duration_seconds` 和波次列表是否结束驱动，`boss_spawn_time` 会被限制在普通阶段时长内。
 - 玩家开局等级来自 `waves.run.starting_level`，当前为 1。
 - 经验需求曲线来自 `waves.run.experience_formula`，当前是 table：Lv1 到 Lv15 需求分别为 `14, 24, 36, 52, 72, 96, 124, 156, 192, 232, 276, 324, 376, 432, 492`；超过表长度后继续使用最后一项。
-- 敌人经验产出来自 `data/enemies.json.base_stats.exp_drop`，生成时再乘 `waves[].enemy_multipliers.exp`、Boss 小怪倍率、召唤倍率或地图事件倍率。
+- 敌人经验产出来自 `data/enemies/enemies.json.base_stats.exp_drop`，生成时再乘 `waves[].enemy_multipliers.exp`、Boss 小怪倍率、召唤倍率或地图事件倍率。
 - 敌人死亡不直接给经验，而是由 `EnemyDeathPipeline` 调用 `EnemyBase._drop_experience_crystal()` 掉落 `scenes/experience_crystal.tscn`。
 - 经验晶体拾取后调用 `Player.add_experience()`；波次结束、普通阶段结束和 Boss 前祝福都会触发全屏经验收集。
 - 升级弹窗由 `Player.leveled_up` 信号触发；多级连升会在 `RunChoiceModalController.pending_level_up_count` 里排队逐个消费。
@@ -21,8 +21,8 @@
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 波次数据 | `data/waves.json` | 单局总时长、Boss 时间、经验曲线、升级权重阶段、普通波次、Boss encounter、小怪、奖励事件。 |
-| 怪物经验数据 | `data/enemies.json` | `base_stats.exp_drop` 定义敌人基础经验掉落。 |
+| 波次数据 | `data/waves/waves.json` | 单局总时长、Boss 时间、经验曲线、升级权重阶段、普通波次、Boss encounter、小怪、奖励事件。 |
+| 怪物经验数据 | `data/enemies/enemies.json` | `base_stats.exp_drop` 定义敌人基础经验掉落。 |
 | 升级数据 | `data/upgrades.json` | 局内普通升级、永久升级、诅咒选择及稀有度权重。 |
 | 数据门面 | `scripts/game/game_data.gd`, `scripts/core/data_manager.gd` | 读取并返回 `waves`、`run`、`upgrade`、`enemy` 配置。 |
 | 单局入口 | `scripts/game/run_scene_coordinator.gd` | 清理旧敌人、经验晶体和 hazard，重置 Player 与 Spawner。 |
@@ -197,7 +197,7 @@ flowchart TD
 3. 普通升级来自 `data/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
 4. 奖励/诅咒等运行中选项仍由对应 modal flow 排队进入 UI，不直接在波次系统里改玩家状态。
 
-## `data/waves.json` 契约
+## `data/waves/waves.json` 契约
 
 | 字段 | 消费方 | 改造注意 |
 | --- | --- | --- |
@@ -265,8 +265,8 @@ flowchart TD
 
 | 想改什么 | 第一入口 | 还要同步检查 |
 | --- | --- | --- |
-| 调整普通波次节奏 | `data/waves.json.waves[]` | `WaveDirector`、HUD 波次计时、`wave_system_check.gd`。 |
-| 增加新 wave | `data/waves.json.waves[]` | `duration_seconds` 总和、Boss 时间、怪物引用、配置校验。 |
+| 调整普通波次节奏 | `data/waves/waves.json.waves[]` | `WaveDirector`、HUD 波次计时、`wave_system_check.gd`。 |
+| 增加新 wave | `data/waves/waves.json.waves[]` | `duration_seconds` 总和、Boss 时间、怪物引用、配置校验。 |
 | 调整波内怪物组合 | `waves[].groups` | 敌人是否存在、行为是否有效、经验曲线是否被改变。 |
 | 调整刷怪总压力 | `spawn_interval`、`max_alive`、`count_min/max`、`enemy_spawn_count_multiplier_add` | 性能、远距离清理、UI 计数。 |
 | 调整敌人成长 | `enemy_multipliers.hp/damage/speed/defense_add` | 伤害承受、玩家受击、Boss/Elite 规则。 |
@@ -300,15 +300,15 @@ flowchart TD
 
 ### 调整普通波次
 
-1. 在 `data/waves.json.waves[]` 改 `duration_seconds`、`spawn_interval`、`max_alive`、`groups`、`enemy_multipliers`。
+1. 在 `data/waves/waves.json.waves[]` 改 `duration_seconds`、`spawn_interval`、`max_alive`、`groups`、`enemy_multipliers`。
 2. 如果改变普通阶段总时长，同步维护 `run.boss_spawn_time`、每波 `start_time/end_time` 和 Boss 前阶段权重。
-3. 新增或替换敌人时，确认 `data/enemies.json` 中存在且行为/技能配置可通过校验。
+3. 新增或替换敌人时，确认 `data/enemies/enemies.json` 中存在且行为/技能配置可通过校验。
 4. 跑 `node tools\validate\validate_enemy_configs.js`。
 5. 跑 `wave_system_check.gd`，确认波次启动、总量限制、波末经验收集仍正常。
 
 ### 调整经验曲线
 
-1. 改 `data/waves.json.run.experience_formula`。
+1. 改 `data/waves/waves.json.run.experience_formula`。
 2. table 模式下保证 values 覆盖目标等级范围；超过表长度会重复最后一档。
 3. 调整经验曲线后，联动检查敌人 `exp_drop` 和各波 `enemy_multipliers.exp`。
 4. 跑 `skill_progression_check.gd`，确认升级选项阶段仍符合预期。
@@ -316,7 +316,7 @@ flowchart TD
 
 ### 调整经验掉落
 
-1. 单个敌人改 `data/enemies.json.base_stats.exp_drop`。
+1. 单个敌人改 `data/enemies/enemies.json.base_stats.exp_drop`。
 2. 按波次成长改 `waves[].enemy_multipliers.exp`。
 3. Boss 小怪改 `boss_event.minion_spawn.enemy_multipliers.exp`。
 4. 召唤、Boss core、自爆等特殊来源检查 `EnemySpawnRequest` 和 `death_policy`。

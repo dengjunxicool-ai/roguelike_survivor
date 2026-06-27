@@ -2,9 +2,9 @@ const path = require("path");
 const { readJsonFile } = require("../lib/json_file");
 
 const root = path.resolve(__dirname, "../..");
-const enemiesPath = path.join(root, "data", "enemies.json");
-const enemySkillsPath = path.join(root, "data", "enemy_skills.json");
-const wavesPath = path.join(root, "data", "waves.json");
+const enemiesPath = path.join(root, "data", "enemies", "enemies.json");
+const enemySkillsPath = path.join(root, "data", "enemies", "enemy_skills.json");
+const wavesPath = path.join(root, "data", "waves", "waves.json");
 
 const VALID_ENEMY_TYPES = new Set(["normal", "elite", "boss"]);
 const VALID_BEHAVIOR_TYPES = new Set([
