@@ -407,10 +407,22 @@ func _apply_projectile_field_tick_rules(rules: Dictionary, context: Dictionary) 
 
 
 func _on_trap_hit(rules: Dictionary, context: Dictionary) -> void:
+	_apply_hunter_trap_hit_rules(rules, context)
+	_apply_trap_damage_hit_rules(rules, context)
+	_apply_trap_control_hit_rules(rules, context)
+
+
+func _apply_hunter_trap_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_prey_mark_on_strong_trap_hit(rules, context)
+
+
+func _apply_trap_damage_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_boss_core_trap_bonus_damage(rules, context)
 	_apply_trap_hit_explosion(rules, context)
 	_apply_small_trap_on_trigger(rules, context)
+
+
+func _apply_trap_control_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_chain_trap_root_on_hit(rules, context)
 	_apply_pincer_reaction_on_root(rules, context)
 
