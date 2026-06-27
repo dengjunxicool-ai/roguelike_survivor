@@ -130,7 +130,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 玩家移动、生命、经验、升级、受击、状态、拾取范围、运行 modifier、子系统挂载。 |
-| 主要文件 | `scripts/player/player_controller.gd`, `player_stats.gd`, `player_modifier_applier.gd`, `player_visual_controller.gd`, `player_status_display_controller.gd` |
+| 主要文件 | `scripts/player/player_controller.gd`, `player_modifier_applier.gd`, `player_visual_controller.gd`, `player_status_display_controller.gd` |
 | 做了什么 | Player 是运行聚合根：挂载 SkillManager、SkillExecutor、StatusEffectManager、RelicManager、SynergyManager、CharacterRuntime、Trait 系统等。它处理输入移动、经验升级、应用升级、受击入口和死亡。 |
 | 怎么做 | `_physics_process` 读取输入并移动；状态和 modifier 影响速度、拾取、伤害；`add_experience()` 累积经验并在达标时发升级信号；`take_damage()` 委托 `DamageApplicationService.apply_player_damage()`；`apply_upgrade()` 根据 id 前缀分派到技能升级或普通升级。 |
 | 接收 | 输入动作 `move_left/right/up/down`；ExpGem 调用 `add_experience()`；敌人/地图/状态调用 `take_damage()` 或 `apply_status()`；UICommandDispatcher 调用 `apply_upgrade()`。 |
