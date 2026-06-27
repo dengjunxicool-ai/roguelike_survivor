@@ -9,6 +9,9 @@ const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_lim
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
+const BurnStatusRuleHelperScript: Script = preload("res://scripts/skills/special_rules/burn_status_rule_helper.gd")
+const SkillSpecialRuleSourceScript: Script = preload("res://scripts/skills/special_rules/skill_special_rule_source.gd")
+const SpecialRuleCommonScript: Script = preload("res://scripts/skills/special_rules/special_rule_common.gd")
 
 static var _soulburn_target_cooldowns: Dictionary = {}
 static var _flame_core_burst_cooldowns: Dictionary = {}
@@ -111,21 +114,8 @@ func _get_burn_status_params(params: Dictionary, context: Dictionary) -> Diction
 	var rules: Dictionary = _get_rules(context)
 	if rules.is_empty():
 		return params
-
-	if rules.has("burn_duration_add"):
-		params["duration"] = float(params.get("duration", 3.0)) + float(rules.get("burn_duration_add", 0.0))
-	if rules.has("burn_max_stacks_add") or rules.has("boss_burn_max_stacks_add"):
-		var target: Node = context.get("target") as Node
-		var base_max_stacks: int = int(params.get("max_stacks", _get_burn_base_max_stacks()))
-		var add_stacks: int = int(rules.get("burn_max_stacks_add", 0))
-		if _is_boss(target):
-			add_stacks = int(rules.get("boss_burn_max_stacks_add", add_stacks))
-		params["max_stacks"] = maxi(base_max_stacks + add_stacks, 1)
-	if rules.has("burn_damage_multiplier_add"):
-		var base_damage: float = float(params.get("damage", params.get("tick_damage", _get_burn_base_damage())))
-		if base_damage > 0:
-			params["damage"] = maxf(base_damage * maxf(1.0 + float(rules.get("burn_damage_multiplier_add", 0.0)), 0.0), 0.0)
-	return params
+	var target: Node = context.get("target") as Node
+	return BurnStatusRuleHelperScript.apply(params, rules, target, _get_burn_base_max_stacks(), _get_burn_base_damage(), _is_boss(target))
 
 
 func _get_burn_base_max_stacks() -> int:
@@ -2734,37 +2724,7 @@ func _set_dynamic_runtime_modifier(skill_instance: RefCounted, modifier_namespac
 
 
 func _get_rules(context: Dictionary) -> Dictionary:
-	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
-	if skill_instance == null:
-		return {}
-	var result: Dictionary = {}
-	var definition: RefCounted = skill_instance.get("definition") as RefCounted
-	if definition != null:
-		var base_rules_value: Variant = definition.get("base_special_rules")
-		if base_rules_value is Dictionary:
-			var base_rules: Dictionary = base_rules_value
-			for key_variant: Variant in base_rules.keys():
-				result[String(key_variant)] = base_rules[key_variant]
-	var modifiers_variant: Variant = skill_instance.get("runtime_modifiers")
-	if modifiers_variant is Dictionary:
-		var modifiers: Dictionary = modifiers_variant
-		for key: String in [
-			"burn_damage_multiplier_add",
-			"burn_duration_add",
-			"burn_max_stacks_add",
-			"boss_burn_max_stacks_add",
-			"burn_move_speed_multiplier_add_per_stack",
-			"lava_duration_add",
-			"lava_radius_multiplier_add"
-		]:
-			if modifiers.has(key):
-				result[key] = modifiers[key]
-	var value: Variant = skill_instance.get("runtime_special_rules")
-	if value is Dictionary:
-		var special_rules: Dictionary = value
-		for key_variant: Variant in special_rules.keys():
-			result[String(key_variant)] = special_rules[key_variant]
-	return result
+	return SkillSpecialRuleSourceScript.get_rules(context.get("skill_instance") as RefCounted)
 
 
 func _get_skill_damage(context: Dictionary) -> int:
@@ -2788,34 +2748,31 @@ func _build_special_packet(source_id: String, amount: int, origin: String, can_c
 
 
 func _is_boss(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"bosses") or bool(target.get_meta("is_boss", false)) or String(target.get_meta("enemy_rank", "")) == "boss")
+	return SpecialRuleCommonScript.is_boss(target)
 
 
 func _is_elite(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"elites") or bool(target.get_meta("is_elite", false)) or String(target.get_meta("enemy_rank", "")) == "elite")
+	return SpecialRuleCommonScript.is_elite(target)
 
 
 func _is_boss_core(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"boss_cores") or bool(target.get_meta("is_boss_core", false)) or String(target.get_meta("enemy_type", "")) == "boss_core")
+	return SpecialRuleCommonScript.is_boss_core(target)
 
 
 func _target_key(target: Node) -> String:
-	return str(target.get_instance_id()) if target != null else "none"
+	return SpecialRuleCommonScript.target_key(target)
 
 
 func _metadata_key(namespace_text: String, suffix: String) -> String:
-	return MetadataKeyScript.key(namespace_text, suffix, "skill_rule")
+	return SpecialRuleCommonScript.metadata_key(namespace_text, suffix)
 
 
 func _metadata_identifier(raw_key: String) -> String:
-	return MetadataKeyScript.identifier(raw_key, "skill_rule")
+	return SpecialRuleCommonScript.metadata_identifier(raw_key)
 
 
 func _health_ratio(target: Node) -> float:
-	if target == null:
-		return 1.0
-	var max_health: float = maxf(float(target.get("max_health")), 1.0)
-	return clampf(float(target.get("current_health")) / max_health, 0.0, 1.0)
+	return SpecialRuleCommonScript.health_ratio(target)
 
 
 func _is_critical_hit_context(context: Dictionary) -> bool:
@@ -2826,25 +2783,16 @@ func _is_critical_hit_context(context: Dictionary) -> bool:
 
 
 func _is_target_moving(target: Node) -> bool:
-	if target == null:
-		return false
-	var velocity_variant: Variant = target.get("velocity")
-	if velocity_variant is Vector2:
-		return (velocity_variant as Vector2).length_squared() > 1.0
-	return false
+	return SpecialRuleCommonScript.is_target_moving(target)
 
 
 func _now_seconds() -> float:
-	return float(Time.get_ticks_msec()) / 1000.0
+	return SpecialRuleCommonScript.now_seconds()
 
 
 func _get_dictionary(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		return (value as Dictionary).duplicate(true)
-	return {}
+	return SpecialRuleCommonScript.get_dictionary(value)
 
 
 func _get_array(value: Variant) -> Array:
-	if value is Array:
-		return (value as Array).duplicate(true)
-	return []
+	return SpecialRuleCommonScript.get_array(value)

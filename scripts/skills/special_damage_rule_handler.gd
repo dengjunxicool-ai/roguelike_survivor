@@ -10,6 +10,7 @@ const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_lim
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
+const SpecialRuleCommonScript: Script = preload("res://scripts/skills/special_rules/special_rule_common.gd")
 
 static var _death_explosion_cooldowns: Dictionary = {}
 static var _lava_zone_cooldowns: Dictionary = {}
@@ -2849,34 +2850,31 @@ static func _remove_oldest_toxic_small_cloud(parent: Node) -> void:
 
 
 static func _is_boss(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"bosses") or bool(target.get_meta("is_boss", false)) or String(target.get_meta("enemy_rank", "")) == "boss")
+	return SpecialRuleCommonScript.is_boss(target)
 
 
 static func _is_elite(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"elites") or bool(target.get_meta("is_elite", false)) or String(target.get_meta("enemy_rank", "")) == "elite")
+	return SpecialRuleCommonScript.is_elite(target)
 
 
 static func _is_boss_core(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"boss_cores") or bool(target.get_meta("is_boss_core", false)) or String(target.get_meta("enemy_type", "")) == "boss_core")
+	return SpecialRuleCommonScript.is_boss_core(target)
 
 
 static func _health_ratio(target: Node) -> float:
-	if target == null:
-		return 1.0
-	var max_health: float = maxf(float(target.get("max_health")), 1.0)
-	return clampf(float(target.get("current_health")) / max_health, 0.0, 1.0)
+	return SpecialRuleCommonScript.health_ratio(target)
 
 
 static func _now_seconds() -> float:
-	return float(Time.get_ticks_msec()) / 1000.0
+	return SpecialRuleCommonScript.now_seconds()
 
 
 static func _metadata_key(namespace_text: String, suffix: String) -> String:
-	return MetadataKeyScript.key(namespace_text, suffix, "skill_rule")
+	return SpecialRuleCommonScript.metadata_key(namespace_text, suffix)
 
 
 static func _metadata_identifier(raw_key: String) -> String:
-	return MetadataKeyScript.identifier(raw_key, "skill_rule")
+	return SpecialRuleCommonScript.metadata_identifier(raw_key)
 
 
 static func _get_root_node() -> Node:
@@ -2885,12 +2883,8 @@ static func _get_root_node() -> Node:
 
 
 static func _get_dictionary(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		return (value as Dictionary).duplicate(true)
-	return {}
+	return SpecialRuleCommonScript.get_dictionary(value)
 
 
 static func _get_array(value: Variant) -> Array:
-	if value is Array:
-		return (value as Array).duplicate(true)
-	return []
+	return SpecialRuleCommonScript.get_array(value)
