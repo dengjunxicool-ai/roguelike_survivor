@@ -495,7 +495,7 @@ function makeCombatObject(ref) {
     return {
       id: ref.id,
       type: "projectile",
-      scene: "res://scenes/fireball_projectile.tscn",
+      scene: "res://scenes/combat/fireball_projectile.tscn",
       collision_radius: 12,
       destroy_on_wall: true,
       destroy_on_hit: true,
@@ -508,7 +508,7 @@ function makeCombatObject(ref) {
   return {
     id: ref.id,
     type: "area",
-    scene: "res://scenes/area_effect.tscn",
+    scene: "res://scenes/combat/area_effect.tscn",
     collision_radius: 126,
     visual_mode: "programmatic",
     visual_style: "smoke_zone",

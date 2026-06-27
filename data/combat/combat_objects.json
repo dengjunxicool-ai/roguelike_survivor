@@ -3,7 +3,7 @@
 		{
 			"id": "fireball_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -40,7 +40,7 @@
 		{
 			"id": "meteor_rain_meteor",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 18,
 			"destroy_on_wall": false,
 			"destroy_on_hit": true,
@@ -62,7 +62,7 @@
 		{
 			"id": "inferno_cycle_meteor",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 16,
 			"destroy_on_wall": false,
 			"destroy_on_hit": true,
@@ -84,7 +84,7 @@
 		{
 			"id": "hailstorm_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -123,7 +123,7 @@
 		{
 			"id": "lightning_orb_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -165,7 +165,7 @@
 		{
 			"id": "arcane_page_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -207,7 +207,7 @@
 		{
 			"id": "throwing_knife_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 8,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
@@ -250,7 +250,7 @@
 		{
 			"id": "poison_bottle_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -292,7 +292,7 @@
 		{
 			"id": "spinning_sword_blade",
 			"type": "orbit_object",
-			"scene": "res://scenes/orbit_object.tscn",
+			"scene": "res://scenes/combat/orbit_object.tscn",
 			"collision_radius": 18,
 			"persistent": true,
 			"follow_owner": true,
@@ -323,7 +323,7 @@
 		{
 			"id": "generic_explosion_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 82,
 			"visual_mode": "programmatic",
 			"visual": {
@@ -362,7 +362,7 @@
 		{
 			"id": "searing_fire_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 48,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
@@ -382,7 +382,7 @@
 		{
 			"id": "blazing_run_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 45,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
@@ -402,7 +402,7 @@
 		{
 			"id": "meteor_burning_ground",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 60,
 			"visual_mode": "programmatic",
 			"visual_style": "meteor_crater",
@@ -422,7 +422,7 @@
 		{
 			"id": "lava_rift",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 72,
 			"visual_mode": "programmatic",
 			"visual_style": "lava_zone",
@@ -442,7 +442,7 @@
 		{
 			"id": "scorching_vortex",
 			"type": "area",
-			"scene": "res://scenes/scorching_vortex_area.tscn",
+			"scene": "res://scenes/combat/scorching_vortex_area.tscn",
 			"collision_radius": 132,
 			"visual_mode": "programmatic",
 			"visual_style": "fire_burst",
@@ -462,7 +462,7 @@
 		{
 			"id": "ember_fox_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 72,
 			"visual_mode": "programmatic",
 			"visual_style": "fire_burst",
@@ -482,7 +482,7 @@
 		{
 			"id": "hunter_arrow_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
@@ -525,7 +525,7 @@
 		{
 			"id": "bear_trap_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 90,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -568,7 +568,7 @@
 		{
 			"id": "holy_field_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 130,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -611,7 +611,7 @@
 		{
 			"id": "poison_cloud_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 105,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -654,7 +654,7 @@
 		{
 			"id": "fire_oil_pot_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -694,7 +694,7 @@
 		{
 			"id": "fire_oil_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 110,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -737,7 +737,7 @@
 		{
 			"id": "smoke_cloud_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 95,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -780,7 +780,7 @@
 		{
 			"id": "acid_spray_cone_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 320,
 			"visual": {
 				"texture": "res://icon.svg",
@@ -823,7 +823,7 @@
 		{
 			"id": "mars_spark_missile_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -845,7 +845,7 @@
 		{
 			"id": "frost_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 134.4,
 			"visual_mode": "programmatic",
 			"visual_style": "frost_field",
@@ -865,7 +865,7 @@
 		{
 			"id": "frost_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 92.4,
 			"visual_mode": "programmatic",
 			"visual_style": "frost_path",
@@ -885,7 +885,7 @@
 		{
 			"id": "ice_shard_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -907,7 +907,7 @@
 		{
 			"id": "glacial_lance_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 14,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
@@ -929,7 +929,7 @@
 		{
 			"id": "shatter_splash",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 100.8,
 			"visual_mode": "programmatic",
 			"visual_style": "shatter_splash",
@@ -949,7 +949,7 @@
 		{
 			"id": "blizzard_cloud",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 168,
 			"visual_mode": "programmatic",
 			"visual_style": "blizzard_cloud",
@@ -969,7 +969,7 @@
 		{
 			"id": "frost_ring",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 151.2,
 			"visual_mode": "programmatic",
 			"visual_style": "frost_ring",
@@ -989,7 +989,7 @@
 		{
 			"id": "ice_crack_shard",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1011,7 +1011,7 @@
 		{
 			"id": "absolute_zero_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 84,
 			"visual_mode": "programmatic",
 			"visual_style": "absolute_zero_field",
@@ -1031,7 +1031,7 @@
 		{
 			"id": "chain_lightning_bolt",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 9,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1053,7 +1053,7 @@
 		{
 			"id": "thunder_arc_bolt",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1075,7 +1075,7 @@
 		{
 			"id": "ball_lightning_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 67.2,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_field",
@@ -1095,7 +1095,7 @@
 		{
 			"id": "ball_lightning_orb",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 96.6,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_field",
@@ -1115,7 +1115,7 @@
 		{
 			"id": "thunderstorm_cloud",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 218.4,
 			"visual_mode": "programmatic",
 			"visual_style": "thunderstorm_cloud",
@@ -1135,7 +1135,7 @@
 		{
 			"id": "lightning_strike_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 67.2,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_strike",
@@ -1155,7 +1155,7 @@
 		{
 			"id": "emp_ring",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 235.2,
 			"visual_mode": "programmatic",
 			"visual_style": "emp_ring",
@@ -1175,7 +1175,7 @@
 		{
 			"id": "overload_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 151.2,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_strike",
@@ -1195,7 +1195,7 @@
 		{
 			"id": "magnetic_pull_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 100.8,
 			"visual_mode": "programmatic",
 			"visual_style": "emp_ring",
@@ -1215,7 +1215,7 @@
 		{
 			"id": "soul_chain_link",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 37.8,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1235,7 +1235,7 @@
 		{
 			"id": "black_serpent_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1257,7 +1257,7 @@
 		{
 			"id": "death_scythe_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 14,
 			"destroy_on_wall": true,
 			"destroy_on_hit": false,
@@ -1279,7 +1279,7 @@
 		{
 			"id": "doom_circle_delay",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 184.8,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1299,7 +1299,7 @@
 		{
 			"id": "doom_circle_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 184.8,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1319,7 +1319,7 @@
 		{
 			"id": "curse_whisper_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 184.8,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1339,7 +1339,7 @@
 		{
 			"id": "soul_bolt_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1361,7 +1361,7 @@
 		{
 			"id": "soul_explosion_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 168,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1381,7 +1381,7 @@
 		{
 			"id": "soul_storm_bolt",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1403,7 +1403,7 @@
 		{
 			"id": "heavenly_wings_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 75.6,
 			"visual_mode": "programmatic",
 			"visual_style": "holy_field",
@@ -1423,7 +1423,7 @@
 		{
 			"id": "holy_ray_beam",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 58.8,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1445,7 +1445,7 @@
 		{
 			"id": "divine_barrier_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 193.2,
 			"visual_mode": "programmatic",
 			"visual_style": "holy_field",
@@ -1465,7 +1465,7 @@
 		{
 			"id": "judgment_hammer_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 117.6,
 			"visual_mode": "programmatic",
 			"visual_style": "hammer_shockwave",
@@ -1485,7 +1485,7 @@
 		{
 			"id": "seraph_holy_bolt",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 10,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1507,7 +1507,7 @@
 		{
 			"id": "shield_guardian_counter_wave",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 117.6,
 			"visual_mode": "programmatic",
 			"visual_style": "holy_shield_pulse",
@@ -1527,7 +1527,7 @@
 		{
 			"id": "divine_punishment_strike",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 100.8,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_strike",
@@ -1547,7 +1547,7 @@
 		{
 			"id": "counter_seal_wave",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 184.8,
 			"visual_mode": "programmatic",
 			"visual_style": "holy_shield_pulse",
@@ -1567,7 +1567,7 @@
 		{
 			"id": "absolution_light_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 117.6,
 			"visual_mode": "programmatic",
 			"visual_style": "holy_field",
@@ -1587,7 +1587,7 @@
 		{
 			"id": "chaos_rift",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 84,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1607,7 +1607,7 @@
 		{
 			"id": "void_rift_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 210,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1627,7 +1627,7 @@
 		{
 			"id": "chaos_orb",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 14,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1649,7 +1649,7 @@
 		{
 			"id": "chaos_weak_hit",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 54.6,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_orb",
@@ -1669,7 +1669,7 @@
 		{
 			"id": "mutation_pulse_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 252,
 			"visual_mode": "programmatic",
 			"visual_style": "emp_ring",
@@ -1689,7 +1689,7 @@
 		{
 			"id": "instability_fission_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 151.2,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_strike",
@@ -1709,7 +1709,7 @@
 		{
 			"id": "chaos_exchange_line",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 37.8,
 			"visual_mode": "programmatic",
 			"visual_style": "emp_ring",
@@ -1729,7 +1729,7 @@
 		{
 			"id": "chaos_singularity_field",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 504,
 			"visual_mode": "programmatic",
 			"visual_style": "thunderstorm_cloud",
@@ -1749,7 +1749,7 @@
 		{
 			"id": "chaos_singularity_burst",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 504,
 			"visual_mode": "programmatic",
 			"visual_style": "lightning_strike",
@@ -1769,7 +1769,7 @@
 		{
 			"id": "steam_mist",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1789,7 +1789,7 @@
 		{
 			"id": "shattered_ember",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1811,7 +1811,7 @@
 		{
 			"id": "plasma_fire_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1831,7 +1831,7 @@
 		{
 			"id": "thunderburn_arc",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1853,7 +1853,7 @@
 		{
 			"id": "ash_curse_rune_fireground",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1873,7 +1873,7 @@
 		{
 			"id": "blackflame_serpent_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1893,7 +1893,7 @@
 		{
 			"id": "burning_light_barrier_edge",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1913,7 +1913,7 @@
 		{
 			"id": "molten_split_spark",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1935,7 +1935,7 @@
 		{
 			"id": "crystalized_flame_spike",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1957,7 +1957,7 @@
 		{
 			"id": "frostburn_shard",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -1979,7 +1979,7 @@
 		{
 			"id": "fusion_frost_thunder_lightning_ice_pillar_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -1999,7 +1999,7 @@
 		{
 			"id": "fusion_frost_thunder_aurora_frost_channel_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2019,7 +2019,7 @@
 		{
 			"id": "fusion_frost_curse_ice_coffin_curse_burst_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2039,7 +2039,7 @@
 		{
 			"id": "fusion_frost_curse_cold_scythe_harvest_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2061,7 +2061,7 @@
 		{
 			"id": "fusion_frost_holy_holy_frost_anchor_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2081,7 +2081,7 @@
 		{
 			"id": "fusion_frost_holy_judgment_ice_lance_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2101,7 +2101,7 @@
 		{
 			"id": "fusion_frost_chaos_rift_avalanche_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2123,7 +2123,7 @@
 		{
 			"id": "fusion_frost_chaos_inverted_ice_shard_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2145,7 +2145,7 @@
 		{
 			"id": "arc_ignition_jump",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2167,7 +2167,7 @@
 		{
 			"id": "thunderfire_circuit",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2187,7 +2187,7 @@
 		{
 			"id": "fusion_thunder_frost_shatter_thunder_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2207,7 +2207,7 @@
 		{
 			"id": "fusion_thunder_frost_shatter_thunder_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2229,7 +2229,7 @@
 		{
 			"id": "fusion_thunder_frost_cryo_capacitor_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2249,7 +2249,7 @@
 		{
 			"id": "fusion_thunder_curse_curse_lightning_rebound_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2269,7 +2269,7 @@
 		{
 			"id": "fusion_thunder_curse_black_thunder_convergence_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2289,7 +2289,7 @@
 		{
 			"id": "fusion_thunder_holy_judgment_wire_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2309,7 +2309,7 @@
 		{
 			"id": "fusion_thunder_holy_shield_capacitor_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2329,7 +2329,7 @@
 		{
 			"id": "fusion_thunder_holy_shield_capacitor_shield_break_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2349,7 +2349,7 @@
 		{
 			"id": "fusion_thunder_chaos_fractal_arc_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2371,7 +2371,7 @@
 		{
 			"id": "fusion_thunder_chaos_rift_lightning_orb_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2393,7 +2393,7 @@
 		{
 			"id": "fusion_curse_frost_ice_coffin_contract_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2413,7 +2413,7 @@
 		{
 			"id": "fusion_curse_frost_cold_scythe_soul_chase_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2435,7 +2435,7 @@
 		{
 			"id": "fusion_curse_thunder_curse_lightning_backlash_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2455,7 +2455,7 @@
 		{
 			"id": "fusion_curse_thunder_black_serpent_conduction_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2477,7 +2477,7 @@
 		{
 			"id": "fusion_curse_holy_confession_curse_seal_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2497,7 +2497,7 @@
 		{
 			"id": "fusion_curse_holy_absolution_harvest_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2517,7 +2517,7 @@
 		{
 			"id": "fusion_curse_chaos_paradox_curse_mark_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2537,7 +2537,7 @@
 		{
 			"id": "fusion_curse_chaos_rift_funeral_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2559,7 +2559,7 @@
 		{
 			"id": "solar_hammer_cross_path",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2579,7 +2579,7 @@
 		{
 			"id": "fusion_holy_frost_crystal_shelter_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2599,7 +2599,7 @@
 		{
 			"id": "fusion_holy_frost_holy_frost_beam_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2619,7 +2619,7 @@
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2639,7 +2639,7 @@
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2659,7 +2659,7 @@
 		{
 			"id": "fusion_holy_thunder_holy_thunder_judgment_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2679,7 +2679,7 @@
 		{
 			"id": "fusion_holy_curse_purifying_chain_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2699,7 +2699,7 @@
 		{
 			"id": "fusion_holy_curse_penitence_barrier_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2719,7 +2719,7 @@
 		{
 			"id": "fusion_holy_chaos_divine_domain_rift_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2739,7 +2739,7 @@
 		{
 			"id": "fusion_holy_chaos_judgment_echo_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2759,7 +2759,7 @@
 		{
 			"id": "riftfire_fork",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2781,7 +2781,7 @@
 		{
 			"id": "fusion_chaos_frost_zero_rift_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2801,7 +2801,7 @@
 		{
 			"id": "fusion_chaos_frost_shattered_ice_warp_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2823,7 +2823,7 @@
 		{
 			"id": "fusion_chaos_thunder_quantum_overload_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2843,7 +2843,7 @@
 		{
 			"id": "fusion_chaos_thunder_warp_lightning_orb_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2865,7 +2865,7 @@
 		{
 			"id": "fusion_chaos_curse_curse_rune_echo_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2885,7 +2885,7 @@
 		{
 			"id": "fusion_chaos_curse_rift_curse_exchange_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2905,7 +2905,7 @@
 		{
 			"id": "fusion_chaos_holy_void_holy_shield_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2925,7 +2925,7 @@
 		{
 			"id": "fusion_chaos_holy_echoing_judgment_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2945,7 +2945,7 @@
 		{
 			"id": "fusion_fire_frost_steam_mist_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -2965,7 +2965,7 @@
 		{
 			"id": "fusion_fire_frost_shattered_ember_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -2987,7 +2987,7 @@
 		{
 			"id": "fusion_fire_thunder_plasma_fire_path_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3007,7 +3007,7 @@
 		{
 			"id": "fusion_fire_thunder_thunderburn_meteor_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3029,7 +3029,7 @@
 		{
 			"id": "fusion_fire_curse_ash_curse_rune_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3049,7 +3049,7 @@
 		{
 			"id": "fusion_fire_curse_blackflame_serpents_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3071,7 +3071,7 @@
 		{
 			"id": "fusion_fire_holy_holy_flame_absolution_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3093,7 +3093,7 @@
 		{
 			"id": "fusion_fire_holy_burning_light_barrier_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3113,7 +3113,7 @@
 		{
 			"id": "fusion_fire_chaos_ember_echo_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3133,7 +3133,7 @@
 		{
 			"id": "fusion_fire_chaos_molten_split_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3155,7 +3155,7 @@
 		{
 			"id": "fusion_frost_fire_crystalized_flame_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3175,7 +3175,7 @@
 		{
 			"id": "fusion_frost_fire_frostburn_shards_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3197,7 +3197,7 @@
 		{
 			"id": "fusion_thunder_fire_arc_ignition_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3217,7 +3217,7 @@
 		{
 			"id": "fusion_thunder_fire_thunderfire_circuit_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3237,7 +3237,7 @@
 		{
 			"id": "fusion_curse_fire_ash_soul_pact_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3257,7 +3257,7 @@
 		{
 			"id": "fusion_curse_fire_burning_soul_minion_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3277,7 +3277,7 @@
 		{
 			"id": "fusion_holy_fire_holy_flame_purification_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3297,7 +3297,7 @@
 		{
 			"id": "fusion_holy_fire_solar_hammer_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3317,7 +3317,7 @@
 		{
 			"id": "fusion_chaos_fire_riftfire_fork_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3339,7 +3339,7 @@
 		{
 			"id": "fusion_chaos_fire_lava_refraction_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3359,7 +3359,7 @@
 		{
 			"id": "fusion_fire_frost_shattered_ember_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3379,7 +3379,7 @@
 		{
 			"id": "fusion_fire_frost_shattered_ember_count_1_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3401,7 +3401,7 @@
 		{
 			"id": "fusion_fire_thunder_thunderburn_meteor_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3421,7 +3421,7 @@
 		{
 			"id": "fusion_fire_curse_blackflame_serpents_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3441,7 +3441,7 @@
 		{
 			"id": "fusion_frost_fire_crystalized_flame_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3463,7 +3463,7 @@
 		{
 			"id": "fusion_frost_thunder_lightning_ice_pillar_r1_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3483,7 +3483,7 @@
 		{
 			"id": "fusion_frost_holy_holy_frost_anchor_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3505,7 +3505,7 @@
 		{
 			"id": "fusion_frost_chaos_rift_avalanche_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3525,7 +3525,7 @@
 		{
 			"id": "fusion_frost_chaos_inverted_ice_shard_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3545,7 +3545,7 @@
 		{
 			"id": "fusion_thunder_fire_arc_ignition_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3567,7 +3567,7 @@
 		{
 			"id": "fusion_thunder_curse_curse_lightning_rebound_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3589,7 +3589,7 @@
 		{
 			"id": "fusion_thunder_curse_black_thunder_convergence_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3611,7 +3611,7 @@
 		{
 			"id": "fusion_thunder_holy_shield_capacitor_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3633,7 +3633,7 @@
 		{
 			"id": "fusion_thunder_holy_shield_capacitor_shield_break_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3655,7 +3655,7 @@
 		{
 			"id": "fusion_thunder_chaos_fractal_arc_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3675,7 +3675,7 @@
 		{
 			"id": "fusion_thunder_chaos_rift_lightning_orb_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3695,7 +3695,7 @@
 		{
 			"id": "fusion_curse_fire_ash_soul_pact_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3717,7 +3717,7 @@
 		{
 			"id": "fusion_curse_thunder_curse_lightning_backlash_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3739,7 +3739,7 @@
 		{
 			"id": "fusion_curse_thunder_black_serpent_conduction_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3759,7 +3759,7 @@
 		{
 			"id": "fusion_curse_chaos_rift_funeral_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3779,7 +3779,7 @@
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3801,7 +3801,7 @@
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3823,7 +3823,7 @@
 		{
 			"id": "fusion_holy_curse_purifying_chain_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3845,7 +3845,7 @@
 		{
 			"id": "fusion_chaos_fire_riftfire_fork_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3865,7 +3865,7 @@
 		{
 			"id": "fusion_chaos_frost_shattered_ice_warp_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3885,7 +3885,7 @@
 		{
 			"id": "fusion_chaos_thunder_warp_lightning_orb_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3905,7 +3905,7 @@
 		{
 			"id": "fusion_fire_frost_steam_mist_tick_1_area",
 			"type": "area",
-			"scene": "res://scenes/area_effect.tscn",
+			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 126,
 			"visual_mode": "programmatic",
 			"visual_style": "smoke_zone",
@@ -3925,7 +3925,7 @@
 		{
 			"id": "fusion_curse_chaos_paradox_curse_mark_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3947,7 +3947,7 @@
 		{
 			"id": "fusion_chaos_frost_zero_rift_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3969,7 +3969,7 @@
 		{
 			"id": "fusion_chaos_thunder_quantum_overload_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
@@ -3991,7 +3991,7 @@
 		{
 			"id": "fusion_chaos_curse_rift_curse_exchange_projectile",
 			"type": "projectile",
-			"scene": "res://scenes/fireball_projectile.tscn",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
 			"collision_radius": 12,
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,

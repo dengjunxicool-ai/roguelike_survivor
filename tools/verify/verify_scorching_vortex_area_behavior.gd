@@ -21,7 +21,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var vortex_scene: PackedScene = load("res://scenes/scorching_vortex_area.tscn") as PackedScene
+	var vortex_scene: PackedScene = load("res://scenes/combat/scorching_vortex_area.tscn") as PackedScene
 	_expect(vortex_scene != null, "loads ScorchingVortexArea scene")
 	if vortex_scene == null:
 		quit(1)

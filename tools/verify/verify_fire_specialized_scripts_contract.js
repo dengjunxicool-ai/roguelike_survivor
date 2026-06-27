@@ -48,10 +48,10 @@ assert(Number(dragonDefinition.movement.follow_distance) > 0, "crimson dragon mu
 
 const vortexObject = combatObjects.find((object) => object && object.id === "scorching_vortex");
 assert(vortexObject, "scorching_vortex combat object must exist");
-assert(vortexObject.scene === "res://scenes/scorching_vortex_area.tscn", "scorching_vortex must use the specialized scene");
+assert(vortexObject.scene === "res://scenes/combat/scorching_vortex_area.tscn", "scorching_vortex must use the specialized scene");
 assert(fs.existsSync(path.join(root, "scripts", "summons", "summon_controller.gd")), "SummonController script file must exist");
 assert(fs.existsSync(path.join(root, "scripts", "summons", "summon_manager.gd")), "SummonManager script file must exist");
 assert(fs.existsSync(path.join(root, "scripts", "combat", "scorching_vortex_area.gd")), "ScorchingVortexArea script file must exist");
-assert(fs.existsSync(path.join(root, "scenes", "scorching_vortex_area.tscn")), "ScorchingVortexArea scene file must exist");
+assert(fs.existsSync(path.join(root, "scenes", "combat", "scorching_vortex_area.tscn")), "ScorchingVortexArea scene file must exist");
 
 console.log("[verify_fire_specialized_scripts_contract] PASS");

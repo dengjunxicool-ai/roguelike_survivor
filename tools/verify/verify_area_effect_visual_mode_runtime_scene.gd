@@ -43,7 +43,7 @@ func _run_check() -> void:
 
 
 func _create_area_effect(node_name: String, params: Dictionary) -> AreaEffect:
-	var area: AreaEffect = load("res://scenes/area_effect.tscn").instantiate() as AreaEffect
+	var area: AreaEffect = load("res://scenes/combat/area_effect.tscn").instantiate() as AreaEffect
 	area.name = node_name
 	add_child(area)
 	area.setup(params)

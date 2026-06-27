@@ -2,9 +2,9 @@ extends RefCounted
 class_name CombatObjectFactory
 
 
-const DEFAULT_PROJECTILE_SCENE: PackedScene = preload("res://scenes/fireball_projectile.tscn")
-const DEFAULT_AREA_EFFECT_SCENE: PackedScene = preload("res://scenes/area_effect.tscn")
-const DEFAULT_ORBIT_OBJECT_SCENE: PackedScene = preload("res://scenes/orbit_object.tscn")
+const DEFAULT_PROJECTILE_SCENE: PackedScene = preload("res://scenes/combat/fireball_projectile.tscn")
+const DEFAULT_AREA_EFFECT_SCENE: PackedScene = preload("res://scenes/combat/area_effect.tscn")
+const DEFAULT_ORBIT_OBJECT_SCENE: PackedScene = preload("res://scenes/combat/orbit_object.tscn")
 
 
 static func create_projectile(params: Dictionary) -> Node2D:
