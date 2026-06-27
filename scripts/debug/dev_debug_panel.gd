@@ -2165,11 +2165,17 @@ func _build_player_attributes_text() -> String:
 	if player == null:
 		return "Calculated Player Attributes: none"
 
-	var effective_move_speed: float = float(player.get("move_speed"))
-	if player.has_method("_get_effective_move_speed"):
-		effective_move_speed = float(player.call("_get_effective_move_speed"))
+	var lines: Array[String] = _build_player_core_attribute_lines(player)
+	lines.append_array(_build_starting_skill_attribute_lines(player))
+	lines.append_array(_build_trait_attribute_lines(player))
+	var status_snapshot: Array = _get_status_snapshot(player)
+	lines.append("Status %s" % _format_statuses(status_snapshot))
+	return "\n".join(lines)
 
-	var lines: Array[String] = [
+
+func _build_player_core_attribute_lines(player: Node) -> Array[String]:
+	var effective_move_speed: float = _get_player_effective_move_speed(player)
+	return [
 		"Calculated Player Attributes",
 		"HP %d/%d  Lv.%d  EXP %d/%d" % [
 			int(player.get("current_health")),
@@ -2230,6 +2236,9 @@ func _build_player_attributes_text() -> String:
 		]
 	]
 
+
+func _build_starting_skill_attribute_lines(player: Node) -> Array[String]:
+	var lines: Array[String] = []
 	var skill: RefCounted = _get_starting_skill(player)
 	if skill != null:
 		var skill_manager: Node = _get_skill_manager(player)
@@ -2250,7 +2259,11 @@ func _build_player_attributes_text() -> String:
 			])
 		if projectile_speed != null:
 			lines.append("ProjectileSpeed %.1f" % float(projectile_speed))
+	return lines
 
+
+func _build_trait_attribute_lines(player: Node) -> Array[String]:
+	var lines: Array[String] = []
 	var runtime: Node = player.get_node_or_null("CharacterRuntime")
 	if runtime != null:
 		var trait_state: Variant = runtime.get("trait_runtime_state")
@@ -2266,10 +2279,7 @@ func _build_player_attributes_text() -> String:
 				int(state.get("shield_points", 0)),
 				float(state.get("shield_remaining_seconds", 0.0))
 			])
-
-	var status_snapshot: Array = _get_status_snapshot(player)
-	lines.append("Status %s" % _format_statuses(status_snapshot))
-	return "\n".join(lines)
+	return lines
 
 
 func _build_state_text() -> String:
