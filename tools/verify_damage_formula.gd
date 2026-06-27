@@ -79,6 +79,16 @@ class IntentTargetNode:
 		last_damage_packet = packet
 
 
+class TestStatusEffectManager:
+	extends StatusEffectManager
+
+	func _get_player() -> Node:
+		return null
+
+	func _get_skill_event_bus() -> Node:
+		return null
+
+
 func _init() -> void:
 	var failed: bool = false
 	failed = not _verify_player_weapon_hits_enemy() or failed
@@ -125,6 +135,7 @@ func _init() -> void:
 	failed = not _verify_source_identity_helpers() or failed
 	failed = not _verify_combat_object_template_source_stabilized() or failed
 	failed = not _verify_fractional_pool_identity_includes_element() or failed
+	failed = not _verify_status_effect_action_source_identity() or failed
 	quit(1 if failed else 0)
 
 
@@ -1530,6 +1541,36 @@ func _verify_fractional_pool_identity_includes_element() -> bool:
 	ok = ok and int(first_fire.get("amount", -1)) == 0
 	ok = ok and int(second_poison.get("amount", -1)) == 1
 	return _expect_equal("fractional pool identity includes element", 1 if ok else 0, 1)
+
+
+func _verify_status_effect_action_source_identity() -> bool:
+	var target: IntentTargetNode = IntentTargetNode.new()
+	root.add_child(target)
+	var manager: Node = TestStatusEffectManager.new()
+	target.add_child(manager)
+	var status: Dictionary = {
+		"id": &"burn",
+		"source_origin_id": &"mage",
+		"source_skill_id": &"fireball",
+		"source_instance_id": "fireball:projectile:0:burn"
+	}
+	var context: Dictionary = manager.call("_build_status_event_context", &"burn", status)
+	var executor: RefCounted = SkillActionExecutorScript.new()
+	executor.call("execute_actions", [{
+		"type": "deal_damage",
+		"params": {
+			"amount": 1,
+			"damage_origin": "status_dot",
+			"damage_type": "status_dot",
+			"element": "fire",
+			"uses_skill_level_coefficient": false
+		}
+	}], context)
+	var packet: Dictionary = target.last_damage_packet if target.last_damage_packet is Dictionary else {}
+	var ok: bool = String(packet.get("source_origin_id", "")) == "mage"
+	ok = ok and String(packet.get("source_skill_id", "")) == "fireball"
+	ok = ok and String(packet.get("source_instance_id", "")) == "fireball:projectile:0:burn"
+	return _expect_equal("status effect action source identity", 1 if ok else 0, 1)
 
 
 func _expect_equal(label: String, actual: int, expected: int) -> bool:

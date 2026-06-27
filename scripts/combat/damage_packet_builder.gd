@@ -26,7 +26,7 @@ static func from_skill_action(args: Dictionary) -> Dictionary:
 	var caster: Node = context.get("caster") as Node
 	var target: Node = context.get("target") as Node
 	var skill_id: StringName = StringName(String(context.get("skill_id", params.get("source_id", ""))))
-	var source_instance_id: StringName = _resolve_skill_source_instance_id(params, skill_id)
+	var source_instance_id: StringName = _resolve_skill_source_instance_id(params, context, skill_id)
 	var uses_skill_level: bool = bool(params.get("uses_skill_level_coefficient", damage_origin == "primary_attack"))
 
 	var packet: Dictionary = {
@@ -307,8 +307,8 @@ static func _build_packet(packet: Dictionary) -> RefCounted:
 	return DamagePacketScript.from_dictionary(packet)
 
 
-static func _resolve_skill_source_instance_id(params: Dictionary, skill_id: StringName) -> StringName:
-	return StringName(String(params.get("source_instance_id", params.get("projectile_id", params.get("area_id", params.get("object_id", skill_id))))))
+static func _resolve_skill_source_instance_id(params: Dictionary, context: Dictionary, skill_id: StringName) -> StringName:
+	return StringName(String(params.get("source_instance_id", context.get("source_instance_id", params.get("projectile_id", params.get("area_id", params.get("object_id", skill_id)))))))
 
 
 static func _default_can_crit(damage_origin: String, damage_type: String) -> bool:
@@ -370,4 +370,3 @@ static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
-

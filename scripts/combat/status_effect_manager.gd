@@ -5,6 +5,7 @@ class_name StatusEffectManager
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
+const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_source_identity.gd")
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
@@ -405,6 +406,12 @@ func _build_status_event_context(status_id: StringName, status: Dictionary) -> D
 	var target: Node = get_parent()
 	var position: Vector2 = (target as Node2D).global_position if target is Node2D else Vector2.ZERO
 	var player: Node = _get_player()
+	var source_skill_id: StringName = StringName(String(status.get("source_skill_id", status_id)))
+	if source_skill_id == &"":
+		source_skill_id = status_id
+	var source_instance_id: String = String(status.get("source_instance_id", ""))
+	if source_instance_id == "":
+		source_instance_id = DamageSourceIdentityScript.for_status_dot(target, status_id, status.get("attacker_id", ""))
 	return {
 		"target": target,
 		"enemy": target,
@@ -412,6 +419,11 @@ func _build_status_event_context(status_id: StringName, status: Dictionary) -> D
 		"owner": player,
 		"status_id": status_id,
 		"status": status.duplicate(true),
+		"skill_id": source_skill_id,
+		"source_id": source_skill_id,
+		"source_origin_id": StringName(String(status.get("source_origin_id", ""))),
+		"source_skill_id": source_skill_id,
+		"source_instance_id": source_instance_id,
 		"power": float(status.get("power", status.get("tick_damage", 0.0))),
 		"position": position,
 		"parent": target.get_parent() if target != null else null,

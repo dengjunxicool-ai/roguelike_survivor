@@ -31,6 +31,12 @@ static func apply_to_status_params(status_params: Dictionary, context: Variant, 
 	var trace_id: int = get_trace_id(context, root, allow_current_trace)
 	if trace_id > 0:
 		result[TRACE_ID_KEY] = trace_id
+	for key: String in ["source_origin_id", "source_skill_id", "source_instance_id", "attacker_id"]:
+		if result.has(key) and String(result.get(key, "")) != "":
+			continue
+		var source_value: Variant = _value_from_context(context, key, null)
+		if source_value != null and String(source_value) != "":
+			result[key] = source_value
 	return result
 
 
@@ -115,4 +121,17 @@ static func _value_from_source(source: Variant, key: Variant, fallback: Variant 
 		return (source as Dictionary).get(key, fallback)
 	if source is RefCounted and source.has_method("get_value"):
 		return source.call("get_value", key, fallback)
+	return fallback
+
+
+static func _value_from_context(context: Variant, key: Variant, fallback: Variant = null) -> Variant:
+	if not (context is Dictionary):
+		return _value_from_source(context, key, fallback)
+	var dictionary: Dictionary = context
+	if dictionary.has(key):
+		return dictionary.get(key)
+	for packet_key: String in ["damage_packet", "packet", "source_packet", "amount_or_packet", "status"]:
+		var value: Variant = _value_from_source(dictionary.get(packet_key), key, null)
+		if value != null and String(value) != "":
+			return value
 	return fallback
