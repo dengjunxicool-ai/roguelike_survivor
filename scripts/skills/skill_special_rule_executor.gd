@@ -456,12 +456,24 @@ func execute_player_tick(context: Dictionary) -> void:
 	var rules: Dictionary = _get_rules(context)
 	if rules.is_empty():
 		return
+	_update_player_defensive_tick_rules(rules, context)
+	_update_player_control_tick_rules(rules, context)
+	_update_player_field_tick_rules(rules, context)
+
+
+func _update_player_defensive_tick_rules(rules: Dictionary, context: Dictionary) -> void:
 	_update_holy_shield(rules, context)
+
+
+func _update_player_control_tick_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_frost_aura_slow(rules, context)
 	_apply_freeze_frostbite_near_player(rules, context)
 	_apply_page_spirit_spawn(rules, context)
 	_update_windstep_state(rules, context)
 	_apply_decoy_trap_spawn(rules, context)
+
+
+func _update_player_field_tick_rules(rules: Dictionary, context: Dictionary) -> void:
 	_update_cross_relic_field(rules, context)
 	_update_toxic_vial_player_cloud(rules, context)
 	_update_fire_oil_smoke_player_buff(rules, context)
