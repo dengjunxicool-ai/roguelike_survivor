@@ -1546,9 +1546,7 @@ func _prepare_projectile_burst_params(params: Dictionary) -> Dictionary:
 
 
 func _repeat_area_path(params: Dictionary, context: Dictionary) -> bool:
-	var area_params: Dictionary = params.duplicate(true)
-	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):
-		area_params["actions_on_tick"] = _effects_to_actions(_get_array(area_params.get("effects_on_tick", [])))
+	var area_params: Dictionary = _prepare_area_tick_action_params(params)
 	if not area_params.has("area_id"):
 		area_params["area_id"] = str(params.get("source_area_tag", "repeated_area_path"))
 	if not area_params.has("duration"):
@@ -1560,14 +1558,19 @@ func _spawn_area_from_existing_area(params: Dictionary, context: Dictionary) -> 
 	var source_area: Node2D = context.get("area") as Node2D
 	if source_area == null:
 		source_area = context.get("source") as Node2D
-	var area_params: Dictionary = params.duplicate(true)
-	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):
-		area_params["actions_on_tick"] = _effects_to_actions(_get_array(area_params.get("effects_on_tick", [])))
+	var area_params: Dictionary = _prepare_area_tick_action_params(params)
 	if source_area != null and not area_params.has("position"):
 		area_params["position"] = source_area.global_position
 	if not area_params.has("radius") and source_area != null:
 		area_params["radius"] = float(source_area.get("radius")) if _has_property(source_area, "radius") else 48.0
 	return _spawn_area(area_params, context, "area")
+
+
+func _prepare_area_tick_action_params(params: Dictionary) -> Dictionary:
+	var area_params: Dictionary = params.duplicate(true)
+	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):
+		area_params["actions_on_tick"] = _effects_to_actions(_get_array(area_params.get("effects_on_tick", [])))
+	return area_params
 
 
 func _mark_target(params: Dictionary, context: Dictionary) -> bool:
