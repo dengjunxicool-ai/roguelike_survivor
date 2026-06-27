@@ -551,22 +551,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	var holy_field_capacity: Dictionary = {}
 	if area_source_id == &"holy_field_area" and special_rules.has("cross_relic_field_capacity"):
 		holy_field_capacity = _get_dictionary(special_rules.get("cross_relic_field_capacity", {}))
-	var damage_multiplier: float = float(params.get("damage_multiplier", 1.0))
-	if not holy_field_capacity.is_empty():
-		damage_multiplier *= maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)
-	var damage: int = maxi(roundi(float(ModifierResolverScript.get_stat(context, "damage", 0)) * damage_multiplier), 0)
-	if params.has("damage"):
-		damage = maxi(roundi(_resolve_scaled_amount(params["damage"], context, "damage")), 0)
-		if not holy_field_capacity.is_empty():
-			damage = maxi(roundi(float(damage) * maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)), 0)
-		if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_upgrade"):
-			var fire_oil_damage_upgrade: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_upgrade", {}))
-			damage = maxi(roundi(float(damage) * maxf(1.0 + float(fire_oil_damage_upgrade.get("tick_damage_multiplier_add", 0.0)), 0.0)), 0)
-		if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_duration_damage"):
-			var acid_damage_rule: Dictionary = _get_dictionary(special_rules.get("acid_pressure_duration_damage", {}))
-			damage = maxi(roundi(float(damage) * maxf(1.0 + float(acid_damage_rule.get("tick_damage_multiplier_add", 0.0)), 0.0)), 0)
-	if source_type == "explosion":
-		damage = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "explosion_damage", damage))), 0)
+	var damage: int = _resolve_area_damage(area_source_id, params, context, source_type, special_rules, holy_field_capacity)
 
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var max_targets: int = _resolve_area_max_targets(area_source_id, area_params, context, source_type, special_rules)
@@ -637,6 +622,26 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _resolve_area_damage(area_source_id: StringName, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
+	var damage_multiplier: float = float(params.get("damage_multiplier", 1.0))
+	if not holy_field_capacity.is_empty():
+		damage_multiplier *= maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)
+	var damage: int = maxi(roundi(float(ModifierResolverScript.get_stat(context, "damage", 0)) * damage_multiplier), 0)
+	if params.has("damage"):
+		damage = maxi(roundi(_resolve_scaled_amount(params["damage"], context, "damage")), 0)
+		if not holy_field_capacity.is_empty():
+			damage = maxi(roundi(float(damage) * maxf(1.0 + float(holy_field_capacity.get("field_damage_multiplier_add", 0.0)), 0.0)), 0)
+		if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_upgrade"):
+			var fire_oil_damage_upgrade: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_upgrade", {}))
+			damage = maxi(roundi(float(damage) * maxf(1.0 + float(fire_oil_damage_upgrade.get("tick_damage_multiplier_add", 0.0)), 0.0)), 0)
+		if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_duration_damage"):
+			var acid_damage_rule: Dictionary = _get_dictionary(special_rules.get("acid_pressure_duration_damage", {}))
+			damage = maxi(roundi(float(damage) * maxf(1.0 + float(acid_damage_rule.get("tick_damage_multiplier_add", 0.0)), 0.0)), 0)
+	if source_type == "explosion":
+		damage = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "explosion_damage", damage))), 0)
+	return damage
 
 
 func _resolve_area_max_targets(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> int:
