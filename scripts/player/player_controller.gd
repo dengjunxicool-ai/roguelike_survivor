@@ -280,6 +280,15 @@ func _initialize_character_runtime() -> bool:
 
 
 func _reset_runtime_stats() -> void:
+	_reset_core_runtime_stats()
+	_reset_reward_and_spawn_modifiers()
+	_reset_damage_reaction_state()
+	_reset_dash_runtime_state()
+	_reset_experience_runtime_state()
+	_reset_runtime_subsystems()
+
+
+func _reset_core_runtime_stats() -> void:
 	move_speed = 220.0
 	max_health = 100
 	starting_level = 1
@@ -291,6 +300,9 @@ func _reset_runtime_stats() -> void:
 	crit_chance = 0.0
 	crit_damage = 1.5
 	armor = 0
+
+
+func _reset_reward_and_spawn_modifiers() -> void:
 	soul_gain_multiplier = 1.0
 	experience_gain_multiplier = 1.0
 	coin_gain_multiplier = 1.0
@@ -314,21 +326,33 @@ func _reset_runtime_stats() -> void:
 	thorns_damage = 0
 	thorns_area_radius = 0.0
 	status_duration_multiplier = 1.0
+
+
+func _reset_damage_reaction_state() -> void:
 	_last_boss_skill_hit_time = -10.0
 	_last_contact_damage_time = -10.0
 	_last_area_damage_times.clear()
 	_recent_enemy_damage_sources.clear()
+
+
+func _reset_dash_runtime_state() -> void:
 	_last_move_direction = Vector2.DOWN
 	_dash_direction = Vector2.DOWN
 	_dash_time_remaining = 0.0
 	_dash_cooldown_remaining = 0.0
 	_dash_afterimage_timer = 0.0
 	_clear_dash_collision_exceptions()
+
+
+func _reset_experience_runtime_state() -> void:
 	set_meta("level_up_upgrade_levels", {})
 	_experience_formula_type = "exponential"
 	_experience_formula_base = 100
 	_experience_formula_per_level = 0
 	_experience_table = []
+
+
+func _reset_runtime_subsystems() -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager != null and skill_manager.has_method("clear_skills"):
 		skill_manager.call("clear_skills")
