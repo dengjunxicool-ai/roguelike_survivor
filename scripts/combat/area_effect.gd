@@ -380,63 +380,71 @@ func _apply_visual(params: Dictionary) -> void:
 
 
 func _draw() -> void:
+	if _draw_named_visual_style():
+		return
+	if _visual_style == "poison_zone" or _visual_style == "poison_cloud":
+		_draw_poison_zone()
+
+
+func _draw_named_visual_style() -> bool:
 	match _visual_style:
 		"fire_burst":
 			_draw_fire_burst()
-			return
+			return true
 		"frost_patch":
 			_draw_frost_patch()
-			return
+			return true
 		"trap_circle":
 			_draw_trap_circle()
-			return
+			return true
 		"holy_field":
 			_draw_holy_field()
-			return
+			return true
 		"holy_shield_pulse":
 			_draw_holy_shield_pulse()
-			return
+			return true
 		"holy_shield_break", "holy_shield_shockwave", "holy_shield_break_shockwave":
 			_draw_holy_shield_pulse()
-			return
+			return true
 		"hammer_shockwave":
 			_draw_hammer_shockwave()
-			return
+			return true
 		"warhammer_crack_field", "warhammer_execution_shockwave":
 			_draw_hammer_shockwave()
-			return
+			return true
 		"lava_zone":
 			_draw_lava_zone()
-			return
+			return true
 		"meteor_crater":
 			_draw_meteor_crater()
-			return
+			return true
 		"lightning_field":
 			_draw_lightning_field()
-			return
+			return true
 		"lightning_strike":
 			_draw_lightning_strike()
-			return
+			return true
 		"thunderstorm_cloud":
 			_draw_thunderstorm_cloud()
-			return
+			return true
 		"emp_ring":
 			_draw_emp_ring()
-			return
+			return true
 		"protective_lava_zone":
 			_draw_protective_lava_zone()
-			return
+			return true
 		"smoke_zone":
 			_draw_smoke_zone()
-			return
+			return true
 		"acid_cone":
 			_draw_acid_cone()
-			return
-		"poison_zone", "poison_cloud":
-			pass
+			return true
 		_:
-			return
+			return false
+	return false
 
+
+func _draw_poison_zone() -> void:
 	var life_ratio: float = clampf(_age / maxf(duration, 0.01), 0.0, 1.0)
 	var fade: float = clampf(1.0 - life_ratio * life_ratio, 0.0, 1.0)
 	var pulse: float = 0.5 + 0.5 * sin(_age * 5.5 + _visual_seed)
