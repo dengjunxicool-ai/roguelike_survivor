@@ -669,9 +669,8 @@ func _apply_soul_ember_on_direct_hit(rules: Dictionary, context: Dictionary) -> 
 	var rule: Dictionary = _get_dictionary(rules.get("soul_ember_on_direct_hit", {}))
 	var key: String = "soul_ember:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_soul_ember_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_soul_ember_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)):
 		return
-	_soul_ember_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "soul_ember"))), {
 		"stacks": int(rule.get("stack", 1)),
 		"max_stacks": int(rule.get("max_stacks", 4)),
@@ -736,9 +735,8 @@ func _apply_frost_lock_on_direct_hit(rules: Dictionary, context: Dictionary) -> 
 	var rule: Dictionary = _get_dictionary(rules.get("frost_lock_on_elite_boss_direct_hit", {}))
 	var key: String = "frost_lock:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_frost_lock_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_frost_lock_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.6)), 0.0)):
 		return
-	_frost_lock_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.6)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "frost_lock"))), {
 		"stacks": int(rule.get("stack", 1)),
 		"max_stacks": int(rule.get("max_stacks", 4)),
@@ -760,9 +758,8 @@ func _apply_frost_lock_bonus_hit(rules: Dictionary, context: Dictionary) -> void
 		return
 	var key: String = "frost_lock_bonus:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_frost_lock_bonus_hit_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_frost_lock_bonus_hit_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)):
 		return
-	_frost_lock_bonus_hit_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)
 	if target.has_method("consume_status_stack"):
 		target.call("consume_status_stack", status_id, int(rule.get("consume_stacks", 4)))
 	if _is_boss(target) and bool(rule.get("boss_converts_to_poise", true)):
@@ -779,9 +776,8 @@ func _apply_frostbite_on_hail_hit(rules: Dictionary, context: Dictionary) -> voi
 	var rule: Dictionary = _get_dictionary(rules.get("frostbite_on_hail_hit", {}))
 	var key: String = "frostbite:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_frostbite_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_frostbite_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)):
 		return
-	_frostbite_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "frostbite"))), {
 		"stacks": int(rule.get("stack", 1)),
 		"max_stacks": int(rule.get("max_stacks", 3)),
@@ -847,9 +843,8 @@ func _apply_shatter_on_freeze_or_frost_hit(rules: Dictionary, context: Dictionar
 	var rule: Dictionary = _get_dictionary(rules.get("shatter_on_freeze_or_frost_hit", {}))
 	var key: String = "shatter:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_shatter_target_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_shatter_target_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_shatter_target_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.execute_shatter_area(rules, context)
 
 
@@ -865,9 +860,8 @@ func _apply_soulburn_burst(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var key: String = "soulburn:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_soulburn_target_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_soulburn_target_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)):
 		return
-	_soulburn_target_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)
 	_consume_soulburn_burn_stacks(target, rule, burn_stacks)
 	var max_health: float = maxf(float(target.get("max_health")), 1.0)
 	var ratio: float = float(rule.get("normal_max_hp_damage", 0.03))
@@ -910,9 +904,8 @@ func _apply_voltage_on_elite_boss_hit(rules: Dictionary, context: Dictionary) ->
 	var rule: Dictionary = _get_dictionary(rules.get("voltage_on_elite_boss_hit", {}))
 	var key: String = "voltage:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_voltage_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_voltage_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.45)), 0.0)):
 		return
-	_voltage_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.45)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "voltage"))), {
 		"stacks": int(rule.get("stack", 1)),
 		"max_stacks": int(rule.get("max_stacks", 5)),
@@ -934,9 +927,8 @@ func _apply_overload_on_voltage(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var key: String = "lightning_overload:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_overload_target_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_overload_target_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.2)), 0.0)):
 		return
-	_overload_target_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.2)), 0.0)
 	var had_shock: bool = target.has_method("has_status") and bool(target.call("has_status", &"shock"))
 	var consume_stacks: int = stacks if bool(rule.get("consume_all", true)) else maxi(int(rule.get("consume_stacks", required_stacks)), 0)
 	if consume_stacks > 0 and target.has_method("consume_status_stack"):
@@ -962,9 +954,8 @@ func _apply_overload_shock_lightning(rules: Dictionary, context: Dictionary) -> 
 	var rule: Dictionary = _get_dictionary(rules.get("overload_shock_lightning", {}))
 	var key: String = "overload_shock_lightning:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_overload_shock_lightning_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_overload_shock_lightning_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_overload_shock_lightning_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.overload_shock_lightning_intents(rules, context, maxi(int(rule.get("amount", 26)), 0)))
 
 
@@ -1018,9 +1009,8 @@ func _apply_shock_consume_reaction(rules: Dictionary, context: Dictionary) -> vo
 		projectile.set_meta("lightning_magnetic_storm_checked", true)
 	var key: String = "magnetic_storm:%s" % String(context.get("skill_id", "lightning_orb"))
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_magnetic_storm_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_magnetic_storm_cooldowns, key, now_seconds, maxf(float(storm_rule.get("same_source_cooldown", 2.5)), 0.0)):
 		return
-	_magnetic_storm_cooldowns[key] = now_seconds + maxf(float(storm_rule.get("same_source_cooldown", 2.5)), 0.0)
 	SpecialDamageRuleHandlerScript.execute_magnetic_storm_on_shock_consume(rules, context)
 
 
@@ -1041,9 +1031,8 @@ func _apply_arcane_seal_on_elite_boss_hit(rules: Dictionary, context: Dictionary
 	var rule: Dictionary = _get_dictionary(rules.get("arcane_seal_on_elite_boss_hit", {}))
 	var key: String = "arcane_seal:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_arcane_seal_burst_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_arcane_seal_burst_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)):
 		return
-	_arcane_seal_burst_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.4)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "arcane_seal"))), {
 		"stacks": int(rule.get("stack", 1)),
 		"max_stacks": int(rule.get("max_stacks", 5)),
@@ -1064,9 +1053,8 @@ func _apply_arcane_seal_burst(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var key: String = "arcane_seal_burst:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_arcane_seal_burst_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_arcane_seal_burst_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.0)), 0.0)):
 		return
-	_arcane_seal_burst_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.0)), 0.0)
 	if target.has_method("consume_status_stack"):
 		target.call("consume_status_stack", status_id, maxi(int(rule.get("consume_stacks", 3)), 0))
 	var amount: int = maxi(int(rule.get("amount", 20)), 0)
