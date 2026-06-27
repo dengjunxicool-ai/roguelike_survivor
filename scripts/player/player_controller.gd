@@ -342,25 +342,47 @@ func _reset_runtime_stats() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var input_direction: Vector2 = Input.get_vector(
+	var input_direction: Vector2 = _get_movement_input_direction()
+	var movement_frozen: bool = _update_player_runtime_tick(delta)
+	if movement_frozen:
+		input_direction = Vector2.ZERO
+
+	_update_dash_cooldown(delta)
+	_update_last_move_direction(input_direction)
+	if Input.is_action_just_pressed("dash") and not movement_frozen:
+		start_dash(input_direction)
+	var was_dash_active: bool = is_dash_active()
+	_apply_dash_or_walk_velocity(input_direction, delta, was_dash_active)
+	move_and_slide()
+	if was_dash_active and not is_dash_active():
+		_clear_dash_collision_exceptions()
+	_clamp_to_movement_bounds()
+	_update_trait_movement(input_direction, delta)
+	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
+
+
+func _get_movement_input_direction() -> Vector2:
+	return Input.get_vector(
 		"move_left",
 		"move_right",
 		"move_up",
 		"move_down"
 	)
 
+
+func _update_player_runtime_tick(delta: float) -> bool:
 	_update_status_effects(delta)
 	_update_player_tick_special_rules(delta)
 	_update_status_label()
-	if _is_movement_frozen():
-		input_direction = Vector2.ZERO
+	return _is_movement_frozen()
 
-	_update_dash_cooldown(delta)
+
+func _update_last_move_direction(input_direction: Vector2) -> void:
 	if input_direction.length_squared() > 0.001:
 		_last_move_direction = input_direction.normalized()
-	if Input.is_action_just_pressed("dash") and not _is_movement_frozen():
-		start_dash(input_direction)
-	var was_dash_active: bool = is_dash_active()
+
+
+func _apply_dash_or_walk_velocity(input_direction: Vector2, delta: float, was_dash_active: bool) -> void:
 	if was_dash_active:
 		_apply_dash_collision_exceptions()
 		velocity = _dash_direction * dash_speed
@@ -369,12 +391,6 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = input_direction * _get_effective_move_speed()
 		_limit_actor_motion(delta)
-	move_and_slide()
-	if was_dash_active and not is_dash_active():
-		_clear_dash_collision_exceptions()
-	_clamp_to_movement_bounds()
-	_update_trait_movement(input_direction, delta)
-	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
 
 
 func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
