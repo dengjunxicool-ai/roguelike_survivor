@@ -2,6 +2,7 @@ extends RefCounted
 class_name GameData
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
+const GameDataAccessScript: Script = preload("res://scripts/core/game_data_access.gd")
 
 
 const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
@@ -228,10 +229,7 @@ static func _string_or(value: Variant, fallback: String = "") -> String:
 
 
 static func _get_dictionary_from_value(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		var dictionary: Dictionary = value
-		return dictionary
-	return {}
+	return GameDataAccessScript.get_dictionary_from_value(value)
 
 
 static func _build_fire_skill_learn_tags(skill: Dictionary) -> Array:
@@ -288,86 +286,32 @@ static func get_wave_config() -> Dictionary:
 
 
 static func _get_array(path: String, key: String) -> Array:
-	var document: Dictionary = _load_document(path)
-	var value: Variant = document.get(key, [])
-	return _get_array_from_value(value)
+	return GameDataAccessScript.get_array(_document_cache, path, key)
 
 
 static func _get_array_from_value(value: Variant) -> Array:
-	if value is Array:
-		var array_value: Array = value
-		return array_value
-
-	return []
+	return GameDataAccessScript.get_array_from_value(value)
 
 
 static func _get_dictionary_array(path: String, key: String) -> Array[Dictionary]:
-	var source_items: Array = _get_array(path, key)
-	var dictionary_items: Array[Dictionary] = []
-
-	for item_variant: Variant in source_items:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			dictionary_items.append(item)
-
-	return dictionary_items
+	return GameDataAccessScript.get_dictionary_array(_document_cache, path, key)
 
 
 static func _find_by_id(items: Array, target_id: StringName) -> Dictionary:
-	for item_variant: Variant in items:
-		if not (item_variant is Dictionary):
-			continue
-
-		var item: Dictionary = item_variant
-		var item_id: StringName = StringName(String(item.get("id", "")))
-		if item_id == target_id:
-			return item
-
-	return {}
+	return GameDataAccessScript.find_by_id(items, target_id)
 
 
 static func _load_document(path: String) -> Dictionary:
-	if _document_cache.has(path):
-		var cached_document: Dictionary = _document_cache[path]
-		return cached_document
-
-	var document: Dictionary = JsonDataLoaderScript.load_dictionary(path, "GameData", JsonDataLoaderScript.REPORT_WARNING)
-	_document_cache[path] = document
-	return document
+	return GameDataAccessScript.load_document(_document_cache, path)
 
 
 static func _get_data_manager() -> Node:
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	if tree == null or tree.root == null:
-		return null
-
-	return tree.root.get_node_or_null("DataManager")
+	return GameDataAccessScript.get_data_manager()
 
 
 static func _get_definition_from_data_manager(method_name: String, definition_id: Variant) -> Dictionary:
-	var data_manager: Node = _get_data_manager()
-	if data_manager == null or not data_manager.has_method(method_name):
-		return {}
-
-	var data: Variant = data_manager.call(method_name, definition_id)
-	if data is Dictionary:
-		var definition: Dictionary = data
-		return definition
-	return {}
+	return GameDataAccessScript.get_definition_from_data_manager(method_name, definition_id)
 
 
 static func _get_pool_from_data_manager(method_name: String) -> Array[Dictionary]:
-	var data_manager: Node = _get_data_manager()
-	if data_manager == null or not data_manager.has_method(method_name):
-		return []
-
-	var data: Variant = data_manager.call(method_name)
-	if not (data is Array):
-		return []
-
-	var items: Array[Dictionary] = []
-	for item_variant: Variant in data:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			items.append(item)
-	return items
+	return GameDataAccessScript.get_pool_from_data_manager(method_name)

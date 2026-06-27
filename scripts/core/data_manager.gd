@@ -3,6 +3,7 @@ extends Node
 
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
+const DataDefinitionIndexScript: Script = preload("res://scripts/core/data_definition_index.gd")
 const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
 const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
 const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
@@ -179,61 +180,20 @@ func _load_json_document(path: String) -> Dictionary:
 
 
 func _index_definitions(document: Dictionary, key: String, id_key: String, target: Dictionary, path: String) -> void:
-	for item: Dictionary in _get_dictionary_array(document, key, path):
-		var item_id: StringName = StringName(String(item.get(id_key, "")))
-		if item_id == &"":
-			push_error("[DataManager] Definition in %s.%s is missing a non-empty %s." % [path, key, id_key])
-			continue
-
-		target[item_id] = item.duplicate(true)
+	DataDefinitionIndexScript.index_definitions(document, key, id_key, target, path)
 
 
 func _index_upgrade_definitions(document: Dictionary, key: String, path: String) -> void:
-	for item: Dictionary in _get_dictionary_array(document, key, path):
-		var item_id: StringName = StringName(String(item.get("id", "")))
-		if item_id == &"":
-			push_error("[DataManager] Definition in %s.%s is missing a non-empty id." % [path, key])
-			continue
-
-		var item_copy: Dictionary = item.duplicate(true)
-		_upgrade_definitions[item_id] = item_copy
-		if key == "level_up_upgrades":
-			_level_up_upgrade_definitions[item_id] = item_copy.duplicate(true)
+	DataDefinitionIndexScript.index_upgrade_definitions(document, key, path, _upgrade_definitions, _level_up_upgrade_definitions)
 
 
 func _get_dictionary_array(document: Dictionary, key: String, path: String) -> Array[Dictionary]:
-	if document.is_empty():
-		return []
-
-	var value: Variant = document.get(key, [])
-	if not (value is Array):
-		push_error("[DataManager] Expected %s.%s to be an array." % [path, key])
-		return []
-
-	var items: Array[Dictionary] = []
-	for item_variant: Variant in value:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			items.append(item)
-		else:
-			push_error("[DataManager] Expected every item in %s.%s to be an object." % [path, key])
-
-	return items
+	return DataDefinitionIndexScript.get_dictionary_array(document, key, path)
 
 
 func _get_definition(source: Dictionary, definition_id: Variant) -> Dictionary:
-	var key: StringName = StringName(String(definition_id))
-	if not source.has(key):
-		return {}
-
-	var definition: Dictionary = source[key]
-	return definition.duplicate(true)
+	return DataDefinitionIndexScript.get_definition(source, definition_id)
 
 
 func _get_definition_values(source: Dictionary) -> Array[Dictionary]:
-	var values: Array[Dictionary] = []
-	for value_variant: Variant in source.values():
-		if value_variant is Dictionary:
-			var value: Dictionary = value_variant
-			values.append(value.duplicate(true))
-	return values
+	return DataDefinitionIndexScript.get_definition_values(source)
