@@ -659,12 +659,8 @@ static func _apply_holy_shield_break_damage_reduction(rules: Dictionary, context
 static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("warhammer_crack_field"):
 		return null
-	var target: Node2D = context.get("target") as Node2D
-	var source: Node2D = context.get("source") as Node2D
 	var caster: Node2D = context.get("caster") as Node2D
-	var origin: Node2D = target if target != null else source
-	if origin == null:
-		origin = caster
+	var origin: Node2D = _warhammer_crack_origin(context)
 	if origin == null:
 		return null
 	var parent: Node = context.get("parent") as Node
@@ -677,35 +673,11 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 	var quake_rule: Dictionary = _get_dictionary(rules.get("warhammer_quake_slam_every_n_casts", {}))
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	var quake_active: bool = skill_instance != null and bool(skill_instance.get_meta("warhammer_quake_slam_active", false))
-	var radius: float = maxf(float(rule.get("radius", 80.0)), 1.0)
-	radius *= maxf(1.0 + float(upgrade.get("length_multiplier_add", 0.0)), 0.05)
-	if quake_active:
-		radius *= maxf(float(quake_rule.get("forward_extension_multiplier", 1.6)), 0.05)
-	var duration: float = maxf(float(rule.get("duration", 1.2)), 0.05)
-	if quake_active and int(quake_rule.get("same_target_max_hits", 0)) > 0:
-		duration = minf(duration, maxf(float(rule.get("tick_interval", 0.4)), 0.05) * float(quake_rule.get("same_target_max_hits", 2)))
+	var radius: float = _warhammer_crack_radius(rule, upgrade, quake_rule, quake_active)
+	var duration: float = _warhammer_crack_duration(rule, quake_rule, quake_active)
 	var amount: int = maxi(int(rule.get("amount", 5)), 0)
-	var packet: Dictionary = _build_traced_special_packet(
-		"warhammer_crack_field",
-		amount,
-		String(rule.get("damage_origin", "field")),
-		false,
-		context,
-		String(rule.get("element", "physical")),
-		String(rule.get("damage_type", "area_direct"))
-	)
-	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
-	if source_origin_id == "" and caster != null:
-		source_origin_id = String(caster.get("selected_character_id"))
-	packet["source_origin_id"] = StringName(source_origin_id)
-	packet["source_skill_id"] = StringName(String(context.get("skill_id", packet.get("source_skill_id", ""))))
-	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.85)) - 1.0
-	var direction: Vector2 = Vector2.ZERO
-	if caster != null:
-		direction = caster.global_position.direction_to(origin.global_position)
-	var position: Vector2 = origin.global_position
-	if quake_active and direction != Vector2.ZERO:
-		position += direction.normalized() * radius * 0.35
+	var packet: Dictionary = _build_warhammer_crack_packet(rule, context, caster, amount)
+	var position: Vector2 = _warhammer_crack_position(origin, caster, radius, quake_active)
 	return CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": position,
@@ -722,6 +694,61 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 		"visual_style": "warhammer_crack_field",
 		"visual_color": Color(0.86, 0.58, 0.18, 0.30)
 	})
+
+
+static func _warhammer_crack_origin(context: Dictionary) -> Node2D:
+	var target: Node2D = context.get("target") as Node2D
+	var source: Node2D = context.get("source") as Node2D
+	var caster: Node2D = context.get("caster") as Node2D
+	if target != null:
+		return target
+	if source != null:
+		return source
+	return caster
+
+
+static func _warhammer_crack_radius(rule: Dictionary, upgrade: Dictionary, quake_rule: Dictionary, quake_active: bool) -> float:
+	var radius: float = maxf(float(rule.get("radius", 80.0)), 1.0)
+	radius *= maxf(1.0 + float(upgrade.get("length_multiplier_add", 0.0)), 0.05)
+	if quake_active:
+		radius *= maxf(float(quake_rule.get("forward_extension_multiplier", 1.6)), 0.05)
+	return radius
+
+
+static func _warhammer_crack_duration(rule: Dictionary, quake_rule: Dictionary, quake_active: bool) -> float:
+	var duration: float = maxf(float(rule.get("duration", 1.2)), 0.05)
+	if quake_active and int(quake_rule.get("same_target_max_hits", 0)) > 0:
+		duration = minf(duration, maxf(float(rule.get("tick_interval", 0.4)), 0.05) * float(quake_rule.get("same_target_max_hits", 2)))
+	return duration
+
+
+static func _build_warhammer_crack_packet(rule: Dictionary, context: Dictionary, caster: Node2D, amount: int) -> Dictionary:
+	var packet: Dictionary = _build_traced_special_packet(
+		"warhammer_crack_field",
+		amount,
+		String(rule.get("damage_origin", "field")),
+		false,
+		context,
+		String(rule.get("element", "physical")),
+		String(rule.get("damage_type", "area_direct"))
+	)
+	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
+	if source_origin_id == "" and caster != null:
+		source_origin_id = String(caster.get("selected_character_id"))
+	packet["source_origin_id"] = StringName(source_origin_id)
+	packet["source_skill_id"] = StringName(String(context.get("skill_id", packet.get("source_skill_id", ""))))
+	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.85)) - 1.0
+	return packet
+
+
+static func _warhammer_crack_position(origin: Node2D, caster: Node2D, radius: float, quake_active: bool) -> Vector2:
+	var position: Vector2 = origin.global_position
+	if not quake_active or caster == null:
+		return position
+	var direction: Vector2 = caster.global_position.direction_to(origin.global_position)
+	if direction != Vector2.ZERO:
+		position += direction.normalized() * radius * 0.35
+	return position
 
 
 static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictionary, amount: int, source_id: String) -> Array[RefCounted]:
