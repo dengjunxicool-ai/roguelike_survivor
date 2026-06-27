@@ -1890,15 +1890,8 @@ func _build_attack_damage_text() -> String:
 	var records: Array = DebugCombatTraceScript.get_records(root)
 	var display_records: Array[Dictionary] = _get_attack_damage_records()
 	var damage_records: Array[Dictionary] = display_records
-	var explosion_count: int = 0
-	var has_explosion_record: bool = false
-	for record_variant: Variant in records:
-		if not (record_variant is Dictionary):
-			continue
-		var record: Dictionary = record_variant
-		if String(record.get("type", "")) == "explosion":
-			explosion_count += 1
-			has_explosion_record = true
+	var explosion_count: int = _count_explosion_records(records)
+	var has_explosion_record: bool = explosion_count > 0
 
 	if trace_id <= 0:
 		return "Damage Breakdown: no attack trace."
@@ -1906,16 +1899,9 @@ func _build_attack_damage_text() -> String:
 		return "Damage Breakdown\nTrace #%d waiting for hit... Explosions=%d" % [trace_id, explosion_count]
 	_attack_damage_card_index = clampi(_attack_damage_card_index, 0, display_records.size() - 1)
 
-	var target_groups: Dictionary = {}
-	var target_order: Array[String] = []
-	for record: Dictionary in damage_records:
-		var target_name: String = String(record.get("target", "target"))
-		if not target_groups.has(target_name):
-			target_groups[target_name] = []
-			target_order.append(target_name)
-		var target_records: Array = _get_array(target_groups.get(target_name, []))
-		target_records.append(record)
-		target_groups[target_name] = target_records
+	var target_summary: Dictionary = _group_damage_records_by_target(damage_records)
+	var target_groups: Dictionary = _get_dictionary(target_summary.get("groups", {}))
+	var target_order: Array[String] = _to_string_array(target_summary.get("order", []))
 
 	var lines: Array[String] = ["Damage Breakdown"]
 	lines.append("Card %d/%d" % [_attack_damage_card_index + 1, display_records.size()])
@@ -1930,6 +1916,34 @@ func _build_attack_damage_text() -> String:
 	lines.append("")
 	lines.append(_format_record_dump(display_records[_attack_damage_card_index]))
 	return "\n".join(lines)
+
+
+func _count_explosion_records(records: Array) -> int:
+	var explosion_count: int = 0
+	for record_variant: Variant in records:
+		if not (record_variant is Dictionary):
+			continue
+		var record: Dictionary = record_variant
+		if String(record.get("type", "")) == "explosion":
+			explosion_count += 1
+	return explosion_count
+
+
+func _group_damage_records_by_target(records: Array[Dictionary]) -> Dictionary:
+	var target_groups: Dictionary = {}
+	var target_order: Array[String] = []
+	for record: Dictionary in records:
+		var target_name: String = String(record.get("target", "target"))
+		if not target_groups.has(target_name):
+			target_groups[target_name] = []
+			target_order.append(target_name)
+		var target_records: Array = _get_array(target_groups.get(target_name, []))
+		target_records.append(record)
+		target_groups[target_name] = target_records
+	return {
+		"groups": target_groups,
+		"order": target_order
+	}
 
 
 func _build_damage_component_summary(records: Array, includes_explosion: bool = false) -> String:
