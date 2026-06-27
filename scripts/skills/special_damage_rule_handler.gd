@@ -209,7 +209,7 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 			"slow_percent": float(slow_rule.get("slow_percent", 0.18)),
 			"boss_slow_percent": float(slow_rule.get("boss_slow_percent", 0.08))
 		}
-	var lava_packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet("fireball_lava_zone", damage, "field", false), context)
+	var lava_packet: Dictionary = _build_traced_special_packet("fireball_lava_zone", damage, "field", false, context)
 	lava_packet["source_type"] = "area"
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
@@ -306,7 +306,7 @@ static func execute_frost_ring_on_player_damaged(rules: Dictionary, context: Dic
 		"position": player.global_position,
 		"damage": amount,
 		"damage_type": StringName(String(rule.get("damage_type", "area_direct"))),
-		"damage_packet": DamageTraceContextScript.apply_to_packet(build_special_packet("frost_ring", amount, String(rule.get("damage_origin", "special")), false, String(rule.get("element", "ice")), String(rule.get("damage_type", "area_direct"))), context),
+		"damage_packet": _build_traced_special_packet("frost_ring", amount, String(rule.get("damage_origin", "special")), false, context, String(rule.get("element", "ice")), String(rule.get("damage_type", "area_direct"))),
 		"duration": 0.12,
 		"tick_interval": 0.1,
 		"radius": radius,
@@ -1004,7 +1004,7 @@ static func _execute_fire_oil_secondary_deflagration(rules: Dictionary, context:
 	if parent == null:
 		return null
 	var amount: int = maxi(roundi(float(primary_amount) * maxf(float(rule.get("damage_multiplier", 0.5)), 0.0)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet("fire_oil_secondary_deflagration", amount, "reaction", false, "fire", "reaction_damage"), context)
+	var packet: Dictionary = _build_traced_special_packet("fire_oil_secondary_deflagration", amount, "reaction", false, context, "fire", "reaction_damage")
 	packet["can_trigger_reaction"] = false
 	packet["boss_damage_multiplier_add"] = -0.25
 	return CombatObjectFactoryScript.create_area_effect({
@@ -1427,14 +1427,15 @@ static func _cross_relic_faith_judgement_intents(rules: Dictionary, context: Dic
 	if hits % required != 0:
 		return intents
 	var amount: int = maxi(int(rule.get("amount", 28)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"cross_relic_faith_judgement",
 		amount,
 		String(rule.get("damage_origin", "special")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "direct_magical"))
-	), context)
+	)
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
 	return intents
 
@@ -1473,7 +1474,7 @@ static func execute_shatter_area(rules: Dictionary, context: Dictionary) -> Node
 		return null
 	var amount: int = maxi(roundi(float(rule.get("amount", 14)) * maxf(1.0 + float(upgrade.get("damage_multiplier_add", 0.0)), 0.0)), 0)
 	var radius: float = maxf(float(rule.get("radius", 80.0)) * maxf(1.0 + float(upgrade.get("radius_multiplier_add", 0.0)), 0.05), 1.0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet("frost_shatter", amount, String(rule.get("damage_origin", "reaction")), false, String(rule.get("element", "ice")), String(rule.get("damage_type", "reaction_damage"))), context)
+	var packet: Dictionary = _build_traced_special_packet("frost_shatter", amount, String(rule.get("damage_origin", "reaction")), false, context, String(rule.get("element", "ice")), String(rule.get("damage_type", "reaction_damage")))
 	packet["reaction_type"] = "shatter"
 	packet["reaction_tier"] = "major"
 	packet["source_instance_id"] = "frost_shatter:%s:%d" % [str(target.get_instance_id()), Time.get_ticks_msec()]
@@ -2243,7 +2244,7 @@ static func execute_small_trap_on_trigger(rules: Dictionary, context: Dictionary
 			"position": hit_target.global_position + Vector2.RIGHT.rotated(angle) * spawn_radius,
 			"damage": amount,
 			"damage_type": &"trap_damage",
-			"damage_packet": DamageTraceContextScript.apply_to_packet(build_special_packet("trap_small_chain", amount, "trap", false, "physical", "trap_damage"), context),
+			"damage_packet": _build_traced_special_packet("trap_small_chain", amount, "trap", false, context, "physical", "trap_damage"),
 			"duration": float(rule.get("duration", 6.0)),
 			"tick_interval": float(rule.get("tick_interval", 0.2)),
 			"radius": radius,
