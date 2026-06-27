@@ -1,7 +1,6 @@
 {
   "scripts": {
-    "verify:obsolete-runtime-removed": "node tools\\verify_obsolete_runtime_removed.js",
-    "validate:combat": "node tools\\validate_weapon_authoring_pipeline.js",
+    "verify:obsolete-weapon-runtime-removed": "node tools\\verify_obsolete_runtime_removed.js",
     "verify:fire-skill-system-contract": "node tools\\verify_fire_skill_system_contract.js",
     "verify:fire-status-contract": "node tools\\verify_fire_status_contract.js",
     "verify:burning-status-stack-devtools": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_burning_status_stack_decay_devtools.gd",
@@ -42,10 +41,6 @@
     "verify:chaos-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_chaos_skill_runtime_smoke.gd",
     "verify:fusion-skill-system-contract": "node tools\\verify_fusion_skill_system_contract.js",
     "verify:fusion-skill-numeric-contract": "node tools\\verify_fusion_skill_numeric_contract.js",
-    "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd",
-    "test:combat:smoke": "node tools\\run_full_weapon_branch_matrix_runtime.js smoke",
-    "test:combat:rules": "node tools\\run_full_weapon_branch_matrix_runtime.js rules",
-    "report:combat:spotlights": "node tools\\generate_combat_scene_spotlight_report.js",
-    "test:combat:scenes": "npm run validate:combat && npm run test:combat:smoke && npm run test:combat:rules && npm run report:combat:spotlights"
+    "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd"
   }
 }

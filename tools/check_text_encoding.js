@@ -6,7 +6,16 @@ const root = path.resolve(__dirname, "..");
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const strictMojibake = process.argv.includes("--strict-mojibake");
 
-const EXCLUDED_DIRS = new Set([".git", ".godot", ".codegraph", "node_modules"]);
+const EXCLUDED_DIRS = new Set([
+  ".git",
+  ".godot",
+  ".codegraph",
+  ".tmp",
+  ".tmp_fire_tornado_gif",
+  "node_modules",
+  "reports",
+  "tmp",
+]);
 const TEXT_EXTENSIONS = new Set([
   ".cfg",
   ".gd",
@@ -38,7 +47,7 @@ function walk(dir) {
   const result = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (!EXCLUDED_DIRS.has(entry.name)) {
+      if (!EXCLUDED_DIRS.has(entry.name) && !entry.name.startsWith("data_")) {
         result.push(...walk(path.join(dir, entry.name)));
       }
       continue;

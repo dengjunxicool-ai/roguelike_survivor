@@ -427,7 +427,7 @@ node tools\validate_enemy_configs.js
 涉及 UI 状态或地图选择页结构：
 
 ```powershell
-& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_ui_architecture.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_map_select_ui.gd
 ```
 
 涉及地图 hazard、伤害、统计或挑战：

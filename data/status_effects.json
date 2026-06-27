@@ -459,7 +459,7 @@
 				"move_slow_per_stack": 1.0
 			},
 			"visual": {
-				"texture": "res://assets/weapon/frost_staff.png",
+				"texture": "res://icon.svg",
 				"modulate": [
 					0.55,
 					0.85,

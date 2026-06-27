@@ -11,7 +11,7 @@
 - 子屏幕只发信号或 UI command，不主动查找其他屏幕，不直接切换其他屏幕。
 - 展示数据优先由 ViewModel builder 汇总，controller 只构建节点、渲染字段、发出用户意图。
 - 涉及存档、奖励、升级、解锁、运行统计的副作用，优先走 `UICommandDispatcher`、`ResultUnlockService` 或运行时 service。
-- 新 UI 改动完成后必须跑 `tools/verify_ui_architecture.gd`，涉及运行中 UI 时还要人工走完整战斗链路。
+- 新 UI 改动完成后必须跑当前存在的 UI smoke（至少 `tools/verify_title_screen_runtime.gd`、`tools/verify_character_select_ui.gd`，涉及地图页时加 `tools/verify_map_select_ui.gd`），涉及运行中 UI 时还要人工走完整战斗链路。
 
 ## 0. 快速定位地图
 
@@ -23,11 +23,11 @@
 | 新增状态流 | `scripts/ui/ui_state_registry.gd` | `scripts/ui/ui_state_prepare_router.gd`、`scripts/ui/ui_manager.gd` 的 `_build_xxx()` | 不要绕过 `UIManager.transition_to()` |
 | 运行中弹窗 | `scripts/ui/modals/modal_flow_controller.gd` | `scripts/ui/modals/run_choice_modal_controller.gd`、`scripts/ui/ui_state_registry.gd` | 不要让弹窗自己控制 pause |
 | HUD 字段/布局 | `scripts/ui/hud/run_hud_state_provider.gd` | `scripts/ui/hud/run_hud_controller.gd`、`RunSceneUIBridge` | 不要把 HUD 数据拼回 `UIManager._process()` |
-| 角色/武器选择 | `CharacterLoadoutViewModelBuilder` | `CharacterLoadoutController`、`CharacterLoadoutText`、`CharacterLoadoutService` | 不要在 controller 复制解锁/可用武器规则 |
+| 角色选择 | `CharacterLoadoutViewModelBuilder` | `CharacterLoadoutController`、`CharacterLoadoutText`、`CharacterLoadoutService` | 不要在 controller 复制解锁/起始技能规则 |
 | 地图选择 | `MapSelectViewModelBuilder` | `MapSelectController`、`MapRuntime`、`data/maps.json` | 不要在地图页实例化战斗场景 |
 | 结算页 | `ResultScreenViewModelBuilder` | `RunResultStateBuilder`、`ResultUnlockService`、`RunDiagnosticService` | 不要在结果页 controller 直接写存档 |
 | 奖励/购买/升级副作用 | `UICommand` + `UICommandDispatcher` | 独立 service 或 `SaveManager`/运行时对象 | 不要把副作用写在按钮回调里 |
-| 主题/按钮/卡牌样式 | `data/ui_theme.json` | `UIThemeService`、`UIButtonSkin` | 不要为每个按钮手写一套 stylebox |
+| 主题/按钮/卡牌样式 | `data/ui/ui_theme.json` | `UIThemeService`、`UIButtonSkin` | 不要为每个按钮手写一套 stylebox |
 | 文案/语言 | `data/localization/ui_text.json` | `LocalizationService`、`UISettingsService` | 不要新增无 fallback 的硬编码 UI 文案 |
 | 响应式/小屏 | `UIResponsiveLayout` | 页面 controller 的 `update_layout()` | 不要散落自定义断点 |
 | 启动/运行场景生命周期 | `RunSceneCoordinator` | `UIManager._start_run()`、`_teardown_run_scene()` | 不要让普通 screen 管理 `main.tscn` |
@@ -50,14 +50,14 @@
 | 运行场景桥接 | `RunSceneUIBridge` 负责连接玩家、刷怪器、敌人死亡等运行时信号 | 90% |
 | HUD 状态 | `RunHudStateProvider` 统一采集 HUD Dictionary，`RunHudController` 消费它刷新节点 | 85% |
 | 运行中弹窗 | `ModalFlowController` 统一弹窗刷新、pending 检查和 `ModalRequest` 队列 | 90% |
-| 武器分支弹窗 | `BRANCH_CHOICE_MODAL` 已纳入主状态机和暂停策略 | 95% |
+| 运行中弹窗兼容状态 | `BRANCH_CHOICE_MODAL` 仍在 modal flow 中保留为兼容状态，但当前不作为新功能入口 | 80% |
 | UI 副作用命令 | `UICommand` + `UICommandDispatcher` 已覆盖升级/奖励、局外升级、角色购买、调试加魂石 | 85% |
 | 结算解锁副作用 | `ResultUnlockService` 已从结果页迁出解锁写存档逻辑 | 95% |
 | 主要页面 ViewModel | 角色、地图、局外升级、图鉴、结算已接入 builder | 90% |
-| 主题系统 | `UIThemeService` 和 `data/ui_theme.json.tokens` 已有，按钮和选择卡背景已接入 | 70% |
+| 主题系统 | `UIThemeService` 和 `data/ui/ui_theme.json.tokens` 已有，按钮和选择卡背景已接入 | 70% |
 | 本地化 | `LocalizationService` 已接入标题页、设置页、主面板标题和弹窗标题 | 65% |
 | 响应式布局 | `UIResponsiveLayout` 已有 scale、breakpoint、compact 和 panel layout | 75% |
-| 自动验证 | `tools/verify_ui_architecture.gd` 覆盖状态、弹窗、命令、ViewModel、本地化、主题、UIManager 启动 | 100% |
+| 自动验证 | 标题页、角色选择、地图选择等 UI smoke 覆盖主要入口；完整架构断言需随新状态补对应验证 | 80% |
 
 整体判断：
 
@@ -111,16 +111,16 @@ project.godot run/main_scene
 - `UIManager._ready()` 会创建所有常驻 screen，新增状态但忘记注册 build order 会导致启动验证失败。
 - `TITLE` 的输入只在 `UIManager._input()` 中转发给 `TitleScreenController.handle_input()`。
 
-### 角色/武器到地图到开局
+### 角色到地图到开局
 
 ```text
 TitleScreenController.state_requested(CHARACTER_SELECT)
   -> UIManager.transition_to(CHARACTER_SELECT)
-  -> CharacterLoadoutController.refresh(selected_character_id, selected_weapon_id)
-  -> loadout_confirmed(character_id, weapon_id)
+  -> CharacterLoadoutController.refresh(selected_character_id)
+  -> loadout_confirmed(character_id)
   -> UIManager._on_loadout_confirmed()
   -> transition_to(MAP_SELECT)
-  -> MapSelectController.refresh(character_id, weapon_id)
+  -> MapSelectController.refresh(character_id)
   -> start_requested(map_id)
   -> UIManager._start_run(map_id)
   -> CharacterLoadoutService.build_loadout()
@@ -130,7 +130,7 @@ TitleScreenController.state_requested(CHARACTER_SELECT)
 
 风险点：
 
-- 角色/武器选择只保存 `character_id` 与 `weapon_id`，真正运行时上下文要通过 `RunLoadout` 传入，不要恢复旧的散字段传参。
+- 角色选择只保存 `character_id`，真正运行时上下文要通过 `RunLoadout` 传入，不要恢复旧的散字段传参。
 - 地图页只发 `start_requested(map_id)`，战斗场景实例化必须留在 `UIManager._start_run()` / `RunSceneCoordinator`。
 
 ### 运行时信号到 HUD/弹窗/结算
@@ -185,14 +185,12 @@ player.died / spawner.boss_defeated / pause give up
 | --- | --- | --- | --- |
 | `BOOT` | 加载占位 | `UIManager._build_boot()` | 无 |
 | `TITLE` | 标题页和主菜单 | `TitleScreenController` | `_reset_title_screen()`，并清理运行场景 |
-| `CHARACTER_SELECT` | 角色和武器选择 | `CharacterLoadoutController` | `_refresh_character_select_screen()`，并清理运行场景 |
+| `CHARACTER_SELECT` | 角色选择 | `CharacterLoadoutController` | `_refresh_character_select_screen()`，并清理运行场景 |
 | `MAP_SELECT` | 地图选择和战斗准备 | `MapSelectController` | `_refresh_map_select_screen()` |
 | `RUNNING` | 战斗 HUD | `RunHudController` | 连接运行时信号，更新 HUD，检查 pending modal |
 | `LEVEL_UP_MODAL` | 升级三选一 | `RunChoiceModalController` | `refresh_level_up_modal()` |
 | `RUN_REWARD_MODAL` | 精英/Boss 奖励 | `RunChoiceModalController` | `refresh_reward_modal()` |
 | `CURSE_CHOICE_MODAL` | 诅咒选择 | `RunChoiceModalController` | `refresh_curse_choice_modal()` |
-| `EVOLUTION_MODAL` | 终式进化选择 | `RunChoiceModalController` | `refresh_evolution_modal()` |
-| `BRANCH_CHOICE_MODAL` | 武器分支选择 | `WeaponBranchModal` | `_open_branch_choice_modal()` |
 | `PAUSE_MENU` | 暂停菜单 | `UIManager._build_pause_menu()` | 无 |
 | `RESULT_DEFEAT` | 失败结算 | `ResultScreenController` | `_refresh_result_screen(state)` |
 | `RESULT_VICTORY` | 胜利结算 | `ResultScreenController` | `_refresh_result_screen(state)` |
@@ -211,7 +209,7 @@ player.died / spawner.boss_defeated / pause give up
 - `TITLE -> CHARACTER_SELECT / META_UPGRADE / CODEX / SETTINGS`
 - `CHARACTER_SELECT -> MAP_SELECT / TITLE`
 - `MAP_SELECT -> RUNNING / CHARACTER_SELECT`
-- `RUNNING -> LEVEL_UP_MODAL / RUN_REWARD_MODAL / CURSE_CHOICE_MODAL / EVOLUTION_MODAL / BRANCH_CHOICE_MODAL / PAUSE_MENU / RESULT_DEFEAT / RESULT_VICTORY / TITLE`
+- `RUNNING -> LEVEL_UP_MODAL / RUN_REWARD_MODAL / CURSE_CHOICE_MODAL / PAUSE_MENU / RESULT_DEFEAT / RESULT_VICTORY / TITLE`
 - running child modal 可回到 `RUNNING`，也可进入 `TITLE`、`CHARACTER_SELECT`、`META_UPGRADE`、结算页。
 - `META_UPGRADE / CODEX / SETTINGS -> TITLE`
 
@@ -246,7 +244,7 @@ player.died / spawner.boss_defeated / pause give up
 
 - 初始化状态机、屏幕 host、窗口/音量/语言设置。
 - 构建所有常驻菜单屏幕和运行中弹窗。
-- 保存跨屏上下文：角色、武器、地图、运行统计、波次、结算缓存。
+- 保存跨屏上下文：角色、地图、运行统计、波次、结算缓存。
 - 调用 `RunSceneCoordinator.start_run()` 和 `teardown()`。
 - 将运行时信号连接交给 `RunSceneUIBridge`。
 - 将 HUD 数据构建交给 `RunHudStateProvider`。
@@ -299,10 +297,10 @@ player.died / spawner.boss_defeated / pause give up
 
 职责：
 
-- 角色轮播、武器网格、详情面板、角色购买、出发确认。
+- 角色轮播、详情面板、角色购买、出发确认。
 - 渲染 `CharacterLoadoutViewModelBuilder` 的输出。
 - 购买角色走 `UICommandDispatcher.purchase_character()`。
-- 出发只发 `loadout_confirmed(character_id, weapon_id)`。
+- 出发只发 `loadout_confirmed(character_id)`。
 
 数据入口：
 
@@ -316,14 +314,13 @@ player.died / spawner.boss_defeated / pause give up
 
 - 布局常量：文件顶部常量。
 - 角色卡：`_add_character_card()`
-- 武器格：`_refresh_weapon_grid()`、`_add_weapon_cell()`
 - 详情字段：`CharacterLoadoutViewModelBuilder._build_character_details()`
 - 购买/出发按钮状态：`CharacterLoadoutViewModelBuilder._build_action()`
 
 边界：
 
 - 不在 controller 中复制角色解锁规则。
-- 不在 controller 中硬编码某个角色可用武器。
+- 不在 controller 中硬编码某个角色起始技能。
 - 新增详情字段先扩展 ViewModel，再渲染。
 
 ### MapSelectController
@@ -375,7 +372,7 @@ player.died / spawner.boss_defeated / pause give up
 - 玩家血条、等级、状态摘要。
 - Boss 血条。
 - 计时器、波次、击杀、资源。
-- 当前武器、分支、主武器等级。
+- 当前起始技能和主动技能等级。
 - 经验条。
 - 公告和提示。
 - debug 统计。
@@ -403,7 +400,7 @@ player.died / spawner.boss_defeated / pause give up
 
 职责：
 
-- 管理升级、奖励、诅咒、进化选择的渲染。
+- 管理升级、奖励、诅咒选择的渲染。
 - 维护旧的 `pending_level_up_count` 和 `pending_reward_kinds`。
 - `ModalFlowController` 负责状态到刷新函数的映射和 `ModalRequest` 队列。
 - 选择后通过 `UICommandDispatcher.apply_choice_option()` 应用副作用，再请求回到目标状态。
@@ -413,7 +410,7 @@ player.died / spawner.boss_defeated / pause give up
 - 卡牌布局：`RunChoiceModalController._add_upgrade_choice_card()`。
 - 卡牌尺寸：`CARD_DESIGN_SIZE`、`CARD_COMPACT_SIZE`。
 - 选项标题/效果：`_get_option_title()`、`_get_option_effect_text()`。
-- 背景图：选项 `background_texture` / `card_background_texture`，否则 `data/ui_theme.json.choice_cards.default_background_texture`。
+- 背景图：选项 `background_texture` / `card_background_texture`，否则 `data/ui/ui_theme.json.choice_cards.default_background_texture`。
 - 新弹窗优先通过 `ModalFlowController.request_modal()`。
 
 边界：
@@ -422,26 +419,23 @@ player.died / spawner.boss_defeated / pause give up
 - 新副作用先补 `UICommand` 构造函数，再补 `UICommandDispatcher` handler。
 - 新运行中弹窗需要同步补 `UIStateRegistry` descriptor。
 
-### WeaponBranchModal
+### Branch Modal 兼容状态
 
-位置：`scripts/ui/weapon_branch_modal.gd`
+位置：`scripts/ui/modals/modal_flow_controller.gd`
 
 职责：
 
-- 展示武器分支选项。
-- 调用目标 player 的 `WeaponBranchSystem.apply_branch()`。
-- 发出 `branch_selected(branch_id)` 和 `close_requested`。
+- 保留 `BRANCH_CHOICE_MODAL` 的 modal flow 分支，避免旧状态名导致运行时崩溃。
+- 当前新技能/神系流程不应继续接入旧武器分支业务。
 
 当前状态：
 
-- 已注册为 `BRANCH_CHOICE_MODAL`。
-- 属于 running child modal。
-- 由 `UIManager._open_branch_choice_modal()` 使用 `open_for_player(player, false)` 打开。
-- 暂停交给 `UIPausePolicy`，不要让 modal 自己控制 pause。
+- 只作为疑似兼容残留记录。
+- 没有当前业务文档要求新增使用它。
 
 后续优化：
 
-- 如果分支应用要彻底纳入命令系统，可新增 `UICommand.apply_weapon_branch(branch_id)`，再把业务应用迁到 dispatcher 或独立 service。
+- 若后续代码审计确认无状态机引用，可作为中风险 UI 状态清理候选。
 
 ### ResultScreenController
 
@@ -500,9 +494,9 @@ player.died / spawner.boss_defeated / pause give up
 
 职责：
 
-- 用 `TabContainer` 展示角色、武器、怪物、状态、遗物、进化表。
+- 用 `TabContainer` 展示角色、技能、怪物、状态、遗物等资料。
 - 展示数据由 `CodexViewModelBuilder` 汇总。
-- 进化表受 `SaveManager.is_unlocked("codex", &"evolution_table")` 控制。
+- 解锁类资料受 `SaveManager.is_unlocked(...)` 控制。
 
 边界：
 
@@ -535,7 +529,7 @@ player.died / spawner.boss_defeated / pause give up
 | --- | --- | --- | --- |
 | `UIScreenFactory` | `scripts/ui/ui_screen_factory.gd` | 创建全屏 screen 和通用 panel screen | 简单页面优先复用 |
 | `UINodeFactory` | `scripts/ui/ui_node_factory.gd` | 快速创建 Label、Button、Scroll、VBox、HBox、ProgressBar | 简单页面通用节点优先复用 |
-| `UIButtonSkin` | `scripts/ui/ui_button_skin.gd` | 从 `UIThemeService` 读取按钮主题 | 新按钮 variant 先改 `data/ui_theme.json` |
+| `UIButtonSkin` | `scripts/ui/ui_button_skin.gd` | 从 `UIThemeService` 读取按钮主题 | 新按钮 variant 先改 `data/ui/ui_theme.json` |
 | `UIThemeService` | `scripts/ui/ui_theme_service.gd` | 读取主题、token、颜色、贴图 | 常用颜色/间距/圆角继续迁入 `tokens` |
 | `LocalizationService` | `scripts/ui/localization_service.gd` | 读取语言选项和文案 key | 新 UI 文案使用 key + fallback |
 | `UIResponsiveLayout` | `scripts/ui/ui_responsive_layout.gd` | 设计尺寸缩放、breakpoint、panel 布局 | 复杂页面不要自写断点 |
@@ -580,18 +574,18 @@ player.died / spawner.boss_defeated / pause give up
 
 UI 主要消费：
 
-- `GameData`：角色、武器、技能、怪物、状态、遗物、进化、地图、升级池。
+- `GameData`：角色、技能、神系、怪物、状态、遗物、地图、升级池。
 - `SaveManager`：灵魂石、设置、角色解锁、局外升级等级、地图通关、图鉴解锁。
 - `RunStatsTracker`：战斗统计，用于 HUD 和结算。
 - `RunDiagnosticService`：结算诊断和推荐。
 - `MapRuntime`：地图默认 ID、解锁、背景图、锁定描述。
-- `CharacterLoadoutService`：角色可用武器和 loadout 校验。
+- `CharacterLoadoutService`：角色和起始技能 loadout 校验。
 
 资源字段约定：
 
-- 角色/武器/怪物视觉通常读配置中的 `visual.icon`、`visual.portrait`、`visual.texture`。
+- 角色/怪物/技能视觉通常读配置中的 `visual.icon`、`visual.portrait`、`visual.texture`。
 - 地图预览和运行背景读 `maps.json` 的 `visual.background_texture`，由 `MapRuntime` 消费。
-- 选择卡牌背景优先读 option 的 `background_texture` / `card_background_texture`，否则读 `data/ui_theme.json`。
+- 选择卡牌背景优先读 option 的 `background_texture` / `card_background_texture`，否则读 `data/ui/ui_theme.json`。
 - 本地化 UI 文案读 `data/localization/ui_text.json`。
 
 ## 8. 最快改造路径
@@ -604,7 +598,7 @@ UI 主要消费：
 4. 在 `UIStateRegistry` 增加 descriptor：`allowed_to`、`build_method`、`pause_mode`。
 5. 如进入页面要刷新数据，在 descriptor 加 `prepare_method`，并在 `UIStatePrepareRouter` 实现。
 6. 来源页面按钮只发 `state_requested`。
-7. 更新 `tools/verify_ui_architecture.gd` 覆盖新状态。
+7. 更新或新增对应 UI smoke 覆盖新状态。
 
 不要做：
 
@@ -647,20 +641,20 @@ UI 主要消费：
 2. 在 `UICommandDispatcher` 增加 command type 和 handler。
 3. 如果副作用复杂，handler 再委托独立 service。
 4. Controller 只发 command。
-5. 更新 `verify_ui_architecture.gd` 的 command contract。
+5. 更新对应 UI smoke 的 command contract。
 
 不要做：
 
 - 不要在 controller 直接写 `SaveManager`。
 - 不要在 UI 中复制战斗/奖励/解锁业务规则。
 
-### 修改角色/武器选择
+### 修改角色选择
 
 优先改：
 
 - 数据和按钮状态：`CharacterLoadoutViewModelBuilder`
 - 文案：`CharacterLoadoutText` 或 localization key
-- 视觉资源：`characters.json`、`weapons.json` 的 `visual`
+- 视觉资源：`characters.json` 的 `visual`，以及 `skills.json` 中起始技能展示字段
 - 渲染：`CharacterLoadoutController`
 
 检查：
@@ -702,8 +696,8 @@ UI 主要消费：
 
 优先改：
 
-- 按钮：`data/ui_theme.json.buttons`
-- 通用 token：`data/ui_theme.json.tokens`
+- 按钮：`data/ui/ui_theme.json.buttons`
+- 通用 token：`data/ui/ui_theme.json.tokens`
 - 读取工具：`UIThemeService`
 - 按钮皮肤：`UIButtonSkin`
 
@@ -711,7 +705,7 @@ UI 主要消费：
 
 1. 通用面板。
 2. 选择卡牌。
-3. 角色卡、武器格、地图卡。
+3. 角色卡、技能展示、地图卡。
 4. HUD 面板和进度条。
 5. 图鉴和结算卡片。
 
@@ -746,7 +740,6 @@ UI 主要消费：
 4. 本地化服务已接入入口文案，但业务数据和专用 text builder 中仍有大量中文硬编码。
 5. `UICommandDispatcher` 统一了入口，但 handler 内仍直接调用部分运行时对象和 `SaveManager`，复杂化后应拆 application service。
 6. `UIManager` 已瘦身，但仍承担运行场景调度和运行事件回调。继续拆分时要小步做，避免影响开局、暂停、结算链路。
-7. `WeaponBranchModal` 已纳入状态机，但业务应用仍在 modal 内调用 `WeaponBranchSystem`，如果后续分支逻辑复杂，应迁到 command/service。
 
 ## 10. 验证清单
 
@@ -755,18 +748,19 @@ UI 主要消费：
 ```powershell
 D:\nodejs\node.exe tools\check_text_encoding.js
 & 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --quit
-& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_ui_architecture.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_title_screen_runtime.gd
+& 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify_character_select_ui.gd
 ```
 
-涉及运行中 UI、HUD、奖励、升级、分支、结算时，还要人工走：
+涉及运行中 UI、HUD、奖励、升级、结算时，还要人工走：
 
 ```text
-启动 -> 标题 -> 角色选择 -> 地图选择 -> 战斗 -> 升级弹窗 -> 奖励弹窗 -> 分支弹窗 -> 暂停 -> 失败/胜利结算 -> 返回主菜单
+启动 -> 标题 -> 角色选择 -> 地图选择 -> 战斗 -> 升级弹窗 -> 奖励弹窗 -> 暂停 -> 失败/胜利结算 -> 返回主菜单
 ```
 
 建议新增测试覆盖：
 
-- 新状态：补 `verify_ui_architecture.gd` 的 build order 和 transition 断言。
+- 新状态：补对应 UI smoke 的 build order 和 transition 断言。
 - 新 command：补 command dispatch 断言。
 - 新 ViewModel：补 builder smoke 断言。
 - 新本地化 key：补语言切换断言。

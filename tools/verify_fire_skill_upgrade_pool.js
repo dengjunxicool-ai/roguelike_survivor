@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { readJsonFile, stripBom } = require("./json_file");
+const { readJsonFile, stripBom } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 

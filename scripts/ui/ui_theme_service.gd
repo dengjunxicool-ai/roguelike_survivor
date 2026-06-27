@@ -2,7 +2,7 @@ extends RefCounted
 class_name UIThemeService
 
 
-const CONFIG_PATH: String = "res://data/ui_theme.json"
+const CONFIG_PATH: String = "res://data/ui/ui_theme.json"
 
 static var _config_loaded: bool = false
 static var _config: Dictionary = {}

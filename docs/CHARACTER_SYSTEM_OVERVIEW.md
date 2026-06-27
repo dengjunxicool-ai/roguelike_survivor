@@ -1,19 +1,19 @@
 # 人物系统梳理
 
-本文档基于当前项目代码重新梳理人物系统，目标是让后续新增、调整、迁移人物相关功能时，可以快速定位入口、数据、运行态、Trait、Modifier、武器、战斗、UI、结算等链路，并避免把人物逻辑散落到其他系统。
+本文档基于当前项目代码重新梳理人物系统，目标是让后续新增、调整、迁移人物相关功能时，可以快速定位入口、数据、运行态、Trait、Modifier、起始技能、战斗、UI、结算等链路，并避免把人物逻辑散落到其他系统。
 
 ## 核心结论
 
 当前人物系统已经形成比较清晰的数据驱动结构：
 
 - 人物定义以 `data/characters.json` 为源头。
-- 运行开始以 `RunLoadout` 为唯一人物和武器载体。
+- 运行开始以 `RunLoadout` 为唯一人物载体。
 - `Player.reset_for_loadout(loadout)` 是玩家重置人物运行态的唯一入口。
-- `CharacterRuntime` 保存本局人物、主武器、武器槽、分支、进化和运行期 modifier。
+- `CharacterRuntime` 保存本局人物定义、起始技能和运行期 modifier。
 - `CharacterRunInitializer` 负责把 loadout 应用到 Player，并绑定起始技能和 Trait。
 - `CharacterTraitSystem` 只做事件、伤害吸收、modifier 查询的门面，具体 Trait 在 `scripts/characters/traits/*.gd` 中实现。
 - 长期生效的数值来源进入 `ModifierStore`，战斗、移动、拾取、技能等系统通过 `ModifierAggregator` 按 scope 查询。
-- 武器分支和进化是人物系统的边界系统：它们读取 `CharacterRuntime`，并通过 runtime 或技能实例写入运行期变化。
+- 起始技能是人物系统与技能系统的边界：人物只声明 `starting_skill_id`，技能执行、升级和表现由技能系统消费。
 
 后续人物改造应优先沿着这条主链路做，不要在 Player、SkillManager、DamageSystem、UI 中新增人物 ID 分支。
 
@@ -23,24 +23,24 @@
 
 | 需求类型 | 首选入口 | 不建议入口 |
 | --- | --- | --- |
-| 新人物、新默认武器、新可装备关系 | `data/characters.json` + `CharacterLoadoutService` | UI 里手写武器列表 |
+| 新人物、新起始技能 | `data/characters.json` + `CharacterLoadoutService` | UI 里手写技能列表 |
 | 人物基础血量、移速、护甲、拾取等静态属性 | `base_stats` + `CharacterRunInitializer.apply_character_setup()` | 在 Player 初始化后零散覆盖属性 |
 | 施法、移动、受伤、击杀触发的人物特性 | 具体 `CharacterTrait` 实现 + `TraitRegistry` | `Player` 或 `DamageSystem` 按人物 ID 分支 |
 | 长期局内数值来源 | `ModifierStore`，通过 `set_run_modifier_source()` / `merge_run_modifier_source()` 写入 | 直接长期改 Player 快照字段 |
-| 单技能或武器分支数值 | `SkillInstance.runtime_modifiers`、`WeaponBranchSystem`、`WeaponEvolutionSystem` | 人物系统直接改技能配置原始数据 |
+| 单技能数值 | `data/skills.json` 或 `SkillInstance.runtime_modifiers` | 人物系统直接改技能配置原始数据 |
 | UI 展示和选择合法性 | `CharacterLoadoutViewModelBuilder` + `CharacterLoadoutText` + `CharacterLoadoutService` | UI 控件直接读散落数据并自行判定 |
 | 结算、成长、挑战统计 | `RunResultStateBuilder` + `RunProgressionService` | 战斗中直接写成长存档 |
 
-如果一个改动同时影响多个系统，优先让人物系统只产出“人物身份、Trait 事件、modifier、运行态武器信息”，由消费系统按既有 query 或事件读取，不把消费端规则反向写回人物系统。
+如果一个改动同时影响多个系统，优先让人物系统只产出“人物身份、起始技能、Trait 事件、modifier”，由消费系统按既有 query 或事件读取，不把消费端规则反向写回人物系统。
 
 ## 当前人物
 
-| 人物 | Trait 类型 | 可装备武器 |
+| 人物 | Trait 类型 | 起始技能 |
 | --- | --- | --- |
-| `mage` | `weapon_cast_stack` | `fire_staff`, `frost_staff`, `lightning_whip`, `spellbook` |
-| `ranger` | `moving_bonus` | `throwing_knife_belt`, `hunter_bow`, `trap_kit` |
-| `paladin` | `passive_with_periodic_shield` | `holy_shield`, `warhammer`, `cross_relic` |
-| `alchemist` | `status_kill_random_area` | `toxic_vial`, `fire_oil_canister`, `acid_sprayer` |
+| `mage` | `skill_cast_stack` | `fireball` |
+| `ranger` | `moving_bonus` | `fireball` |
+| `paladin` | `passive_with_periodic_shield` | `fireball` |
+| `alchemist` | `status_kill_random_area` | `fireball` |
 
 `hp_lost_stack` 已注册为可用 Trait 类型，但当前 `characters.json` 中没有人物使用它。
 
@@ -48,16 +48,16 @@
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 人物数据 | `data/characters.json` | 定义人物 ID、展示名、定位、基础属性、可装备武器、解锁、视觉、Trait。 |
-| 人物文案 | `data/character_texts.json` | 定义人物选择界面的 Trait、短板、难度、武器展示文案。 |
-| 数据校验 | `tools/validate_character_configs.js` | 校验人物字段、Trait 参数、可装备武器、文案、成长目标、挑战引用。 |
-| 冒烟校验 | `tools/smoke_character_system.js` | 遍历人物和可装备武器组合，验证起始技能、Trait 类型、运行初始化。 |
-| Loadout 服务 | `scripts/characters/character_loadout_service.gd` | 解析默认武器、校验人物和武器合法性、生成 `RunLoadout`。 |
-| Loadout 载体 | `scripts/characters/run_loadout.gd` | 本局人物和武器的不可散参载体。 |
+| 人物数据 | `data/characters.json` | 定义人物 ID、展示名、定位、基础属性、起始技能、解锁、视觉、Trait。 |
+| 人物文案 | `data/character_texts.json` | 定义人物选择界面的 Trait、短板、难度、起始技能展示文案。 |
+| 数据校验 | `tools/verify_gods_and_skills_contract.js` + `tools/validate_enemy_configs.js` | 校验当前技能、神系、敌人和波次配置入口。 |
+| 冒烟校验 | `tools/verify_fire_skill_runtime_smoke.gd` 等神系 runtime smoke | 验证起始技能、技能触发和关键运行链路。 |
+| Loadout 服务 | `scripts/characters/character_loadout_service.gd` | 校验人物和起始技能合法性、生成 `RunLoadout`。 |
+| Loadout 载体 | `scripts/characters/run_loadout.gd` | 本局人物的不可散参载体。 |
 | 开局协调 | `scripts/game/run_scene_coordinator.gd` | 接收 `run_loadout`，创建运行场景，重置 spawner 和 player。 |
 | 玩家宿主 | `scripts/player/player_controller.gd` | 持有人物运行节点、基础属性快照、移动拾取查询、受伤入口。 |
 | 人物初始化 | `scripts/characters/character_run_initializer.gd` | 初始化 runtime、Trait、基础属性、起始技能、事件订阅。 |
-| 人物运行态 | `scripts/characters/character_runtime.gd` | 保存人物定义、主武器槽、武器槽、分支、进化、运行期 modifier。 |
+| 人物运行态 | `scripts/characters/character_runtime.gd` | 保存人物定义、起始技能、运行期 modifier。 |
 | Trait 门面 | `scripts/characters/character_trait_system.gd` | 对 Player 暴露 Trait 事件、伤害吸收、modifier 查询。 |
 | Trait 控制器 | `scripts/characters/character_trait_controller.gd` | 创建具体 Trait、转发事件、同步 debug state。 |
 | Trait 策略 | `scripts/characters/traits/*.gd` | 每个 `trait.type` 的独立行为实现。 |
@@ -65,28 +65,24 @@
 | Modifier 查询 | `scripts/modifiers/modifier_query.gd` | 定义 `player`、`skill`、`movement`、`pickup`、`damage` scope。 |
 | Modifier 存储 | `scripts/modifiers/modifier_store.gd` | 按来源和 scope 保存运行期 modifier。 |
 | Modifier 聚合 | `scripts/modifiers/modifier_aggregator.gd` | 汇总 store、技能 runtime、技能被动、人物 Trait、遗物技能 modifier。 |
-| 武器槽 | `scripts/weapons/weapon_runtime_slot.gd` | 保存单个武器的分支、等级、进化状态。 |
-| 起始技能绑定 | `scripts/weapons/weapon_skill_binding.gd` | 从 `CharacterRuntime` 读取装备武器的起始技能并加入 SkillManager。 |
-| 武器分支 | `scripts/weapons/weapon_branch_system.gd` | 读取当前武器槽，应用分支等级，写入技能 runtime modifier 和人物 runtime modifier。 |
-| 武器进化 | `scripts/weapons/weapon_evolution_system.gd` | 读取当前武器和分支，替换技能定义，更新 runtime 进化状态。 |
 | 战斗伤害 | `scripts/combat/damage_system.gd`, `scripts/combat/application_stages/*.gd` | 计算输出伤害、玩家受伤、Trait 吸收和受伤完成事件。 |
-| UI 入口 | `scripts/ui/ui_manager.gd`, `scripts/ui/screens/character_loadout_controller.gd` | 选择人物和武器，构建 loadout，进入地图选择和开局。 |
-| UI 展示 | `scripts/ui/screens/character_loadout_view_model_builder.gd`, `scripts/ui/screens/character_loadout_text.gd` | 把人物和武器数据组装成选择界面展示模型。 |
-| 结算成长 | `scripts/game/run_progression_service.gd`, `data/progression_goals.json`, `data/challenges.json` | 按本局人物、武器、地图记录成长、挑战、人物专精。 |
+| UI 入口 | `scripts/ui/ui_manager.gd`, `scripts/ui/screens/character_loadout_controller.gd` | 选择人物，构建 loadout，进入地图选择和开局。 |
+| UI 展示 | `scripts/ui/screens/character_loadout_view_model_builder.gd`, `scripts/ui/screens/character_loadout_text.gd` | 把人物和起始技能数据组装成选择界面展示模型。 |
+| 结算成长 | `scripts/game/run_progression_service.gd`, `data/progression_goals.json`, `data/challenges.json` | 按本局人物、地图记录成长、挑战、人物专精。 |
 
 ## 开局主链路
 
-1. 人物选择界面持有 `selected_character_id` 和 `selected_weapon_id`。
-2. `CharacterLoadoutController` 使用 `CharacterLoadoutService.get_allowed_weapons()` 展示当前人物可装备武器。
-3. 确认选择后，`UIManager._on_loadout_confirmed()` 保存人物和武器 ID。
+1. 人物选择界面持有 `selected_character_id`。
+2. `CharacterLoadoutController` 展示当前人物和 `starting_skill_id` 对应的起始技能。
+3. 确认选择后，`UIManager._on_loadout_confirmed()` 保存人物 ID。
 4. 开始战斗时，`UIManager._start_run()` 调用 `CharacterLoadoutService.build_loadout()`。
-5. `RunSceneCoordinator.start_run()` 只接受合法 `run_loadout`，不再接受人物和武器散参。
+5. `RunSceneCoordinator.start_run()` 只接受合法 `run_loadout`，不再接受人物散参。
 6. `RunSceneCoordinator._reset_runtime_sources()` 调用 `Player.reset_for_loadout(loadout)`。
-7. `Player.reset_for_loadout()` 重置基础运行状态，并确保 `CharacterRuntime`、`WeaponEquipSystem`、`WeaponSkillBinding`、`CharacterTraitSystem`、`ModifierStore`、`WeaponBranchSystem`、`WeaponEvolutionSystem` 等节点存在。
+7. `Player.reset_for_loadout()` 重置基础运行状态，并确保 `CharacterRuntime`、`CharacterTraitSystem`、`ModifierStore`、`SkillManager`、`SkillExecutor` 等节点存在。
 8. `CharacterRunInitializer.initialize_loadout()` 初始化 `CharacterRuntime` 和 `CharacterTraitSystem`。
-9. `CharacterRuntime.initialize(character_id, weapon_id)` 读取人物和武器定义，校验可装备关系，创建主 `WeaponRuntimeSlot`，应用武器 trait modifier。
+9. `CharacterRuntime.initialize(character_id)` 读取人物定义，并暴露 `get_starting_skill_id()` 给起始技能绑定使用。
 10. `CharacterRunInitializer.apply_character_setup()` 把人物 `base_stats`、视觉、run config 应用到 Player，并刷新 modifier 快照。
-11. `CharacterRunInitializer.configure_starting_skills()` 通过 `WeaponSkillBinding` 绑定起始技能，并把 `SkillEventBus.on_cast` 接到 `CharacterTraitSystem.handle_skill_bus_event()`。
+11. `CharacterRunInitializer.configure_starting_skills()` 读取人物 `starting_skill_id` 并加入 `SkillManager`，再把 `SkillEventBus.on_cast` 接到 `CharacterTraitSystem.handle_skill_bus_event()`。
 
 这条链路是人物系统的主干。新增人物、切换人物、调试开局、推荐 loadout 都应该通过 `RunLoadout` 和 `reset_for_loadout()` 进入。
 
@@ -99,7 +95,7 @@
 - `description`
 - `role`
 - `base_stats`
-- `allowed_weapon_ids`
+- `starting_skill_id`
 - `unlock`
 - `visual`
 - `trait`
@@ -110,6 +106,7 @@
 - `stats`
 - `talent`
 - `allowed_weapons`
+- `allowed_weapon_ids`
 - `unlock_condition`
 - `crit_rate_add`
 - `pickup_range_multiplier_add`
@@ -117,7 +114,7 @@
 
 拾取范围使用 `pickup_radius_*`，暴击使用 `crit_chance_*`。
 
-`allowed_weapon_ids` 是人物可装备武器的唯一权威来源。UI、loadout 校验、冒烟测试都会围绕它运行。
+`starting_skill_id` 是人物起始技能的唯一权威来源。UI、loadout 校验、冒烟测试都会围绕它运行。
 
 ## Trait 链路
 
@@ -138,7 +135,7 @@ Trait 事件入口如下：
 
 | `trait.type` | 实现 | 行为重点 |
 | --- | --- | --- |
-| `weapon_cast_stack` | `weapon_cast_stack_trait.gd` | 装备武器施法叠层，受伤掉层，满层可额外 modifier。 |
+| `skill_cast_stack` | `skill_cast_stack_trait.gd` | 技能施法叠层，受伤掉层，满层可额外 modifier。 |
 | `moving_bonus` | `moving_bonus_trait.gd` | 持续移动获得加成，停止或受伤触发惩罚。 |
 | `passive_with_periodic_shield` | `periodic_shield_trait.gd` | 周期护盾、受伤吸收、护盾存在时 modifier。 |
 | `status_kill_random_area` | `status_kill_random_area_trait.gd` | 击杀带状态敌人时概率生成区域伤害。 |
@@ -149,9 +146,9 @@ Trait 事件入口如下：
 1. 在 `scripts/characters/traits/` 新增 Trait 文件，继承 `CharacterTrait`。
 2. 实现需要的 `setup()`、`process()`、`handle_event()`、`get_modifiers()`、`absorb_damage()`、`get_debug_state()`。
 3. 在 `scripts/characters/traits/trait_registry.gd` 注册 `trait.type`。
-4. 在 `tools/validate_character_configs.js` 的 `TRAIT_SCHEMAS` 中补充参数校验。
+4. 在对应数据契约或专项验证脚本中补充参数校验。
 5. 在 `data/character_texts.json` 中补充展示文案。
-6. 必要时扩展 `tools/smoke_character_system.js` 或新增专项验证。
+6. 必要时扩展现有神系 runtime smoke 或新增专项验证。
 
 不要在 `Player`、`CharacterTraitSystem`、`SkillManager` 或 `DamageSystem` 中按人物 ID 写 Trait 分支。
 
@@ -180,7 +177,6 @@ Trait 事件入口如下：
 - `damage_multiplier_add`
 - `crit_chance_add`
 - `crit_damage_add`
-- `equipped_weapon_damage_add`
 - `*_damage_multiplier_add`
 - `move_speed_multiplier`
 - `move_speed_multiplier_add`
@@ -197,32 +193,15 @@ Trait 事件入口如下：
 
 注意：`damage` scope 不直接收集 Trait modifier，避免技能伤害包和 Trait provider 重复计算。人物如果需要影响输出伤害，应通过 Trait 在 `skill` scope 影响技能包，或通过长期 modifier 来源进入 `ModifierStore` 的 `damage` scope。
 
-## 武器边界
+## 起始技能边界
 
-人物系统拥有“当前人物装备了什么武器”的运行态，但不直接负责武器完整成长逻辑。
+人物系统拥有“当前人物从哪个技能开始”的运行态，但不直接负责技能完整成长逻辑。
 
 ### 起始技能
 
-`WeaponSkillBinding.bind_starting_skill(player)` 从 `CharacterRuntime.get_equipped_weapon_skill_id()` 读取起始技能，加入 `SkillManager`。
+`CharacterRunInitializer.configure_starting_skills(player)` 优先读取 `data/characters.json.starting_skill_id`，找不到时回退到 `data/skills.json.starting_skills` 的第一项，然后调用 `SkillManager.add_skill()`。
 
-### 分支
-
-`WeaponBranchSystem` 读取 `CharacterRuntime` 的当前武器和分支状态：
-
-- `get_available_branches()` 只在主武器等级为 1 且未选分支时返回可选分支。
-- `apply_branch()` 会把主武器等级推到 2，并应用 2 级分支配置。
-- `apply_selected_branch_level()` 应用 3 到 5 级分支配置。
-- 分支 modifier 同时写入 `SkillInstance.runtime_modifiers` 和 `CharacterRuntime.add_runtime_modifiers()`。
-
-### 进化
-
-`WeaponEvolutionSystem` 读取当前武器、分支和技能等级：
-
-- `get_available_evolution()` 根据 `weapon_id`、`branch_id`、技能等级和 evolution check 判断是否可进化。
-- `apply_evolution()` 替换技能 definition 和 skill id，并调用 `CharacterRuntime.mark_weapon_evolved()`。
-- 如果进化配置不继承分支 modifier，会清空技能 runtime modifier，并调用 `CharacterRuntime.clear_temporary_modifiers()`。
-
-后续人物相关武器改造，应优先通过 `CharacterRuntime` 的 getter 和方法访问武器状态，不要外部直接拼旧字段或散参。
+后续人物相关技能改造，应优先通过 `CharacterRuntime.get_starting_skill_id()` 和技能系统的公开入口访问状态，不要外部直接拼散参。
 
 ## 战斗边界
 
@@ -256,19 +235,18 @@ Trait 事件入口如下：
 
 人物选择 UI 不应自己判断复杂规则：
 
-- 允许武器来自 `CharacterLoadoutService.get_allowed_weapons()`。
-- 默认武器来自 `CharacterLoadoutService.resolve_weapon_id()`。
-- 确认前合法性来自 `CharacterLoadoutService.is_weapon_allowed()`。
+- 起始技能来自 `data/characters.json.starting_skill_id`。
+- 确认前合法性来自 `CharacterLoadoutService.get_validation_errors()`。
 - 展示文本来自 `CharacterLoadoutText` 和 `character_texts.json`。
 
 结算和成长系统读取本局结果中的：
 
 - `selected_character_id`
-- `selected_weapon_id`
+- `starting_skill_id`
 - `selected_map_id`
 - `run_stats`
 
-`RunProgressionService` 会更新人物专精、武器熟练、地图挑战和固定挑战。人物 ID 是存档、挑战、成长、推荐 loadout 的连接键，已发布 ID 不应直接改名。
+`RunProgressionService` 会更新人物专精、地图挑战和固定挑战。人物 ID 是存档、挑战、成长、推荐 loadout 的连接键，已发布 ID 不应直接改名。
 
 ## 常见改造路径
 
@@ -288,8 +266,8 @@ Trait 事件入口如下：
 ### 新增人物，复用已有 Trait
 
 1. 在 `data/characters.json` 添加人物。
-2. 使用当前字段，尤其是 `id`、`base_stats`、`allowed_weapon_ids`、`trait`。
-3. 确认所有 `allowed_weapon_ids` 对应武器存在，且武器有 `starting_skill_id`。
+2. 使用当前字段，尤其是 `id`、`base_stats`、`starting_skill_id`、`trait`。
+3. 确认 `starting_skill_id` 对应 `data/skills.json.starting_skills` 中的技能。
 4. 在 `data/character_texts.json` 添加人物展示文案。
 5. 在 `data/progression_goals.json` 添加人物专精目标。
 6. 如挑战引用新人物，在 `data/challenges.json` 添加对应配置。
@@ -316,8 +294,7 @@ Trait 事件入口如下：
 - 人物 Trait 的动态效果：写在具体 Trait 的 `get_modifiers()`。
 - 长期 run 来源：调用 `Player.set_run_modifier_source()` 或 `merge_run_modifier_source()`。
 - 单技能局部变化：写入 `SkillInstance.runtime_modifiers`。
-- 武器分支变化：通过 `WeaponBranchSystem` 和分支配置写入。
-- 进化继承或清空：通过 `weapon_evolutions.json` 的 inherit 配置和 `WeaponEvolutionSystem`。
+- 起始技能或可学习技能变化：优先修改 `data/skills.json`，运行期临时变化再写 `SkillInstance.runtime_modifiers`。
 
 不要直接长期写 Player 属性，也不要绕过 `ModifierStore`。
 
@@ -331,8 +308,8 @@ Trait 事件入口如下：
 
 ## 不应做的事
 
-- 不要恢复 `reset_for_run(character_id, weapon_id)` 或其他人物武器散参入口。
-- 不要让 `RunSceneCoordinator.start_run()` 接受散参人物和武器。
+- 不要恢复 `reset_for_run(character_id)` 或其他人物散参入口。
+- 不要让 `RunSceneCoordinator.start_run()` 接受散参人物。
 - 不要把具体人物 ID 分支写进 `Player`、`SkillManager`、`DamageSystem`、`UIManager`。
 - 不要把 Trait 类型分支写回 `CharacterTraitSystem`，新增 Trait 应走 `TraitRegistry`。
 - 不要直接访问旧的 `runtime_modifiers` 公共字段，使用 `CharacterRuntime.add_runtime_modifiers()`、`clear_temporary_modifiers()`。
@@ -343,8 +320,8 @@ Trait 事件入口如下：
 ## 风险点
 
 1. 人物 ID 关联存档、成长、挑战、UI 推荐，不能随意改名。
-2. `allowed_weapon_ids` 是人物可装备武器唯一权威来源，武器侧不要再维护另一套 allowed characters。
-3. `CharacterRuntime` 既保存人物定义也保存主武器槽，改它会影响武器分支、进化、起始技能、Trait 查询。
+2. `starting_skill_id` 是人物起始技能唯一权威来源，技能侧不要再维护另一套角色默认技能。
+3. `CharacterRuntime` 保存人物定义和起始技能查询，改它会影响起始技能、Trait 查询和 HUD 展示。
 4. `ModifierAggregator` 在 `damage` scope 排除了 Trait provider，改这个规则容易造成伤害重复计算。
 5. `Player._apply_modifiers()` 是属性快照刷新器，不是新增长期数值系统的首选入口。
 6. `status_kill_random_area` 跨到敌人状态、击杀事件、区域伤害和 run stats，改动时要联测战斗对象创建和击杀桥接。
@@ -356,18 +333,18 @@ Trait 事件入口如下：
 人物相关改造后至少运行：
 
 ```powershell
-node tools\validate_character_configs.js
-node tools\smoke_character_system.js
-node tools\verify_primary_attack_config.js
-node tools\validate_weapon_authoring_pipeline.js
+node tools\verify_gods_and_skills_contract.js
+node tools\verify_skill_definition_schema.js
+node tools\verify_skill_rule_adapters.js
+node tools\validate_enemy_configs.js
 ```
 
-涉及武器分支或进化时，额外运行：
+涉及起始技能或神系运行时时，额外运行：
 
 ```powershell
-node tools\validate_weapon_graph.js
-node tools\verify_weapon_runtime_slot_wiring.js
-node tools\verify_weapon_runtime_state_access.js
+node tools\verify_fire_skill_system_contract.js
+node tools\verify_frost_skill_system_contract.js
+node tools\verify_thunder_skill_system_contract.js
 ```
 
 涉及伤害公式时，额外在 Godot 环境中运行或打开对应验证：
@@ -379,8 +356,8 @@ tools\verify_damage_formula.gd
 最终还需要在 Godot 编辑器中至少手动验证：
 
 - 每个人物都能进入战斗。
-- 每个人物默认武器和可选武器正确。
+- 每个人物起始技能展示正确。
 - 起始技能能正常施放。
 - Trait 的核心触发条件有效。
-- 分支选择和进化不会丢失当前人物运行态。
+- 技能升级不会丢失当前人物运行态。
 - 受伤、死亡、结算和人物成长记录正常。

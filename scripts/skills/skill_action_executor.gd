@@ -16,6 +16,7 @@ const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_s
 const ConditionEvaluatorScript: Script = preload("res://scripts/skills/condition_evaluator.gd")
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
+const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
@@ -1276,8 +1277,10 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 
 	owner.set_meta("fire_passive_shield", final_amount)
 	owner.set_meta("fire_passive_shield_expires_at", _now_seconds() + duration)
-	owner.set_meta("%s_shield" % shield_type, int(owner.get_meta("%s_shield" % shield_type, 0)) + maxi(final_amount - current, 0))
-	owner.set_meta("%s_shield_expires_at" % shield_type, _now_seconds() + duration)
+	var shield_meta_key: String = _metadata_key(shield_type, "shield")
+	var shield_expires_meta_key: String = _metadata_key(shield_type, "shield_expires_at")
+	owner.set_meta(shield_meta_key, int(owner.get_meta(shield_meta_key, 0)) + maxi(final_amount - current, 0))
+	owner.set_meta(shield_expires_meta_key, _now_seconds() + duration)
 	var event_bus: Node = context.get("event_bus") as Node
 	if event_bus != null and event_bus.has_method("emit_skill_event"):
 		var shield_context: Dictionary = context.duplicate(true)
@@ -1537,9 +1540,10 @@ func _mark_target(params: Dictionary, context: Dictionary) -> bool:
 	if mark == "":
 		return false
 
-	target.set_meta(mark, true)
+	var mark_key: String = _metadata_identifier(mark)
+	target.set_meta(mark_key, true)
 	if params.has("duration"):
-		target.set_meta("%s_expires_at" % mark, float(Time.get_ticks_msec()) / 1000.0 + maxf(float(params.get("duration", 0.0)), 0.0))
+		target.set_meta(_metadata_key(mark, "expires_at"), float(Time.get_ticks_msec()) / 1000.0 + maxf(float(params.get("duration", 0.0)), 0.0))
 	return true
 
 
@@ -2262,3 +2266,11 @@ func _get_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	if params.has("max_stacks"):
 		status_params["max_stacks"] = int(params["max_stacks"])
 	return DamageTraceContextScript.apply_to_status_params(status_params, context)
+
+
+func _metadata_key(namespace_text: String, suffix: String) -> String:
+	return MetadataKeyScript.key(namespace_text, suffix, "skill_action")
+
+
+func _metadata_identifier(raw_key: String) -> String:
+	return MetadataKeyScript.identifier(raw_key, "skill_action")

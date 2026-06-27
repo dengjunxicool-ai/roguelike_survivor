@@ -27,6 +27,7 @@ tmp/
 
 # Generated reports and exported builds
 reports/
+tools/*.out.txt
 *.exe
 *.console.exe
 *.pck

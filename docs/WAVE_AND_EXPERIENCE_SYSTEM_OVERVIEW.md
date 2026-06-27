@@ -2,7 +2,7 @@
 
 本文档用于后续快速、安全地改造波次、刷怪、经验、升级触发和升级选项相关功能。目标不是重复函数索引，而是明确：改什么先看哪里，数据如何流动，哪些链路会被连带影响，以及改完要验证什么。
 
-梳理基于 2026-06-12 当前项目状态。后续涉及波次或经验的需求，优先从本文定位，再进入怪物、武器、UI、伤害或地图等专题文档。
+梳理基于 2026-06-12 当前项目状态。后续涉及波次或经验的需求，优先从本文定位，再进入怪物、技能、UI、伤害或地图等专题文档。
 
 ## 当前结论
 
@@ -37,7 +37,7 @@
 | 死亡掉落 | `scripts/enemies/death/enemy_death_pipeline.gd`, `scripts/enemies/enemy_base.gd` | 根据死亡 policy 决定是否掉经验、发击杀事件、发灵魂石和释放节点。 |
 | 经验晶体 | `scripts/drops/exp_gem.gd`, `scenes/experience_crystal.tscn` | 靠近吸附、拾取、调用玩家加经验。 |
 | 玩家经验 | `scripts/player/player_controller.gd` | 读取经验曲线、累计经验、处理多级连升、发 `experience_changed` 和 `leveled_up`。 |
-| 升级池 | `scripts/upgrades/upgrade_pool.gd`, `scripts/upgrades/upgrade_offer_policy.gd` | 生成分支、技能升级、进化、普通升级选项，并按阶段/血量/标签调权重。 |
+| 升级池 | `scripts/upgrades/upgrade_pool.gd`, `scripts/upgrades/upgrade_offer_policy.gd` | 生成技能升级、普通升级和奖励选项，并按阶段/血量/标签调权重。 |
 | 升级 UI | `scripts/ui/ui_manager.gd`, `scripts/ui/modals/run_choice_modal_controller.gd` | 监听升级和波次事件，排队弹窗，选择后调用 Player 应用升级。 |
 | HUD | `scripts/ui/hud/run_hud_state_provider.gd`, `run_hud_controller.gd` | 只读玩家等级、当前经验、下一等级需求和波次计时。 |
 | 校验 | `tools/validate_enemy_configs.js`, `scripts/debug/wave_system_check.gd`, `scripts/debug/enemy_timeline_system_check.gd`, `scripts/debug/skill_progression_check.gd` | 校验配置、波次自动收经验、Boss 事件、小怪生成、升级路线。 |
@@ -192,11 +192,10 @@ flowchart TD
 
 升级选项阶段：
 
-1. 如果当前武器还没选 Lv2 分支，`UpgradePool` 优先返回分支选项，并用普通升级补满。
-2. 分支已锁定后，`UpgradePool` 先放进化选项，再放一个当前分支技能升级选项，然后用普通升级补满。
-3. 技能升级选项只覆盖当前主武器、目标等级 Lv3 到 Lv5，且依赖已选分支的 `level_path`。
-4. 进化选项由 `WeaponEvolutionSystem.get_available_evolution()` 决定，出现时优先级最高。
-5. 普通升级来自 `data/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
+1. `UpgradePool` 根据当前 `SkillManager`、`data/skills.json` 和普通升级池生成候选。
+2. 技能升级选项围绕已拥有技能、可学习技能和 `SkillOfferService` 规则生成。
+3. 普通升级来自 `data/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
+4. 奖励/诅咒等运行中选项仍由对应 modal flow 排队进入 UI，不直接在波次系统里改玩家状态。
 
 ## `data/waves.json` 契约
 
@@ -211,7 +210,7 @@ flowchart TD
 | `spawn_rules.spawn_radius_min/max` | `EnemySpawnService` | 控制围绕玩家生成半径；地图也可用 `set_spawn_radius_range()` 调整。 |
 | `spawn_rules.despawn_radius` | `EnemyCleanupService` | 只清远处 `normal` 和 `boss_minion`，不会清 Boss。 |
 | `spawn_rules.wave_transition_notice_seconds` | `WaveDirector.finish_wave()` | 波间等待时间；为 0 时立即进下一波。 |
-| `spawn_rules.upgrade_phase_weights` | `UpgradeOfferPolicy` | 影响普通升级标签权重；条件可看主武器等级和运行时间。 |
+| `spawn_rules.upgrade_phase_weights` | `UpgradeOfferPolicy` | 影响普通升级标签权重；条件可看技能阶段和运行时间。 |
 | `spawn_rules.low_hp_rule` | `UpgradeOfferPolicy` | 低血量时保底指定标签，例如 `survival`、`heal`。 |
 | `waves[].id` | UI、事件 key、文档 | 稳定标识；改名会影响调试和显示。 |
 | `waves[].duration_seconds` | `WaveDirector.start_wave()` | 当前真实波次时长。 |
@@ -277,7 +276,7 @@ flowchart TD
 | 调整升级选项数量 | `RunChoiceModalController.LEVEL_UP_OPTION_COUNT` | UI 卡片布局、`UpgradePool.generate_options()`、调试脚本。 |
 | 调整升级权重阶段 | `waves.spawn_rules.upgrade_phase_weights` | `UpgradeOfferPolicy` 标签匹配、升级数据 tags。 |
 | 调整低血量保底 | `waves.spawn_rules.low_hp_rule` | 升级 tags、推荐文案。 |
-| 调整 Lv2/Lv3-Lv5/进化优先级 | `UpgradePool` | 武器分支、进化系统、技能进度检查。 |
+| 调整技能升级/普通升级优先级 | `UpgradePool` | 技能池、普通升级权重、技能进度检查。 |
 | 增加波次奖励事件 | `RewardEventDirector` + `waves.rewards.wave_clear_rewards` | UI pending reward、统计、配置校验。 |
 | 调整 Boss 出场 | `boss_event` + 普通 waves 总时长 | `BossEncounterController`、UI 胜利、Boss 小怪经验。 |
 | 地图影响刷怪 | `MapVariableRuntime`、`EnemySpawner.apply_run_modifiers()` | 不要直接改 Spawner 私有状态；优先走 modifier 字典。 |
@@ -292,7 +291,7 @@ flowchart TD
 6. 自爆、召唤、Boss core 等特殊死亡 policy 会改变经验掉落。改资源产出前必须看 `EnemyDeathPipeline` 和生成 request 的 `reward_policy`。
 7. `Player.add_experience()` 多级连升时会连续发 `leveled_up`，UI 会排队弹窗。大幅提高经验产出时要确认弹窗堆积是否符合体验。
 8. `RewardEventDirector.force_level_up` 当前直接发 `leveled_up` 信号，不会修改 `Player.level/current_experience`。如果要做真正等级奖励，应改为调用玩家入口或新增明确奖励类型。
-9. `UpgradeOfferPolicy.option_has_any_tag()` 只检查普通升级 payload 里的 `upgrade_id`；分支和技能升级不参与普通升级 tag 保底判断。
+9. `UpgradeOfferPolicy.option_has_any_tag()` 只检查普通升级 payload 里的 `upgrade_id`；非普通升级选项不参与普通升级 tag 保底判断。
 10. `spawn_rules.main_progression_pity`、`first_level_up_choice`、`weapon_tag_rule` 当前更多是配置预留，实际 `UpgradePool` 没有完整消费这些字段。改这些字段前先确认是否需要补代码。
 11. `pre_boss_blessing_options_add` 当前在数据里存在，但本次梳理未看到它被 `RunRewardPool` 之外的主链路直接影响升级弹窗；改 Boss 前祝福选项数时要先读 `run_reward_pool.gd`。
 12. HUD 只读 `Player` 和 Spawner 状态。不要为了显示去直接写等级、经验或波次私有变量。
@@ -329,7 +328,7 @@ flowchart TD
 2. 如果是技能相关效果，确认 modifier key 会被 Player、SkillManager、SkillStatService 或目标系统消费。
 3. 如果希望某阶段更容易出现，调整 `waves.spawn_rules.upgrade_phase_weights` 里的对应 tag。
 4. 如果希望低血量保底出现，加入 `low_hp_rule.guarantee_tags` 对应 tag。
-5. 跑 `skill_progression_check.gd`，确认分支/技能升级/进化优先级没有被破坏。
+5. 跑当前技能升级相关验证，确认技能升级和普通升级优先级没有被破坏。
 
 ### 新增波次奖励事件
 
@@ -349,13 +348,13 @@ flowchart TD
 - `node tools\validate_enemy_configs.js` 通过，当前为 16 个敌人、15 个敌方技能、8 个 wave。
 - `wave_system_check.gd` 通过，覆盖首波启动、波次总量限制、波末经验自动收集、波次超时不清普通怪。
 - `enemy_timeline_system_check.gd` 通过，覆盖清普通怪保留 Boss、Boss encounter、Boss 小怪生成。
-- `skill_progression_check.gd` 会走 Lv2 分支选择、Lv3-Lv5 技能升级，并确认 Lv5 后不再出现分支、技能升级或终式进化候选。
+- 当前技能 runtime smoke 会覆盖起始技能、神系技能升级和关键触发链路。
 
 配置校验：
 
 ```powershell
 node tools\validate_enemy_configs.js
-node tools\validate_character_configs.js
+node tools\verify_gods_and_skills_contract.js
 node tools\check_text_encoding.js
 ```
 
@@ -375,6 +374,6 @@ godot --headless --path . -s res://scripts/debug/skill_progression_check.gd
 4. 普通阶段结束后能触发 Boss，Boss 小怪按配置生成。
 5. 敌人死亡经验、波次经验倍率、玩家经验倍率叠加后符合预期。
 6. 多级连升时升级弹窗能逐个消费，不会丢升级。
-7. Lv2 分支、Lv3-Lv5 分支升级、Lv5 后进化的优先级仍正确。
+7. 技能升级、普通升级和奖励选项的优先级仍正确。
 8. 低血量和 Boss 前阶段的普通升级权重符合设计。
 9. Boss 死亡仍会触发胜利结算。

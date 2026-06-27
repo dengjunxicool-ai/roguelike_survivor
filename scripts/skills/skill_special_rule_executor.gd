@@ -8,6 +8,7 @@ const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 
 static var _soulburn_target_cooldowns: Dictionary = {}
 static var _flame_core_burst_cooldowns: Dictionary = {}
@@ -2735,38 +2736,11 @@ func _target_key(target: Node) -> String:
 
 
 func _metadata_key(namespace_text: String, suffix: String) -> String:
-	return _metadata_identifier("%s_%s" % [namespace_text, suffix])
+	return MetadataKeyScript.key(namespace_text, suffix, "skill_rule")
 
 
 func _metadata_identifier(raw_key: String) -> String:
-	var safe_key: String = ""
-	for index: int in range(raw_key.length()):
-		var character: String = raw_key.substr(index, 1)
-		if _is_ascii_identifier_character(character):
-			safe_key += character
-		else:
-			safe_key += "_"
-	if safe_key == "" or not _is_ascii_identifier_start(safe_key.substr(0, 1)):
-		safe_key = "skill_rule_%s" % safe_key
-	return safe_key
-
-
-func _is_ascii_identifier_start(character: String) -> bool:
-	if character == "_":
-		return true
-	if character.length() != 1:
-		return false
-	var code: int = character.unicode_at(0)
-	return (code >= 65 and code <= 90) or (code >= 97 and code <= 122)
-
-
-func _is_ascii_identifier_character(character: String) -> bool:
-	if _is_ascii_identifier_start(character):
-		return true
-	if character.length() != 1:
-		return false
-	var code: int = character.unicode_at(0)
-	return code >= 48 and code <= 57
+	return MetadataKeyScript.identifier(raw_key, "skill_rule")
 
 
 func _health_ratio(target: Node) -> float:

@@ -13,8 +13,8 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-const configPath = path.join(root, "data", "skill_system_config.json");
-assert(fs.existsSync(configPath), "data/skill_system_config.json must exist");
+const configPath = path.join(root, "data", "config", "skill_system_config.json");
+assert(fs.existsSync(configPath), "data/config/skill_system_config.json must exist");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 assert(typeof config.range_unit_px === "number" && config.range_unit_px > 0, "skill_system_config.range_unit_px must be a positive number");
 assert(config.range_unit_px === 84, "default range_unit_px must remain 84");

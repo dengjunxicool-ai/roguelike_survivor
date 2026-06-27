@@ -2,7 +2,7 @@
 	"characters": [
 		{
 			"visual": {
-				"texture": "res://assets/hero/mage.png",
+				"texture": "res://assets/hero/mege.png",
 				"sprite_frames": "res://assets/hero/mage_spriteframes.tres",
 				"scale": [
 					0.65,

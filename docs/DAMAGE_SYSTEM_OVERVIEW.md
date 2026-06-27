@@ -75,7 +75,6 @@ flowchart TD
 	"damage_type": &"direct_physical",
 	"element": &"physical",
 	"source_type": "skill",
-	"source_weapon_id": &"",
 	"source_skill_id": skill_id,
 	"source_instance_id": source_instance_id,
 	"attacker": caster,
@@ -98,7 +97,7 @@ flowchart TD
 `DamagePacket` 内部拆成四块：
 
 - 基础字段：`raw_amount`、`amount`、`damage_origin`、`damage_type`、`element`、`target_id`、`reaction_depth`。
-- 来源上下文：`source_type`、`attacker`、`attacker_id`、`source_weapon_id`、`source_skill_id`、`source_instance_id`、`source_action_id`、`source_slot_id`、`owner_character_id`、`source_tags`。
+- 来源上下文：`source_type`、`attacker`、`attacker_id`、`source_skill_id`、`source_instance_id`、`source_action_id`、`source_slot_id`、`owner_character_id`、`source_tags`。
 - flags：`can_crit`、`can_trigger_reaction`、`ignore_defense`、`ignore_resistance`、`ignore_vulnerability`、`ignore_min_damage`。
 - scaling：`uses_character_damage_multiplier`、`uses_skill_level_coefficient`、`skill_level_coefficient`。
 
@@ -132,7 +131,7 @@ flowchart TD
 
 | origin | 默认 damage_type | 默认吃技能等级 | 默认吃角色伤害 | 主要用途 |
 | --- | --- | ---: | ---: | --- |
-| `primary_attack` | `direct_physical` | 是 | 是 | 玩家主攻、武器技能、直接命中、可暴击输出。 |
+| `primary_attack` | `direct_physical` | 是 | 是 | 玩家起始技能、主动技能、直接命中、可暴击输出。 |
 | `status_dot` | `status_dot` | 否 | 是 | 状态持续伤害，走小数池。 |
 | `reaction` | `reaction_damage` | 否 | 是 | 元素/状态反应，不二次触发反应。 |
 | `field` | `area_direct` | 否 | 是 | 地面区域、场地持续 tick、敌方区域。 |

@@ -1,5 +1,5 @@
 const path = require("path");
-const { readJsonFile } = require("./json_file");
+const { readJsonFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const enemiesPath = path.join(root, "data", "enemies.json");

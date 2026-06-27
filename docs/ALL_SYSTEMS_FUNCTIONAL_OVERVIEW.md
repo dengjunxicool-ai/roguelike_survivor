@@ -11,7 +11,7 @@ flowchart TD
 	A["project.godot"] --> B["scenes/app_bootstrap.tscn"]
 	B --> C["UIManager"]
 	D["DataManager autoload"] --> C
-	C --> E["选角色/武器/地图"]
+	C --> E["选角色/地图"]
 	E --> F["RunLoadout"]
 	F --> G["RunSceneCoordinator.start_run(context)"]
 	G --> H["scenes/main.tscn"]
@@ -19,7 +19,7 @@ flowchart TD
 	H --> J["EnemySpawner"]
 	H --> K["RunStatsTracker"]
 	H --> L["MapVariableRuntime"]
-	I --> M["Character / Weapon / Skill / Modifier / Relic / Status"]
+	I --> M["Character / Skill / Modifier / Relic / Status"]
 	J --> N["Timeline / Spawn / Behavior / EnemySkill / Death"]
 	M --> O["DamageApplicationService + DamageSystem"]
 	N --> O
@@ -39,7 +39,6 @@ flowchart TD
 | `PlayerController` | `experience_changed` | 当前经验、升级需求、等级 | HUD | 刷新经验条 |
 | `PlayerController` | `leveled_up` | `level` | `UIManager` / `RunChoiceModalController` | 排队升级弹窗 |
 | `PlayerController` | `upgrade_applied` | `upgrade_id` | `UIManager`、统计/HUD | 刷新构筑、协同、HUD |
-| `PlayerController` | `skill_evolved` | `base_skill_id`, `evolved_skill_id` | UI/公告/统计 | 展示进化结果 |
 | `EnemySpawner` | `wave_changed` | `wave_id` | `UIManager` / HUD | 当前波次变化 |
 | `EnemySpawner` | `timeline_event_started` | `event_id`, `announcement` | HUD | 精英/事件公告 |
 | `EnemySpawner` | `run_time_changed` | `elapsed_time`, `duration` | HUD、结算上下文 | 单局计时 |
@@ -57,7 +56,6 @@ flowchart TD
 | `RunStatsTracker` | `event_recorded` | `event_name`, `payload` | 遗物、诊断、UI | 广播统计事件 |
 | UI controllers | `state_requested` / `back_requested` / `start_requested` / `loadout_confirmed` | 目标状态或选择 id | `UIManager` | 页面意图，不直接改业务状态 |
 | `RunHudController` | `pause_requested` | 无 | `UIManager` | 进入暂停菜单 |
-| `WeaponBranchModal` | `branch_selected` / `close_requested` | 分支 id 或无 | `UIManager` | 分支选择弹窗完成 |
 | `RunChoiceModalController` | `transition_requested` | `state` | `UIManager` | 弹窗完成后的状态跳转 |
 
 `RunSceneUIBridge` 负责把 Player、EnemySpawner、EnemyBase 的运行时信号接到 `UIManager`，避免 HUD 或页面到处自行连接战斗节点。
@@ -81,9 +79,9 @@ flowchart TD
 | --- | --- |
 | 职责范围 | 加载 `data/*.json`，按 id 建索引，给运行系统提供深拷贝配置。 |
 | 主要文件 | `scripts/core/data_manager.gd`, `scripts/game/game_data.gd`, `data/*.json` |
-| 做了什么 | `DataManager` 作为 autoload 在 `_ready()` 调 `load_all()`；读取角色、武器、主攻击、分支、进化、怪物、敌方技能、波次、地图、升级、状态、遗物、协同、战斗对象等配置。`GameData` 是兼容门面，优先走 `/root/DataManager`，缺失时直接读 JSON。 |
+| 做了什么 | `DataManager` 作为 autoload 在 `_ready()` 调 `load_all()`；读取角色、技能、神系、怪物、敌方技能、波次、地图、升级、状态、遗物、协同、战斗对象等配置。`GameData` 是兼容门面，优先走 `/root/DataManager`，缺失时直接读 JSON。 |
 | 怎么做 | JSON 被解析为 `Dictionary`，数组项按 `id` 放入索引；对外 getter 返回 `duplicate(true)`，避免运行时污染源配置。 |
-| 接收 | 文件路径和 id 查询，如 `get_weapon_definition(weapon_id)`、`get_enemy_definition(enemy_id)`。 |
+| 接收 | 文件路径和 id 查询，如 `get_skill_definition(skill_id)`、`get_enemy_definition(enemy_id)`。 |
 | 返回 | 单项返回 `Dictionary`；池子返回 `Array[Dictionary]`；波次返回 `Dictionary`。找不到时返回空字典或空数组。 |
 | 信号 | 无。 |
 | 边界 | 新数据结构要同步 DataManager、GameData fallback、验证工具和消费端。运行时不要直接改配置字典来表达状态。 |
@@ -92,13 +90,13 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 标题、选角、选图、运行 HUD、升级/奖励/诅咒/进化/分支弹窗、暂停、结算、局外升级、图鉴、设置等页面的状态机和显示层。 |
+| 职责范围 | 标题、选角、选图、运行 HUD、升级/奖励/诅咒弹窗、暂停、结算、局外升级、图鉴、设置等页面的状态机和显示层。 |
 | 主要文件 | `scripts/ui/ui_manager.gd`, `ui_state_registry.gd`, `ui_state_machine.gd`, `ui_screen_host.gd`, `ui_state_prepare_router.gd`, `ui_command_dispatcher.gd`, `scripts/ui/screens/*`, `scripts/ui/modals/*` |
 | 做了什么 | `UIManager` 是顶层门面；`UIStateRegistry` 声明合法状态、跳转、构建方法、进入前准备方法、暂停策略；`UIScreenHost` 控制显示层级；页面 controller 只构建 UI、刷新 ViewModel、发出用户意图；`UICommandDispatcher` 处理升级、奖励、购买、加魂石等副作用。 |
 | 怎么做 | 所有跳转走 `UIManager.transition_to(next_state)`；状态机校验合法性后，prepare router 刷新数据，pause policy 设置暂停，screen host 切显示。复杂展示数据由 `*_view_model_builder.gd` 生成。 |
-| 接收 | 页面信号：`state_requested`、`back_requested`、`start_requested(map_id)`、`loadout_confirmed(character_id, weapon_id)`、`pause_requested`、`transition_requested(state)`、`recommended_loadout_requested(...)`。命令输入：`UICommand` 或 `Dictionary`。 |
+| 接收 | 页面信号：`state_requested`、`back_requested`、`start_requested(map_id)`、`loadout_confirmed(character_id)`、`pause_requested`、`transition_requested(state)`、`recommended_loadout_requested(...)`。命令输入：`UICommand` 或 `Dictionary`。 |
 | 返回 | `UICommandDispatcher.dispatch()` 返回 `Dictionary`，如 `{"handled": true, "purchased": true}`；ViewModel builder 返回 `Dictionary`；controller 的 `build()` 返回 `Control` 或写入传入容器。 |
-| 发出 | 页面发出用户意图信号；HUD 发 `pause_requested`；分支弹窗发 `branch_selected` 和 `close_requested`。 |
+| 发出 | 页面发出用户意图信号；HUD 发 `pause_requested`。 |
 | 边界 | Controller 不直接切换其他屏幕、不直接写存档、不直接改战斗对象；副作用通过 command/service，状态切换通过 UIManager。 |
 
 ## 6. HUD 与运行 UI 桥接系统
@@ -107,7 +105,7 @@ flowchart TD
 | --- | --- |
 | 职责范围 | 把运行时 Player、EnemySpawner、EnemyBase、RunStatsTracker 的状态转为 HUD 显示和公告。 |
 | 主要文件 | `scripts/ui/run_scene_ui_bridge.gd`, `scripts/ui/hud/run_hud_controller.gd`, `scripts/ui/hud/run_hud_state_provider.gd` |
-| 做了什么 | `RunSceneUIBridge` 连接运行对象信号到 UIManager；`RunHudStateProvider.build(context)` 汇总血量、经验、波次、Boss、武器、分支、统计；`RunHudController` 构建 CanvasLayer 并渲染 label/progress bar/公告。 |
+| 做了什么 | `RunSceneUIBridge` 连接运行对象信号到 UIManager；`RunHudStateProvider.build(context)` 汇总血量、经验、波次、Boss、起始技能、统计；`RunHudController` 构建 CanvasLayer 并渲染 label/progress bar/公告。 |
 | 怎么做 | UIManager 在进入 `RUNNING` 后连接运行源，并周期性构造 HUD state 字典交给 controller。 |
 | 接收 | Player 信号、EnemySpawner 信号、EnemyBase `died`；普通输入是 HUD `context: Dictionary`。 |
 | 返回 | `RunHudStateProvider.build()` 返回 HUD 字典；`RunHudController.build()` 返回 `CanvasLayer`；`get_screen()` 返回 HUD 层。 |
@@ -118,12 +116,12 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 角色定义、角色可装备武器、开局 loadout、角色运行态、角色 trait 事件与 modifier。 |
+| 职责范围 | 角色定义、起始技能、开局 loadout、角色运行态、角色 trait 事件与 modifier。 |
 | 主要文件 | `scripts/characters/*`, `scripts/characters/traits/*`, `data/characters.json`, `data/character_texts.json` |
-| 做了什么 | `CharacterLoadoutService` 校验角色/武器并生成 `RunLoadout`；`CharacterRuntime` 保存本局角色、主武器槽、分支、进化、运行 modifier；`CharacterRunInitializer` 把 loadout 应用到 Player；`CharacterTraitSystem` 转发移动、施法、受击、击杀等事件到具体 trait。 |
+| 做了什么 | `CharacterLoadoutService` 校验角色及起始技能并生成 `RunLoadout`；`CharacterRuntime` 保存本局角色定义和运行 modifier；`CharacterRunInitializer` 把 loadout 应用到 Player；`CharacterTraitSystem` 转发移动、施法、受击、击杀等事件到具体 trait。 |
 | 怎么做 | 开局只走 `Player.reset_for_loadout(loadout)`；内部调用 `CharacterRunInitializer.initialize_loadout()`，再初始化 `CharacterRuntime`、Trait、基础属性、起始技能。Trait 通过 `TraitRegistry` 创建具体策略对象。 |
-| 接收 | 普通输入：`RunLoadout`、`characters.json`、`weapons.json`。事件输入：移动 `handle_movement`、技能 `handle_skill_bus_event`、受击 `handle_player_damaged`、击杀 `handle_enemy_killed`、受击前吸收 `request_damage_absorb`。 |
-| 返回 | `CharacterLoadoutService.build_loadout()` 返回 `RunLoadout`；`RunLoadout.is_valid()` 返回 `bool`；`CharacterRuntime.initialize()` 返回 `bool`；runtime getter 返回角色/武器/分支/进化状态；`CharacterTraitSystem.get_modifiers()` 返回 `Dictionary`；`request_damage_absorb()` 返回 `DamageAbsorbResult`。 |
+| 接收 | 普通输入：`RunLoadout`、`characters.json`、`skills.json`。事件输入：移动 `handle_movement`、技能 `handle_skill_bus_event`、受击 `handle_player_damaged`、击杀 `handle_enemy_killed`、受击前吸收 `request_damage_absorb`。 |
+| 返回 | `CharacterLoadoutService.build_loadout()` 返回 `RunLoadout`；`RunLoadout.is_valid()` 返回 `bool`；`CharacterRuntime.initialize()` 返回 `bool`；runtime getter 返回角色和起始技能状态；`CharacterTraitSystem.get_modifiers()` 返回 `Dictionary`；`request_damage_absorb()` 返回 `DamageAbsorbResult`。 |
 | 信号 | 自身不发 Godot signal，主要被 Player 和 SkillEventBus 调用。 |
 | 边界 | 不在 Player、SkillManager、DamageSystem 中按角色 id 写分支；新 trait 放 `traits/` 并注册，参数校验同步工具。 |
 
@@ -133,35 +131,22 @@ flowchart TD
 | --- | --- |
 | 职责范围 | 玩家移动、生命、经验、升级、受击、状态、拾取范围、运行 modifier、子系统挂载。 |
 | 主要文件 | `scripts/player/player_controller.gd`, `player_stats.gd`, `player_modifier_applier.gd`, `player_visual_controller.gd`, `player_status_display_controller.gd` |
-| 做了什么 | Player 是运行聚合根：挂载 SkillManager、SkillExecutor、StatusEffectManager、RelicManager、SynergyManager、CharacterRuntime、Weapon 系统、Trait 系统等。它处理输入移动、经验升级、应用升级、受击入口和死亡。 |
-| 怎么做 | `_physics_process` 读取输入并移动；状态和 modifier 影响速度、拾取、伤害；`add_experience()` 累积经验并在达标时发升级信号；`take_damage()` 委托 `DamageApplicationService.apply_player_damage()`；`apply_upgrade()` 根据 id 前缀分派到技能升级、分支、进化或普通升级。 |
+| 做了什么 | Player 是运行聚合根：挂载 SkillManager、SkillExecutor、StatusEffectManager、RelicManager、SynergyManager、CharacterRuntime、Trait 系统等。它处理输入移动、经验升级、应用升级、受击入口和死亡。 |
+| 怎么做 | `_physics_process` 读取输入并移动；状态和 modifier 影响速度、拾取、伤害；`add_experience()` 累积经验并在达标时发升级信号；`take_damage()` 委托 `DamageApplicationService.apply_player_damage()`；`apply_upgrade()` 根据 id 前缀分派到技能升级或普通升级。 |
 | 接收 | 输入动作 `move_left/right/up/down`；ExpGem 调用 `add_experience()`；敌人/地图/状态调用 `take_damage()` 或 `apply_status()`；UICommandDispatcher 调用 `apply_upgrade()`。 |
 | 返回 | 状态查询返回 `bool`、`int`、`float`、`Array[Dictionary]`；`take_damage()` 和 `apply_upgrade()` 不直接返回结果，结果通过状态变化和信号体现。 |
-| 发出 | `health_changed`、`died`、`experience_changed`、`leveled_up`、`upgrade_applied`、`skill_evolved`。 |
+| 发出 | `health_changed`、`died`、`experience_changed`、`leveled_up`、`upgrade_applied`。 |
 | 边界 | 外部不要直接改 `current_health`、经验或技能实例；受击走 `take_damage()`，成长走 `apply_upgrade()`，长期数值走 modifier source。 |
 
-## 9. 武器、分支与进化系统
+## 9. 技能与神系系统
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 单局主武器、起始技能绑定、武器运行槽、Lv2 分支锁定、Lv3-Lv5 分支成长、Lv5 后进化、武器视觉。 |
-| 主要文件 | `scripts/weapons/*`, `data/weapons.json`, `data/weapon_branches.json`, `data/weapon_evolutions.json` |
-| 做了什么 | `WeaponRuntimeSlot` 保存武器 id、基础技能、当前技能、已选分支、分支等级、进化状态；`WeaponSkillBinding` 把当前武器技能加入 SkillManager；`WeaponBranchSystem` 应用分支配置；`WeaponEvolutionSystem` 替换技能定义并标记进化。 |
-| 怎么做 | 开局从 `weapons.json.starting_skill_id` 绑定技能；升级池在合适阶段生成 `branch_choice` 或 `evolution` 选项；Player 应用升级时调用对应系统，系统再修改 SkillInstance runtime modifier/event/tag/special rule 和 CharacterRuntime 槽位。 |
-| 接收 | `Player.apply_upgrade()` 分派的分支/进化请求；`UpgradePool` 查询可选分支/进化；配置来自武器相关 JSON。 |
-| 返回 | `can_equip()`、`apply_branch()`、`apply_selected_branch_level()`、`apply_evolution()` 返回 `bool`；`get_available_branches()` 返回 `Array[Dictionary]`；`get_available_evolution()`、`get_selected_branch()` 返回 `Dictionary`；`WeaponRuntimeSlot.to_debug_dict()` 返回调试字典。 |
-| 信号 | 武器系统自身不发信号；进化成功后 Player 发 `skill_evolved`，技能变化由 SkillManager 发信号。 |
-| 边界 | 当前武器状态只以 `WeaponRuntimeSlot` 为准，不恢复 CharacterRuntime 旧镜像字段；不要用 skill id 猜分支和进化状态。 |
-
-## 10. 技能执行系统
-
-| 项目 | 内容 |
-| --- | --- |
-| 职责范围 | 主动技能实例、冷却、目标选择、事件触发、action 执行、特殊规则和技能数值。 |
-| 主要文件 | `scripts/skills/*`, `data/primary_attack.json`, `data/combat_objects.json` |
+| 职责范围 | 起始技能、可学习技能、神系归属、主动技能实例、冷却、目标选择、事件触发、action 执行、特殊规则和技能数值。 |
+| 主要文件 | `scripts/skills/*`, `data/skills.json`, `data/gods.json`, `data/combat_objects.json` |
 | 做了什么 | `SkillManager` 保存主动技能实例；`SkillExecutor` 每帧 tick 技能；`SkillComponentRunner` 处理 cooldown、targeting、persistent orbit；`SkillEventBus` 执行 on_cast/on_projectile_hit/on_orbit_hit 等事件；`SkillActionExecutor` 执行动作；`SkillStatService` 合并配置、等级、modifier。 |
 | 怎么做 | 技能定义由组件和事件组成。组件决定什么时候触发，事件匹配 trigger 和 conditions，action 负责生成 projectile/area/orbit、直接伤害、状态、击退、治疗等。特殊规则在通用 action 表达不了时由 `SkillSpecialRuleExecutor` 和 `SpecialDamageRuleHandler` 处理。 |
-| 接收 | SkillManager 的技能列表、`primary_attack.json`、SkillEventBus 事件、Projectile/Area/Orbit 的命中回调、Trait/Relic/Synergy 的 modifier。 |
+| 接收 | SkillManager 的技能列表、`skills.json`、SkillEventBus 事件、Projectile/Area/Orbit 的命中回调、Trait/Relic/Synergy 的 modifier。 |
 | 返回 | `SkillManager.add_skill()`、`upgrade_skill()`、`SkillInstance.level_up()` 返回 `bool`；`get_skill()` 返回 `RefCounted`；`emit_skill_event()` 返回 `Array` 的命中/监听结果；`execute_action()` 返回具体 action 的结果或 `Variant`。 |
 | 发出 | `SkillManager.skill_added`、`skill_upgraded`、`skill_changed`。 |
 | 边界 | 新普通效果优先走配置 action；新增 action 要同步 `SkillActionExecutor`、配置合约、验证脚本和文档。 |
@@ -196,11 +181,11 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 统一收集角色、武器、分支、升级、遗物、技能 runtime、Trait、地图和永久成长的数值修正。 |
+| 职责范围 | 统一收集角色、升级、遗物、技能 runtime、Trait、地图和永久成长的数值修正。 |
 | 主要文件 | `scripts/modifiers/*`, `scripts/player/player_modifier_applier.gd` |
 | 做了什么 | `ModifierStore` 按 source/scope/lifetime 存储 modifier；`ModifierSource.flatten()` 把配置里的修正拍平为 key-value；`ModifierAggregator` 根据 `ModifierQuery` 收集对应 scope；`ModifierKeyRegistry` 定义 key 的语义和 scope 推断。 |
 | 怎么做 | Player 的 `set_run_modifier_source()` / `merge_run_modifier_source()` 将来源写入 store；技能和伤害系统用 query 按 player/movement/pickup/skill/damage scope 查询；PlayerModifierApplier 把玩家基础快照型 modifier 应用到属性。 |
-| 接收 | 来自角色 trait、武器 trait、分支、升级、遗物、永久升级、地图变量的 modifier 字典。 |
+| 接收 | 来自角色 trait、技能 runtime、升级、遗物、永久升级、地图变量的 modifier 字典。 |
 | 返回 | `ModifierStore.collect()` 返回 `Dictionary`；`get_debug_sources()` 返回调试字典；`DamageModifierQuery.to_modifier_query()` 返回普通 query。 |
 | 信号 | 无。 |
 | 边界 | 新 key 必须确认存储 scope 和消费端；动态伤害、移动、拾取 key 不应只写进 Player 快照。 |
@@ -248,11 +233,11 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 升级三选一、技能升级、普通升级、武器分支、进化选项、精英/Boss 奖励、诅咒选项。 |
+| 职责范围 | 升级三选一、技能升级、普通升级、精英/Boss 奖励、诅咒选项。 |
 | 主要文件 | `scripts/upgrades/upgrade_pool.gd`, `upgrade_offer_policy.gd`, `upgrade_option.gd`, `run_reward_pool.gd`, `data/upgrades.json` |
-| 做了什么 | `UpgradePool.generate_options()` 根据玩家当前武器等级、分支状态、进化状态、普通升级池和权重生成选项；`UpgradeOfferPolicy` 决定权重、条件和保底；`RunRewardPool` 生成精英/Boss 奖励；UICommandDispatcher 应用选项。 |
+| 做了什么 | `UpgradePool.generate_options()` 根据玩家当前技能、普通升级池和权重生成选项；`UpgradeOfferPolicy` 决定权重、条件和保底；`RunRewardPool` 生成精英/Boss 奖励；UICommandDispatcher 应用选项。 |
 | 怎么做 | Player 升级发 `leveled_up`，UI 排队弹窗并请求 UpgradePool；点击选项后 UICommandDispatcher 调用 Player `apply_upgrade()` 或发奖励副作用；奖励可给经验、治疗、遗物、魂石或升级。 |
-| 接收 | Player、当前技能/武器状态、`upgrades.json`、运行奖励种类。 |
+| 接收 | Player、当前技能状态、`upgrades.json`、运行奖励种类。 |
 | 返回 | `generate_options()` 返回 `Array` 的 `UpgradeOption`；`generate_reward_options()` 返回 `Array[Dictionary]`；policy 返回权重、条件、推荐理由。 |
 | 信号 | 本系统不发信号；结果由 Player 发 `upgrade_applied`，RelicManager 发遗物信号，SaveManager 写存档。 |
 | 边界 | 选项生成和选项应用分离；UI 不直接改 SkillInstance 或 SaveManager。 |
@@ -274,9 +259,9 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 魂石、永久升级、角色购买、地图通关、武器精通、角色专精、挑战、设置、历史记录、结算进度、失败诊断和推荐配装。 |
+| 职责范围 | 魂石、永久升级、角色购买、地图通关、角色专精、挑战、设置、历史记录、结算进度、失败诊断和推荐配装。 |
 | 主要文件 | `scripts/game/save_manager.gd`, `run_progression_service.gd`, `run_diagnostic_service.gd`, `scripts/ui/result_unlock_service.gd`, `scripts/ui/run_result_state_builder.gd` |
-| 做了什么 | SaveManager 用 `user://save.cfg` 读写局外数据；RunProgressionService 在结算时保存摘要、加全局计数、武器精通、角色专精、地图挑战和固定挑战；RunDiagnosticService 根据统计生成失败原因和下局建议；ResultUnlockService 处理结果页解锁。 |
+| 做了什么 | SaveManager 用 `user://save.cfg` 读写局外数据；RunProgressionService 在结算时保存摘要、加全局计数、角色专精、地图挑战和固定挑战；RunDiagnosticService 根据统计生成失败原因和下局建议；ResultUnlockService 处理结果页解锁。 |
 | 怎么做 | 胜利或死亡后 UIManager 构造 run_state，结果页读取 RunStatsTracker summary，ProgressionService 写存档并返回 unlock 列表，DiagnosticService 生成展示用诊断 ViewModel。 |
 | 接收 | 结算状态 `RESULT_VICTORY` / `RESULT_DEFEAT`、`run_state: Dictionary`、SaveManager 静态读写调用、UI command 的购买请求。 |
 | 返回 | SaveManager 返回 `int/bool/Dictionary/Array[StringName]`；`RunProgressionService.record_run_result()` 返回带 `progression_unlocks` 的 summary 字典；`RunDiagnosticService.build_diagnostic()` 返回诊断字典；ResultUnlockService 返回 `Array[String]`。 |
@@ -300,9 +285,9 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 角色、怪物、武器、技能对象、UI 按配置展示；UI 主题 token、按钮皮肤、本地化、响应式布局。 |
-| 主要文件 | `scripts/visual/visual_config_applier.gd`, `scripts/player/player_visual_controller.gd`, `scripts/enemies/enemy_visual_controller.gd`, `scripts/weapons/weapon_visual.gd`, `scripts/ui/ui_theme_service.gd`, `ui_button_skin.gd`, `localization_service.gd`, `ui_responsive_layout.gd`, `data/ui_theme.json`, `data/localization/ui_text.json` |
-| 做了什么 | VisualConfigApplier 根据 visual 配置应用 Sprite/AnimatedSprite；Player/Enemy visual controller 播放移动、受击、状态表现；WeaponVisual 根据当前武器贴图显示；UIThemeService 和 UIButtonSkin 读取主题配置；LocalizationService 读取语言文本；UIResponsiveLayout 按视口缩放和布局。 |
+| 职责范围 | 角色、怪物、技能对象、UI 按配置展示；UI 主题 token、按钮皮肤、本地化、响应式布局。 |
+| 主要文件 | `scripts/visual/visual_config_applier.gd`, `scripts/player/player_visual_controller.gd`, `scripts/enemies/enemy_visual_controller.gd`, `scripts/ui/ui_theme_service.gd`, `ui_button_skin.gd`, `localization_service.gd`, `ui_responsive_layout.gd`, `data/ui/ui_theme.json`, `data/localization/ui_text.json` |
+| 做了什么 | VisualConfigApplier 根据 visual 配置应用 Sprite/AnimatedSprite；Player/Enemy visual controller 播放移动、受击、状态表现；技能和状态 visual 由对应 controller/applier 消费；UIThemeService 和 UIButtonSkin 读取主题配置；LocalizationService 读取语言文本；UIResponsiveLayout 按视口缩放和布局。 |
 | 怎么做 | 业务配置里的 `visual` 字段只描述资源和表现参数，具体应用由 controller/applier 完成；UI controller 通过 helper/service 取 token、文本和布局尺寸。 |
 | 接收 | visual 字典、texture path、viewport size、localization key、theme token。 |
 | 返回 | 多数为 void；`LocalizationService` 返回翻译字符串，`UIResponsiveLayout` 返回 scale/breakpoint/offset。 |
@@ -313,9 +298,9 @@ flowchart TD
 
 | 项目 | 内容 |
 | --- | --- |
-| 职责范围 | 开发面板、自动检查场景、JSON 配置验证、武器配置脚手架、文档/函数参考生成。 |
+| 职责范围 | 开发面板、自动检查场景、JSON 配置验证、技能/神系配置检查、文档/函数参考生成。 |
 | 主要文件 | `scripts/debug/*`, `tools/*.js`, `tools/*.gd` |
-| 做了什么 | Godot debug 脚本验证技能成长、波次、敌方技能、进度服务、视觉配置、全流程自动跑；JS 工具验证角色、怪物、武器图、主攻击配置、编码、运行状态访问和 authoring pipeline。 |
+| 做了什么 | Godot debug 脚本验证技能成长、波次、敌方技能、进度服务、视觉配置、全流程自动跑；JS 工具验证角色、怪物、技能/神系配置、编码、运行状态访问和资源引用。 |
 | 怎么做 | JS 工具直接读 JSON 和脚本文本；Godot 工具通过 headless 场景或脚本实例化运行系统。 |
 | 接收 | 配置文件、场景、Godot 运行环境、Node.js。 |
 | 返回 | 命令行退出码、日志、报告文档或脚手架输出。 |
@@ -327,11 +312,11 @@ flowchart TD
 | 改动点 | 正确入口 | 不建议做法 |
 | --- | --- | --- |
 | 开始一局 | `RunSceneCoordinator.start_run(context)` | UI 直接 new Player/Spawner 或手动改其字段 |
-| 角色/武器选择 | `CharacterLoadoutService` + `RunLoadout` | 散传 character_id/weapon_id 到多个系统 |
+| 角色选择 | `CharacterLoadoutService` + `RunLoadout` | 散传 character_id 到多个系统 |
 | 玩家受击 | `Player.take_damage(packet)` | 直接改 `current_health` |
 | 怪物受击 | `EnemyBase.take_damage(packet)` | 技能或投射物直接扣怪物血 |
 | 怪物死亡 | `EnemyDeathPipeline` | 直接 `_die()` 或 `queue_free()` |
-| 技能行为 | `primary_attack.json` action/event | 按具体武器 id 写硬编码 |
+| 技能行为 | `skills.json` action/event | 按具体技能 id 写硬编码 |
 | 敌方技能 | `enemy_skills.json` + `EnemyActionRegistry` | 把普通攻击塞进 EnemyBase |
 | 升级选择 | `UpgradePool.generate_options()` + `Player.apply_upgrade()` | UI 直接改 SkillInstance |
 | 遗物/奖励 | `RunRewardPool` + `UICommandDispatcher` + `RelicManager` | 弹窗点击回调里写散装奖励逻辑 |
@@ -342,18 +327,19 @@ flowchart TD
 ## 24. 推荐阅读顺序
 
 1. 先读本文件确定系统边界。
-2. 再读对应专题文档：`PROJECT_SYSTEMS_OVERVIEW.md`、`UI_SYSTEM_OVERVIEW.md`、`CHARACTER_SYSTEM_OVERVIEW.md`、`WEAPON_SYSTEM_OVERVIEW.md`、`MONSTER_SYSTEM_OVERVIEW.md`、`DAMAGE_SYSTEM_OVERVIEW.md`。
+2. 再读对应专题文档：`PROJECT_SYSTEMS_OVERVIEW.md`、`UI_SYSTEM_OVERVIEW.md`、`CHARACTER_SYSTEM_OVERVIEW.md`、`MONSTER_SYSTEM_OVERVIEW.md`、`DAMAGE_SYSTEM_OVERVIEW.md`。旧武器系统说明已归档到 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md`，仅作历史参考。
 3. 进入代码时先看系统入口文件，再看子模块。
 4. 改配置先跑 JS 验证；改运行逻辑再跑 Godot headless 验证。
 
 常用验证命令：
 
 ```powershell
-node tools\validate_character_configs.js
-node tools\validate_weapon_authoring_pipeline.js
 node tools\validate_enemy_configs.js
-node tools\verify_primary_attack_config.js
+node tools\verify_gods_and_skills_contract.js
+node tools\verify_skill_definition_schema.js
+node tools\verify_skill_rule_adapters.js
 node tools\check_text_encoding.js
 godot --headless --path . --script res://tools/verify_damage_formula.gd
-godot --headless --path . --script res://tools/verify_ui_architecture.gd
+godot --headless --path . --script res://tools/verify_title_screen_runtime.gd
+godot --headless --path . --script res://tools/verify_character_select_ui.gd
 ```

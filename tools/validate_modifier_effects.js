@@ -1,10 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const { readJsonFile } = require("./json_file");
+const { readJsonFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const dataDir = path.join(root, "data");
-const weaponDesignConfigDir = path.join(root, "docs", "weapon_design_configs");
 
 const VALID_OPS = new Set(["add", "multiplier_add", "multiplier", "override"]);
 const VALID_DOMAINS = new Set([
@@ -159,12 +158,23 @@ function walk(value, where) {
   }
 }
 
-function main() {
-  for (const fileName of fs.readdirSync(dataDir).filter((name) => name.endsWith(".json")).sort()) {
-    walk(readJsonFile(path.join(dataDir, fileName)), `data/${fileName}`);
+function jsonFiles(dir) {
+  const result = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      result.push(...jsonFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith(".json")) {
+      result.push(fullPath);
+    }
   }
-  for (const fileName of fs.readdirSync(weaponDesignConfigDir).filter((name) => name.endsWith(".json")).sort()) {
-    walk(readJsonFile(path.join(weaponDesignConfigDir, fileName)), `docs/weapon_design_configs/${fileName}`);
+  return result;
+}
+
+function main() {
+  for (const filePath of jsonFiles(dataDir).sort()) {
+    const relativePath = path.relative(root, filePath).replace(/\\/g, "/");
+    walk(readJsonFile(filePath), relativePath);
   }
 
   for (const issue of errors) {

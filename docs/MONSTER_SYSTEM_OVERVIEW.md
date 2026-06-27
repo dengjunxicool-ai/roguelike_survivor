@@ -305,7 +305,7 @@ node tools\check_text_encoding.js
 & 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . -s res://scripts/debug/enemy_skill_system_check.gd
 & 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . -s res://scripts/debug/enemy_timeline_system_check.gd
 & 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . -s res://scripts/debug/wave_system_check.gd
-& 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . -s res://scripts/debug/visual_config_check.gd
+& 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . --script res://tools/verify_enemy_health_lag_bar_runtime.gd
 ```
 
 改造完成前至少确认：

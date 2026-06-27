@@ -1,23 +1,25 @@
 # 攻击系统梳理
 
-本文档用于后续快速、安全地改造所有攻击相关功能。这里的“攻击系统”不是单一模块，而是横跨玩家主武器技能、敌方技能、战斗对象、状态、伤害包、受击应用、统计和 UI 的端到端链路。目标是让每次改攻击前都能先判断：改数据还是改代码、改玩家侧还是敌方侧、是否会影响伤害公式、状态、死亡、统计、升级或结算。
+> 旧武器分支/进化运行时已移除，相关专题文档已归档到 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md`。当前新增玩家技能优先参考 `docs/skills/skills.md` 和 `data/skills.json`。
+
+本文档用于后续快速、安全地改造所有攻击相关功能。这里的“攻击系统”不是单一模块，而是横跨玩家技能、敌方技能、战斗对象、状态、伤害包、受击应用、统计和 UI 的端到端链路。目标是让每次改攻击前都能先判断：改数据还是改代码、改玩家侧还是敌方侧、是否会影响伤害公式、状态、死亡、统计、升级或结算。
 
 本文件是攻击链路总入口；更细的专题仍看：
 
-- `docs/WEAPON_SYSTEM_OVERVIEW.md`：主武器、分支、进化、主攻技能绑定。
+- `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md`：旧武器运行时历史记录，仅作追溯参考。
 - `docs/DAMAGE_SYSTEM_OVERVIEW.md`：DamagePacket、公式、受击应用、DOT、反应。
 - `docs/MONSTER_SYSTEM_OVERVIEW.md`：怪物行为、敌方技能、Boss phase、死亡奖励。
 
 ## 核心结论
 
-1. 玩家攻击由 `data/primary_attack.json` 的 components、events 和 actions 驱动；武器只决定起始技能、分支、进化和标签，不直接执行攻击。
+1. 玩家攻击由 `data/skills.json` 的 `starting_skills` / `skills`、components、events 和 actions 驱动；角色只决定起始技能，不直接执行攻击。
 2. 敌方攻击由 `data/enemy_skills.json` 的 actions 驱动；怪物行为只决定何时触发技能，不应承载具体 projectile / area / summon 逻辑。
 3. 玩家攻击和敌方攻击的构包路径必须分开：玩家走 `DamagePacketBuilder.from_skill_action()`，敌方走 `EnemyDamagePacketBuilder.build()`。
 4. 战斗对象只负责移动、命中、tick、事件回调、source 稳定和状态转发；不要在 projectile / area / orbit 内写公式或直接扣血。
 5. 真正扣血只发生在目标 `take_damage()` 后的 `DamageApplicationService` / application pipeline 中。
 6. 新攻击效果优先用现有 action 组合表达；只有现有 action、component、combat object 行为无法表达时才新增 GDScript 能力。
-7. 新增任何能造成伤害的攻击入口，都必须保证 `source_weapon_id`、`source_skill_id`、`source_instance_id`、`damage_origin`、`damage_type`、`element` 正确。
-8. 改攻击往往会影响升级、分支、进化、协同、遗物、状态、统计、HUD 和结算；不要只看命中表现。
+7. 新增任何能造成伤害的攻击入口，都必须保证 `source_skill_id`、`source_instance_id`、`damage_origin`、`damage_type`、`element` 正确。
+8. 改攻击往往会影响升级、协同、遗物、状态、统计、HUD 和结算；不要只看命中表现。
 
 ## 当前规模
 
@@ -89,9 +91,9 @@ combat object 分布：
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 玩家攻击数据 | `data/primary_attack.json` | 主攻和终式技能定义，包含 components、events、actions、base、damage_scaling。 |
-| 武器入口数据 | `data/weapons.json` | 当前主武器的 `starting_skill_id`、分支、标签和视觉。 |
-| 分支/进化数据 | `data/weapon_branches.json`、`data/weapon_evolutions.json` | 追加 runtime events / modifiers / special_rules，或替换为终式技能。 |
+| 玩家技能数据 | `data/skills.json` | 起始技能和可学习技能定义，包含 school、type、components、events、trigger_rules、effects、base。 |
+| 神系数据 | `data/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
+| 角色起始技能 | `data/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
 | 战斗对象数据 | `data/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
 | 敌方攻击数据 | `data/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
 | 怪物行为数据 | `data/enemies.json` | 行为类型、技能引用、接触伤害、行为范围、Boss phase 配置。 |
@@ -121,7 +123,7 @@ combat object 分布：
 
 ```mermaid
 flowchart TD
-    A["玩家攻击配置 primary_attack.json"] --> B["SkillManager active skill"]
+    A["玩家技能配置 skills.json"] --> B["SkillManager active skill"]
     B --> C["SkillExecutor tick"]
     C --> D["SkillComponentRunner"]
     D --> E["SkillEventBus"]
@@ -143,14 +145,14 @@ flowchart TD
 
 ## 玩家攻击主链路
 
-1. 开局时 `WeaponSkillBinding.bind_starting_skill()` 从 `CharacterRuntime.get_equipped_weapon_skill_id()` 读取当前武器技能，把它加入 `SkillManager.active_skills`。
+1. 开局时 `CharacterRunInitializer.configure_starting_skills()` 从 `CharacterRuntime.get_starting_skill_id()` 读取角色起始技能，把它加入 `SkillManager.active_skills`。
 2. 每帧 `SkillExecutor._physics_process()` 遍历 `SkillManager.get_all_skills()`，给每个技能构造 context。
 3. `SkillComponentRunner.tick()` 读取技能 `components`：
    - `persistent_orbit`：持续发 `on_cast`，确保环绕物存在。
    - `cooldown`：倒计时归零后施放。
    - `targeting`：调用 `TargetingService.find_target()` 找目标；找不到目标时不施放。
 4. `SkillComponentRunner` 触发 `SkillEventBus.emit_skill_event("on_cast", context)`。
-5. `SkillEventBus` 合并技能定义里的 `events` 和分支/运行时追加的 `runtime_events`，按 `trigger`、`source_id` 和 `conditions` 匹配。
+5. `SkillEventBus` 合并技能定义里的 `events` 和运行时追加的 `runtime_events`，按 `trigger`、`source_id` 和 `conditions` 匹配。
 6. 匹配成功后调用 `SkillActionExecutor.execute_actions()`。
 7. `SkillActionExecutor` 按 action type 执行：
    - `deal_damage`：直接构造 DamagePacket 并调用目标 `take_damage()`。
@@ -169,8 +171,8 @@ flowchart TD
 | --- | --- |
 | `caster` / `owner` | 玩家节点，提供位置、属性、CharacterRuntime、ModifierStore。 |
 | `skill_instance` | 当前技能实例，持有等级、runtime_events、runtime_modifiers、meta。 |
-| `skill_id` | 当前执行技能 ID，进化后会变成终式技能 ID。 |
-| `source_weapon_id` | 当前装备武器 ID，伤害、modifier、统计、挑战归因都依赖它。 |
+| `skill_id` | 当前执行技能 ID。 |
+| `source_skill_id` | 当前技能来源 ID，伤害、modifier、统计和 HUD 归因都依赖它。 |
 | `skill_manager` / `relic_manager` | 合并 skill modifier、遗物、协同。 |
 | `event_bus` | 后续 `on_projectile_hit` / `on_orbit_hit` 回调入口。 |
 | `parent` | projectile / area / orbit 的挂载父节点。 |
@@ -238,7 +240,7 @@ EnemyBase._apply_contact_damage()
 
 | 字段 | 玩家攻击 | 敌方攻击 | 影响 |
 | --- | --- | --- | --- |
-| `source_weapon_id` | 当前装备武器 ID | 敌人 ID | modifier、统计、挑战、精通、协同。 |
+| `source_skill_id` | 当前玩家技能 ID | 敌人技能或敌人 ID | modifier、统计、挑战、协同。 |
 | `source_skill_id` | 当前技能 ID | enemy skill ID 或 source kind | 事件、统计、调试、Boss 技能归因。 |
 | `source_instance_id` | cast / projectile / area / orbit 的稳定实例 ID | 敌人实例 + source_type + skill ID | DOT 小数池、区域命中保护、反应限制、统计聚合。 |
 | `source_type` | `skill` / `projectile` / `area` / `orbit` / `trap` | `contact` / `projectile` / `area` 等 | 玩家命中保护、默认 origin/type、调试。 |
@@ -261,21 +263,21 @@ EnemyBase._apply_contact_damage()
 
 ## 攻击配置契约
 
-### `primary_attack.json`
+### `skills.json`
 
 | 字段 | 作用 | 改造注意 |
 | --- | --- | --- |
-| `id` | 技能主键 | 改名会影响武器起始技能、进化、升级、HUD、统计。 |
-| `weapon_id` | 归属武器 | 起始技能和终式技能都建议填写，便于归因和诊断。 |
-| `category` | SkillManager 学习限制 | 主武器攻击当前应为 `active`。 |
+| `id` | 技能主键 | 改名会影响角色起始技能、升级、HUD、统计。 |
+| `school` / `fusion_school` | 神系归属 | 必须能被 `data/gods.json` 和技能池验证。 |
+| `type` | 技能类型 | 用于 SkillManager、升级池和 UI 区分主动、被动、融合等语义。 |
 | `base` | 基础数值 | `damage`、`cooldown`、`range`、`projectile_count`、`area_radius` 等。 |
-| `damage_scaling.skill_level_coefficients` | 技能等级伤害系数 | `primary_attack` 默认吃该系数；缺失会 warning 并回退 1.0。 |
 | `components` | 触发时机 | 现支持 `cooldown`、`targeting`、`persistent_orbit`。 |
 | `events` | 攻击行为 | 以 `trigger` + `actions` 表达施放和命中效果。 |
+| `trigger_rules` / `effects` | 可学习技能规则 | 用于技能卡描述、升级池和 runtime adapter。 |
 | `actions[].type` | 行为类型 | 新 action 必须同步执行器、契约、验证和文档。 |
 | `actions[].params.damage_origin` | 来源语义 | 区域持续伤害一般是 `field`，主攻爆炸若要吃主攻规则可显式 `primary_attack`。 |
 | `actions[].params.damage_type` | 公式类型 | 不要只改 type 忘记 element。 |
-| `tags` | 协同、挑战、UI | 分支还会追加 `runtime_tags`。 |
+| `tags` | 协同、挑战、UI | 运行时也可通过技能实例追加临时 tags。 |
 
 ### `enemy_skills.json`
 
@@ -300,16 +302,15 @@ EnemyBase._apply_contact_damage()
 
 ## 常见改造路径
 
-### 调整某个玩家武器攻击
+### 调整某个玩家技能攻击
 
-1. 从 `data/weapons.json.starting_skill_id` 找到技能 ID。
-2. 到 `data/primary_attack.json` 修改该技能的 `base`、`components`、`events/actions`。
+1. 从 `data/characters.json.starting_skill_id` 或 `data/skills.json.skills[].id` 找到技能 ID。
+2. 到 `data/skills.json` 修改该技能的 `base`、`components`、`events/actions`。
 3. 改基础伤害优先改 `base.damage` 或 action `damage/damage_multiplier`。
 4. 改攻击频率优先改 cooldown component 的 `params.seconds`，并确认 `attack_speed_multiplier_add` 是否通过 modifier 消费。
-5. 改目标选择优先改 targeting component，不要只改 `weapons.json.targeting_rule_id`。
+5. 改目标选择优先改 targeting component。
 6. 改弹体/区域/环绕物表现优先改 action params 或 `combat_objects.json`。
-7. 若分支或进化会覆盖行为，同时检查 `weapon_branches.json.events_added` 和 `weapon_evolutions.json.evolved_skill_id`。
-8. 跑武器和攻击配置校验。
+7. 跑技能、神系和攻击配置校验。
 
 ### 新增玩家攻击 action
 
@@ -319,8 +320,8 @@ EnemyBase._apply_contact_damage()
 4. 若生成新对象，优先接入 `CombatObjectFactory` 和 `combat_objects.json`。
 5. 若需要 modifier，补 `ModifierResolver` / `SkillStatService` / `DamageSystem` 消费点。
 6. 在 `tools/weapon_config_contracts.js` 增加配置契约。
-7. 补最小配置样例或验证，跑 `validate_weapon_authoring_pipeline`。
-8. 同步本文档和 `WEAPON_SYSTEM_OVERVIEW.md`。
+7. 补最小配置样例或验证，跑当前神系/技能契约验证。
+8. 同步本文档；旧武器系统说明只保留在 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md` 作为历史记录。
 
 ### 新增 projectile / area / orbit 行为
 
@@ -366,7 +367,7 @@ EnemyBase._apply_contact_damage()
 
 ### 改攻击数值公式
 
-1. 如果只是单技能、单武器、单敌人调数，优先改 JSON，不改 `DamageSystem`。
+1. 如果只是单技能或单敌人调数，优先改 JSON，不改 `DamageSystem`。
 2. 如果是全局公式，先定位到普通输出、玩家受击、true percent、DOT、reaction、field、trap 中哪一类。
 3. 新增公式优先新增 stage 或修改单一 stage。
 4. 同步 `DamageRuleRegistry` 的 origin/type 政策。
@@ -376,9 +377,9 @@ EnemyBase._apply_contact_damage()
 
 | 系统 | 攻击连接点 | 安全边界 |
 | --- | --- | --- |
-| 武器 | `starting_skill_id`、分支 runtime events、进化替换技能 | 武器不是执行器；攻击行为落在 `primary_attack.json` 和技能系统。 |
+| 角色 | `starting_skill_id`、CharacterTraitSystem | 角色不是执行器；攻击行为落在 `skills.json` 和技能系统。 |
 | 角色 | base stats、weapon_trait、CharacterTraitSystem | 攻击属性优先通过 modifier scope 接入，不要在技能里读角色私有字段。 |
-| 升级 | `UpgradePool`、`Player.apply_upgrade()`、分支/进化系统 | UI 不直接改技能实例；分支和进化必须走系统入口。 |
+| 升级 | `UpgradePool`、`Player.apply_upgrade()`、SkillManager | UI 不直接改技能实例；技能升级必须走系统入口。 |
 | modifier | `ModifierStore`、`SkillStatService`、`ModifierResolver`、`DamageSystem` | 新 key 必须 flatten、聚合、消费三处完整接上。 |
 | 状态 | `apply_status`、`statuses_on_hit`、`StatusEffectManager` | DOT 和控制效果不要写在 projectile/area 私有逻辑里。 |
 | 伤害 | DamagePacket、DamageApplicationService、DamageSystem | 不直接扣血；不混用玩家和敌方构包器。 |
@@ -396,24 +397,22 @@ EnemyBase._apply_contact_damage()
 4. 不要让玩家攻击走 `EnemyDamagePacketBuilder`。
 5. 不要只创建 visual object 而不稳定 DamagePacket source。
 6. 不要只新增配置字段而不补消费点和校验器。
-7. 不要把具体武器 ID、怪物 ID、Boss ID 写进通用 `DamageSystem` 分支。
+7. 不要把具体技能 ID、怪物 ID、Boss ID 写进通用 `DamageSystem` 分支。
 8. 不要把行为触发时机、action 执行、伤害公式混在同一个改动里。
 9. 不要丢 `source_instance_id`；它影响 DOT 小数池、玩家区域命中保护、反应限制和统计归因。
-10. 不要用 `weapons.json.targeting_rule_id` 期待改变实际攻击目标；实际目标选择看 `primary_attack.components.targeting`。
+10. 不要在 UI 或角色数据里硬写目标规则；实际目标选择看 `skills.json` 的 targeting component。
 
 ## 快速定位表
 
 | 想改什么 | 第一入口 | 还要检查 |
 | --- | --- | --- |
-| 玩家攻击冷却 | `primary_attack.components.cooldown.params.seconds` | `ModifierResolver`、攻击速度 modifier、HUD debug。 |
-| 玩家攻击目标 | `primary_attack.components.targeting.params` | `TargetingService`、敌人 group、Boss/Elite 优先级。 |
-| 玩家攻击直接伤害 | `primary_attack.base.damage` 或 action params | `damage_scaling`、DamagePacket、分支 modifier。 |
+| 玩家攻击冷却 | `skills.json` 的 cooldown component | `ModifierResolver`、攻击速度 modifier、HUD debug。 |
+| 玩家攻击目标 | `skills.json` 的 targeting component | `TargetingService`、敌人 group、Boss/Elite 优先级。 |
+| 玩家攻击直接伤害 | `skills.json.base.damage` 或 action params | DamagePacket、modifier。 |
 | 玩家投射物 | action `spawn_projectile` | `combat_objects.json`、`Projectile`、`on_projectile_hit`。 |
 | 玩家区域 | action `spawn_area` / `create_explosion` | `AreaEffect`、origin/type、tick_interval、source_instance_id。 |
 | 玩家环绕物 | component `persistent_orbit` + action `spawn_orbit_object` | `OrbitObject`、hit_interval、debug nonce、运行时清理。 |
 | 命中后追加效果 | `events[].trigger=on_projectile_hit/on_orbit_hit` | `source_id` 是否匹配、conditions、runtime_events。 |
-| 分支新增攻击行为 | `weapon_branches.json.level_path.*.events_added` | `WeaponBranchSystem`、进化继承规则。 |
-| 终式攻击行为 | `weapon_evolutions.json.evolved_skill_id` 指向的技能 | active skill key 替换、等级重置、tags。 |
 | 敌人接触伤害 | `enemies.json.base_stats.contact_damage/contact_interval` | 玩家命中保护、`contact_status`。 |
 | 敌方远程 | `enemy_skills.json` action `projectile` | `EnemyActionRegistry`、`EnemyDamagePacketBuilder`、预警行为。 |
 | 敌方区域 | `enemy_skills.json` action `damage_area` | `DamageArea`、玩家 area 命中保护、Boss phase 参数。 |
@@ -425,13 +424,13 @@ EnemyBase._apply_contact_damage()
 
 ## 推荐验证
 
-攻击配置和武器链路：
+攻击配置和技能链路：
 
 ```powershell
-node tools\validate_weapon_authoring_pipeline.js
-node tools\verify_primary_attack_config.js
-node tools\verify_weapon_runtime_state_access.js
-node tools\verify_weapon_runtime_slot_wiring.js
+node tools\verify_gods_and_skills_contract.js
+node tools\verify_skill_definition_schema.js
+node tools\verify_skill_rule_adapters.js
+node tools\verify_skill_runtime_no_dead_cards.js
 ```
 
 敌方攻击配置：
@@ -459,18 +458,19 @@ node tools\check_text_encoding.js --strict-mojibake
 godot --headless --path . -s res://scripts/debug/enemy_skill_system_check.gd
 godot --headless --path . -s res://scripts/debug/enemy_timeline_system_check.gd
 godot --headless --path . -s res://scripts/debug/wave_system_check.gd
-godot --headless --path . -s res://scripts/debug/visual_config_check.gd
+godot --headless --path . --script res://tools/verify_area_effect_visual_mode_runtime_scene.gd
+godot --headless --path . --script res://tools/verify_enemy_health_lag_bar_runtime.gd
 ```
 
 当前环境若没有 `godot` 在 PATH，需要使用本机 Godot 可执行文件的绝对路径运行。
 
 ## 改造前决策顺序
 
-1. 先判断攻击来源：玩家主武器、玩家分支/进化、敌方普通技能、Boss phase、状态 DOT、反应、地图/特殊规则。
+1. 先判断攻击来源：玩家起始技能、玩家可学习技能、敌方普通技能、Boss phase、状态 DOT、反应、地图/特殊规则。
 2. 再判断改变层级：触发时机、目标选择、动作表现、构包字段、公式、受击副作用、死亡/统计。
 3. 能改 JSON 就先改 JSON；需要新通用能力才改 GDScript。
 4. 玩家侧和敌方侧分开找入口，避免构包路径混用。
 5. 凡是会造成伤害，先补完整 DamagePacket，再接目标 `take_damage()`。
 6. 凡是会杀死敌人，确认仍会走 `EnemyDeathPipeline`。
-7. 凡是会影响数值，确认 modifier、升级、分支、进化、Boss/Elite 修正是否参与。
+7. 凡是会影响数值，确认 modifier、升级、Boss/Elite 修正是否参与。
 8. 最后跑对应验证，并同步文档。
