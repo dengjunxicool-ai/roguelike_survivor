@@ -1521,6 +1521,10 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 
 
 func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
+	return _spawn_projectile(_prepare_projectile_burst_params(params), context)
+
+
+func _prepare_projectile_burst_params(params: Dictionary) -> Dictionary:
 	var projectile_params: Dictionary = params.duplicate(true)
 	if projectile_params.has("damage") and projectile_params.get("damage") is Dictionary:
 		var damage: Dictionary = projectile_params.get("damage")
@@ -1538,7 +1542,7 @@ func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
 		projectile_params["spread_angle"] = float(projectile_params.get("angle", 0.0))
 	if not projectile_params.has("spawn_offset"):
 		projectile_params["spawn_offset"] = float(projectile_params.get("radius", 24.0))
-	return _spawn_projectile(projectile_params, context)
+	return projectile_params
 
 
 func _repeat_area_path(params: Dictionary, context: Dictionary) -> bool:
