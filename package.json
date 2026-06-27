@@ -11,6 +11,10 @@
     "verify:fire-status-runtime": "node tools\\verify_fire_status_runtime_support.js",
     "verify:obsolete-runtime-removed": "node tools\\verify_obsolete_fire_runtime_removed.js",
     "verify:run-hud-skill-slots": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_run_hud_skill_slots.gd",
+    "verify:title-screen-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_title_screen_runtime.gd",
+    "verify:title-screen-font": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_title_screen_font.gd",
+    "verify:character-select-ui": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_character_select_ui.gd",
+    "verify:map-select-ui": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_map_select_ui.gd",
     "verify:enemy-hit-flash": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_enemy_hit_flash.gd",
     "verify:attack-skill-replacement": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_attack_skill_replacement.gd",
     "verify:player-dash": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_player_dash.gd",
@@ -41,6 +45,9 @@
     "verify:chaos-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_chaos_skill_runtime_smoke.gd",
     "verify:fusion-skill-system-contract": "node tools\\verify_fusion_skill_system_contract.js",
     "verify:fusion-skill-numeric-contract": "node tools\\verify_fusion_skill_numeric_contract.js",
-    "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd"
+    "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd",
+    "verify:no-cpu-particles": "node tools\\verify_no_cpu_particles_project_wide.js",
+    "verify:safe-meta-keys": "node tools\\verify_safe_meta_keys.js",
+    "verify:coverage-report": "node tools\\verify_coverage_report.js"
   }
 }
