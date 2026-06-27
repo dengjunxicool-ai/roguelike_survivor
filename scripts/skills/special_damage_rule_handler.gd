@@ -165,31 +165,15 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 	if ground_fire.is_empty() and lava.is_empty():
 		return null
 	if not ground_fire.is_empty() and not lava.is_empty():
-		var ground_rules: Dictionary = rules.duplicate(true)
-		ground_rules.erase("player_lava_on_nearby_fireball_hit")
-		var ground_area: Node2D = spawn_ground_fire_or_lava(ground_rules, context, base_damage)
-		var lava_rules: Dictionary = rules.duplicate(true)
-		lava_rules.erase("ground_fire_on_hit")
-		var lava_area: Node2D = spawn_ground_fire_or_lava(lava_rules, context, base_damage)
-		return lava_area if lava_area != null else ground_area
+		return _spawn_split_ground_fire_and_lava(rules, context, base_damage)
 	var parent: Node = context.get("parent") as Node
 	var target: Node2D = context.get("target") as Node2D
 	if parent == null or target == null:
 		return null
 	var active_rule: Dictionary = lava if not lava.is_empty() else ground_fire
 	var caster: Node2D = context.get("caster") as Node2D
-	if not lava.is_empty():
-		if caster != null and float(lava.get("near_player_radius", 0.0)) > 0.0:
-			var near_radius: float = float(lava.get("near_player_radius", 0.0))
-			if caster.global_position.distance_squared_to(target.global_position) > near_radius * near_radius:
-				return null
-		var cooldown: float = maxf(float(lava.get("same_source_cooldown", 0.0)), 0.0)
-		var cooldown_key: String = "lava:%s:player_lava_on_nearby_fireball_hit" % (str(caster.get_instance_id()) if caster != null else "none")
-		var now_seconds: float = _now_seconds()
-		if cooldown > 0.0 and now_seconds < float(_lava_zone_cooldowns.get(cooldown_key, 0.0)):
-			return null
-		if cooldown > 0.0:
-			_lava_zone_cooldowns[cooldown_key] = now_seconds + cooldown
+	if not lava.is_empty() and not _reserve_player_lava_spawn(lava, caster, target):
+		return null
 	var duration: float = float(active_rule.get("duration", 0.8))
 	duration += float(rules.get("lava_duration_add", 0.0))
 	var radius: float = 42.0
@@ -199,16 +183,7 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 	var position: Vector2 = target.global_position
 	if String(active_rule.get("spawn_position", "")) == "player" and caster != null:
 		position = caster.global_position
-	var slow_rule: Dictionary = _get_dictionary(rules.get("lava_slow", {}))
-	var status_id: StringName = &""
-	var status_params: Dictionary = {}
-	if not slow_rule.is_empty():
-		status_id = StringName(String(slow_rule.get("status_id", "slow")))
-		status_params = {
-			"duration": float(slow_rule.get("duration", 0.5)),
-			"slow_percent": float(slow_rule.get("slow_percent", 0.18)),
-			"boss_slow_percent": float(slow_rule.get("boss_slow_percent", 0.08))
-		}
+	var status_data: Dictionary = _build_lava_status_data(rules)
 	var lava_packet: Dictionary = _build_traced_special_packet("fireball_lava_zone", damage, "field", false, context)
 	lava_packet["source_type"] = "area"
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
@@ -223,12 +198,54 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_style": "lava_zone",
 		"visual_color": Color(1.0, 0.25, 0.05, 0.32),
-		"status_on_hit": status_id,
-		"status_params": status_params
+		"status_on_hit": status_data.get("status_id", &""),
+		"status_params": _get_dictionary(status_data.get("status_params", {}))
 	})
 	if area != null:
 		area.set_meta("fireball_lava_zone", true)
 	return area
+
+
+static func _spawn_split_ground_fire_and_lava(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
+	var ground_rules: Dictionary = rules.duplicate(true)
+	ground_rules.erase("player_lava_on_nearby_fireball_hit")
+	var ground_area: Node2D = spawn_ground_fire_or_lava(ground_rules, context, base_damage)
+	var lava_rules: Dictionary = rules.duplicate(true)
+	lava_rules.erase("ground_fire_on_hit")
+	var lava_area: Node2D = spawn_ground_fire_or_lava(lava_rules, context, base_damage)
+	return lava_area if lava_area != null else ground_area
+
+
+static func _reserve_player_lava_spawn(lava: Dictionary, caster: Node2D, target: Node2D) -> bool:
+	if caster != null and float(lava.get("near_player_radius", 0.0)) > 0.0:
+		var near_radius: float = float(lava.get("near_player_radius", 0.0))
+		if caster.global_position.distance_squared_to(target.global_position) > near_radius * near_radius:
+			return false
+	var cooldown: float = maxf(float(lava.get("same_source_cooldown", 0.0)), 0.0)
+	var cooldown_key: String = "lava:%s:player_lava_on_nearby_fireball_hit" % (str(caster.get_instance_id()) if caster != null else "none")
+	var now_seconds: float = _now_seconds()
+	if cooldown > 0.0 and now_seconds < float(_lava_zone_cooldowns.get(cooldown_key, 0.0)):
+		return false
+	if cooldown > 0.0:
+		_lava_zone_cooldowns[cooldown_key] = now_seconds + cooldown
+	return true
+
+
+static func _build_lava_status_data(rules: Dictionary) -> Dictionary:
+	var slow_rule: Dictionary = _get_dictionary(rules.get("lava_slow", {}))
+	if slow_rule.is_empty():
+		return {
+			"status_id": &"",
+			"status_params": {}
+		}
+	return {
+		"status_id": StringName(String(slow_rule.get("status_id", "slow"))),
+		"status_params": {
+			"duration": float(slow_rule.get("duration", 0.5)),
+			"slow_percent": float(slow_rule.get("slow_percent", 0.18)),
+			"boss_slow_percent": float(slow_rule.get("boss_slow_percent", 0.08))
+		}
+	}
 
 
 static func execute_protective_lava_ring_on_player_damaged(rules: Dictionary, context: Dictionary) -> Node2D:
