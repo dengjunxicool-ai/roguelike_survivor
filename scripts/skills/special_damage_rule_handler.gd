@@ -336,14 +336,15 @@ static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pu
 		var radius_rule: Dictionary = _get_dictionary(rules.get("holy_pulse_radius", {}))
 		radius *= maxf(1.0 + float(radius_rule.get("radius_multiplier_add", 0.0)), 0.05)
 	var amount: int = maxi(int(base.get("pulse_damage", 5)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"holy_shield_pulse",
 		amount,
 		String(base.get("damage_origin", "primary_attack")),
 		false,
+		context,
 		String(base.get("element", "holy")),
 		String(base.get("damage_type", "area_direct"))
-	), context)
+	)
 	CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": player.global_position,
@@ -393,14 +394,15 @@ static func execute_holy_shield_break(rules: Dictionary, context: Dictionary) ->
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	var amount: int = int(skill_instance.get_meta("holy_shield_break_damage", base.get("break_damage", 30))) if skill_instance != null else int(base.get("break_damage", 30))
 	var radius: float = maxf(float(base.get("break_radius", 150.0)), 1.0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"holy_shield_break",
 		amount,
 		String(base.get("damage_origin", "primary_attack")),
 		false,
+		context,
 		String(base.get("element", "holy")),
 		String(base.get("damage_type", "area_direct"))
-	), context)
+	)
 	CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": player.global_position,
@@ -463,14 +465,15 @@ static func _spawn_holy_area(rule: Dictionary, context: Dictionary, position: Ve
 	var amount: int = maxi(int(rule.get("amount", 0)), 0)
 	if amount <= 0:
 		return null
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		source_id,
 		amount,
 		String(rule.get("damage_origin", "primary_attack")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "area_direct"))
-	), context)
+	)
 	if rule.has("boss_damage_multiplier"):
 		packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 1.0)) - 1.0
 	return CombatObjectFactoryScript.create_area_effect({
@@ -500,7 +503,7 @@ static func _apply_holy_mark_pulse_focus(rules: Dictionary, context: Dictionary,
 	for target: Node2D in _find_targets_in_radius(context, position, radius):
 		if not _has_status(target, &"holy_mark"):
 			continue
-		var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet("holy_mark_pulse_focus", bonus_amount, "primary_attack", false, "holy", "area_direct"), context)
+		var packet: Dictionary = _build_traced_special_packet("holy_mark_pulse_focus", bonus_amount, "primary_attack", false, context, "holy", "area_direct")
 		intents.append(DamageIntentScript.create(target, packet, &"area_direct"))
 	apply_intents(intents)
 
@@ -563,14 +566,15 @@ static func _apply_judgement_beam_on_boss_mark_pulses(rules: Dictionary, context
 		target.set_meta(meta_key, count)
 		if count % required != 0:
 			continue
-		var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+		var packet: Dictionary = _build_traced_special_packet(
 			"holy_judgement_beam",
 			amount,
 			String(rule.get("damage_origin", "special")),
 			false,
+			context,
 			String(rule.get("element", "holy")),
 			String(rule.get("damage_type", "direct_magical"))
-		), context)
+		)
 		intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
 	apply_intents(intents)
 
@@ -590,14 +594,15 @@ static func _execute_holy_counter_on_marked_break_hit(rules: Dictionary, context
 		if _is_boss(target):
 			amount = maxi(roundi(float(amount) * maxf(float(rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
 			_apply_holy_counter_boss_poise(rules, target)
-		var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+		var packet: Dictionary = _build_traced_special_packet(
 			"holy_counter_on_marked_break_hit",
 			amount,
 			String(rule.get("damage_origin", "reaction")),
 			false,
+			context,
 			String(rule.get("element", "holy")),
 			String(rule.get("damage_type", "reaction_damage"))
-		), context)
+		)
 		intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
 	apply_intents(intents)
 
