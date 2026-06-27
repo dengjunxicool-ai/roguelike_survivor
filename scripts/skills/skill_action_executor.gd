@@ -325,7 +325,8 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 	if caster == null:
 		return false
 
-	var count: int = maxi(int(ModifierResolverScript.resolve_value(context, "projectile_count", params.get("count", 1))), 1)
+	var projectile_stats: Dictionary = _resolve_projectile_runtime_stats(params, context)
+	var count: int = int(projectile_stats.get("count", 1))
 	var range: float = maxf(float(ModifierResolverScript.resolve_value(context, "range", params.get("range", ModifierResolverScript.get_stat(context, "range", INF)))), 1.0)
 	var targets: Array = TargetingServiceScript.find_targets(caster, str(params.get("targeting_mode", params.get("targeting", "around_player"))), {
 		"origin": caster,
@@ -337,7 +338,6 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		return false
 	targets = _build_projectile_target_sequence(targets, count)
 
-	var projectile_stats: Dictionary = _resolve_projectile_runtime_stats(params, context)
 	var speed: float = float(projectile_stats.get("speed", 420.0))
 	var pierce: int = int(projectile_stats.get("pierce", 0))
 	var radius: float = float(projectile_stats.get("radius", 10.0))
