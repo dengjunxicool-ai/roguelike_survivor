@@ -208,8 +208,7 @@ func _on_cast(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("hot_rapid_fire", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 3)), 1)
-	var cast_count: int = int(skill_instance.get_meta("fireball_cast_count", 0)) + 1
-	skill_instance.set_meta("fireball_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "fireball_cast_count")
 	if cast_count % interval == 0:
 		skill_instance.set_meta("hot_rapid_fire_next_cast", true)
 		skill_instance.set_meta("hot_rapid_fire_crit_chance_add", float(rule.get("next_projectile_crit_chance_add", 0.4)))
@@ -223,8 +222,7 @@ func _prepare_storm_hail_cast(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("storm_hail_every_n_casts", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 4)), 1)
-	var cast_count: int = int(skill_instance.get_meta("storm_hail_cast_count", 0)) + 1
-	skill_instance.set_meta("storm_hail_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "storm_hail_cast_count")
 	skill_instance.set_meta("storm_hail_next_cast", cast_count % interval == 0)
 
 
@@ -236,8 +234,7 @@ func _prepare_arcane_double_page_cast(rules: Dictionary, context: Dictionary) ->
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("arcane_double_page_every_n_casts", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 5)), 1)
-	var cast_count: int = int(skill_instance.get_meta("arcane_page_cast_count", 0)) + 1
-	skill_instance.set_meta("arcane_page_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "arcane_page_cast_count")
 	if cast_count % interval == 0:
 		skill_instance.set_meta("arcane_double_page_next_cast", true)
 		skill_instance.set_meta("arcane_double_page_extra_projectiles", maxi(int(rule.get("extra_projectile_count", 1)), 0))
@@ -251,8 +248,7 @@ func _prepare_forbidden_page_cast(rules: Dictionary, context: Dictionary) -> voi
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("forbidden_page_every_n_casts", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 4)), 1)
-	var cast_count: int = int(skill_instance.get_meta("forbidden_page_cast_count", 0)) + 1
-	skill_instance.set_meta("forbidden_page_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "forbidden_page_cast_count")
 	skill_instance.set_meta("forbidden_page_next_cast", cast_count % interval == 0)
 
 
@@ -264,8 +260,7 @@ func _prepare_extra_knife_cast(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("extra_knife_every_n_casts", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 4)), 1)
-	var cast_count: int = int(skill_instance.get_meta("extra_knife_cast_count", 0)) + 1
-	skill_instance.set_meta("extra_knife_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "extra_knife_cast_count")
 	if cast_count % interval == 0:
 		SpecialDamageRuleHandlerScript.execute_extra_knife_throw(rules, context, _get_skill_damage(context))
 
@@ -278,8 +273,7 @@ func _prepare_hunter_bow_cast(rules: Dictionary, context: Dictionary) -> void:
 	if rules.has("windstep_double_arrow") and _is_windstep_active(context):
 		var wind_rule: Dictionary = _get_dictionary(rules.get("windstep_double_arrow", {}))
 		var wind_interval: int = maxi(int(wind_rule.get("cast_interval", 4)), 1)
-		var wind_count: int = int(skill_instance.get_meta("windstep_arrow_cast_count", 0)) + 1
-		skill_instance.set_meta("windstep_arrow_cast_count", wind_count)
+		var wind_count: int = _advance_interval_counter(skill_instance, "windstep_arrow_cast_count")
 		if wind_count % wind_interval == 0:
 			SpecialDamageRuleHandlerScript.execute_windstep_double_arrow(rules, context, _get_skill_damage(context))
 	if not rules.has("cloud_arrow_every_n_casts"):
@@ -287,8 +281,7 @@ func _prepare_hunter_bow_cast(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("cloud_arrow_every_n_casts", {}))
 	var interval: int = maxi(int(rule.get("cast_interval", 3)), 1)
-	var cast_count: int = int(skill_instance.get_meta("cloud_arrow_cast_count", 0)) + 1
-	skill_instance.set_meta("cloud_arrow_cast_count", cast_count)
+	var cast_count: int = _advance_interval_counter(skill_instance, "cloud_arrow_cast_count")
 	var active: bool = cast_count % interval == 0
 	skill_instance.set_meta("hunter_cloud_arrow_active", active)
 	var pierce_override_value: Variant = null
@@ -306,8 +299,7 @@ func _prepare_warhammer_cast(rules: Dictionary, context: Dictionary) -> void:
 	if rules.has("warhammer_quake_slam_every_n_casts"):
 		var quake_rule: Dictionary = _get_dictionary(rules.get("warhammer_quake_slam_every_n_casts", {}))
 		var cast_interval: int = maxi(int(quake_rule.get("cast_interval", 3)), 1)
-		var cast_count: int = int(skill_instance.get_meta("warhammer_cast_count", 0)) + 1
-		skill_instance.set_meta("warhammer_cast_count", cast_count)
+		var cast_count: int = _advance_interval_counter(skill_instance, "warhammer_cast_count")
 		skill_instance.set_meta("warhammer_quake_slam_active", cast_count % cast_interval == 0)
 	if rules.has("warhammer_forced_shock_every_n_seconds"):
 		var shock_rule: Dictionary = _get_dictionary(rules.get("warhammer_forced_shock_every_n_seconds", {}))
@@ -317,6 +309,12 @@ func _prepare_warhammer_cast(rules: Dictionary, context: Dictionary) -> void:
 		skill_instance.set_meta("warhammer_forced_shock_active", active_shock)
 		if active_shock:
 			skill_instance.set_meta("warhammer_forced_shock_next_at", now_seconds + maxf(float(shock_rule.get("interval", 8.0)), 0.0))
+
+
+func _advance_interval_counter(skill_instance: RefCounted, meta_key: String) -> int:
+	var count: int = int(skill_instance.get_meta(meta_key, 0)) + 1
+	skill_instance.set_meta(meta_key, count)
+	return count
 
 
 func _on_projectile_hit(rules: Dictionary, context: Dictionary) -> void:
