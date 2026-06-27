@@ -17,6 +17,7 @@ const EnemyBehaviorControllerScript: Script = preload("res://scripts/enemies/beh
 const EnemySkillControllerScript: Script = preload("res://scripts/enemies/skills/enemy_skill_controller.gd")
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
 const EnemyStateControllerScript: Script = preload("res://scripts/enemies/enemy_state_controller.gd")
+const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_config_helper.gd")
 
 signal health_changed(current_health: int, max_health: int)
 signal died
@@ -595,22 +596,11 @@ func _apply_enemy_config() -> void:
 
 
 func _get_dictionary(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		var dictionary: Dictionary = value
-		return dictionary.duplicate(true)
-
-	return {}
+	return EnemyConfigHelperScript.duplicate_dictionary(value)
 
 
 func _get_dictionary_array(value: Variant) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	if not (value is Array):
-		return result
-	for item_variant: Variant in value:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			result.append(item.duplicate(true))
-	return result
+	return EnemyConfigHelperScript.duplicate_dictionary_array(value)
 
 
 func _execute_enemy_skill_action(action_type: String, runtime_params: Dictionary = {}) -> bool:
@@ -645,50 +635,15 @@ func _get_enemy_skill_cooldown(action_type: String, fallback: float) -> float:
 
 
 func _apply_classification_metadata(enemy_config: Dictionary) -> void:
-	var enemy_type: String = String(get_meta("enemy_type_override", enemy_config.get("type", "normal")))
-	var enemy_rank: String = String(get_meta("enemy_rank_override", get_meta("enemy_rank", enemy_config.get("rank", enemy_type))))
-	if enemy_rank == "":
-		enemy_rank = enemy_type
-	set_meta("enemy_type", enemy_type)
-	set_meta("enemy_rank", enemy_rank)
-	set_meta("is_boss", enemy_rank == "boss")
-	set_meta("is_elite", enemy_rank == "elite")
-	if enemy_rank == "boss":
-		add_to_group(&"bosses")
-	elif enemy_rank == "elite":
-		add_to_group(&"elites")
+	EnemyConfigHelperScript.apply_classification_metadata(self, enemy_config)
 
 
 func _get_behavior_attack_range_fallback() -> float:
-	match String(_behavior.get("type", "")):
-		"keep_distance_and_shoot":
-			return float(_behavior.get("preferred_distance", attack_range))
-		"explode_near_player":
-			return float(_behavior.get("trigger_radius", attack_range))
-		"summon_and_chase":
-			return float(_behavior.get("summon_range", _behavior.get("attack_range", attack_range)))
-		"chase_and_cast_pool":
-			return float(_behavior.get("cast_range", _behavior.get("attack_range", attack_range)))
-		"dash_attack":
-			return float(_behavior.get("dash_trigger_range", _behavior.get("attack_range", attack_range)))
-		"boss_dungeon_heart":
-			return float(_behavior.get("skill_range", _behavior.get("attack_range", attack_range)))
-		_:
-			return attack_range
+	return EnemyConfigHelperScript.behavior_attack_range_fallback(_behavior, attack_range)
 
 
 func _get_behavior_attack_range() -> float:
-	match String(_behavior.get("type", "")):
-		"summon_and_chase":
-			return float(_behavior.get("summon_range", _behavior.get("attack_range", attack_range)))
-		"chase_and_cast_pool":
-			return float(_behavior.get("cast_range", _behavior.get("attack_range", attack_range)))
-		"dash_attack":
-			return float(_behavior.get("dash_trigger_range", _behavior.get("attack_range", attack_range)))
-		"boss_dungeon_heart":
-			return float(_behavior.get("skill_range", _behavior.get("attack_range", attack_range)))
-		_:
-			return attack_range
+	return EnemyConfigHelperScript.behavior_attack_range(_behavior, attack_range)
 
 
 func _apply_collision_radius(radius: float) -> void:
