@@ -249,14 +249,15 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	if caster == null or target == null:
 		return false
 
-	var count: int = maxi(int(ModifierResolverScript.resolve_value(context, "projectile_count", params.get("count", 1))), 1)
-	var speed: float = maxf(float(ModifierResolverScript.resolve_value(context, "projectile_speed", params.get("speed", 420.0))), 1.0)
+	var projectile_stats: Dictionary = _resolve_projectile_runtime_stats(params, context)
+	var count: int = int(projectile_stats.get("count", 1))
+	var speed: float = float(projectile_stats.get("speed", 420.0))
 	var spread_angle: float = deg_to_rad(float(ModifierResolverScript.resolve_value(context, "spread_angle", params.get("spread_angle", 0.0))))
-	var pierce: int = maxi(int(ModifierResolverScript.resolve_value(context, "pierce", params.get("pierce", 0))), 0)
-	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("collision_radius", params.get("radius", 10.0)))), 1.0)
-	var lifetime: float = maxf(float(params.get("lifetime", 2.0)), 0.1)
-	var damage: int = maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0)
-	var source_id: StringName = StringName(str(params.get("projectile_id", params.get("source_id", ""))))
+	var pierce: int = int(projectile_stats.get("pierce", 0))
+	var radius: float = float(projectile_stats.get("radius", 10.0))
+	var lifetime: float = float(projectile_stats.get("lifetime", 2.0))
+	var damage: int = int(projectile_stats.get("damage", 0))
+	var source_id: StringName = StringName(str(projectile_stats.get("source_id", "")))
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var base_direction: Vector2 = caster.global_position.direction_to(target.global_position)
 	if base_direction == Vector2.ZERO:
@@ -336,12 +337,13 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		return false
 	targets = _build_projectile_target_sequence(targets, count)
 
-	var speed: float = maxf(float(ModifierResolverScript.resolve_value(context, "projectile_speed", params.get("speed", 420.0))), 1.0)
-	var pierce: int = maxi(int(ModifierResolverScript.resolve_value(context, "pierce", params.get("pierce", 0))), 0)
-	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("collision_radius", params.get("radius", 10.0)))), 1.0)
-	var lifetime: float = maxf(float(params.get("lifetime", 2.0)), 0.1)
-	var damage: int = maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0)
-	var source_id: StringName = StringName(str(params.get("projectile_id", params.get("source_id", ""))))
+	var projectile_stats: Dictionary = _resolve_projectile_runtime_stats(params, context)
+	var speed: float = float(projectile_stats.get("speed", 420.0))
+	var pierce: int = int(projectile_stats.get("pierce", 0))
+	var radius: float = float(projectile_stats.get("radius", 10.0))
+	var lifetime: float = float(projectile_stats.get("lifetime", 2.0))
+	var damage: int = int(projectile_stats.get("damage", 0))
+	var source_id: StringName = StringName(str(projectile_stats.get("source_id", "")))
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var parent: Node = _get_parent_node(context)
 	var cast_instance_id: String = _next_cast_instance_id(context)
@@ -401,6 +403,18 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		spawned += 1
 
 	return spawned > 0
+
+
+func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) -> Dictionary:
+	return {
+		"count": maxi(int(ModifierResolverScript.resolve_value(context, "projectile_count", params.get("count", 1))), 1),
+		"speed": maxf(float(ModifierResolverScript.resolve_value(context, "projectile_speed", params.get("speed", 420.0))), 1.0),
+		"pierce": maxi(int(ModifierResolverScript.resolve_value(context, "pierce", params.get("pierce", 0))), 0),
+		"radius": maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("collision_radius", params.get("radius", 10.0)))), 1.0),
+		"lifetime": maxf(float(params.get("lifetime", 2.0)), 0.1),
+		"damage": maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0),
+		"source_id": StringName(str(params.get("projectile_id", params.get("source_id", ""))))
+	}
 
 
 func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dictionary, context: Dictionary, parent: Node, caster: Node2D, source_id: StringName, position: Vector2, direction: Vector2, damage: int, damage_packet: Dictionary, speed: float, pierce: int, radius: float, lifetime: float, statuses_on_hit: Array[StringName], cast_instance_id: String, trajectory_mode: String, curve_start_position: Vector2, curve_target_position: Vector2, extra_params: Dictionary = {}) -> Dictionary:
