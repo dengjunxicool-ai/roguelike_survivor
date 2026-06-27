@@ -105,28 +105,36 @@ func update_status_effects(delta: float) -> void:
 	for id_variant: Variant in _statuses.keys():
 		var id: StringName = StringName(String(id_variant))
 		var status: Dictionary = _statuses[id]
-		status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - delta
+		_advance_status_tick(status, delta)
 
-		if _is_dot_status(status):
-			_update_damage_over_time(status, delta)
-
-		if int(status.get("stacks", 1)) <= 0:
-			expired_statuses.append(id)
-			expired_snapshots[id] = status.duplicate(true)
-		elif float(status.get("duration_remaining", 0.0)) <= 0.0:
+		if _is_status_expired(status):
 			expired_statuses.append(id)
 			expired_snapshots[id] = status.duplicate(true)
 		else:
 			_statuses[id] = status
 
+	_expire_statuses(expired_statuses, expired_snapshots)
+	if not expired_statuses.is_empty():
+		_refresh_status_visual()
+	_apply_poison_slow_synergy()
+
+
+func _advance_status_tick(status: Dictionary, delta: float) -> void:
+	status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - delta
+	if _is_dot_status(status):
+		_update_damage_over_time(status, delta)
+
+
+func _is_status_expired(status: Dictionary) -> bool:
+	return int(status.get("stacks", 1)) <= 0 or float(status.get("duration_remaining", 0.0)) <= 0.0
+
+
+func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Dictionary) -> void:
 	for id: StringName in expired_statuses:
 		_statuses.erase(id)
 		var expired_status: Dictionary = _get_dictionary(expired_snapshots.get(id, {}))
 		_execute_status_effects(expired_status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, expired_status)
-	if not expired_statuses.is_empty():
-		_refresh_status_visual()
-	_apply_poison_slow_synergy()
 
 
 func has_status(status_id: Variant) -> bool:
