@@ -560,7 +560,7 @@ for (const ref of refs) {
       summons.push({
         id: ref.id,
         name: ref.id,
-        scene_path: "res://scenes/summon_controller.tscn",
+        scene_path: "res://scenes/summons/summon_controller.tscn",
         max_count: 2,
         duration: 10.0,
         movement: { move_speed: 180, follow_distance: 96, min_distance: 44, leash_distance: 360, teleport_distance: 720, separation_radius: 34 },

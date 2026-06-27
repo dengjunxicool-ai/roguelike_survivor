@@ -4,7 +4,7 @@ class_name SummonManager
 
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SummonFormationServiceScript: Script = preload("res://scripts/summons/summon_formation_service.gd")
-const DEFAULT_SUMMON_SCENE: PackedScene = preload("res://scenes/summon_controller.tscn")
+const DEFAULT_SUMMON_SCENE: PackedScene = preload("res://scenes/summons/summon_controller.tscn")
 
 var _active_by_id: Dictionary = {}
 

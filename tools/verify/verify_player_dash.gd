@@ -9,7 +9,7 @@ func _init() -> void:
 	_ensure_data_manager()
 	_expect(_space_dash_input_exists(), "dash input action exists and is bound to Space")
 
-	var packed_scene: PackedScene = load("res://scenes/player.tscn") as PackedScene
+	var packed_scene: PackedScene = load("res://scenes/characters/player.tscn") as PackedScene
 	_expect(packed_scene != null, "player scene loads")
 	if packed_scene == null:
 		quit(1)

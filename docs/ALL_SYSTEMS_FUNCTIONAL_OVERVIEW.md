@@ -221,7 +221,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 经验晶体、磁吸拾取、玩家经验增加。 |
-| 主要文件 | `scripts/drops/exp_gem.gd`, `scenes/experience_crystal.tscn` |
+| 主要文件 | `scripts/drops/exp_gem.gd`, `scenes/drops/experience_crystal.tscn` |
 | 做了什么 | 怪物死亡时掉落经验晶体；经验晶体检测玩家范围，进入磁吸后飞向玩家，收集时调用 Player `add_experience()`。 |
 | 怎么做 | ExpGem 持有经验数值和 target group；玩家有效拾取半径由 Player/Modifier 计算；接近后执行 collect。 |
 | 接收 | EnemyDeathPipeline 生成的经验掉落；玩家节点；`set_experience_amount(amount)`。 |

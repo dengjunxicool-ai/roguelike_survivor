@@ -31,12 +31,12 @@ function hasChilledEffect(summon) {
 
 const summons = readJson("data/summons/summons.json").summons || [];
 const frostWolf = findSummon(summons, "summon_frost_wolf");
-assert(frostWolf.scene_path === "res://scenes/summon_controller.tscn", "frost wolf must reuse summon controller scene");
+assert(frostWolf.scene_path === "res://scenes/summons/summon_controller.tscn", "frost wolf must reuse summon controller scene");
 assert(hasChilledEffect(frostWolf), "frost wolf must apply chilled on hit");
 assert((frostWolf.targeting || {}).target_priority === "frozen_first_then_nearest", "frost wolf must prefer Frozen targets before nearest enemies");
 
 const iceCrystalGuard = findSummon(summons, "ice_crystal_guard");
-assert(iceCrystalGuard.scene_path === "res://scenes/summon_controller.tscn", "ice crystal guard must reuse summon controller scene");
+assert(iceCrystalGuard.scene_path === "res://scenes/summons/summon_controller.tscn", "ice crystal guard must reuse summon controller scene");
 assert((iceCrystalGuard.movement || {}).movement_mode === "stationary", "ice crystal guard must use stationary movement mode");
 assert((iceCrystalGuard.attack || {}).attack_type === "area_pulse", "ice crystal guard must use area pulse attacks");
 assert(Number((iceCrystalGuard.attack || {}).pulse_radius) > 0, "ice crystal guard must define pulse_radius");

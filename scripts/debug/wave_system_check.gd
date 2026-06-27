@@ -109,7 +109,7 @@ func _check_wave_spawn_cap(spawner: Node) -> void:
 
 
 func _check_wave_end_collects_experience(main: Node, player: Node2D, spawner: Node) -> void:
-	var crystal_scene: PackedScene = load("res://scenes/experience_crystal.tscn") as PackedScene
+	var crystal_scene: PackedScene = load("res://scenes/drops/experience_crystal.tscn") as PackedScene
 	var crystal: Node2D = crystal_scene.instantiate() as Node2D
 	main.add_child(crystal)
 	crystal.global_position = player.global_position + Vector2(120, 0)
@@ -130,7 +130,7 @@ func _check_wave_end_collects_experience(main: Node, player: Node2D, spawner: No
 
 
 func _check_wave_transition_collects_deferred_experience(main: Node, player: Node2D, spawner: Node) -> void:
-	var crystal_scene: PackedScene = load("res://scenes/experience_crystal.tscn") as PackedScene
+	var crystal_scene: PackedScene = load("res://scenes/drops/experience_crystal.tscn") as PackedScene
 	var crystal: Node2D = crystal_scene.instantiate() as Node2D
 	crystal.global_position = player.global_position + Vector2(140, 0)
 	if crystal.has_method("set_experience_amount"):

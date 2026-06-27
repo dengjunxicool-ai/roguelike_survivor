@@ -12,7 +12,7 @@
 - 玩家开局等级来自 `waves.run.starting_level`，当前为 1。
 - 经验需求曲线来自 `waves.run.experience_formula`，当前是 table：Lv1 到 Lv15 需求分别为 `14, 24, 36, 52, 72, 96, 124, 156, 192, 232, 276, 324, 376, 432, 492`；超过表长度后继续使用最后一项。
 - 敌人经验产出来自 `data/enemies/enemies.json.base_stats.exp_drop`，生成时再乘 `waves[].enemy_multipliers.exp`、Boss 小怪倍率、召唤倍率或地图事件倍率。
-- 敌人死亡不直接给经验，而是由 `EnemyDeathPipeline` 调用 `EnemyBase._drop_experience_crystal()` 掉落 `scenes/experience_crystal.tscn`。
+- 敌人死亡不直接给经验，而是由 `EnemyDeathPipeline` 调用 `EnemyBase._drop_experience_crystal()` 掉落 `scenes/drops/experience_crystal.tscn`。
 - 经验晶体拾取后调用 `Player.add_experience()`；波次结束、普通阶段结束和 Boss 前祝福都会触发全屏经验收集。
 - 升级弹窗由 `Player.leveled_up` 信号触发；多级连升会在 `RunChoiceModalController.pending_level_up_count` 里排队逐个消费。
 - 升级选项与波次配置有隐性连接：`waves.spawn_rules.upgrade_phase_weights`、`low_hp_rule` 会影响 `UpgradeOfferPolicy` 的普通升级权重和保底。
@@ -35,7 +35,7 @@
 | 生成服务 | `scripts/enemies/spawning/*` | 规范化倍率、实例化敌人、写入来源、分类、奖励 policy 和 post-ready 属性。 |
 | 清理/收集 | `scripts/enemies/timeline/enemy_cleanup_service.gd` | 统计存活普通怪/Boss 小怪、远距离清理、清普通怪、全屏收经验。 |
 | 死亡掉落 | `scripts/enemies/death/enemy_death_pipeline.gd`, `scripts/enemies/enemy_base.gd` | 根据死亡 policy 决定是否掉经验、发击杀事件、发灵魂石和释放节点。 |
-| 经验晶体 | `scripts/drops/exp_gem.gd`, `scenes/experience_crystal.tscn` | 靠近吸附、拾取、调用玩家加经验。 |
+| 经验晶体 | `scripts/drops/exp_gem.gd`, `scenes/drops/experience_crystal.tscn` | 靠近吸附、拾取、调用玩家加经验。 |
 | 玩家经验 | `scripts/player/player_controller.gd` | 读取经验曲线、累计经验、处理多级连升、发 `experience_changed` 和 `leveled_up`。 |
 | 升级池 | `scripts/upgrades/upgrade_pool.gd`, `scripts/upgrades/upgrade_offer_policy.gd` | 生成技能升级、普通升级和奖励选项，并按阶段/血量/标签调权重。 |
 | 升级 UI | `scripts/ui/ui_manager.gd`, `scripts/ui/modals/run_choice_modal_controller.gd` | 监听升级和波次事件，排队弹窗，选择后调用 Player 应用升级。 |

@@ -28,7 +28,7 @@ const DEFAULT_ATTACK: Dictionary = {
 
 var id: StringName = &""
 var display_name: String = ""
-var scene_path: String = "res://scenes/summon_controller.tscn"
+var scene_path: String = "res://scenes/summons/summon_controller.tscn"
 var max_count: int = 1
 var duration: float = 18.0
 var movement: Dictionary = {}

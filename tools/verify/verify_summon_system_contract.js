@@ -22,7 +22,7 @@ const requiredFiles = [
   "scripts/summons/summon_movement_component.gd",
   "scripts/summons/summon_attack_component.gd",
   "scripts/summons/summon_formation_service.gd",
-  "scenes/summon_controller.tscn",
+  "scenes/summons/summon_controller.tscn",
   "data/summons/summons.json",
 ];
 

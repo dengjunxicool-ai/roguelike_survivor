@@ -3,7 +3,7 @@
 		{
 			"id": "summon_frost_wolf",
 			"name": "霜狼",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 2,
 			"duration": 18,
 			"movement": {
@@ -49,7 +49,7 @@
 		{
 			"id": "ice_crystal_guard",
 			"name": "冰晶守卫",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 2,
 			"duration": 16,
 			"movement": {
@@ -100,7 +100,7 @@
 		{
 			"id": "crimson_dragon",
 			"name": "赤焰龙",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 999,
 			"movement": {
@@ -140,7 +140,7 @@
 		{
 			"id": "storm_lynx",
 			"name": "雷兽猞猁",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 22,
 			"movement": {
@@ -188,7 +188,7 @@
 		{
 			"id": "storm_crow",
 			"name": "风暴乌鸦",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 2,
 			"duration": 22,
 			"movement": {
@@ -235,7 +235,7 @@
 		{
 			"id": "bone_servant",
 			"name": "亡骸仆从",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 4,
 			"duration": 12,
 			"movement": {
@@ -281,7 +281,7 @@
 		{
 			"id": "soul_crow",
 			"name": "魂鸦",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 2,
 			"duration": 18,
 			"movement": {
@@ -328,7 +328,7 @@
 		{
 			"id": "seraph",
 			"name": "炽天使",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 22,
 			"movement": {
@@ -375,7 +375,7 @@
 		{
 			"id": "holy_shield_guardian",
 			"name": "圣盾卫士",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 22,
 			"movement": {
@@ -421,7 +421,7 @@
 		{
 			"id": "chaos_clone",
 			"name": "混沌分身",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 8,
 			"movement": {
@@ -468,7 +468,7 @@
 		{
 			"id": "void_maw",
 			"name": "虚空巨口",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 1,
 			"duration": 6,
 			"movement": {
@@ -519,7 +519,7 @@
 		{
 			"id": "burning_soul_minion",
 			"name": "burning_soul_minion",
-			"scene_path": "res://scenes/summon_controller.tscn",
+			"scene_path": "res://scenes/summons/summon_controller.tscn",
 			"max_count": 2,
 			"duration": 10,
 			"movement": {

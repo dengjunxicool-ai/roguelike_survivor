@@ -37,7 +37,7 @@ signal died
 @export_range(0.01, 100.0, 0.01, "or_greater") var damage_multiplier: float = 1.0
 @export_range(0.01, 100.0, 0.01, "or_greater") var move_speed_multiplier: float = 1.0
 @export_range(0.01, 100.0, 0.01, "or_greater") var experience_multiplier: float = 1.0
-@export var experience_crystal_scene: PackedScene = preload("res://scenes/experience_crystal.tscn")
+@export var experience_crystal_scene: PackedScene = preload("res://scenes/drops/experience_crystal.tscn")
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/enemies/enemy_projectile.tscn")
 @export var damage_area_scene: PackedScene = preload("res://scenes/combat/damage_area.tscn")
 @export var target_group: StringName = &"player"
