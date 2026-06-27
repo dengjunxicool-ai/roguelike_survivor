@@ -126,22 +126,26 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 	var requires_low_hp_execute: bool = params.has("low_hp_execute_threshold") and float(params.get("low_hp_execute_threshold", 0.0)) > 0.0
 	var damaged_any: bool = false
 	for damage_target: Node in targets:
-		if damage_target == null or not damage_target.has_method("take_damage"):
-			continue
-		var target_context: Dictionary = context.duplicate(true)
-		target_context["target"] = damage_target
-		var execute_triggered: bool = _should_execute_low_hp_target(params, damage_target)
-		if requires_low_hp_execute and not execute_triggered:
-			continue
-		var target_amount: int = _get_low_hp_execute_amount(damage_target, amount) if execute_triggered else amount
-		var packet: Dictionary = _build_damage_packet(params, target_context, target_amount, "skill")
-		_inherit_projectile_runtime_damage_packet(packet, target_context, damage_target)
-		if execute_triggered:
-			_apply_low_hp_execute_packet(packet, params, damage_target)
-		packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
-		damage_target.call("take_damage", packet, &"true_damage" if execute_triggered else damage_type)
-		damaged_any = true
+		damaged_any = _deal_damage_to_target(params, context, damage_target, amount, damage_type, requires_low_hp_execute) or damaged_any
 	return damaged_any
+
+
+func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_target: Node, amount: int, damage_type: StringName, requires_low_hp_execute: bool) -> bool:
+	if damage_target == null or not damage_target.has_method("take_damage"):
+		return false
+	var target_context: Dictionary = context.duplicate(true)
+	target_context["target"] = damage_target
+	var execute_triggered: bool = _should_execute_low_hp_target(params, damage_target)
+	if requires_low_hp_execute and not execute_triggered:
+		return false
+	var target_amount: int = _get_low_hp_execute_amount(damage_target, amount) if execute_triggered else amount
+	var packet: Dictionary = _build_damage_packet(params, target_context, target_amount, "skill")
+	_inherit_projectile_runtime_damage_packet(packet, target_context, damage_target)
+	if execute_triggered:
+		_apply_low_hp_execute_packet(packet, params, damage_target)
+	packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
+	damage_target.call("take_damage", packet, &"true_damage" if execute_triggered else damage_type)
+	return true
 
 
 func _should_execute_low_hp_target(params: Dictionary, target: Node) -> bool:
