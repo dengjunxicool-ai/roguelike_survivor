@@ -364,21 +364,32 @@ static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pu
 	var base: Dictionary = _get_dictionary(rules.get("holy_shield_base", {}))
 	if base.is_empty():
 		return
-	var player: Node2D = context.get("player", context.get("caster")) as Node2D
+	var player: Node2D = _context_player(context)
 	if player == null:
 		return
-	var parent: Node = context.get("parent") as Node
-	if parent == null:
-		parent = player.get_parent()
+	var parent: Node = _context_parent_for_actor(context, player)
 	if parent == null:
 		return
+	var radius: float = _holy_shield_pulse_radius(rules, base)
+	var amount: int = maxi(int(base.get("pulse_damage", 5)), 0)
+	_create_holy_shield_area(base, context, parent, player.global_position, amount, radius, "holy_shield_pulse", Color(1.0, 0.92, 0.35, 0.28))
+	_apply_holy_mark_on_pulse(rules, context, player.global_position, radius)
+	_apply_holy_mark_pulse_focus(rules, context, player.global_position, radius, amount)
+	_apply_judgement_beam_on_boss_mark_pulses(rules, context, player.global_position, radius)
+	_execute_holy_shockwave_if_due(rules, context, player.global_position, pulse_count)
+
+
+static func _holy_shield_pulse_radius(rules: Dictionary, base: Dictionary) -> float:
 	var radius: float = maxf(float(base.get("radius", 120.0)), 1.0)
 	if rules.has("holy_pulse_radius"):
 		var radius_rule: Dictionary = _get_dictionary(rules.get("holy_pulse_radius", {}))
 		radius *= maxf(1.0 + float(radius_rule.get("radius_multiplier_add", 0.0)), 0.05)
-	var amount: int = maxi(int(base.get("pulse_damage", 5)), 0)
+	return radius
+
+
+static func _create_holy_shield_area(base: Dictionary, context: Dictionary, parent: Node, position: Vector2, amount: int, radius: float, source_id: String, color: Color) -> Node2D:
 	var packet: Dictionary = _build_traced_special_packet(
-		"holy_shield_pulse",
+		source_id,
 		amount,
 		String(base.get("damage_origin", "primary_attack")),
 		false,
@@ -386,9 +397,9 @@ static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pu
 		String(base.get("element", "holy")),
 		String(base.get("damage_type", "area_direct"))
 	)
-	CombatObjectFactoryScript.create_area_effect({
+	return CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
-		"position": player.global_position,
+		"position": position,
 		"damage": amount,
 		"damage_type": StringName(String(base.get("damage_type", "area_direct"))),
 		"damage_packet": packet,
@@ -396,13 +407,9 @@ static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pu
 		"tick_interval": 0.1,
 		"radius": radius,
 		"target_group": context.get("target_group", &"enemies"),
-		"visual_style": "holy_shield_pulse",
-		"visual_color": Color(1.0, 0.92, 0.35, 0.28)
+		"visual_style": source_id,
+		"visual_color": color
 	})
-	_apply_holy_mark_on_pulse(rules, context, player.global_position, radius)
-	_apply_holy_mark_pulse_focus(rules, context, player.global_position, radius, amount)
-	_apply_judgement_beam_on_boss_mark_pulses(rules, context, player.global_position, radius)
-	_execute_holy_shockwave_if_due(rules, context, player.global_position, pulse_count)
 
 
 static func execute_holy_shield_player_damaged(rules: Dictionary, context: Dictionary) -> void:
@@ -424,39 +431,16 @@ static func execute_holy_shield_break(rules: Dictionary, context: Dictionary) ->
 	var base: Dictionary = _get_dictionary(rules.get("holy_shield_base", {}))
 	if base.is_empty():
 		return
-	var player: Node2D = context.get("player", context.get("caster")) as Node2D
+	var player: Node2D = _context_player(context)
 	if player == null:
 		return
-	var parent: Node = context.get("parent") as Node
-	if parent == null:
-		parent = player.get_parent()
+	var parent: Node = _context_parent_for_actor(context, player)
 	if parent == null:
 		return
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	var amount: int = int(skill_instance.get_meta("holy_shield_break_damage", base.get("break_damage", 30))) if skill_instance != null else int(base.get("break_damage", 30))
 	var radius: float = maxf(float(base.get("break_radius", 150.0)), 1.0)
-	var packet: Dictionary = _build_traced_special_packet(
-		"holy_shield_break",
-		amount,
-		String(base.get("damage_origin", "primary_attack")),
-		false,
-		context,
-		String(base.get("element", "holy")),
-		String(base.get("damage_type", "area_direct"))
-	)
-	CombatObjectFactoryScript.create_area_effect({
-		"parent": parent,
-		"position": player.global_position,
-		"damage": amount,
-		"damage_type": StringName(String(base.get("damage_type", "area_direct"))),
-		"damage_packet": packet,
-		"duration": 0.12,
-		"tick_interval": 0.1,
-		"radius": radius,
-		"target_group": context.get("target_group", &"enemies"),
-		"visual_style": "holy_shield_break",
-		"visual_color": Color(1.0, 0.86, 0.25, 0.36)
-	})
+	_create_holy_shield_area(base, context, parent, player.global_position, amount, radius, "holy_shield_break", Color(1.0, 0.86, 0.25, 0.36))
 	_execute_holy_shield_break_shockwave(rules, context, player.global_position)
 	_execute_holy_counter_on_marked_break_hit(rules, context, player.global_position, radius)
 	_apply_holy_shield_break_damage_reduction(rules, context)
