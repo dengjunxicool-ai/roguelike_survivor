@@ -574,10 +574,8 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		_enforce_max_active_areas(parent, source_type, area_source_id, max_active)
 
 	var duration: float = _resolve_area_duration(area_source_id, area_params, context, special_rules)
-	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_zones"):
-		var fire_oil_merge: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_zones", {}))
-		if bool(fire_oil_merge.get("enabled", false)) and _merge_existing_fire_oil_area(parent, position, radius, duration, damage, fire_oil_merge):
-			return true
+	if _try_merge_fire_oil_area(area_source_id, special_rules, parent, position, radius, duration, damage):
+		return true
 
 	var area_effect_params: Dictionary = _build_area_effect_spawn_params(
 		area_params,
@@ -609,6 +607,13 @@ func _prepare_area_damage_packet(area_params: Dictionary, context: Dictionary, s
 		var cast_instance_id: String = _cast_instance_id_for_area(context)
 		area_params["source_instance_id"] = DamageSourceIdentityScript.for_area(cast_instance_id, source_type, area_source_id)
 	return _build_damage_packet(area_params, context, damage, source_type)
+
+
+func _try_merge_fire_oil_area(area_source_id: StringName, special_rules: Dictionary, parent: Node, position: Vector2, radius: float, duration: float, damage: int) -> bool:
+	if area_source_id != &"fire_oil_area" or not special_rules.has("fire_oil_merge_zones"):
+		return false
+	var fire_oil_merge: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_zones", {}))
+	return bool(fire_oil_merge.get("enabled", false)) and _merge_existing_fire_oil_area(parent, position, radius, duration, damage, fire_oil_merge)
 
 
 func _record_area_explosion_trace(parent: Node, position: Vector2, radius: float, area_params: Dictionary, context: Dictionary, debug_trace_id: int, damage_packet: Dictionary) -> void:
