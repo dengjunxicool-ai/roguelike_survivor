@@ -569,12 +569,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		damage = maxi(roundi(float(ModifierResolverScript.resolve_value(context, "explosion_damage", damage))), 0)
 
 	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
-	var max_targets_stat: String = "%s_max_targets" % source_type
-	var max_targets: int = maxi(int(ModifierResolverScript.resolve_value(context, max_targets_stat, area_params.get("max_targets", 0))), 0)
-	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
-	if area_source_id == &"acid_spray_cone_area" and skill_instance != null and bool(skill_instance.get_meta("acid_pressure_next_cast", false)):
-		max_targets = maxi(max_targets, int(_get_dictionary(special_rules.get("acid_pressure_every_n_casts", {})).get("max_targets", 8)))
-		skill_instance.set_meta("acid_pressure_next_cast", false)
+	var max_targets: int = _resolve_area_max_targets(area_source_id, area_params, context, source_type, special_rules)
 	var max_active: int = _resolve_area_max_active(area_source_id, area_params, context, source_type, special_rules, holy_field_capacity)
 	var debug_trace_id: int = _get_debug_attack_trace_id(context)
 	if not area_params.has("source_instance_id"):
@@ -642,6 +637,16 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _resolve_area_max_targets(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> int:
+	var max_targets_stat: String = "%s_max_targets" % source_type
+	var max_targets: int = maxi(int(ModifierResolverScript.resolve_value(context, max_targets_stat, area_params.get("max_targets", 0))), 0)
+	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
+	if area_source_id == &"acid_spray_cone_area" and skill_instance != null and bool(skill_instance.get_meta("acid_pressure_next_cast", false)):
+		max_targets = maxi(max_targets, int(_get_dictionary(special_rules.get("acid_pressure_every_n_casts", {})).get("max_targets", 8)))
+		skill_instance.set_meta("acid_pressure_next_cast", false)
+	return max_targets
 
 
 func _resolve_area_max_active(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
