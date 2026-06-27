@@ -9,6 +9,8 @@ const DamageRuleRegistryScript: Script = preload("res://scripts/combat/damage_ru
 const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_source_identity.gd")
 const ModifierResolverScript: Script = preload("res://scripts/skills/modifier_resolver.gd")
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
+const SkillActionAreaBuilderScript: Script = preload("res://scripts/skills/skill_action_area_builder.gd")
+const SkillActionProjectileBuilderScript: Script = preload("res://scripts/skills/skill_action_projectile_builder.gd")
 const SkillRangeUnitScript: Script = preload("res://scripts/skills/skill_range_unit.gd")
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/skill_special_rule_executor.gd")
@@ -447,48 +449,25 @@ func _get_projectile_runtime_statuses_on_hit(runtime_data: Dictionary) -> Array[
 
 
 func _build_targeted_projectile_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
-	var visual_start_position: Vector2 = _resolve_projectile_visual_start_position(caster_position, target_position, same_target_hit_index, params)
-	var visual_target_position: Vector2 = _resolve_projectile_visual_target_position(target_position, same_target_hit_index, params)
-	visual_start_position = _apply_projectile_visual_start_offset(visual_start_position, visual_target_position, params)
-	var direction: Vector2 = visual_start_position.direction_to(visual_target_position)
-	if direction == Vector2.ZERO:
-		direction = Vector2.RIGHT
-	return {
-		"position": visual_start_position,
-		"target_position": visual_target_position,
-		"direction": direction
-	}
+	return SkillActionProjectileBuilderScript.build_targeted_launch_data(params, caster_position, target_position, same_target_hit_index)
 
 
 func _build_direct_projectile_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
-	var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
-	var target_position: Vector2 = target.global_position
-	var position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
-	position = _apply_projectile_visual_start_offset(position, target_position, params)
-	if params.has("visual_start_offset"):
-		direction = position.direction_to(target_position)
-		if direction == Vector2.ZERO:
-			direction = base_direction
-	return {
-		"position": position,
-		"direction": direction,
-		"target_position": target_position
-	}
+	return SkillActionProjectileBuilderScript.build_direct_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
 
 
 func _apply_projectile_visual_start_offset(start_position: Vector2, target_position: Vector2, params: Dictionary) -> Vector2:
-	if not params.has("visual_start_offset"):
-		return start_position
-	var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
-	if str(params.get("visual_start_relative_to", "caster")) == "target":
-		return target_position + visual_start_offset
-	return start_position + visual_start_offset
+	return SkillActionProjectileBuilderScript.apply_visual_start_offset(start_position, target_position, params)
 
 
 func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dictionary, context: Dictionary, parent: Node, caster: Node2D, source_id: StringName, position: Vector2, direction: Vector2, damage: int, damage_packet: Dictionary, speed: float, pierce: int, radius: float, lifetime: float, statuses_on_hit: Array[StringName], cast_instance_id: String, trajectory_mode: String, curve_start_position: Vector2, curve_target_position: Vector2, extra_params: Dictionary = {}) -> Dictionary:
-	var spawn_params: Dictionary = {
+	return SkillActionProjectileBuilderScript.build_spawn_params({
+		"params": params,
+		"projectile_params": projectile_params,
+		"context": context,
 		"parent": parent,
-		"projectile_id": source_id,
+		"caster": caster,
+		"source_id": source_id,
 		"position": position,
 		"direction": direction,
 		"damage": damage,
@@ -498,77 +477,26 @@ func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dicti
 		"pierce": pierce,
 		"radius": radius,
 		"lifetime": lifetime,
-		"status_on_hit": StringName(str(params.get("status_id", params.get("status_on_hit", "")))),
 		"statuses_on_hit": statuses_on_hit,
 		"status_params": _get_status_params(params, context),
-		"target_group": context.get("target_group", &"enemies"),
-		"event_bus": context.get("event_bus"),
-		"skill_instance": context.get("skill_instance"),
-		"caster": caster,
-		"skill_manager": context.get("skill_manager"),
-		"relic_manager": context.get("relic_manager"),
-		"source_id": source_id,
-		"event_on_hit": &"on_projectile_hit",
-		"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
 		"cast_instance_id": cast_instance_id,
 		"trajectory_mode": trajectory_mode,
 		"curve_start_position": curve_start_position,
 		"curve_target_position": curve_target_position,
-		"curve_height": float(params.get("curve_height", 64.0)),
-		"homing_enabled": bool(params.get("homing_enabled", false)),
-		"homing_turn_rate": float(params.get("homing_turn_rate", 8.0)),
-		"homing_seek_range": float(params.get("homing_seek_range", params.get("range", 0.0)))
-	}
-	for key: Variant in extra_params.keys():
-		spawn_params[key] = extra_params[key]
-	return spawn_params
+		"extra_params": extra_params
+	})
 
 
 func _build_projectile_target_sequence(targets: Array, count: int) -> Array:
-	var valid_targets: Array = []
-	for target_variant: Variant in targets:
-		var target: Node2D = target_variant as Node2D
-		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
-			continue
-		valid_targets.append(target)
-	if valid_targets.is_empty():
-		return []
-
-	var result: Array = []
-	for target: Node2D in valid_targets:
-		if result.size() >= count:
-			return result
-		result.append(target)
-	var repeat_index: int = 0
-	while result.size() < count:
-		result.append(valid_targets[repeat_index % valid_targets.size()])
-		repeat_index += 1
-	return result
+	return SkillActionProjectileBuilderScript.build_target_sequence(targets, count)
 
 
 func _resolve_projectile_visual_start_position(start_position: Vector2, target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
-	if same_target_hit_index <= 0:
-		return start_position
-	var spread_radius: float = maxf(float(params.get("same_target_curve_start_spread_radius", 12.0)), 0.0)
-	if spread_radius <= 0.0:
-		return start_position
-	var forward: Vector2 = start_position.direction_to(target_position)
-	if forward == Vector2.ZERO:
-		forward = Vector2.RIGHT
-	var side: Vector2 = Vector2(-forward.y, forward.x).normalized()
-	var side_sign: float = -1.0 if same_target_hit_index % 2 == 1 else 1.0
-	var ring: float = float((same_target_hit_index + 1) / 2)
-	return start_position + side * side_sign * spread_radius * ring
+	return SkillActionProjectileBuilderScript.resolve_visual_start_position(start_position, target_position, same_target_hit_index, params)
 
 
 func _resolve_projectile_visual_target_position(target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
-	if same_target_hit_index <= 0:
-		return target_position
-	var spread_radius: float = maxf(float(params.get("same_target_curve_spread_radius", 18.0)), 0.0)
-	if spread_radius <= 0.0:
-		return target_position
-	var angle: float = -PI * 0.5 + float(same_target_hit_index - 1) * TAU / 3.0
-	return target_position + Vector2(cos(angle), sin(angle)) * spread_radius
+	return SkillActionProjectileBuilderScript.resolve_visual_target_position(target_position, same_target_hit_index, params)
 
 
 func _apply_projectile_damage_sequence(packet: Dictionary, params: Dictionary, same_target_hit_index: int, context: Dictionary) -> void:
@@ -778,50 +706,24 @@ func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary,
 
 
 func _build_area_effect_spawn_params(area_params: Dictionary, context: Dictionary, source_type: String, parent: Node, area_source_id: StringName, position: Vector2, damage: int, damage_packet: Dictionary, duration: float, radius: float, max_targets: int, statuses_on_hit: Array[StringName], special_rules: Dictionary) -> Dictionary:
-	var impact_target: Node = context.get("target") as Node
-	var area_effect_params: Dictionary = {
+	return SkillActionAreaBuilderScript.build_effect_spawn_params({
+		"area_params": area_params,
+		"context": context,
 		"parent": parent,
-		"area_id": area_source_id,
+		"area_source_id": area_source_id,
 		"position": position,
 		"damage": damage,
 		"damage_type": _get_damage_type(area_params, context, source_type, _get_damage_origin(area_params, context, source_type)),
 		"damage_packet": damage_packet,
-		"source_origin_id": StringName(str(damage_packet.get("source_origin_id", context.get("source_origin_id", "")))),
-		"source_skill_id": StringName(str(damage_packet.get("source_skill_id", context.get("skill_id", "")))),
 		"duration": duration,
 		"tick_interval": _resolve_area_tick_interval(area_source_id, area_params, special_rules),
 		"radius": radius,
-		"cone_width_degrees": float(area_params.get("cone_width_degrees", 0.0)),
-		"cone_direction": _resolve_cone_direction(area_params, context, position),
-		"move_direction": _resolve_area_move_direction(area_params, context, position),
-		"move_speed": maxf(float(area_params.get("move_speed", 0.0)), 0.0),
 		"max_targets": max_targets,
-		"target_group": context.get("target_group", &"enemies"),
-		"visual_color": area_params.get("visual_color", Color(1.0, 0.38, 0.05, 0.32)),
-		"status_on_hit": StringName(str(area_params.get("status_id", area_params.get("status_on_hit", "")))),
 		"statuses_on_hit": statuses_on_hit,
 		"status_params": _get_status_params(area_params, context),
-		"source_id": area_source_id,
-		"event_on_hit": StringName(str(area_params.get("event_on_hit", ""))),
-		"event_on_expire": StringName(str(area_params.get("event_on_expire", ""))),
-		"actions_on_apply": _get_array(area_params.get("actions_on_apply", [])),
-		"actions_on_tick": _get_array(area_params.get("actions_on_tick", [])),
-		"actions_on_hit": _get_array(area_params.get("actions_on_hit", [])),
-		"actions_on_expire": _get_array(area_params.get("actions_on_expire", [])),
-		"actions_on_death": _get_array(area_params.get("actions_on_death", [])),
-		"finish_after_damage": bool(area_params.get("finish_after_damage", false)),
-		"impact_target": impact_target,
-		"impact_target_id": str(impact_target.get_instance_id()) if impact_target != null else "",
-		"impact_target_damage_multiplier": float(area_params.get("impact_target_damage_multiplier", 1.0)),
-		"event_bus": context.get("event_bus"),
-		"skill_instance": context.get("skill_instance"),
-		"caster": context.get("caster"),
-		"skill_manager": context.get("skill_manager"),
-		"relic_manager": context.get("relic_manager")
-	}
-	if area_params.has("visual_style"):
-		area_effect_params["visual_style"] = str(area_params.get("visual_style", ""))
-	return area_effect_params
+		"cone_direction": _resolve_cone_direction(area_params, context, position),
+		"move_direction": _resolve_area_move_direction(area_params, context, position)
+	})
 
 
 func _spawn_trap(params: Dictionary, context: Dictionary) -> bool:
