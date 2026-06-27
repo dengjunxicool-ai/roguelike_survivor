@@ -1,5 +1,6 @@
 extends RefCounted
 class_name SummonDefinition
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const DEFAULT_MOVEMENT: Dictionary = {
@@ -53,7 +54,7 @@ static func from_id(definition_id: Variant) -> RefCounted:
 	var id_string: String = String(definition_id)
 	if id_string == "":
 		return null
-	var file: FileAccess = FileAccess.open("res://data/summons.json", FileAccess.READ)
+	var file: FileAccess = FileAccess.open(DataPathsScript.SUMMONS_PATH, FileAccess.READ)
 	if file == null:
 		return null
 	var parsed: Variant = JSON.parse_string(file.get_as_text())

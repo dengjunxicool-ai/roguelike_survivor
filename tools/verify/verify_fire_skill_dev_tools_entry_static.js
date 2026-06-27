@@ -113,10 +113,10 @@ assert(pool.includes("SKILLS_DATA_PATH"), "UpgradePool must read skills.json for
 assert(pool.includes("_make_god_skill_learn_upgrade"), "UpgradePool must synthesize learn-skill cards from skills.json");
 assert(!pool.includes("mars_spark_missile_projectile"), "UpgradePool must not hardcode a single skill implementation");
 
-assert(dataManager.includes('const SKILLS_PATH: String = "res://data/skills.json"'), "DataManager must know data/skills.json");
+assert(dataManager.includes('const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH'), "DataManager must use DataPaths for data/skills.json");
 assert(dataManager.includes("STARTING_SKILLS_KEY"), "DataManager must index starting_skills");
 assert(dataManager.includes("SKILLS_KEY"), "DataManager must index skills");
-assert(gameData.includes("const SKILLS_PATH"), "GameData must know data/skills.json");
+assert(gameData.includes("const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH"), "GameData must use DataPaths for data/skills.json");
 assert(skillManager.includes("offer_in_upgrade_pool"), "SkillManager must allow skills offered from the upgrade pool");
 assert(skillExecutor.includes("func debug_cast_skill(skill_id: Variant, debug_attack_trace_id: int = 0) -> int:"), "SkillExecutor must expose selected skill debug casting");
 

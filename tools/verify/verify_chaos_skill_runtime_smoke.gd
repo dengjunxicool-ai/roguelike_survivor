@@ -127,11 +127,12 @@ func _run() -> void:
 	await process_frame
 	_expect(_count_area_effects(&"chaos_exchange_line") > 0, "chaos exchange creates a visible tear line", _count_area_effects(&"chaos_exchange_line"))
 
+	_enemy = _create_enemy("FissionChaosSmokeEnemy", Vector2(220.0, -42.0))
 	for _index in range(4):
 		_enemy.call("apply_status", &"instability", {"stacks": 1, "duration": 6.0, "power": 24.0})
+	_expect(_enemy.call("get_status_stack", &"instability") == 1, "chaos singularity retains 1 Instability stack after fission", _enemy.call("get_status_stack", &"instability"))
 	await process_frame
 	_expect(_count_area_effects(&"instability_fission_burst") > 0, "Instability max stack triggers fission burst", _count_area_effects(&"instability_fission_burst"))
-	_expect(_enemy.call("get_status_stack", &"instability") == 1, "chaos singularity retains 1 Instability stack after fission", _enemy.call("get_status_stack", &"instability"))
 
 	if not _failed:
 		print("[verify_chaos_skill_runtime_smoke] PASS")

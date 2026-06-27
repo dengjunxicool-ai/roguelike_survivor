@@ -1,5 +1,6 @@
 extends Node
 class_name StatusEffectManager
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
@@ -649,7 +650,7 @@ func _get_status_definition(status_id: StringName) -> Dictionary:
 
 
 func _get_status_definition_from_game_data(status_id: StringName) -> Dictionary:
-	var document: Dictionary = GameData._load_document("res://data/status_effects.json")
+	var document: Dictionary = GameData._load_document(DataPathsScript.STATUS_EFFECTS_PATH)
 	var status_items: Variant = document.get("statuses", [])
 	if not (status_items is Array):
 		return {}

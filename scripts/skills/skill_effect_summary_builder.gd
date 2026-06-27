@@ -1,9 +1,10 @@
 extends RefCounted
 class_name SkillEffectSummaryBuilder
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const SUMMONS_PATH: String = "res://data/summons.json"
-const COMBAT_OBJECTS_PATH: String = "res://data/combat_objects.json"
+const SUMMONS_PATH: String = DataPathsScript.SUMMONS_PATH
+const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
 const SkillRangeUnitScript: Script = preload("res://scripts/skills/skill_range_unit.gd")
 
 

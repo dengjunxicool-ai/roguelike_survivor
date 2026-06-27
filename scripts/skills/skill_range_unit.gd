@@ -1,8 +1,9 @@
 extends RefCounted
 class_name SkillRangeUnit
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const CONFIG_PATH: String = "res://data/config/skill_system_config.json"
+const CONFIG_PATH: String = DataPathsScript.SKILL_SYSTEM_CONFIG_PATH
 const DEFAULT_RANGE_UNIT_PX: float = 84.0
 
 static var _cached_range_unit_px: float = -1.0

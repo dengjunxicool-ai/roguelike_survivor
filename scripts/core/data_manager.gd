@@ -1,17 +1,18 @@
 extends Node
 
 
-const SKILLS_PATH: String = "res://data/skills.json"
-const ENEMIES_PATH: String = "res://data/enemies.json"
-const ENEMY_SKILLS_PATH: String = "res://data/enemy_skills.json"
-const UPGRADES_PATH: String = "res://data/upgrades.json"
-const STATUS_EFFECTS_PATH: String = "res://data/status_effects.json"
-const RELICS_PATH: String = "res://data/relics.json"
-const SYNERGIES_PATH: String = "res://data/synergies.json"
-const COMBAT_OBJECTS_PATH: String = "res://data/combat_objects.json"
-const CHARACTERS_PATH: String = "res://data/characters.json"
-const WAVES_PATH: String = "res://data/waves.json"
-const MAPS_PATH: String = "res://data/maps.json"
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
+const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
+const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
+const UPGRADES_PATH: String = DataPathsScript.UPGRADES_PATH
+const STATUS_EFFECTS_PATH: String = DataPathsScript.STATUS_EFFECTS_PATH
+const RELICS_PATH: String = DataPathsScript.RELICS_PATH
+const SYNERGIES_PATH: String = DataPathsScript.SYNERGIES_PATH
+const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
+const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
+const WAVES_PATH: String = DataPathsScript.WAVES_PATH
+const MAPS_PATH: String = DataPathsScript.MAPS_PATH
 
 const STARTING_SKILLS_KEY: String = "starting_skills"
 const SKILLS_KEY: String = "skills"

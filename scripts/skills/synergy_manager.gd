@@ -1,8 +1,9 @@
 extends Node
 class_name SynergyManager
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const SYNERGY_DATA_PATH: String = "res://data/synergies.json"
+const SYNERGY_DATA_PATH: String = DataPathsScript.SYNERGIES_PATH
 
 signal synergies_changed(active_synergy_ids: Array[StringName])
 

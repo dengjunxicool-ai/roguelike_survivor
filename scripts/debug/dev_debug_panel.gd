@@ -1,5 +1,6 @@
 extends CanvasLayer
 class_name DevDebugPanel
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
@@ -11,8 +12,8 @@ const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/sk
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemy.tscn")
 const FIRE_TORNADO_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/fire_tornado_effect.tscn")
 const MARS_SPARK_MISSILE_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/mars_spark_missile_effect.tscn")
-const GODS_DATA_PATH: String = "res://data/gods.json"
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const GODS_DATA_PATH: String = DataPathsScript.GODS_PATH
+const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 
 @export var enabled_in_debug_builds: bool = true
 @export var update_interval: float = 0.2

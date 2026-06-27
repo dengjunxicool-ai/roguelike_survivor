@@ -1,8 +1,9 @@
 extends RefCounted
 class_name UIThemeService
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const CONFIG_PATH: String = "res://data/ui/ui_theme.json"
+const CONFIG_PATH: String = DataPathsScript.UI_THEME_PATH
 
 static var _config_loaded: bool = false
 static var _config: Dictionary = {}

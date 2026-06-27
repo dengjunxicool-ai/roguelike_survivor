@@ -1,8 +1,9 @@
 extends Node
 class_name RelicManager
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const RELIC_DATA_PATH: String = "res://data/relics.json"
+const RELIC_DATA_PATH: String = DataPathsScript.RELICS_PATH
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 
 signal relic_added(relic_id: StringName)

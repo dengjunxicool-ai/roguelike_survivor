@@ -1,18 +1,19 @@
 extends RefCounted
 class_name GameData
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const SKILLS_PATH: String = "res://data/skills.json"
-const ENEMIES_PATH: String = "res://data/enemies.json"
-const ENEMY_SKILLS_PATH: String = "res://data/enemy_skills.json"
-const STATUS_EFFECTS_PATH: String = "res://data/status_effects.json"
-const UPGRADES_PATH: String = "res://data/upgrades.json"
-const WAVES_PATH: String = "res://data/waves.json"
-const CHARACTERS_PATH: String = "res://data/characters.json"
-const MAPS_PATH: String = "res://data/maps.json"
-const RELICS_PATH: String = "res://data/relics.json"
-const PROGRESSION_GOALS_PATH: String = "res://data/progression_goals.json"
-const CHALLENGES_PATH: String = "res://data/challenges.json"
+const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
+const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
+const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
+const STATUS_EFFECTS_PATH: String = DataPathsScript.STATUS_EFFECTS_PATH
+const UPGRADES_PATH: String = DataPathsScript.UPGRADES_PATH
+const WAVES_PATH: String = DataPathsScript.WAVES_PATH
+const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
+const MAPS_PATH: String = DataPathsScript.MAPS_PATH
+const RELICS_PATH: String = DataPathsScript.RELICS_PATH
+const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
+const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
 const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
 
 static var _document_cache: Dictionary = {}

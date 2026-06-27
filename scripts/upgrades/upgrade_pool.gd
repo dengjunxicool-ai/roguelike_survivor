@@ -1,11 +1,12 @@
 extends RefCounted
 class_name UpgradePool
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_option.gd")
 const UpgradeOfferPolicyScript: Script = preload("res://scripts/upgrades/upgrade_offer_policy.gd")
 const SkillOfferServiceScript: Script = preload("res://scripts/skills/skill_offer_service.gd")
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 const FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
 
 var rarity_weights: Dictionary = {

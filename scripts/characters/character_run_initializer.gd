@@ -1,5 +1,6 @@
 extends RefCounted
 class_name CharacterRunInitializer
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 func initialize_loadout(player: Node, loadout: RefCounted) -> bool:
 	if loadout == null or not bool(loadout.call("is_valid")):
@@ -78,7 +79,7 @@ func _resolve_starting_skill_id(player: Node) -> StringName:
 
 
 func _first_configured_starting_skill_id() -> StringName:
-	var document: Dictionary = GameData._load_document("res://data/skills.json")
+	var document: Dictionary = GameData._load_document(DataPathsScript.SKILLS_PATH)
 	var starting_skills: Variant = document.get("starting_skills", [])
 	if not (starting_skills is Array):
 		return &""

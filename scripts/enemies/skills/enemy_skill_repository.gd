@@ -1,9 +1,10 @@
 extends RefCounted
 class_name EnemySkillRepository
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const EnemySkillDefinitionScript: Script = preload("res://scripts/enemies/skills/enemy_skill_definition.gd")
-const ENEMY_SKILLS_PATH: String = "res://data/enemy_skills.json"
+const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
 
 var _definitions: Dictionary = {}
 var _loaded: bool = false

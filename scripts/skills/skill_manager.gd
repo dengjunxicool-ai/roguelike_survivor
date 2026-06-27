@@ -1,12 +1,13 @@
 extends Node
 class_name SkillManager
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const SkillDefinitionScript: Script = preload("res://scripts/skills/skill_definition.gd")
 const SkillInstanceScript: Script = preload("res://scripts/skills/skill_instance.gd")
 const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skill_modifier.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 
 signal skill_added(skill_id: StringName)
 signal skill_upgraded(skill_id: StringName, new_level: int)

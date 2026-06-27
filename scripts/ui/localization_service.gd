@@ -1,8 +1,9 @@
 extends RefCounted
 class_name LocalizationService
+const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
-const CONFIG_PATH: String = "res://data/localization/ui_text.json"
+const CONFIG_PATH: String = DataPathsScript.LOCALIZATION_UI_TEXT_PATH
 const DEFAULT_LANGUAGE_ID: String = "zh"
 
 static var _config_loaded: bool = false
