@@ -44,7 +44,7 @@
 
 ```mermaid
 flowchart TD
-    A["CharacterLoadoutController confirms character/weapon"] --> B["UIManager -> MAP_SELECT"]
+    A["CharacterLoadoutController confirms character"] --> B["UIManager -> MAP_SELECT"]
     B --> C["MapSelectController.refresh"]
     C --> D["MapSelectViewModelBuilder.build"]
     D --> E["GameData.get_map_pool / SaveManager"]

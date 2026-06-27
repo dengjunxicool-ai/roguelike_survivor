@@ -378,7 +378,7 @@ EnemyBase._apply_contact_damage()
 | 系统 | 攻击连接点 | 安全边界 |
 | --- | --- | --- |
 | 角色 | `starting_skill_id`、CharacterTraitSystem | 角色不是执行器；攻击行为落在 `skills.json` 和技能系统。 |
-| 角色 | base stats、weapon_trait、CharacterTraitSystem | 攻击属性优先通过 modifier scope 接入，不要在技能里读角色私有字段。 |
+| 角色 | base stats、CharacterTraitSystem | 攻击属性优先通过 modifier scope 接入，不要在技能里读角色私有字段。 |
 | 升级 | `UpgradePool`、`Player.apply_upgrade()`、SkillManager | UI 不直接改技能实例；技能升级必须走系统入口。 |
 | modifier | `ModifierStore`、`SkillStatService`、`ModifierResolver`、`DamageSystem` | 新 key 必须 flatten、聚合、消费三处完整接上。 |
 | 状态 | `apply_status`、`statuses_on_hit`、`StatusEffectManager` | DOT 和控制效果不要写在 projectile/area 私有逻辑里。 |

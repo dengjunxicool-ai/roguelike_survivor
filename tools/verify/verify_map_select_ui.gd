@@ -17,14 +17,14 @@ func _init() -> void:
 	_assert(screen.find_child("MapLoadoutCharacterLabel", true, false) != null, "map select shows selected character")
 	_assert(screen.find_child("MapLoadoutSkillLabel", true, false) != null, "map select shows starting skill")
 	_assert(screen.find_child("MapLoadoutThreatLabel", true, false) != null, "map select shows threat level")
-	_assert(screen.find_child("MapLoadoutWeaponLabel", true, false) == null, "map select does not show obsolete weapon loadout")
+	_assert(screen.find_child("MapLoadoutWeaponLabel", true, false) == null, "map select does not show obsolete loadout label")
 	_assert(screen.find_child("MapStartButton", true, false) != null, "map select has start button")
 
 	var text: String = _collect_text(screen)
 	_assert(text.contains("战斗准备"), "map select title is readable Chinese")
 	_assert(text.contains("开始挑战"), "map select start button is readable Chinese")
 	_assert(text.contains("废弃地牢"), "map select uses readable map names")
-	_assert(not text.contains("武器"), "map select text does not expose obsolete weapon concept")
+	_assert(not text.contains("武器"), "map select text does not expose obsolete loadout concept")
 
 	print("[verify_map_select_ui] PASS")
 	quit(0)

@@ -19,7 +19,7 @@ func _init() -> void:
 	_assert(screen.find_child("CharacterTraitLabel", true, false) != null, "CharacterTraitLabel exists")
 	_assert(screen.find_child("CharacterStartingSkillLabel", true, false) != null, "CharacterStartingSkillLabel exists")
 	_assert(screen.find_child("CharacterConfirmButton", true, false) != null, "CharacterConfirmButton exists")
-	_assert(screen.find_child("CharacterWeaponList", true, false) == null, "old weapon list removed")
+	_assert(screen.find_child("CharacterWeaponList", true, false) == null, "obsolete loadout list removed")
 	var confirm_button: Button = screen.find_child("CharacterConfirmButton", true, false) as Button
 	_assert(confirm_button != null and not confirm_button.disabled, "character confirm is enabled when starting skill resolves")
 
@@ -27,7 +27,7 @@ func _init() -> void:
 	_assert(text_dump.contains("选择角色"), "screen title is readable")
 	_assert(text_dump.contains("初始技能"), "starting skill text is shown")
 	_assert(text_dump.contains("角色特质"), "trait text is shown")
-	_assert(not text_dump.contains("武器"), "legacy weapon wording is hidden from character select")
+	_assert(not text_dump.contains("武器"), "legacy loadout wording is hidden from character select")
 
 	if _failed:
 		push_error("verify_character_select_ui: FAIL")

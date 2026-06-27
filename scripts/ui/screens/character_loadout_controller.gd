@@ -337,7 +337,7 @@ func _refresh_selected_character() -> void:
 
 	_name_label.text = _get_character_display_name(character, selected_character_id)
 	_role_label.text = _get_character_role(character, selected_character_id)
-	_description_label.text = _clean_legacy_text(str(character.get("description", DESCRIPTION_FALLBACKS.get(str(selected_character_id), ""))))
+	_description_label.text = str(character.get("description", DESCRIPTION_FALLBACKS.get(str(selected_character_id), "")))
 	_portrait_texture.texture = UIDisplayHelperScript.visual_texture(character, "portrait")
 	if _portrait_texture.texture != null:
 		_portrait_texture.modulate = UIDisplayHelperScript.visual_modulate(character)
@@ -373,8 +373,8 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 
 func _refresh_trait(character: Dictionary) -> void:
 	var trait_data: Dictionary = _get_dictionary(character.get("trait", {}))
-	var trait_name: String = _clean_legacy_text(str(trait_data.get("display_name", trait_data.get("id", "未配置"))))
-	var trait_description: String = _clean_legacy_text(str(trait_data.get("description", "")))
+	var trait_name: String = str(trait_data.get("display_name", trait_data.get("id", "未配置")))
+	var trait_description: String = str(trait_data.get("description", ""))
 	_trait_label.text = "角色特质\n%s\n%s" % [trait_name, trait_description]
 
 
@@ -385,8 +385,8 @@ func _refresh_starting_skill(character: Dictionary) -> void:
 		_starting_skill_label.text = "初始技能\n未配置"
 		return
 	_starting_skill_label.text = "初始技能\n%s\n%s" % [
-		_clean_legacy_text(str(skill.get("display_name", starting_skill_id))),
-		_clean_legacy_text(str(skill.get("description", "")))
+		str(skill.get("display_name", starting_skill_id)),
+		str(skill.get("description", ""))
 	]
 
 
@@ -441,12 +441,7 @@ func _get_character_display_name(character: Dictionary, fallback_id: StringName)
 
 
 func _get_character_role(character: Dictionary, fallback_id: StringName) -> String:
-	var role: String = str(character.get("role", ROLE_FALLBACKS.get(str(fallback_id), "")))
-	return _clean_legacy_text(role)
-
-
-func _clean_legacy_text(text: String) -> String:
-	return text.replace("主武器", "初始技能").replace("装备武器", "初始技能").replace("武器伤害", "技能伤害").replace("武器", "技能")
+	return str(character.get("role", ROLE_FALLBACKS.get(str(fallback_id), "")))
 
 
 func _format_number(value: Variant) -> String:

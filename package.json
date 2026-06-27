@@ -34,6 +34,7 @@
     "verify:devtools-god-skill-cards-static": "node tools\\verify\\verify_devtools_god_skill_cards_static.js",
     "verify:fire-skill-dev-tools-entry": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_fire_skill_dev_tools_entry.gd",
     "verify:fire-skill-dev-tools-entry-static": "node tools\\verify\\verify_fire_skill_dev_tools_entry_static.js",
+    "verify:fire-skill-card-selection-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_fire_skill_card_selection_runtime.gd",
     "verify:fire-vortex-dragon-contract": "node tools\\verify\\verify_fire_vortex_dragon_contract.js",
     "verify:burst-fireball-death-explosion-debug-trace": "node tools\\verify\\verify_burst_fireball_death_explosion_debug_trace.js",
     "verify:area-effect-motion": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_area_effect_motion.gd",

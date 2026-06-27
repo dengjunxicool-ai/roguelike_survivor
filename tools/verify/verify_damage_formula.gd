@@ -91,7 +91,7 @@ class TestStatusEffectManager:
 
 func _init() -> void:
 	var failed: bool = false
-	failed = not _verify_player_weapon_hits_enemy() or failed
+	failed = not _verify_player_primary_attack_hits_enemy() or failed
 	failed = not _verify_enemy_hits_player() or failed
 	failed = not _verify_dot_fractional_damage() or failed
 	failed = not _verify_reaction_damage() or failed
@@ -139,7 +139,7 @@ func _init() -> void:
 	quit(1 if failed else 0)
 
 
-func _verify_player_weapon_hits_enemy() -> bool:
+func _verify_player_primary_attack_hits_enemy() -> bool:
 	var attacker: FormulaNode = FormulaNode.new()
 	attacker.damage_multiplier = 1.25
 	attacker.fire_damage_multiplier_add = 0.10
@@ -185,7 +185,7 @@ func _verify_player_weapon_hits_enemy() -> bool:
 	expected_float -= minf(12.0 * 0.6, expected_float * 0.45)
 	expected_float *= 1.0 - 0.20
 	var expected: int = roundi(expected_float)
-	return _expect_equal("player weapon -> enemy", int(result.get("amount", -1)), expected)
+	return _expect_equal("player primary attack -> enemy", int(result.get("amount", -1)), expected)
 
 
 func _verify_enemy_hits_player() -> bool:
@@ -392,7 +392,7 @@ func _verify_reaction_limits() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_origin_id": &"test_weapon",
+		"source_origin_id": &"test_primary_attack",
 		"source_skill_id": &"test_lightning_chain",
 		"source_instance_id": "formula_reaction_limit",
 		"attacker_id": str(source.get_instance_id()),
@@ -551,7 +551,7 @@ func _verify_damage_trace_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_origin_id": &"trace_weapon",
+		"source_origin_id": &"trace_primary_attack",
 		"source_skill_id": &"trace_skill",
 		"source_instance_id": "trace_skill:1",
 		"attacker_id": "trace_attacker",
@@ -610,7 +610,7 @@ func _verify_damage_system_typed_result_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_physical",
 		"element": &"physical",
-		"source_origin_id": &"typed_result_weapon",
+		"source_origin_id": &"typed_result_primary_attack",
 		"source_skill_id": &"typed_result_skill",
 		"source_instance_id": "typed_result:1",
 		"attacker_id": "typed_result_attacker",
@@ -759,7 +759,7 @@ func _verify_damage_source_context_factory_contract() -> bool:
 	var attacker: FormulaNode = FormulaNode.new()
 	root.add_child(attacker)
 	var source_context: RefCounted = DamageSourceContextFactoryScript.from_packet({
-		"source_origin_id": &"factory_weapon",
+		"source_origin_id": &"factory_primary_attack",
 		"source_skill_id": &"factory_skill",
 		"source_instance_id": "factory:1"
 	}, attacker)
@@ -1041,7 +1041,7 @@ func _verify_reaction_damage_builder_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_origin_id": &"builder_weapon",
+		"source_origin_id": &"builder_skill_source",
 		"source_skill_id": &"builder_reaction",
 		"source_instance_id": "builder_reaction:1",
 		"attacker_id": "attacker",
@@ -1072,7 +1072,7 @@ func _verify_reaction_typed_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"lightning",
-		"source_origin_id": &"typed_reaction_weapon",
+		"source_origin_id": &"typed_reaction_skill_source",
 		"source_skill_id": &"typed_reaction_skill",
 		"source_instance_id": "typed_reaction:1",
 		"attacker_id": str(source.get_instance_id()),
@@ -1226,14 +1226,14 @@ func _verify_damage_modifier_query_contract() -> bool:
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"fire",
-		"source_origin_id": &"modifier_weapon",
+		"source_origin_id": &"modifier_skill_source",
 		"source_skill_id": &"modifier_skill",
 		"source_instance_id": "modifier:1"
 	}, attacker)
 	var damage_query: RefCounted = DamageModifierQueryScript.make(packet_object, attacker)
 	var query: RefCounted = damage_query.call("to_modifier_query")
 	var ok: bool = String(query.get("scope")) == "damage"
-	ok = ok and String(query.get("source_origin_id")) == "modifier_weapon"
+	ok = ok and String(query.get("source_origin_id")) == "modifier_skill_source"
 	ok = ok and String(query.get("skill_id")) == "modifier_skill"
 	ok = ok and String(query.get("damage_origin")) == "primary_attack"
 	ok = ok and String(query.get("element")) == "fire"
@@ -1250,7 +1250,7 @@ func _verify_skill_packet_builder_contract() -> bool:
 		"caster": attacker,
 		"target": target,
 		"skill_id": &"builder_contract",
-		"source_origin_id": &"builder_weapon"
+		"source_origin_id": &"builder_skill_source"
 	}
 	var packet: Dictionary = executor.call("_build_damage_packet", {
 		"damage_origin": "reaction",
@@ -1263,7 +1263,7 @@ func _verify_skill_packet_builder_contract() -> bool:
 	ok = ok and String(packet.get("damage_origin", "")) == "reaction"
 	ok = ok and String(packet.get("damage_type", "")) == "reaction_damage"
 	ok = ok and String(packet.get("element", "")) == "lightning"
-	ok = ok and String(packet.get("source_origin_id", "")) == "builder_weapon"
+	ok = ok and String(packet.get("source_origin_id", "")) == "builder_skill_source"
 	ok = ok and String(packet.get("source_skill_id", "")) == "builder_contract"
 	ok = ok and String(packet.get("source_instance_id", "")) == "builder_contract:reaction"
 	ok = ok and not bool(packet.get("can_crit", true))

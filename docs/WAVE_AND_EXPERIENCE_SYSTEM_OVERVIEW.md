@@ -292,7 +292,7 @@ flowchart TD
 7. `Player.add_experience()` 多级连升时会连续发 `leveled_up`，UI 会排队弹窗。大幅提高经验产出时要确认弹窗堆积是否符合体验。
 8. `RewardEventDirector.force_level_up` 当前直接发 `leveled_up` 信号，不会修改 `Player.level/current_experience`。如果要做真正等级奖励，应改为调用玩家入口或新增明确奖励类型。
 9. `UpgradeOfferPolicy.option_has_any_tag()` 只检查普通升级 payload 里的 `upgrade_id`；非普通升级选项不参与普通升级 tag 保底判断。
-10. `spawn_rules.main_progression_pity`、`first_level_up_choice`、`weapon_tag_rule` 当前更多是配置预留，实际 `UpgradePool` 没有完整消费这些字段。改这些字段前先确认是否需要补代码。
+10. `spawn_rules.main_progression_pity`、`first_level_up_choice`、旧版标签规则字段当前更多是配置预留，实际 `UpgradePool` 没有完整消费这些字段。改这些字段前先确认是否需要补代码。
 11. `pre_boss_blessing_options_add` 当前在数据里存在，但本次梳理未看到它被 `RunRewardPool` 之外的主链路直接影响升级弹窗；改 Boss 前祝福选项数时要先读 `run_reward_pool.gd`。
 12. HUD 只读 `Player` 和 Spawner 状态。不要为了显示去直接写等级、经验或波次私有变量。
 
