@@ -333,28 +333,59 @@ func _advance_interval_counter(skill_instance: RefCounted, meta_key: String) -> 
 
 
 func _on_projectile_hit(rules: Dictionary, context: Dictionary) -> void:
+	_apply_fire_projectile_hit_rules(rules, context)
+	_apply_frost_projectile_hit_rules(rules, context)
+	_apply_fire_reaction_hit_rules(rules, context)
+	_apply_frost_reaction_hit_rules(rules, context)
+	_apply_lightning_projectile_hit_rules(rules, context)
+	_apply_arcane_projectile_hit_rules(rules, context)
+	_apply_hunter_projectile_hit_rules(rules, context)
+	_apply_warhammer_on_hit(rules, context)
+	_apply_projectile_field_tick_rules(rules, context)
+	_spawn_ground_fire_or_lava(rules, context)
+
+
+func _apply_fire_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_direct_hit_extra_explosion_bonus(rules, context)
 	_apply_explosion_burn_rules(rules, context)
 	_apply_soul_ember_to_burn(rules, context)
 	_apply_soul_ember_on_direct_hit(rules, context)
 	_apply_flame_core_on_direct_hit(rules, context)
+
+
+func _apply_frost_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_frost_lock_on_direct_hit(rules, context)
 	_apply_frost_lock_bonus_hit(rules, context)
 	_apply_frostbite_freeze_or_poise(rules, context)
 	_apply_frostbite_on_hail_hit(rules, context)
 	_apply_shatter_on_freeze_or_frost_hit(rules, context)
+
+
+func _apply_fire_reaction_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_soulburn_burst(rules, context)
 	_apply_flame_core_boss_burst(rules, context)
+
+
+func _apply_frost_reaction_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_frost_core_crack_on_boss_poise(rules, context)
+
+
+func _apply_lightning_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_lightning_chain_bounce(rules, context)
 	_apply_voltage_on_elite_boss_hit(rules, context)
 	_apply_overload_on_voltage(rules, context)
 	_apply_shock_on_lightning_orb_hit(rules, context)
 	_apply_shock_consume_reaction(rules, context)
+
+
+func _apply_arcane_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_arcane_page_copy(rules, context)
 	_apply_arcane_seal_on_elite_boss_hit(rules, context)
 	_apply_arcane_seal_burst(rules, context)
 	_apply_forbidden_page_hit(rules, context)
+
+
+func _apply_hunter_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_execution_mark_on_strong_target(rules, context)
 	_apply_boss_low_hp_execution_burst(rules, context)
 	_apply_wound_on_throwing_knife_hit(rules, context)
@@ -366,12 +397,13 @@ func _on_projectile_hit(rules: Dictionary, context: Dictionary) -> void:
 	_apply_hunter_arrow_shards(rules, context)
 	_apply_marked_hit_cooldown_refund(rules, context)
 	_apply_eagle_shot_on_boss_mark_hits(rules, context)
-	_apply_warhammer_on_hit(rules, context)
+
+
+func _apply_projectile_field_tick_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_cross_relic_on_field_tick(rules, context)
 	_apply_toxic_vial_on_field_tick(rules, context)
 	_apply_fire_oil_on_field_tick(rules, context)
 	_apply_acid_spray_on_field_tick(rules, context)
-	_spawn_ground_fire_or_lava(rules, context)
 
 
 func _on_trap_hit(rules: Dictionary, context: Dictionary) -> void:
