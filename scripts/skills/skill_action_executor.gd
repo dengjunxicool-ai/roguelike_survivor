@@ -575,15 +575,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	if area_source_id == &"acid_spray_cone_area" and skill_instance != null and bool(skill_instance.get_meta("acid_pressure_next_cast", false)):
 		max_targets = maxi(max_targets, int(_get_dictionary(special_rules.get("acid_pressure_every_n_casts", {})).get("max_targets", 8)))
 		skill_instance.set_meta("acid_pressure_next_cast", false)
-	var max_active: int = 0
-	if source_type == "trap":
-		max_active = maxi(int(ModifierResolverScript.resolve_value(context, "max_active_traps", area_params.get("max_active", 0))), 0)
-	elif area_source_id == &"holy_field_area":
-		max_active = maxi(int(ModifierResolverScript.resolve_value(context, "max_active_fields", area_params.get("max_active", 0))) + int(holy_field_capacity.get("max_active_add", 0)), 0)
-	elif area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_zones"):
-		max_active = maxi(int(_get_dictionary(special_rules.get("fire_oil_merge_zones", {})).get("max_active", area_params.get("max_active", 0))), 0)
-	else:
-		max_active = maxi(int(area_params.get("max_active", 0)), 0)
+	var max_active: int = _resolve_area_max_active(area_source_id, area_params, context, source_type, special_rules, holy_field_capacity)
 	var debug_trace_id: int = _get_debug_attack_trace_id(context)
 	if not area_params.has("source_instance_id"):
 		var cast_instance_id: String = _cast_instance_id_for_area(context)
@@ -650,6 +642,16 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _resolve_area_max_active(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
+	if source_type == "trap":
+		return maxi(int(ModifierResolverScript.resolve_value(context, "max_active_traps", area_params.get("max_active", 0))), 0)
+	if area_source_id == &"holy_field_area":
+		return maxi(int(ModifierResolverScript.resolve_value(context, "max_active_fields", area_params.get("max_active", 0))) + int(holy_field_capacity.get("max_active_add", 0)), 0)
+	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_zones"):
+		return maxi(int(_get_dictionary(special_rules.get("fire_oil_merge_zones", {})).get("max_active", area_params.get("max_active", 0))), 0)
+	return maxi(int(area_params.get("max_active", 0)), 0)
 
 
 func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary, context: Dictionary, special_rules: Dictionary) -> float:
