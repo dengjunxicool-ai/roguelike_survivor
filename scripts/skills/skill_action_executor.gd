@@ -526,28 +526,10 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	context = _context_with_resolved_target(params, context)
 	var parent: Node = _get_parent_node(context)
 	var position: Vector2 = _resolve_position(params, context)
-	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("radius", params.get("collision_radius", 48.0)))), 1.0)
 	var area_params: Dictionary = params.duplicate(true)
 	var area_source_id: StringName = StringName(str(area_params.get("area_id", area_params.get("object_id", ""))))
 	var special_rules: Dictionary = _get_runtime_special_rules(context)
-	if source_type == "explosion":
-		radius = maxf(float(ModifierResolverScript.resolve_value(context, "explosion_radius", radius)), 1.0)
-	if source_type == "trap":
-		if special_rules.has("trap_radius_upgrade"):
-			var trap_radius_rule: Dictionary = _get_dictionary(special_rules.get("trap_radius_upgrade", {}))
-			radius *= maxf(1.0 + float(trap_radius_rule.get("radius_multiplier_add", 0.0)), 0.05)
-	var storm_rule: Dictionary = _get_storm_hail_rule_for_context(context)
-	if not storm_rule.is_empty():
-		radius *= maxf(1.0 + float(storm_rule.get("area_radius_multiplier_add", 0.0)), 0.05)
-		area_params["max_targets"] = int(area_params.get("max_targets", 0)) + int(storm_rule.get("max_targets_add", 0))
-		area_params["boss_damage_multiplier_add"] = float(area_params.get("boss_damage_multiplier_add", 0.0)) + float(storm_rule.get("boss_damage_multiplier", 0.8)) - 1.0
-	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_upgrade"):
-		var fire_oil_upgrade: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_upgrade", {}))
-		radius *= maxf(1.0 + float(fire_oil_upgrade.get("radius_multiplier_add", 0.0)), 0.05)
-	if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_range_width"):
-		var acid_range_rule: Dictionary = _get_dictionary(special_rules.get("acid_pressure_range_width", {}))
-		radius += float(acid_range_rule.get("range_add", 0.0))
-		area_params["cone_width_degrees"] = float(area_params.get("cone_width_degrees", 70.0)) + float(acid_range_rule.get("cone_width_degrees_add", 0.0))
+	var radius: float = _prepare_area_radius_and_geometry_params(area_source_id, area_params, params, context, source_type, special_rules)
 	var holy_field_capacity: Dictionary = {}
 	if area_source_id == &"holy_field_area" and special_rules.has("cross_relic_field_capacity"):
 		holy_field_capacity = _get_dictionary(special_rules.get("cross_relic_field_capacity", {}))
@@ -622,6 +604,29 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _prepare_area_radius_and_geometry_params(area_source_id: StringName, area_params: Dictionary, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> float:
+	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("radius", params.get("collision_radius", 48.0)))), 1.0)
+	if source_type == "explosion":
+		radius = maxf(float(ModifierResolverScript.resolve_value(context, "explosion_radius", radius)), 1.0)
+	if source_type == "trap":
+		if special_rules.has("trap_radius_upgrade"):
+			var trap_radius_rule: Dictionary = _get_dictionary(special_rules.get("trap_radius_upgrade", {}))
+			radius *= maxf(1.0 + float(trap_radius_rule.get("radius_multiplier_add", 0.0)), 0.05)
+	var storm_rule: Dictionary = _get_storm_hail_rule_for_context(context)
+	if not storm_rule.is_empty():
+		radius *= maxf(1.0 + float(storm_rule.get("area_radius_multiplier_add", 0.0)), 0.05)
+		area_params["max_targets"] = int(area_params.get("max_targets", 0)) + int(storm_rule.get("max_targets_add", 0))
+		area_params["boss_damage_multiplier_add"] = float(area_params.get("boss_damage_multiplier_add", 0.0)) + float(storm_rule.get("boss_damage_multiplier", 0.8)) - 1.0
+	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_upgrade"):
+		var fire_oil_upgrade: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_upgrade", {}))
+		radius *= maxf(1.0 + float(fire_oil_upgrade.get("radius_multiplier_add", 0.0)), 0.05)
+	if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_range_width"):
+		var acid_range_rule: Dictionary = _get_dictionary(special_rules.get("acid_pressure_range_width", {}))
+		radius += float(acid_range_rule.get("range_add", 0.0))
+		area_params["cone_width_degrees"] = float(area_params.get("cone_width_degrees", 70.0)) + float(acid_range_rule.get("cone_width_degrees_add", 0.0))
+	return radius
 
 
 func _resolve_area_damage(area_source_id: StringName, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
