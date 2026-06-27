@@ -23,7 +23,7 @@
 | --- | --- | --- |
 | 波次数据 | `data/waves/waves.json` | 单局总时长、Boss 时间、经验曲线、升级权重阶段、普通波次、Boss encounter、小怪、奖励事件。 |
 | 怪物经验数据 | `data/enemies/enemies.json` | `base_stats.exp_drop` 定义敌人基础经验掉落。 |
-| 升级数据 | `data/upgrades.json` | 局内普通升级、永久升级、诅咒选择及稀有度权重。 |
+| 升级数据 | `data/upgrades/upgrades.json` | 局内普通升级、永久升级、诅咒选择及稀有度权重。 |
 | 数据门面 | `scripts/game/game_data.gd`, `scripts/core/data_manager.gd` | 读取并返回 `waves`、`run`、`upgrade`、`enemy` 配置。 |
 | 单局入口 | `scripts/game/run_scene_coordinator.gd` | 清理旧敌人、经验晶体和 hazard，重置 Player 与 Spawner。 |
 | 波次门面 | `scripts/enemies/enemy_spawner.gd` | 暴露 UI 信号、重置运行状态、同步 timeline/spawn 服务、接收地图/挑战修正。 |
@@ -194,7 +194,7 @@ flowchart TD
 
 1. `UpgradePool` 根据当前 `SkillManager`、`data/skills/skills.json` 和普通升级池生成候选。
 2. 技能升级选项围绕已拥有技能、可学习技能和 `SkillOfferService` 规则生成。
-3. 普通升级来自 `data/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
+3. 普通升级来自 `data/upgrades/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
 4. 奖励/诅咒等运行中选项仍由对应 modal flow 排队进入 UI，不直接在波次系统里改玩家状态。
 
 ## `data/waves/waves.json` 契约
@@ -324,7 +324,7 @@ flowchart TD
 
 ### 新增升级选项
 
-1. 在 `data/upgrades.json.level_up_upgrades` 新增配置，设置 `id`、`tags`、`base_weight`、`max_level`、`level_modifiers`。
+1. 在 `data/upgrades/upgrades.json.level_up_upgrades` 新增配置，设置 `id`、`tags`、`base_weight`、`max_level`、`level_modifiers`。
 2. 如果是技能相关效果，确认 modifier key 会被 Player、SkillManager、SkillStatService 或目标系统消费。
 3. 如果希望某阶段更容易出现，调整 `waves.spawn_rules.upgrade_phase_weights` 里的对应 tag。
 4. 如果希望低血量保底出现，加入 `low_hp_rule.guarantee_tags` 对应 tag。

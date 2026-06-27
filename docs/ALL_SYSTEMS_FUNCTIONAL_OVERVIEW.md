@@ -234,7 +234,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 升级三选一、技能升级、普通升级、精英/Boss 奖励、诅咒选项。 |
-| 主要文件 | `scripts/upgrades/upgrade_pool.gd`, `upgrade_offer_policy.gd`, `upgrade_option.gd`, `run_reward_pool.gd`, `data/upgrades.json` |
+| 主要文件 | `scripts/upgrades/upgrade_pool.gd`, `upgrade_offer_policy.gd`, `upgrade_option.gd`, `run_reward_pool.gd`, `data/upgrades/upgrades.json` |
 | 做了什么 | `UpgradePool.generate_options()` 根据玩家当前技能、普通升级池和权重生成选项；`UpgradeOfferPolicy` 决定权重、条件和保底；`RunRewardPool` 生成精英/Boss 奖励；UICommandDispatcher 应用选项。 |
 | 怎么做 | Player 升级发 `leveled_up`，UI 排队弹窗并请求 UpgradePool；点击选项后 UICommandDispatcher 调用 Player `apply_upgrade()` 或发奖励副作用；奖励可给经验、治疗、遗物、魂石或升级。 |
 | 接收 | Player、当前技能状态、`upgrades.json`、运行奖励种类。 |
