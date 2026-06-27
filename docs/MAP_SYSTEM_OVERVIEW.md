@@ -320,7 +320,7 @@ flowchart TD
 职责拆分：
 
 - `ResultUnlockService`：胜利时写入 `SaveManager.mark_map_cleared(selected_map_id)`，并提示由 `clear_map` 解锁的新地图。
-- `RunProgressionService`：增加地图运行次数和通关次数计数，完成 `data/progression_goals.json` 中的地图挑战。
+- `RunProgressionService`：增加地图运行次数和通关次数计数，完成 `data/progression/progression_goals.json` 中的地图挑战。
 - `SaveManager`：
   - `is_map_cleared(map_id)`
   - `mark_map_cleared(map_id)`
@@ -349,7 +349,7 @@ flowchart TD
 1. 在 `assets/ui/maps/` 添加背景图和 `.import`。
 2. 在 `data/maps.json.maps` 增加条目，至少包含 `id`、`display_name`、`description`、`visual.background`、`unlock`、`map_variable.type`、`difficulty`。
 3. 如果需要预览怪物，补 `enemy_preview_ids`、`elite_preview_ids`、`boss_id`。
-4. 如果要接入地图挑战，补 `data/progression_goals.json.map_challenges`。
+4. 如果要接入地图挑战，补 `data/progression/progression_goals.json.map_challenges`。
 5. 如果要让 UI 文案完全数据驱动，补 `map_traits`、`recommended_build_tags`、`not_recommended_build_tags`。
 6. 运行 JSON 校验和一次地图选择到开局 smoke。
 
@@ -381,7 +381,7 @@ flowchart TD
 
 ### 修改地图挑战
 
-1. 在 `data/progression_goals.json.map_challenges` 添加 objective。
+1. 在 `data/progression/progression_goals.json.map_challenges` 添加 objective。
 2. 在 `RunProgressionService._map_objective_met()` 添加判断。
 3. 确认所需统计是否已由 `RunStatsTracker` 记录。
 4. 如果统计缺失，先补记录点，再补判断。

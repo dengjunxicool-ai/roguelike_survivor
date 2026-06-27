@@ -68,7 +68,7 @@
 | 战斗伤害 | `scripts/combat/damage_system.gd`, `scripts/combat/application_stages/*.gd` | 计算输出伤害、玩家受伤、Trait 吸收和受伤完成事件。 |
 | UI 入口 | `scripts/ui/ui_manager.gd`, `scripts/ui/screens/character_loadout_controller.gd` | 选择人物，构建 loadout，进入地图选择和开局。 |
 | UI 展示 | `scripts/ui/screens/character_loadout_view_model_builder.gd`, `scripts/ui/screens/character_loadout_text.gd` | 把人物和起始技能数据组装成选择界面展示模型。 |
-| 结算成长 | `scripts/game/run_progression_service.gd`, `data/progression_goals.json`, `data/challenges.json` | 按本局人物、地图记录成长、挑战、人物专精。 |
+| 结算成长 | `scripts/game/run_progression_service.gd`, `data/progression/progression_goals.json`, `data/progression/challenges.json` | 按本局人物、地图记录成长、挑战、人物专精。 |
 
 ## 开局主链路
 
@@ -254,7 +254,7 @@ Trait 事件入口如下：
 
 改人物前先按下面顺序查影响面，可以最快判断是否会碰到其他系统：
 
-1. 数据源：`data/characters.json`、`data/character_texts.json`、`data/progression_goals.json`、`data/challenges.json`。
+1. 数据源：`data/characters.json`、`data/character_texts.json`、`data/progression/progression_goals.json`、`data/progression/challenges.json`。
 2. 开局链路：`CharacterLoadoutService.build_loadout()`、`RunSceneCoordinator.start_run()`、`Player.reset_for_loadout()`。
 3. 运行态：`CharacterRuntime` 是否已有 getter 或写入方法可复用。
 4. 触发源：移动看 `Player._update_trait_movement()`，施法看 `SkillEventBus.on_cast`，受伤看玩家 damage application stage，击杀看 `EnemyRewardController.notify_enemy_killed_synergies()`。
@@ -269,8 +269,8 @@ Trait 事件入口如下：
 2. 使用当前字段，尤其是 `id`、`base_stats`、`starting_skill_id`、`trait`。
 3. 确认 `starting_skill_id` 对应 `data/skills.json.starting_skills` 中的技能。
 4. 在 `data/character_texts.json` 添加人物展示文案。
-5. 在 `data/progression_goals.json` 添加人物专精目标。
-6. 如挑战引用新人物，在 `data/challenges.json` 添加对应配置。
+5. 在 `data/progression/progression_goals.json` 添加人物专精目标。
+6. 如挑战引用新人物，在 `data/progression/challenges.json` 添加对应配置。
 7. 运行校验和冒烟测试。
 
 ### 新增人物，新增 Trait 类型
