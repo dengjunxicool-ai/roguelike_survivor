@@ -415,13 +415,13 @@ flowchart TD
 
 ```powershell
 node -e "JSON.parse(require('fs').readFileSync('data/maps.json','utf8')); console.log('maps ok')"
-node tools\check_text_encoding.js
+node tools\validate\check_text_encoding.js
 ```
 
 涉及敌人预览、地图刷怪或地图专属敌人：
 
 ```powershell
-node tools\validate_enemy_configs.js
+node tools\validate\validate_enemy_configs.js
 ```
 
 涉及 UI 状态或地图选择页结构：

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { TextDecoder } = require("util");
 
-const root = path.resolve(__dirname, "..");
+const root = path.resolve(__dirname, "../..");
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const strictMojibake = process.argv.includes("--strict-mojibake");
 
@@ -100,7 +100,7 @@ function main() {
       continue;
     }
 
-    const shouldCheckMojibake = rel(filePath) !== "tools/check_text_encoding.js";
+    const shouldCheckMojibake = rel(filePath) !== "tools/validate/check_text_encoding.js";
     const mojibake = shouldCheckMojibake ? firstMatch(text, MOJIBAKE_HINTS) : null;
     if (mojibake != null) {
       warnings.push(`${rel(filePath)}:${lineForOffset(text, mojibake.index)}: possible ${mojibake.label}`);

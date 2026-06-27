@@ -727,7 +727,7 @@ UI 主要消费：
 每次 UI 相关改动后至少执行：
 
 ```powershell
-D:\nodejs\node.exe tools\check_text_encoding.js
+D:\nodejs\node.exe tools\validate\check_text_encoding.js
 & 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --quit
 & 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify/verify_title_screen_runtime.gd
 & 'D:\Godot\Godot_v4.6.3-stable_win64_console.exe' --headless --path . --script res://tools/verify/verify_character_select_ui.gd

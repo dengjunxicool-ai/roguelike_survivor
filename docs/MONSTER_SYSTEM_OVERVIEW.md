@@ -11,7 +11,7 @@
 - 当前共有 8 个普通 wave；Boss 由 `waves.boss_event` 生成，Boss 小怪由 `boss_event.minion_spawn` 控制，不再作为普通 wave 存在。
 - 当前行为类型共有 7 个：`chase_player`、`keep_distance_and_shoot`、`explode_near_player`、`summon_and_chase`、`chase_and_cast_pool`、`dash_attack`、`boss_dungeon_heart`。
 - 未知或缺失 `behavior.type` 不再回退到默认追击行为；配置校验和运行时都会报错。
-- 远程、召唤、毒池、自爆等行为依赖 `enemy_skills.json` action；缺失必需 action 会被 `tools/validate_enemy_configs.js` 拦截。
+- 远程、召唤、毒池、自爆等行为依赖 `enemy_skills.json` action；缺失必需 action 会被 `tools/validate/validate_enemy_configs.js` 拦截。
 - Boss phase 必须显式配置在 `enemies.json.behavior.phases`；`phase_thresholds` 和运行时默认三阶段都不再支持。
 - 死亡副作用统一走 `EnemyDeathPipeline`；自爆通过 `death_policy.self_explosion` 控制是否掉经验、魂石、死亡效果和击杀事件。
 
@@ -35,7 +35,7 @@
 3. 能新增 behavior 的不要扩大 `EnemyBase`。
 4. 能走 `EnemySpawnService` 的不要手动实例化。
 5. 能走 `EnemyDeathPipeline` 的不要直接释放节点。
-6. 新增可配置类型必须同步 `tools/validate_enemy_configs.js`，否则后续改造会失去护栏。
+6. 新增可配置类型必须同步 `tools/validate/validate_enemy_configs.js`，否则后续改造会失去护栏。
 
 ## 核心文件
 
@@ -44,7 +44,7 @@
 | 怪物数据 | `data/enemies.json` | 怪物 ID、类型、基础属性、行为、技能引用、死亡策略、视觉配置。 |
 | 敌方技能数据 | `data/enemy_skills.json` | 敌方技能定义和 action 参数。普通行为与 Boss phase 都通过这里执行动作。 |
 | 波次数据 | `data/waves.json` | 普通 wave、刷怪组、倍率、精英事件、Boss encounter、Boss 小怪和奖励事件。 |
-| 配置校验 | `tools/validate_enemy_configs.js` | 校验怪物、技能、波次、Boss phase、死亡策略、必需 action 和跨文件引用。 |
+| 配置校验 | `tools/validate/validate_enemy_configs.js` | 校验怪物、技能、波次、Boss phase、死亡策略、必需 action 和跨文件引用。 |
 | 场景入口 | `scenes/enemy.tscn`、`scenes/boss.tscn` | 怪物和 Boss 场景。Boss 场景使用 `BossController`，继承 `EnemyBase`。 |
 | 刷怪门面 | `scripts/enemies/enemy_spawner.gd` | 场景节点入口，保留 UI 信号、旧私有包装方法、运行修正和地图刷怪入口。 |
 | 时间线 | `scripts/enemies/timeline/*` | 普通 wave、Boss encounter、Boss 小怪、清场、经验收集、奖励事件、选组。 |
@@ -206,7 +206,7 @@
 
 | 要改的功能 | 先看 | 需要同步 | 必跑验证 |
 | --- | --- | --- | --- |
-| 敌人基础属性 | `data/enemies.json.base_stats` | `tools/validate_enemy_configs.js` 必填字段 | `node tools\validate_enemy_configs.js` |
+| 敌人基础属性 | `data/enemies.json.base_stats` | `tools/validate/validate_enemy_configs.js` 必填字段 | `node tools\validate\validate_enemy_configs.js` |
 | 敌人移动/攻击节奏 | 对应 `scripts/enemies/behaviors/*`、`behavior` 参数 | 行为必需 action、冷却字段、预警表现 | `enemy_skill_system_check.gd` |
 | 敌人远程弹幕 | `enemy_skills.json` 的 `projectile`/`ring_projectiles` action | `EnemyActionRegistry`、`EnemyDamagePacketBuilder` 参数 | `enemy_skill_system_check.gd` |
 | 敌人地面范围 | `enemy_skills.json` 的 `damage_area`/Boss area action | action 参数 schema、元素/伤害类型 | `enemy_skill_system_check.gd` |
@@ -227,17 +227,17 @@
 1. 在 `data/enemies.json.monsters` 增加唯一 `id`、`type`、`base_stats`、`behavior`、`skills`、`visual`。
 2. 如果复用现有行为，只改 `behavior` 参数和 `skills` 引用。
 3. 如果需要新动作，先在 `data/enemy_skills.json` 增加 action，再在怪物 `skills` 中引用。
-4. 如果需要新行为，新建 `scripts/enemies/behaviors/xxx_behavior.gd`，在 `EnemyBehaviorRegistry` 注册，并在 `tools/validate_enemy_configs.js` 加入合法类型和必需 action。
+4. 如果需要新行为，新建 `scripts/enemies/behaviors/xxx_behavior.gd`，在 `EnemyBehaviorRegistry` 注册，并在 `tools/validate/validate_enemy_configs.js` 加入合法类型和必需 action。
 5. 在 `data/waves.json` 的 `groups[].enemy_ids` 或 `events[]` 中引用新怪。
 6. 需要地图预览时，补 `data/maps.json` 的 `enemy_preview_ids`、`elite_preview_ids` 或 `boss_id`。
-7. 跑 `node tools/validate_enemy_configs.js` 和相关 Godot debug check。
+7. 跑 `node tools/validate/validate_enemy_configs.js` 和相关 Godot debug check。
 
 ### 新增敌方技能或 action
 
 1. 优先在 `data/enemy_skills.json` 新增技能，不要把具体动作写回 `EnemyBase`。
 2. 现有 action 能表达时只加数据：`projectile`、`damage_area`、`summon`、`contact_status`、`self_explode`、Boss phase action 等。
 3. 现有 action 不够时，扩展 `EnemyActionRegistry.execute()` 和参数执行逻辑。
-4. 同步扩展 `tools/validate_enemy_configs.js` 的 `VALID_ENEMY_ACTION_TYPES` 和 `ENEMY_ACTION_PARAM_SCHEMAS`。
+4. 同步扩展 `tools/validate/validate_enemy_configs.js` 的 `VALID_ENEMY_ACTION_TYPES` 和 `ENEMY_ACTION_PARAM_SCHEMAS`。
 5. 如某行为必须依赖该 action，同步扩展 `REQUIRED_ACTIONS_BY_BEHAVIOR`。
 6. 补 `scripts/debug/enemy_skill_system_check.gd` 或新增专门检查。
 
@@ -286,7 +286,7 @@
 4. 自爆怪默认通过 `death_policy.self_explosion` 不掉经验、不发魂石、不跑死亡效果，但会触发击杀事件和 `died` 信号。改这个行为会影响资源产出和 UI 统计。
 5. 召唤怪通过 `EnemySpawnRequest.summon()` 默认 `award_soul=false`，经验倍率为 `0.25`。改召唤收益前要评估刷资源风险。
 6. Boss 小怪不在普通 wave 中，校验器会阻止 `boss_minions` 作为普通 wave 回来。
-7. `display_name` 和部分文档/数据中文在终端中存在乱码表现。改中文文案时要先确认文件编码，跑 `node tools/check_text_encoding.js`。
+7. `display_name` 和部分文档/数据中文在终端中存在乱码表现。改中文文案时要先确认文件编码，跑 `node tools/validate/check_text_encoding.js`。
 8. `wave_system_check` 和 `visual_config_check` 覆盖了一些时序行为。改经验自动收集、调试刷怪、远程预警时要复跑它们。
 
 ## 验证清单
@@ -294,8 +294,8 @@
 基础校验：
 
 ```powershell
-node tools\validate_enemy_configs.js
-node tools\check_text_encoding.js
+node tools\validate\validate_enemy_configs.js
+node tools\validate\check_text_encoding.js
 & 'C:\Users\dengj\Desktop\Godot.exe' --headless --path . --quit
 ```
 

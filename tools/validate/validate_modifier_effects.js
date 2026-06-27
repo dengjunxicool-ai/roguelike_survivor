@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
-const { readJsonFile } = require("./lib/json_file");
+const { readJsonFile } = require("../lib/json_file");
 
-const root = path.resolve(__dirname, "..");
+const root = path.resolve(__dirname, "../..");
 const dataDir = path.join(root, "data");
 
 const VALID_OPS = new Set(["add", "multiplier_add", "multiplier", "override"]);

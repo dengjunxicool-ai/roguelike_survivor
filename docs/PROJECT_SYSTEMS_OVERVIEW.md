@@ -281,11 +281,11 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 配置类改动优先跑：
 
 ```powershell
-node tools\validate_enemy_configs.js
+node tools\validate\validate_enemy_configs.js
 node tools\verify\verify_gods_and_skills_contract.js
 node tools\verify\verify_skill_definition_schema.js
 node tools\verify\verify_skill_rule_adapters.js
-node tools\check_text_encoding.js
+node tools\validate\check_text_encoding.js
 ```
 
 技能运行状态相关：

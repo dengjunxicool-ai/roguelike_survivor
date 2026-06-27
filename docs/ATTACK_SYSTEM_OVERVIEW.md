@@ -338,7 +338,7 @@ EnemyBase._apply_contact_damage()
 3. 复用现有 action：`projectile`、`damage_area`、`ring_projectiles`、`summon`、`contact_status`、`self_explode` 等。
 4. 如果现有 action 不够，扩展 `EnemyActionRegistry.execute()`。
 5. 新敌方伤害必须用 `EnemyDamagePacketBuilder.build()`，不要走玩家 `SkillActionExecutor`。
-6. 同步 `tools/validate_enemy_configs.js` 的合法 action 和 schema。
+6. 同步 `tools/validate/validate_enemy_configs.js` 的合法 action 和 schema。
 7. 跑 `validate_enemy_configs.js` 和敌方技能 debug check。
 
 ### 调整敌人接触/近战攻击
@@ -436,7 +436,7 @@ node tools\verify\verify_skill_runtime_no_dead_cards.js
 敌方攻击配置：
 
 ```powershell
-node tools\validate_enemy_configs.js
+node tools\validate\validate_enemy_configs.js
 ```
 
 伤害公式和构包：
@@ -449,7 +449,7 @@ godot --headless --path . --script res://tools/verify/verify_damage_formula.gd
 
 ```powershell
 godot --headless --path . --quit
-node tools\check_text_encoding.js --strict-mojibake
+node tools\validate\check_text_encoding.js --strict-mojibake
 ```
 
 敌方技能、波次和视觉 debug：

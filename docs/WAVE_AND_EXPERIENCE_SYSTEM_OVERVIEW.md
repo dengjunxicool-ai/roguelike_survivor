@@ -40,7 +40,7 @@
 | 升级池 | `scripts/upgrades/upgrade_pool.gd`, `scripts/upgrades/upgrade_offer_policy.gd` | 生成技能升级、普通升级和奖励选项，并按阶段/血量/标签调权重。 |
 | 升级 UI | `scripts/ui/ui_manager.gd`, `scripts/ui/modals/run_choice_modal_controller.gd` | 监听升级和波次事件，排队弹窗，选择后调用 Player 应用升级。 |
 | HUD | `scripts/ui/hud/run_hud_state_provider.gd`, `run_hud_controller.gd` | 只读玩家等级、当前经验、下一等级需求和波次计时。 |
-| 校验 | `tools/validate_enemy_configs.js`, `scripts/debug/wave_system_check.gd`, `scripts/debug/enemy_timeline_system_check.gd`, `scripts/debug/skill_progression_check.gd` | 校验配置、波次自动收经验、Boss 事件、小怪生成、升级路线。 |
+| 校验 | `tools/validate/validate_enemy_configs.js`, `scripts/debug/wave_system_check.gd`, `scripts/debug/enemy_timeline_system_check.gd`, `scripts/debug/skill_progression_check.gd` | 校验配置、波次自动收经验、Boss 事件、小怪生成、升级路线。 |
 
 ## 主链路
 
@@ -303,7 +303,7 @@ flowchart TD
 1. 在 `data/waves.json.waves[]` 改 `duration_seconds`、`spawn_interval`、`max_alive`、`groups`、`enemy_multipliers`。
 2. 如果改变普通阶段总时长，同步维护 `run.boss_spawn_time`、每波 `start_time/end_time` 和 Boss 前阶段权重。
 3. 新增或替换敌人时，确认 `data/enemies.json` 中存在且行为/技能配置可通过校验。
-4. 跑 `node tools\validate_enemy_configs.js`。
+4. 跑 `node tools\validate\validate_enemy_configs.js`。
 5. 跑 `wave_system_check.gd`，确认波次启动、总量限制、波末经验收集仍正常。
 
 ### 调整经验曲线
@@ -336,7 +336,7 @@ flowchart TD
 2. 在 `waves.rewards.wave_clear_rewards` 加配置前，先扩展 `RewardEventDirector.start_reward_event()` 支持的新 `type`。
 3. 如果事件会弹 UI 奖励，接入 `UIManager._on_timeline_event_started()` 和 `RunChoiceModalController.queue_reward()`。
 4. 如果事件改变等级或经验，优先调用 Player 的公开入口，而不是只发信号。
-5. 给 `tools/validate_enemy_configs.js` 补 schema 校验。
+5. 给 `tools/validate/validate_enemy_configs.js` 补 schema 校验。
 
 ## 验证清单
 
@@ -344,8 +344,8 @@ flowchart TD
 
 2026-06-12 本次梳理后已验证：
 
-- `node tools\check_text_encoding.js` 通过，546 个文本文件均为 UTF-8。
-- `node tools\validate_enemy_configs.js` 通过，当前为 16 个敌人、15 个敌方技能、8 个 wave。
+- `node tools\validate\check_text_encoding.js` 通过，546 个文本文件均为 UTF-8。
+- `node tools\validate\validate_enemy_configs.js` 通过，当前为 16 个敌人、15 个敌方技能、8 个 wave。
 - `wave_system_check.gd` 通过，覆盖首波启动、波次总量限制、波末经验自动收集、波次超时不清普通怪。
 - `enemy_timeline_system_check.gd` 通过，覆盖清普通怪保留 Boss、Boss encounter、Boss 小怪生成。
 - 当前技能 runtime smoke 会覆盖起始技能、神系技能升级和关键触发链路。
@@ -353,9 +353,9 @@ flowchart TD
 配置校验：
 
 ```powershell
-node tools\validate_enemy_configs.js
+node tools\validate\validate_enemy_configs.js
 node tools\verify\verify_gods_and_skills_contract.js
-node tools\check_text_encoding.js
+node tools\validate\check_text_encoding.js
 ```
 
 波次/经验运行校验：
