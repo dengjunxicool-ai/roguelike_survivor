@@ -592,11 +592,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	if max_active > 0:
 		_enforce_max_active_areas(parent, source_type, area_source_id, max_active)
 
-	var duration: float = maxf(float(ModifierResolverScript.resolve_value(context, "duration", area_params.get("duration", 0.12))), 0.05)
-	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_duration_tuning"):
-		duration += float(_get_dictionary(special_rules.get("fire_oil_duration_tuning", {})).get("duration_add", 0.0))
-	if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_duration_damage"):
-		duration += float(_get_dictionary(special_rules.get("acid_pressure_duration_damage", {})).get("duration_add", 0.0))
+	var duration: float = _resolve_area_duration(area_source_id, area_params, context, special_rules)
 	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_merge_zones"):
 		var fire_oil_merge: Dictionary = _get_dictionary(special_rules.get("fire_oil_merge_zones", {}))
 		if bool(fire_oil_merge.get("enabled", false)) and _merge_existing_fire_oil_area(parent, position, radius, duration, damage, fire_oil_merge):
@@ -654,6 +650,15 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary, context: Dictionary, special_rules: Dictionary) -> float:
+	var duration: float = maxf(float(ModifierResolverScript.resolve_value(context, "duration", area_params.get("duration", 0.12))), 0.05)
+	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_duration_tuning"):
+		duration += float(_get_dictionary(special_rules.get("fire_oil_duration_tuning", {})).get("duration_add", 0.0))
+	if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_duration_damage"):
+		duration += float(_get_dictionary(special_rules.get("acid_pressure_duration_damage", {})).get("duration_add", 0.0))
+	return duration
 
 
 func _build_area_effect_spawn_params(area_params: Dictionary, context: Dictionary, source_type: String, parent: Node, area_source_id: StringName, position: Vector2, damage: int, damage_packet: Dictionary, duration: float, radius: float, max_targets: int, statuses_on_hit: Array[StringName], special_rules: Dictionary) -> Dictionary:
