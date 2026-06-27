@@ -424,21 +424,21 @@ function validateNoRawRangeUnits(value, location) {
 function main() {
 	const expectedMetadataById = buildExpectedSkillMetadata();
 
-	const document = readJson("data/skills.json");
+	const document = readJson("data/skills/skills.json");
 	const combatObjectsDocument = readJson("data/combat_objects.json");
 	const charactersDocument = readJson("data/characters/characters.json");
-	assert(Array.isArray(document.starting_skills), "data/skills.json starting_skills must be an array");
-	assert(document.starting_skills.length === 1, `data/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
+	assert(Array.isArray(document.starting_skills), "data/skills/skills.json starting_skills must be an array");
+	assert(document.starting_skills.length === 1, `data/skills/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
 	const fireball = document.starting_skills[0];
-	assert(isObject(fireball), "data/skills.json starting_skills[0] must be an object");
-	assert(fireball.id === "fireball", "data/skills.json starting skill must be fireball");
+	assert(isObject(fireball), "data/skills/skills.json starting_skills[0] must be an object");
+	assert(fireball.id === "fireball", "data/skills/skills.json starting skill must be fireball");
 	assert(fireball.is_starting_skill === true, "fireball must be marked as a starting skill");
 	assert(fireball.offer_in_upgrade_pool === false, "fireball must not appear in the upgrade offer pool");
 
-	assert(Array.isArray(document.skills), "data/skills.json skills must be an array");
+	assert(Array.isArray(document.skills), "data/skills/skills.json skills must be an array");
 	const skills = document.skills;
 	skills.forEach((skill, index) => {
-		assert(isObject(skill), `data/skills.json skills[${index}] must be a non-array object`);
+		assert(isObject(skill), `data/skills/skills.json skills[${index}] must be a non-array object`);
 	});
   const fireBaseIds = new Set(FIRE_BASE_IDS);
   const fireFusionIds = new Set(FIRE_FUSION_IDS);
@@ -446,7 +446,7 @@ function main() {
   const fireSkills = skills.filter((skill) => expectedIds.has(skill.id));
   const actualIds = new Set(fireSkills.map((skill) => skill.id));
 
-	assert(fireSkills.length === 34, `data/skills.json must contain exactly 34 first-version fire skills, got ${fireSkills.length}`);
+	assert(fireSkills.length === 34, `data/skills/skills.json must contain exactly 34 first-version fire skills, got ${fireSkills.length}`);
 	assert(!actualIds.has("fireball"), "fireball belongs in starting_skills, not the first-version fire skill pool");
 	for (const id of expectedIds) {
 		assert(actualIds.has(id), `missing skill ${id}`);
@@ -456,7 +456,7 @@ function main() {
 	}
 	validateMeteorRainSkill(fireSkills);
 	validateBaseFireRangePixels(fireSkills);
-	validateNoRawRangeUnits(fireSkills, "data/skills.json.skills");
+	validateNoRawRangeUnits(fireSkills, "data/skills/skills.json.skills");
 
 	const combatObjects = Array.isArray(combatObjectsDocument.combat_objects) ? combatObjectsDocument.combat_objects : [];
 	const combatObjectById = new Map(combatObjects.map((object) => [object.id, object]));

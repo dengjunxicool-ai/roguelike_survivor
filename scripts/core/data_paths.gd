@@ -2,8 +2,8 @@ extends RefCounted
 class_name DataPaths
 
 
-const SKILLS_PATH: String = "res://data/skills.json"
-const GODS_PATH: String = "res://data/gods.json"
+const SKILLS_PATH: String = "res://data/skills/skills.json"
+const GODS_PATH: String = "res://data/skills/gods.json"
 const ENEMIES_PATH: String = "res://data/enemies/enemies.json"
 const ENEMY_SKILLS_PATH: String = "res://data/enemies/enemy_skills.json"
 const UPGRADES_PATH: String = "res://data/upgrades.json"

@@ -192,7 +192,7 @@ flowchart TD
 
 升级选项阶段：
 
-1. `UpgradePool` 根据当前 `SkillManager`、`data/skills.json` 和普通升级池生成候选。
+1. `UpgradePool` 根据当前 `SkillManager`、`data/skills/skills.json` 和普通升级池生成候选。
 2. 技能升级选项围绕已拥有技能、可学习技能和 `SkillOfferService` 规则生成。
 3. 普通升级来自 `data/upgrades.json.level_up_upgrades`，权重由 `UpgradeOfferPolicy` 根据等级、波次阶段、标签、低血量和后期时间调整。
 4. 奖励/诅咒等运行中选项仍由对应 modal flow 排队进入 UI，不直接在波次系统里改玩家状态。

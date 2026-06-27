@@ -1,6 +1,6 @@
 # 攻击系统梳理
 
-> 旧武器分支/进化运行时已移除，相关专题文档已归档到 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md`。当前新增玩家技能优先参考 `docs/skills/skills.md` 和 `data/skills.json`。
+> 旧武器分支/进化运行时已移除，相关专题文档已归档到 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md`。当前新增玩家技能优先参考 `docs/skills/skills.md` 和 `data/skills/skills.json`。
 
 本文档用于后续快速、安全地改造所有攻击相关功能。这里的“攻击系统”不是单一模块，而是横跨玩家技能、敌方技能、战斗对象、状态、伤害包、受击应用、统计和 UI 的端到端链路。目标是让每次改攻击前都能先判断：改数据还是改代码、改玩家侧还是敌方侧、是否会影响伤害公式、状态、死亡、统计、升级或结算。
 
@@ -12,7 +12,7 @@
 
 ## 核心结论
 
-1. 玩家攻击由 `data/skills.json` 的 `starting_skills` / `skills`、components、events 和 actions 驱动；角色只决定起始技能，不直接执行攻击。
+1. 玩家攻击由 `data/skills/skills.json` 的 `starting_skills` / `skills`、components、events 和 actions 驱动；角色只决定起始技能，不直接执行攻击。
 2. 敌方攻击由 `data/enemies/enemy_skills.json` 的 actions 驱动；怪物行为只决定何时触发技能，不应承载具体 projectile / area / summon 逻辑。
 3. 玩家攻击和敌方攻击的构包路径必须分开：玩家走 `DamagePacketBuilder.from_skill_action()`，敌方走 `EnemyDamagePacketBuilder.build()`。
 4. 战斗对象只负责移动、命中、tick、事件回调、source 稳定和状态转发；不要在 projectile / area / orbit 内写公式或直接扣血。
@@ -91,8 +91,8 @@ combat object 分布：
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 玩家技能数据 | `data/skills.json` | 起始技能和可学习技能定义，包含 school、type、components、events、trigger_rules、effects、base。 |
-| 神系数据 | `data/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
+| 玩家技能数据 | `data/skills/skills.json` | 起始技能和可学习技能定义，包含 school、type、components、events、trigger_rules、effects、base。 |
+| 神系数据 | `data/skills/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
 | 角色起始技能 | `data/characters/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
 | 战斗对象数据 | `data/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
 | 敌方攻击数据 | `data/enemies/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
@@ -268,7 +268,7 @@ EnemyBase._apply_contact_damage()
 | 字段 | 作用 | 改造注意 |
 | --- | --- | --- |
 | `id` | 技能主键 | 改名会影响角色起始技能、升级、HUD、统计。 |
-| `school` / `fusion_school` | 神系归属 | 必须能被 `data/gods.json` 和技能池验证。 |
+| `school` / `fusion_school` | 神系归属 | 必须能被 `data/skills/gods.json` 和技能池验证。 |
 | `type` | 技能类型 | 用于 SkillManager、升级池和 UI 区分主动、被动、融合等语义。 |
 | `base` | 基础数值 | `damage`、`cooldown`、`range`、`projectile_count`、`area_radius` 等。 |
 | `components` | 触发时机 | 现支持 `cooldown`、`targeting`、`persistent_orbit`。 |
@@ -304,8 +304,8 @@ EnemyBase._apply_contact_damage()
 
 ### 调整某个玩家技能攻击
 
-1. 从 `data/characters/characters.json.starting_skill_id` 或 `data/skills.json.skills[].id` 找到技能 ID。
-2. 到 `data/skills.json` 修改该技能的 `base`、`components`、`events/actions`。
+1. 从 `data/characters/characters.json.starting_skill_id` 或 `data/skills/skills.json.skills[].id` 找到技能 ID。
+2. 到 `data/skills/skills.json` 修改该技能的 `base`、`components`、`events/actions`。
 3. 改基础伤害优先改 `base.damage` 或 action `damage/damage_multiplier`。
 4. 改攻击频率优先改 cooldown component 的 `params.seconds`，并确认 `attack_speed_multiplier_add` 是否通过 modifier 消费。
 5. 改目标选择优先改 targeting component。

@@ -12,7 +12,7 @@ const ModifierStoreScript: Script = preload("res://scripts/modifiers/modifier_st
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 const DamageSystemScript: Script = preload("res://scripts/combat/damage_system.gd")
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = "res://data/skills/skills.json"
 
 
 class SmokePlayer:

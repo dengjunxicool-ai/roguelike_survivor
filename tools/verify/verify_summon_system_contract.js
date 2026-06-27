@@ -40,7 +40,7 @@ assert(dragon.movement && Number(dragon.movement.leash_distance) >= 540, "crimso
 assert(dragon.attack && dragon.attack.on_hit_effects.some((effect) => effect.type === "apply_status" && effect.status === "burning"), "crimson dragon must apply Burning through summon attack config");
 assert(dragon.visual && dragon.visual.texture === "res://assets/effect/crimson_dragon.png", "crimson dragon must keep the generated dragon visual");
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const fireDragon = skills.find((skill) => skill.id === "fire_summon_crimson_dragon");
 assert(fireDragon, "fire_summon_crimson_dragon skill must exist");
 const spawnRule = (fireDragon.trigger_rules || []).flatMap((rule) => rule.effects || []).find((effect) => effect.type === "spawn_summon");

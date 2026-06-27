@@ -17,8 +17,8 @@ function approx(actual, expected, message) {
   assert(Math.abs(Number(actual) - expected) < 0.0001, `${message}: expected ${expected}, got ${actual}`);
 }
 
-const skillsData = readJson("data/skills.json");
-const godsData = readJson("data/gods.json");
+const skillsData = readJson("data/skills/skills.json");
+const godsData = readJson("data/skills/gods.json");
 const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
 const summons = readJson("data/summons.json").summons || [];
 

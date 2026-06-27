@@ -22,8 +22,8 @@ function hasEffect(skill, predicate) {
     || (skill.trigger_rules || []).some((rule) => (rule.effects || []).some(predicate));
 }
 
-const skillsData = readJson("data/skills.json");
-const godsData = readJson("data/gods.json");
+const skillsData = readJson("data/skills/skills.json");
+const godsData = readJson("data/skills/gods.json");
 const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
 const summons = readJson("data/summons.json").summons || [];
 

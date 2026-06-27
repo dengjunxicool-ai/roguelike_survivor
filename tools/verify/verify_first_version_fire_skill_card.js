@@ -19,7 +19,7 @@ function findById(items, id, label) {
   return item;
 }
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const firstSkill = findById(skills, "fire_attack_searing", "fire skill");
 assert(firstSkill.school === "fire", "fire_attack_searing must be a fire school skill");
 assert(firstSkill.type === "attack", "fire_attack_searing must use the new attack type");

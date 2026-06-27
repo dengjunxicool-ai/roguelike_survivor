@@ -2,7 +2,7 @@ const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
 
 const root = path.resolve(__dirname, "../..");
-const skillsPath = path.join(root, "data", "skills.json");
+const skillsPath = path.join(root, "data", "skills", "skills.json");
 const runtimeFamiliesPath = path.join(root, "docs", "skills", "runtime_families.md");
 const actionExecutorPath = path.join(root, "scripts", "skills", "skill_action_executor.gd");
 const fireRuntimePath = path.join(root, "scripts", "skills", "fire_skill_runtime.gd");
@@ -274,7 +274,7 @@ function validateFireActionTypes(document, executor) {
   const errors = [];
   for (const actionType of collectFireActionTypes(document)) {
     if (!executor.includes(`"${actionType}"`)) {
-      errors.push(`fire action type "${actionType}" is present in data/skills.json but missing from SkillActionExecutor.execute_action`);
+      errors.push(`fire action type "${actionType}" is present in data/skills/skills.json but missing from SkillActionExecutor.execute_action`);
     }
   }
   return errors;

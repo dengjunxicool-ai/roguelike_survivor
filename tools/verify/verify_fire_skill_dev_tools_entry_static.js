@@ -40,7 +40,7 @@ const skillExecutor = read("scripts/skills/skill_executor.gd");
 const dataManager = read("scripts/core/data_manager.gd");
 const gameData = read("scripts/game/game_data.gd");
 const smoke = read("tools/verify/verify_fire_skill_dev_tools_entry.gd");
-const skills = readJson("data/skills.json");
+const skills = readJson("data/skills/skills.json");
 const skillDefinitions = Array.isArray(skills.skills) ? skills.skills : [];
 
 const fireSkills = skillDefinitions.filter(
@@ -60,7 +60,7 @@ for (const [label, text] of [
   assert(!text.includes('StringName(String(skill.get("fusion_school"'), `${label} must not wrap skill fusion_school with String(...)`);
 }
 
-assert(fireSkills.length === 34, "expected 34 first-version fire-related skills from data/skills.json");
+assert(fireSkills.length === 34, "expected 34 first-version fire-related skills from data/skills/skills.json");
 assert(fireSkills[0].id === "fire_attack_searing", "fire_attack_searing must be the first fire skill card");
 assert(!fireSkills.some((skill) => skill.id === "mars_spark_missile"), "old mars_spark_missile card must be removed");
 
@@ -113,10 +113,10 @@ assert(pool.includes("SKILLS_DATA_PATH"), "UpgradePool must read skills.json for
 assert(pool.includes("_make_god_skill_learn_upgrade"), "UpgradePool must synthesize learn-skill cards from skills.json");
 assert(!pool.includes("mars_spark_missile_projectile"), "UpgradePool must not hardcode a single skill implementation");
 
-assert(dataManager.includes('const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH'), "DataManager must use DataPaths for data/skills.json");
+assert(dataManager.includes('const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH'), "DataManager must use DataPaths for data/skills/skills.json");
 assert(dataManager.includes("STARTING_SKILLS_KEY"), "DataManager must index starting_skills");
 assert(dataManager.includes("SKILLS_KEY"), "DataManager must index skills");
-assert(gameData.includes("const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH"), "GameData must use DataPaths for data/skills.json");
+assert(gameData.includes("const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH"), "GameData must use DataPaths for data/skills/skills.json");
 assert(skillManager.includes("offer_in_upgrade_pool"), "SkillManager must allow skills offered from the upgrade pool");
 assert(skillExecutor.includes("func debug_cast_skill(skill_id: Variant, debug_attack_trace_id: int = 0) -> int:"), "SkillExecutor must expose selected skill debug casting");
 

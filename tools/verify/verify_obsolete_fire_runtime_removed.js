@@ -18,9 +18,9 @@ function assert(condition, message) {
   }
 }
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 for (const obsoleteId of ["mars_spark_missile", "fire_tornado", "soulburn"]) {
-  assert(!skills.some((skill) => skill && skill.id === obsoleteId), `${obsoleteId} must not remain in data/skills.json`);
+  assert(!skills.some((skill) => skill && skill.id === obsoleteId), `${obsoleteId} must not remain in data/skills/skills.json`);
 }
 
 assert(!fs.existsSync(path.join(root, "tools", "verify_mars_spark_missile_skill_card.js")), "old mars spark missile skill-card verifier must be removed");

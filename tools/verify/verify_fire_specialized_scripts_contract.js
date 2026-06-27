@@ -35,7 +35,7 @@ function firstEffect(skill, type) {
   return null;
 }
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const combatObjects = readJson("data/combat_objects.json").combat_objects || [];
 const summons = readJson("data/summons.json").summons || [];
 

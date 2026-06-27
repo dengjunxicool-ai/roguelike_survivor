@@ -76,7 +76,7 @@ const expected = [
   ["fusion_chaos_holy_echoing_judgment", "回响裁决", "chaos", "holy", "神罚命中带有 Instability 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚"],
 ];
 
-const skillsData = readJson("data/skills.json");
+const skillsData = readJson("data/skills/skills.json");
 const combatObjects = new Set((readJson("data/combat_objects.json").combat_objects || []).map((object) => object.id));
 const summons = new Set((readJson("data/summons.json").summons || []).map((summon) => summon.id));
 const fusionSkills = (skillsData.skills || []).filter((skill) => skill.type === "fusion" || skill.fusion_school);

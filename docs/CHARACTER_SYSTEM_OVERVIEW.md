@@ -27,7 +27,7 @@
 | 人物基础血量、移速、护甲、拾取等静态属性 | `base_stats` + `CharacterRunInitializer.apply_character_setup()` | 在 Player 初始化后零散覆盖属性 |
 | 施法、移动、受伤、击杀触发的人物特性 | 具体 `CharacterTrait` 实现 + `TraitRegistry` | `Player` 或 `DamageSystem` 按人物 ID 分支 |
 | 长期局内数值来源 | `ModifierStore`，通过 `set_run_modifier_source()` / `merge_run_modifier_source()` 写入 | 直接长期改 Player 快照字段 |
-| 单技能数值 | `data/skills.json` 或 `SkillInstance.runtime_modifiers` | 人物系统直接改技能配置原始数据 |
+| 单技能数值 | `data/skills/skills.json` 或 `SkillInstance.runtime_modifiers` | 人物系统直接改技能配置原始数据 |
 | UI 展示和选择合法性 | `CharacterLoadoutViewModelBuilder` + `CharacterLoadoutText` + `CharacterLoadoutService` | UI 控件直接读散落数据并自行判定 |
 | 结算、成长、挑战统计 | `RunResultStateBuilder` + `RunProgressionService` | 战斗中直接写成长存档 |
 
@@ -199,7 +199,7 @@ Trait 事件入口如下：
 
 ### 起始技能
 
-`CharacterRunInitializer.configure_starting_skills(player)` 优先读取 `data/characters/characters.json.starting_skill_id`，找不到时回退到 `data/skills.json.starting_skills` 的第一项，然后调用 `SkillManager.add_skill()`。
+`CharacterRunInitializer.configure_starting_skills(player)` 优先读取 `data/characters/characters.json.starting_skill_id`，找不到时回退到 `data/skills/skills.json.starting_skills` 的第一项，然后调用 `SkillManager.add_skill()`。
 
 后续人物相关技能改造，应优先通过 `CharacterRuntime.get_starting_skill_id()` 和技能系统的公开入口访问状态，不要外部直接拼散参。
 
@@ -267,7 +267,7 @@ Trait 事件入口如下：
 
 1. 在 `data/characters/characters.json` 添加人物。
 2. 使用当前字段，尤其是 `id`、`base_stats`、`starting_skill_id`、`trait`。
-3. 确认 `starting_skill_id` 对应 `data/skills.json.starting_skills` 中的技能。
+3. 确认 `starting_skill_id` 对应 `data/skills/skills.json.starting_skills` 中的技能。
 4. 在 `data/characters/character_texts.json` 添加人物展示文案。
 5. 在 `data/progression/progression_goals.json` 添加人物专精目标。
 6. 如挑战引用新人物，在 `data/progression/challenges.json` 添加对应配置。
@@ -294,7 +294,7 @@ Trait 事件入口如下：
 - 人物 Trait 的动态效果：写在具体 Trait 的 `get_modifiers()`。
 - 长期 run 来源：调用 `Player.set_run_modifier_source()` 或 `merge_run_modifier_source()`。
 - 单技能局部变化：写入 `SkillInstance.runtime_modifiers`。
-- 起始技能或可学习技能变化：优先修改 `data/skills.json`，运行期临时变化再写 `SkillInstance.runtime_modifiers`。
+- 起始技能或可学习技能变化：优先修改 `data/skills/skills.json`，运行期临时变化再写 `SkillInstance.runtime_modifiers`。
 
 不要直接长期写 Player 属性，也不要绕过 `ModifierStore`。
 

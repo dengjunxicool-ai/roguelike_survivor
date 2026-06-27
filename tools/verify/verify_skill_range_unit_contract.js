@@ -34,7 +34,7 @@ assert(executor.includes("resolve_action_params"), "SkillActionExecutor must res
 const summary = read("scripts/skills/skill_effect_summary_builder.gd");
 assert(summary.includes("SkillRangeUnitScript"), "skill card summary must use SkillRangeUnit");
 
-const skills = JSON.parse(read("data/skills.json"));
+const skills = JSON.parse(read("data/skills/skills.json"));
 const thunderSkills = (skills.skills || []).filter((skill) => skill.school === "thunder" && (skill.fusion_school === null || skill.fusion_school === undefined));
 assert(thunderSkills.length === 14, "thunder skills must exist before range-unit validation");
 

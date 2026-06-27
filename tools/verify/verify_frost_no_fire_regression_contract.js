@@ -30,7 +30,7 @@ function flatEffects(skill) {
   ];
 }
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const frostSkills = skills.filter((skill) => skill && skill.school === "frost" && (skill.fusion_school ?? null) === null);
 assert(frostSkills.length === 14, "first frost version must contain exactly 14 frost skills");
 for (const skill of frostSkills) {

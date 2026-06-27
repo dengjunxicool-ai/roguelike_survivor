@@ -7,7 +7,7 @@ const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_e
 const ModifierStoreScript: Script = preload("res://scripts/modifiers/modifier_store.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = "res://data/skills/skills.json"
 
 
 class SmokePlayer:

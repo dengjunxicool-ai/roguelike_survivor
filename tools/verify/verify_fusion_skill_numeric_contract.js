@@ -18,7 +18,7 @@ function assert(condition, message) {
 }
 
 const rows = parseFusionNumericRows();
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const byName = new Map(skills.map((skill) => [skill.name, skill]));
 
 for (const row of rows) {

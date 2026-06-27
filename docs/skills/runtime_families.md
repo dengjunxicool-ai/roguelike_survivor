@@ -4,7 +4,7 @@ This document records the first data contract for learnable god skills. Runtime 
 
 ## Common Fields
 
-Every learnable skill in `data/skills.json` has:
+Every learnable skill in `data/skills/skills.json` has:
 
 - `id`, `display_name`, `god_id`, `rarity`, `source_rarity`
 - `description`, `vfx_description`, `build_hint`

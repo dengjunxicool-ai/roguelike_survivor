@@ -30,8 +30,8 @@ function extractGdFunctionBody(text, functionName) {
 }
 
 const panel = read("scripts/debug/dev_debug_panel.gd");
-const godsData = readJson("data/gods.json");
-const skillsData = readJson("data/skills.json");
+const godsData = readJson("data/skills/gods.json");
+const skillsData = readJson("data/skills/skills.json");
 
 assert(panel.includes("func _string_or(value: Variant"), "DevDebugPanel must use a safe Variant-to-String helper");
 assert(!panel.includes("String(god_id)"), "DevDebugPanel must not call the removed String constructor on god_id");
@@ -40,7 +40,7 @@ assert(!panel.includes('StringName(String(skill.get("school"'), "DevDebugPanel g
 assert(!panel.includes('StringName(String(skill.get("fusion_school"'), "DevDebugPanel god filter must not wrap skill fusion_school with String(...)");
 
 const gods = Array.isArray(godsData.gods) ? godsData.gods : [];
-assert(gods.length === 6, "data/gods.json must define exactly 6 gods");
+assert(gods.length === 6, "data/skills/gods.json must define exactly 6 gods");
 for (const god of gods) {
   assert(typeof god.id === "string" && god.id.trim() !== "", "each god must have a non-empty id");
 }
@@ -98,7 +98,7 @@ const skills = Array.isArray(skillsData.skills) ? skillsData.skills : [];
 const fireSkills = skills.filter(
   (skill) => skill.school === "fire" || skill.fusion_school === "fire" || (skill.tags || []).includes("fire")
 );
-assert(fireSkills.length === 34, "data/skills.json must define 34 first-version fire-related skills");
+assert(fireSkills.length === 34, "data/skills/skills.json must define 34 first-version fire-related skills");
 assert(
   fireSkills.some((skill) => skill.id === "fire_attack_searing"),
   "fire skill cards must include fire_attack_searing"

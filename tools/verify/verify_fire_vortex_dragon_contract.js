@@ -35,7 +35,7 @@ function firstEffect(skill, type) {
   return null;
 }
 
-const skillsDocument = readJson("data/skills.json");
+const skillsDocument = readJson("data/skills/skills.json");
 const skills = Array.isArray(skillsDocument.skills) ? skillsDocument.skills : [];
 const summonsDocument = readJson("data/summons.json");
 const summons = Array.isArray(summonsDocument.summons) ? summonsDocument.summons : [];

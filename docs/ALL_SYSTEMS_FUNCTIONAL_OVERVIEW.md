@@ -143,7 +143,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 起始技能、可学习技能、神系归属、主动技能实例、冷却、目标选择、事件触发、action 执行、特殊规则和技能数值。 |
-| 主要文件 | `scripts/skills/*`, `data/skills.json`, `data/gods.json`, `data/combat_objects.json` |
+| 主要文件 | `scripts/skills/*`, `data/skills/skills.json`, `data/skills/gods.json`, `data/combat_objects.json` |
 | 做了什么 | `SkillManager` 保存主动技能实例；`SkillExecutor` 每帧 tick 技能；`SkillComponentRunner` 处理 cooldown、targeting、persistent orbit；`SkillEventBus` 执行 on_cast/on_projectile_hit/on_orbit_hit 等事件；`SkillActionExecutor` 执行动作；`SkillStatService` 合并配置、等级、modifier。 |
 | 怎么做 | 技能定义由组件和事件组成。组件决定什么时候触发，事件匹配 trigger 和 conditions，action 负责生成 projectile/area/orbit、直接伤害、状态、击退、治疗等。特殊规则在通用 action 表达不了时由 `SkillSpecialRuleExecutor` 和 `SpecialDamageRuleHandler` 处理。 |
 | 接收 | SkillManager 的技能列表、`skills.json`、SkillEventBus 事件、Projectile/Area/Orbit 的命中回调、Trait/Relic/Synergy 的 modifier。 |

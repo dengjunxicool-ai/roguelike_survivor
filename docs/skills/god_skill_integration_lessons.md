@@ -5,7 +5,7 @@
 ## 核心原则
 
 1. **数据不是生效**
-   - `data/skills.json` 里有卡牌，只说明技能能被学习或展示，不说明技能已经介入 runtime。
+   - `data/skills/skills.json` 里有卡牌，只说明技能能被学习或展示，不说明技能已经介入 runtime。
    - 每个技能必须至少有一个可观测 runtime 结果：伤害变化、状态变化、投射物、区域、召唤物、HUD 冷却、DevTools 状态文本或可见 VFX。
    - 学习技能后必须在真实事件链路里验证，不只用手动构造带完整 target 的测试上下文。
 
@@ -159,7 +159,7 @@
 
 ### 数据层
 
-- [ ] `data/gods.json` 已标记 `implemented: true`。
+- [ ] `data/skills/gods.json` 已标记 `implemented: true`。
 - [ ] 所有技能使用 `description`，不使用 `effect_description`。
 - [ ] 每个技能有明确 `type`、`tags`、`offer_rule`、`trigger_rules` 或 `effects`。
 - [ ] attack/dash/core 等互斥技能设置正确 `exclusive_group`。

@@ -3,8 +3,8 @@ const path = require("path");
 const { readJsonFile } = require("../lib/json_file");
 
 const ROOT = path.resolve(__dirname, "../..");
-const GODS_PATH = path.join(ROOT, "data", "gods.json");
-const SKILLS_PATH = path.join(ROOT, "data", "skills.json");
+const GODS_PATH = path.join(ROOT, "data", "skills", "gods.json");
+const SKILLS_PATH = path.join(ROOT, "data", "skills", "skills.json");
 const CHARACTERS_PATH = path.join(ROOT, "data", "characters", "characters.json");
 const UNREADABLE_JSON = Symbol("unreadable_json");
 
@@ -66,32 +66,32 @@ function assertUniqueIds(items, label, errors) {
 function validateGods(godsDocument, errors) {
   if (godsDocument === UNREADABLE_JSON) return { gods: [], godIds: new Set(), implementedGodIds: new Set() };
   if (!isObject(godsDocument)) {
-    errors.push('data/gods.json root must be an object with a top-level "gods" array');
+    errors.push('data/skills/gods.json root must be an object with a top-level "gods" array');
     return { gods: [], godIds: new Set(), implementedGodIds: new Set() };
   }
 
-  const gods = requiredArray(godsDocument, "gods", "data/gods.json", errors);
-  assertUniqueIds(gods, "data/gods.json god", errors);
+  const gods = requiredArray(godsDocument, "gods", "data/skills/gods.json", errors);
+  assertUniqueIds(gods, "data/skills/gods.json god", errors);
 
   const godIds = new Set();
   const implementedGodIds = new Set();
   for (const [index, god] of gods.entries()) {
     if (!isObject(god)) {
-      errors.push(`data/gods.json gods[${index}] must be an object`);
+      errors.push(`data/skills/gods.json gods[${index}] must be an object`);
       continue;
     }
 
     for (const field of ["id", "display_name", "title", "description"]) {
-      if (!isNonEmptyString(god[field])) errors.push(`data/gods.json god ${god.id || index} missing ${field}`);
+      if (!isNonEmptyString(god[field])) errors.push(`data/skills/gods.json god ${god.id || index} missing ${field}`);
     }
     if (!Array.isArray(god.tags) || god.tags.length === 0) {
-      errors.push(`data/gods.json god ${god.id || index} tags must be a non-empty array`);
+      errors.push(`data/skills/gods.json god ${god.id || index} tags must be a non-empty array`);
     }
     if (!isObject(god.color)) {
-      errors.push(`data/gods.json god ${god.id || index} color must be an object`);
+      errors.push(`data/skills/gods.json god ${god.id || index} color must be an object`);
     }
     if (typeof god.implemented !== "boolean") {
-      errors.push(`data/gods.json god ${god.id || index} implemented must be boolean`);
+      errors.push(`data/skills/gods.json god ${god.id || index} implemented must be boolean`);
     }
 
     if (isNonEmptyString(god.id)) {
@@ -170,7 +170,7 @@ function validateTriggerRules(skill, errors) {
 
 function validateSkill(skill, index, godIds, errors) {
   if (!isObject(skill)) {
-    errors.push(`data/skills.json skills[${index}] must be an object`);
+    errors.push(`data/skills/skills.json skills[${index}] must be an object`);
     return null;
   }
 
@@ -221,16 +221,16 @@ function validateSkill(skill, index, godIds, errors) {
 function validateSkills(skillsDocument, godIds, implementedGodIds, errors) {
   if (skillsDocument === UNREADABLE_JSON) return;
   if (!isObject(skillsDocument)) {
-    errors.push('data/skills.json root must be an object with top-level "skills" and "starting_skills" arrays');
+    errors.push('data/skills/skills.json root must be an object with top-level "skills" and "starting_skills" arrays');
     return;
   }
 
-  const startingSkills = requiredArray(skillsDocument, "starting_skills", "data/skills.json", errors);
-  const skills = requiredArray(skillsDocument, "skills", "data/skills.json", errors);
-  assertUniqueIds([...startingSkills, ...skills], "data/skills.json skill", errors);
+  const startingSkills = requiredArray(skillsDocument, "starting_skills", "data/skills/skills.json", errors);
+  const skills = requiredArray(skillsDocument, "skills", "data/skills/skills.json", errors);
+  assertUniqueIds([...startingSkills, ...skills], "data/skills/skills.json skill", errors);
 
   if (!startingSkills.some((skill) => isObject(skill) && skill.id === "fireball")) {
-    errors.push('data/skills.json starting_skills must include "fireball"');
+    errors.push('data/skills/skills.json starting_skills must include "fireball"');
   }
 
   const schoolCounts = new Map();
@@ -243,7 +243,7 @@ function validateSkills(skillsDocument, godIds, implementedGodIds, errors) {
 
   for (const godId of implementedGodIds) {
     if ((schoolCounts.get(godId) || 0) <= 0) {
-      errors.push(`data/gods.json god ${godId} is implemented but has no skills in data/skills.json`);
+      errors.push(`data/skills/gods.json god ${godId} is implemented but has no skills in data/skills/skills.json`);
     }
   }
 }
@@ -266,8 +266,8 @@ function validateCharacters(charactersDocument, errors) {
 
 function main() {
   const errors = [];
-  const godsDocument = loadJson("data/gods.json", GODS_PATH, errors);
-  const skillsDocument = loadJson("data/skills.json", SKILLS_PATH, errors);
+  const godsDocument = loadJson("data/skills/gods.json", GODS_PATH, errors);
+  const skillsDocument = loadJson("data/skills/skills.json", SKILLS_PATH, errors);
   const charactersDocument = loadJson("data/characters/characters.json", CHARACTERS_PATH, errors);
 
   const { godIds, implementedGodIds } = validateGods(godsDocument, errors);

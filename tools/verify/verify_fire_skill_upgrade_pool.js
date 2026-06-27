@@ -22,7 +22,7 @@ function bodyOf(source, functionName) {
   return source.slice(start, next < 0 ? source.length : next);
 }
 
-const skillsDocument = readJsonFile(path.join(root, "data", "skills.json"));
+const skillsDocument = readJsonFile(path.join(root, "data", "skills", "skills.json"));
 const upgradePool = read("scripts/upgrades/upgrade_pool.gd");
 const skillManager = read("scripts/skills/skill_manager.gd");
 const gameData = read("scripts/game/game_data.gd");

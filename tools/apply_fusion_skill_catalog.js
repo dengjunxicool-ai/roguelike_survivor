@@ -530,7 +530,7 @@ const expectedRows = loadExpectedFusionRows();
 const numericRowsByName = new Map(parseFusionNumericRows().map((row) => [row.name, row]));
 const expectedIds = new Set(expectedRows.map(([id]) => id));
 
-const skillsDocument = readJson("data/skills.json");
+const skillsDocument = readJson("data/skills/skills.json");
 const existingById = new Map((skillsDocument.skills || []).map((skill) => [skill.id, skill]));
 const nonFusionSkills = (skillsDocument.skills || []).filter((skill) => !skill.fusion_school && skill.type !== "fusion");
 const fusionSkills = expectedRows.map((row) => {
@@ -546,7 +546,7 @@ const fusionSkills = expectedRows.map((row) => {
   return skill;
 });
 skillsDocument.skills = [...nonFusionSkills, ...fusionSkills];
-writeJson("data/skills.json", skillsDocument);
+writeJson("data/skills/skills.json", skillsDocument);
 
 const combatDocument = readJson("data/combat_objects.json");
 const combatObjects = combatDocument.combat_objects || [];

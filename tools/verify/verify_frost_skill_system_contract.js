@@ -61,13 +61,13 @@ const requiredCombatObjects = [
   "absolute_zero_field",
 ];
 
-const gods = readJson("data/gods.json").gods || [];
+const gods = readJson("data/skills/gods.json").gods || [];
 const frostGod = findById(gods, "frost", "god");
 assert(frostGod.implemented === true, "frost god must be implemented");
 assert((frostGod.tags || []).includes("implemented"), "frost god tags must include implemented");
 assert(!(frostGod.tags || []).includes("planned"), "frost god tags must not include planned after implementation");
 
-const skills = readJson("data/skills.json").skills || [];
+const skills = readJson("data/skills/skills.json").skills || [];
 const frostSkills = skills.filter((skill) => skill && skill.school === "frost" && (skill.fusion_school ?? null) === null);
 assert(frostSkills.length === expectedSkills.length, `expected ${expectedSkills.length} frost skills, found ${frostSkills.length}`);
 

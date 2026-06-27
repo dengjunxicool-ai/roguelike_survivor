@@ -4,7 +4,7 @@ extends SceneTree
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
 const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_effect_manager.gd")
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = "res://data/skills/skills.json"
 
 
 class SmokePlayer:

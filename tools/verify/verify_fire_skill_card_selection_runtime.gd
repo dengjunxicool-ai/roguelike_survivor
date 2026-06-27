@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const SKILLS_DATA_PATH: String = "res://data/skills.json"
+const SKILLS_DATA_PATH: String = "res://data/skills/skills.json"
 const CARD_SKILL_ID: StringName = &"fire_cast_meteor_rain"
 const PROJECTILE_SOURCE_ID: StringName = &"meteor_rain_meteor"
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
@@ -69,7 +69,7 @@ func _run() -> void:
 	var runtime_definition_variant: Variant = data_manager.call("get_skill_definition", CARD_SKILL_ID)
 	var runtime_definition: Dictionary = runtime_definition_variant if runtime_definition_variant is Dictionary else {}
 	_expect(not runtime_definition.is_empty(), "runtime skill definition found for selected card")
-	_expect(_runtime_definition_matches_selected_contract(runtime_definition), "DataManager exposes data/skills.json contract for selected card")
+	_expect(_runtime_definition_matches_selected_contract(runtime_definition), "DataManager exposes data/skills/skills.json contract for selected card")
 
 	_build_runtime_nodes()
 	await process_frame
@@ -129,10 +129,10 @@ func _runtime_definition_matches_selected_contract(runtime_definition: Dictionar
 	]
 	for key: String in keys_to_match:
 		if not runtime_definition.has(key):
-			_fail("DataManager.get_skill_definition(%s) missing data/skills.json field '%s'; runtime still appears to use the legacy loader" % [String(CARD_SKILL_ID), key])
+			_fail("DataManager.get_skill_definition(%s) missing data/skills/skills.json field '%s'; runtime still appears to use the legacy loader" % [String(CARD_SKILL_ID), key])
 			return false
 		if str(runtime_definition.get(key)) != str(_selected_skill.get(key)):
-			_fail("DataManager.get_skill_definition(%s) field '%s' differs from data/skills.json" % [String(CARD_SKILL_ID), key])
+			_fail("DataManager.get_skill_definition(%s) field '%s' differs from data/skills/skills.json" % [String(CARD_SKILL_ID), key])
 			return false
 	return true
 
@@ -176,7 +176,7 @@ func _try_grant_skill() -> void:
 	var granted: bool = bool(_skill_manager.call("add_skill", CARD_SKILL_ID))
 	_expect(granted, "skill granted to player")
 	if not granted:
-		_fail("SkillManager.add_skill(%s) returned false; selected data/skills.json card is not wired into runtime learning yet" % String(CARD_SKILL_ID))
+		_fail("SkillManager.add_skill(%s) returned false; selected data/skills/skills.json card is not wired into runtime learning yet" % String(CARD_SKILL_ID))
 		return
 
 	_expect(bool(_skill_manager.call("has_skill", CARD_SKILL_ID)), "selected fire skill is active on player")

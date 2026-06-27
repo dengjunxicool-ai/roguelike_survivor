@@ -165,7 +165,7 @@ flowchart TD
     I --> J["refresh_skill_configs + refresh_synergies + HUD"]
 ```
 
-当前技能成长由 `UpgradePool` 基于 `data/skills.json`、玩家当前技能状态和 `upgrades.json` 生成选项。修改相关规则时要一起看 `UpgradePool`、`SkillManager`、`SkillOfferService`、`Player.apply_upgrade()` 和 `data/skills.json`。
+当前技能成长由 `UpgradePool` 基于 `data/skills/skills.json`、玩家当前技能状态和 `upgrades.json` 生成选项。修改相关规则时要一起看 `UpgradePool`、`SkillManager`、`SkillOfferService`、`Player.apply_upgrade()` 和 `data/skills/skills.json`。
 
 ### 3.7 结算与局外成长流
 
@@ -191,7 +191,7 @@ flowchart TD
 
 ### 4.2 改起始技能、神系或技能成长
 
-起始技能定义在 `data/skills.json.starting_skills`，可学习技能定义在 `data/skills.json.skills`，神系定义在 `data/gods.json`。人物通过 `data/characters/characters.json.starting_skill_id` 指向起始技能，开局时 `CharacterRunInitializer.configure_starting_skills()` 把它加入 `SkillManager`。
+起始技能定义在 `data/skills/skills.json.starting_skills`，可学习技能定义在 `data/skills/skills.json.skills`，神系定义在 `data/skills/gods.json`。人物通过 `data/characters/characters.json.starting_skill_id` 指向起始技能，开局时 `CharacterRunInitializer.configure_starting_skills()` 把它加入 `SkillManager`。
 
 安全路径是：先改配置，再跑技能/神系验证；如需新增动作类型，才改 `SkillActionExecutor`、技能规则适配器、验证脚本和相关文档。不要把人物、UI 或伤害系统写成按具体技能 ID 分支，优先通过 skill definition、tags、school 和 modifier scope 表达。
 
@@ -260,8 +260,8 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | --- | --- | --- |
 | 开局角色/地图选择 | `UIManager._start_run()` | `CharacterLoadoutService`, `RunLoadout`, `RunSceneCoordinator` |
 | 角色基础数值 | `data/characters/characters.json` | `CharacterRunInitializer`, `PlayerModifierApplier`, HUD |
-| 角色起始技能 | `data/characters/characters.json.starting_skill_id` | `data/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
-| 技能伤害/冷却/投射物 | `data/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
+| 角色起始技能 | `data/characters/characters.json.starting_skill_id` | `data/skills/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
+| 技能伤害/冷却/投射物 | `data/skills/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
 | 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify/verify_damage_formula.gd`, Damage docs |
 | DOT/控制/易伤 | `data/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
 | 新怪物 | `data/enemies/enemies.json` | `waves.json`, behavior registry, enemy validators |
