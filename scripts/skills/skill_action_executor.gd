@@ -1501,6 +1501,16 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 		return false
 	_consume_status_stack_on_target(target, &"frozen", 1)
 
+	_deal_damage(_prepare_shatter_damage_params(params), context)
+	if int(params.get("projectile_count", 0)) > 0:
+		var burst_params: Dictionary = params.duplicate(true)
+		burst_params["count"] = int(params.get("projectile_count", 0))
+		burst_params["projectile_id"] = str(params.get("projectile_id", "shattered_ember"))
+		_spawn_projectile_burst(burst_params, context)
+	return true
+
+
+func _prepare_shatter_damage_params(params: Dictionary) -> Dictionary:
 	var damage_value: Variant = params.get("amount", params.get("damage", {"stat": "power", "scale": 0.25}))
 	var damage_params: Dictionary = params.duplicate(true)
 	damage_params["amount"] = damage_value
@@ -1511,13 +1521,7 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 		for key_variant: Variant in damage_dictionary.keys():
 			if not damage_params.has(key_variant):
 				damage_params[key_variant] = damage_dictionary[key_variant]
-	_deal_damage(damage_params, context)
-	if int(params.get("projectile_count", 0)) > 0:
-		var burst_params: Dictionary = params.duplicate(true)
-		burst_params["count"] = int(params.get("projectile_count", 0))
-		burst_params["projectile_id"] = str(params.get("projectile_id", "shattered_ember"))
-		_spawn_projectile_burst(burst_params, context)
-	return true
+	return damage_params
 
 
 func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
