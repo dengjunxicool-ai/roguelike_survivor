@@ -59,39 +59,67 @@ func _ready() -> void:
 
 
 func setup(params: Dictionary) -> void:
+	_apply_projectile_core_params(params)
+	_apply_projectile_payload_params(params)
+	_apply_projectile_context_params(params)
+	_apply_projectile_visual_params(params)
+	_setup_trajectory(params)
+	_apply_projectile_trace_meta(params)
+	_apply_projectile_runtime_meta(params)
+	_reset_projectile_runtime_state(params)
+	_apply_visual_config(params)
+	_attach_visual_effect_scene()
+	queue_redraw()
+
+
+func _apply_projectile_core_params(params: Dictionary) -> void:
 	damage = maxi(int(params.get("damage", damage)), 0)
 	speed = maxf(float(params.get("speed", speed)), 1.0)
 	direction = _get_vector2(params.get("direction", direction), direction)
 	pierce = maxi(int(params.get("pierce", pierce)), 0)
-	status_on_hit = StringName(String(params.get("status_on_hit", status_on_hit)))
-	statuses_on_hit = _get_status_array(params.get("statuses_on_hit", []), status_on_hit)
-	status_params = _get_dictionary(params.get("status_params", status_params))
-	damage_type = StringName(String(params.get("damage_type", damage_type)))
-	damage_packet = _get_dictionary(params.get("damage_packet", damage_packet))
 	lifetime = maxf(float(params.get("lifetime", lifetime)), 0.1)
 	target_group = StringName(String(params.get("target_group", target_group)))
 	source_id = StringName(String(params.get("source_id", source_id)))
 	homing_enabled = bool(params.get("homing_enabled", homing_enabled))
 	homing_turn_rate = maxf(float(params.get("homing_turn_rate", homing_turn_rate)), 0.1)
 	homing_seek_range = maxf(float(params.get("homing_seek_range", homing_seek_range)), 0.0)
-	visual_effect_scene = String(params.get("visual_effect_scene", visual_effect_scene))
+
+
+func _apply_projectile_payload_params(params: Dictionary) -> void:
+	status_on_hit = StringName(String(params.get("status_on_hit", status_on_hit)))
+	statuses_on_hit = _get_status_array(params.get("statuses_on_hit", []), status_on_hit)
+	status_params = _get_dictionary(params.get("status_params", status_params))
+	damage_type = StringName(String(params.get("damage_type", damage_type)))
+	damage_packet = _get_dictionary(params.get("damage_packet", damage_packet))
 	_stabilize_damage_packet_source("projectile")
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
+
+
+func _apply_projectile_context_params(params: Dictionary) -> void:
 	event_bus = params.get("event_bus") as Node
 	skill_instance = params.get("skill_instance") as RefCounted
 	caster = params.get("caster") as Node
 	skill_manager = params.get("skill_manager") as Node
 	relic_manager = params.get("relic_manager") as Node
+
+
+func _apply_projectile_visual_params(params: Dictionary) -> void:
+	visual_effect_scene = String(params.get("visual_effect_scene", visual_effect_scene))
 	_visual_mode = String(params.get("visual_mode", _visual_mode))
 	_visual_style = String(params.get("visual_style", _visual_style))
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
 	_visual_ring_color = _get_color(params.get("visual_ring_color", _visual_ring_color), _visual_ring_color)
-	_setup_trajectory(params)
+
+
+func _apply_projectile_trace_meta(params: Dictionary) -> void:
 	if params.has("cast_instance_id"):
 		set_meta("cast_instance_id", String(params["cast_instance_id"]))
 	DamageTraceContextScript.apply_to_node_meta(self, params)
 	damage_packet = DamageTraceContextScript.apply_to_packet(damage_packet, params)
+
+
+func _apply_projectile_runtime_meta(params: Dictionary) -> void:
 	if params.has("hot_rapid_fire_crit"):
 		set_meta("hot_rapid_fire_crit", bool(params["hot_rapid_fire_crit"]))
 	if params.has("hot_rapid_fire_crit_chance_add"):
@@ -102,6 +130,9 @@ func setup(params: Dictionary) -> void:
 		set_meta("arcane_page_copy", bool(params["arcane_page_copy"]))
 	if params.has("arcane_page_hit_ids"):
 		set_meta("arcane_page_hit_ids", params["arcane_page_hit_ids"])
+
+
+func _reset_projectile_runtime_state(params: Dictionary) -> void:
 	_hit_bodies.clear()
 	_is_destroying = false
 	set_deferred("monitoring", true)
@@ -111,9 +142,6 @@ func setup(params: Dictionary) -> void:
 	_reset_pierce_counter()
 	_collision_radius = maxf(float(params.get("radius", params.get("area_radius", 12.0))), 1.0)
 	_apply_area_radius(_collision_radius)
-	_apply_visual_config(params)
-	_attach_visual_effect_scene()
-	queue_redraw()
 
 
 func _physics_process(delta: float) -> void:
