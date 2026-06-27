@@ -417,6 +417,10 @@ func _on_trap_hit(rules: Dictionary, context: Dictionary) -> void:
 
 func _on_trap_expired(rules: Dictionary, context: Dictionary) -> void:
 	_apply_smoke_cloud_on_oil_expire(rules, context)
+	_execute_decoy_trap_expired(rules, context)
+
+
+func _execute_decoy_trap_expired(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("decoy_trap_explosion"):
 		return
 	var area: Node = context.get("area") as Node
