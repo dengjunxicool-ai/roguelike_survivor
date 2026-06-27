@@ -1,6 +1,5 @@
-const fs = require("fs");
 const path = require("path");
-const { readJsonFile, stripBom } = require("./lib/json_file");
+const { readJsonFile, readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const skillsPath = path.join(root, "data", "skills.json");
@@ -127,7 +126,7 @@ const FAMILY_TO_FIRST_BATCH_RULE_NAME = {
 };
 
 function readText(filePath) {
-  return stripBom(fs.readFileSync(filePath, "utf8"));
+  return readTextFile(filePath);
 }
 
 function asArray(value) {

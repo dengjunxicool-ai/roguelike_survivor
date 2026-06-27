@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { readJsonFile, readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const toolPath = path.join(root, "tools", "coverage_report.js");
@@ -74,7 +75,7 @@ function main() {
   assert.ok(fs.existsSync(summaryPath), "coverage summary JSON should be written");
   assert.ok(fs.existsSync(reportPath), "coverage Markdown report should be written");
 
-  const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
+  const summary = readJsonFile(summaryPath);
   assert.strictEqual(summary.totals.functions.total, 3, "should count all source functions");
   assert.strictEqual(summary.totals.functions.covered, 1, "should count referenced source functions");
   assert.strictEqual(summary.totals.files.total, 2, "should count all source files");
@@ -82,7 +83,7 @@ function main() {
   assert.ok(summary.uncovered.functions.some((item) => item.name === "uncovered_func"), "should list uncovered function");
   assert.ok(summary.uncovered.functions.some((item) => item.name === "enemy_func"), "should list uncovered function from uncovered file");
 
-  const report = fs.readFileSync(reportPath, "utf8");
+  const report = readTextFile(reportPath);
   assert.match(report, /Function Coverage/, "Markdown report should include function coverage");
   assert.match(report, /uncovered_func/, "Markdown report should include uncovered function names");
 
