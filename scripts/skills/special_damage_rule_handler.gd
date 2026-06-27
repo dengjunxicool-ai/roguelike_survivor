@@ -113,9 +113,8 @@ static func execute_burning_target_death_explosion(rules: Dictionary, context: D
 	var key: String = "burn_death:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
 	var now_seconds: float = _now_seconds()
 	var cooldown: float = maxf(float(rule.get("same_source_cooldown", 0.2)), 0.0)
-	if now_seconds < float(_death_explosion_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_death_explosion_cooldowns, key, now_seconds, cooldown):
 		return
-	_death_explosion_cooldowns[key] = now_seconds + cooldown
 
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
@@ -224,11 +223,7 @@ static func _reserve_player_lava_spawn(lava: Dictionary, caster: Node2D, target:
 	var cooldown: float = maxf(float(lava.get("same_source_cooldown", 0.0)), 0.0)
 	var cooldown_key: String = "lava:%s:player_lava_on_nearby_fireball_hit" % (str(caster.get_instance_id()) if caster != null else "none")
 	var now_seconds: float = _now_seconds()
-	if cooldown > 0.0 and now_seconds < float(_lava_zone_cooldowns.get(cooldown_key, 0.0)):
-		return false
-	if cooldown > 0.0:
-		_lava_zone_cooldowns[cooldown_key] = now_seconds + cooldown
-	return true
+	return true if cooldown <= 0.0 else _reserve_rule_cooldown_at(_lava_zone_cooldowns, cooldown_key, now_seconds, cooldown)
 
 
 static func _build_lava_status_data(rules: Dictionary) -> Dictionary:
@@ -1046,9 +1041,8 @@ static func _execute_fire_oil_secondary_deflagration(rules: Dictionary, context:
 		return null
 	var key: String = "secondary_deflagration:%s" % str(target.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_fire_oil_secondary_deflagration_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_fire_oil_secondary_deflagration_cooldowns, key, now_seconds, 1.0):
 		return null
-	_fire_oil_secondary_deflagration_cooldowns[key] = now_seconds + 1.0
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
 		parent = target.get_parent()
@@ -1122,9 +1116,8 @@ static func execute_toxic_vial_small_cloud(rules: Dictionary, context: Dictionar
 	var key: String = "toxic_small_cloud:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
 	var now_seconds: float = _now_seconds()
 	var cooldown: float = maxf(float(cooldown_rule.get("same_source_cooldown", rule.get("same_source_cooldown", 0.5))), 0.0)
-	if now_seconds < float(_toxic_vial_small_cloud_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_toxic_vial_small_cloud_cooldowns, key, now_seconds, cooldown):
 		return null
-	_toxic_vial_small_cloud_cooldowns[key] = now_seconds + cooldown
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
 		parent = enemy.get_parent()
@@ -1203,9 +1196,8 @@ static func execute_poison_death_explosion(rules: Dictionary, context: Dictionar
 	var key: String = "poison_death_explosion:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
 	var now_seconds: float = _now_seconds()
 	var cooldown: float = maxf(float(upgrade.get("same_source_cooldown", explosion_rule.get("same_source_cooldown", 0.5))), 0.0)
-	if now_seconds < float(_poison_death_explosion_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_poison_death_explosion_cooldowns, key, now_seconds, cooldown):
 		return null
-	_poison_death_explosion_cooldowns[key] = now_seconds + cooldown
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
 		parent = enemy.get_parent()
@@ -1411,9 +1403,8 @@ static func execute_cross_relic_purify_small_pulse(rules: Dictionary, context: D
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_purify_small_pulse", {}))
 	var key: String = "cross_relic_purify_small_pulse:%s" % str(target_2d.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_cross_relic_purify_small_pulse_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_cross_relic_purify_small_pulse_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 0.25)), 0.0)):
 		return null
-	_cross_relic_purify_small_pulse_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 0.25)), 0.0)
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
 		parent = target_2d.get_parent()
@@ -1495,9 +1486,8 @@ static func _apply_cross_relic_purify_boss_poise(rules: Dictionary, target: Node
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_purify_boss_poise", {}))
 	var key: String = "cross_relic_purify:%s" % str(target.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_cross_relic_purify_boss_poise_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_cross_relic_purify_boss_poise_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)):
 		return
-	_cross_relic_purify_boss_poise_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.0)), 0.0)
 	for _i in range(maxi(int(rule.get("stacks", 1)), 1)):
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"stun")
 
@@ -1984,10 +1974,9 @@ static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> 
 	var max_spirits: int = maxi(int(spawn_rule.get("max_spirits", 2)), 0)
 	if current_count < max_spirits:
 		var spawn_key: String = "page_spirit_spawn:%s" % caster_key
-		if now_seconds >= float(_page_spirit_spawn_cooldowns.get(spawn_key, 0.0)):
+		if _reserve_rule_cooldown_at(_page_spirit_spawn_cooldowns, spawn_key, now_seconds, maxf(float(spawn_rule.get("spawn_interval", 8.0)), 0.05)):
 			current_count += 1
 			caster.set_meta("page_spirit_count", current_count)
-			_page_spirit_spawn_cooldowns[spawn_key] = now_seconds + maxf(float(spawn_rule.get("spawn_interval", 8.0)), 0.05)
 	if current_count <= 0:
 		return
 	var attack_rule: Dictionary = _get_dictionary(rules.get("page_spirit_attack", {}))
@@ -2002,7 +1991,8 @@ static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> 
 	var target: Node2D = _find_nearest_target(parent, caster.global_position, context.get("target_group", &"enemies"))
 	if target == null:
 		return
-	_page_spirit_attack_cooldowns[attack_key] = now_seconds + maxf(float(attack_rule.get("attack_interval", 1.2)), 0.05)
+	if not _reserve_rule_cooldown_at(_page_spirit_attack_cooldowns, attack_key, now_seconds, maxf(float(attack_rule.get("attack_interval", 1.2)), 0.05)):
+		return
 	var amount: int = maxi(int(attack_rule.get("amount", 5)), 0)
 	var packet: Dictionary = build_special_packet("page_spirit_attack", amount, String(attack_rule.get("damage_origin", "special")), false, String(attack_rule.get("element", "arcane")), String(attack_rule.get("damage_type", "summon_damage")))
 	packet["boss_damage_multiplier_add"] = float(attack_rule.get("boss_damage_multiplier", 0.8)) - 1.0
