@@ -759,13 +759,7 @@ static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictio
 	var rule: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock", {}))
 	if source_id == "warhammer_boss_poise_judgement_bonus":
 		rule = _get_dictionary(rules.get("warhammer_boss_poise_judgement_bonus", {}))
-	var final_amount: int = amount
-	if _is_elite(target) or _is_boss(target):
-		var upgrade: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock_upgrade", {}))
-		final_amount = maxi(roundi(float(final_amount) * maxf(1.0 + float(upgrade.get("elite_boss_damage_multiplier_add", 0.0)), 0.0)), 0)
-	if _is_boss(target):
-		var shock_rule: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock", {}))
-		final_amount = maxi(roundi(float(final_amount) * maxf(float(shock_rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
+	var final_amount: int = _warhammer_judgement_final_amount(rules, target, amount)
 	var packet: Dictionary = _build_traced_special_packet(
 		source_id,
 		final_amount,
@@ -779,6 +773,17 @@ static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictio
 	return intents
 
 
+static func _warhammer_judgement_final_amount(rules: Dictionary, target: Node, amount: int) -> int:
+	var final_amount: int = amount
+	if _is_elite(target) or _is_boss(target):
+		var upgrade: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock_upgrade", {}))
+		final_amount = maxi(roundi(float(final_amount) * maxf(1.0 + float(upgrade.get("elite_boss_damage_multiplier_add", 0.0)), 0.0)), 0)
+	if _is_boss(target):
+		var shock_rule: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock", {}))
+		final_amount = maxi(roundi(float(final_amount) * maxf(float(shock_rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
+	return final_amount
+
+
 static func execute_warhammer_boss_low_hp_shockwave(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("warhammer_boss_low_hp_shockwave"):
 		return null
@@ -790,9 +795,8 @@ static func execute_warhammer_boss_low_hp_shockwave(rules: Dictionary, context: 
 		return null
 	var key: String = "warhammer_low_hp:%s" % str(target.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_warhammer_boss_low_hp_shockwave_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_warhammer_boss_low_hp_shockwave_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 3.0)), 0.0)):
 		return null
-	_warhammer_boss_low_hp_shockwave_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 3.0)), 0.0)
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
 		parent = target.get_parent()
