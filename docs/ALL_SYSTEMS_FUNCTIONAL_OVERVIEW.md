@@ -208,7 +208,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 地图选择、地图数据、背景、运行边界、环境危害、地图刷怪压力。 |
-| 主要文件 | `scripts/maps/map_runtime.gd`, `map_variable_runtime.gd`, `responsive_background.gd`, `data/maps.json` |
+| 主要文件 | `scripts/maps/map_runtime.gd`, `map_variable_runtime.gd`, `responsive_background.gd`, `data/maps/maps.json` |
 | 做了什么 | `MapRuntime` 提供默认地图和地图定义读取；`ResponsiveBackground` 应用背景纹理并刷新玩家移动边界；`MapVariableRuntime` 根据地图变量生成 hazard 或调用 Spawner 施加刷怪压力。 |
 | 怎么做 | 开局 Coordinator 解析 map id，设置背景与边界，实例化/配置 MapVariableRuntime；地图变量按 interval tick，生成 area/hazard 或调用 `EnemySpawner.spawn_map_enemy()`。 |
 | 接收 | `maps.json`、`setup(map_data, target_group)`、视口尺寸、Spawner 引用。 |

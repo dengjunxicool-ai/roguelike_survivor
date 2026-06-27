@@ -10,7 +10,7 @@
 
 | 能力 | 入口 | 说明 |
 | --- | --- | --- |
-| 地图数据 | `data/maps.json` | 地图 id、名称、描述、背景、解锁、展示预览、地图变量。 |
+| 地图数据 | `data/maps/maps.json` | 地图 id、名称、描述、背景、解锁、展示预览、地图变量。 |
 | 选择与展示 | `scripts/ui/screens/map_select_controller.gd`、`map_select_view_model_builder.gd` | 地图列表、详情、预览图、怪物预览、开始按钮。 |
 | 单局初始化 | `scripts/game/run_scene_coordinator.gd`、`scripts/maps/map_runtime.gd` | 解析地图 id、应用背景、创建统计器、创建地图变量运行时。 |
 | 单局机制 | `scripts/maps/map_variable_runtime.gd`、`responsive_background.gd` | 环境 hazard、地图刷怪压力、背景自适应、玩家移动边界。 |
@@ -28,7 +28,7 @@
 
 | 文件 | 职责 | 改造优先级 |
 | --- | --- | --- |
-| `data/maps.json` | 地图定义源。 | 新地图、新背景、新解锁、新地图变量优先改这里。 |
+| `data/maps/maps.json` | 地图定义源。 | 新地图、新背景、新解锁、新地图变量优先改这里。 |
 | `scripts/maps/map_runtime.gd` | 地图 id 解析、默认地图、解锁判断、锁定文案、背景加载和应用。 | 改地图基础合约和解锁规则时看这里。 |
 | `scripts/maps/map_variable_runtime.gd` | 单局地图变量 tick，生成 hazard，调用刷怪器施加地图压力。 | 改地图机制时看这里。 |
 | `scripts/maps/responsive_background.gd` | 背景缩放适配视口和摄像机，刷新玩家移动边界。 | 改背景尺寸、世界边界、相机边界时看这里。 |
@@ -69,7 +69,7 @@ flowchart TD
 
 ## 4. 数据合约
 
-`data/maps.json` 顶层为：
+`data/maps/maps.json` 顶层为：
 
 ```json
 {
@@ -347,7 +347,7 @@ flowchart TD
 ### 新增一张普通地图
 
 1. 在 `assets/ui/maps/` 添加背景图和 `.import`。
-2. 在 `data/maps.json.maps` 增加条目，至少包含 `id`、`display_name`、`description`、`visual.background`、`unlock`、`map_variable.type`、`difficulty`。
+2. 在 `data/maps/maps.json.maps` 增加条目，至少包含 `id`、`display_name`、`description`、`visual.background`、`unlock`、`map_variable.type`、`difficulty`。
 3. 如果需要预览怪物，补 `enemy_preview_ids`、`elite_preview_ids`、`boss_id`。
 4. 如果要接入地图挑战，补 `data/progression/progression_goals.json.map_challenges`。
 5. 如果要让 UI 文案完全数据驱动，补 `map_traits`、`recommended_build_tags`、`not_recommended_build_tags`。
@@ -414,7 +414,7 @@ flowchart TD
 地图配置改动：
 
 ```powershell
-node -e "JSON.parse(require('fs').readFileSync('data/maps.json','utf8')); console.log('maps ok')"
+node -e "JSON.parse(require('fs').readFileSync('data/maps/maps.json','utf8')); console.log('maps ok')"
 node tools\validate\check_text_encoding.js
 ```
 

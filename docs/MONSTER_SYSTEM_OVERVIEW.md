@@ -229,7 +229,7 @@
 3. 如果需要新动作，先在 `data/enemy_skills.json` 增加 action，再在怪物 `skills` 中引用。
 4. 如果需要新行为，新建 `scripts/enemies/behaviors/xxx_behavior.gd`，在 `EnemyBehaviorRegistry` 注册，并在 `tools/validate/validate_enemy_configs.js` 加入合法类型和必需 action。
 5. 在 `data/waves.json` 的 `groups[].enemy_ids` 或 `events[]` 中引用新怪。
-6. 需要地图预览时，补 `data/maps.json` 的 `enemy_preview_ids`、`elite_preview_ids` 或 `boss_id`。
+6. 需要地图预览时，补 `data/maps/maps.json` 的 `enemy_preview_ids`、`elite_preview_ids` 或 `boss_id`。
 7. 跑 `node tools/validate/validate_enemy_configs.js` 和相关 Godot debug check。
 
 ### 新增敌方技能或 action

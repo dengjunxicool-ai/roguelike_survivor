@@ -268,7 +268,7 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | 新敌方技能 | `data/enemy_skills.json` | `EnemyActionRegistry`, `EnemyDamagePacketBuilder` |
 | 波次节奏 | `data/waves.json` | `WaveDirector`, `BossEncounterController`, HUD timer |
 | Boss 胜利条件 | `EnemySpawner._on_boss_died()` | `UIManager._on_boss_defeated`, result/progression |
-| 地图环境机制 | `data/maps.json`, `MapVariableRuntime` | `EnemySpawner.spawn_map_enemy`, hazard damage |
+| 地图环境机制 | `data/maps/maps.json`, `MapVariableRuntime` | `EnemySpawner.spawn_map_enemy`, hazard damage |
 | 升级选项 | `UpgradePool` | `Player.apply_upgrade`, SkillManager |
 | 遗物触发 | `RelicManager.handle_combat_event` | `RunStatsTracker.event_recorded`, SkillEventBus |
 | 局外永久升级 | `SaveManager` | `Player._apply_permanent_upgrade_modifiers`, meta UI |

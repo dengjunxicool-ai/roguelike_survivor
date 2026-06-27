@@ -24,7 +24,7 @@
 | 运行中弹窗 | `scripts/ui/modals/modal_flow_controller.gd` | `scripts/ui/modals/run_choice_modal_controller.gd`、`scripts/ui/ui_state_registry.gd` | 不要让弹窗自己控制 pause |
 | HUD 字段/布局 | `scripts/ui/hud/run_hud_state_provider.gd` | `scripts/ui/hud/run_hud_controller.gd`、`RunSceneUIBridge` | 不要把 HUD 数据拼回 `UIManager._process()` |
 | 角色选择 | `CharacterLoadoutViewModelBuilder` | `CharacterLoadoutController`、`CharacterLoadoutText`、`CharacterLoadoutService` | 不要在 controller 复制解锁/起始技能规则 |
-| 地图选择 | `MapSelectViewModelBuilder` | `MapSelectController`、`MapRuntime`、`data/maps.json` | 不要在地图页实例化战斗场景 |
+| 地图选择 | `MapSelectViewModelBuilder` | `MapSelectController`、`MapRuntime`、`data/maps/maps.json` | 不要在地图页实例化战斗场景 |
 | 结算页 | `ResultScreenViewModelBuilder` | `RunResultStateBuilder`、`ResultUnlockService`、`RunDiagnosticService` | 不要在结果页 controller 直接写存档 |
 | 奖励/购买/升级副作用 | `UICommand` + `UICommandDispatcher` | 独立 service 或 `SaveManager`/运行时对象 | 不要把副作用写在按钮回调里 |
 | 主题/按钮/卡牌样式 | `data/ui/ui_theme.json` | `UIThemeService`、`UIButtonSkin` | 不要为每个按钮手写一套 stylebox |
@@ -345,7 +345,7 @@ player.died / spawner.boss_defeated / pause give up
 - 地图详情：`_refresh_selected_map_details()`
 - 敌人预览：`_refresh_enemy_preview()`
 - 开始按钮：`MapSelectViewModelBuilder` 的 `start_button`
-- 地图配置：`data/maps.json`
+- 地图配置：`data/maps/maps.json`
 
 边界：
 
@@ -648,7 +648,7 @@ UI 主要消费：
 
 优先改：
 
-- 地图配置：`data/maps.json`
+- 地图配置：`data/maps/maps.json`
 - 地图运行/解锁：`MapRuntime`
 - ViewModel：`MapSelectViewModelBuilder`
 - 渲染：`MapSelectController`
