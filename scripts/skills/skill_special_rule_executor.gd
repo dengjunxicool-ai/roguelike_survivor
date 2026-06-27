@@ -164,30 +164,35 @@ func adjust_damage_packet(packet: Dictionary, context: Dictionary) -> Dictionary
 	_apply_warhammer_low_hp_damage_bonus(adjusted, rules, target)
 	_apply_warhammer_stun_target_damage_taken(adjusted, rules, target)
 	_apply_cross_relic_dot_target_damage_bonus(adjusted, rules, target, packet_object)
-
-	if rules.has("same_target_multi_projectile_damage"):
-		var projectile: Node = context.get("projectile") as Node
-		var target_key: String = _target_key(target)
-		var cast_key: String = String(projectile.get_meta("cast_instance_id", "default")) if projectile != null else "default"
-		var hit_key: String = "rapid:%s:%s" % [cast_key, target_key]
-		var hits: int = int(adjusted.get("_rapid_same_target_hits", 0))
-		if target != null:
-			var meta_hits: Dictionary = {}
-			if target.has_meta("rapid_fireball_hits"):
-				var meta_variant: Variant = target.get_meta("rapid_fireball_hits")
-				if meta_variant is Dictionary:
-					meta_hits = meta_variant
-			hits = int(meta_hits.get(hit_key, 0)) + 1
-			meta_hits[hit_key] = hits
-			target.set_meta("rapid_fireball_hits", meta_hits)
-		if hits >= 2:
-			var rule: Dictionary = _get_dictionary(rules.get("same_target_multi_projectile_damage", {}))
-			adjusted["special_final_modifier"] = float(packet_object.call("get_value", "special_final_modifier", 1.0)) * maxf(float(rule.get("second_hit_damage_multiplier", 0.6)), 0.0)
-			adjusted["special_final_modifier_source"] = "target_passive"
+	_apply_same_target_multi_projectile_damage(adjusted, rules, context, target, packet_object)
 
 	if bool(context.get("hot_rapid_fire_crit", false)):
 		adjusted["crit_chance_add"] = float(packet_object.call("get_value", "crit_chance_add", 0.0)) + float(context.get("hot_rapid_fire_crit_chance_add", 0.0))
 	return adjusted
+
+
+func _apply_same_target_multi_projectile_damage(packet: Dictionary, rules: Dictionary, context: Dictionary, target: Node, packet_object: RefCounted) -> void:
+	if not rules.has("same_target_multi_projectile_damage"):
+		return
+	var projectile: Node = context.get("projectile") as Node
+	var target_key: String = _target_key(target)
+	var cast_key: String = String(projectile.get_meta("cast_instance_id", "default")) if projectile != null else "default"
+	var hit_key: String = "rapid:%s:%s" % [cast_key, target_key]
+	var hits: int = int(packet.get("_rapid_same_target_hits", 0))
+	if target != null:
+		var meta_hits: Dictionary = {}
+		if target.has_meta("rapid_fireball_hits"):
+			var meta_variant: Variant = target.get_meta("rapid_fireball_hits")
+			if meta_variant is Dictionary:
+				meta_hits = meta_variant
+		hits = int(meta_hits.get(hit_key, 0)) + 1
+		meta_hits[hit_key] = hits
+		target.set_meta("rapid_fireball_hits", meta_hits)
+	if hits < 2:
+		return
+	var rule: Dictionary = _get_dictionary(rules.get("same_target_multi_projectile_damage", {}))
+	packet["special_final_modifier"] = float(packet_object.call("get_value", "special_final_modifier", 1.0)) * maxf(float(rule.get("second_hit_damage_multiplier", 0.6)), 0.0)
+	packet["special_final_modifier_source"] = "target_passive"
 
 
 func _on_cast(rules: Dictionary, context: Dictionary) -> void:
