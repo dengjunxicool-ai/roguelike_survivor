@@ -569,27 +569,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	)
 	var area_effect: Node2D = CombatObjectFactoryScript.create_area_effect(area_effect_params)
 	if area_effect != null:
-		area_effect.set_meta("source_type", source_type)
-		area_effect.set_meta("source_id", area_source_id)
-		area_effect.set_meta("source_instance_id", str(area_params.get("source_instance_id", "")))
-		area_effect.add_to_group(&"areas")
-		area_effect.add_to_group(&"area_effects")
-		if source_type == "trap":
-			area_effect.add_to_group(&"traps")
-		if area_source_id == &"holy_field_area":
-			area_effect.set_meta("cross_relic_field", true)
-		if area_source_id == &"poison_cloud_area":
-			area_effect.set_meta("toxic_vial_poison_cloud", true)
-			area_effect.set_meta("toxic_vial_poison_cloud_radius", radius)
-		if area_source_id == &"fire_oil_area":
-			area_effect.set_meta("fire_oil_area", true)
-			area_effect.set_meta("fire_oil_radius", radius)
-		if area_source_id == &"acid_spray_cone_area":
-			area_effect.set_meta("acid_spray_cone_area", true)
-			area_effect.set_meta("acid_spray_radius", radius)
-		if area_source_id == &"smoke_cloud_area":
-			area_effect.set_meta("fire_oil_smoke_cloud", true)
-			area_effect.set_meta("fire_oil_smoke_radius", radius)
+		_register_area_effect_runtime_metadata(area_effect, area_source_id, area_params, source_type, radius)
 	if area_effect != null and source_type == "explosion":
 		DebugCombatTraceScript.record_explosion(
 			_get_root_node(),
@@ -604,6 +584,30 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _register_area_effect_runtime_metadata(area_effect: Node2D, area_source_id: StringName, area_params: Dictionary, source_type: String, radius: float) -> void:
+	area_effect.set_meta("source_type", source_type)
+	area_effect.set_meta("source_id", area_source_id)
+	area_effect.set_meta("source_instance_id", str(area_params.get("source_instance_id", "")))
+	area_effect.add_to_group(&"areas")
+	area_effect.add_to_group(&"area_effects")
+	if source_type == "trap":
+		area_effect.add_to_group(&"traps")
+	if area_source_id == &"holy_field_area":
+		area_effect.set_meta("cross_relic_field", true)
+	if area_source_id == &"poison_cloud_area":
+		area_effect.set_meta("toxic_vial_poison_cloud", true)
+		area_effect.set_meta("toxic_vial_poison_cloud_radius", radius)
+	if area_source_id == &"fire_oil_area":
+		area_effect.set_meta("fire_oil_area", true)
+		area_effect.set_meta("fire_oil_radius", radius)
+	if area_source_id == &"acid_spray_cone_area":
+		area_effect.set_meta("acid_spray_cone_area", true)
+		area_effect.set_meta("acid_spray_radius", radius)
+	if area_source_id == &"smoke_cloud_area":
+		area_effect.set_meta("fire_oil_smoke_cloud", true)
+		area_effect.set_meta("fire_oil_smoke_radius", radius)
 
 
 func _prepare_area_radius_and_geometry_params(area_source_id: StringName, area_params: Dictionary, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> float:
