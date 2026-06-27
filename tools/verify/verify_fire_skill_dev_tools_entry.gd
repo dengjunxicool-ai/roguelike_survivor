@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const APP_BOOTSTRAP_PATH: String = "res://scenes/app_bootstrap.tscn"
+const APP_BOOTSTRAP_PATH: String = "res://scenes/app/app_bootstrap.tscn"
 const CHARACTER_ID: StringName = &"mage"
 const WEAPON_ID: StringName = &"fire_staff"
 const MAP_ID: StringName = &"abandoned_dungeon"

@@ -38,7 +38,7 @@
 | `scripts/ui/result_unlock_service.gd` | 胜利后标记地图通关，并提示新地图解锁。 | 改通关解锁时看这里。 |
 | `scripts/game/run_progression_service.gd` | 结算计数、地图挑战目标完成。 | 改地图挑战和进度时看这里。 |
 | `scripts/game/run_stats_tracker.gd` | 记录地图事件、地图 hazard 受伤、击杀和结算摘要。 | 改地图统计时看这里。 |
-| `scenes/main.tscn` | 运行场景固定包含 `DungeonBackground`、`Player`、`EnemySpawner`。 | 改运行场景地图节点时看这里。 |
+| `scenes/app/main.tscn` | 运行场景固定包含 `DungeonBackground`、`Player`、`EnemySpawner`。 | 改运行场景地图节点时看这里。 |
 
 ## 3. 主链路
 
@@ -135,7 +135,7 @@ flowchart TD
 1. 解析 `RunLoadout`。
 2. `MapRuntime.resolve_map_id(context.map_id)` 得到规范地图 id。
 3. `GameData.get_map(selected_map_id)` 读取地图配置。
-4. 创建或复用 `scenes/main.tscn`。
+4. 创建或复用 `scenes/app/main.tscn`。
 5. 创建/重置 `RunStatsTracker`，写入角色、武器、地图 id 和地图名。
 6. `MapRuntime.apply_background(tree, map_data)` 给 `DungeonBackground` 换背景。
 7. 清理旧的 `enemy`、`experience_crystal`、`map_hazard` 节点。
@@ -143,7 +143,7 @@ flowchart TD
 9. `Player.reset_for_loadout(loadout)`。
 10. `_setup_map_variable_runtime(map_data, run_scene_parent)`。
 
-`scenes/main.tscn` 当前地图相关节点：
+`scenes/app/main.tscn` 当前地图相关节点：
 
 ```text
 Main

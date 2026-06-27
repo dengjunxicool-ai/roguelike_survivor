@@ -18,7 +18,7 @@ var _finished: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	var packed_scene: PackedScene = load("res://scenes/app_bootstrap.tscn") as PackedScene
+	var packed_scene: PackedScene = load("res://scenes/app/app_bootstrap.tscn") as PackedScene
 	if packed_scene == null:
 		push_error("[FullFlowAutoplay] Could not load main.tscn.")
 		get_tree().quit(1)

@@ -8,13 +8,13 @@
 
 ```mermaid
 flowchart TD
-	A["project.godot"] --> B["scenes/app_bootstrap.tscn"]
+	A["project.godot"] --> B["scenes/app/app_bootstrap.tscn"]
 	B --> C["UIManager"]
 	D["DataManager autoload"] --> C
 	C --> E["选角色/地图"]
 	E --> F["RunLoadout"]
 	F --> G["RunSceneCoordinator.start_run(context)"]
-	G --> H["scenes/main.tscn"]
+	G --> H["scenes/app/main.tscn"]
 	H --> I["Player"]
 	H --> J["EnemySpawner"]
 	H --> K["RunStatsTracker"]
@@ -26,7 +26,7 @@ flowchart TD
 	O --> P["Signals / Stats / HUD / Result / Save"]
 ```
 
-启动入口只有一个：`project.godot` 的 `run/main_scene` 指向 `scenes/app_bootstrap.tscn`。该场景挂载 UI 层，真正的战斗运行场景由 `RunSceneCoordinator` 动态实例化、重置和清理。
+启动入口只有一个：`project.godot` 的 `run/main_scene` 指向 `scenes/app/app_bootstrap.tscn`。该场景挂载 UI 层，真正的战斗运行场景由 `RunSceneCoordinator` 动态实例化、重置和清理。
 
 ## 2. 显式 Signal 总表
 
@@ -65,7 +65,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 控制从 UI 到单局运行场景的生命周期：创建、复用、清理、重置 Player/Spawner/Map/Stats。 |
-| 主要文件 | `scripts/game/run_scene_coordinator.gd`, `scenes/app_bootstrap.tscn`, `scenes/main.tscn` |
+| 主要文件 | `scripts/game/run_scene_coordinator.gd`, `scenes/app/app_bootstrap.tscn`, `scenes/app/main.tscn` |
 | 做了什么 | 接收 `RunLoadout`、地图 id 和 UI 上下文，实例化 `main.tscn`，清理旧运行节点，应用地图背景，重置玩家和刷怪器，创建或刷新 `RunStatsTracker`。 |
 | 怎么做 | `UIManager._start_run()` 构造 `context`，调用 `RunSceneCoordinator.start_run(context)`；Coordinator 找到运行场景父节点，实例化/复用 main scene，再按顺序重置地图、Player、EnemySpawner 和统计对象。 |
 | 接收 | 普通 API 输入：`context: Dictionary`，包含 `run_loadout`、`map_id`、`tree` 等。 |

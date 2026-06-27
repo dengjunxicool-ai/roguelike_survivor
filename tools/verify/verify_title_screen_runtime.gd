@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const APP_SCENE_PATH: String = "res://scenes/app_bootstrap.tscn"
+const APP_SCENE_PATH: String = "res://scenes/app/app_bootstrap.tscn"
 const REQUIRED_MAIN_TITLE: String = "Survivor"
 
 

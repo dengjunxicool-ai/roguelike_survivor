@@ -4,7 +4,7 @@ class_name RunSceneCoordinator
 
 const PLAYER_GROUP: StringName = &"player"
 const ENEMY_SPAWNER_GROUP: StringName = &"enemy_spawner"
-const RUN_SCENE: PackedScene = preload("res://scenes/main.tscn")
+const RUN_SCENE: PackedScene = preload("res://scenes/app/main.tscn")
 const MapRuntimeScript: Script = preload("res://scripts/maps/map_runtime.gd")
 const MapVariableRuntimeScript: Script = preload("res://scripts/maps/map_variable_runtime.gd")
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")

@@ -68,10 +68,10 @@
 
 启动入口：
 
-- `project.godot` 的 `run/main_scene` 指向 `res://scenes/app_bootstrap.tscn`。
+- `project.godot` 的 `run/main_scene` 指向 `res://scenes/app/app_bootstrap.tscn`。
 - `app_bootstrap.tscn` 只挂载 `UIManager`，实例来自 `res://scenes/ui/ui_prototype.tscn`。
 - `ui_prototype.tscn` 是薄场景，只声明 `CanvasLayer` 和 `scripts/ui/ui_manager.gd`。
-- 战斗主场景 `res://scenes/main.tscn` 不在启动时常驻，而是在 `UIManager._start_run()` 中通过 `RunSceneCoordinator.start_run()` 动态实例化到 `AppBootstrap` 下。
+- 战斗主场景 `res://scenes/app/main.tscn` 不在启动时常驻，而是在 `UIManager._start_run()` 中通过 `RunSceneCoordinator.start_run()` 动态实例化到 `AppBootstrap` 下。
 
 运行时层级：
 
@@ -96,7 +96,7 @@ AppBootstrap
 
 ```text
 project.godot run/main_scene
-  -> scenes/app_bootstrap.tscn
+  -> scenes/app/app_bootstrap.tscn
   -> scenes/ui/ui_prototype.tscn
   -> UIManager._ready()
   -> _build_screens()

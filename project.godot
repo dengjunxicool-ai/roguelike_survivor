@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="roguelike_survivor"
-run/main_scene="res://scenes/app_bootstrap.tscn"
+run/main_scene="res://scenes/app/app_bootstrap.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 

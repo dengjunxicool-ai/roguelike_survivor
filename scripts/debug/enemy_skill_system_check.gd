@@ -16,7 +16,7 @@ func _run_checks() -> void:
 
 
 func _run_checks_impl() -> void:
-	var main_scene: PackedScene = load("res://scenes/main.tscn") as PackedScene
+	var main_scene: PackedScene = load("res://scenes/app/main.tscn") as PackedScene
 	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
 	if main_scene == null or enemy_scene == null:
 		_fail("required scenes exist")

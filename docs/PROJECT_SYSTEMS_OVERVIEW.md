@@ -6,13 +6,13 @@
 
 ```mermaid
 flowchart TD
-    A["project.godot run/main_scene"] --> B["scenes/app_bootstrap.tscn"]
+    A["project.godot run/main_scene"] --> B["scenes/app/app_bootstrap.tscn"]
     B --> C["UIManager"]
     D["DataManager autoload"] --> C
     C --> E["选择角色/地图"]
     E --> F["RunLoadout"]
     F --> G["RunSceneCoordinator.start_run"]
-    G --> H["scenes/main.tscn"]
+    G --> H["scenes/app/main.tscn"]
     H --> I["Player"]
     H --> J["EnemySpawner"]
     H --> K["DungeonBackground"]
@@ -26,7 +26,7 @@ flowchart TD
     Q --> R["HUD/弹窗/结算/存档"]
 ```
 
-启动入口是 `project.godot` 的 `scenes/app_bootstrap.tscn`。场景只挂载 `UIManager`，实际进局由 `UIManager._start_run()` 构造或接收 `RunLoadout`，再交给 `RunSceneCoordinator.start_run()` 实例化 `scenes/main.tscn`。`main.tscn` 内固定包含 `Player`、`EnemySpawner`、背景、摄像机和调试面板；每次开局会清理旧运行节点，重置 Player/Spawner，并创建 `RunStatsTracker` 与 `MapVariableRuntime`。
+启动入口是 `project.godot` 的 `scenes/app/app_bootstrap.tscn`。场景只挂载 `UIManager`，实际进局由 `UIManager._start_run()` 构造或接收 `RunLoadout`，再交给 `RunSceneCoordinator.start_run()` 实例化 `scenes/app/main.tscn`。`main.tscn` 内固定包含 `Player`、`EnemySpawner`、背景、摄像机和调试面板；每次开局会清理旧运行节点，重置 Player/Spawner，并创建 `RunStatsTracker` 与 `MapVariableRuntime`。
 
 当前项目的核心原则是：配置由 `data/*.json` 驱动，运行时由节点和服务组合承载；不要在 UI、技能、怪物、地图中直接改跨系统状态，优先走已有门面或服务。
 

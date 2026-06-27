@@ -15,7 +15,7 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 
 ## Project Layout
 
-- `scenes/main.tscn`: main runtime scene.
+- `scenes/app/main.tscn`: main runtime scene.
 - `scenes/ui/ui_prototype.tscn`: current UI entry scene, driven by `UIManager`.
 - `scripts/player/`: player runtime, stats, upgrades, and character setup.
 - `scripts/characters/`: character definitions, runtime state, and traits.
@@ -39,4 +39,4 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 - `tools/verify/verify_title_screen_runtime.gd`
 - `tools/verify/verify_enemy_health_lag_bar_runtime.gd`
 - `tools/verify/verify_fire_skill_runtime_smoke.gd`
-- `scenes/full_flow_autoplay.tscn`
+- `scenes/app/full_flow_autoplay.tscn`
