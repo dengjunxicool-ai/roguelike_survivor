@@ -97,8 +97,6 @@ var _pause_policy: RefCounted = UIPausePolicyScript.new()
 var _run_scene_ui_bridge: RefCounted = RunSceneUIBridgeScript.new()
 var _run_scene_coordinator: RefCounted = RunSceneCoordinatorScript.new()
 var _responsive_layout: RefCounted = UIResponsiveLayoutScript.new()
-var _choice_layout_items: Array[Dictionary] = []
-var _choice_font_items: Array[Dictionary] = []
 var _allow_direct_running_transition: bool = false
 
 
@@ -443,7 +441,6 @@ func _update_responsive_layouts() -> void:
 	_update_title_layout()
 	_update_character_select_layout()
 	_update_map_select_layout()
-	_update_choice_layouts()
 	if _run_hud_controller != null and _run_hud_controller.has_method("update_layout"):
 		_run_hud_controller.call("update_layout")
 
@@ -456,71 +453,6 @@ func _queue_responsive_layout_refresh() -> void:
 func _update_responsive_layouts_next_frame() -> void:
 	await get_tree().process_frame
 	_update_responsive_layouts()
-
-
-func _create_choice_panel(parent: Control, name: String, rect: Rect2, compact_rect: Rect2, hide_in_compact: bool) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.name = name
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.058, 0.082, 0.72)
-	style.border_color = Color(0.60, 0.70, 0.92, 0.22)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(10)
-	style.shadow_color = Color(0, 0, 0, 0.36)
-	style.shadow_size = 10
-	style.shadow_offset = Vector2(0, 4)
-	panel.add_theme_stylebox_override("panel", style)
-	parent.add_child(panel)
-	_register_choice_layout(panel, rect, compact_rect, hide_in_compact)
-	return panel
-
-
-func _add_choice_label(parent: Control, name: String, text: String, rect: Rect2, compact_rect: Rect2, font_size: int, h_align: HorizontalAlignment, v_align: VerticalAlignment, color: Color = Color.WHITE, hide_in_compact: bool = false) -> Label:
-	var label := Label.new()
-	label.name = name
-	label.text = text
-	label.horizontal_alignment = h_align
-	label.vertical_alignment = v_align
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.clip_text = true
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.z_index = 103
-	label.add_theme_color_override("font_color", color)
-	parent.add_child(label)
-	_register_choice_layout(label, rect, compact_rect, hide_in_compact)
-	_choice_font_items.append({"label": label, "size": font_size})
-	return label
-
-
-func _register_choice_layout(control: Control, rect: Rect2, compact_rect: Rect2, hide_in_compact: bool = false) -> void:
-	_choice_layout_items.append({
-		"control": control,
-		"rect": rect,
-		"compact_rect": compact_rect,
-		"hide_in_compact": hide_in_compact
-	})
-
-
-func _update_choice_layouts() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	var compact: bool = bool(_responsive_layout.call("is_compact", viewport_size))
-	for item: Dictionary in _choice_layout_items:
-		var control := item.get("control", null) as Control
-		if control == null:
-			continue
-		var hidden := compact and bool(item.get("hide_in_compact", false))
-		control.visible = not hidden
-		if hidden:
-			continue
-		var rect: Rect2 = item.get("compact_rect", item.get("rect", Rect2())) if compact else item.get("rect", Rect2())
-		_responsive_layout.call("apply_design_rect", control, rect, viewport_size)
-	for item: Dictionary in _choice_font_items:
-		var label := item.get("label", null) as Label
-		if label == null:
-			continue
-		var ui_scale: float = float(_responsive_layout.call("get_fit_scale", viewport_size))
-		label.add_theme_font_size_override("font_size", maxi(10, roundi(float(item.get("size", 12)) * ui_scale)))
 
 
 func _update_map_select_layout() -> void:
