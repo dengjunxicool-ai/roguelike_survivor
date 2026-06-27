@@ -430,12 +430,24 @@ func _execute_decoy_trap_expired(rules: Dictionary, context: Dictionary) -> void
 
 
 func _on_enemy_killed(rules: Dictionary, context: Dictionary) -> void:
+	_apply_elemental_enemy_kill_rules(rules, context)
+	_apply_hunter_enemy_kill_rules(rules, context)
+	_apply_toxic_enemy_kill_rules(rules, context)
+
+
+func _apply_elemental_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_burning_target_death_explosion(rules, context)
 	SpecialDamageRuleHandlerScript.execute_shatter_kill_spawn_icicle(rules, context)
+
+
+func _apply_hunter_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> void:
 	_apply_next_knife_kill_bonus(rules, context)
 	_apply_recycle_knife_on_normal_kill(rules, context)
 	_apply_marked_target_death_explosion(rules, context)
 	_apply_trap_kill_fragment_field(rules, context)
+
+
+func _apply_toxic_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_toxic_vial_small_cloud(rules, context)
 	SpecialDamageRuleHandlerScript.execute_poison_death_explosion(rules, context)
 
