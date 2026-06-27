@@ -569,10 +569,7 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	var max_targets: int = _resolve_area_max_targets(area_source_id, area_params, context, source_type, special_rules)
 	var max_active: int = _resolve_area_max_active(area_source_id, area_params, context, source_type, special_rules, holy_field_capacity)
 	var debug_trace_id: int = _get_debug_attack_trace_id(context)
-	if not area_params.has("source_instance_id"):
-		var cast_instance_id: String = _cast_instance_id_for_area(context)
-		area_params["source_instance_id"] = DamageSourceIdentityScript.for_area(cast_instance_id, source_type, area_source_id)
-	var damage_packet: Dictionary = _build_damage_packet(area_params, context, damage, source_type)
+	var damage_packet: Dictionary = _prepare_area_damage_packet(area_params, context, source_type, area_source_id, damage)
 	if max_active > 0:
 		_enforce_max_active_areas(parent, source_type, area_source_id, max_active)
 
@@ -605,6 +602,13 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 		if debug_trace_id > 0 and area_effect.has_method("apply_immediate_tick_once"):
 			area_effect.call("apply_immediate_tick_once")
 	return area_effect != null
+
+
+func _prepare_area_damage_packet(area_params: Dictionary, context: Dictionary, source_type: String, area_source_id: StringName, damage: int) -> Dictionary:
+	if not area_params.has("source_instance_id"):
+		var cast_instance_id: String = _cast_instance_id_for_area(context)
+		area_params["source_instance_id"] = DamageSourceIdentityScript.for_area(cast_instance_id, source_type, area_source_id)
+	return _build_damage_packet(area_params, context, damage, source_type)
 
 
 func _record_area_explosion_trace(parent: Node, position: Vector2, radius: float, area_params: Dictionary, context: Dictionary, debug_trace_id: int, damage_packet: Dictionary) -> void:
