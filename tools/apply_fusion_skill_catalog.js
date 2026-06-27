@@ -13,7 +13,7 @@ function writeJson(relativePath, value) {
 }
 
 function loadExpectedFusionRows() {
-  const text = fs.readFileSync(path.join(root, "tools/verify_fusion_skill_system_contract.js"), "utf8");
+  const text = fs.readFileSync(path.join(root, "tools/verify/verify_fusion_skill_system_contract.js"), "utf8");
   const match = /const expected = (\[[\s\S]*?\]);/.exec(text);
   if (!match) {
     throw new Error("Unable to read expected fusion catalog from verify_fusion_skill_system_contract.js");
