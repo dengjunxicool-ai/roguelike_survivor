@@ -64,6 +64,19 @@ func _ready() -> void:
 
 
 func setup(params: Dictionary) -> void:
+	_apply_area_core_params(params)
+	_apply_area_payload_params(params)
+	_apply_area_action_params(params)
+	_apply_area_context_params(params)
+	_apply_area_visual_params(params)
+	_reset_area_runtime_state(params)
+	_enable_area_collision()
+	_apply_radius(radius)
+	_apply_visual(params)
+	_execute_apply_actions()
+
+
+func _apply_area_core_params(params: Dictionary) -> void:
 	damage = maxi(int(params.get("damage", damage)), 0)
 	duration = maxf(float(params.get("duration", duration)), 0.05)
 	tick_interval = maxf(float(params.get("tick_interval", tick_interval)), 0.05)
@@ -75,6 +88,9 @@ func setup(params: Dictionary) -> void:
 		cone_direction = Vector2.RIGHT
 	else:
 		cone_direction = cone_direction.normalized()
+
+
+func _apply_area_payload_params(params: Dictionary) -> void:
 	status_on_hit = StringName(String(params.get("status_on_hit", status_on_hit)))
 	statuses_on_hit = _get_status_array(params.get("statuses_on_hit", []), status_on_hit)
 	status_params = _get_dictionary(params.get("status_params", status_params))
@@ -88,6 +104,9 @@ func setup(params: Dictionary) -> void:
 	move_speed = maxf(float(params.get("move_speed", move_speed)), 0.0)
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	event_on_expire = StringName(String(params.get("event_on_expire", event_on_expire)))
+
+
+func _apply_area_action_params(params: Dictionary) -> void:
 	actions_on_apply = _get_array(params.get("actions_on_apply", []))
 	actions_on_tick = _get_array(params.get("actions_on_tick", []))
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
@@ -97,6 +116,9 @@ func setup(params: Dictionary) -> void:
 	damage_once_per_body = bool(params.get("damage_once_per_body", damage_once_per_body))
 	impact_target_id = String(params.get("impact_target_id", impact_target_id))
 	impact_target_damage_multiplier = maxf(float(params.get("impact_target_damage_multiplier", impact_target_damage_multiplier)), 0.0)
+
+
+func _apply_area_context_params(params: Dictionary) -> void:
 	_stabilize_damage_packet_source("area", params)
 	DamageTraceContextScript.apply_to_node_meta(self, params)
 	damage_packet = DamageTraceContextScript.apply_to_packet(damage_packet, params)
@@ -106,10 +128,16 @@ func setup(params: Dictionary) -> void:
 	skill_manager = params.get("skill_manager") as Node
 	relic_manager = params.get("relic_manager") as Node
 	impact_target = params.get("impact_target") as Node
+
+
+func _apply_area_visual_params(params: Dictionary) -> void:
 	_visual_mode = String(params.get("visual_mode", _visual_mode))
 	_visual_style = String(params.get("visual_style", ""))
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
 	_visual_ring_color = _get_color(params.get("visual_ring_color", _visual_ring_color), _visual_ring_color)
+
+
+func _reset_area_runtime_state(params: Dictionary) -> void:
 	_age = 0.0
 	_tick_timer = 0.0
 	_damage_window_finished = false
@@ -119,16 +147,16 @@ func setup(params: Dictionary) -> void:
 	_expand_to_radius = float(params.get("expand_to_radius", -1.0))
 	_damaged_body_ids.clear()
 	_current_tick_targets_hit = 0
+	if _uses_expanding_radius():
+		radius = maxf(_expand_from_radius, 1.0)
+
+
+func _enable_area_collision() -> void:
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", false)
-	if _uses_expanding_radius():
-		radius = maxf(_expand_from_radius, 1.0)
-	_apply_radius(radius)
-	_apply_visual(params)
-	_execute_apply_actions()
 
 
 func extend_duration(target_duration: float, max_duration: float = 5.0) -> void:
