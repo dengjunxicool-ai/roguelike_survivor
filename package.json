@@ -47,6 +47,7 @@
     "verify:fusion-skill-numeric-contract": "node tools\\verify_fusion_skill_numeric_contract.js",
     "verify:fusion-skill-runtime-smoke": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify_fusion_skill_runtime_smoke.gd",
     "verify:no-cpu-particles": "node tools\\verify_no_cpu_particles_project_wide.js",
+    "verify:no-numeric-damage-inputs": "node tools\\verify_no_numeric_damage_inputs.js",
     "verify:safe-meta-keys": "node tools\\verify_safe_meta_keys.js",
     "verify:coverage-report": "node tools\\verify_coverage_report.js"
   }
