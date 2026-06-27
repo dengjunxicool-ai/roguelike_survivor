@@ -509,22 +509,8 @@ func _deploy_holy_shield(rules: Dictionary, context: Dictionary) -> void:
 	if caster == null or skill_instance == null:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("holy_shield_base", {}))
-	var shield_value: int = maxi(roundi(float(SkillStatServiceScript.get_effective_stat(
-		skill_instance,
-		"shield_value",
-		rule.get("shield_value", 30),
-		context.get("skill_manager") as Node,
-		context.get("relic_manager") as Node,
-		caster
-	))), 0)
-	var break_damage: int = maxi(roundi(float(SkillStatServiceScript.get_effective_stat(
-		skill_instance,
-		"break_damage",
-		rule.get("break_damage", 30),
-		context.get("skill_manager") as Node,
-		context.get("relic_manager") as Node,
-		caster
-	))), 0)
+	var shield_value: int = _get_effective_skill_stat_int(skill_instance, context, "shield_value", rule.get("shield_value", 30))
+	var break_damage: int = _get_effective_skill_stat_int(skill_instance, context, "break_damage", rule.get("break_damage", 30))
 	var now_seconds: float = _now_seconds()
 	var duration: float = maxf(float(rule.get("duration", rule.get("deploy_interval", 7.0))), 0.1)
 	skill_instance.set_meta("holy_shield_active", true)
@@ -2790,10 +2776,14 @@ func _get_rules(context: Dictionary) -> Dictionary:
 
 func _get_skill_damage(context: Dictionary) -> int:
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
+	return _get_effective_skill_stat_int(skill_instance, context, "damage", 16)
+
+
+func _get_effective_skill_stat_int(skill_instance: RefCounted, context: Dictionary, stat_name: String, fallback: Variant) -> int:
 	return maxi(roundi(float(SkillStatServiceScript.get_effective_stat(
 		skill_instance,
-		"damage",
-		16,
+		stat_name,
+		fallback,
 		context.get("skill_manager") as Node,
 		context.get("relic_manager") as Node,
 		context.get("caster") as Node
