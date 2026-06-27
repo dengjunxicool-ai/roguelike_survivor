@@ -2,6 +2,7 @@ extends Node
 
 
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
 const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
 const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
@@ -174,33 +175,7 @@ func get_wave_config() -> Dictionary:
 
 
 func _load_json_document(path: String) -> Dictionary:
-	if not FileAccess.file_exists(path):
-		push_error("[DataManager] Data file does not exist: %s" % path)
-		return {}
-
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		push_error("[DataManager] Could not open data file: %s (error: %s)" % [path, error_string(FileAccess.get_open_error())])
-		return {}
-
-	var json := JSON.new()
-	var parse_error: Error = json.parse(file.get_as_text())
-	if parse_error != OK:
-		push_error(
-			"[DataManager] Failed to parse JSON file: %s (line %d: %s)" % [
-				path,
-				json.get_error_line(),
-				json.get_error_message()
-			]
-		)
-		return {}
-
-	var data: Variant = json.data
-	if not (data is Dictionary):
-		push_error("[DataManager] JSON root must be an object: %s" % path)
-		return {}
-
-	return data
+	return JsonDataLoaderScript.load_dictionary(path, "DataManager")
 
 
 func _index_definitions(document: Dictionary, key: String, id_key: String, target: Dictionary, path: String) -> void:

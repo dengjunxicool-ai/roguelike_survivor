@@ -1,6 +1,7 @@
 extends RefCounted
 class_name SkillEffectSummaryBuilder
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SUMMONS_PATH: String = DataPathsScript.SUMMONS_PATH
@@ -267,13 +268,7 @@ static func _find_by_id(items: Array, id: StringName) -> Dictionary:
 
 
 static func _load_array(path: String, key: String) -> Array:
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return []
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		return _array((parsed as Dictionary).get(key, []))
-	return []
+	return JsonDataLoaderScript.load_array(path, key, "SkillEffectSummaryBuilder", JsonDataLoaderScript.REPORT_SILENT)
 
 
 static func _dict(value: Variant) -> Dictionary:

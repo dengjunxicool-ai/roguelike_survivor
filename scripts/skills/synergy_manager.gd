@@ -1,6 +1,7 @@
 extends Node
 class_name SynergyManager
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SYNERGY_DATA_PATH: String = DataPathsScript.SYNERGIES_PATH
@@ -104,28 +105,8 @@ func _load_synergy_definitions() -> void:
 
 
 func _load_synergies_from_file() -> Array[Dictionary]:
-	if not FileAccess.file_exists(SYNERGY_DATA_PATH):
-		push_error("[SynergyManager] Synergy data file does not exist: %s" % SYNERGY_DATA_PATH)
-		return []
-
-	var file: FileAccess = FileAccess.open(SYNERGY_DATA_PATH, FileAccess.READ)
-	if file == null:
-		push_error("[SynergyManager] Could not open synergy data file: %s" % SYNERGY_DATA_PATH)
-		return []
-
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if not (parsed is Dictionary):
-		push_error("[SynergyManager] Could not parse synergy data as Dictionary: %s" % SYNERGY_DATA_PATH)
-		return []
-
-	var document: Dictionary = parsed
-	var synergies_variant: Variant = document.get("synergies", [])
-	if not (synergies_variant is Array):
-		push_error("[SynergyManager] Expected data/relics/synergies.json.synergies to be an Array.")
-		return []
-
 	var synergies: Array[Dictionary] = []
-	for synergy_variant: Variant in synergies_variant:
+	for synergy_variant: Variant in JsonDataLoaderScript.load_array(SYNERGY_DATA_PATH, "synergies", "SynergyManager"):
 		if synergy_variant is Dictionary:
 			var synergy: Dictionary = synergy_variant
 			synergies.append(synergy.duplicate(true))

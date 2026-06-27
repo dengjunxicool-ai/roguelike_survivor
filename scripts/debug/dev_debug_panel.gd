@@ -1,6 +1,7 @@
 extends CanvasLayer
 class_name DevDebugPanel
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
@@ -497,16 +498,7 @@ func _sync_selected_god_skill_id() -> void:
 
 
 func _load_json_document(path: String) -> Dictionary:
-	if not FileAccess.file_exists(path):
-		return {}
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return {}
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		var document: Dictionary = parsed
-		return document.duplicate(true)
-	return {}
+	return JsonDataLoaderScript.load_dictionary(path, "DevDebugPanel", JsonDataLoaderScript.REPORT_SILENT)
 
 
 func _get_god_definitions() -> Array[Dictionary]:

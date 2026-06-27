@@ -1,6 +1,7 @@
 extends Node
 class_name SkillManager
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SkillDefinitionScript: Script = preload("res://scripts/skills/skill_definition.gd")
@@ -350,15 +351,7 @@ func _get_skill_definition_data(skill_id: StringName) -> Dictionary:
 
 
 func _load_skills_document() -> Dictionary:
-	if not FileAccess.file_exists(SKILLS_DATA_PATH):
-		return {}
-	var file: FileAccess = FileAccess.open(SKILLS_DATA_PATH, FileAccess.READ)
-	if file == null:
-		return {}
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		return (parsed as Dictionary).duplicate(true)
-	return {}
+	return JsonDataLoaderScript.load_dictionary(SKILLS_DATA_PATH, "SkillManager", JsonDataLoaderScript.REPORT_SILENT)
 
 
 func _can_current_character_learn(skill_data: Dictionary) -> bool:

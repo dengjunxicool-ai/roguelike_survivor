@@ -1,6 +1,7 @@
 extends RefCounted
 class_name EnemySkillRepository
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const EnemySkillDefinitionScript: Script = preload("res://scripts/enemies/skills/enemy_skill_definition.gd")
@@ -46,18 +47,8 @@ func _load_skill_data() -> Array[Dictionary]:
 		if managed is Array:
 			return _to_dictionary_array(managed)
 
-	var file: FileAccess = FileAccess.open(ENEMY_SKILLS_PATH, FileAccess.READ)
-	if file == null:
-		push_warning("[EnemySkillRepository] Could not open %s." % ENEMY_SKILLS_PATH)
-		return []
-
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if not (parsed is Dictionary):
-		push_warning("[EnemySkillRepository] Could not parse %s." % ENEMY_SKILLS_PATH)
-		return []
-
-	var document: Dictionary = parsed
-	return _to_dictionary_array(document.get("enemy_skills", []))
+	var enemy_skills: Array = JsonDataLoaderScript.load_array(ENEMY_SKILLS_PATH, "enemy_skills", "EnemySkillRepository", JsonDataLoaderScript.REPORT_WARNING)
+	return _to_dictionary_array(enemy_skills)
 
 
 func _get_data_manager() -> Node:

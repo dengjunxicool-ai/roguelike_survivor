@@ -1,6 +1,7 @@
 extends RefCounted
 class_name GameData
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
@@ -330,20 +331,7 @@ static func _load_document(path: String) -> Dictionary:
 		var cached_document: Dictionary = _document_cache[path]
 		return cached_document
 
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		push_warning("Could not open data file: %s" % path)
-		_document_cache[path] = {}
-		return {}
-
-	var text: String = file.get_as_text()
-	var parsed: Variant = JSON.parse_string(text)
-	if not (parsed is Dictionary):
-		push_warning("Could not parse data file as Dictionary: %s" % path)
-		_document_cache[path] = {}
-		return {}
-
-	var document: Dictionary = parsed
+	var document: Dictionary = JsonDataLoaderScript.load_dictionary(path, "GameData", JsonDataLoaderScript.REPORT_WARNING)
 	_document_cache[path] = document
 	return document
 

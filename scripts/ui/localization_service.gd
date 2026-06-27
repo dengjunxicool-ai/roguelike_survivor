@@ -1,6 +1,7 @@
 extends RefCounted
 class_name LocalizationService
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const CONFIG_PATH: String = DataPathsScript.LOCALIZATION_UI_TEXT_PATH
@@ -68,15 +69,7 @@ static func _ensure_config_loaded() -> void:
 	if _config_loaded:
 		return
 	_config_loaded = true
-	_config = {}
-	if not FileAccess.file_exists(CONFIG_PATH):
-		return
-	var file: FileAccess = FileAccess.open(CONFIG_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		_config = parsed
+	_config = JsonDataLoaderScript.load_dictionary(CONFIG_PATH, "LocalizationService", JsonDataLoaderScript.REPORT_SILENT)
 
 
 static func _get_dictionary(value: Variant) -> Dictionary:

@@ -1,6 +1,7 @@
 extends RefCounted
 class_name SkillRangeUnit
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const CONFIG_PATH: String = DataPathsScript.SKILL_SYSTEM_CONFIG_PATH
@@ -62,13 +63,8 @@ static func _resolve_unit_field(params: Dictionary, source_key: String, target_k
 
 
 static func _load_range_unit_px() -> float:
-	var file: FileAccess = FileAccess.open(CONFIG_PATH, FileAccess.READ)
-	if file == null:
-		return DEFAULT_RANGE_UNIT_PX
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		var config: Dictionary = parsed
-		var configured: float = float(config.get("range_unit_px", DEFAULT_RANGE_UNIT_PX))
-		if configured > 0.0:
-			return configured
+	var config: Dictionary = JsonDataLoaderScript.load_dictionary(CONFIG_PATH, "SkillRangeUnit", JsonDataLoaderScript.REPORT_SILENT)
+	var configured: float = float(config.get("range_unit_px", DEFAULT_RANGE_UNIT_PX))
+	if configured > 0.0:
+		return configured
 	return DEFAULT_RANGE_UNIT_PX

@@ -1,6 +1,7 @@
 extends Node
 class_name RelicManager
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const RELIC_DATA_PATH: String = DataPathsScript.RELICS_PATH
@@ -113,28 +114,8 @@ func _load_relic_definitions() -> void:
 
 
 func _load_relics_from_file() -> Array[Dictionary]:
-	if not FileAccess.file_exists(RELIC_DATA_PATH):
-		push_error("[RelicManager] Relic data file does not exist: %s" % RELIC_DATA_PATH)
-		return []
-
-	var file: FileAccess = FileAccess.open(RELIC_DATA_PATH, FileAccess.READ)
-	if file == null:
-		push_error("[RelicManager] Could not open relic data file: %s" % RELIC_DATA_PATH)
-		return []
-
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if not (parsed is Dictionary):
-		push_error("[RelicManager] Could not parse relic data as Dictionary: %s" % RELIC_DATA_PATH)
-		return []
-
-	var document: Dictionary = parsed
-	var relics_variant: Variant = document.get("relics", [])
-	if not (relics_variant is Array):
-		push_error("[RelicManager] Expected data/relics/relics.json.relics to be an Array.")
-		return []
-
 	var relics: Array[Dictionary] = []
-	for relic_variant: Variant in relics_variant:
+	for relic_variant: Variant in JsonDataLoaderScript.load_array(RELIC_DATA_PATH, "relics", "RelicManager"):
 		if relic_variant is Dictionary:
 			var relic: Dictionary = relic_variant
 			relics.append(relic.duplicate(true))
