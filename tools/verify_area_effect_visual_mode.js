@@ -1,10 +1,10 @@
-const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
 function read(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8").replace(/^\uFEFF/, "");
+  return readTextFile(path.join(root, relativePath));
 }
 
 function readJson(relativePath) {
@@ -14,9 +14,6 @@ function readJson(relativePath) {
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
-
-const contracts = read("tools/weapon_config_contracts.js");
-assert(contracts.includes('"visual_mode"'), "Weapon config contracts must allow visual_mode for area assets");
 
 const factory = read("scripts/combat/combat_object_factory.gd");
 assert(factory.includes('"visual_style", "visual_color", "visual_ring_color", "visual_mode"'), "CombatObjectFactory must merge visual_mode from combat object definitions");

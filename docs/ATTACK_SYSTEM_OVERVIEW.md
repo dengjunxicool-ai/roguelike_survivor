@@ -319,7 +319,7 @@ EnemyBase._apply_contact_damage()
 3. 若会造成伤害，必须走 `_build_damage_packet()` 或等价完整 DamagePacket。
 4. 若生成新对象，优先接入 `CombatObjectFactory` 和 `combat_objects.json`。
 5. 若需要 modifier，补 `ModifierResolver` / `SkillStatService` / `DamageSystem` 消费点。
-6. 在 `tools/weapon_config_contracts.js` 增加配置契约。
+6. 在 `data/combat_objects.json` 表达可配置字段，并补对应 JS/Godot 验证。
 7. 补最小配置样例或验证，跑当前神系/技能契约验证。
 8. 同步本文档；旧武器系统说明只保留在 `docs/archive/WEAPON_SYSTEM_OVERVIEW_OBSOLETE.md` 作为历史记录。
 
@@ -418,7 +418,7 @@ EnemyBase._apply_contact_damage()
 | 敌方区域 | `enemy_skills.json` action `damage_area` | `DamageArea`、玩家 area 命中保护、Boss phase 参数。 |
 | Boss 技能 | `enemies.json.behavior.phases[].skills[]` | `runtime=boss_phase`、并发数、cooldown、胜利结算。 |
 | 新敌方 action | `EnemyActionRegistry.execute()` | `validate_enemy_configs.js`、enemy skill debug check。 |
-| 新玩家 action | `SkillActionExecutor.execute_action()` | `weapon_config_contracts.js`、authoring pipeline。 |
+| 新玩家 action | `SkillActionExecutor.execute_action()` | `data/combat_objects.json`、配置验证、authoring pipeline。 |
 | 新伤害类型/origin | `DamageRuleRegistry` | `DamagePacketBuilder`、`verify_damage_formula.gd`。 |
 | 攻击统计 | `RunStatsTracker` 和 application stage | source 字段、HUD/result 展示。 |
 

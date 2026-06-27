@@ -1,10 +1,10 @@
-const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
 function readProjectFile(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8").replace(/^\uFEFF/, "");
+  return readTextFile(path.join(root, relativePath));
 }
 
 function assert(condition, message) {
