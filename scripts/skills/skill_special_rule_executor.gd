@@ -165,10 +165,14 @@ func adjust_damage_packet(packet: Dictionary, context: Dictionary) -> Dictionary
 	_apply_warhammer_stun_target_damage_taken(adjusted, rules, target)
 	_apply_cross_relic_dot_target_damage_bonus(adjusted, rules, target, packet_object)
 	_apply_same_target_multi_projectile_damage(adjusted, rules, context, target, packet_object)
-
-	if bool(context.get("hot_rapid_fire_crit", false)):
-		adjusted["crit_chance_add"] = float(packet_object.call("get_value", "crit_chance_add", 0.0)) + float(context.get("hot_rapid_fire_crit_chance_add", 0.0))
+	_apply_hot_rapid_fire_crit_bonus(adjusted, context, packet_object)
 	return adjusted
+
+
+func _apply_hot_rapid_fire_crit_bonus(packet: Dictionary, context: Dictionary, packet_object: RefCounted) -> void:
+	if not bool(context.get("hot_rapid_fire_crit", false)):
+		return
+	packet["crit_chance_add"] = float(packet_object.call("get_value", "crit_chance_add", 0.0)) + float(context.get("hot_rapid_fire_crit_chance_add", 0.0))
 
 
 func _apply_same_target_multi_projectile_damage(packet: Dictionary, rules: Dictionary, context: Dictionary, target: Node, packet_object: RefCounted) -> void:
