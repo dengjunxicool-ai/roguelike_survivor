@@ -281,18 +281,10 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 		if not projectile_params.has("source_instance_id"):
 			projectile_params["source_instance_id"] = DamageSourceIdentityScript.for_projectile(cast_instance_id, projectile_index, source_id)
 		var use_hot_rapid_fire: bool = hot_rapid_fire_pending and projectile_index == 0
-		var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
-		var projectile_position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
-		var curve_target_position: Vector2 = target.global_position
-		if params.has("visual_start_offset"):
-			var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
-			if str(params.get("visual_start_relative_to", "caster")) == "target":
-				projectile_position = curve_target_position + visual_start_offset
-			else:
-				projectile_position += visual_start_offset
-			direction = projectile_position.direction_to(curve_target_position)
-			if direction == Vector2.ZERO:
-				direction = base_direction
+		var launch_data: Dictionary = _build_direct_projectile_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
+		var projectile_position: Vector2 = launch_data.get("position", caster.global_position)
+		var direction: Vector2 = launch_data.get("direction", base_direction)
+		var curve_target_position: Vector2 = launch_data.get("target_position", target.global_position)
 		var trajectory_mode: String = str(params.get("trajectory_mode", "linear"))
 		CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
 			params,
@@ -366,12 +358,7 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		target_hit_counts[target_key] = same_target_hit_index + 1
 		var visual_start_position: Vector2 = _resolve_projectile_visual_start_position(caster.global_position, target.global_position, same_target_hit_index, params)
 		var visual_target_position: Vector2 = _resolve_projectile_visual_target_position(target.global_position, same_target_hit_index, params)
-		if params.has("visual_start_offset"):
-			var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
-			if str(params.get("visual_start_relative_to", "caster")) == "target":
-				visual_start_position = visual_target_position + visual_start_offset
-			else:
-				visual_start_position += visual_start_offset
+		visual_start_position = _apply_projectile_visual_start_offset(visual_start_position, visual_target_position, params)
 
 		var direction: Vector2 = visual_start_position.direction_to(visual_target_position)
 		if direction == Vector2.ZERO:
@@ -419,6 +406,31 @@ func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) 
 		"damage": maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0),
 		"source_id": StringName(str(params.get("projectile_id", params.get("source_id", ""))))
 	}
+
+
+func _build_direct_projectile_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
+	var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
+	var target_position: Vector2 = target.global_position
+	var position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
+	position = _apply_projectile_visual_start_offset(position, target_position, params)
+	if params.has("visual_start_offset"):
+		direction = position.direction_to(target_position)
+		if direction == Vector2.ZERO:
+			direction = base_direction
+	return {
+		"position": position,
+		"direction": direction,
+		"target_position": target_position
+	}
+
+
+func _apply_projectile_visual_start_offset(start_position: Vector2, target_position: Vector2, params: Dictionary) -> Vector2:
+	if not params.has("visual_start_offset"):
+		return start_position
+	var visual_start_offset: Vector2 = _get_vector2(params.get("visual_start_offset"), Vector2.ZERO)
+	if str(params.get("visual_start_relative_to", "caster")) == "target":
+		return target_position + visual_start_offset
+	return start_position + visual_start_offset
 
 
 func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dictionary, context: Dictionary, parent: Node, caster: Node2D, source_id: StringName, position: Vector2, direction: Vector2, damage: int, damage_packet: Dictionary, speed: float, pierce: int, radius: float, lifetime: float, statuses_on_hit: Array[StringName], cast_instance_id: String, trajectory_mode: String, curve_start_position: Vector2, curve_target_position: Vector2, extra_params: Dictionary = {}) -> Dictionary:
