@@ -255,20 +255,14 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 
 	var projectile_stats: Dictionary = _resolve_projectile_runtime_stats(params, context)
 	var count: int = int(projectile_stats.get("count", 1))
-	var speed: float = float(projectile_stats.get("speed", 420.0))
+	var runtime_data: Dictionary = _build_projectile_runtime_data(projectile_stats, params, context)
+	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
+	var cast_instance_id: String = str(runtime_data.get("cast_instance_id", ""))
 	var spread_angle: float = deg_to_rad(float(ModifierResolverScript.resolve_value(context, "spread_angle", params.get("spread_angle", 0.0))))
-	var pierce: int = int(projectile_stats.get("pierce", 0))
-	var radius: float = float(projectile_stats.get("radius", 10.0))
-	var lifetime: float = float(projectile_stats.get("lifetime", 2.0))
-	var damage: int = int(projectile_stats.get("damage", 0))
-	var source_id: StringName = StringName(str(projectile_stats.get("source_id", "")))
-	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
 	var base_direction: Vector2 = caster.global_position.direction_to(target.global_position)
 	if base_direction == Vector2.ZERO:
 		return false
 
-	var parent: Node = _get_parent_node(context)
-	var cast_instance_id: String = _next_cast_instance_id(context)
 	_mark_storm_hail_cast(context, cast_instance_id)
 	var forbidden_page_pending: bool = _consume_forbidden_page_pending(context)
 	var arcane_extra_projectiles: int = _consume_arcane_double_page_pending(context)
@@ -280,38 +274,21 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 		var projectile_params: Dictionary = params.duplicate(true)
 		if not projectile_params.has("source_instance_id"):
 			projectile_params["source_instance_id"] = DamageSourceIdentityScript.for_projectile(cast_instance_id, projectile_index, source_id)
-		var use_hot_rapid_fire: bool = hot_rapid_fire_pending and projectile_index == 0
-		var launch_data: Dictionary = _build_direct_projectile_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
-		var projectile_position: Vector2 = launch_data.get("position", caster.global_position)
-		var direction: Vector2 = launch_data.get("direction", base_direction)
-		var curve_target_position: Vector2 = launch_data.get("target_position", target.global_position)
-		var trajectory_mode: String = str(params.get("trajectory_mode", "linear"))
-		CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+		_spawn_direct_projectile_instance(
 			params,
 			projectile_params,
 			context,
-			parent,
 			caster,
-			source_id,
-			projectile_position,
-			direction,
-			damage,
-			_build_damage_packet(projectile_params, context, damage, "projectile"),
-			speed,
-			pierce,
-			radius,
-			lifetime,
-			statuses_on_hit,
-			cast_instance_id,
-			trajectory_mode,
-			projectile_position,
-			curve_target_position,
-			{
-				"hot_rapid_fire_crit": use_hot_rapid_fire,
-				"hot_rapid_fire_crit_chance_add": hot_rapid_fire_crit_chance_add if use_hot_rapid_fire else 0.0,
-				"forbidden_page": forbidden_page_pending and projectile_index == 0
-			}
-		))
+			target,
+			runtime_data,
+			base_direction,
+			start_angle,
+			spread_angle,
+			projectile_index,
+			forbidden_page_pending,
+			hot_rapid_fire_pending,
+			hot_rapid_fire_crit_chance_add
+		)
 
 	return true
 
@@ -334,15 +311,9 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		return false
 	targets = _build_projectile_target_sequence(targets, count)
 
-	var speed: float = float(projectile_stats.get("speed", 420.0))
-	var pierce: int = int(projectile_stats.get("pierce", 0))
-	var radius: float = float(projectile_stats.get("radius", 10.0))
-	var lifetime: float = float(projectile_stats.get("lifetime", 2.0))
-	var damage: int = int(projectile_stats.get("damage", 0))
-	var source_id: StringName = StringName(str(projectile_stats.get("source_id", "")))
-	var statuses_on_hit: Array[StringName] = _get_statuses_on_hit(params, context)
-	var parent: Node = _get_parent_node(context)
-	var cast_instance_id: String = _next_cast_instance_id(context)
+	var runtime_data: Dictionary = _build_projectile_runtime_data(projectile_stats, params, context)
+	var cast_instance_id: String = str(runtime_data.get("cast_instance_id", ""))
+	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
 	_mark_storm_hail_cast(context, cast_instance_id)
 
 	var spawned: int = 0
@@ -356,41 +327,90 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		var target_key: String = str(target.get_instance_id())
 		var same_target_hit_index: int = int(target_hit_counts.get(target_key, 0))
 		target_hit_counts[target_key] = same_target_hit_index + 1
-		var launch_data: Dictionary = _build_targeted_projectile_launch_data(params, caster.global_position, target.global_position, same_target_hit_index)
-		var visual_start_position: Vector2 = launch_data.get("position", caster.global_position)
-		var visual_target_position: Vector2 = launch_data.get("target_position", target.global_position)
-		var direction: Vector2 = launch_data.get("direction", Vector2.RIGHT)
 		var projectile_context: Dictionary = context.duplicate(true)
 		projectile_context["target"] = target
 		var projectile_params: Dictionary = params.duplicate(true)
 		if not projectile_params.has("source_instance_id"):
 			projectile_params["source_instance_id"] = DamageSourceIdentityScript.for_projectile(cast_instance_id, spawned, source_id)
-		var damage_packet: Dictionary = _build_damage_packet(projectile_params, projectile_context, damage, "projectile")
-		_apply_projectile_damage_sequence(damage_packet, projectile_params, same_target_hit_index, context)
-		CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+		_spawn_targeted_projectile_instance(
 			params,
 			projectile_params,
 			projectile_context,
-			parent,
 			caster,
-			source_id,
-			visual_start_position,
-			direction.normalized(),
-			damage,
-			damage_packet,
-			speed,
-			pierce,
-			radius,
-			lifetime,
-			statuses_on_hit,
-			cast_instance_id,
-			str(params.get("trajectory_mode", "curve")),
-			visual_start_position,
-			visual_target_position
-		))
+			target,
+			runtime_data,
+			context,
+			same_target_hit_index
+		)
 		spawned += 1
 
 	return spawned > 0
+
+
+func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Dictionary, context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int, forbidden_page_pending: bool, hot_rapid_fire_pending: bool, hot_rapid_fire_crit_chance_add: float) -> void:
+	var use_hot_rapid_fire: bool = hot_rapid_fire_pending and projectile_index == 0
+	var launch_data: Dictionary = _build_direct_projectile_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
+	var projectile_position: Vector2 = launch_data.get("position", caster.global_position)
+	var direction: Vector2 = launch_data.get("direction", base_direction)
+	var curve_target_position: Vector2 = launch_data.get("target_position", target.global_position)
+	var damage: int = int(runtime_data.get("damage", 0))
+	CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+		params,
+		projectile_params,
+		context,
+		runtime_data.get("parent") as Node,
+		caster,
+		StringName(runtime_data.get("source_id", &"")),
+		projectile_position,
+		direction,
+		damage,
+		_build_damage_packet(projectile_params, context, damage, "projectile"),
+		float(runtime_data.get("speed", 420.0)),
+		int(runtime_data.get("pierce", 0)),
+		float(runtime_data.get("radius", 10.0)),
+		float(runtime_data.get("lifetime", 2.0)),
+		_get_projectile_runtime_statuses_on_hit(runtime_data),
+		str(runtime_data.get("cast_instance_id", "")),
+		str(params.get("trajectory_mode", "linear")),
+		projectile_position,
+		curve_target_position,
+		{
+			"hot_rapid_fire_crit": use_hot_rapid_fire,
+			"hot_rapid_fire_crit_chance_add": hot_rapid_fire_crit_chance_add if use_hot_rapid_fire else 0.0,
+			"forbidden_page": forbidden_page_pending and projectile_index == 0
+		}
+	))
+
+
+func _spawn_targeted_projectile_instance(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int) -> void:
+	var launch_data: Dictionary = _build_targeted_projectile_launch_data(params, caster.global_position, target.global_position, same_target_hit_index)
+	var visual_start_position: Vector2 = launch_data.get("position", caster.global_position)
+	var visual_target_position: Vector2 = launch_data.get("target_position", target.global_position)
+	var direction: Vector2 = launch_data.get("direction", Vector2.RIGHT)
+	var damage: int = int(runtime_data.get("damage", 0))
+	var damage_packet: Dictionary = _build_damage_packet(projectile_params, projectile_context, damage, "projectile")
+	_apply_projectile_damage_sequence(damage_packet, projectile_params, same_target_hit_index, source_context)
+	CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+		params,
+		projectile_params,
+		projectile_context,
+		runtime_data.get("parent") as Node,
+		caster,
+		StringName(runtime_data.get("source_id", &"")),
+		visual_start_position,
+		direction.normalized(),
+		damage,
+		damage_packet,
+		float(runtime_data.get("speed", 420.0)),
+		int(runtime_data.get("pierce", 0)),
+		float(runtime_data.get("radius", 10.0)),
+		float(runtime_data.get("lifetime", 2.0)),
+		_get_projectile_runtime_statuses_on_hit(runtime_data),
+		str(runtime_data.get("cast_instance_id", "")),
+		str(params.get("trajectory_mode", "curve")),
+		visual_start_position,
+		visual_target_position
+	))
 
 
 func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) -> Dictionary:
@@ -403,6 +423,27 @@ func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) 
 		"damage": maxi(roundi(_resolve_scaled_amount(params.get("damage", ModifierResolverScript.get_stat(context, "damage", 0)), context, "damage")), 0),
 		"source_id": StringName(str(params.get("projectile_id", params.get("source_id", ""))))
 	}
+
+
+func _build_projectile_runtime_data(projectile_stats: Dictionary, params: Dictionary, context: Dictionary) -> Dictionary:
+	return {
+		"speed": float(projectile_stats.get("speed", 420.0)),
+		"pierce": int(projectile_stats.get("pierce", 0)),
+		"radius": float(projectile_stats.get("radius", 10.0)),
+		"lifetime": float(projectile_stats.get("lifetime", 2.0)),
+		"damage": int(projectile_stats.get("damage", 0)),
+		"source_id": StringName(str(projectile_stats.get("source_id", ""))),
+		"statuses_on_hit": _get_statuses_on_hit(params, context),
+		"parent": _get_parent_node(context),
+		"cast_instance_id": _next_cast_instance_id(context)
+	}
+
+
+func _get_projectile_runtime_statuses_on_hit(runtime_data: Dictionary) -> Array[StringName]:
+	var statuses: Array[StringName] = []
+	for status_variant: Variant in _get_array(runtime_data.get("statuses_on_hit", [])):
+		statuses.append(StringName(str(status_variant)))
+	return statuses
 
 
 func _build_targeted_projectile_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
