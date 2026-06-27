@@ -118,10 +118,17 @@ func _process(delta: float) -> void:
 	if current_state != STATE_RUNNING:
 		return
 
+	_update_announcement_timer(delta)
+	_update_hud_refresh_timer(delta)
+
+
+func _update_announcement_timer(delta: float) -> void:
 	_announcement_timer = maxf(_announcement_timer - delta, 0.0)
 	if _announcement_timer <= 0.0:
 		_set_hud_label("announcement", "")
 
+
+func _update_hud_refresh_timer(delta: float) -> void:
 	_hud_refresh_cooldown = maxf(_hud_refresh_cooldown - delta, 0.0)
 	if _hud_refresh_cooldown <= 0.0:
 		_update_run_hud()
