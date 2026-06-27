@@ -47,11 +47,26 @@ func is_target_valid(target: Node2D, leash_distance: float) -> bool:
 func find_target(summon: Node2D) -> Node2D:
 	if summon == null:
 		return null
+	var tree: SceneTree = _get_scene_tree(summon)
+	if tree == null:
+		return null
+	var candidates: Array[Node2D] = _collect_target_candidates(tree, summon)
+	if candidates.is_empty():
+		return null
+	var priority_status_id: StringName = _get_priority_status_id()
+	if priority_status_id != &"":
+		return _select_status_priority_target(candidates, summon.global_position, priority_status_id)
+	return _select_nearest_target(candidates, _get_default_target_origin(summon))
+
+
+func _get_scene_tree(summon: Node2D) -> SceneTree:
 	var tree: SceneTree = summon.get_tree()
 	if tree == null:
 		tree = Engine.get_main_loop() as SceneTree
-	if tree == null:
-		return null
+	return tree
+
+
+func _collect_target_candidates(tree: SceneTree, summon: Node2D) -> Array[Node2D]:
 	var candidates: Array[Node2D] = []
 	var range_squared: float = detect_range * detect_range
 	for node: Node in tree.get_nodes_in_group(target_group):
@@ -62,58 +77,45 @@ func find_target(summon: Node2D) -> Node2D:
 			continue
 		if summon.global_position.distance_squared_to(enemy.global_position) <= range_squared:
 			candidates.append(enemy)
-	if candidates.is_empty():
-		return null
-	if target_priority == "frozen_first_then_nearest":
-		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-			var a_frozen: bool = _has_status(a, &"frozen")
-			var b_frozen: bool = _has_status(b, &"frozen")
-			if a_frozen != b_frozen:
-				return a_frozen
-			return summon.global_position.distance_squared_to(a.global_position) < summon.global_position.distance_squared_to(b.global_position)
-		)
-		return candidates[0]
-	if target_priority == "conductive_first_then_nearest":
-		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-			var a_conductive: bool = _has_status(a, &"conductive")
-			var b_conductive: bool = _has_status(b, &"conductive")
-			if a_conductive != b_conductive:
-				return a_conductive
-			return summon.global_position.distance_squared_to(a.global_position) < summon.global_position.distance_squared_to(b.global_position)
-		)
-		return candidates[0]
-	if target_priority == "judgment_first_then_nearest":
-		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-			var a_judgment: bool = _has_status(a, &"judgment")
-			var b_judgment: bool = _has_status(b, &"judgment")
-			if a_judgment != b_judgment:
-				return a_judgment
-			return summon.global_position.distance_squared_to(a.global_position) < summon.global_position.distance_squared_to(b.global_position)
-		)
-		return candidates[0]
-	if target_priority == "instability_first_then_nearest":
-		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-			var a_instability: bool = _has_status(a, &"instability")
-			var b_instability: bool = _has_status(b, &"instability")
-			if a_instability != b_instability:
-				return a_instability
-			return summon.global_position.distance_squared_to(a.global_position) < summon.global_position.distance_squared_to(b.global_position)
-		)
-		return candidates[0]
-	if target_priority == "cursed_first_then_nearest":
-		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-			var a_cursed: bool = _has_status(a, &"cursed")
-			var b_cursed: bool = _has_status(b, &"cursed")
-			if a_cursed != b_cursed:
-				return a_cursed
-			return summon.global_position.distance_squared_to(a.global_position) < summon.global_position.distance_squared_to(b.global_position)
-		)
-		return candidates[0]
+	return candidates
+
+
+func _get_priority_status_id() -> StringName:
+	match target_priority:
+		"frozen_first_then_nearest":
+			return &"frozen"
+		"conductive_first_then_nearest":
+			return &"conductive"
+		"judgment_first_then_nearest":
+			return &"judgment"
+		"instability_first_then_nearest":
+			return &"instability"
+		"cursed_first_then_nearest":
+			return &"cursed"
+		_:
+			return &""
+
+
+func _select_status_priority_target(candidates: Array[Node2D], origin: Vector2, priority_status_id: StringName) -> Node2D:
 	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
-		var origin: Vector2 = owner.global_position if target_priority == "nearest_to_owner" and owner != null else summon.global_position
+		var a_has_priority: bool = _has_status(a, priority_status_id)
+		var b_has_priority: bool = _has_status(b, priority_status_id)
+		if a_has_priority != b_has_priority:
+			return a_has_priority
 		return origin.distance_squared_to(a.global_position) < origin.distance_squared_to(b.global_position)
 	)
 	return candidates[0]
+
+
+func _select_nearest_target(candidates: Array[Node2D], origin: Vector2) -> Node2D:
+	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+		return origin.distance_squared_to(a.global_position) < origin.distance_squared_to(b.global_position)
+	)
+	return candidates[0]
+
+
+func _get_default_target_origin(summon: Node2D) -> Vector2:
+	return owner.global_position if target_priority == "nearest_to_owner" and owner != null else summon.global_position
 
 
 func _has_status(target: Node, status_id: StringName) -> bool:
