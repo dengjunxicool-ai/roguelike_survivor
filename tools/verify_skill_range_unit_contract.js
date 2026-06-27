@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readJsonFile, readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
@@ -10,12 +11,12 @@ function assert(condition, message) {
 }
 
 function read(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8");
+  return readTextFile(path.join(root, relativePath));
 }
 
 const configPath = path.join(root, "data", "config", "skill_system_config.json");
 assert(fs.existsSync(configPath), "data/config/skill_system_config.json must exist");
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+const config = readJsonFile(configPath);
 assert(typeof config.range_unit_px === "number" && config.range_unit_px > 0, "skill_system_config.range_unit_px must be a positive number");
 assert(config.range_unit_px === 84, "default range_unit_px must remain 84");
 

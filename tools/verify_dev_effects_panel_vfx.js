@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const MARS_PARTICLE_MATERIALS = [
@@ -15,7 +16,7 @@ function readText(relativePath, failures) {
     failures.push(`${relativePath} must exist`);
     return "";
   }
-  return fs.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
+  return readTextFile(fullPath);
 }
 
 function escapeRegExp(value) {
