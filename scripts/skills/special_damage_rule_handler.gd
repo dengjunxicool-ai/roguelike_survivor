@@ -481,10 +481,7 @@ static func _execute_holy_shield_break_shockwave(rules: Dictionary, context: Dic
 
 
 static func _spawn_holy_area(rule: Dictionary, context: Dictionary, position: Vector2, source_id: String, color: Color) -> Node2D:
-	var parent: Node = context.get("parent") as Node
-	if parent == null:
-		var player: Node2D = context.get("player", context.get("caster")) as Node2D
-		parent = player.get_parent() if player != null else null
+	var parent: Node = _context_parent_for_actor(context, _context_player(context))
 	if parent == null:
 		return null
 	var amount: int = maxi(int(rule.get("amount", 0)), 0)
@@ -638,9 +635,8 @@ static func _apply_holy_counter_boss_poise(rules: Dictionary, target: Node) -> v
 	var rule: Dictionary = _get_dictionary(rules.get("holy_counter_boss_poise", {}))
 	var key: String = "holy_counter_poise:%s" % str(target.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_holy_counter_boss_poise_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_holy_counter_boss_poise_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)):
 		return
-	_holy_counter_boss_poise_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 2.5)), 0.0)
 	for _i in range(maxi(int(rule.get("stacks", 1)), 1)):
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"holy_mark")
 
@@ -648,15 +644,14 @@ static func _apply_holy_counter_boss_poise(rules: Dictionary, target: Node) -> v
 static func _apply_holy_shield_break_damage_reduction(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("holy_shield_break_damage_reduction"):
 		return
-	var player: Node = context.get("player", context.get("caster")) as Node
+	var player: Node = _context_player(context)
 	if player == null:
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("holy_shield_break_damage_reduction", {}))
 	var key: String = "holy_break_reduction:%s" % str(player.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_holy_shield_break_reduction_cooldowns.get(key, 0.0)):
+	if not _reserve_rule_cooldown_at(_holy_shield_break_reduction_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)):
 		return
-	_holy_shield_break_reduction_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 18.0)), 0.0)
 	player.set_meta("holy_shield_break_reduction_until", now_seconds + maxf(float(rule.get("duration", 1.0)), 0.0))
 	player.set_meta("holy_shield_break_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.4)))
 
