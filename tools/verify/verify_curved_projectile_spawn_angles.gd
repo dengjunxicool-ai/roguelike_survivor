@@ -56,6 +56,7 @@ func _run() -> void:
 		"target_group": &"enemies"
 	}))
 	_expect(ok, "curved projectile action executes")
+	await process_frame
 
 	var projectiles: Array[Node2D] = _projectiles_for_source(&"angle_curve_test_projectile")
 	_expect(projectiles.size() == 3, "curved projectile action spawns three projectiles")
