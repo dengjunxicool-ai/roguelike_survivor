@@ -121,7 +121,7 @@ func _load_synergies_from_file() -> Array[Dictionary]:
 	var document: Dictionary = parsed
 	var synergies_variant: Variant = document.get("synergies", [])
 	if not (synergies_variant is Array):
-		push_error("[SynergyManager] Expected data/synergies.json.synergies to be an Array.")
+		push_error("[SynergyManager] Expected data/relics/synergies.json.synergies to be an Array.")
 		return []
 
 	var synergies: Array[Dictionary] = []

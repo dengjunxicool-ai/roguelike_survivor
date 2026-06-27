@@ -130,7 +130,7 @@ func _load_relics_from_file() -> Array[Dictionary]:
 	var document: Dictionary = parsed
 	var relics_variant: Variant = document.get("relics", [])
 	if not (relics_variant is Array):
-		push_error("[RelicManager] Expected data/relics.json.relics to be an Array.")
+		push_error("[RelicManager] Expected data/relics/relics.json.relics to be an Array.")
 		return []
 
 	var relics: Array[Dictionary] = []

@@ -247,7 +247,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 本局遗物持有、遗物 modifier、战斗事件触发、技能/状态协同。 |
-| 主要文件 | `scripts/relics/relic_manager.gd`, `scripts/skills/synergy_manager.gd`, `data/relics.json`, `data/synergies.json` |
+| 主要文件 | `scripts/relics/relic_manager.gd`, `scripts/skills/synergy_manager.gd`, `data/relics/relics.json`, `data/relics/synergies.json` |
 | 做了什么 | RelicManager 管理已获得遗物、上限、遗物定义、技能 modifier 和 combat event；SynergyManager 根据已拥有技能 tag 刷新 active synergy，并处理伤害、击杀、施法、状态应用等事件。 |
 | 怎么做 | 奖励流调用 `add_relic()`；技能数值查询时 RelicManager 提供 modifier；RunStatsTracker 或战斗链路把事件传给 Relic/Synergy；Synergy 可生成额外反应或区域效果。 |
 | 接收 | `add_relic(relic_id)`、`handle_combat_event(event_name, payload)`、Synergy 的 `on_damage_dealt` / `on_enemy_killed` / `on_skill_cast` / `on_status_applied`。 |

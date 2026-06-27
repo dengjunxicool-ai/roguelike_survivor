@@ -20,7 +20,7 @@ function main() {
   assert(deathExplosionStart >= 0 && deathExplosionEnd > deathExplosionStart, "Burst fireball death explosion function must exist");
   const deathExplosionHandler = specialHandler.slice(deathExplosionStart, deathExplosionEnd);
   const specialRuleExecutor = read("scripts/skills/skill_special_rule_executor.gd");
-  const synergyData = JSON.parse(read("data/synergies.json"));
+  const synergyData = JSON.parse(read("data/relics/synergies.json"));
   const synergyManager = read("scripts/skills/synergy_manager.gd");
 
   assert(
