@@ -6,7 +6,6 @@ const ModalRequestScript: Script = preload("res://scripts/ui/modals/modal_reques
 const STATE_LEVEL_UP_MODAL: String = "LEVEL_UP_MODAL"
 const STATE_RUN_REWARD_MODAL: String = "RUN_REWARD_MODAL"
 const STATE_CURSE_CHOICE_MODAL: String = "CURSE_CHOICE_MODAL"
-const STATE_BRANCH_CHOICE_MODAL: String = "BRANCH_CHOICE_MODAL"
 const STATE_RUNNING: String = "RUNNING"
 
 var _modal_queue: Array[Dictionary] = []
@@ -24,8 +23,6 @@ func refresh_modal_for_state(choice_modal: RefCounted, state: String) -> bool:
 			return true
 		STATE_CURSE_CHOICE_MODAL:
 			choice_modal.call("refresh_curse_choice_modal")
-			return true
-		STATE_BRANCH_CHOICE_MODAL:
 			return true
 		_:
 			return false
@@ -48,8 +45,7 @@ func is_modal_state(state: String) -> bool:
 	return [
 		STATE_LEVEL_UP_MODAL,
 		STATE_RUN_REWARD_MODAL,
-		STATE_CURSE_CHOICE_MODAL,
-		STATE_BRANCH_CHOICE_MODAL
+		STATE_CURSE_CHOICE_MODAL
 	].has(state)
 
 

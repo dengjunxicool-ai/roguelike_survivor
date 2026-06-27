@@ -50,7 +50,6 @@
 | 运行场景桥接 | `RunSceneUIBridge` 负责连接玩家、刷怪器、敌人死亡等运行时信号 | 90% |
 | HUD 状态 | `RunHudStateProvider` 统一采集 HUD Dictionary，`RunHudController` 消费它刷新节点 | 85% |
 | 运行中弹窗 | `ModalFlowController` 统一弹窗刷新、pending 检查和 `ModalRequest` 队列 | 90% |
-| 运行中弹窗兼容状态 | `BRANCH_CHOICE_MODAL` 仍在 modal flow 中保留为兼容状态，但当前不作为新功能入口 | 80% |
 | UI 副作用命令 | `UICommand` + `UICommandDispatcher` 已覆盖升级/奖励、局外升级、角色购买、调试加魂石 | 85% |
 | 结算解锁副作用 | `ResultUnlockService` 已从结果页迁出解锁写存档逻辑 | 95% |
 | 主要页面 ViewModel | 角色、地图、局外升级、图鉴、结算已接入 builder | 90% |
@@ -418,24 +417,6 @@ player.died / spawner.boss_defeated / pause give up
 - 新奖励副作用不要写到卡牌点击回调里。
 - 新副作用先补 `UICommand` 构造函数，再补 `UICommandDispatcher` handler。
 - 新运行中弹窗需要同步补 `UIStateRegistry` descriptor。
-
-### Branch Modal 兼容状态
-
-位置：`scripts/ui/modals/modal_flow_controller.gd`
-
-职责：
-
-- 保留 `BRANCH_CHOICE_MODAL` 的 modal flow 分支，避免旧状态名导致运行时崩溃。
-- 当前新技能/神系流程不应继续接入旧武器分支业务。
-
-当前状态：
-
-- 只作为疑似兼容残留记录。
-- 没有当前业务文档要求新增使用它。
-
-后续优化：
-
-- 若后续代码审计确认无状态机引用，可作为中风险 UI 状态清理候选。
 
 ### ResultScreenController
 

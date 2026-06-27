@@ -61,7 +61,7 @@ func _process(delta: float) -> void:
 			_next_log_time += 15.0
 		if _elapsed >= PLAY_SECONDS:
 			_finish(0)
-	elif state == "LEVEL_UP_MODAL" or state == "CURSE_CHOICE_MODAL" or state == "EVOLUTION_MODAL":
+	elif state == "LEVEL_UP_MODAL" or state == "CURSE_CHOICE_MODAL":
 		_release_all_movement()
 		call_deferred("_choose_first_modal_option", state)
 	elif state == "RESULT_DEFEAT" or state == "RESULT_VICTORY":
@@ -166,8 +166,7 @@ func _choose_first_modal_option(state: String) -> void:
 
 	var state_to_container: Dictionary = {
 		"LEVEL_UP_MODAL": "_level_up_options",
-		"CURSE_CHOICE_MODAL": "_curse_options",
-		"EVOLUTION_MODAL": "_evolution_options"
+		"CURSE_CHOICE_MODAL": "_curse_options"
 	}
 	var key: String = String(state_to_container.get(state, ""))
 	var container: Node = null
@@ -179,18 +178,44 @@ func _choose_first_modal_option(state: String) -> void:
 		container = screen.find_child(key, true, false) if screen != null else null
 
 	if container != null:
-		var option_count: int = 0
-		for child: Node in container.get_children():
-			if child is Button and not (child as Button).disabled:
-				option_count += 1
-		for child: Node in container.get_children():
-			if child is Button and not (child as Button).disabled:
-				print("[FullFlowAutoplay] choose_modal state=%s options=%d text=%s" % [state, option_count, (child as Button).text.replace("\n", " | ")])
-				(child as Button).emit_signal("pressed")
-				return
+		var buttons: Array[Button] = _collect_enabled_buttons(container)
+		if not buttons.is_empty():
+			var button: Button = buttons[0]
+			print("[FullFlowAutoplay] choose_modal state=%s options=%d text=%s" % [state, buttons.size(), _describe_button(button)])
+			button.emit_signal("pressed")
+			return
 
 	print("[FullFlowAutoplay] modal_no_choice state=%s, returning_to_running" % state)
 	_ui.call("transition_to", "RUNNING")
+
+
+func _collect_enabled_buttons(root: Node) -> Array[Button]:
+	var buttons: Array[Button] = []
+	if root == null:
+		return buttons
+	if root is Button and not (root as Button).disabled:
+		buttons.append(root as Button)
+	for child: Node in root.get_children():
+		buttons.append_array(_collect_enabled_buttons(child))
+	return buttons
+
+
+func _describe_button(button: Button) -> String:
+	var direct_text: String = button.text.strip_edges()
+	if direct_text != "":
+		return direct_text.replace("\n", " | ")
+	var labels: Array[String] = []
+	_collect_label_text(button, labels)
+	return " | ".join(labels)
+
+
+func _collect_label_text(root: Node, labels: Array[String]) -> void:
+	for child: Node in root.get_children():
+		if child is Label:
+			var label_text: String = (child as Label).text.strip_edges()
+			if label_text != "":
+				labels.append(label_text.replace("\n", " | "))
+		_collect_label_text(child, labels)
 
 
 func _log_status(time_value: float) -> void:
