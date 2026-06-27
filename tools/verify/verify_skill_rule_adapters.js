@@ -20,6 +20,7 @@ const actionExecutor = read("scripts/skills/skill_action_executor.gd");
 const areaEffect = read("scripts/combat/area_effect.gd");
 const projectile = read("scripts/combat/projectile.gd");
 const playerController = read("scripts/player/player_controller.gd");
+const playerSkillEventContext = read("scripts/player/player_skill_event_context.gd");
 const enemyHealthApplicationStage = read("scripts/combat/application_stages/enemy_health_application_stage.gd");
 
 for (const effectType of [
@@ -63,9 +64,13 @@ assert(eventBus.includes("SkillTriggerRuleAdapterScript"), "SkillEventBus must u
 assert(eventBus.includes("can_execute_rule_event"), "SkillEventBus must apply rule counter/cooldown guards");
 assert(eventBus.includes("get_all_skills"), "SkillEventBus must evaluate owned trigger rules");
 assert(eventBus.includes("execute_adapted_actions"), "SkillEventBus must expose inline adapted action execution");
+const playerEventTexts = `${playerController}\n${playerSkillEventContext}`;
 assert(playerController.includes('emit_skill_event", &"on_player_damaged"'), "Player damage must emit skill rule events");
 assert(playerController.includes('"skip_fire_passive_runtime"'), "Player damage rule event must avoid FireSkillRuntime double-run");
-assert(playerController.includes('"target": self'), "Player damage rule context must expose the player as target");
+assert(playerController.includes("PlayerSkillEventContextScript.build_damage_taken_context"), "PlayerController must delegate player damage event context construction");
+assert(playerController.includes("PlayerSkillEventContextScript.build_dash_context"), "PlayerController must delegate dash event context construction");
+assert(playerEventTexts.includes('"target": player'), "Player damage rule context must expose the player as target");
+assert(playerEventTexts.includes('"dash_direction": dash_direction'), "Player dash rule context must expose dash direction");
 assert(enemyHealthApplicationStage.includes('emit_skill_event", &"post_damage_hit"'), "Enemy damage application must emit the unified post_damage_hit event after applying damage");
 for (const actionField of ["actions_on_apply", "actions_on_tick", "actions_on_hit", "actions_on_expire", "actions_on_death"]) {
   assert(areaEffect.includes(actionField), `AreaEffect must store ${actionField}`);

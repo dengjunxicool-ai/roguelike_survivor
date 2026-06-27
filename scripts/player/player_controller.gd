@@ -13,6 +13,7 @@ const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifi
 const ModifierStoreScript: Script = preload("res://scripts/modifiers/modifier_store.gd")
 const PlayerVisualControllerScript: Script = preload("res://scripts/player/player_visual_controller.gd")
 const PlayerModifierApplierScript: Script = preload("res://scripts/player/player_modifier_applier.gd")
+const PlayerSkillEventContextScript: Script = preload("res://scripts/player/player_skill_event_context.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const DamageSystemScript: Script = preload("res://scripts/combat/damage_system.gd")
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
@@ -401,19 +402,7 @@ func _emit_dash_skill_event(event_name: StringName) -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null:
 		return
-	var parent_node: Node = get_tree().current_scene if get_tree() != null else get_parent()
-	event_bus.call("emit_skill_event", event_name, {
-		"player": self,
-		"caster": self,
-		"owner": self,
-		"position": global_position,
-		"dash_direction": _dash_direction,
-		"skill_manager": skill_manager,
-		"relic_manager": get_node_or_null("RelicManager"),
-		"event_bus": event_bus,
-		"parent": parent_node,
-		"target_group": &"enemies"
-	})
+	event_bus.call("emit_skill_event", event_name, PlayerSkillEventContextScript.build_dash_context(self, _dash_direction, skill_manager, get_node_or_null("RelicManager"), event_bus))
 
 
 func is_dash_active() -> bool:
@@ -656,20 +645,7 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 		return
 	var parent_node: Node = get_tree().current_scene if get_tree() != null else get_parent()
 	var event_bus: Node = get_node_or_null("SkillEventBus")
-	var damage_context: Dictionary = {
-		"player": self,
-		"caster": self,
-		"owner": self,
-		"target": self,
-		"parent": parent_node,
-		"source_packet": source_packet,
-		"damage_result": damage_result,
-		"amount": amount,
-		"skill_manager": skill_manager,
-		"relic_manager": get_node_or_null("RelicManager"),
-		"event_bus": event_bus,
-		"target_group": &"enemies"
-	}
+	var damage_context: Dictionary = PlayerSkillEventContextScript.build_damage_taken_context(self, source_packet, damage_result, amount, skill_manager, get_node_or_null("RelicManager"), event_bus)
 	FireSkillRuntimeScript.execute_passive_event(&"on_player_damaged", damage_context, skill_manager)
 	if event_bus != null and event_bus.has_method("emit_skill_event"):
 		var skill_rule_context: Dictionary = damage_context.duplicate(true)
