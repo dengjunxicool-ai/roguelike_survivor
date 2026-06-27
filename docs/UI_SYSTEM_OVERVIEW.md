@@ -565,7 +565,7 @@ UI 主要消费：
 资源字段约定：
 
 - 角色/怪物/技能视觉通常读配置中的 `visual.icon`、`visual.portrait`、`visual.texture`。
-- 地图预览和运行背景读 `maps.json` 的 `visual.background_texture`，由 `MapRuntime` 消费。
+- 地图预览和运行背景读 `maps.json` 的 `visual.background`，由 `MapRuntime` 消费。
 - 选择卡牌背景优先读 option 的 `background_texture` / `card_background_texture`，否则读 `data/ui/ui_theme.json`。
 - 本地化 UI 文案读 `data/localization/ui_text.json`。
 

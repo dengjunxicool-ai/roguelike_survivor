@@ -11,7 +11,7 @@
 			},
 			"id": "mage",
 			"display_name": "法师",
-			"description": "以主武器伤害和元素状态推进节奏，但过载后更脆弱。",
+			"description": "以主攻击伤害和元素状态推进节奏，但过载后更脆弱。",
 			"role": "高爆发元素施法者",
 			"unlock": {
 				"type": "default"
@@ -19,7 +19,7 @@
 			"trait": {
 				"id": "arcane_overload",
 				"display_name": "奥术过载",
-				"description": "每次攻击叠加过载状态，提升武器伤害，但会增加人物层数，并降低移速和拾取范围，最多可叠6层。受击会损失一半层数。",
+				"description": "每次攻击叠加过载状态，提升主攻击伤害，但会增加人物层数，并降低移速和拾取范围，最多可叠6层。受击会损失一半层数。",
 				"type": "skill_cast_stack",
 				"params": {
 					"casts_per_stack": 3.0,
@@ -232,7 +232,7 @@
 			"trait": {
 				"id": "holy_burden",
 				"display_name": "神圣重负",
-				"description": "定期获得护盾，整体承伤更稳；护盾存在时装备武器伤害提升，但节奏更慢。",
+				"description": "定期获得护盾，整体承伤更稳；护盾存在时初始技能伤害提升，但节奏更慢。",
 				"type": "passive_with_periodic_shield",
 				"params": {
 					"shield_amount": 20.0,

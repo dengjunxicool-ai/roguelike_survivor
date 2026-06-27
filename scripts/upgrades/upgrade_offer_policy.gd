@@ -67,10 +67,10 @@ func build_recommended_reason(player: Node, upgrade: Dictionary) -> String:
 	if is_late_run(player) and tags.has("boss"):
 		return "Boss 即将出现或已经出现，强敌补强的收益更高。"
 	if tags.has("dot") or tags.has("reaction"):
-		return "当前武器可走状态链路线，适合补足 DOT / 反应贡献。"
+		return "当前技能构筑可走状态链路线，适合补足 DOT / 反应贡献。"
 	if tags.has("area") or tags.has("field"):
 		return "中后段怪群压力增加，范围覆盖有助于清场。"
-	return "与当前武器或局内阶段兼容，可作为稳定成长选择。"
+	return "与当前技能构筑或局内阶段兼容，可作为稳定成长选择。"
 
 
 func options_have_any_tag(options: Array, tags: Array[String]) -> bool:

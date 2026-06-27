@@ -79,13 +79,13 @@ sequenceDiagram
     participant Spawner as EnemySpawner
     participant Tracker as RunStatsTracker
 
-    UI->>Loadout: build_loadout(character_id, weapon_id)
+    UI->>Loadout: build_loadout(character_id)
     UI->>Coord: start_run({loadout, map_id})
     Coord->>Main: instantiate/reuse run scene
-    Coord->>Tracker: reset_run(character, weapon, map)
+    Coord->>Tracker: reset_run(character, map)
     Coord->>Spawner: reset_for_run()
     Coord->>Player: reset_for_loadout(loadout)
-    Player->>Player: ensure CharacterRuntime/Weapon/Skill/Modifier/Status systems
+    Player->>Player: ensure CharacterRuntime/Skill/Modifier/Status systems
     Coord->>UI: return player/spawner/map/tracker
     UI->>UI: transition_to(RUNNING), connect HUD bridge
 ```

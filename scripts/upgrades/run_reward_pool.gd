@@ -50,7 +50,7 @@ func _build_boss_blessing_options(player: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = [
 		_make_option("boss_damage_blessing", "强敌压制", "Boss 战期间输出提高。", "rare", {"upgrade_id": &"boss_damage", "reward_kind": "boss_blessing"}, ["Boss", "输出"], "精英 / Boss", "不影响普通怪清场。", "Boss 即将出现，单体补强更容易转化为胜利。"),
 		_make_option("boss_survival_blessing", "稳固防线", "恢复 20% 最大生命，并获得防御补强。", "rare", {"heal_percent": 0.20, "upgrade_id": &"survival_defense", "reward_kind": "boss_blessing"}, ["Boss", "生存"], "Boss 阶段承伤", "不直接提高输出。", "适合对 Boss 技能读条不熟或血量偏低的局。"),
-		_make_option("boss_growth_blessing", "临战熟练", "立即获得 60 点经验，补齐未完成的主攻击成长。", "rare", {"amount": 60, "reward_kind": "boss_blessing"}, ["成长", "主攻击"], "主攻击等级", "不直接提高未装备武器。", "若 Boss 前未完成 Lv5，该选项能补齐构筑闭环。"),
+		_make_option("boss_growth_blessing", "临战熟练", "立即获得 60 点经验，补齐未完成的主攻击成长。", "rare", {"amount": 60, "reward_kind": "boss_blessing"}, ["成长", "主攻击"], "主攻击等级", "不直接提高未拥有技能。", "若 Boss 前未完成 Lv5，该选项能补齐构筑闭环。"),
 		_make_option("boss_status_blessing", "状态共鸣", "Boss 战中 DOT 与反应路线获得补强。", "rare", {"upgrade_id": &"boss_damage", "reward_kind": "boss_blessing"}, ["Boss", "状态", "反应"], "DOT / 反应 Boss 表现", "不影响百分比真伤或普通怪。", "适合冰、毒、闪电等依赖状态链的构筑。"),
 		_make_option("boss_control_blessing", "破势训练", "Boss 战中控制路线更容易转化为有效输出窗口。", "rare", {"upgrade_id": &"survival_defense", "reward_kind": "boss_blessing"}, ["Boss", "控制", "生存"], "Boss 韧性 / 生存", "不直接提高普通怪伤害。", "适合冰杖、战锤、陷阱等控制构筑。"),
 		_make_option("boss_risk_reward", "危险悬赏", "Boss 生命提高，但本局胜利收益提高。", "epic", {"upgrade_id": &"curse_boss_bounty", "reward_kind": "boss_blessing"}, ["Boss", "风险奖励"], "Boss 难度 / 胜利收益", "不提高生存，且会增加 Boss 血量。", "适合输出已经成型、想换取更高胜利收益的局。")

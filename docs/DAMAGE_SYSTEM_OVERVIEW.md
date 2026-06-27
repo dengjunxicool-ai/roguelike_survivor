@@ -443,7 +443,7 @@ ReactionService / ReactionLimiter
 
 `verify_damage_formula.gd` 当前覆盖：
 
-- 玩家武器打敌人。
+- 玩家主攻击打敌人。
 - 敌人打玩家。
 - DOT 小数池。
 - 反应伤害和反应限制。

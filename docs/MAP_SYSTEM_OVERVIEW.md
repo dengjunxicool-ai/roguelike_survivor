@@ -111,16 +111,14 @@ flowchart TD
 
 地图选择 UI 分两层：
 
-- `MapSelectViewModelBuilder.build(character_id, weapon_id, selected_map_id)` 聚合地图、角色、武器、灵魂石和开始按钮状态。
+- `MapSelectController.refresh(character_id)` 聚合地图、角色、灵魂石和开始按钮状态。
 - `MapSelectController` 负责构建节点、渲染列表、详情、预览图、怪物预览和开始按钮。
 
 开始条件：
 
 1. 角色存在。
-2. 武器 id 非空。
-3. 地图存在。
-4. 武器允许被当前角色使用。
-5. `MapRuntime.is_map_unlocked(map_data)` 为 true。
+2. 地图存在。
+3. `MapRuntime.is_map_unlocked(map_data)` 为 true。
 
 边界：
 
@@ -136,7 +134,7 @@ flowchart TD
 2. `MapRuntime.resolve_map_id(context.map_id)` 得到规范地图 id。
 3. `GameData.get_map(selected_map_id)` 读取地图配置。
 4. 创建或复用 `scenes/app/main.tscn`。
-5. 创建/重置 `RunStatsTracker`，写入角色、武器、地图 id 和地图名。
+5. 创建/重置 `RunStatsTracker`，写入角色、地图 id 和地图名。
 6. `MapRuntime.apply_background(tree, map_data)` 给 `DungeonBackground` 换背景。
 7. 清理旧的 `enemy`、`experience_crystal`、`map_hazard` 节点。
 8. `EnemySpawner.reset_for_run()`。
