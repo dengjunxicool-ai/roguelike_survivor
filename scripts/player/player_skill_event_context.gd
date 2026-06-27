@@ -34,6 +34,33 @@ static func build_damage_taken_context(player: Node2D, source_packet: Variant, d
 	}
 
 
+static func build_skill_instance_damage_context(player: Node2D, source_packet: Variant, damage_result: Dictionary, amount: int, skill_instance: RefCounted, skill_manager: Node, relic_manager: Node) -> Dictionary:
+	return {
+		"player": player,
+		"caster": player,
+		"parent": _resolve_parent(player),
+		"source_packet": source_packet,
+		"damage_result": damage_result,
+		"amount": amount,
+		"skill_instance": skill_instance,
+		"skill_manager": skill_manager,
+		"relic_manager": relic_manager,
+		"target_group": &"enemies"
+	}
+
+
+static func build_damage_rule_context(player: Node2D, source_packet: Variant, damage_result: Dictionary, skill_instance: RefCounted) -> Dictionary:
+	return {
+		"player": player,
+		"caster": player,
+		"parent": _resolve_parent(player),
+		"source_packet": source_packet,
+		"damage_result": damage_result,
+		"skill_instance": skill_instance,
+		"target_group": &"enemies"
+	}
+
+
 static func _resolve_parent(player: Node) -> Node:
 	if player == null:
 		return null

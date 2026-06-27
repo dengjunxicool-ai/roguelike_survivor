@@ -643,7 +643,6 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
 		return
-	var parent_node: Node = get_tree().current_scene if get_tree() != null else get_parent()
 	var event_bus: Node = get_node_or_null("SkillEventBus")
 	var damage_context: Dictionary = PlayerSkillEventContextScript.build_damage_taken_context(self, source_packet, damage_result, amount, skill_manager, get_node_or_null("RelicManager"), event_bus)
 	FireSkillRuntimeScript.execute_passive_event(&"on_player_damaged", damage_context, skill_manager)
@@ -655,53 +654,18 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 		var skill_instance: RefCounted = skill_variant as RefCounted
 		if skill_instance == null:
 			continue
-		_skill_special_rule_executor.call("execute_player_damaged", {
-			"player": self,
-			"caster": self,
-			"parent": parent_node,
-			"source_packet": source_packet,
-			"damage_result": damage_result,
-			"amount": amount,
-			"skill_instance": skill_instance,
-			"skill_manager": skill_manager,
-			"relic_manager": get_node_or_null("RelicManager"),
-			"target_group": &"enemies"
-		})
+		_skill_special_rule_executor.call("execute_player_damaged", PlayerSkillEventContextScript.build_skill_instance_damage_context(self, source_packet, damage_result, amount, skill_instance, skill_manager, get_node_or_null("RelicManager")))
 		var rules_variant: Variant = skill_instance.get("runtime_special_rules")
 		if not (rules_variant is Dictionary):
 			continue
 		var rules: Dictionary = rules_variant
 		if not rules.has("protective_lava_ring_on_player_damaged"):
 			if rules.has("frost_ring_on_player_damaged"):
-				SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, {
-					"player": self,
-					"caster": self,
-					"parent": parent_node,
-					"source_packet": source_packet,
-					"damage_result": damage_result,
-					"skill_instance": skill_instance,
-					"target_group": &"enemies"
-				})
+				SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
 			continue
-		SpecialDamageRuleHandlerScript.execute_protective_lava_ring_on_player_damaged(rules, {
-			"player": self,
-			"caster": self,
-			"parent": parent_node,
-			"source_packet": source_packet,
-			"damage_result": damage_result,
-			"skill_instance": skill_instance,
-			"target_group": &"enemies"
-		})
+		SpecialDamageRuleHandlerScript.execute_protective_lava_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
 		if rules.has("frost_ring_on_player_damaged"):
-			SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, {
-				"player": self,
-				"caster": self,
-				"parent": parent_node,
-				"source_packet": source_packet,
-				"damage_result": damage_result,
-				"skill_instance": skill_instance,
-				"target_group": &"enemies"
-			})
+			SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
 
 
 func _update_player_tick_special_rules(_delta: float) -> void:
