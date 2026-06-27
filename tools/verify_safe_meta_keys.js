@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const ROOT = process.cwd();
 const SEARCH_DIRS = ["scripts", "tools"];
@@ -70,7 +71,7 @@ function findVariableDefinition(lines, fromLineIndex, variableName) {
 
 function auditFile(filePath) {
   const relPath = path.relative(ROOT, filePath).replace(/\\/g, "/");
-  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  const lines = readTextFile(filePath).split(/\r?\n/);
   const issues = [];
 
   for (let i = 0; i < lines.length; i += 1) {

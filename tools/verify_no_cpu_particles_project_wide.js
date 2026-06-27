@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 const targetExtensions = new Set([".gd", ".tscn"]);
@@ -23,7 +24,7 @@ function walk(directory, files = []) {
 
 const failures = [];
 for (const filePath of walk(root)) {
-  const text = fs.readFileSync(filePath, "utf8");
+  const text = readTextFile(filePath);
   if (!text.includes(forbidden)) continue;
   const relativePath = path.relative(root, filePath).replace(/\\/g, "/");
   const lines = text.split(/\r?\n/);

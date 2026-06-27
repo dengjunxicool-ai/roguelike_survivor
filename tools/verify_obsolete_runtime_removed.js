@@ -1,5 +1,6 @@
 ﻿const fs = require("fs");
 const path = require("path");
+const { readTextFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
@@ -93,7 +94,7 @@ for (const scanRoot of scannedRoots) {
   for (const absolutePath of walk(scanRoot)) {
     if (!shouldScan(absolutePath)) continue;
     const relativePath = path.relative(root, absolutePath).replaceAll(path.sep, "/");
-    const text = fs.readFileSync(absolutePath, "utf8");
+    const text = readTextFile(absolutePath);
     const lines = text.split(/\r?\n/);
     lines.forEach((line, index) => {
       for (const pattern of forbiddenPatterns) {
@@ -111,4 +112,3 @@ if (errors.length) {
 }
 
 console.log("Weapon runtime removal check passed.");
-
