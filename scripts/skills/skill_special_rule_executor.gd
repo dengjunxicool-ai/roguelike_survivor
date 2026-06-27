@@ -144,31 +144,43 @@ func adjust_damage_packet(packet: Dictionary, context: Dictionary) -> Dictionary
 	var target: Node = context.get("target") as Node
 	var packet_object: RefCounted = DamagePacketScript.from_dictionary(packet, context.get("caster") as Node, target)
 	var damage_origin: String = String(packet_object.call("get_value", "damage_origin", ""))
-	_apply_flammable_mark_fire_vulnerability(adjusted, rules, target, packet_object)
-	_apply_acid_mark_vulnerability(adjusted, rules, target)
+	_apply_global_damage_packet_modifiers(adjusted, rules, target, packet_object)
 	if damage_origin == "trap":
-		_apply_hunter_trap_damage_bonus(adjusted, rules, target)
+		_apply_trap_damage_packet_modifiers(adjusted, rules, target)
 		return adjusted
 	if damage_origin != "primary_attack":
 		return adjusted
-	_apply_flame_core_direct_damage_bonus(adjusted, rules, target)
-	_apply_boss_poise_damage_bonus(adjusted, rules, target)
-	_apply_storm_hail_boss_modifier(adjusted, rules, context, target)
-	_apply_arcane_seal_burst_vulnerability(adjusted, rules, target)
-	_apply_forbidden_page_damage_bonus(adjusted, rules, context, target)
-	_apply_low_hp_damage_bonus(adjusted, rules, target)
-	_apply_same_target_short_window_decay(adjusted, rules, context, packet_object, target)
-	_apply_execution_mark_crit_damage_bonus(adjusted, rules, target)
-	_apply_next_knife_damage_after_kill(adjusted, rules, context)
-	_apply_hunter_arrow_pierce_damage(adjusted, rules, context, packet_object)
-	_apply_hunter_mark_damage_taken(adjusted, rules, target)
-	_apply_holy_mark_holy_vulnerability(adjusted, rules, target, packet_object)
-	_apply_warhammer_low_hp_damage_bonus(adjusted, rules, target)
-	_apply_warhammer_stun_target_damage_taken(adjusted, rules, target)
-	_apply_cross_relic_dot_target_damage_bonus(adjusted, rules, target, packet_object)
-	_apply_same_target_multi_projectile_damage(adjusted, rules, context, target, packet_object)
-	_apply_hot_rapid_fire_crit_bonus(adjusted, context, packet_object)
+	_apply_primary_attack_damage_packet_modifiers(adjusted, rules, context, target, packet_object)
 	return adjusted
+
+
+func _apply_global_damage_packet_modifiers(packet: Dictionary, rules: Dictionary, target: Node, packet_object: RefCounted) -> void:
+	_apply_flammable_mark_fire_vulnerability(packet, rules, target, packet_object)
+	_apply_acid_mark_vulnerability(packet, rules, target)
+
+
+func _apply_trap_damage_packet_modifiers(packet: Dictionary, rules: Dictionary, target: Node) -> void:
+	_apply_hunter_trap_damage_bonus(packet, rules, target)
+
+
+func _apply_primary_attack_damage_packet_modifiers(packet: Dictionary, rules: Dictionary, context: Dictionary, target: Node, packet_object: RefCounted) -> void:
+	_apply_flame_core_direct_damage_bonus(packet, rules, target)
+	_apply_boss_poise_damage_bonus(packet, rules, target)
+	_apply_storm_hail_boss_modifier(packet, rules, context, target)
+	_apply_arcane_seal_burst_vulnerability(packet, rules, target)
+	_apply_forbidden_page_damage_bonus(packet, rules, context, target)
+	_apply_low_hp_damage_bonus(packet, rules, target)
+	_apply_same_target_short_window_decay(packet, rules, context, packet_object, target)
+	_apply_execution_mark_crit_damage_bonus(packet, rules, target)
+	_apply_next_knife_damage_after_kill(packet, rules, context)
+	_apply_hunter_arrow_pierce_damage(packet, rules, context, packet_object)
+	_apply_hunter_mark_damage_taken(packet, rules, target)
+	_apply_holy_mark_holy_vulnerability(packet, rules, target, packet_object)
+	_apply_warhammer_low_hp_damage_bonus(packet, rules, target)
+	_apply_warhammer_stun_target_damage_taken(packet, rules, target)
+	_apply_cross_relic_dot_target_damage_bonus(packet, rules, target, packet_object)
+	_apply_same_target_multi_projectile_damage(packet, rules, context, target, packet_object)
+	_apply_hot_rapid_fire_crit_bonus(packet, context, packet_object)
 
 
 func _apply_hot_rapid_fire_crit_bonus(packet: Dictionary, context: Dictionary, packet_object: RefCounted) -> void:
