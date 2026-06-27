@@ -289,42 +289,32 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 			if direction == Vector2.ZERO:
 				direction = base_direction
 		var trajectory_mode: String = str(params.get("trajectory_mode", "linear"))
-		CombatObjectFactoryScript.create_projectile({
-			"parent": parent,
-			"projectile_id": source_id,
-			"position": projectile_position,
-			"direction": direction,
-			"damage": damage,
-			"damage_type": _get_damage_type(projectile_params, context, "projectile", _get_damage_origin(projectile_params, context, "projectile")),
-			"damage_packet": _build_damage_packet(projectile_params, context, damage, "projectile"),
-			"speed": speed,
-			"pierce": pierce,
-			"radius": radius,
-			"lifetime": lifetime,
-			"status_on_hit": StringName(str(params.get("status_id", params.get("status_on_hit", "")))),
-			"statuses_on_hit": statuses_on_hit,
-			"status_params": _get_status_params(params, context),
-			"target_group": context.get("target_group", &"enemies"),
-			"event_bus": context.get("event_bus"),
-			"skill_instance": context.get("skill_instance"),
-			"caster": caster,
-			"skill_manager": context.get("skill_manager"),
-			"relic_manager": context.get("relic_manager"),
-			"source_id": source_id,
-			"event_on_hit": &"on_projectile_hit",
-			"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
-			"cast_instance_id": cast_instance_id,
-			"hot_rapid_fire_crit": use_hot_rapid_fire,
-			"hot_rapid_fire_crit_chance_add": hot_rapid_fire_crit_chance_add if use_hot_rapid_fire else 0.0,
-			"forbidden_page": forbidden_page_pending and projectile_index == 0,
-			"trajectory_mode": trajectory_mode,
-			"curve_start_position": projectile_position,
-			"curve_target_position": curve_target_position,
-			"curve_height": float(params.get("curve_height", 64.0)),
-			"homing_enabled": bool(params.get("homing_enabled", false)),
-			"homing_turn_rate": float(params.get("homing_turn_rate", 8.0)),
-			"homing_seek_range": float(params.get("homing_seek_range", params.get("range", 0.0)))
-		})
+		CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+			params,
+			projectile_params,
+			context,
+			parent,
+			caster,
+			source_id,
+			projectile_position,
+			direction,
+			damage,
+			_build_damage_packet(projectile_params, context, damage, "projectile"),
+			speed,
+			pierce,
+			radius,
+			lifetime,
+			statuses_on_hit,
+			cast_instance_id,
+			trajectory_mode,
+			projectile_position,
+			curve_target_position,
+			{
+				"hot_rapid_fire_crit": use_hot_rapid_fire,
+				"hot_rapid_fire_crit_chance_add": hot_rapid_fire_crit_chance_add if use_hot_rapid_fire else 0.0,
+				"forbidden_page": forbidden_page_pending and projectile_index == 0
+			}
+		))
 
 	return true
 
@@ -387,42 +377,69 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 			projectile_params["source_instance_id"] = DamageSourceIdentityScript.for_projectile(cast_instance_id, spawned, source_id)
 		var damage_packet: Dictionary = _build_damage_packet(projectile_params, projectile_context, damage, "projectile")
 		_apply_projectile_damage_sequence(damage_packet, projectile_params, same_target_hit_index, context)
-		CombatObjectFactoryScript.create_projectile({
-			"parent": parent,
-			"projectile_id": source_id,
-			"position": visual_start_position,
-			"direction": direction.normalized(),
-			"damage": damage,
-			"damage_type": _get_damage_type(projectile_params, projectile_context, "projectile", _get_damage_origin(projectile_params, projectile_context, "projectile")),
-			"damage_packet": damage_packet,
-			"speed": speed,
-			"pierce": pierce,
-			"radius": radius,
-			"lifetime": lifetime,
-			"status_on_hit": StringName(str(params.get("status_id", params.get("status_on_hit", "")))),
-			"statuses_on_hit": statuses_on_hit,
-			"status_params": _get_status_params(params, projectile_context),
-			"target_group": context.get("target_group", &"enemies"),
-			"event_bus": context.get("event_bus"),
-			"skill_instance": context.get("skill_instance"),
-			"caster": caster,
-			"skill_manager": context.get("skill_manager"),
-			"relic_manager": context.get("relic_manager"),
-			"source_id": source_id,
-			"event_on_hit": &"on_projectile_hit",
-			"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
-			"cast_instance_id": cast_instance_id,
-			"trajectory_mode": str(params.get("trajectory_mode", "curve")),
-			"curve_start_position": visual_start_position,
-			"curve_target_position": visual_target_position,
-			"curve_height": float(params.get("curve_height", 64.0)),
-			"homing_enabled": bool(params.get("homing_enabled", false)),
-			"homing_turn_rate": float(params.get("homing_turn_rate", 8.0)),
-			"homing_seek_range": float(params.get("homing_seek_range", params.get("range", 0.0)))
-		})
+		CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+			params,
+			projectile_params,
+			projectile_context,
+			parent,
+			caster,
+			source_id,
+			visual_start_position,
+			direction.normalized(),
+			damage,
+			damage_packet,
+			speed,
+			pierce,
+			radius,
+			lifetime,
+			statuses_on_hit,
+			cast_instance_id,
+			str(params.get("trajectory_mode", "curve")),
+			visual_start_position,
+			visual_target_position
+		))
 		spawned += 1
 
 	return spawned > 0
+
+
+func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dictionary, context: Dictionary, parent: Node, caster: Node2D, source_id: StringName, position: Vector2, direction: Vector2, damage: int, damage_packet: Dictionary, speed: float, pierce: int, radius: float, lifetime: float, statuses_on_hit: Array[StringName], cast_instance_id: String, trajectory_mode: String, curve_start_position: Vector2, curve_target_position: Vector2, extra_params: Dictionary = {}) -> Dictionary:
+	var spawn_params: Dictionary = {
+		"parent": parent,
+		"projectile_id": source_id,
+		"position": position,
+		"direction": direction,
+		"damage": damage,
+		"damage_type": _get_damage_type(projectile_params, context, "projectile", _get_damage_origin(projectile_params, context, "projectile")),
+		"damage_packet": damage_packet,
+		"speed": speed,
+		"pierce": pierce,
+		"radius": radius,
+		"lifetime": lifetime,
+		"status_on_hit": StringName(str(params.get("status_id", params.get("status_on_hit", "")))),
+		"statuses_on_hit": statuses_on_hit,
+		"status_params": _get_status_params(params, context),
+		"target_group": context.get("target_group", &"enemies"),
+		"event_bus": context.get("event_bus"),
+		"skill_instance": context.get("skill_instance"),
+		"caster": caster,
+		"skill_manager": context.get("skill_manager"),
+		"relic_manager": context.get("relic_manager"),
+		"source_id": source_id,
+		"event_on_hit": &"on_projectile_hit",
+		"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
+		"cast_instance_id": cast_instance_id,
+		"trajectory_mode": trajectory_mode,
+		"curve_start_position": curve_start_position,
+		"curve_target_position": curve_target_position,
+		"curve_height": float(params.get("curve_height", 64.0)),
+		"homing_enabled": bool(params.get("homing_enabled", false)),
+		"homing_turn_rate": float(params.get("homing_turn_rate", 8.0)),
+		"homing_seek_range": float(params.get("homing_seek_range", params.get("range", 0.0)))
+	}
+	for key: Variant in extra_params.keys():
+		spawn_params[key] = extra_params[key]
+	return spawn_params
 
 
 func _build_projectile_target_sequence(targets: Array, count: int) -> Array:
