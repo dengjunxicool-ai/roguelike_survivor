@@ -344,6 +344,13 @@ func _advance_interval_counter(skill_instance: RefCounted, meta_key: String) -> 
 	return count
 
 
+func _reserve_cooldown(cooldowns: Dictionary, key: String, now_seconds: float, cooldown_seconds: float) -> bool:
+	if now_seconds < float(cooldowns.get(key, 0.0)):
+		return false
+	cooldowns[key] = now_seconds + cooldown_seconds
+	return true
+
+
 func _on_projectile_hit(rules: Dictionary, context: Dictionary) -> void:
 	_apply_fire_projectile_hit_rules(rules, context)
 	_apply_frost_projectile_hit_rules(rules, context)
@@ -1123,9 +1130,8 @@ func _apply_boss_low_hp_execution_burst(rules: Dictionary, context: Dictionary) 
 		return
 	var key: String = "execution_burst:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_execution_burst_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_execution_burst_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_execution_burst_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.execution_burst_intents(rules, context, maxi(int(rule.get("amount", 22)), 0)))
 
 
@@ -1138,9 +1144,8 @@ func _apply_wound_on_throwing_knife_hit(rules: Dictionary, context: Dictionary) 
 	var rule: Dictionary = _get_dictionary(rules.get("wound_on_throwing_knife_hit", {}))
 	var key: String = "wound_on_hit:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_wound_on_hit_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_wound_on_hit_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 0.3)), 0.0)):
 		return
-	_wound_on_hit_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 0.3)), 0.0)
 	var duration: float = float(rule.get("duration", 4.0))
 	var tuning: Dictionary = _get_dictionary(rules.get("wound_tuning", {}))
 	duration += float(tuning.get("duration_add", 0.0))
@@ -1162,9 +1167,8 @@ func _apply_bleed_on_crit_wound(rules: Dictionary, context: Dictionary) -> void:
 		return
 	var key: String = "bleed_on_wound:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_bleed_on_wound_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_bleed_on_wound_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)):
 		return
-	_bleed_on_wound_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.0)), 0.0)
 	target.call("apply_status", StringName(String(rule.get("status_id", "bleed"))), {
 		"stacks": maxi(int(rule.get("stacks", 1)), 1),
 		"max_stacks": maxi(int(rule.get("max_stacks", 1)), 1),
@@ -1183,9 +1187,8 @@ func _apply_rupture_on_full_wound_crit(rules: Dictionary, context: Dictionary) -
 		return
 	var key: String = "rupture:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_rupture_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_rupture_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_rupture_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.rupture_on_full_wound_crit_intents(rules, context, maxi(int(rule.get("amount", 18)), 0)))
 
 
@@ -1289,9 +1292,8 @@ func _apply_marked_hit_cooldown_refund(rules: Dictionary, context: Dictionary) -
 		return
 	var key: String = "marked_refund:%s:%s" % [String(context.get("skill_id", "piercing_arrow")), str(skill_instance.get_instance_id())]
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_marked_hit_refund_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_marked_hit_refund_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 2.0)), 0.0)):
 		return
-	_marked_hit_refund_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 2.0)), 0.0)
 	skill_instance.set("cooldown_remaining", 0.0)
 
 
@@ -1324,9 +1326,8 @@ func _apply_marked_target_death_explosion(rules: Dictionary, context: Dictionary
 		return
 	var key: String = "marked_death:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_marked_death_explosion_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_marked_death_explosion_cooldowns, key, now_seconds, maxf(float(rule.get("same_source_cooldown", 0.25)), 0.0)):
 		return
-	_marked_death_explosion_cooldowns[key] = now_seconds + maxf(float(rule.get("same_source_cooldown", 0.25)), 0.0)
 	SpecialDamageRuleHandlerScript.execute_burst_mark_death_explosion(rules, context, _get_skill_damage(context))
 
 
@@ -1373,9 +1374,8 @@ func _apply_pincer_reaction_on_root(rules: Dictionary, context: Dictionary) -> v
 		return
 	var key: String = "trap_pincer:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_pincer_reaction_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_pincer_reaction_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)):
 		return
-	_pincer_reaction_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 1.5)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.pincer_reaction_intents(rules, context, maxi(int(rule.get("amount", 16)), 0)))
 
 
@@ -1402,9 +1402,8 @@ func _apply_boss_core_trap_bonus_damage(rules: Dictionary, context: Dictionary) 
 	var rule: Dictionary = _get_dictionary(rules.get("boss_core_trap_bonus_damage", {}))
 	var key: String = "boss_core_trap_bonus:%s" % _target_key(target)
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_boss_core_trap_bonus_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_boss_core_trap_bonus_cooldowns, key, now_seconds, maxf(float(rule.get("same_target_cooldown", 3.0)), 0.0)):
 		return
-	_boss_core_trap_bonus_cooldowns[key] = now_seconds + maxf(float(rule.get("same_target_cooldown", 3.0)), 0.0)
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.boss_core_trap_bonus_intents(rules, context, maxi(int(rule.get("amount", 28)), 0)))
 
 
@@ -1432,9 +1431,8 @@ func _apply_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("decoy_trap_spawn", {}))
 	var key: String = "decoy_trap:%s" % str(caster.get_instance_id())
 	var now_seconds: float = _now_seconds()
-	if now_seconds < float(_decoy_trap_spawn_cooldowns.get(key, 0.0)):
+	if not _reserve_cooldown(_decoy_trap_spawn_cooldowns, key, now_seconds, maxf(float(rule.get("spawn_interval", 10.0)), 0.05)):
 		return
-	_decoy_trap_spawn_cooldowns[key] = now_seconds + maxf(float(rule.get("spawn_interval", 10.0)), 0.05)
 	SpecialDamageRuleHandlerScript.execute_decoy_trap_spawn(rules, context)
 
 
