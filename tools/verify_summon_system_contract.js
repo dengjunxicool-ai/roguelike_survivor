@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readJsonFile } = require("./lib/json_file");
 
 const root = path.resolve(__dirname, "..");
 
@@ -10,7 +11,7 @@ function assert(condition, message) {
 }
 
 function readJson(relativePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8").replace(/^\uFEFF/, ""));
+  return readJsonFile(path.join(root, relativePath));
 }
 
 const requiredFiles = [
