@@ -696,7 +696,7 @@ Expected: Case 1, Case 2A, Case 2B, Lv3, and Lv5 assertions pass.
 ### Task 8: Add Static + Runtime Batch Command Documentation
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-06-18-main-gameplay-combat-test-design.md`
+- Modify: `docs/archive/superpowers/specs/2026-06-18-main-gameplay-combat-test-design.md`
 - Optional create: `reports/combat-scene-checks/README.md`
 
 - [ ] **Step 1: Add final command set to spec**
