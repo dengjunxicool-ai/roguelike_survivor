@@ -3,7 +3,6 @@ extends SceneTree
 
 const APP_BOOTSTRAP_PATH: String = "res://scenes/app/app_bootstrap.tscn"
 const CHARACTER_ID: StringName = &"mage"
-const WEAPON_ID: StringName = &"fire_staff"
 const MAP_ID: StringName = &"abandoned_dungeon"
 const FROST_SKILL_ID: StringName = &"frost_attack_frostbite"
 
@@ -49,7 +48,6 @@ func _run_frost_skill_card_case() -> Dictionary:
 
 	ui_manager.call("start_developer_debug_run", {
 		"character_id": CHARACTER_ID,
-		"weapon_id": WEAPON_ID,
 		"map_id": MAP_ID
 	})
 	root.set_meta("developer_mode_enabled", true)

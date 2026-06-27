@@ -3,7 +3,6 @@ extends SceneTree
 
 const APP_BOOTSTRAP_PATH: String = "res://scenes/app/app_bootstrap.tscn"
 const CHARACTER_ID: StringName = &"mage"
-const WEAPON_ID: StringName = &"fire_staff"
 const MAP_ID: StringName = &"abandoned_dungeon"
 const DEFAULT_SKILL_ID: StringName = &"fire_attack_searing"
 const EXPECTED_GOD_IDS: Array = [&"fire", &"thunder", &"frost", &"curse", &"holy", &"chaos"]
@@ -50,7 +49,6 @@ func _run_fire_skill_chain_case(skill_id: StringName) -> Dictionary:
 
 	ui_manager.call("start_developer_debug_run", {
 		"character_id": CHARACTER_ID,
-		"weapon_id": WEAPON_ID,
 		"map_id": MAP_ID
 	})
 	root.set_meta("developer_mode_enabled", true)

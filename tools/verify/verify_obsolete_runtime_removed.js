@@ -21,6 +21,7 @@ const forbiddenExistingPaths = [
 const scannedRoots = [
   "data",
   "scripts",
+  "tools/verify",
   "package.json",
 ];
 
