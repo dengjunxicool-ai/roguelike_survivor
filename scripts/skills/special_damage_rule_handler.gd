@@ -665,14 +665,15 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 	if quake_active and int(quake_rule.get("same_target_max_hits", 0)) > 0:
 		duration = minf(duration, maxf(float(rule.get("tick_interval", 0.4)), 0.05) * float(quake_rule.get("same_target_max_hits", 2)))
 	var amount: int = maxi(int(rule.get("amount", 5)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"warhammer_crack_field",
 		amount,
 		String(rule.get("damage_origin", "field")),
 		false,
+		context,
 		String(rule.get("element", "physical")),
 		String(rule.get("damage_type", "area_direct"))
-	), context)
+	)
 	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
 	if source_origin_id == "" and caster != null:
 		source_origin_id = String(caster.get("selected_character_id"))
@@ -718,14 +719,15 @@ static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictio
 	if _is_boss(target):
 		var shock_rule: Dictionary = _get_dictionary(rules.get("warhammer_judgement_shock", {}))
 		final_amount = maxi(roundi(float(final_amount) * maxf(float(shock_rule.get("boss_damage_multiplier", 0.75)), 0.0)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		source_id,
 		final_amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
 	return intents
 
@@ -750,14 +752,15 @@ static func execute_warhammer_boss_low_hp_shockwave(rules: Dictionary, context: 
 	if parent == null:
 		return null
 	var amount: int = maxi(int(rule.get("amount", 30)), 0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"warhammer_boss_low_hp_shockwave",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "physical")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	return CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": target.global_position,
@@ -787,14 +790,15 @@ static func fire_oil_flammable_burst_intents(rules: Dictionary, context: Diction
 		return intents
 	var rule: Dictionary = _get_dictionary(rules.get("flammable_mark_burst_on_full_mark_tick", {}))
 	var boss_tuning: Dictionary = _get_dictionary(rules.get("flammable_mark_boss_tuning", {}))
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"fire_oil_flammable_burst",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "fire")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	if _is_boss(target):
 		packet["boss_damage_multiplier_add"] = float(boss_tuning.get("burst_boss_damage_multiplier_add", 0.0))
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
@@ -816,14 +820,15 @@ static func execute_fire_oil_deflagration(rules: Dictionary, context: Dictionary
 	var upgrade: Dictionary = _get_dictionary(rules.get("deflagration_upgrade", {}))
 	var amount: int = maxi(roundi(float(rule.get("amount", 18)) * maxf(1.0 + float(rule.get("damage_multiplier_add", 0.0)), 0.0)), 0)
 	var radius: float = maxf(float(rule.get("radius", 90.0)) * maxf(1.0 + float(upgrade.get("radius_multiplier_add", 0.0)), 0.05), 1.0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"fire_oil_deflagration",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "fire")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet["can_trigger_reaction"] = false
 	var status_id: StringName = &""
@@ -863,14 +868,15 @@ static func acid_burst_intents(rules: Dictionary, context: Dictionary, amount: i
 	if target == null or amount <= 0:
 		return intents
 	var rule: Dictionary = _acid_burst_rule(rules)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"acid_burst",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "acid")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet["can_trigger_reaction"] = false
 	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
@@ -897,14 +903,15 @@ static func execute_acid_burst(rules: Dictionary, context: Dictionary) -> Node2D
 		multiplier *= maxf(1.0 + float(high_defense_rule.get("damage_multiplier_add", 0.2)), 0.0)
 	amount = maxi(roundi(float(amount) * multiplier), 0)
 	var radius: float = maxf(float(rule.get("radius", _get_dictionary(rules.get("acid_sprayer_base", {})).get("acid_burst_radius", 75.0))), 1.0)
-	var packet: Dictionary = DamageTraceContextScript.apply_to_packet(build_special_packet(
+	var packet: Dictionary = _build_traced_special_packet(
 		"acid_burst",
 		amount,
 		String(rule.get("damage_origin", "reaction")),
 		false,
+		context,
 		String(rule.get("element", "acid")),
 		String(rule.get("damage_type", "reaction_damage"))
-	), context)
+	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet["can_trigger_reaction"] = false
 	var spread_rule: Dictionary = _get_dictionary(rules.get("acid_burst_spread_residue", {}))
