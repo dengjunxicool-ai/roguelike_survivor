@@ -117,7 +117,7 @@ flowchart TD
 | 项目 | 内容 |
 | --- | --- |
 | 职责范围 | 角色定义、起始技能、开局 loadout、角色运行态、角色 trait 事件与 modifier。 |
-| 主要文件 | `scripts/characters/*`, `scripts/characters/traits/*`, `data/characters.json`, `data/character_texts.json` |
+| 主要文件 | `scripts/characters/*`, `scripts/characters/traits/*`, `data/characters/characters.json`, `data/characters/character_texts.json` |
 | 做了什么 | `CharacterLoadoutService` 校验角色及起始技能并生成 `RunLoadout`；`CharacterRuntime` 保存本局角色定义和运行 modifier；`CharacterRunInitializer` 把 loadout 应用到 Player；`CharacterTraitSystem` 转发移动、施法、受击、击杀等事件到具体 trait。 |
 | 怎么做 | 开局只走 `Player.reset_for_loadout(loadout)`；内部调用 `CharacterRunInitializer.initialize_loadout()`，再初始化 `CharacterRuntime`、Trait、基础属性、起始技能。Trait 通过 `TraitRegistry` 创建具体策略对象。 |
 | 接收 | 普通输入：`RunLoadout`、`characters.json`、`skills.json`。事件输入：移动 `handle_movement`、技能 `handle_skill_bus_event`、受击 `handle_player_damaged`、击杀 `handle_enemy_killed`、受击前吸收 `request_damage_absorb`。 |

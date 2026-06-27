@@ -5,7 +5,7 @@ const { readJsonFile } = require("../lib/json_file");
 const ROOT = path.resolve(__dirname, "../..");
 const GODS_PATH = path.join(ROOT, "data", "gods.json");
 const SKILLS_PATH = path.join(ROOT, "data", "skills.json");
-const CHARACTERS_PATH = path.join(ROOT, "data", "characters.json");
+const CHARACTERS_PATH = path.join(ROOT, "data", "characters", "characters.json");
 const UNREADABLE_JSON = Symbol("unreadable_json");
 
 const ALLOWED_SKILL_TYPES = new Set([
@@ -251,15 +251,15 @@ function validateSkills(skillsDocument, godIds, implementedGodIds, errors) {
 function validateCharacters(charactersDocument, errors) {
   if (charactersDocument === UNREADABLE_JSON) return;
   if (!isObject(charactersDocument)) {
-    errors.push('data/characters.json root must be an object with a top-level "characters" array');
+    errors.push('data/characters/characters.json root must be an object with a top-level "characters" array');
     return;
   }
 
-  const characters = requiredArray(charactersDocument, "characters", "data/characters.json", errors);
+  const characters = requiredArray(charactersDocument, "characters", "data/characters/characters.json", errors);
   for (const character of characters) {
     if (!isObject(character)) continue;
     if (character.starting_skill_id !== "fireball") {
-      errors.push(`data/characters.json character ${character.id || "missing id"} must set starting_skill_id: "fireball"`);
+      errors.push(`data/characters/characters.json character ${character.id || "missing id"} must set starting_skill_id: "fireball"`);
     }
   }
 }
@@ -268,7 +268,7 @@ function main() {
   const errors = [];
   const godsDocument = loadJson("data/gods.json", GODS_PATH, errors);
   const skillsDocument = loadJson("data/skills.json", SKILLS_PATH, errors);
-  const charactersDocument = loadJson("data/characters.json", CHARACTERS_PATH, errors);
+  const charactersDocument = loadJson("data/characters/characters.json", CHARACTERS_PATH, errors);
 
   const { godIds, implementedGodIds } = validateGods(godsDocument, errors);
   validateSkills(skillsDocument, godIds, implementedGodIds, errors);

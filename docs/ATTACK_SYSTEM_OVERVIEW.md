@@ -93,7 +93,7 @@ combat object 分布：
 | --- | --- | --- |
 | 玩家技能数据 | `data/skills.json` | 起始技能和可学习技能定义，包含 school、type、components、events、trigger_rules、effects、base。 |
 | 神系数据 | `data/gods.json` | 神系身份、展示、是否已实现，以及技能归属验证入口。 |
-| 角色起始技能 | `data/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
+| 角色起始技能 | `data/characters/characters.json.starting_skill_id` | 当前角色开局加入 `SkillManager` 的起始技能。 |
 | 战斗对象数据 | `data/combat_objects.json` | projectile / area / orbit object 的默认 scene、碰撞半径和 visual。 |
 | 敌方攻击数据 | `data/enemy_skills.json` | 敌方普通技能和 Boss phase 技能的 action 参数。 |
 | 怪物行为数据 | `data/enemies.json` | 行为类型、技能引用、接触伤害、行为范围、Boss phase 配置。 |
@@ -304,7 +304,7 @@ EnemyBase._apply_contact_damage()
 
 ### 调整某个玩家技能攻击
 
-1. 从 `data/characters.json.starting_skill_id` 或 `data/skills.json.skills[].id` 找到技能 ID。
+1. 从 `data/characters/characters.json.starting_skill_id` 或 `data/skills.json.skills[].id` 找到技能 ID。
 2. 到 `data/skills.json` 修改该技能的 `base`、`components`、`events/actions`。
 3. 改基础伤害优先改 `base.damage` 或 action `damage/damage_multiplier`。
 4. 改攻击频率优先改 cooldown component 的 `params.seconds`，并确认 `attack_speed_multiplier_add` 是否通过 modifier 消费。

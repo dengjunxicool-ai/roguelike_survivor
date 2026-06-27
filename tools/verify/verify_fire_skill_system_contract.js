@@ -426,7 +426,7 @@ function main() {
 
 	const document = readJson("data/skills.json");
 	const combatObjectsDocument = readJson("data/combat_objects.json");
-	const charactersDocument = readJson("data/characters.json");
+	const charactersDocument = readJson("data/characters/characters.json");
 	assert(Array.isArray(document.starting_skills), "data/skills.json starting_skills must be an array");
 	assert(document.starting_skills.length === 1, `data/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
 	const fireball = document.starting_skills[0];
@@ -478,9 +478,9 @@ function main() {
 	}
 
 	const allSkillIds = new Set([...document.starting_skills, ...skills].map((skill) => skill.id));
-	assert(Array.isArray(charactersDocument.characters), "data/characters.json characters must be an array");
+	assert(Array.isArray(charactersDocument.characters), "data/characters/characters.json characters must be an array");
 	for (const character of charactersDocument.characters) {
-		assert(isObject(character), "data/characters.json characters entries must be objects");
+		assert(isObject(character), "data/characters/characters.json characters entries must be objects");
 		const startingSkillId = character.starting_skill_id;
 		assert(typeof startingSkillId === "string" && startingSkillId !== "", `${character.id || "missing character"} must set starting_skill_id`);
 		assert(allSkillIds.has(startingSkillId), `${character.id || "missing character"} references missing starting_skill_id ${startingSkillId}`);

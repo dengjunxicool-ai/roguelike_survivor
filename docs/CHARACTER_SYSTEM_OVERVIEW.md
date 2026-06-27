@@ -6,7 +6,7 @@
 
 当前人物系统已经形成比较清晰的数据驱动结构：
 
-- 人物定义以 `data/characters.json` 为源头。
+- 人物定义以 `data/characters/characters.json` 为源头。
 - 运行开始以 `RunLoadout` 为唯一人物载体。
 - `Player.reset_for_loadout(loadout)` 是玩家重置人物运行态的唯一入口。
 - `CharacterRuntime` 保存本局人物定义、起始技能和运行期 modifier。
@@ -23,7 +23,7 @@
 
 | 需求类型 | 首选入口 | 不建议入口 |
 | --- | --- | --- |
-| 新人物、新起始技能 | `data/characters.json` + `CharacterLoadoutService` | UI 里手写技能列表 |
+| 新人物、新起始技能 | `data/characters/characters.json` + `CharacterLoadoutService` | UI 里手写技能列表 |
 | 人物基础血量、移速、护甲、拾取等静态属性 | `base_stats` + `CharacterRunInitializer.apply_character_setup()` | 在 Player 初始化后零散覆盖属性 |
 | 施法、移动、受伤、击杀触发的人物特性 | 具体 `CharacterTrait` 实现 + `TraitRegistry` | `Player` 或 `DamageSystem` 按人物 ID 分支 |
 | 长期局内数值来源 | `ModifierStore`，通过 `set_run_modifier_source()` / `merge_run_modifier_source()` 写入 | 直接长期改 Player 快照字段 |
@@ -48,8 +48,8 @@
 
 | 层级 | 文件 | 职责 |
 | --- | --- | --- |
-| 人物数据 | `data/characters.json` | 定义人物 ID、展示名、定位、基础属性、起始技能、解锁、视觉、Trait。 |
-| 人物文案 | `data/character_texts.json` | 定义人物选择界面的 Trait、短板、难度、起始技能展示文案。 |
+| 人物数据 | `data/characters/characters.json` | 定义人物 ID、展示名、定位、基础属性、起始技能、解锁、视觉、Trait。 |
+| 人物文案 | `data/characters/character_texts.json` | 定义人物选择界面的 Trait、短板、难度、起始技能展示文案。 |
 | 数据校验 | `tools/verify/verify_gods_and_skills_contract.js` + `tools/validate/validate_enemy_configs.js` | 校验当前技能、神系、敌人和波次配置入口。 |
 | 冒烟校验 | `tools/verify/verify_fire_skill_runtime_smoke.gd` 等神系 runtime smoke | 验证起始技能、技能触发和关键运行链路。 |
 | Loadout 服务 | `scripts/characters/character_loadout_service.gd` | 校验人物和起始技能合法性、生成 `RunLoadout`。 |
@@ -88,7 +88,7 @@
 
 ## 数据契约
 
-`data/characters.json` 的人物定义应使用当前字段：
+`data/characters/characters.json` 的人物定义应使用当前字段：
 
 - `id`
 - `display_name`
@@ -147,7 +147,7 @@ Trait 事件入口如下：
 2. 实现需要的 `setup()`、`process()`、`handle_event()`、`get_modifiers()`、`absorb_damage()`、`get_debug_state()`。
 3. 在 `scripts/characters/traits/trait_registry.gd` 注册 `trait.type`。
 4. 在对应数据契约或专项验证脚本中补充参数校验。
-5. 在 `data/character_texts.json` 中补充展示文案。
+5. 在 `data/characters/character_texts.json` 中补充展示文案。
 6. 必要时扩展现有神系 runtime smoke 或新增专项验证。
 
 不要在 `Player`、`CharacterTraitSystem`、`SkillManager` 或 `DamageSystem` 中按人物 ID 写 Trait 分支。
@@ -199,7 +199,7 @@ Trait 事件入口如下：
 
 ### 起始技能
 
-`CharacterRunInitializer.configure_starting_skills(player)` 优先读取 `data/characters.json.starting_skill_id`，找不到时回退到 `data/skills.json.starting_skills` 的第一项，然后调用 `SkillManager.add_skill()`。
+`CharacterRunInitializer.configure_starting_skills(player)` 优先读取 `data/characters/characters.json.starting_skill_id`，找不到时回退到 `data/skills.json.starting_skills` 的第一项，然后调用 `SkillManager.add_skill()`。
 
 后续人物相关技能改造，应优先通过 `CharacterRuntime.get_starting_skill_id()` 和技能系统的公开入口访问状态，不要外部直接拼散参。
 
@@ -235,7 +235,7 @@ Trait 事件入口如下：
 
 人物选择 UI 不应自己判断复杂规则：
 
-- 起始技能来自 `data/characters.json.starting_skill_id`。
+- 起始技能来自 `data/characters/characters.json.starting_skill_id`。
 - 确认前合法性来自 `CharacterLoadoutService.get_validation_errors()`。
 - 展示文本来自 `CharacterLoadoutText` 和 `character_texts.json`。
 
@@ -254,7 +254,7 @@ Trait 事件入口如下：
 
 改人物前先按下面顺序查影响面，可以最快判断是否会碰到其他系统：
 
-1. 数据源：`data/characters.json`、`data/character_texts.json`、`data/progression/progression_goals.json`、`data/progression/challenges.json`。
+1. 数据源：`data/characters/characters.json`、`data/characters/character_texts.json`、`data/progression/progression_goals.json`、`data/progression/challenges.json`。
 2. 开局链路：`CharacterLoadoutService.build_loadout()`、`RunSceneCoordinator.start_run()`、`Player.reset_for_loadout()`。
 3. 运行态：`CharacterRuntime` 是否已有 getter 或写入方法可复用。
 4. 触发源：移动看 `Player._update_trait_movement()`，施法看 `SkillEventBus.on_cast`，受伤看玩家 damage application stage，击杀看 `EnemyRewardController.notify_enemy_killed_synergies()`。
@@ -265,10 +265,10 @@ Trait 事件入口如下：
 
 ### 新增人物，复用已有 Trait
 
-1. 在 `data/characters.json` 添加人物。
+1. 在 `data/characters/characters.json` 添加人物。
 2. 使用当前字段，尤其是 `id`、`base_stats`、`starting_skill_id`、`trait`。
 3. 确认 `starting_skill_id` 对应 `data/skills.json.starting_skills` 中的技能。
-4. 在 `data/character_texts.json` 添加人物展示文案。
+4. 在 `data/characters/character_texts.json` 添加人物展示文案。
 5. 在 `data/progression/progression_goals.json` 添加人物专精目标。
 6. 如挑战引用新人物，在 `data/progression/challenges.json` 添加对应配置。
 7. 运行校验和冒烟测试。
@@ -282,7 +282,7 @@ Trait 事件入口如下：
 
 ### 调整人物基础数值
 
-1. 修改 `data/characters.json` 的 `base_stats`。
+1. 修改 `data/characters/characters.json` 的 `base_stats`。
 2. 如果是输出伤害类字段，确认它属于 Player 快照还是 damage scope。
 3. 如果是移动或拾取字段，确认 key 是否会被动态 scope 排除。
 4. 跑人物配置校验和 smoke。

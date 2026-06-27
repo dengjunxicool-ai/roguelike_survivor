@@ -185,13 +185,13 @@ flowchart TD
 
 ### 4.1 改角色或玩家属性
 
-优先改 `data/characters.json`、永久升级配置或 modifier 来源。运行时基础属性由 `Player.reset_for_loadout()` 重置后，通过 `CharacterRunInitializer.apply_character_setup()` 应用角色配置，再叠加永久升级和运行 modifier。移动速度、拾取范围、伤害等动态属性要确认对应 modifier scope 是否存在。
+优先改 `data/characters/characters.json`、永久升级配置或 modifier 来源。运行时基础属性由 `Player.reset_for_loadout()` 重置后，通过 `CharacterRunInitializer.apply_character_setup()` 应用角色配置，再叠加永久升级和运行 modifier。移动速度、拾取范围、伤害等动态属性要确认对应 modifier scope 是否存在。
 
 需要加角色特质时，优先扩展 `CharacterTraitSystem` 和 trait 配置，不要把特质逻辑散落到技能或怪物里。受击吸收、移动触发、技能 on_cast 事件已有接入点。
 
 ### 4.2 改起始技能、神系或技能成长
 
-起始技能定义在 `data/skills.json.starting_skills`，可学习技能定义在 `data/skills.json.skills`，神系定义在 `data/gods.json`。人物通过 `data/characters.json.starting_skill_id` 指向起始技能，开局时 `CharacterRunInitializer.configure_starting_skills()` 把它加入 `SkillManager`。
+起始技能定义在 `data/skills.json.starting_skills`，可学习技能定义在 `data/skills.json.skills`，神系定义在 `data/gods.json`。人物通过 `data/characters/characters.json.starting_skill_id` 指向起始技能，开局时 `CharacterRunInitializer.configure_starting_skills()` 把它加入 `SkillManager`。
 
 安全路径是：先改配置，再跑技能/神系验证；如需新增动作类型，才改 `SkillActionExecutor`、技能规则适配器、验证脚本和相关文档。不要把人物、UI 或伤害系统写成按具体技能 ID 分支，优先通过 skill definition、tags、school 和 modifier scope 表达。
 
@@ -259,8 +259,8 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 | 想改什么 | 第一入口 | 还要检查 |
 | --- | --- | --- |
 | 开局角色/地图选择 | `UIManager._start_run()` | `CharacterLoadoutService`, `RunLoadout`, `RunSceneCoordinator` |
-| 角色基础数值 | `data/characters.json` | `CharacterRunInitializer`, `PlayerModifierApplier`, HUD |
-| 角色起始技能 | `data/characters.json.starting_skill_id` | `data/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
+| 角色基础数值 | `data/characters/characters.json` | `CharacterRunInitializer`, `PlayerModifierApplier`, HUD |
+| 角色起始技能 | `data/characters/characters.json.starting_skill_id` | `data/skills.json.starting_skills`, `CharacterRunInitializer`, `SkillManager` |
 | 技能伤害/冷却/投射物 | `data/skills.json` | `SkillActionExecutor`, `CombatObjectFactory`, damage validators |
 | 暴击/防御/抗性公式 | `scripts/combat/damage_system.gd` | `tools/verify/verify_damage_formula.gd`, Damage docs |
 | DOT/控制/易伤 | `data/status_effects.json` | `StatusEffectManager`, ReactionLimiter, RunStatsTracker |
