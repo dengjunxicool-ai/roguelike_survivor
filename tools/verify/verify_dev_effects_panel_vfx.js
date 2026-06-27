@@ -94,6 +94,8 @@ function getTscnSectionBody(text, header) {
 function expectPanelContract(panel, failures) {
   const functions = collectFunctionBlocks(panel);
   const buildPanel = findFunction(functions, "_build_panel");
+  const categoryNavigation = findFunction(functions, "_add_category_navigation");
+  const buildEffectsPage = findFunction(functions, "_build_effects_page");
   const populateOptions = findFunction(functions, "_populate_options");
   const populateEffects = findFunction(functions, "_populate_effect_options");
   const dispatcher = findFunction(functions, "_trigger_selected_effect");
@@ -114,19 +116,21 @@ function expectPanelContract(panel, failures) {
   ].filter(([condition]) => !condition).map(([, message]) => message));
 
   if (buildPanel) {
-    if (!hasCallWithArgs(buildPanel.body, "_add_category_button", ['"effects"', '"Effects"'])) {
+    const categoryNavigationBody = categoryNavigation ? categoryNavigation.body : buildPanel.body;
+    const effectsPageBody = buildEffectsPage ? buildEffectsPage.body : buildPanel.body;
+    if (!hasCallWithArgs(categoryNavigationBody, "_add_category_button", ['"effects"', '"Effects"'])) {
       failures.push('DevDebugPanel must expose an Effects category button for id "effects"');
     }
-    if (!hasCallWithArgs(buildPanel.body, "_add_category_page", ['"effects"', '"Effects"'])) {
+    if (!hasCallWithArgs(effectsPageBody, "_add_category_page", ['"effects"', '"Effects"'])) {
       failures.push('DevDebugPanel must register an Effects page for id "effects"');
     }
-    if (!buildPanel.body.includes('_add_option_row(effects_page, "Effect")')) {
+    if (!effectsPageBody.includes('_add_option_row(effects_page, "Effect")')) {
       failures.push("Effects page must create the _effect_option dropdown on effects_page");
     }
-    if (!hasCallWithArgs(buildPanel.body, "_add_button", ['"持续发射"', 'Callable(self, "_start_continuous_effect_fire")'])) {
+    if (!hasCallWithArgs(effectsPageBody, "_add_button", ['"持续发射"', 'Callable(self, "_start_continuous_effect_fire")'])) {
       failures.push("Effects page must wire 持续发射 to _start_continuous_effect_fire");
     }
-    if (!hasCallWithArgs(buildPanel.body, "_add_button", ['"单次发射"', 'Callable(self, "_fire_single_effect")'])) {
+    if (!hasCallWithArgs(effectsPageBody, "_add_button", ['"单次发射"', 'Callable(self, "_fire_single_effect")'])) {
       failures.push("Effects page must wire 单次发射 to _fire_single_effect");
     }
   }

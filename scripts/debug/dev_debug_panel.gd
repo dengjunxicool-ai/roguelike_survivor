@@ -147,6 +147,35 @@ func _build_panel() -> void:
 	_category_buttons.clear()
 	_active_category_id = ""
 
+	var root: VBoxContainer = _build_panel_shell()
+
+	_add_category_navigation(root)
+	var page_root: VBoxContainer = _build_page_root(root)
+
+	_build_run_setup_page(page_root)
+
+	_build_runtime_page(page_root)
+
+	_build_skill_cards_page(page_root)
+
+	_build_enemy_spawn_page(page_root)
+
+	_build_effects_page(page_root)
+
+	_build_status_page(page_root)
+
+	_build_utility_page(page_root)
+
+	_log_label = Label.new()
+	_log_label.name = "LogLabel"
+	_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_log_label.add_theme_font_size_override("font_size", 12)
+	root.add_child(_log_label)
+	_open_category("run_setup")
+	_refresh_state()
+
+
+func _build_panel_shell() -> VBoxContainer:
 	_panel = PanelContainer.new()
 	_panel.name = "DevDebugPanelRoot"
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -181,6 +210,10 @@ func _build_panel() -> void:
 	_state_label.add_theme_font_size_override("font_size", 12)
 	root.add_child(_state_label)
 
+	return root
+
+
+func _add_category_navigation(root: VBoxContainer) -> void:
 	var category_grid: GridContainer = GridContainer.new()
 	category_grid.columns = 2
 	category_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -195,6 +228,8 @@ func _build_panel() -> void:
 	_add_category_button(category_grid, "status", "Status / Stacks")
 	_add_category_button(category_grid, "utility", "Utility")
 
+
+func _build_page_root(root: VBoxContainer) -> VBoxContainer:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -205,6 +240,10 @@ func _build_panel() -> void:
 	page_root.add_theme_constant_override("separation", 7)
 	scroll.add_child(page_root)
 
+	return page_root
+
+
+func _build_run_setup_page(page_root: VBoxContainer) -> void:
 	var run_setup_page: VBoxContainer = _add_category_page(page_root, "run_setup", "Run Setup")
 	_character_option = _add_option_row(run_setup_page, "Character")
 	_map_option = _add_option_row(run_setup_page, "Map")
@@ -215,6 +254,8 @@ func _build_panel() -> void:
 	_add_button(run_row, "Restart Run", Callable(self, "_restart_debug_run"), 132)
 	_add_button(run_row, "Lv3", Callable(self, "_level_starting_skill_to").bind(3), 60)
 
+
+func _build_runtime_page(page_root: VBoxContainer) -> void:
 	var runtime_page: VBoxContainer = _add_category_page(page_root, "runtime", "Runtime")
 	var runtime_row: HBoxContainer = _add_row(runtime_page)
 	_add_button(runtime_row, "Pause Game", Callable(self, "_toggle_tree_pause"), 112)
@@ -244,6 +285,8 @@ func _build_panel() -> void:
 	_attack_damage_scroll.add_child(_attack_damage_label)
 	runtime_page.add_child(_attack_damage_scroll)
 
+
+func _build_skill_cards_page(page_root: VBoxContainer) -> void:
 	var skill_cards_page: VBoxContainer = _add_category_page(page_root, "skill_cards", "Skill Cards")
 	var god_skill_button_row: HBoxContainer = _add_row(skill_cards_page)
 	god_skill_button_row.name = "GodSkillButtons"
@@ -271,6 +314,8 @@ func _build_panel() -> void:
 	_fire_skill_chain_log_label.text = "God skill chain: idle."
 	skill_cards_page.add_child(_fire_skill_chain_log_label)
 
+
+func _build_enemy_spawn_page(page_root: VBoxContainer) -> void:
 	var enemy_spawn_page: VBoxContainer = _add_category_page(page_root, "enemy_spawn", "Enemy Spawn")
 	_enemy_option = _add_option_row(enemy_spawn_page, "Enemy")
 	_spawn_count_spin = _add_spin_row(enemy_spawn_page, "Count", 1.0, 200.0, 1.0, 8.0)
@@ -288,12 +333,16 @@ func _build_panel() -> void:
 	_add_button(enemy_state_row, "Set Enemy State", Callable(self, "_apply_enemy_state_override"), 140)
 	_add_button(enemy_state_row, "Clear Enemy State", Callable(self, "_clear_enemy_state_override"), 148)
 
+
+func _build_effects_page(page_root: VBoxContainer) -> void:
 	var effects_page: VBoxContainer = _add_category_page(page_root, "effects", "Effects")
 	_effect_option = _add_option_row(effects_page, "Effect")
 	var effects_row: HBoxContainer = _add_row(effects_page)
 	_add_button(effects_row, "持续发射", Callable(self, "_start_continuous_effect_fire"), 116)
 	_add_button(effects_row, "单次发射", Callable(self, "_fire_single_effect"), 116)
 
+
+func _build_status_page(page_root: VBoxContainer) -> void:
 	var status_page: VBoxContainer = _add_category_page(page_root, "status", "Status / Stacks")
 	_status_option = _add_option_row(status_page, "Status")
 	_status_stack_spin = _add_spin_row(status_page, "Stacks", 1.0, 99.0, 1.0, 1.0)
@@ -309,18 +358,12 @@ func _build_panel() -> void:
 	_add_button(status_row, "Apply Status", Callable(self, "_apply_status_from_panel"), 124)
 	_add_button(status_row, "Clear Status", Callable(self, "_clear_statuses"), 112)
 
+
+func _build_utility_page(page_root: VBoxContainer) -> void:
 	var utility_page: VBoxContainer = _add_category_page(page_root, "utility", "Utility")
 	var util_row: HBoxContainer = _add_row(utility_page)
 	_add_button(util_row, "Print", Callable(self, "_print_state"), 72)
 	_add_button(util_row, "Ranges", Callable(self, "_toggle_range_overlay"), 84)
-
-	_log_label = Label.new()
-	_log_label.name = "LogLabel"
-	_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_log_label.add_theme_font_size_override("font_size", 12)
-	root.add_child(_log_label)
-	_open_category("run_setup")
-	_refresh_state()
 
 
 func _populate_options() -> void:
