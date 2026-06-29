@@ -18,11 +18,34 @@ func is_skill_available(player: Node, skill: Dictionary) -> bool:
 		return false
 	if _has_learned(skill_manager, skill_id):
 		return false
+	if _is_blocked_by_capacity(skill_manager, skill):
+		return false
 	if _is_blocked_by_exclusive_group(skill_manager, skill):
 		return false
 	if _get_skill_type(skill) == "fusion" and _has_any_fusion(skill_manager):
 		return false
 	return _offer_rule_met(skill_manager, _get_dictionary(skill.get("offer_rule", {})))
+
+
+func _is_blocked_by_capacity(skill_manager: Node, skill: Dictionary) -> bool:
+	var category: String = _get_skill_category(skill)
+	if category == "passive":
+		return skill_manager.has_method("is_passive_skill_full") and bool(skill_manager.call("is_passive_skill_full"))
+	if category == "active" and _is_capacity_counted_active_skill(skill):
+		return skill_manager.has_method("is_active_skill_full") and bool(skill_manager.call("is_active_skill_full"))
+	return false
+
+
+func _is_capacity_counted_active_skill(skill: Dictionary) -> bool:
+	var skill_type: String = _get_skill_type(skill)
+	return (
+		not bool(skill.get("is_starting_skill", false))
+		and _string_or(skill.get("category", ""), "") != "starting_skill"
+		and _string_or(skill.get("exclusive_group", ""), "") != "attack_school"
+		and _string_or(skill.get("exclusive_group", ""), "") != "dash_school"
+		and skill_type != "attack"
+		and skill_type != "dash"
+	)
 
 
 func _offer_rule_met(skill_manager: Node, offer_rule: Dictionary) -> bool:
@@ -131,6 +154,20 @@ func _get_skill_manager(player: Node) -> Node:
 
 func _get_skill_type(skill: Dictionary) -> String:
 	return _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+
+
+func _get_skill_category(skill: Dictionary) -> String:
+	var category: String = _string_or(skill.get("category", ""), "")
+	if category == "active" or category == "passive":
+		return category
+
+	match _get_skill_type(skill):
+		"passive":
+			return "passive"
+		"attack", "dash", "cast", "summon", "power", "core", "fusion":
+			return "active"
+		_:
+			return category
 
 
 func _get_array(value: Variant) -> Array:

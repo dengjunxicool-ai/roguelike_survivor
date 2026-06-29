@@ -3,6 +3,8 @@ class_name RunHudStateProvider
 
 
 const RunResultStateBuilderScript: Script = preload("res://scripts/ui/run_result_state_builder.gd")
+const MAX_HUD_ACTIVE_SKILLS: int = 5
+const MAX_HUD_PASSIVE_SKILLS: int = 3
 
 
 func build(context: Dictionary) -> Dictionary:
@@ -48,7 +50,12 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	var skill_level: int = _get_starting_skill_level(player)
 	if skill_level > 0:
 		state["main_attack_level"] = skill_level
-	state["skills"] = _build_skill_slots(player)
+	var skill_slots: Dictionary = _build_skill_slots(player, String(state.get("main_attack", "")))
+	state["primary_skill"] = skill_slots.get("primary_skill", {})
+	state["dash_skill"] = skill_slots.get("dash_skill", {})
+	state["active_skills"] = skill_slots.get("active_skills", [])
+	state["passive_skills"] = skill_slots.get("passive_skills", [])
+	state["skills"] = state["active_skills"]
 
 
 func _build_boss_state(tree: SceneTree) -> Dictionary:
@@ -90,16 +97,19 @@ func _get_starting_skill_level(player: Node) -> int:
 	return int(skill_instance.get("current_level"))
 
 
-func _build_skill_slots(player: Node) -> Array[Dictionary]:
-	var slots: Array[Dictionary] = []
+func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary:
+	var active_slots: Array[Dictionary] = []
+	var passive_slots: Array[Dictionary] = []
+	var primary_slot: Dictionary = {}
+	var dash_slot: Dictionary = {}
 	if not is_instance_valid(player):
-		return slots
+		return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
 	var skill_manager := player.get_node_or_null("SkillManager")
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
-		return slots
+		return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
 	var skill_instances_variant: Variant = skill_manager.call("get_all_skills")
 	if not (skill_instances_variant is Array):
-		return slots
+		return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
 	for skill_variant: Variant in skill_instances_variant:
 		var skill_instance := skill_variant as RefCounted
 		if skill_instance == null:
@@ -115,15 +125,44 @@ func _build_skill_slots(player: Node) -> Array[Dictionary]:
 			cooldown_total = _get_player_float(player, "dash_cooldown", cooldown_total)
 		if cooldown_remaining > cooldown_total:
 			cooldown_total = cooldown_remaining
-		slots.append({
+		var slot: Dictionary = {
 			"id": skill_id,
 			"display_name": _resolve_skill_display_name(skill_id, definition),
 			"level": int(skill_instance.get("current_level")),
 			"cooldown_remaining": cooldown_remaining,
 			"cooldown_total": cooldown_total,
-			"icon": _resolve_skill_icon_path(skill_id, definition)
-		})
-	return slots
+			"icon": _resolve_skill_icon_path(skill_id, definition),
+			"skill_type": _resolve_skill_type(skill_instance, definition)
+		}
+		if _is_primary_skill(skill_id, slot, main_attack_id):
+			primary_slot = slot
+		elif _is_dash_skill(skill_instance, definition):
+			dash_slot = slot
+		elif String(slot.get("skill_type", "")) == "passive":
+			if passive_slots.size() < MAX_HUD_PASSIVE_SKILLS:
+				passive_slots.append(slot)
+		elif active_slots.size() < MAX_HUD_ACTIVE_SKILLS:
+			active_slots.append(slot)
+	return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+
+
+func _skill_slot_result(primary_slot: Dictionary, dash_slot: Dictionary, active_slots: Array[Dictionary], passive_slots: Array[Dictionary]) -> Dictionary:
+	return {
+		"primary_skill": primary_slot,
+		"dash_skill": dash_slot,
+		"active_skills": active_slots,
+		"passive_skills": passive_slots
+	}
+
+
+func _is_primary_skill(skill_id: String, slot: Dictionary, main_attack_id: String) -> bool:
+	if main_attack_id != "" and skill_id == main_attack_id:
+		return true
+	var skill_type: String = String(slot.get("skill_type", ""))
+	if skill_type == "attack":
+		return true
+	var skill_data: Dictionary = GameData.get_skill(StringName(skill_id))
+	return bool(skill_data.get("is_starting_skill", false))
 
 
 func _resolve_skill_display_name(skill_id: String, definition: RefCounted) -> String:
@@ -189,6 +228,13 @@ func _is_dash_skill(skill_instance: RefCounted, definition: RefCounted) -> bool:
 	if skill_instance != null and _string_from_value(skill_instance.get("skill_type")) == "dash":
 		return true
 	return definition != null and _string_from_value(definition.get("skill_type")) == "dash"
+
+
+func _resolve_skill_type(skill_instance: RefCounted, definition: RefCounted) -> String:
+	var instance_type: String = _string_from_value(skill_instance.get("skill_type")) if skill_instance != null else ""
+	if instance_type != "":
+		return instance_type
+	return _string_from_value(definition.get("skill_type")) if definition != null else ""
 
 
 func _get_player_float(player: Node, property_name: String, fallback: float = 0.0) -> float:

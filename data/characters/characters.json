@@ -3,7 +3,7 @@
 		{
 			"visual": {
 				"texture": "res://assets/hero/mege.png",
-				"sprite_frames": "res://assets/hero/mage_spriteframes.tres",
+				"sprite_frames": "res://assets/character/mage/mage_sprite_frames.tres",
 				"scale": [
 					0.65,
 					0.65

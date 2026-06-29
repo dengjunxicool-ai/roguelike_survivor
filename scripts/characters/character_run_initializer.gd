@@ -1,6 +1,7 @@
 extends RefCounted
 class_name CharacterRunInitializer
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
+const DEFAULT_STARTING_DASH_SKILL_ID: StringName = &"fire_dash_blazing_run"
 
 func initialize_loadout(player: Node, loadout: RefCounted) -> bool:
 	if loadout == null or not bool(loadout.call("is_valid")):
@@ -52,6 +53,9 @@ func configure_starting_skills(player: Node) -> void:
 	var starting_skill_id: StringName = _resolve_starting_skill_id(player)
 	if starting_skill_id != &"" and skill_manager.has_method("add_skill"):
 		skill_manager.call("add_skill", starting_skill_id)
+	var starting_dash_skill_id: StringName = _resolve_starting_dash_skill_id(player)
+	if starting_dash_skill_id != &"" and skill_manager.has_method("add_skill"):
+		skill_manager.call("add_skill", starting_dash_skill_id)
 	_connect_trait_skill_events(player)
 
 func _initialize_trait_system(player: Node, runtime: Node) -> void:
@@ -76,6 +80,15 @@ func _resolve_starting_skill_id(player: Node) -> StringName:
 	if starting_skill_id != &"":
 		return starting_skill_id
 	return _first_configured_starting_skill_id()
+
+
+func _resolve_starting_dash_skill_id(player: Node) -> StringName:
+	var character_id: StringName = StringName(String(player.get("selected_character_id")))
+	var character: Dictionary = GameData.get_character(character_id)
+	var configured_dash_id: StringName = StringName(String(character.get("starting_dash_skill_id", "")))
+	if configured_dash_id != &"":
+		return configured_dash_id
+	return DEFAULT_STARTING_DASH_SKILL_ID
 
 
 func _first_configured_starting_skill_id() -> StringName:

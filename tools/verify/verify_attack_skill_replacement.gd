@@ -55,10 +55,10 @@ func _run() -> void:
 
 	var provider: RefCounted = RunHudStateProviderScript.new()
 	var state: Dictionary = provider.call("build", {"tree": self})
+	var primary_skill: Dictionary = state.get("primary_skill", {})
 	var slots: Array = state.get("skills", [])
-	_expect(slots.size() == 1, "HUD exports one replacement skill slot", slots)
-	if slots.size() == 1:
-		_expect(String(slots[0].get("id", "")) == "fire_attack_searing", "HUD slot shows replacement skill id", slots[0])
+	_expect(String(primary_skill.get("id", "")) == "fire_attack_searing", "HUD primary slot shows replacement skill id", primary_skill)
+	_expect(slots.is_empty(), "HUD ordinary active slots exclude primary attack replacement", slots)
 
 	player.queue_free()
 	await process_frame

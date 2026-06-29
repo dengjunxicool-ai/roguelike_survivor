@@ -14,7 +14,8 @@ signal skill_added(skill_id: StringName)
 signal skill_upgraded(skill_id: StringName, new_level: int)
 signal skill_changed
 
-@export_range(1, 20, 1, "or_greater") var max_active_skills: int = 999
+@export_range(1, 20, 1, "or_greater") var max_active_skills: int = 5
+@export_range(1, 20, 1, "or_greater") var max_passive_skills: int = 3
 
 var active_skills: Dictionary = {}
 var passive_skills: Dictionary = {}
@@ -41,8 +42,10 @@ func add_skill(skill_id: Variant) -> bool:
 		replaced_active_skill_id = _find_replaced_active_skill_id(id, definition_data)
 		if _is_attack_replacement_definition(definition_data):
 			definition_data = _with_inherited_attack_runtime(definition_data, replaced_active_skill_id)
-		if replaced_active_skill_id == &"" and is_active_skill_full():
+		if replaced_active_skill_id == &"" and _is_capacity_counted_active_definition(definition_data) and is_active_skill_full():
 			return false
+	elif category == "passive" and is_passive_skill_full():
+		return false
 
 	var definition: RefCounted = SkillDefinitionScript.new(definition_data)
 	var skill_instance: RefCounted = SkillInstanceScript.new(definition)
@@ -87,7 +90,7 @@ func get_skill(skill_id: Variant) -> RefCounted:
 
 
 func _find_replaced_active_skill_id(new_skill_id: StringName, definition_data: Dictionary) -> StringName:
-	if not _is_attack_replacement_definition(definition_data):
+	if not _is_active_slot_replacement_definition(definition_data):
 		return &""
 	var explicit_id: StringName = _to_skill_id(definition_data.get("replaces_skill", definition_data.get("replaces_starting_skill", "")))
 	if explicit_id != &"" and explicit_id != new_skill_id and active_skills.has(explicit_id):
@@ -96,15 +99,30 @@ func _find_replaced_active_skill_id(new_skill_id: StringName, definition_data: D
 		var active_id: StringName = _to_skill_id(active_id_variant)
 		if active_id == new_skill_id:
 			continue
-		if _is_active_attack_slot_skill(active_id):
+		if _is_attack_replacement_definition(definition_data) and _is_active_attack_slot_skill(active_id):
+			return active_id
+		if _is_dash_replacement_definition(definition_data) and _is_active_dash_slot_skill(active_id):
 			return active_id
 	return &""
 
 
+func _is_active_slot_replacement_definition(definition_data: Dictionary) -> bool:
+	return _is_attack_replacement_definition(definition_data) or _is_dash_replacement_definition(definition_data)
+
+
 func _is_attack_replacement_definition(definition_data: Dictionary) -> bool:
 	return (
-		_string_or(definition_data.get("exclusive_group", ""), "") == "attack_school"
+		bool(definition_data.get("is_starting_skill", false))
+		or String(definition_data.get("category", "")) == "starting_skill"
+		or _string_or(definition_data.get("exclusive_group", ""), "") == "attack_school"
 		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "attack"
+	)
+
+
+func _is_dash_replacement_definition(definition_data: Dictionary) -> bool:
+	return (
+		_string_or(definition_data.get("exclusive_group", ""), "") == "dash_school"
+		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "dash"
 	)
 
 
@@ -117,6 +135,21 @@ func _is_active_attack_slot_skill(skill_id: StringName) -> bool:
 			return true
 	var definition_data: Dictionary = _get_skill_definition_data(skill_id)
 	return bool(definition_data.get("is_starting_skill", false)) or _is_attack_replacement_definition(definition_data)
+
+
+func _is_active_dash_slot_skill(skill_id: StringName) -> bool:
+	var skill_instance: RefCounted = active_skills.get(skill_id, null) as RefCounted
+	if skill_instance != null:
+		if _string_or(skill_instance.get("exclusive_group"), "") == "dash_school":
+			return true
+		if _string_or(skill_instance.get("skill_type"), "") == "dash":
+			return true
+	var definition_data: Dictionary = _get_skill_definition_data(skill_id)
+	return _is_dash_replacement_definition(definition_data)
+
+
+func _is_capacity_counted_active_definition(definition_data: Dictionary) -> bool:
+	return not _is_active_slot_replacement_definition(definition_data)
 
 
 func _with_inherited_attack_runtime(definition_data: Dictionary, replaced_active_skill_id: StringName) -> Dictionary:
@@ -233,7 +266,21 @@ func clear_skills() -> void:
 
 
 func is_active_skill_full() -> bool:
-	return active_skills.size() >= max_active_skills
+	return _count_capacity_active_skills() >= max_active_skills
+
+
+func is_passive_skill_full() -> bool:
+	return passive_skills.size() >= max_passive_skills
+
+
+func _count_capacity_active_skills() -> int:
+	var count: int = 0
+	for active_id_variant: Variant in active_skills.keys():
+		var active_id: StringName = _to_skill_id(active_id_variant)
+		var definition_data: Dictionary = _get_skill_definition_data(active_id)
+		if _is_capacity_counted_active_definition(definition_data):
+			count += 1
+	return count
 
 
 func add_passive_modifier(modifiers: Variant) -> void:
