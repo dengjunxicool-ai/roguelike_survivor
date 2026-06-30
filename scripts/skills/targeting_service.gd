@@ -289,6 +289,10 @@ static func _get_valid_enemies() -> Array:
 	return enemies
 
 
+static func is_valid_target(enemy: Node2D) -> bool:
+	return _is_valid_enemy(enemy)
+
+
 static func _is_valid_enemy(enemy: Node2D) -> bool:
 	if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 		return false

@@ -1705,10 +1705,15 @@ func _resolve_named_direction(name: String, context: Dictionary, origin: Vector2
 func _context_with_resolved_target(params: Dictionary, context: Dictionary) -> Dictionary:
 	var target: Node2D = context.get("target") as Node2D
 	var force_configured_targeting: bool = params.has("targeting") or params.has("targeting_mode")
-	if not force_configured_targeting and target != null and is_instance_valid(target) and not target.is_queued_for_deletion():
+	if not force_configured_targeting and TargetingServiceScript.is_valid_target(target):
 		return context
 	var resolved_target: Node2D = _resolve_action_target(params, context)
 	if resolved_target == null:
+		if not force_configured_targeting and target != null:
+			var cleared_context: Dictionary = context.duplicate(true)
+			cleared_context.erase("target")
+			cleared_context.erase("enemy")
+			return cleared_context
 		return context
 	var resolved_context: Dictionary = context.duplicate(true)
 	resolved_context["target"] = resolved_target
