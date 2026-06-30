@@ -5,7 +5,10 @@ class_name SkillLearnDefinitionRepository
 static func get_skill_learn_definitions(skill_pool: Array, offer_rule_key: String = "offer_rule") -> Array[Dictionary]:
 	var skills: Array[Dictionary] = []
 	for skill: Dictionary in skill_pool:
-		if StringName(_string_or(skill.get("id", ""), "")) == &"":
+		var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
+		if skill_id == &"":
+			continue
+		if skill_id == &"fireball" or bool(skill.get("is_starting_skill", false)):
 			continue
 		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get(offer_rule_key, {})).is_empty():
 			continue

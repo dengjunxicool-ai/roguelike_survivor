@@ -43,10 +43,17 @@ static func create_area_effect(params: Dictionary) -> Node2D:
 	if area_effect == null:
 		return null
 
-	parent.add_child(area_effect)
-	area_effect.global_position = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
-	if area_effect.has_method("setup"):
-		area_effect.call(&"setup", object_params)
+	var spawn_position: Vector2 = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
+	if Engine.is_in_physics_frame():
+		parent.call_deferred("add_child", area_effect)
+		area_effect.set_deferred("global_position", spawn_position)
+		if area_effect.has_method("setup"):
+			area_effect.call_deferred(&"setup", object_params)
+	else:
+		parent.add_child(area_effect)
+		area_effect.global_position = spawn_position
+		if area_effect.has_method("setup"):
+			area_effect.call(&"setup", object_params)
 
 	return area_effect
 

@@ -102,14 +102,25 @@ static func get_weekly_challenge_pool() -> Array[Dictionary]:
 static func get_skill_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_skill_definitions")
 	if not data.is_empty():
-		return data
-	var skills: Array[Dictionary] = _get_dictionary_array(SKILLS_PATH, "starting_skills")
-	skills.append_array(_get_dictionary_array(SKILLS_PATH, "skills"))
-	return skills
+		return _filter_out_starting_skill_definitions(data)
+	return _filter_out_starting_skill_definitions(_get_dictionary_array(SKILLS_PATH, "skills"))
 
 
 static func get_primary_attack_pool() -> Array[Dictionary]:
-	return get_skill_pool()
+	var skills: Array[Dictionary] = _get_dictionary_array(SKILLS_PATH, "starting_skills")
+	skills.append_array(get_skill_pool())
+	return skills
+
+
+static func _filter_out_starting_skill_definitions(skills: Array[Dictionary]) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for skill: Dictionary in skills:
+		if bool(skill.get("is_starting_skill", false)):
+			continue
+		if StringName(_string_or(skill.get("id", ""), "")) == &"fireball":
+			continue
+		result.append(skill)
+	return result
 
 
 static func get_enemy_pool() -> Array[Dictionary]:

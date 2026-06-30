@@ -17,7 +17,7 @@ var tags: Array[StringName] = []
 static func from_dictionary(packet: Dictionary) -> RefCounted:
 	var context: RefCounted = new()
 	context.source_type = StringName(String(packet.get("source_type", "")))
-	context.attacker = packet.get("attacker") as Node
+	context.attacker = _valid_node_or_null(packet.get("attacker"))
 	context.attacker_id = String(packet.get("attacker_id", ""))
 	context.source_origin_id = StringName(String(packet.get("source_origin_id", "")))
 	context.source_skill_id = StringName(String(packet.get("source_skill_id", packet.get("source_id", ""))))
@@ -32,7 +32,7 @@ static func from_dictionary(packet: Dictionary) -> RefCounted:
 func apply_to_dictionary(packet: Dictionary) -> Dictionary:
 	var result: Dictionary = packet.duplicate(true)
 	result["source_type"] = source_type
-	result["attacker"] = attacker
+	result["attacker"] = attacker if attacker != null and is_instance_valid(attacker) else null
 	result["attacker_id"] = attacker_id
 	result["source_origin_id"] = source_origin_id
 	result["source_skill_id"] = source_skill_id
@@ -56,3 +56,9 @@ static func _string_name_array(value: Variant) -> Array[StringName]:
 			if name != &"" and not result.has(name):
 				result.append(name)
 	return result
+
+
+static func _valid_node_or_null(value: Variant) -> Node:
+	if typeof(value) == TYPE_OBJECT and not is_instance_valid(value):
+		return null
+	return value as Node

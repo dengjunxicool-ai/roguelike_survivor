@@ -105,6 +105,8 @@ static func _trace_id_from_value(value: Variant) -> int:
 			if node_id > 0:
 				return node_id
 		return 0
+	if typeof(value) == TYPE_OBJECT and not is_instance_valid(value):
+		return 0
 	if value is Node:
 		var node: Node = value
 		var meta_id: int = int(node.get_meta(TRACE_ID_KEY, 0))
@@ -119,6 +121,8 @@ static func _trace_id_from_value(value: Variant) -> int:
 static func _value_from_source(source: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if source is Dictionary:
 		return (source as Dictionary).get(key, fallback)
+	if typeof(source) == TYPE_OBJECT and not is_instance_valid(source):
+		return fallback
 	if source is RefCounted and source.has_method("get_value"):
 		return source.call("get_value", key, fallback)
 	return fallback

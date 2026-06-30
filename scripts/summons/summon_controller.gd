@@ -75,6 +75,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_attack.tick(delta)
+	if target != null and (not is_instance_valid(target) or target.is_queued_for_deletion()):
+		target = null
 	target = _targeting.update(delta, self, target, float(_movement.get("leash_distance")))
 	if target == null:
 		state = STATE_FOLLOW

@@ -84,6 +84,7 @@ func _select_growth_stage_options(player: Node, requested_count: int) -> Array:
 	_add_unique_options(selected_options, priority_options, requested_count)
 	_fill_from_weighted_pool(selected_options, regular_options, requested_count)
 	_enforce_guaranteed_options(player, selected_options, requested_count)
+	_enforce_ordinary_active_learn_option(player, selected_options, requested_count)
 	return selected_options
 
 
@@ -364,6 +365,121 @@ func _enforce_guaranteed_options(player: Node, selected_options: Array, requeste
 	var missing_tags: Array = _offer_policy.call("get_missing_guarantee_tags", player, selected_options)
 	if not missing_tags.is_empty():
 		_replace_with_tagged_option(player, selected_options, requested_count, _to_string_array(missing_tags))
+
+
+func _enforce_ordinary_active_learn_option(player: Node, selected_options: Array, requested_count: int) -> void:
+	if requested_count <= 0 or _count_owned_direct_active_skills(player) >= 2:
+		return
+	if _options_have_direct_active_learn(selected_options):
+		return
+	var candidates: Array = _build_fire_skill_learn_options(player)
+	_shuffle_options(candidates)
+	for candidate_variant: Variant in candidates:
+		var candidate: RefCounted = candidate_variant as RefCounted
+		if candidate == null or not _is_cast_active_learn_option(candidate):
+			continue
+		_replace_or_append_guaranteed_option(selected_options, requested_count, candidate)
+		return
+	for candidate_variant: Variant in candidates:
+		var candidate: RefCounted = candidate_variant as RefCounted
+		if candidate == null or not _is_direct_active_learn_option(candidate):
+			continue
+		_replace_or_append_guaranteed_option(selected_options, requested_count, candidate)
+		return
+	for candidate_variant: Variant in candidates:
+		var candidate: RefCounted = candidate_variant as RefCounted
+		if candidate == null or not _is_ordinary_active_learn_option(candidate):
+			continue
+		_replace_or_append_guaranteed_option(selected_options, requested_count, candidate)
+		return
+
+
+func _replace_or_append_guaranteed_option(selected_options: Array, requested_count: int, candidate: RefCounted) -> void:
+	if selected_options.size() >= requested_count and not selected_options.is_empty():
+		selected_options[selected_options.size() - 1] = candidate
+	else:
+		selected_options.append(candidate)
+
+
+func _count_owned_ordinary_active_skills(player: Node) -> int:
+	var count: int = 0
+	for skill_instance: RefCounted in _get_owned_skill_instances(player):
+		if skill_instance == null:
+			continue
+		var skill_id: StringName = StringName(String(skill_instance.get("skill_id")))
+		var skill: Dictionary = GameData.get_skill(skill_id)
+		if _is_ordinary_active_skill(skill):
+			count += 1
+	return count
+
+
+func _count_owned_direct_active_skills(player: Node) -> int:
+	var count: int = 0
+	for skill_instance: RefCounted in _get_owned_skill_instances(player):
+		if skill_instance == null:
+			continue
+		var skill_id: StringName = StringName(String(skill_instance.get("skill_id")))
+		if skill_id == &"fireball":
+			continue
+		var skill: Dictionary = GameData.get_skill(skill_id)
+		var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+		if skill_type == "cast" or skill_type == "summon":
+			count += 1
+	return count
+
+
+func _options_have_ordinary_active_learn(options: Array) -> bool:
+	for option_variant: Variant in options:
+		var option: RefCounted = option_variant as RefCounted
+		if option != null and _is_ordinary_active_learn_option(option):
+			return true
+	return false
+
+
+func _options_have_direct_active_learn(options: Array) -> bool:
+	for option_variant: Variant in options:
+		var option: RefCounted = option_variant as RefCounted
+		if option != null and _is_direct_active_learn_option(option):
+			return true
+	return false
+
+
+func _is_ordinary_active_learn_option(option: RefCounted) -> bool:
+	var learn_skill_id: StringName = _get_option_learn_skill_id(option)
+	if learn_skill_id == &"":
+		return false
+	return _is_ordinary_active_skill(GameData.get_skill(learn_skill_id))
+
+
+func _is_direct_active_learn_option(option: RefCounted) -> bool:
+	var learn_skill_id: StringName = _get_option_learn_skill_id(option)
+	if learn_skill_id == &"":
+		return false
+	var skill: Dictionary = GameData.get_skill(learn_skill_id)
+	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	return skill_type == "cast" or skill_type == "summon"
+
+
+func _is_cast_active_learn_option(option: RefCounted) -> bool:
+	var learn_skill_id: StringName = _get_option_learn_skill_id(option)
+	if learn_skill_id == &"":
+		return false
+	var skill: Dictionary = GameData.get_skill(learn_skill_id)
+	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	return skill_type == "cast"
+
+
+func _is_ordinary_active_skill(skill: Dictionary) -> bool:
+	if skill.is_empty():
+		return false
+	if bool(skill.get("is_starting_skill", false)):
+		return false
+	if _string_or(skill.get("exclusive_group", ""), "") == "attack_school":
+		return false
+	if _string_or(skill.get("exclusive_group", ""), "") == "dash_school":
+		return false
+	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	return skill_type != "attack" and skill_type != "dash" and skill_type != "passive"
 
 
 func _replace_with_tagged_option(player: Node, selected_options: Array, _requested_count: int, tags: Array[String]) -> void:

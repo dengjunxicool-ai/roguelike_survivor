@@ -56,22 +56,26 @@ func attack(summon: Node2D, target: Node2D, player_power: float, context: Dictio
 			if not _spawn_area_pulse(summon, player_power, context):
 				_apply_area_pulse(summon, player_power, context)
 		_:
-			_apply_melee(target, player_power)
+			_apply_melee(summon, target, player_power, context)
 	_cooldown_remaining = attack_cooldown
 	return true
 
 
-func _apply_melee(target: Node2D, player_power: float) -> void:
+func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
 	var amount: int = maxi(roundi(player_power * damage_scale), 0)
 	if amount > 0 and target.has_method("take_damage"):
+		var skill_id: StringName = _source_skill_id(context)
 		target.call("take_damage", {
 			"raw_amount": amount,
 			"amount": amount,
 			"damage_origin": &"special",
-			"damage_type": damage_type,
+			"damage_type": &"summon_damage",
 			"element": damage_type,
-			"source_type": "summon"
-		}, damage_type)
+			"source_type": "summon",
+			"source_origin_id": _source_origin_id(context),
+			"source_skill_id": skill_id,
+			"source_instance_id": "%s:%s" % [String(skill_id), str(summon.get_instance_id()) if summon != null else "summon"]
+		}, &"summon_damage")
 	_apply_on_hit_effects(target)
 
 
@@ -93,7 +97,7 @@ func _apply_area_pulse(summon: Node2D, player_power: float, context: Dictionary)
 			continue
 		if summon.global_position.distance_squared_to(target.global_position) > radius_squared:
 			continue
-		_apply_melee(target, player_power)
+		_apply_melee(summon, target, player_power, context)
 
 
 func _spawn_area_pulse(summon: Node2D, player_power: float, context: Dictionary) -> bool:
@@ -114,9 +118,12 @@ func _spawn_area_pulse(summon: Node2D, player_power: float, context: Dictionary)
 		"duration": pulse_duration,
 		"tick_interval": pulse_tick_interval,
 		"damage": amount,
-		"damage_type": str(damage_type),
-		"damage_origin": "summon",
-		"source_type": "summon"
+		"damage_type": "summon_damage",
+		"element": str(damage_type),
+		"damage_origin": "special",
+		"source_type": "summon",
+		"source_origin_id": _source_origin_id(context),
+		"source_skill_id": _source_skill_id(context)
 	}
 	_apply_pulse_status_params(area_params)
 	return bool(action_executor.call("execute_action", {"type": "spawn_area", "params": area_params}, area_context))
@@ -138,7 +145,7 @@ func _apply_pulse_status_params(area_params: Dictionary) -> void:
 func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
 	var action_executor: RefCounted = context.get("action_executor") as RefCounted
 	if action_executor == null:
-		_apply_melee(target, player_power)
+		_apply_melee(summon, target, player_power, context)
 		return
 	var projectile_context: Dictionary = context.duplicate(true)
 	projectile_context["caster"] = context.get("owner")
@@ -148,14 +155,25 @@ func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, conte
 		"type": "spawn_projectile",
 		"params": {
 			"damage": roundi(player_power * damage_scale),
-			"damage_type": str(damage_type),
+			"damage_type": "summon_damage",
+			"element": str(damage_type),
 			"damage_origin": "special",
 			"projectile_id": str(projectile_id) if projectile_id != &"" else "thunder_arc_bolt",
 			"speed": 420.0,
 			"range": attack_range,
+			"source_origin_id": _source_origin_id(context),
+			"source_skill_id": _source_skill_id(context),
 			"on_hit": on_hit_effects
 		}
 	}, projectile_context)
+
+
+func _source_origin_id(context: Dictionary) -> StringName:
+	return StringName(String(context.get("source_origin_id", "")))
+
+
+func _source_skill_id(context: Dictionary) -> StringName:
+	return StringName(String(context.get("skill_id", context.get("source_skill_id", ""))))
 
 
 func _apply_on_hit_effects(target: Node2D) -> void:
