@@ -61,8 +61,7 @@ func _make_player_with_early_fire_loadout() -> TestPlayer:
 	skill_manager.name = "SkillManager"
 	player.add_child(skill_manager)
 	root.add_child(player)
-	skill_manager.call("add_skill", &"fireball")
-	skill_manager.call("upgrade_skill", &"fireball")
+	skill_manager.call("set_primary_attack_method", &"fireball")
 	skill_manager.call("add_skill", &"fire_dash_blazing_run")
 	return player
 

@@ -3,6 +3,7 @@ class_name SkillTriggerRuleAdapter
 
 
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
+const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 
 const TRIGGER_ALIASES: Dictionary = {
 	"attack_hit": &"attack_hit",
@@ -53,11 +54,13 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 	var event: Dictionary = {
 		"trigger": event_name,
 		"conditions": _normalize_conditions(rule.get("conditions", [])),
-		"actions": SkillEffectAdapterScript.to_actions(_get_array(rule.get("effects", [])))
+		"actions": SkillEffectAdapterScript.to_actions(_get_array(rule.get("effects", [])), _skill_instance)
 	}
 	for optional_key: String in ["source_id", "counter_key", "threshold", "cooldown", "max_triggers_per_second"]:
 		if rule.has(optional_key):
 			event[optional_key] = rule[optional_key]
+	if event.has("cooldown") and _skill_instance != null:
+		event["cooldown"] = SkillGrowthScalingScript.apply_to_number(float(event.get("cooldown", 0.0)), _skill_instance, "cooldown")
 	return event
 
 

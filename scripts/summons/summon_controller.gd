@@ -6,6 +6,7 @@ const SummonTargetingComponentScript: Script = preload("res://scripts/summons/su
 const SummonMovementComponentScript: Script = preload("res://scripts/summons/summon_movement_component.gd")
 const SummonAttackComponentScript: Script = preload("res://scripts/summons/summon_attack_component.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
+const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 
 const STATE_FOLLOW: StringName = &"FOLLOW"
 const STATE_CHASE: StringName = &"CHASE"
@@ -35,16 +36,28 @@ func setup(setup_params: Dictionary) -> void:
 	_context = setup_params.duplicate(true)
 	if definition == null:
 		definition = SummonDefinitionScript.from_dictionary(setup_params)
-	_remaining_duration = definition.duration
+	var skill_instance: RefCounted = setup_params.get("skill_instance") as RefCounted
+	_remaining_duration = SkillGrowthScalingScript.apply_to_number(definition.duration, skill_instance, "duration")
 	_targeting = SummonTargetingComponentScript.new()
 	_targeting.setup(definition.get("targeting"), summon_owner, target_group)
 	_movement = SummonMovementComponentScript.new()
 	_movement.setup(definition.get("movement"), int(setup_params.get("formation_index", 0)))
 	_attack = SummonAttackComponentScript.new()
-	_attack.setup(definition.get("attack"))
+	_attack.setup(_scaled_attack_config(definition.get("attack"), skill_instance))
 	_apply_visual(definition.get("visual"))
 	state = STATE_FOLLOW
 	set_physics_process(true)
+
+
+func _scaled_attack_config(config: Dictionary, skill_instance: RefCounted) -> Dictionary:
+	var scaled: Dictionary = config.duplicate(true)
+	if skill_instance == null:
+		return scaled
+	if scaled.has("damage_scale"):
+		scaled["damage_scale"] = SkillGrowthScalingScript.apply_to_number(float(scaled.get("damage_scale", 0.0)), skill_instance, "damage")
+	if scaled.has("attack_cooldown"):
+		scaled["attack_cooldown"] = SkillGrowthScalingScript.apply_to_number(float(scaled.get("attack_cooldown", 0.0)), skill_instance, "attack_cooldown")
+	return scaled
 
 
 func _physics_process(delta: float) -> void:

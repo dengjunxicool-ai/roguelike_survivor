@@ -171,7 +171,8 @@ func _cleanup_stale_orbit_objects() -> void:
 		return
 
 	var active_skill_ids: Dictionary = {}
-	for skill_instance_variant: Variant in _skill_manager.call("get_all_skills"):
+	var active_skills: Array = _skill_manager.call("get_active_skills") if _skill_manager.has_method("get_active_skills") else _skill_manager.call("get_all_skills")
+	for skill_instance_variant: Variant in active_skills:
 		var skill_instance: RefCounted = skill_instance_variant as RefCounted
 		if skill_instance != null:
 			active_skill_ids[StringName(skill_instance.get("skill_id"))] = true
@@ -214,4 +215,3 @@ func _allow_debug_orbit_pulse(skill_instance: RefCounted) -> void:
 	for orbit_object: Node2D in _get_orbit_objects(parent, caster, skill_id):
 		if orbit_object != null and orbit_object.has_method("debug_allow_current_nonce"):
 			orbit_object.call("debug_allow_current_nonce")
-

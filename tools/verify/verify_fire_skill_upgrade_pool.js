@@ -44,23 +44,25 @@ for (const skill of fireSkills) {
 }
 
 const growthBody = bodyOf(upgradePool, "_select_growth_stage_options");
-const formalBuilderBody = bodyOf(upgradePool, "_build_fire_skill_learn_options");
+const formalBuilderBody = bodyOf(upgradePool, "_build_god_skill_learn_options");
 const definitionBody = bodyOf(upgradePool, "_get_skill_learn_definitions");
 
 assert(formalBuilderBody, "UpgradePool must define a learn option builder");
-assert(growthBody.includes("_build_fire_skill_learn_options(player)"), "generate_options growth stage must include skill learn cards");
+assert(growthBody.includes("_build_god_skill_learn_options(player)"), "generate_options growth stage must include god skill learn cards");
 assert(definitionBody.includes("GameData.get_skill_pool()"), "learn options must read the unified skill pool");
 assert(definitionBody.includes("offer_rule"), "learn options must include new offer_rule skills");
 assert(formalBuilderBody.includes("is_skill_available"), "learn options must ask SkillOfferService before offering cards");
 assert(!formalBuilderBody.includes("mars_spark_missile_projectile"), "formal learn options must not hardcode a single old skill implementation");
-assert(formalBuilderBody.includes('"id": "level_up_upgrade:%s"'), "learn cards must use level_up_upgrade option ids");
+assert(formalBuilderBody.includes('"id": "level_up_upgrade:%s:%s"'), "learn cards must use level_up_upgrade option ids with rarity suffix");
 assert(formalBuilderBody.includes('"learn_skill_id"'), "learn card payload must carry learn_skill_id");
+assert(upgradePool.includes("func _build_fire_skill_learn_options"), "UpgradePool must keep fire debug learn option compatibility");
 
 for (const token of ["required_schools", "required_min_skill_count", "blocked_by_exclusive_group", "fusion"]) {
   assert(offerService.includes(token), `SkillOfferService must enforce ${token}`);
 }
 
-assert(gameData.includes("_is_fire_related_skill"), "GameData must synthesize learn upgrades for fire-related skills without legacy god_id");
+assert(gameData.includes("SKILL_LEARN_UPGRADE_PREFIX"), "GameData must synthesize generic god skill learn upgrades");
+assert(gameData.includes("_is_fire_related_skill"), "GameData must keep legacy fire learn upgrade compatibility");
 assert(gameData.includes("offer_rule"), "GameData synthetic learn upgrades must accept offer_rule skills");
 assert(skillManager.includes("_category_from_skill_type"), "SkillManager must map new type values to active/passive buckets");
 assert(skillManager.includes('skill_data.get("offer_rule"'), "SkillManager must treat offer_rule skills as pool-learnable");

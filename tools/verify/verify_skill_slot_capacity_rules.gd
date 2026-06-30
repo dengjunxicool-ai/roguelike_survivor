@@ -62,16 +62,19 @@ func _verify_starting_loadout_grants_primary_and_dash() -> void:
 	var initializer: RefCounted = CharacterRunInitializerScript.new()
 	initializer.call("configure_starting_skills", player)
 	var skill_manager := player.get_node("SkillManager")
-	_expect(bool(skill_manager.call("has_skill", &"fireball")), "starting loadout grants primary attack", skill_manager.call("get_all_skills"))
+	_expect(not bool(skill_manager.call("has_skill", &"fireball")), "starting fireball is not a learned skill", skill_manager.call("get_all_skills"))
+	_expect(StringName(String(skill_manager.call("get_primary_attack_id"))) == &"fireball", "starting loadout grants primary attack method", skill_manager.call("get_primary_attack_id"))
 	_expect(bool(skill_manager.call("has_skill", &"fire_dash_blazing_run")), "starting loadout grants dash skill", skill_manager.call("get_all_skills"))
-	_expect(skill_manager.call("get_active_skills").size() == 2, "starting primary and dash are both active skills internally", skill_manager.call("get_active_skills").size())
+	_expect(skill_manager.call("get_all_skills").size() == 1, "starting loadout only counts dash as learned skill", skill_manager.call("get_all_skills").size())
+	_expect(skill_manager.call("get_active_skills").size() == 2, "starting primary attack method and dash are both executable active entries", skill_manager.call("get_active_skills").size())
 	player.queue_free()
 
 
 func _verify_primary_and_dash_do_not_consume_active_capacity() -> void:
 	var player := _make_player_with_skill_manager()
 	var skill_manager := player.get_node("SkillManager")
-	_expect(bool(skill_manager.call("add_skill", &"fireball")), "adds primary skill", "")
+	_expect(bool(skill_manager.call("set_primary_attack_method", &"fireball")), "sets primary attack method", "")
+	_expect(not bool(skill_manager.call("add_skill", &"fireball")), "does not add primary attack method as learned skill", "")
 	_expect(bool(skill_manager.call("add_skill", &"fire_dash_blazing_run")), "adds dash skill", "")
 	for skill_id: StringName in [
 		&"fire_cast_meteor_rain",
@@ -103,7 +106,7 @@ func _verify_passive_capacity_is_three() -> void:
 func _verify_offer_service_hides_full_capacity_skills() -> void:
 	var player := _make_player_with_skill_manager()
 	var skill_manager := player.get_node("SkillManager")
-	skill_manager.call("add_skill", &"fireball")
+	skill_manager.call("set_primary_attack_method", &"fireball")
 	skill_manager.call("add_skill", &"fire_dash_blazing_run")
 	for skill_id: StringName in [
 		&"fire_cast_meteor_rain",

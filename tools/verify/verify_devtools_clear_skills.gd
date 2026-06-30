@@ -39,7 +39,8 @@ func _run() -> void:
 	var skill_manager: Node = SkillManagerScript.new()
 	skill_manager.name = "SkillManager"
 	player.add_child(skill_manager)
-	_expect(bool(skill_manager.call("add_skill", &"fireball")), "test player learns fireball before clearing")
+	_expect(bool(skill_manager.call("set_primary_attack_method", &"fireball")), "test player sets fireball attack method before clearing")
+	_expect(bool(skill_manager.call("add_skill", &"fire_dash_blazing_run")), "test player learns a skill before clearing")
 
 	var panel: CanvasLayer = DevDebugPanelScript.new() as CanvasLayer
 	panel.name = "DevDebugPanel"
@@ -51,6 +52,7 @@ func _run() -> void:
 	if clear_button != null:
 		clear_button.pressed.emit()
 	_expect(skill_manager.call("get_all_skills").is_empty(), "Clear Skills button clears current SkillManager")
+	_expect(skill_manager.call("get_primary_attack_method") == null, "Clear Skills button clears primary attack method")
 
 	panel.queue_free()
 	player.queue_free()

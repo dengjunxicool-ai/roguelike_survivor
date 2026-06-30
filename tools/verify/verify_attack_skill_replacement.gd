@@ -39,10 +39,12 @@ func _run() -> void:
 	skill_manager.set("max_active_skills", 1)
 	player.add_child(skill_manager)
 
-	_expect(bool(skill_manager.call("add_skill", &"fireball")), "learns initial fireball", "add_skill=false")
-	_expect(skill_manager.call("get_all_skills").size() == 1, "starts with one active skill slot", skill_manager.call("get_all_skills").size())
-	_expect(bool(skill_manager.call("add_skill", &"fire_attack_searing")), "searing attack replaces initial fireball even when active slots are full", "add_skill=false")
-	_expect(not bool(skill_manager.call("has_skill", &"fireball")), "fireball is no longer an active learned skill after replacement", "fireball still active")
+	_expect(bool(skill_manager.call("set_primary_attack_method", &"fireball")), "sets initial fireball attack method", "set_primary_attack_method=false")
+	_expect(skill_manager.call("get_all_skills").size() == 0, "initial fireball does not occupy a learned skill slot", skill_manager.call("get_all_skills").size())
+	_expect(skill_manager.call("get_active_skills").size() == 1, "initial fireball remains executable as an attack method", skill_manager.call("get_active_skills").size())
+	_expect(bool(skill_manager.call("add_skill", &"fire_attack_searing")), "searing attack replaces initial fireball attack method even when active slots are full", "add_skill=false")
+	_expect(not bool(skill_manager.call("has_skill", &"fireball")), "fireball is not an active learned skill after replacement", "fireball still active")
+	_expect(skill_manager.call("get_primary_attack_method") == null, "searing attack clears the initial fireball attack method", skill_manager.call("get_primary_attack_method"))
 	_expect(bool(skill_manager.call("has_skill", &"fire_attack_searing")), "searing attack becomes the active attack skill", "missing searing")
 	_expect(skill_manager.call("get_all_skills").size() == 1, "replacement keeps one HUD skill slot", skill_manager.call("get_all_skills").size())
 

@@ -51,8 +51,11 @@ func configure_starting_skills(player: Node) -> void:
 		skill_manager.call("clear_skills")
 
 	var starting_skill_id: StringName = _resolve_starting_skill_id(player)
-	if starting_skill_id != &"" and skill_manager.has_method("add_skill"):
-		skill_manager.call("add_skill", starting_skill_id)
+	if starting_skill_id != &"":
+		if skill_manager.has_method("set_primary_attack_method"):
+			skill_manager.call("set_primary_attack_method", starting_skill_id)
+		elif skill_manager.has_method("add_skill"):
+			skill_manager.call("add_skill", starting_skill_id)
 	var starting_dash_skill_id: StringName = _resolve_starting_dash_skill_id(player)
 	if starting_dash_skill_id != &"" and skill_manager.has_method("add_skill"):
 		skill_manager.call("add_skill", starting_dash_skill_id)

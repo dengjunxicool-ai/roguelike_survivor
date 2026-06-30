@@ -223,8 +223,8 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 	var title_label: Label = _add_card_label(column, _get_option_title(option), 22, VERTICAL_ALIGNMENT_CENTER)
 	title_label.custom_minimum_size = Vector2(0, 48)
 
-	## var meta_label: Label = _add_card_label(column, _get_option_meta_text(option), 13, VERTICAL_ALIGNMENT_TOP)
-	## meta_label.custom_minimum_size = Vector2(0, 44)
+	var meta_label: Label = _add_card_label(column, _get_option_meta_text(option), 13, VERTICAL_ALIGNMENT_TOP)
+	meta_label.custom_minimum_size = Vector2(0, 44)
 
 	var effect_label: Label = _add_card_label(column, _get_option_effect_text(option), 14, VERTICAL_ALIGNMENT_CENTER)
 	effect_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -417,6 +417,10 @@ func _get_option_title(option: Dictionary) -> String:
 
 func _get_option_meta_text(option: Dictionary) -> String:
 	var parts: Array[String] = ["稀有度：%s" % String(option.get("rarity", "common")).to_upper()]
+	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
+	var current_rarity: String = String(payload.get("current_rarity", ""))
+	if current_rarity != "":
+		parts.append("当前：%s" % current_rarity)
 	var level_text: String = String(option.get("level_text", ""))
 	if level_text != "":
 		parts.append(level_text)

@@ -7,6 +7,8 @@ const KNOWN_EXCLUSIVE_GROUPS: Array[String] = [
 	"dash_school",
 	"core_school"
 ]
+const MAX_LEARNED_GOD_SCHOOLS: int = 2
+const GOD_SCHOOLS: Array[StringName] = [&"fire", &"frost", &"thunder", &"curse", &"holy", &"chaos"]
 
 
 func is_skill_available(player: Node, skill: Dictionary) -> bool:
@@ -22,9 +24,14 @@ func is_skill_available(player: Node, skill: Dictionary) -> bool:
 		return false
 	if _is_blocked_by_exclusive_group(skill_manager, skill):
 		return false
-	if _get_skill_type(skill) == "fusion" and _has_any_fusion(skill_manager):
+	if _get_skill_type(skill) == "fusion":
+		if _learned_god_school_count(skill_manager) < MAX_LEARNED_GOD_SCHOOLS:
+			return false
+		if _has_any_fusion(skill_manager):
+			return false
+	elif _would_exceed_god_school_limit(skill_manager, skill):
 		return false
-	return _offer_rule_met(skill_manager, _get_dictionary(skill.get("offer_rule", {})))
+	return _offer_rule_met(skill_manager, skill, _get_dictionary(skill.get("offer_rule", {})))
 
 
 func _is_blocked_by_capacity(skill_manager: Node, skill: Dictionary) -> bool:
@@ -48,18 +55,32 @@ func _is_capacity_counted_active_skill(skill: Dictionary) -> bool:
 	)
 
 
-func _offer_rule_met(skill_manager: Node, offer_rule: Dictionary) -> bool:
-	for school_variant: Variant in _get_array(offer_rule.get("required_schools", [])):
-		if _count_school(skill_manager, StringName(_string_or(school_variant, ""))) <= 0:
+func _offer_rule_met(skill_manager: Node, skill: Dictionary, offer_rule: Dictionary) -> bool:
+	var required_schools: Array = _get_array(offer_rule.get("required_schools", []))
+	for school_variant: Variant in required_schools:
+		var required_school: StringName = StringName(_string_or(school_variant, ""))
+		if _count_school(skill_manager, required_school) <= 0 and not _can_open_required_school(skill_manager, skill, required_school, required_schools):
 			return false
 	for skill_variant: Variant in _get_array(offer_rule.get("required_skills", [])):
 		if not _has_learned(skill_manager, StringName(_string_or(skill_variant, ""))):
 			return false
-	var min_counts: Dictionary = _get_dictionary(offer_rule.get("required_min_skill_count", {}))
-	for school_variant: Variant in min_counts.keys():
-		if _count_school(skill_manager, StringName(_string_or(school_variant, ""))) < int(min_counts[school_variant]):
-			return false
+	if _get_skill_type(skill) != "fusion":
+		var min_counts: Dictionary = _get_dictionary(offer_rule.get("required_min_skill_count", {}))
+		for school_variant: Variant in min_counts.keys():
+			if _count_school(skill_manager, StringName(_string_or(school_variant, ""))) < int(min_counts[school_variant]):
+				return false
 	return true
+
+
+func _can_open_required_school(skill_manager: Node, skill: Dictionary, required_school: StringName, required_schools: Array) -> bool:
+	if required_school == &"" or required_schools.size() != 1:
+		return false
+	if _get_skill_type(skill) == "fusion":
+		return false
+	if _get_skill_primary_god_school(skill) != required_school:
+		return false
+	var learned_schools: Array[StringName] = _learned_god_schools(skill_manager)
+	return learned_schools.has(required_school) or learned_schools.size() < MAX_LEARNED_GOD_SCHOOLS
 
 
 func _is_blocked_by_exclusive_group(skill_manager: Node, skill: Dictionary) -> bool:
@@ -101,6 +122,36 @@ func _count_school(skill_manager: Node, school: StringName) -> int:
 	return count
 
 
+func _would_exceed_god_school_limit(skill_manager: Node, skill: Dictionary) -> bool:
+	var school: StringName = _get_skill_primary_god_school(skill)
+	if school == &"":
+		return false
+	var learned_schools: Array[StringName] = _learned_god_schools(skill_manager)
+	return not learned_schools.has(school) and learned_schools.size() >= MAX_LEARNED_GOD_SCHOOLS
+
+
+func _learned_god_school_count(skill_manager: Node) -> int:
+	return _learned_god_schools(skill_manager).size()
+
+
+func _learned_god_schools(skill_manager: Node) -> Array[StringName]:
+	if skill_manager != null and skill_manager.has_method("get_learned_god_schools"):
+		var value: Variant = skill_manager.call("get_learned_god_schools")
+		if value is Array:
+			var schools: Array[StringName] = []
+			for school_variant: Variant in value:
+				var school: StringName = StringName(_string_or(school_variant, ""))
+				if school != &"" and not schools.has(school):
+					schools.append(school)
+			return schools
+	var schools: Array[StringName] = []
+	for skill_instance: RefCounted in _get_all_skills(skill_manager):
+		var school: StringName = _skill_instance_primary_god_school(skill_instance)
+		if school != &"" and not schools.has(school):
+			schools.append(school)
+	return schools
+
+
 func _skill_instance_has_school(skill_instance: RefCounted, school: StringName) -> bool:
 	if StringName(_string_or(skill_instance.get("school"), "")) == school:
 		return true
@@ -121,6 +172,26 @@ func _skill_instance_has_school(skill_instance: RefCounted, school: StringName) 
 
 	var base: Dictionary = _get_dictionary(definition.get("base"))
 	return StringName(_string_or(base.get("element", ""), "")) == school
+
+
+func _skill_instance_primary_god_school(skill_instance: RefCounted) -> StringName:
+	if skill_instance == null:
+		return &""
+	if _string_or(skill_instance.get("skill_type"), "") == "fusion":
+		return &""
+	var school: StringName = StringName(_string_or(skill_instance.get("school"), ""))
+	if GOD_SCHOOLS.has(school):
+		return school
+	var definition: RefCounted = skill_instance.get("definition") as RefCounted
+	if definition == null:
+		return &""
+	school = StringName(_string_or(definition.get("school"), ""))
+	return school if GOD_SCHOOLS.has(school) else &""
+
+
+func _get_skill_primary_god_school(skill: Dictionary) -> StringName:
+	var school: StringName = StringName(_string_or(skill.get("school", skill.get("god_id", "")), ""))
+	return school if GOD_SCHOOLS.has(school) else &""
 
 
 func _has_learned(skill_manager: Node, skill_id: StringName) -> bool:

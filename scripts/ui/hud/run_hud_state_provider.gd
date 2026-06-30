@@ -91,6 +91,10 @@ func _get_starting_skill_level(player: Node) -> int:
 	var skill_manager := player.get_node_or_null("SkillManager")
 	if runtime == null or skill_manager == null or not skill_manager.has_method("get_skill"):
 		return 0
+	if skill_manager.has_method("get_primary_attack_method"):
+		var primary_attack := skill_manager.call("get_primary_attack_method") as RefCounted
+		if primary_attack != null and String(primary_attack.get("skill_id")) == String(runtime.call("get_starting_skill_id")):
+			return int(primary_attack.get("current_level"))
 	var skill_instance := skill_manager.call("get_skill", StringName(String(runtime.call("get_starting_skill_id")))) as RefCounted
 	if skill_instance == null:
 		return 0
@@ -107,6 +111,10 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 	var skill_manager := player.get_node_or_null("SkillManager")
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
 		return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+	if skill_manager.has_method("get_primary_attack_method"):
+		var primary_attack := skill_manager.call("get_primary_attack_method") as RefCounted
+		if primary_attack != null:
+			primary_slot = _build_skill_slot(player, primary_attack)
 	var skill_instances_variant: Variant = skill_manager.call("get_all_skills")
 	if not (skill_instances_variant is Array):
 		return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
@@ -118,22 +126,7 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 		if skill_id == "":
 			continue
 		var definition := skill_instance.get("definition") as RefCounted
-		var cooldown_remaining: float = maxf(float(skill_instance.get("cooldown_remaining")), 0.0)
-		var cooldown_total: float = _resolve_skill_cooldown_total(definition)
-		if _is_dash_skill(skill_instance, definition):
-			cooldown_remaining = _get_player_float(player, "_dash_cooldown_remaining", cooldown_remaining)
-			cooldown_total = _get_player_float(player, "dash_cooldown", cooldown_total)
-		if cooldown_remaining > cooldown_total:
-			cooldown_total = cooldown_remaining
-		var slot: Dictionary = {
-			"id": skill_id,
-			"display_name": _resolve_skill_display_name(skill_id, definition),
-			"level": int(skill_instance.get("current_level")),
-			"cooldown_remaining": cooldown_remaining,
-			"cooldown_total": cooldown_total,
-			"icon": _resolve_skill_icon_path(skill_id, definition),
-			"skill_type": _resolve_skill_type(skill_instance, definition)
-		}
+		var slot: Dictionary = _build_skill_slot(player, skill_instance)
 		if _is_primary_skill(skill_id, slot, main_attack_id):
 			primary_slot = slot
 		elif _is_dash_skill(skill_instance, definition):
@@ -152,6 +145,27 @@ func _skill_slot_result(primary_slot: Dictionary, dash_slot: Dictionary, active_
 		"dash_skill": dash_slot,
 		"active_skills": active_slots,
 		"passive_skills": passive_slots
+	}
+
+
+func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
+	var skill_id: String = _string_from_value(skill_instance.get("skill_id"))
+	var definition := skill_instance.get("definition") as RefCounted
+	var cooldown_remaining: float = maxf(float(skill_instance.get("cooldown_remaining")), 0.0)
+	var cooldown_total: float = _resolve_skill_cooldown_total(definition)
+	if _is_dash_skill(skill_instance, definition):
+		cooldown_remaining = _get_player_float(player, "_dash_cooldown_remaining", cooldown_remaining)
+		cooldown_total = _get_player_float(player, "dash_cooldown", cooldown_total)
+	if cooldown_remaining > cooldown_total:
+		cooldown_total = cooldown_remaining
+	return {
+		"id": skill_id,
+		"display_name": _resolve_skill_display_name(skill_id, definition),
+		"level": int(skill_instance.get("current_level")),
+		"cooldown_remaining": cooldown_remaining,
+		"cooldown_total": cooldown_total,
+		"icon": _resolve_skill_icon_path(skill_id, definition),
+		"skill_type": _resolve_skill_type(skill_instance, definition)
 	}
 
 

@@ -65,13 +65,13 @@ func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: N
 	if relic_id != &"":
 		_apply_relic_reward(relic_id, player, tree)
 
-	var upgrade_id: StringName = StringName(String(payload.get("upgrade_id", "")))
-	if upgrade_id != &"" and player.has_method("apply_upgrade"):
-		player.call("apply_upgrade", StringName("level_up_upgrade:%s" % String(upgrade_id)))
-	elif player.has_method("apply_upgrade"):
-		var option_id: String = String(option.get("id", ""))
-		if option_id.begins_with("level_up_upgrade:") or option_id.begins_with("skill_level_up:"):
-			player.call("apply_upgrade", StringName(option_id))
+	var option_id: String = String(option.get("id", ""))
+	if player.has_method("apply_upgrade") and (option_id.begins_with("level_up_upgrade:") or option_id.begins_with("skill_level_up:")):
+		player.call("apply_upgrade", StringName(option_id))
+	else:
+		var upgrade_id: StringName = StringName(String(payload.get("upgrade_id", "")))
+		if upgrade_id != &"" and player.has_method("apply_upgrade"):
+			player.call("apply_upgrade", StringName("level_up_upgrade:%s" % String(upgrade_id)))
 
 	var tracker: Node = RunStatsTrackerScript.get_active(tree)
 	if tracker != null and tracker.has_method("record_reward_taken"):

@@ -854,7 +854,8 @@ func apply_upgrade(upgrade_id: StringName) -> void:
 	if upgrade_id_text.begins_with(LEVEL_UP_UPGRADE_PREFIX):
 		var upgrade_parts: PackedStringArray = upgrade_id_text.split(":")
 		var level_up_upgrade_id: StringName = StringName(upgrade_parts[1] if upgrade_parts.size() > 1 else "")
-		if _apply_level_up_upgrade(level_up_upgrade_id):
+		var rarity: String = String(upgrade_parts[2] if upgrade_parts.size() > 2 else "")
+		if _apply_level_up_upgrade(level_up_upgrade_id, rarity):
 			upgrade_applied.emit(upgrade_id)
 			_refresh_skill_configs()
 			_refresh_synergies()
@@ -882,7 +883,7 @@ func _apply_upgrade_data(_definition_upgrade_id: StringName, emitted_upgrade_id:
 	_refresh_synergies()
 
 
-func _apply_level_up_upgrade(upgrade_id: StringName) -> bool:
+func _apply_level_up_upgrade(upgrade_id: StringName, rarity: String = "") -> bool:
 	var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 	if upgrade.is_empty():
 		return false
@@ -894,7 +895,8 @@ func _apply_level_up_upgrade(upgrade_id: StringName) -> bool:
 
 	if upgrade.has("learn_skill_id"):
 		var learned_skill_id: StringName = StringName(String(upgrade.get("learn_skill_id", "")))
-		if not _learn_active_skill(learned_skill_id):
+		var skill_rarity: String = rarity if rarity != "" else String(upgrade.get("rarity", "normal"))
+		if not _learn_active_skill(learned_skill_id, skill_rarity):
 			return false
 		_set_level_up_upgrade_level(upgrade_id, upgrade_level + 1)
 		return true
@@ -918,13 +920,13 @@ func _apply_level_up_upgrade(upgrade_id: StringName) -> bool:
 	return true
 
 
-func _learn_active_skill(skill_id: StringName) -> bool:
+func _learn_active_skill(skill_id: StringName, rarity: String = "") -> bool:
 	if skill_id == &"":
 		return false
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("add_skill"):
 		return false
-	return bool(skill_manager.call("add_skill", skill_id))
+	return bool(skill_manager.call("add_skill", skill_id, rarity))
 
 
 func _get_experience_required_for_level(character_level: int) -> int:
@@ -1154,7 +1156,7 @@ func _apply_environment_modifiers() -> void:
 		})
 
 
-func _upgrade_skill(skill_id: StringName, amount: int, _dev_level_hint: Variant = &"", _dev_enabled: bool = false) -> bool:
+func _upgrade_skill(skill_id: StringName, amount: int, rarity: String = "", _dev_level_hint: Variant = &"", _dev_enabled: bool = false) -> bool:
 	if amount <= 0:
 		return false
 
@@ -1164,7 +1166,7 @@ func _upgrade_skill(skill_id: StringName, amount: int, _dev_level_hint: Variant 
 
 	var upgraded: bool = false
 	for _upgrade_index in range(amount):
-		if not bool(skill_manager.call("upgrade_skill", skill_id)):
+		if not bool(skill_manager.call("upgrade_skill", skill_id, rarity)):
 			break
 		upgraded = true
 
@@ -1196,8 +1198,9 @@ func _refresh_synergies() -> void:
 func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = false) -> bool:
 	var level_parts: PackedStringArray = upgrade_id_text.split(":")
 	var skill_id_from_option: StringName = StringName(level_parts[1] if level_parts.size() > 1 else "")
+	var rarity: String = String(level_parts[3] if level_parts.size() > 3 else "")
 	if not dev_enabled:
-		return _upgrade_skill(skill_id_from_option, 1)
+		return _upgrade_skill(skill_id_from_option, 1, rarity)
 
 	var target_level: int = int(level_parts[2] if level_parts.size() > 2 else "0")
 	var skill_instance: RefCounted = _get_skill_instance(skill_id_from_option)
@@ -1205,7 +1208,7 @@ func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = 
 		return false
 	if target_level <= int(skill_instance.get("current_level")):
 		return true
-	return _upgrade_skill(skill_id_from_option, target_level - int(skill_instance.get("current_level")), target_level, true)
+	return _upgrade_skill(skill_id_from_option, target_level - int(skill_instance.get("current_level")), rarity, target_level, true)
 
 
 func _is_dev_run() -> bool:
