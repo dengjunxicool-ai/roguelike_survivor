@@ -55,9 +55,9 @@ func _check_enemy_overlap_escape(main: Node, enemy_scene: PackedScene, player: N
 	var blocker_position: Vector2 = blocker.global_position
 	(player as CharacterBody2D).velocity = Vector2.UP * 220.0
 	player.call("_limit_actor_motion", 0.2)
-	var player_blocked: bool = (player as CharacterBody2D).velocity.length() < 220.0
+	var player_unblocked: bool = is_equal_approx((player as CharacterBody2D).velocity.length(), 220.0)
 	(player as CharacterBody2D).velocity = Vector2.ZERO
-	_expect(player_blocked and blocker.global_position == blocker_position, "player movement is blocked by enemy collision")
+	_expect(player_unblocked and blocker.global_position == blocker_position, "player movement is not body-blocked by enemy collision")
 	blocker.queue_free()
 	await process_frame
 

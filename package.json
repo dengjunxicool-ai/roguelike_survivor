@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "verify:enemy-motion-neighbor-limit": "node tools\\verify\\verify_enemy_motion_neighbor_limit.js",
     "verify:obsolete-weapon-runtime-removed": "node tools\\verify\\verify_obsolete_runtime_removed.js",
     "verify:fire-skill-system-contract": "node tools\\verify\\verify_fire_skill_system_contract.js",
     "verify:gods-and-skills-contract": "node tools\\verify\\verify_gods_and_skills_contract.js",

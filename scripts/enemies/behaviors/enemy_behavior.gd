@@ -63,6 +63,9 @@ func _apply_chase_movement(extra_direction: Vector2 = Vector2.ZERO) -> void:
 
 
 func _apply_melee_chase_movement() -> void:
+	if _should_skip_melee_neighbor_logic():
+		_apply_chase_movement()
+		return
 	if _idle_if_melee_space_blocked():
 		return
 	_apply_chase_movement(_get_separation_direction() * float(config.get("separation_strength", 0.25)))
@@ -80,10 +83,7 @@ func _idle_if_melee_space_blocked() -> bool:
 
 	var max_nearby: int = int(config.get("melee_crowd_limit", 10))
 	var count: int = 0
-	for node: Node in body.get_tree().get_nodes_in_group(&"enemy"):
-		var other: Node2D = node as Node2D
-		if other == null or other == body or other.is_queued_for_deletion():
-			continue
+	for other: Node2D in _nearby_enemies(target.global_position, radius):
 		if other.has_method("get_behavior_type") and not _is_melee_behavior(String(other.call("get_behavior_type"))):
 			continue
 		if other.global_position.distance_squared_to(target.global_position) <= radius * radius:
@@ -101,10 +101,7 @@ func _get_separation_direction() -> Vector2:
 	var radius: float = float(config.get("separation_radius", 30.0))
 	var separation: Vector2 = Vector2.ZERO
 	var checked: int = 0
-	for node: Node in body.get_tree().get_nodes_in_group(&"enemy"):
-		var other: Node2D = node as Node2D
-		if other == null or other == body or other.is_queued_for_deletion():
-			continue
+	for other: Node2D in _nearby_enemies(body.global_position, radius):
 		var offset: Vector2 = body.global_position - other.global_position
 		var distance_squared: float = offset.length_squared()
 		if distance_squared <= 0.01 or distance_squared > radius * radius:
@@ -118,6 +115,16 @@ func _get_separation_direction() -> Vector2:
 
 func _is_melee_behavior(behavior_type: String) -> bool:
 	return behavior_type == "chase_player" or behavior_type == "explode_near_player" or behavior_type == "dash_attack"
+
+
+func _nearby_enemies(center: Vector2, radius: float) -> Array:
+	if enemy != null and enemy.has_method("_nearby_enemies"):
+		return enemy.call("_nearby_enemies", center, radius)
+	return []
+
+
+func _should_skip_melee_neighbor_logic() -> bool:
+	return bool(_call_enemy(&"_should_skip_melee_neighbor_logic"))
 
 
 func _is_target_in_attack_range(distance: float = -1.0) -> bool:

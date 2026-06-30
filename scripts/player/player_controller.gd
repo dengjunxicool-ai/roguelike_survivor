@@ -414,7 +414,6 @@ func _apply_dash_or_walk_velocity(input_direction: Vector2, delta: float, was_da
 		_dash_time_remaining = maxf(_dash_time_remaining - delta, 0.0)
 	else:
 		velocity = input_direction * _get_effective_move_speed()
-		_limit_actor_motion(delta)
 
 
 func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
@@ -539,20 +538,7 @@ func _get_dash_visual_texture(source: Node2D) -> Texture2D:
 
 
 func _limit_actor_motion(delta: float) -> void:
-	if velocity.length_squared() <= 0.01 or delta <= 0.0:
-		return
-
-	var motion: Vector2 = velocity * delta
-	var scale: float = 1.0
-	for node: Node in get_tree().get_nodes_in_group(&"enemies"):
-		var enemy: Node2D = node as Node2D
-		if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
-			continue
-		if enemy.has_method("is_dead") and bool(enemy.call("is_dead")):
-			continue
-		scale = minf(scale, _get_actor_motion_scale(motion, enemy))
-	if scale < 1.0:
-		velocity *= maxf(scale, 0.0)
+	return
 
 
 func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:

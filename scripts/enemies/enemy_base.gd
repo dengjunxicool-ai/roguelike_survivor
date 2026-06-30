@@ -18,6 +18,17 @@ const EnemySkillControllerScript: Script = preload("res://scripts/enemies/skills
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
 const EnemyStateControllerScript: Script = preload("res://scripts/enemies/enemy_state_controller.gd")
 const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_config_helper.gd")
+const NEARBY_ENEMY_CELL_SIZE: float = 128.0
+const MOTION_LIMIT_EXTRA_RADIUS: float = 96.0
+const CROWDED_ENEMY_LOD_THRESHOLD: int = 60
+const HEAVY_CROWD_ENEMY_LOD_THRESHOLD: int = 90
+const HEAVY_CROWD_RUNTIME_SKIP_THRESHOLD: int = 70
+const MOTION_LIMIT_ALWAYS_DISTANCE_SQUARED: float = 220.0 * 220.0
+const CROWDED_RUNTIME_SKIP_DISTANCE_SQUARED: float = 420.0 * 420.0
+const VISUAL_UPDATE_CROWDED_INTERVAL: float = 0.05
+const VISUAL_UPDATE_HEAVY_CROWD_INTERVAL: float = 0.10
+const VISUAL_UPDATE_FAR_INTERVAL: float = 0.20
+const VISUAL_UPDATE_FAR_DISTANCE_SQUARED: float = 900.0 * 900.0
 
 signal health_changed(current_health: int, max_health: int)
 signal died
@@ -76,6 +87,12 @@ var _death_pipeline: RefCounted = EnemyDeathPipelineScript.new()
 var _behavior_controller: RefCounted = EnemyBehaviorControllerScript.new()
 var _skill_controller: RefCounted = EnemySkillControllerScript.new()
 var _state_controller: RefCounted = EnemyStateControllerScript.new()
+var _visual_update_timer: float = 0.0
+static var _nearby_enemy_index_frame: int = -1
+static var _nearby_enemy_index_tree_id: int = 0
+static var _nearby_enemy_grid: Dictionary = {}
+static var _nearby_enemy_total_count: int = 0
+static var _enemy_profile_sections: Dictionary = {}
 
 
 func _ready() -> void:
@@ -93,10 +110,10 @@ func _ready() -> void:
 		_apply_enemy_config()
 	_behavior_controller.call("setup", self, _behavior)
 	_skill_controller.call("setup", self, _enemy_skill_refs, _behavior)
+	_visual_update_timer = float(int(get_instance_id()) % 7) * 0.01
 
 	current_health = max_health
 	health_changed.emit(current_health, max_health)
-	_update_debug_health_display()
 	target = _get_target_from_path()
 	if target == null:
 		target = _find_target_in_group()
@@ -106,42 +123,71 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 
+	var profile_start: int = _profile_start()
 	_update_enemy_runtime_tick(delta)
+	_profile_add("runtime_tick", profile_start)
+	profile_start = _profile_start()
 	_state_controller.call("update", delta)
 	var debug_forced_state: String = _get_debug_enemy_forced_state()
 	if debug_forced_state != "":
 		_state_controller.call("set_forced_state", debug_forced_state)
 		_apply_debug_forced_state(delta, debug_forced_state)
+		_profile_add("debug_forced_state", profile_start)
 		return
 	_state_controller.call("clear_forced_state")
 	if _is_debug_control_mode():
 		_stop_motion_and_update_visual(delta)
+		_profile_add("debug_control", profile_start)
 		return
 
 	if _is_movement_frozen():
 		_stop_motion_and_update_visual(delta)
+		_profile_add("movement_frozen", profile_start)
 		return
+	_profile_add("state_update", profile_start)
 
+	profile_start = _profile_start()
 	_behavior_time += delta
 	_update_enemy_action_cooldowns(delta)
+	_profile_add("cooldowns", profile_start)
+	profile_start = _profile_start()
 	_skill_controller.call("tick", delta)
+	_profile_add("enemy_skill_tick", profile_start)
 
+	profile_start = _profile_start()
 	if not _resolve_current_target():
 		_stop_motion()
+		_profile_add("resolve_target_missing", profile_start)
+		return
+	_profile_add("resolve_target", profile_start)
+
+	if _should_skip_crowded_runtime_frame():
+		move_and_slide()
 		return
 
+	profile_start = _profile_start()
 	_update_behavior(delta)
-	_limit_actor_motion(delta, true)
+	_profile_add("behavior", profile_start)
+	profile_start = _profile_start()
+	if _should_limit_actor_motion():
+		_limit_actor_motion(delta, true)
+	_profile_add("motion_limit", profile_start)
+	profile_start = _profile_start()
 	move_and_slide()
-	_update_enemy_visual_state(delta)
+	_profile_add("move_and_slide", profile_start)
+	profile_start = _profile_start()
+	if _should_update_enemy_visual_state(delta):
+		_update_enemy_visual_state(delta)
+	_profile_add("visual", profile_start)
 
+	profile_start = _profile_start()
 	_apply_contact_damage()
+	_profile_add("contact_damage", profile_start)
 
 
 func _update_enemy_runtime_tick(delta: float) -> void:
 	_update_status_effects(delta)
 	_update_status_label()
-	_update_debug_health_display()
 
 
 func _update_enemy_action_cooldowns(delta: float) -> void:
@@ -287,17 +333,27 @@ func _apply_contact_damage() -> void:
 	if _damage_cooldown > 0.0:
 		return
 
-	for collision_index in range(get_slide_collision_count()):
-		var collision: KinematicCollision2D = get_slide_collision(collision_index)
-		var collider: Object = collision.get_collider()
+	var contact_target: Object = null
+	if _is_target_touching_contact_radius():
+		contact_target = target
+	if contact_target == null or not contact_target.has_method("take_damage"):
+		return
 
-		if collider == target and collider.has_method("take_damage"):
-			var applied_damage: int = int(_behavior.get("dash_damage", contact_damage)) if _dash_timer > 0.0 else contact_damage
-			collider.call(&"take_damage", _get_enemy_damage_packet(applied_damage, "contact"))
-			_execute_enemy_skill_action("contact_status", {"target": collider})
-			_mark_runtime_state("attack", 0.2)
-			_damage_cooldown = damage_interval
-			return
+	var applied_damage: int = int(_behavior.get("dash_damage", contact_damage)) if _dash_timer > 0.0 else contact_damage
+	contact_target.call(&"take_damage", _get_enemy_damage_packet(applied_damage, "contact"))
+	_execute_enemy_skill_action("contact_status", {"target": contact_target})
+	_mark_runtime_state("attack", 0.2)
+	_damage_cooldown = damage_interval
+
+
+func _is_target_touching_contact_radius() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	var contact_radius: float = maxf(
+		attack_range,
+		_get_collision_radius(self, 24.0) + _get_collision_radius(target, 24.0) + 2.0
+	)
+	return global_position.distance_squared_to(target.global_position) <= contact_radius * contact_radius
 
 
 func _apply_range_attack_damage() -> void:
@@ -664,15 +720,143 @@ func _limit_actor_motion(delta: float, include_player: bool = false) -> void:
 	var scale: float = 1.0
 	if include_player and target != null and is_instance_valid(target):
 		scale = minf(scale, _get_actor_motion_scale(motion, target))
-	for node: Node in get_tree().get_nodes_in_group(&"enemies"):
-		var enemy: Node2D = node as Node2D
-		if enemy == null or enemy == self or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
-			continue
-		if enemy.has_method("is_dead") and bool(enemy.call("is_dead")):
-			continue
+	if _should_skip_enemy_neighbor_motion_limit():
+		if scale < 1.0:
+			velocity *= maxf(scale, 0.0)
+		return
+	var query_radius: float = maxf(
+		motion.length() + _get_collision_radius(self, 24.0) + MOTION_LIMIT_EXTRA_RADIUS,
+		NEARBY_ENEMY_CELL_SIZE
+	)
+	for enemy: Node2D in _nearby_enemies(global_position, query_radius):
 		scale = minf(scale, _get_actor_motion_scale(motion, enemy))
 	if scale < 1.0:
 		velocity *= maxf(scale, 0.0)
+
+
+func _should_limit_actor_motion() -> bool:
+	if _is_strong_enemy():
+		return true
+	if target != null and is_instance_valid(target):
+		if global_position.distance_squared_to(target.global_position) <= MOTION_LIMIT_ALWAYS_DISTANCE_SQUARED:
+			return true
+
+	_ensure_nearby_enemy_index()
+	var enemy_count: int = _nearby_enemy_total_count
+	if enemy_count < CROWDED_ENEMY_LOD_THRESHOLD:
+		return true
+
+	var throttle_frames: int = 2 if enemy_count < HEAVY_CROWD_ENEMY_LOD_THRESHOLD else 3
+	var frame: int = int(Engine.get_physics_frames())
+	return frame % throttle_frames == int(get_instance_id()) % throttle_frames
+
+
+func _should_skip_enemy_neighbor_motion_limit() -> bool:
+	return not _is_strong_enemy() and _is_crowded_enemy_lod_active()
+
+
+func _should_skip_melee_neighbor_logic() -> bool:
+	return not _is_strong_enemy() and _is_crowded_enemy_lod_active()
+
+
+func _should_skip_crowded_runtime_frame() -> bool:
+	if _is_strong_enemy() or target == null or not is_instance_valid(target):
+		return false
+	if velocity.length_squared() <= 0.01:
+		return false
+	_ensure_nearby_enemy_index()
+	if _nearby_enemy_total_count < HEAVY_CROWD_RUNTIME_SKIP_THRESHOLD:
+		return false
+	if global_position.distance_squared_to(target.global_position) <= CROWDED_RUNTIME_SKIP_DISTANCE_SQUARED:
+		return false
+
+	var throttle_frames: int = 2 if _nearby_enemy_total_count < HEAVY_CROWD_ENEMY_LOD_THRESHOLD else 3
+	var frame: int = int(Engine.get_physics_frames())
+	return frame % throttle_frames != int(get_instance_id()) % throttle_frames
+
+
+func _is_crowded_enemy_lod_active() -> bool:
+	_ensure_nearby_enemy_index()
+	return _nearby_enemy_total_count >= CROWDED_ENEMY_LOD_THRESHOLD
+
+
+func _nearby_enemies(center: Vector2, radius: float) -> Array[Node2D]:
+	_ensure_nearby_enemy_index()
+	var result: Array[Node2D] = []
+	var query_radius: float = maxf(radius, 0.0)
+	var radius_squared: float = query_radius * query_radius
+	var center_cell: Vector2i = _enemy_spatial_cell(center)
+	var cell_radius: int = maxi(ceili(query_radius / NEARBY_ENEMY_CELL_SIZE), 1)
+	for cell_x: int in range(center_cell.x - cell_radius, center_cell.x + cell_radius + 1):
+		for cell_y: int in range(center_cell.y - cell_radius, center_cell.y + cell_radius + 1):
+			var cell: Vector2i = Vector2i(cell_x, cell_y)
+			var bucket: Array = _nearby_enemy_grid.get(cell, [])
+			for item: Variant in bucket:
+				var enemy: Node2D = item as Node2D
+				if enemy == null or enemy == self or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+					continue
+				if enemy.global_position.distance_squared_to(center) <= radius_squared:
+					result.append(enemy)
+	return result
+
+
+func _ensure_nearby_enemy_index() -> void:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		_nearby_enemy_grid.clear()
+		_nearby_enemy_index_frame = -1
+		_nearby_enemy_index_tree_id = 0
+		return
+	var frame: int = int(Engine.get_physics_frames())
+	var tree_id: int = int(tree.get_instance_id())
+	if Engine.is_in_physics_frame() and _nearby_enemy_index_frame == frame and _nearby_enemy_index_tree_id == tree_id:
+		return
+	_nearby_enemy_grid.clear()
+	_nearby_enemy_total_count = 0
+	_nearby_enemy_index_frame = frame
+	_nearby_enemy_index_tree_id = tree_id
+	for node: Node in tree.get_nodes_in_group(&"enemies"):
+		var enemy: Node2D = node as Node2D
+		if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+			continue
+		if enemy.has_method("is_dead") and bool(enemy.call("is_dead")):
+			continue
+		var cell: Vector2i = _enemy_spatial_cell(enemy.global_position)
+		var bucket: Array = _nearby_enemy_grid.get(cell, [])
+		bucket.append(enemy)
+		_nearby_enemy_grid[cell] = bucket
+		_nearby_enemy_total_count += 1
+
+
+static func _enemy_spatial_cell(position: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(position.x / NEARBY_ENEMY_CELL_SIZE),
+		floori(position.y / NEARBY_ENEMY_CELL_SIZE)
+	)
+
+
+func get_enemy_profile_snapshot(reset: bool = true) -> Dictionary:
+	var snapshot: Dictionary = _enemy_profile_sections.duplicate(true)
+	if reset:
+		_enemy_profile_sections.clear()
+	return snapshot
+
+
+func _profile_start() -> int:
+	var tree: SceneTree = get_tree()
+	if tree == null or tree.root == null or not bool(tree.root.get_meta("profile_enemy_physics", false)):
+		return 0
+	return Time.get_ticks_usec()
+
+
+func _profile_add(section: String, start_usec: int) -> void:
+	if start_usec <= 0:
+		return
+	var elapsed_usec: int = Time.get_ticks_usec() - start_usec
+	var record: Dictionary = _enemy_profile_sections.get(section, {"usec": 0, "count": 0})
+	record["usec"] = int(record.get("usec", 0)) + elapsed_usec
+	record["count"] = int(record.get("count", 0)) + 1
+	_enemy_profile_sections[section] = record
 
 
 func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:
@@ -707,6 +891,34 @@ func _update_enemy_visual_state(delta: float) -> void:
 	var state: Dictionary = _state_controller.call("get_snapshot")
 	state["status_state"] = _get_priority_status_visual_state()
 	_visual_controller.call("update", state, delta)
+
+
+func _should_update_enemy_visual_state(delta: float) -> bool:
+	var interval: float = _get_enemy_visual_update_interval()
+	if interval <= 0.0:
+		return true
+
+	_visual_update_timer -= delta
+	if _visual_update_timer > 0.0:
+		return false
+
+	_visual_update_timer = interval + float(int(get_instance_id()) % 5) * 0.003
+	return true
+
+
+func _get_enemy_visual_update_interval() -> float:
+	if not _is_normal_enemy():
+		return 0.0
+	_ensure_nearby_enemy_index()
+	if target != null and is_instance_valid(target):
+		var distance_squared: float = global_position.distance_squared_to(target.global_position)
+		if distance_squared > VISUAL_UPDATE_FAR_DISTANCE_SQUARED:
+			return VISUAL_UPDATE_FAR_INTERVAL
+	if _nearby_enemy_total_count >= HEAVY_CROWD_ENEMY_LOD_THRESHOLD:
+		return VISUAL_UPDATE_HEAVY_CROWD_INTERVAL
+	if _nearby_enemy_total_count >= CROWDED_ENEMY_LOD_THRESHOLD:
+		return VISUAL_UPDATE_CROWDED_INTERVAL
+	return 0.0
 
 
 func _get_priority_status_visual_state() -> String:
@@ -765,5 +977,14 @@ func _get_debug_enemy_forced_state() -> String:
 
 
 func _can_debug_force_elite_visual_state() -> bool:
+	var rank: String = String(get_meta("enemy_rank", get_meta("enemy_type", "normal")))
+	return rank == "elite" or rank == "boss"
+
+
+func _is_normal_enemy() -> bool:
+	return String(get_meta("enemy_rank", get_meta("enemy_type", "normal"))) == "normal"
+
+
+func _is_strong_enemy() -> bool:
 	var rank: String = String(get_meta("enemy_rank", get_meta("enemy_type", "normal")))
 	return rank == "elite" or rank == "boss"

@@ -25,6 +25,7 @@
 	}
   },
   "spawn_rules": {
+	"max_normal_enemies_alive": 40,
 	"first_level_up_choice": {
 	  "option_count": 3
 	},

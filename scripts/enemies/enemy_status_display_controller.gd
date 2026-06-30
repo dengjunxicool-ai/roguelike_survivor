@@ -10,14 +10,10 @@ var _status_label: Label
 
 func setup(owner: Node2D) -> void:
 	_owner = owner
-	_ensure_label()
 
 
 func update(snapshot: Array[Dictionary]) -> void:
 	if _owner == null:
-		return
-	_ensure_label()
-	if _status_label == null:
 		return
 
 	var fragments: Array[String] = []
@@ -37,6 +33,12 @@ func update(snapshot: Array[Dictionary]) -> void:
 			fragments.append("%s%d" % [_get_status_short_name(status_id), stacks])
 		if fragments.size() >= 5:
 			break
+
+	if fragments.is_empty() and (_status_label == null or not is_instance_valid(_status_label)):
+		return
+	_ensure_label()
+	if _status_label == null:
+		return
 
 	_status_label.text = " ".join(fragments)
 	_status_label.visible = not fragments.is_empty()

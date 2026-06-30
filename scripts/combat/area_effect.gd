@@ -5,6 +5,7 @@ class_name AreaEffect
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const PROGRAMMATIC_VISUAL_REDRAW_INTERVAL: float = 0.08
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
@@ -20,6 +21,7 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 @export var damage_type: StringName = &""
 @export var damage_packet: Dictionary = {}
 @export var target_group: StringName = &"enemies"
+@export var area_id: StringName = &""
 @export var source_id: StringName = &""
 @export var move_direction: Vector2 = Vector2.ZERO
 @export_range(0.0, 2000.0, 1.0, "or_greater") var move_speed: float = 0.0
@@ -38,6 +40,7 @@ var _visual_style: String = ""
 var _visual_color: Color = Color(0.35, 0.95, 0.2, 0.32)
 var _visual_ring_color: Color = Color(0.75, 1.0, 0.25, 0.66)
 var _visual_seed: float = 0.0
+var _redraw_timer: float = 0.0
 var _damage_window_finished: bool = false
 var _finished_by_damage: bool = false
 var _base_radius: float = 52.0
@@ -74,6 +77,7 @@ func setup(params: Dictionary) -> void:
 	_apply_radius(radius)
 	_apply_visual(params)
 	_execute_apply_actions()
+	_enforce_max_active(int(params.get("max_active", 0)))
 
 
 func _apply_area_core_params(params: Dictionary) -> void:
@@ -98,6 +102,7 @@ func _apply_area_payload_params(params: Dictionary) -> void:
 	damage_type = StringName(String(params.get("damage_type", damage_type)))
 	damage_packet = _get_dictionary(params.get("damage_packet", damage_packet))
 	target_group = StringName(String(params.get("target_group", target_group)))
+	area_id = StringName(String(params.get("area_id", area_id)))
 	source_id = StringName(String(params.get("source_id", source_id)))
 	move_direction = _get_vector2(params.get("move_direction", move_direction), Vector2.ZERO)
 	move_direction = move_direction.normalized() if move_direction.length_squared() > 0.0001 else Vector2.ZERO
@@ -142,6 +147,7 @@ func _reset_area_runtime_state(params: Dictionary) -> void:
 	_tick_timer = 0.0
 	_damage_window_finished = false
 	_finished_by_damage = false
+	_redraw_timer = 0.0
 	_base_radius = radius
 	_expand_from_radius = float(params.get("expand_from_radius", -1.0))
 	_expand_to_radius = float(params.get("expand_to_radius", -1.0))
@@ -152,11 +158,11 @@ func _reset_area_runtime_state(params: Dictionary) -> void:
 
 
 func _enable_area_collision() -> void:
-	set_deferred("monitoring", true)
-	set_deferred("monitorable", true)
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null:
-		collision_shape.set_deferred("disabled", false)
+		collision_shape.set_deferred("disabled", true)
 
 
 func extend_duration(target_duration: float, max_duration: float = 5.0) -> void:
@@ -187,7 +193,7 @@ func _physics_process(delta: float) -> void:
 		global_position += move_direction * move_speed * delta
 	_update_expanding_radius()
 	if _uses_programmatic_visual():
-		queue_redraw()
+		_queue_programmatic_visual_redraw(delta)
 
 	_tick_timer -= delta
 	if _tick_timer <= 0.0:
@@ -196,6 +202,54 @@ func _physics_process(delta: float) -> void:
 
 	if _age >= duration:
 		_finish_damage_window()
+
+
+func _queue_programmatic_visual_redraw(delta: float) -> void:
+	_redraw_timer = maxf(_redraw_timer - delta, 0.0)
+	if _redraw_timer > 0.0:
+		return
+	_redraw_timer = PROGRAMMATIC_VISUAL_REDRAW_INTERVAL
+	queue_redraw()
+
+
+func _enforce_max_active(max_active: int) -> void:
+	if max_active <= 0 or get_parent() == null:
+		return
+
+	var grouping_key: StringName = area_id if area_id != &"" else source_id
+	if grouping_key == &"":
+		return
+
+	var matches: Array[Node] = []
+	for child: Node in get_parent().get_children():
+		var area: AreaEffect = child as AreaEffect
+		if area == null or not is_instance_valid(area) or area.is_queued_for_deletion():
+			continue
+		var area_grouping_key: StringName = area.get("area_id") if area.get("area_id") != &"" else area.get("source_id")
+		if String(area_grouping_key) != String(grouping_key):
+			continue
+		matches.append(area)
+
+	while matches.size() > max_active:
+		var oldest: Node = _oldest_area_effect(matches)
+		if oldest == null:
+			return
+		matches.erase(oldest)
+		oldest.queue_free()
+
+
+func _oldest_area_effect(areas: Array[Node]) -> Node:
+	var oldest: Node = null
+	var oldest_age: float = -INF
+	var oldest_instance_id: int = 0
+	for area: Node in areas:
+		var age: float = float(area.get("_age"))
+		var instance_id: int = int(area.get_instance_id())
+		if oldest == null or age > oldest_age or (is_equal_approx(age, oldest_age) and instance_id < oldest_instance_id):
+			oldest = area
+			oldest_age = age
+			oldest_instance_id = instance_id
+	return oldest
 
 
 func _apply_tick_damage() -> void:
@@ -215,19 +269,6 @@ func _collect_tick_damage_targets() -> Array[Node]:
 	var targets: Array[Node] = []
 	var damaged_bodies: Dictionary = {}
 	var damaged_count: int = 0
-	if monitoring:
-		for body: Node in get_overlapping_bodies():
-			if _damage_window_finished:
-				break
-			if max_targets > 0 and damaged_count >= max_targets:
-				break
-			if not _can_damage_body(body):
-				continue
-			if not _body_in_effect_shape(body):
-				continue
-			damaged_bodies[body] = true
-			targets.append(body)
-			damaged_count += 1
 
 	var tree: SceneTree = get_tree()
 	if tree == null:
