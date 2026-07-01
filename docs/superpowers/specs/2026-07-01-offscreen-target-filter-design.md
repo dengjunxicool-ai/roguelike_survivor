@@ -35,7 +35,7 @@ The visibility check should compute a world-space rectangle from the active view
 1. Get the `SceneTree` from `Engine.get_main_loop()`.
 2. Get the root viewport and its active `Camera2D`.
 3. Convert the viewport visible size into world units by dividing by the camera zoom.
-4. Center the rectangle on `camera.global_position`.
+4. Center the rectangle on `camera.get_screen_center_position()` so smoothing and camera limits use the actual visible center.
 5. Accept enemies whose `global_position` is inside that rectangle.
 
 No buffer is applied because the selected requirement is strict current-camera visibility.

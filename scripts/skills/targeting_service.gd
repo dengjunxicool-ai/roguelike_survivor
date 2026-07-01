@@ -308,7 +308,37 @@ static func _is_valid_enemy(enemy: Node2D) -> bool:
 	if is_dead_variant != null and bool(is_dead_variant):
 		return false
 
+	if not _is_enemy_inside_active_camera_view(enemy):
+		return false
+
 	return true
+
+
+static func _is_enemy_inside_active_camera_view(enemy: Node2D) -> bool:
+	if enemy == null:
+		return false
+
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return true
+
+	var viewport: Viewport = tree.root
+	var camera: Camera2D = viewport.get_camera_2d()
+	if camera == null:
+		return true
+
+	var visible_size: Vector2 = viewport.get_visible_rect().size
+	if visible_size.x <= 0.0 or visible_size.y <= 0.0:
+		return true
+
+	var camera_zoom: Vector2 = camera.zoom.abs()
+	var world_size: Vector2 = Vector2(
+		visible_size.x / maxf(camera_zoom.x, 0.001),
+		visible_size.y / maxf(camera_zoom.y, 0.001)
+	)
+	var screen_center: Vector2 = camera.get_screen_center_position()
+	var world_rect: Rect2 = Rect2(screen_center - world_size * 0.5, world_size)
+	return world_rect.has_point(enemy.global_position)
 
 
 static func _get_enemy_health(enemy: Node2D) -> int:

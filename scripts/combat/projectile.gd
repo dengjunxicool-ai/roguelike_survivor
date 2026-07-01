@@ -5,6 +5,7 @@ class_name Projectile
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 15
 @export_range(1.0, 3000.0, 10.0, "or_greater") var speed: float = 520.0
@@ -395,9 +396,7 @@ func _find_nearest_homing_target() -> Node2D:
 	var nearest_distance_squared: float = seek_range * seek_range
 	for node: Node in tree.get_nodes_in_group(target_group):
 		var target: Node2D = node as Node2D
-		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
-			continue
-		if target.has_method("is_dead") and bool(target.call("is_dead")):
+		if not _is_valid_homing_target(target):
 			continue
 		var distance_squared: float = global_position.distance_squared_to(target.global_position)
 		if distance_squared < nearest_distance_squared:
@@ -438,11 +437,7 @@ func _resolve_swept_homing_hit(from_position: Vector2, to_position: Vector2) -> 
 
 
 func _is_valid_homing_target(target: Node2D) -> bool:
-	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
-		return false
-	if target.has_method("is_dead") and bool(target.call("is_dead")):
-		return false
-	return true
+	return TargetingServiceScript.is_valid_target(target)
 
 
 func _get_target_hit_radius(target: Node2D) -> float:

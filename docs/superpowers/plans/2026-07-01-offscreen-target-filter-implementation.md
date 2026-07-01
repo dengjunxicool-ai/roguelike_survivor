@@ -89,7 +89,7 @@ function validateTargetingService(text) {
       "get_camera_2d",
       "get_visible_rect",
       "camera.zoom.abs",
-      "camera.global_position",
+      "get_screen_center_position",
       "enemy.global_position",
       "Rect2",
       "has_point",
@@ -109,6 +109,7 @@ function validateTargetingService(text) {
 function validateProjectile(text) {
   const errors = [];
   const nearestBody = extractGdFunctionBody(text, /^func\s+_find_nearest_homing_target\s*\(/m);
+  const sweptBody = extractGdFunctionBody(text, /^func\s+_resolve_swept_homing_hit\s*\(/m);
   const validBody = extractGdFunctionBody(text, /^func\s+_is_valid_homing_target\s*\(/m);
 
   if (!text.includes('preload("res://scripts/skills/targeting_service.gd")')) {
@@ -119,6 +120,12 @@ function validateProjectile(text) {
     errors.push("Projectile._find_nearest_homing_target must exist.");
   } else if (!nearestBody.includes("_is_valid_homing_target(target)")) {
     errors.push("Projectile._find_nearest_homing_target must reuse _is_valid_homing_target.");
+  }
+
+  if (sweptBody === "") {
+    errors.push("Projectile._resolve_swept_homing_hit must exist.");
+  } else if (!sweptBody.includes("_is_valid_homing_target(target)")) {
+    errors.push("Projectile._resolve_swept_homing_hit must reuse _is_valid_homing_target.");
   }
 
   if (validBody === "") {
@@ -222,7 +229,8 @@ static func _is_enemy_inside_active_camera_view(enemy: Node2D) -> bool:
 		visible_size.x / maxf(camera_zoom.x, 0.001),
 		visible_size.y / maxf(camera_zoom.y, 0.001)
 	)
-	var world_rect: Rect2 = Rect2(camera.global_position - world_size * 0.5, world_size)
+	var screen_center: Vector2 = camera.get_screen_center_position()
+	var world_rect: Rect2 = Rect2(screen_center - world_size * 0.5, world_size)
 	return world_rect.has_point(enemy.global_position)
 ```
 

@@ -20,6 +20,7 @@
     "verify:skill-growth-ui-dispatcher": "node tools\\verify\\verify_skill_growth_ui_dispatcher.js",
     "verify:skill-runtime-no-dead-cards": "node tools\\verify\\verify_skill_runtime_no_dead_cards.js",
     "verify:skill-retarget-dead-target": "node tools\\verify\\verify_skill_retarget_dead_target.js",
+    "verify:offscreen-target-filter": "node tools\\verify\\verify_offscreen_target_filter.js",
     "verify:skill-rule-adapters": "node tools\\verify\\verify_skill_rule_adapters.js",
     "verify:damage-formula": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_damage_formula.gd",
     "verify:unified-damage-trace-context": "node tools\\verify\\verify_unified_damage_trace_context.js",
