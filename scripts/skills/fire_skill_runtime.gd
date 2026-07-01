@@ -417,16 +417,16 @@ static func _apply_burn_action(rules: Dictionary, context: Dictionary, executor:
 	executor.call("execute_actions", [{
 		"type": "apply_status",
 		"params": {
-			"status_id": "burn",
+			"status_id": "burning",
 			"duration": maxf(float(rules.get("reignite_duration_multiplier", 0.6)) * 3.0, 0.1),
-			"damage": maxi(int(context.get("damage", context.get("amount", 4))), 1)
+			"power": maxi(int(context.get("damage", context.get("amount", 4))), 1)
 		}
 	}], context)
 
 
 static func _apply_blackflame_conversion(rules: Dictionary, context: Dictionary, executor: RefCounted) -> void:
 	var target: Node = context.get("target") as Node
-	if target == null or not _target_has_status(target, &"burn"):
+	if target == null or not _target_has_status(target, &"burning"):
 		return
 	var chance: float = clampf(float(rules.get("conversion_chance", 1.0)), 0.0, 1.0)
 	if _is_target_boss(target):
@@ -434,7 +434,7 @@ static func _apply_blackflame_conversion(rules: Dictionary, context: Dictionary,
 	if randf() > chance:
 		return
 	if target.has_method("consume_status_stack"):
-		target.call("consume_status_stack", &"burn", 1)
+		target.call("consume_status_stack", &"burning", 1)
 	var base_damage: int = maxi(int(context.get("damage", context.get("amount", 4))), 1)
 	if executor != null:
 		executor.call("execute_actions", [{
@@ -451,7 +451,7 @@ static func _apply_blackflame_conversion(rules: Dictionary, context: Dictionary,
 
 static func _apply_armor_melting_burn(rules: Dictionary, context: Dictionary, executor: RefCounted) -> void:
 	var target: Node = context.get("target") as Node
-	if target == null or not _target_has_status(target, &"burn") or executor == null:
+	if target == null or not _target_has_status(target, &"burning") or executor == null:
 		return
 	var vulnerability_add: float = maxf(-float(rules.get("armor_multiplier_add", 0.0)), 0.0)
 	if _is_target_boss(target):

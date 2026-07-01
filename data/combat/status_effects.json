@@ -260,44 +260,6 @@
 			}
 		},
 		{
-			"duration": 3.0,
-			"tick_interval": 0.5,
-			"refresh_rule": "refresh_duration",
-			"boss_conversion_rule": "dot_resist",
-			"id": "burn",
-			"display_name": "burn",
-			"type": "dot",
-			"max_stacks": 5.0,
-			"effect": {
-				"dot": true
-			},
-			"damage": 1.6,
-			"damage_origin": "status_dot",
-			"damage_type": "status_dot",
-			"element": "fire",
-			"can_crit": false,
-			"boss_modifiers": {
-				"dot_damage_multiplier": 0.65
-			},
-			"visual": {
-				"sprite_frames": "res://assets/effect/burn/burn.tres",
-				"scale": [
-					0.45,
-					0.45
-				],
-				"offset": [
-					0.0,
-					-22.0
-				],
-				"priority": 30.0,
-				"animations": {
-					"burn": {
-						"animation": "burn"
-					}
-				}
-			}
-		},
-		{
 			"duration": 4.0,
 			"tick_interval": 0.5,
 			"refresh_rule": "refresh_duration",

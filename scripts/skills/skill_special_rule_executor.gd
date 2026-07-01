@@ -104,13 +104,15 @@ func get_status_params(status_id: StringName, base_params: Dictionary, context: 
 			return _get_poison_status_params(params, context)
 		&"flammable_mark":
 			return _get_flammable_mark_status_params(params, context)
-		&"burn":
+		&"burning":
 			return _get_burn_status_params(params, context)
 		_:
 			return params
 
 
 func _get_burn_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
+	if not params.has("power") and not params.has("damage") and not params.has("tick_damage"):
+		params["power"] = _get_burning_power_from_context(context)
 	var rules: Dictionary = _get_rules(context)
 	if rules.is_empty():
 		return params
@@ -124,6 +126,12 @@ func _get_burn_base_max_stacks() -> int:
 
 func _get_burn_base_damage() -> float:
 	return 1.6
+
+
+func _get_burning_power_from_context(context: Dictionary) -> float:
+	if context.has("power"):
+		return maxf(float(context.get("power", 0.0)), 0.0)
+	return maxf(float(context.get("damage", context.get("amount", _get_burn_base_damage() / 0.18))), 0.0)
 
 
 func adjust_damage_packet(packet: Dictionary, context: Dictionary) -> Dictionary:
@@ -603,11 +611,15 @@ func _apply_explosion_direct_hit_burn(rules: Dictionary, context: Dictionary, ta
 		var now_seconds: float = _now_seconds()
 		if now_seconds >= float(target.get_meta(key, 0.0)):
 			target.set_meta(key, now_seconds + maxf(float(direct_rule.get("same_target_cooldown", 1.5)), 0.0))
-			var direct_status_params: Dictionary = DamageTraceContextScript.apply_to_status_params({
+			var direct_status_id: StringName = StringName(String(direct_rule.get("status_id", "burning")))
+			var direct_status_params: Dictionary = {
 				"stacks": int(direct_rule.get("stack", 1)),
 				"duration": float(direct_rule.get("duration", 3.0))
-			}, context)
-			target.call("apply_status", StringName(String(direct_rule.get("status_id", "burn"))), direct_status_params)
+			}
+			if direct_status_id == &"burning":
+				direct_status_params = _get_burn_status_params(direct_status_params, context)
+			direct_status_params = DamageTraceContextScript.apply_to_status_params(direct_status_params, context)
+			target.call("apply_status", direct_status_id, direct_status_params)
 
 
 func _apply_explosion_multi_hit_burn(rules: Dictionary, context: Dictionary, target: Node) -> void:
@@ -617,11 +629,15 @@ func _apply_explosion_multi_hit_burn(rules: Dictionary, context: Dictionary, tar
 	var hit_count: int = int(context.get("explosion_targets_hit", target.get_meta("fireball_explosion_targets_hit", 1)))
 	if hit_count < maxi(int(multi_rule.get("min_targets_hit", 3)), 1):
 		return
-	var multi_status_params: Dictionary = DamageTraceContextScript.apply_to_status_params({
+	var multi_status_id: StringName = StringName(String(multi_rule.get("status_id", "burning")))
+	var multi_status_params: Dictionary = {
 		"stacks": int(multi_rule.get("stack", 1)),
 		"duration": float(multi_rule.get("duration", 3.0))
-	}, context)
-	target.call("apply_status", StringName(String(multi_rule.get("status_id", "burn"))), multi_status_params)
+	}
+	if multi_status_id == &"burning":
+		multi_status_params = _get_burn_status_params(multi_status_params, context)
+	multi_status_params = DamageTraceContextScript.apply_to_status_params(multi_status_params, context)
+	target.call("apply_status", multi_status_id, multi_status_params)
 
 
 func _apply_soul_ember_to_burn(rules: Dictionary, context: Dictionary) -> void:
@@ -647,7 +663,7 @@ func _apply_soul_ember_to_burn(rules: Dictionary, context: Dictionary) -> void:
 			"max_stacks": maxi(int(rule.get("burn_max_stacks", 5)), 1)
 		}, context)
 		burn_params = DamageTraceContextScript.apply_to_status_params(burn_params, context)
-		target.call("apply_status", &"burn", burn_params)
+		target.call("apply_status", &"burning", burn_params)
 
 
 func _apply_soul_ember_on_direct_hit(rules: Dictionary, context: Dictionary) -> void:
@@ -847,7 +863,7 @@ func _apply_soulburn_burst(rules: Dictionary, context: Dictionary) -> void:
 	if target == null or not target.has_method("get_status_stack") or not target.has_method("take_damage"):
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("soulburn_burst_on_full_burn_direct_hit", {}))
-	var burn_stacks: int = int(target.call("get_status_stack", &"burn"))
+	var burn_stacks: int = int(target.call("get_status_stack", &"burning"))
 	if burn_stacks < maxi(int(rule.get("required_burn_stacks", 5)), 1):
 		return
 	var key: String = "soulburn:%s" % _target_key(target)
@@ -870,9 +886,9 @@ func _consume_soulburn_burn_stacks(target: Node, rule: Dictionary, current_burn_
 		return
 	var consume_rule: String = String(rule.get("consume_burn_stacks", ""))
 	if consume_rule == "all":
-		target.call("consume_status_stack", &"burn", current_burn_stacks)
+		target.call("consume_status_stack", &"burning", current_burn_stacks)
 	elif rule.has("consume_burn_stacks"):
-		target.call("consume_status_stack", &"burn", maxi(int(rule.get("consume_burn_stacks", 0)), 0))
+		target.call("consume_status_stack", &"burning", maxi(int(rule.get("consume_burn_stacks", 0)), 0))
 
 
 func _spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary) -> void:
@@ -1690,7 +1706,7 @@ func _apply_cross_relic_dot_target_damage_bonus(packet: Dictionary, rules: Dicti
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_dot_target_damage_bonus", {}))
 	if rule.is_empty():
 		return
-	for status_variant: Variant in _get_array(rule.get("status_ids", ["burn", "poison", "bleed"])):
+	for status_variant: Variant in _get_array(rule.get("status_ids", ["burning", "poison", "bleed"])):
 		if bool(target.call("has_status", StringName(String(status_variant)))):
 			packet["direct_damage_multiplier_add"] = float(packet.get("direct_damage_multiplier_add", 0.0)) + float(rule.get("damage_multiplier_add", 0.15))
 			return
@@ -1943,11 +1959,15 @@ func _apply_burn_in_merged_oil(rules: Dictionary, context: Dictionary, target: N
 	var now_seconds: float = _now_seconds()
 	if not _reserve_cooldown(_fire_oil_burn_in_merged_oil_cooldowns, key, now_seconds, maxf(float(rule.get("interval", 1.5)), 0.05)):
 		return
-	target.call("apply_status", StringName(String(rule.get("status_id", "burn"))), {
+	var status_id: StringName = StringName(String(rule.get("status_id", "burning")))
+	var status_params: Dictionary = {
 		"duration": float(rule.get("duration", 3.0)),
 		"stacks": maxi(int(rule.get("stacks", 1)), 1),
 		"max_stacks": maxi(int(rule.get("max_stacks", 1)), 1)
-	})
+	}
+	if status_id == &"burning":
+		status_params = _get_burn_status_params(status_params, context)
+	target.call("apply_status", status_id, status_params)
 
 
 func _apply_flammable_mark_on_oil_tick(rules: Dictionary, target: Node) -> void:

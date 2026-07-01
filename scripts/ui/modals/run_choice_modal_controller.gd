@@ -13,11 +13,13 @@ const UIResponsiveLayoutScript: Script = preload("res://scripts/ui/ui_responsive
 const UICommandDispatcherScript: Script = preload("res://scripts/ui/ui_command_dispatcher.gd")
 const UICommandScript: Script = preload("res://scripts/ui/ui_command.gd")
 const UIThemeServiceScript: Script = preload("res://scripts/ui/ui_theme_service.gd")
-const CARD_DESIGN_SIZE: Vector2 = Vector2(342.0, 608.0)
-const CARD_COMPACT_SIZE: Vector2 = Vector2(300.0, 533.3333)
+const CARD_DESIGN_SIZE: Vector2 = Vector2(342.0, 589.0)
+const CARD_COMPACT_SIZE: Vector2 = Vector2(300.0, 516.6667)
 const CARD_INNER_GAP: float = 36.0
 const CARD_COMPACT_INNER_GAP: float = 36.0
 const CARD_TEXT_LINE_HEIGHT_MULTIPLIER: float = 1.2
+const DEFAULT_SKILL_CARD_ICON_TEXTURE: String = "res://icon.svg"
+const SKILL_CARD_MAX_VALUE_ROWS: int = 3
 
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const RunRewardPoolScript: Script = preload("res://scripts/upgrades/run_reward_pool.gd")
@@ -203,32 +205,33 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 
 	_add_card_background(button, option)
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_bottom", 18)
-	button.add_child(margin)
+	var content_layer: Control = Control.new()
+	content_layer.name = "SkillCardContentLayer"
+	content_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	content_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(content_layer)
 
-	var column: VBoxContainer = VBoxContainer.new()
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_theme_constant_override("separation", 10)
-	margin.add_child(column)
+	var title_label: Label = _add_card_label(content_layer, _get_option_title(option), 23, VERTICAL_ALIGNMENT_CENTER)
+	title_label.name = "SkillCardTitle"
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.38, 1.0))
+	_set_card_slot(title_label, 0.14, 0.062, 0.86, 0.145)
 
-	var title_label: Label = _add_card_label(column, _get_option_title(option), 22, VERTICAL_ALIGNMENT_CENTER)
-	title_label.custom_minimum_size = Vector2(0, 48)
+	var icon_frame: Control = _add_card_icon(content_layer, option)
+	_set_card_slot(icon_frame, 0.285, 0.165, 0.715, 0.405)
 
-	var meta_label: Label = _add_card_label(column, _get_option_meta_text(option), 13, VERTICAL_ALIGNMENT_TOP)
-	meta_label.custom_minimum_size = Vector2(0, 44)
+	var description_label: Label = _add_card_label(content_layer, _get_option_description_text(option), 15, VERTICAL_ALIGNMENT_CENTER)
+	description_label.name = "SkillCardDescription"
+	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
+	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
+	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
 
-	var effect_label: Label = _add_card_label(column, _get_option_effect_text(option), 14, VERTICAL_ALIGNMENT_CENTER)
-	effect_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	effect_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(14))
+	var rarity_label: Label = _add_card_label(content_layer, _get_option_rarity_text(option), 18, VERTICAL_ALIGNMENT_CENTER)
+	rarity_label.name = "SkillCardRarity"
+	rarity_label.add_theme_color_override("font_color", Color(0.74, 0.84, 1.0, 1.0))
+	_set_card_slot(rarity_label, 0.27, 0.634, 0.73, 0.684)
+
+	var values: VBoxContainer = _add_card_value_rows(content_layer, option)
+	_set_card_slot(values, 0.14, 0.684, 0.86, 0.872)
 
 	var resize_callable: Callable = Callable(self, "_update_choice_card_sizes").bind(parent)
 	if not parent.resized.is_connected(resize_callable):
@@ -283,6 +286,66 @@ func _add_card_background(parent: Button, option: Dictionary) -> void:
 	parent.add_child(texture_rect)
 
 
+func _add_card_icon(parent: Node, option: Dictionary) -> Control:
+	var frame: Control = Control.new()
+	frame.name = "SkillCardIconFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(frame)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(center)
+
+	var texture_rect: TextureRect = TextureRect.new()
+	texture_rect.name = "SkillCardIconTexture"
+	texture_rect.custom_minimum_size = Vector2(122, 122)
+	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_rect.texture = _load_texture(_get_option_icon_texture(option))
+	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	center.add_child(texture_rect)
+	return frame
+
+
+func _add_card_value_rows(parent: Node, option: Dictionary) -> VBoxContainer:
+	var values: VBoxContainer = VBoxContainer.new()
+	values.name = "SkillCardValues"
+	values.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	values.add_theme_constant_override("separation", 4)
+	parent.add_child(values)
+
+	var lines: Array[String] = _get_option_value_lines(option)
+	for index: int in range(mini(lines.size(), SKILL_CARD_MAX_VALUE_ROWS)):
+		var row: HBoxContainer = HBoxContainer.new()
+		row.name = "SkillCardValueRow%d" % (index + 1)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 8)
+		values.add_child(row)
+
+		var icon: TextureRect = TextureRect.new()
+		icon.name = "SkillCardValueIcon"
+		icon.custom_minimum_size = Vector2(22, 22)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.self_modulate = Color(1.0, 0.52, 0.12, 0.95)
+		row.add_child(icon)
+
+		var parts: Dictionary = _split_value_line(lines[index])
+		var name_label: Label = _add_value_row_label(row, str(parts.get("name", "")), 14, HORIZONTAL_ALIGNMENT_LEFT)
+		name_label.name = "SkillCardValueName"
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var value_label: Label = _add_value_row_label(row, str(parts.get("value", "")), 14, HORIZONTAL_ALIGNMENT_RIGHT)
+		value_label.name = "SkillCardValueAmount"
+		value_label.custom_minimum_size = Vector2(64, 0)
+	return values
+
+
 func _get_choice_card_background_texture(option: Dictionary) -> String:
 	for key: String in ["background_texture", "card_background_texture"]:
 		var option_path: String = String(option.get(key, ""))
@@ -304,12 +367,43 @@ func _add_card_label(parent: Node, text: String, font_size: int, vertical_alignm
 	label.add_theme_color_override("font_color", Color.WHITE)
 	label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(font_size))
 	parent.add_child(label)
+	_register_card_label(label, font_size, true)
+	return label
+
+
+func _add_value_row_label(parent: Node, text: String, font_size: int, alignment: HorizontalAlignment) -> Label:
+	var label: Label = Label.new()
+	label.text = text
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.horizontal_alignment = alignment
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.38, 1.0))
+	parent.add_child(label)
+	_register_card_label(label, font_size, false)
+	return label
+
+
+func _register_card_label(label: Label, font_size: int, uses_line_spacing: bool) -> void:
 	_choice_card_labels.append({
 		"label": label,
 		"font_size": font_size,
-		"line_spacing": true
+		"line_spacing": uses_line_spacing
 	})
-	return label
+
+
+func _set_card_slot(control: Control, left: float, top: float, right: float, bottom: float) -> void:
+	if control == null:
+		return
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
 
 
 func _update_choice_card_sizes(container: BoxContainer) -> void:
@@ -416,24 +510,155 @@ func _get_option_title(option: Dictionary) -> String:
 
 
 func _get_option_meta_text(option: Dictionary) -> String:
-	var parts: Array[String] = ["稀有度：%s" % String(option.get("rarity", "common")).to_upper()]
-	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
-	var current_rarity: String = String(payload.get("current_rarity", ""))
-	if current_rarity != "":
-		parts.append("当前：%s" % current_rarity)
-	var level_text: String = String(option.get("level_text", ""))
-	if level_text != "":
-		parts.append(level_text)
-	var tags: Array[String] = _get_string_array(option.get("tags", []))
-	if not tags.is_empty():
-		parts.append("标签：%s" % " / ".join(tags.slice(0, mini(tags.size(), 4))))
-	return "  |  ".join(parts)
+	return _get_option_rarity_text(option)
+
+
+func _get_option_rarity_text(option: Dictionary) -> String:
+	var rarity: String = _string_from_variant(option.get("rarity", "common")).to_lower()
+	match rarity:
+		"normal":
+			return "普通"
+		"rare":
+			return "稀有"
+		"epic":
+			return "史诗"
+		"legendary":
+			return "传说"
+		_:
+			return rarity
+
+
+func _get_option_description_text(option: Dictionary) -> String:
+	var description: String = _string_from_variant(option.get("description", ""))
+	if description != "":
+		return description
+	var skill_id: StringName = _get_option_skill_id(option)
+	if skill_id == &"":
+		return ""
+	var skill: Dictionary = GameData.get_skill(skill_id)
+	return _string_from_variant(skill.get("description", ""))
 
 
 func _get_option_effect_text(option: Dictionary) -> String:
-	var summary: String = String(SkillEffectSummaryBuilderScript.build_for_option(option))
-	var lines: Array[String] = [summary if summary != "" else "%s" % String(option.get("description", ""))]
-	return "\n".join(lines)
+	var summary: String = _string_from_variant(SkillEffectSummaryBuilderScript.build_for_option(option))
+	return summary if summary != "" else _get_option_description_text(option)
+
+
+func _get_option_value_lines(option: Dictionary) -> Array[String]:
+	var lines: Array[String] = []
+	for line: String in _get_option_effect_text(option).split("\n", false):
+		var trimmed: String = line.strip_edges()
+		if trimmed != "":
+			lines.append(trimmed)
+	return _prioritize_card_value_lines(lines)
+
+
+func _prioritize_card_value_lines(lines: Array[String]) -> Array[String]:
+	var picked: Array[String] = []
+	var before_damage_pick: int = picked.size()
+	_pick_first_matching_value_line(lines, picked, ["%", "攻击伤害"])
+	if picked.size() == before_damage_pick:
+		_pick_first_matching_value_line(lines, picked, ["伤害"])
+	_pick_first_matching_value_line(lines, picked, ["范围", "px"])
+	_pick_first_matching_value_line(lines, picked, ["Burning", "Chilled", "Conductive", "Cursed", "Judgment", "Instability", "层"])
+	for line: String in lines:
+		if picked.size() >= SKILL_CARD_MAX_VALUE_ROWS:
+			break
+		if not picked.has(line):
+			picked.append(line)
+	return picked
+
+
+func _pick_first_matching_value_line(lines: Array[String], picked: Array[String], tokens: Array[String]) -> void:
+	if picked.size() >= SKILL_CARD_MAX_VALUE_ROWS:
+		return
+	for line: String in lines:
+		if picked.has(line):
+			continue
+		for token: String in tokens:
+			if line.contains(token):
+				picked.append(line)
+				return
+
+
+func _split_value_line(line: String) -> Dictionary:
+	var status_parts: PackedStringArray = line.strip_edges().split(" ", false)
+	if status_parts.size() >= 3 and status_parts[0] == "施加":
+		return {
+			"name": "附加 %s %s" % [status_parts[2], status_parts[1]],
+			"value": status_parts[3] if status_parts.size() >= 4 else ""
+		}
+
+	var words: PackedStringArray = line.strip_edges().split(" ", false)
+	if words.size() <= 1:
+		return {
+			"name": _clean_value_name(line),
+			"value": ""
+		}
+
+	var name_parts: Array[String] = []
+	for index: int in range(words.size() - 1):
+		name_parts.append(words[index])
+	return {
+		"name": _clean_value_name(" ".join(name_parts)),
+		"value": words[words.size() - 1]
+	}
+
+
+func _clean_value_name(name: String) -> String:
+	if name.contains("攻击伤害") or name == "伤害":
+		return "伤害"
+	if name.contains("范围"):
+		return "范围"
+	if name.contains("持续"):
+		return "持续"
+	if name.contains("CD"):
+		return "冷却"
+	return name
+
+
+func _get_option_icon_texture(option: Dictionary) -> String:
+	var option_path: String = _first_texture_path(option)
+	if option_path != "":
+		return option_path
+
+	var skill_id: StringName = _get_option_skill_id(option)
+	if skill_id != &"":
+		var skill: Dictionary = GameData.get_skill(skill_id)
+		var skill_path: String = _first_texture_path(skill)
+		if skill_path != "":
+			return skill_path
+	return DEFAULT_SKILL_CARD_ICON_TEXTURE
+
+
+func _get_option_skill_id(option: Dictionary) -> StringName:
+	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
+	for key: String in ["learn_skill_id", "skill_id"]:
+		var payload_value: String = _string_from_variant(payload.get(key, ""))
+		if payload_value != "":
+			return StringName(payload_value)
+	var direct_value: String = _string_from_variant(option.get("skill_id", ""))
+	if direct_value != "":
+		return StringName(direct_value)
+	var option_id: String = _string_from_variant(option.get("id", ""))
+	if option_id.begins_with("skill_level_up:"):
+		var parts: PackedStringArray = option_id.split(":")
+		if parts.size() >= 2 and parts[1] != "":
+			return StringName(parts[1])
+	return &""
+
+
+func _first_texture_path(definition: Dictionary) -> String:
+	for key: String in ["icon", "icon_texture", "texture"]:
+		var path: String = _string_from_variant(definition.get(key, ""))
+		if path != "":
+			return path
+	var visual: Dictionary = _get_dictionary(definition.get("visual", {}))
+	for key: String in ["icon", "icon_texture", "texture"]:
+		var visual_path: String = _string_from_variant(visual.get(key, ""))
+		if visual_path != "":
+			return visual_path
+	return ""
 
 
 func _pick_dictionary_items(source: Array[Dictionary], count: int) -> Array[Dictionary]:
@@ -467,6 +692,12 @@ func _get_dictionary(value: Variant) -> Dictionary:
 		var dictionary: Dictionary = value
 		return dictionary.duplicate(true)
 	return {}
+
+
+func _string_from_variant(value: Variant) -> String:
+	if value == null:
+		return ""
+	return str(value)
 
 
 func _get_string_array(value: Variant) -> Array[String]:

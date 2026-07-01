@@ -45,10 +45,10 @@ func _run() -> void:
 		_convert_pair(executor, skill_instance, normal)
 		_convert_pair(executor, skill_instance, boss)
 
-	_expect(int(normal.call("get_status_stack", &"burn")) == 7, "Soulburn Lv4 normal burn cap is 7")
-	_expect(int(boss.call("get_status_stack", &"burn")) == 6, "Soulburn Lv4 Boss burn cap is 6")
-	_expect(_burn_duration_remaining(normal) > 3.9, "Soulburn Lv4 normal burn duration is extended to 4s")
-	_expect(_burn_duration_remaining(boss) > 3.9, "Soulburn Lv4 Boss burn duration is extended to 4s")
+	_expect(int(normal.call("get_status_stack", &"burning")) == 7, "Soulburn Lv4 normal burning cap is 7")
+	_expect(int(boss.call("get_status_stack", &"burning")) == 6, "Soulburn Lv4 Boss burning cap is 6")
+	_expect(_burning_duration_remaining(normal) > 3.9, "Soulburn Lv4 normal burning duration is extended to 4s")
+	_expect(_burning_duration_remaining(boss) > 3.9, "Soulburn Lv4 Boss burning duration is extended to 4s")
 
 	_write_result()
 	quit(1 if _failed else 0)
@@ -62,13 +62,13 @@ func _convert_pair(executor: RefCounted, skill_instance: RefCounted, target: Nod
 	})
 
 
-func _burn_duration_remaining(target: Node) -> float:
+func _burning_duration_remaining(target: Node) -> float:
 	var snapshot: Array = target.call("get_status_snapshot")
 	for status_variant: Variant in snapshot:
 		if not (status_variant is Dictionary):
 			continue
 		var status: Dictionary = status_variant
-		if StringName(String(status.get("id", ""))) == &"burn":
+		if StringName(String(status.get("id", ""))) == &"burning":
 			return float(status.get("duration_remaining", 0.0))
 	return 0.0
 

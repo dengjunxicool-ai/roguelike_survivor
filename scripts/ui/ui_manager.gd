@@ -98,6 +98,12 @@ var _run_scene_ui_bridge: RefCounted = RunSceneUIBridgeScript.new()
 var _run_scene_coordinator: RefCounted = RunSceneCoordinatorScript.new()
 var _responsive_layout: RefCounted = UIResponsiveLayoutScript.new()
 var _allow_direct_running_transition: bool = false
+var _run_loading_overlay: Control
+var _run_loading_status_label: Label
+var _run_loading_dots_label: Label
+var _run_loading_tween: Tween
+var _run_loading_active: bool = false
+var _run_loading_elapsed: float = 0.0
 
 
 func _ready() -> void:
@@ -109,12 +115,15 @@ func _ready() -> void:
 	_apply_startup_window_mode()
 	get_viewport().size_changed.connect(Callable(self, "_update_responsive_layouts"))
 	_build_screens()
+	_ensure_run_loading_overlay()
 	call_deferred("_update_responsive_layouts")
 	transition_to(STATE_BOOT)
 	call_deferred("_finish_boot")
 
 
 func _process(delta: float) -> void:
+	if _run_loading_active:
+		_update_run_loading(delta)
 	if current_state != STATE_RUNNING:
 		return
 
@@ -215,7 +224,11 @@ func _apply_pause_for_state(state: String) -> void:
 
 
 func _enter_running_state() -> void:
-	if _allow_direct_running_transition and not bool(_state_machine.call("can_transition", STATE_RUNNING)):
+	_enter_running_state_with_direct(_allow_direct_running_transition)
+
+
+func _enter_running_state_with_direct(allow_direct_transition: bool) -> void:
+	if allow_direct_transition and not bool(_state_machine.call("can_transition", STATE_RUNNING)):
 		_state_machine.call("force_transition_to", STATE_RUNNING)
 		current_state = String(_state_machine.call("get_current_state"))
 		_prepare_state(STATE_RUNNING)
@@ -541,8 +554,17 @@ func _on_loadout_confirmed(character_id: StringName) -> void:
 
 
 func _start_run(map_id: Variant) -> void:
+	if _run_loading_active:
+		return
+	var allow_direct_transition: bool = _allow_direct_running_transition
+	var resolved_map_id: StringName = _run_scene_coordinator.call("resolve_map_id", map_id)
+	var loading_map_data: Dictionary = GameData.get_map(resolved_map_id)
+	var loading_map_name: String = String(loading_map_data.get("display_name", resolved_map_id)) if not loading_map_data.is_empty() else String(resolved_map_id)
+	_show_run_loading_overlay(loading_map_name)
+	await _wait_for_run_loading_overlay_painted()
 	var loadout: RefCounted = CharacterLoadoutServiceScript.build_loadout(_selected_character_id)
 	if loadout == null:
+		_hide_run_loading_overlay(true)
 		CharacterLoadoutServiceScript.warn_if_invalid(_selected_character_id, "[UIManager]")
 		return
 	var run_setup: Dictionary = _run_scene_coordinator.call("start_run", {
@@ -554,8 +576,12 @@ func _start_run(map_id: Variant) -> void:
 		"debug": bool(get_tree().root.get_meta("developer_mode_enabled", false)),
 		"stat_event_callable": Callable(self, "_on_run_stat_event")
 	})
+	if run_setup.is_empty():
+		_hide_run_loading_overlay(true)
+		return
 	_selected_map_id = StringName(run_setup.get("map_id", DEFAULT_MAP_ID))
 	_selected_map_name = String(run_setup.get("map_name", _selected_map_id))
+	_set_run_loading_status("场景初始化中")
 	_run_stats_tracker = run_setup.get("run_stats_tracker", null) as Node
 	_run_seconds = 0.0
 	_kill_count = 0
@@ -573,9 +599,150 @@ func _start_run(map_id: Variant) -> void:
 	_wave_spawned_count = 0
 	_wave_total_count = 0
 	_ensure_run_hud_built()
-	_enter_running_state()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_enter_running_state_with_direct(allow_direct_transition)
+	_hide_run_loading_overlay(false)
 	if bool(get_tree().root.get_meta("developer_mode_enabled", false)):
 		call_deferred("_open_developer_debug_panel")
+
+
+func _show_run_loading_overlay(map_name: String) -> void:
+	_ensure_run_loading_overlay()
+	_run_loading_active = true
+	_run_loading_elapsed = 0.0
+	_run_loading_overlay.visible = true
+	_run_loading_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_run_loading_overlay.modulate = Color(1, 1, 1, 1)
+	_set_run_loading_status("正在进入 %s" % map_name)
+	if _run_loading_tween != null and _run_loading_tween.is_running():
+		_run_loading_tween.kill()
+
+
+func _wait_for_run_loading_overlay_painted() -> void:
+	await get_tree().process_frame
+	if DisplayServer.get_name().to_lower() == "headless":
+		return
+	await RenderingServer.frame_post_draw
+
+
+func _hide_run_loading_overlay(immediate: bool) -> void:
+	if _run_loading_overlay == null:
+		_run_loading_active = false
+		return
+	_run_loading_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _run_loading_tween != null and _run_loading_tween.is_running():
+		_run_loading_tween.kill()
+	if immediate:
+		_run_loading_overlay.visible = false
+		_run_loading_overlay.modulate = Color(1, 1, 1, 0)
+		_run_loading_active = false
+		return
+	_run_loading_tween = create_tween()
+	_run_loading_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_run_loading_tween.tween_property(_run_loading_overlay, "modulate:a", 0.0, 0.18)
+	_run_loading_tween.tween_callback(Callable(self, "_finish_hide_run_loading_overlay"))
+
+
+func _finish_hide_run_loading_overlay() -> void:
+	if _run_loading_overlay != null:
+		_run_loading_overlay.visible = false
+	_run_loading_active = false
+
+
+func _update_run_loading(delta: float) -> void:
+	_run_loading_elapsed += delta
+	if _run_loading_dots_label == null:
+		return
+	var dot_count: int = int(floor(_run_loading_elapsed * 3.0)) % 4
+	_run_loading_dots_label.text = ".".repeat(dot_count)
+
+
+func _set_run_loading_status(text: String) -> void:
+	if _run_loading_status_label != null:
+		_run_loading_status_label.text = text
+
+
+func _ensure_run_loading_overlay() -> void:
+	if _run_loading_overlay != null and is_instance_valid(_run_loading_overlay):
+		return
+	_run_loading_overlay = Control.new()
+	_run_loading_overlay.name = "RunLoadingOverlay"
+	_run_loading_overlay.visible = false
+	_run_loading_overlay.z_index = 1000
+	_run_loading_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_run_loading_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_run_loading_overlay)
+
+	var background: ColorRect = ColorRect.new()
+	background.name = "Background"
+	background.color = Color(0.025, 0.027, 0.033, 0.98)
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_run_loading_overlay.add_child(background)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.name = "Center"
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_run_loading_overlay.add_child(center)
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(520, 220)
+	panel.add_theme_stylebox_override("panel", _create_run_loading_panel_style())
+	center.add_child(panel)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 42)
+	margin.add_theme_constant_override("margin_top", 34)
+	margin.add_theme_constant_override("margin_right", 42)
+	margin.add_theme_constant_override("margin_bottom", 34)
+	panel.add_child(margin)
+
+	var content: VBoxContainer = VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 14)
+	margin.add_child(content)
+
+	var title: Label = Label.new()
+	title.text = "战斗载入"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(1.0, 0.86, 0.48, 1.0))
+	content.add_child(title)
+
+	var status_row: HBoxContainer = HBoxContainer.new()
+	status_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	status_row.add_theme_constant_override("separation", 0)
+	content.add_child(status_row)
+
+	_run_loading_status_label = Label.new()
+	_run_loading_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_run_loading_status_label.add_theme_font_size_override("font_size", 18)
+	_run_loading_status_label.add_theme_color_override("font_color", Color(0.92, 0.94, 0.98, 1.0))
+	status_row.add_child(_run_loading_status_label)
+
+	_run_loading_dots_label = Label.new()
+	_run_loading_dots_label.custom_minimum_size = Vector2(34, 0)
+	_run_loading_dots_label.add_theme_font_size_override("font_size", 18)
+	_run_loading_dots_label.add_theme_color_override("font_color", Color(0.92, 0.94, 0.98, 1.0))
+	status_row.add_child(_run_loading_dots_label)
+
+	var hint: Label = Label.new()
+	hint.text = "正在准备角色、地图和怪物波次"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78, 1.0))
+	content.add_child(hint)
+
+
+func _create_run_loading_panel_style() -> StyleBoxFlat:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.095, 0.105, 0.125, 0.96)
+	style.border_color = Color(0.34, 0.43, 0.60, 0.82)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.shadow_color = Color(0, 0, 0, 0.48)
+	style.shadow_size = 18
+	return style
 
 
 func _start_developer_mode() -> void:

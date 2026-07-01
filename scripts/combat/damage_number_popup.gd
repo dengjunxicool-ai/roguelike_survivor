@@ -96,7 +96,7 @@ static func _get_damage_color(damage_result: Dictionary, options: Dictionary) ->
 	match element:
 		&"physical":
 			return COLOR_PHYSICAL
-		&"fire", &"burn":
+		&"fire", &"burning":
 			return COLOR_FIRE
 		&"ice", &"freeze":
 			return COLOR_ICE

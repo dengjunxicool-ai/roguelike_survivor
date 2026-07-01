@@ -1549,12 +1549,12 @@ func _verify_status_effect_action_source_identity() -> bool:
 	var manager: Node = TestStatusEffectManager.new()
 	target.add_child(manager)
 	var status: Dictionary = {
-		"id": &"burn",
+		"id": &"burning",
 		"source_origin_id": &"mage",
 		"source_skill_id": &"fireball",
-		"source_instance_id": "fireball:projectile:0:burn"
+		"source_instance_id": "fireball:projectile:0:burning"
 	}
-	var context: Dictionary = manager.call("_build_status_event_context", &"burn", status)
+	var context: Dictionary = manager.call("_build_status_event_context", &"burning", status)
 	var executor: RefCounted = SkillActionExecutorScript.new()
 	executor.call("execute_actions", [{
 		"type": "deal_damage",
@@ -1569,7 +1569,9 @@ func _verify_status_effect_action_source_identity() -> bool:
 	var packet: Dictionary = target.last_damage_packet if target.last_damage_packet is Dictionary else {}
 	var ok: bool = String(packet.get("source_origin_id", "")) == "mage"
 	ok = ok and String(packet.get("source_skill_id", "")) == "fireball"
-	ok = ok and String(packet.get("source_instance_id", "")) == "fireball:projectile:0:burn"
+	ok = ok and String(packet.get("source_instance_id", "")) == "fireball:projectile:0:burning"
+	if not ok:
+		print("[DamageFormula] status identity packet=%s" % str(packet))
 	return _expect_equal("status effect action source identity", 1 if ok else 0, 1)
 
 

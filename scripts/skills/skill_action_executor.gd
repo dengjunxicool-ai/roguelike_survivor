@@ -1703,13 +1703,16 @@ func _resolve_named_direction(name: String, context: Dictionary, origin: Vector2
 
 
 func _context_with_resolved_target(params: Dictionary, context: Dictionary) -> Dictionary:
-	var target: Node2D = context.get("target") as Node2D
+	var target: Node = _valid_node_or_null(context.get("target"))
+	var target_2d: Node2D = target as Node2D
+	var has_invalid_target_reference: bool = context.has("target") and target == null
+	var has_invalid_enemy_reference: bool = context.has("enemy") and _valid_node_or_null(context.get("enemy")) == null
 	var force_configured_targeting: bool = params.has("targeting") or params.has("targeting_mode")
-	if not force_configured_targeting and TargetingServiceScript.is_valid_target(target):
+	if not force_configured_targeting and target != null and (target_2d == null or TargetingServiceScript.is_valid_target(target_2d)):
 		return context
 	var resolved_target: Node2D = _resolve_action_target(params, context)
 	if resolved_target == null:
-		if not force_configured_targeting and target != null:
+		if has_invalid_target_reference or has_invalid_enemy_reference or (not force_configured_targeting and target != null):
 			var cleared_context: Dictionary = context.duplicate(true)
 			cleared_context.erase("target")
 			cleared_context.erase("enemy")
@@ -1719,6 +1722,18 @@ func _context_with_resolved_target(params: Dictionary, context: Dictionary) -> D
 	resolved_context["target"] = resolved_target
 	resolved_context["enemy"] = resolved_target
 	return resolved_context
+
+
+func _valid_node_or_null(value: Variant) -> Node:
+	if value == null or typeof(value) != TYPE_OBJECT or not is_instance_valid(value):
+		return null
+	return value as Node
+
+
+func _valid_node2d_or_null(value: Variant) -> Node2D:
+	if value == null or typeof(value) != TYPE_OBJECT or not is_instance_valid(value):
+		return null
+	return value as Node2D
 
 
 func _resolve_action_target(params: Dictionary, context: Dictionary) -> Node2D:

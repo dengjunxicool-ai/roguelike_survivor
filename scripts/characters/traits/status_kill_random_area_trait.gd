@@ -98,7 +98,7 @@ func _enemy_has_any_status(enemy_variant: Variant) -> bool:
 	var status_manager: Node = enemy.get_node_or_null("StatusEffectManager")
 	if status_manager == null or not status_manager.has_method("has_status"):
 		return false
-	for status_id: StringName in [&"burn", &"poison", &"freeze", &"slow", &"shock", &"bleed", &"armor_break"]:
+	for status_id: StringName in [&"burning", &"poison", &"freeze", &"slow", &"shock", &"bleed", &"armor_break"]:
 		if bool(status_manager.call("has_status", status_id)):
 			return true
 	return false

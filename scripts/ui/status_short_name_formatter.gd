@@ -3,7 +3,7 @@ class_name StatusShortNameFormatter
 
 
 const STATUS_SHORT_NAMES: Dictionary = {
-	"burn": "Brn",
+	"burning": "Brn",
 	"poison": "Psn",
 	"bleed": "Bld",
 	"freeze": "Frz",

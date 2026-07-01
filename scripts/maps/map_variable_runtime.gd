@@ -86,7 +86,7 @@ func _spawn_hazard() -> void:
 		"radius": 96.0 if is_lava else 130.0,
 		"target_group": _target_group,
 		"visual_color": Color(1.0, 0.22, 0.05, 0.28) if is_lava else Color(0.35, 0.9, 0.2, 0.24),
-		"statuses_on_hit": [&"burn"] if is_lava else [&"poison"],
+		"statuses_on_hit": [&"burning"] if is_lava else [&"poison"],
 		"status_params": {
 			"duration": 2.5,
 			"damage": 3,

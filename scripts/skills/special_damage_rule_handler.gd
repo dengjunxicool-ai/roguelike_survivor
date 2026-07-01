@@ -103,7 +103,7 @@ static func execute_burning_target_death_explosion(rules: Dictionary, context: D
 	if not rules.has("burning_target_death_explosion"):
 		return
 	var enemy: Node = context.get("enemy") as Node
-	if enemy == null or not _has_status(enemy, &"burn"):
+	if enemy == null or not _has_status(enemy, &"burning"):
 		return
 	var rule: Dictionary = _get_dictionary(rules.get("burning_target_death_explosion", {}))
 	if not bool(rule.get("enabled", true)):
@@ -111,7 +111,7 @@ static func execute_burning_target_death_explosion(rules: Dictionary, context: D
 	var source_key_value: String = String(context.get("source_key", ""))
 	if not bool(rule.get("can_trigger_self", false)) and source_key_value.find("fireball_burning_death_explosion") >= 0:
 		return
-	var key: String = "burn_death:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
+	var key: String = "burning_death:%s" % String(context.get("source_key", str(enemy.get_instance_id())))
 	var now_seconds: float = _now_seconds()
 	var cooldown: float = maxf(float(rule.get("same_source_cooldown", 0.2)), 0.0)
 	if not _reserve_rule_cooldown_at(_death_explosion_cooldowns, key, now_seconds, cooldown):
@@ -882,11 +882,12 @@ static func execute_fire_oil_deflagration(rules: Dictionary, context: Dictionary
 	var status_params: Dictionary = {}
 	if rules.has("deflagration_apply_burn"):
 		var burn_rule: Dictionary = _get_dictionary(rules.get("deflagration_apply_burn", {}))
-		status_id = &"burn"
+		status_id = &"burning"
 		status_params = {
 			"duration": float(burn_rule.get("burn_duration", 3.0)),
 			"stacks": int(burn_rule.get("burn_stacks", 1)),
-			"max_stacks": int(burn_rule.get("burn_max_stacks", 1))
+			"max_stacks": int(burn_rule.get("burn_max_stacks", 1)),
+			"power": amount
 		}
 	var area: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
@@ -1333,7 +1334,7 @@ static func execute_cross_relic_purify_dot(rules: Dictionary, context: Dictionar
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_purify_dot", {}))
 	if randf() > clampf(float(rule.get("chance", 0.2)), 0.0, 1.0):
 		return
-	var status_id: StringName = _first_matching_status(target, _get_array(rule.get("status_ids", ["burn", "poison", "bleed"])))
+	var status_id: StringName = _first_matching_status(target, _get_array(rule.get("status_ids", ["burning", "poison", "bleed"])))
 	if status_id == &"":
 		return
 	if target.has_method("consume_status_stack"):

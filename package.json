@@ -16,6 +16,7 @@
     "verify:upgrade-pool-no-relic-fireball-god-mix": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_upgrade_pool_no_relic_fireball_god_mix.gd",
     "verify:god-school-learning-rules": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_god_school_learning_rules.gd",
     "verify:skill-card-scaled-values-and-rarity": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_card_scaled_values_and_rarity.gd",
+    "verify:skill-card-reference-layout": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_card_reference_layout.gd",
     "verify:skill-growth-summon-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_growth_summon_runtime.gd",
     "verify:skill-growth-ui-dispatcher": "node tools\\verify\\verify_skill_growth_ui_dispatcher.js",
     "verify:skill-runtime-no-dead-cards": "node tools\\verify\\verify_skill_runtime_no_dead_cards.js",

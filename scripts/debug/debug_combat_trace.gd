@@ -157,7 +157,7 @@ static func _should_record_element_damage_site(record: Dictionary) -> bool:
 
 static func _element_site_color(element: String) -> Color:
 	match element:
-		"fire", "burn":
+		"fire", "burning":
 			return Color(1.0, 0.32, 0.08, 0.86)
 		"poison":
 			return Color(0.42, 1.0, 0.18, 0.82)
@@ -211,4 +211,3 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
-

@@ -22,7 +22,7 @@
 		}
 	},
 	"choice_cards": {
-		"default_background_texture": "res://assets/ui/skills/skill_card_bg.png"
+		"default_background_texture": "res://assets/ui/skills/skill_card_bg_2.png"
 	},
 	"buttons": {
 		"default": {

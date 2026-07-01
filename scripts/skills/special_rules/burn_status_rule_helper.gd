@@ -12,7 +12,11 @@ static func apply(params: Dictionary, rules: Dictionary, target: Node, base_max_
 			add_stacks = int(rules.get("boss_burn_max_stacks_add", add_stacks))
 		params["max_stacks"] = maxi(current_max_stacks + add_stacks, 1)
 	if rules.has("burn_damage_multiplier_add"):
-		var current_damage: float = float(params.get("damage", params.get("tick_damage", base_damage)))
-		if current_damage > 0:
-			params["damage"] = maxf(current_damage * maxf(1.0 + float(rules.get("burn_damage_multiplier_add", 0.0)), 0.0), 0.0)
+		var multiplier: float = maxf(1.0 + float(rules.get("burn_damage_multiplier_add", 0.0)), 0.0)
+		if params.has("power"):
+			params["power"] = maxf(float(params.get("power", 0.0)) * multiplier, 0.0)
+		else:
+			var current_damage: float = float(params.get("damage", params.get("tick_damage", base_damage)))
+			if current_damage > 0:
+				params["damage"] = maxf(current_damage * multiplier, 0.0)
 	return params

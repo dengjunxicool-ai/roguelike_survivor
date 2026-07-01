@@ -12,7 +12,7 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
 const StatusEffectQueryScript: Script = preload("res://scripts/combat/status_effect_query.gd")
 const StatusEffectTickHelperScript: Script = preload("res://scripts/combat/status_effect_tick_helper.gd")
-const DOT_STATUS_IDS: Array[StringName] = [&"burn", &"burning", &"poison", &"bleed"]
+const DOT_STATUS_IDS: Array[StringName] = [&"burning", &"poison", &"bleed"]
 const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"frozen", &"stun", &"paralyze"]
 const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
 
@@ -503,7 +503,7 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 		multiplier = float(_get_dictionary(definition.get("boss_modifiers", {})).get("dot_damage_multiplier", 0.65))
 	elif _is_elite():
 		multiplier = float(_get_dictionary(definition.get("elite_modifiers", {})).get("dot_damage_multiplier", 0.8))
-	if StringName(String(status.get("id", ""))) == &"burn":
+	if StringName(String(status.get("id", ""))) == &"burning":
 		var owner: Node = get_parent()
 		if owner != null and float(owner.get_meta("fire_oil_burn_damage_until", 0.0)) > float(Time.get_ticks_msec()) / 1000.0:
 			if _is_boss():

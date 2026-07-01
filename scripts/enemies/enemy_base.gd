@@ -924,7 +924,7 @@ func _get_enemy_visual_update_interval() -> float:
 func _get_priority_status_visual_state() -> String:
 	if has_status(&"freeze") or has_status(&"stun") or has_status(&"paralyze"):
 		return "freeze"
-	if has_status(&"burn") or has_status(&"heat") or has_status(&"oil"):
+	if has_status(&"burning") or has_status(&"heat") or has_status(&"oil"):
 		return "burn"
 	if has_status(&"poison") or has_status(&"residue") or has_status(&"corrosion"):
 		return "poison"

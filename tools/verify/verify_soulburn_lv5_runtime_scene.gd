@@ -51,26 +51,27 @@ func _run() -> void:
 	_expect(int(normal.get("current_health")) == 970, "normal Soulburn burst deals 3% max HP")
 	_expect(int(elite.get("current_health")) == 990, "elite Soulburn burst deals 1% max HP")
 	_expect(int(boss.get("current_health")) == 997, "Boss Soulburn burst deals rounded 0.25% max HP")
-	_expect(int(normal.call("get_status_stack", &"burn")) == 0, "normal Soulburn burst consumes all burn")
-	_expect(int(elite.call("get_status_stack", &"burn")) == 0, "elite Soulburn burst consumes all burn")
-	_expect(int(boss.call("get_status_stack", &"burn")) == 0, "Boss Soulburn burst consumes all burn")
+	_expect(int(normal.call("get_status_stack", &"burning")) == 0, "normal Soulburn burst consumes all burning")
+	_expect(int(elite.call("get_status_stack", &"burning")) == 0, "elite Soulburn burst consumes all burning")
+	_expect(int(boss.call("get_status_stack", &"burning")) == 0, "Boss Soulburn burst consumes all burning")
 
 	var under_stacked: Node2D = _spawn_enemy(false, false)
 	await process_frame
 	_apply_burn(under_stacked, 4)
 	executor.call("execute_event", &"on_projectile_hit", {"skill_instance": skill_instance, "target": under_stacked})
 	_expect(int(under_stacked.get("current_health")) == 1000, "Soulburn burst does not trigger below 5 burn")
-	_expect(int(under_stacked.call("get_status_stack", &"burn")) == 4, "Soulburn burst does not consume burn below 5 stacks")
+	_expect(int(under_stacked.call("get_status_stack", &"burning")) == 4, "Soulburn burst does not consume burning below 5 stacks")
 
 	_write_result()
 	quit(1 if _failed else 0)
 
 
 func _apply_burn(target: Node, stacks: int) -> void:
-	target.call("apply_status", &"burn", {
+	target.call("apply_status", &"burning", {
 		"stacks": stacks,
 		"max_stacks": stacks,
-		"duration": 4.0
+		"duration": 4.0,
+		"power": 100.0
 	})
 
 
