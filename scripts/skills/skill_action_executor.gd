@@ -868,12 +868,7 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 			return true
 	_attach_summon_visual(summon, params)
 
-	var particles: GPUParticles2D = GPUParticles2D.new()
-	particles.name = "SummonParticles"
-	_configure_gpu_particles(particles, {"profile": params.get("profile", "fire_summon"), "amount": 42, "lifetime": 0.75}, Color(1.0, 0.42, 0.08, 0.74))
-	summon.add_child(particles)
-	particles.restart()
-	particles.emitting = true
+	_restart_summon_particles(summon, params)
 
 	var attack_interval: float = maxf(float(params.get("attack_interval", 0.7)), 0.05)
 	var duration: float = maxf(float(params.get("duration", 5.0)), attack_interval)
@@ -985,9 +980,11 @@ func _update_summon_visual_facing(summon: Node2D, target: Node2D) -> void:
 func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dictionary) -> void:
 	if summon == null or target == null or not bool(params.get("breath_particles", false)):
 		return
-	var particles: GPUParticles2D = GPUParticles2D.new()
-	particles.name = "DragonBreathParticles"
-	summon.add_child(particles)
+	var particles: GPUParticles2D = summon.get_node_or_null("DragonBreathParticles") as GPUParticles2D
+	if particles == null:
+		particles = GPUParticles2D.new()
+		particles.name = "DragonBreathParticles"
+		summon.add_child(particles)
 	var direction: Vector2 = (target.global_position - summon.global_position).normalized()
 	if direction.length_squared() <= 0.0001:
 		direction = Vector2.RIGHT
@@ -1008,9 +1005,19 @@ func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dict
 	}, Color(1.0, 0.26, 0.03, 0.82))
 	particles.restart()
 	particles.emitting = true
-	var tree: SceneTree = summon.get_tree()
-	if tree != null:
-		tree.create_timer(0.55).timeout.connect(Callable(particles, "queue_free"))
+
+
+func _restart_summon_particles(summon: Node2D, params: Dictionary) -> void:
+	if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
+		return
+	var particles: GPUParticles2D = summon.get_node_or_null("SummonParticles") as GPUParticles2D
+	if particles == null:
+		particles = GPUParticles2D.new()
+		particles.name = "SummonParticles"
+		summon.add_child(particles)
+	_configure_gpu_particles(particles, {"profile": params.get("profile", "fire_summon"), "amount": 42, "lifetime": 0.75}, Color(1.0, 0.42, 0.08, 0.74))
+	particles.restart()
+	particles.emitting = true
 
 
 func _configure_gpu_particles(particles: GPUParticles2D, params: Dictionary, color: Color) -> void:

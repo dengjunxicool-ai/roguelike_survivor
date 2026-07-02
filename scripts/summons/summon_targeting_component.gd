@@ -19,10 +19,10 @@ func setup(config: Dictionary, summon_owner: Node2D, group: StringName) -> void:
 	_retarget_timer = 0.0
 
 
-func update(delta: float, summon: Node2D, current_target: Node2D, leash_distance: float) -> Node2D:
+func update(delta: float, summon: Node2D, current_target: Variant, leash_distance: float) -> Node2D:
 	_retarget_timer -= delta
 	if is_target_valid(current_target, leash_distance):
-		return current_target
+		return current_target as Node2D
 	if _retarget_timer > 0.0:
 		return null
 	_retarget_timer = retarget_interval
@@ -34,12 +34,15 @@ func force_retarget(summon: Node2D) -> Node2D:
 	return find_target(summon)
 
 
-func is_target_valid(target: Node2D, leash_distance: float) -> bool:
+func is_target_valid(target: Variant, leash_distance: float) -> bool:
 	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 		return false
-	if target.has_method("is_dead") and bool(target.call("is_dead")):
+	var target_node: Node2D = target as Node2D
+	if target_node == null:
 		return false
-	if owner != null and owner.global_position.distance_to(target.global_position) > maxf(leash_distance, detect_range):
+	if target_node.has_method("is_dead") and bool(target_node.call("is_dead")):
+		return false
+	if owner != null and is_instance_valid(owner) and owner.global_position.distance_to(target_node.global_position) > maxf(leash_distance, detect_range):
 		return false
 	return true
 

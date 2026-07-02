@@ -88,9 +88,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_attack.tick(delta)
-	if target != null and (not is_instance_valid(target) or target.is_queued_for_deletion()):
-		target = null
-	target = _targeting.update(delta, self, target, float(_movement.get("leash_distance")))
+	var current_target: Node2D = _get_valid_target()
+	target = _targeting.update(delta, self, current_target, float(_movement.get("leash_distance")))
 	if target == null:
 		state = STATE_FOLLOW
 		_movement.move_follow(self, summon_owner, delta)
@@ -116,6 +115,14 @@ func _face_target(face_target: Node2D) -> void:
 	var sprite: Sprite2D = get_node_or_null("SummonVisual") as Sprite2D
 	if sprite != null:
 		sprite.rotation = direction.angle() - PI * 0.5
+
+
+func _get_valid_target() -> Node2D:
+	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
+		return null
+	if target.has_method("is_dead") and bool(target.call("is_dead")):
+		return null
+	return target
 
 
 func _apply_visual(visual: Dictionary) -> void:

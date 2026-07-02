@@ -574,6 +574,59 @@ Interpretation:
 - The run is not a clean performance win. `SummonParticles` created 6,546 `GPUParticles2D` nodes, and the existing summon targeting script error remains noisy. That makes PR-5's long-run totals unsuitable as a pure comparison of the profiler-only callback overhead.
 - Status pressure is now clearly visible near spikes: most >100ms spike frames are accompanied by thousands of status ticks/reactions in aggregate context. This supports making status visual/label churn and summon VFX correctness the next focused investigations.
 
+## Summon Targeting And VFX Follow-up Acceptance
+
+Change summary:
+- `SummonTargetingComponent.update()` now accepts the cached target as `Variant` and validates/casts it internally. This prevents freed enemy references from failing GDScript typed argument binding before the targeting component can reject them.
+- `SummonController` now normalizes the cached target through `_get_valid_target()` before targeting, attack, and movement decisions.
+- Legacy summon spawn VFX now reuses a child named `SummonParticles` and restarts it instead of creating a new `GPUParticles2D` plus destruction timer every summon trigger.
+- Legacy dragon breath VFX now reuses `DragonBreathParticles` on the summon node. No summon damage, duration, attack interval, targeting priority, status application, skill data, enemy data, pickup behavior, UI behavior, or pooling architecture was changed.
+
+Acceptance run:
+- Command: `Godot_v4.6.3-stable_win64_console.exe --profiling --path . -- --real-full-run-profile --survival-guard`
+- Character: mage
+- Map: abandoned_dungeon
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 683.8s
+- Boss damage done: 1001
+- Boss HP modified by profiler: false
+- Log scan: 0 `SCRIPT ERROR`, 0 `SummonTargetingComponent`, 0 `Invalid type in function`, 0 `ERROR:`
+
+Before/after versus PR-5:
+
+| Metric | PR-5 polluted run | Summon follow-up run | Delta |
+| --- | ---: | ---: | ---: |
+| `SummonTargetingComponent.update()` script errors | 3,024 | 0 | fixed |
+| `SummonParticles` created | 6,546 | 993 | -84.8% |
+| `SummonParticles` destroyed | 6,470 | 977 | -84.9% |
+| Total nodes created | 26,242 | 8,903 | -66.1% |
+| Total nodes destroyed | 25,338 | 8,259 | -67.4% |
+| Average FPS | 26.34 | 54.9 | improved |
+| p95 frame time | 180.58ms | 60.35ms | improved |
+| p99 frame time | 532.53ms | 151.57ms | improved |
+| Max frame time | 998.83ms | 558.33ms | improved |
+| Frames > 50ms | 2,518 | 2,344 | improved |
+| Frames > 100ms | 1,696 | 854 | improved |
+| ObjectDB delta | +1,640 | +1,382 | improved |
+
+Current top created objects after summon follow-up:
+
+| Rank | Object key | Created | Destroyed | Interpretation |
+| ---: | --- | ---: | ---: | --- |
+| 1 | `no_scene|no_script|GPUParticles2D|SummonParticles` | 993 | 977 | Much lower, but legacy summon VFX is still the largest single churn key because old-style summon instances still own one particle node per lifecycle. |
+| 2 | `area_effect.tscn` child `Sprite2D` | 687 | 683 | AoE scene children still enter/exit frequently. |
+| 3 | `area_effect.tscn` child `AnimatedSprite2D` | 687 | 683 | Same AoE child churn as above. |
+| 4 | `area_effect.tscn` child `CollisionShape2D` | 687 | 683 | Same AoE child churn as above. |
+| 5 | `enemy.tscn` child nodes (`StatusEffectManager`, `CollisionShape2D`, `Sprite2D`) | 315 each | 293 each | Enemy lifecycle churn remains visible. |
+
+Updated next pooling/fix priority:
+1. Convert legacy summon VFX lifecycle to a retained/pool-backed path or migrate `ember_fox`-style legacy summons to managed summon definitions so `SummonParticles` is not recreated per summon lifecycle.
+2. Fix AoE scene-root/child retention so `AreaEffect` children do not still enter/exit the tree on every area lifecycle.
+3. Pool/reuse status UI/visual nodes: `StatusLabel` and `StatusVisualOverlay` remain high-frequency churn keys.
+4. Add retained-pool reporting for enemy internals before pooling enemy scene roots, so ObjectDB retained cost is separated from leaks.
+5. Pool or cap `DashAfterimage` after higher-pressure AoE/status/summon churn is reduced.
+
 ## PR-1 Through PR-5 Rollout Summary
 
 | Metric | Baseline | PR-1 | PR-2 | PR-3 | PR-4 | PR-5 |
