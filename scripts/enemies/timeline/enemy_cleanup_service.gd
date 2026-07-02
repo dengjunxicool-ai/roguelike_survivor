@@ -87,7 +87,10 @@ func collect_all_experience_crystals() -> void:
 			crystal.call("collect_to_player", player)
 		elif player.has_method("add_experience") and crystal.get("experience_amount") != null:
 			player.call("add_experience", int(crystal.get("experience_amount")))
-			crystal.queue_free()
+			if crystal.has_method("despawn_or_free"):
+				crystal.call("despawn_or_free")
+			else:
+				crystal.call("queue_free")
 
 
 func _get_tree() -> SceneTree:

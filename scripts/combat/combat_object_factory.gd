@@ -2,6 +2,7 @@ extends RefCounted
 class_name CombatObjectFactory
 
 
+const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
 const DEFAULT_PROJECTILE_SCENE: PackedScene = preload("res://scenes/combat/fireball_projectile.tscn")
 const DEFAULT_AREA_EFFECT_SCENE: PackedScene = preload("res://scenes/combat/area_effect.tscn")
 const DEFAULT_ORBIT_OBJECT_SCENE: PackedScene = preload("res://scenes/combat/orbit_object.tscn")
@@ -15,19 +16,19 @@ static func create_projectile(params: Dictionary) -> Node2D:
 	if projectile_scene == null or parent == null or direction == Vector2.ZERO:
 		return null
 
-	var projectile: Node2D = projectile_scene.instantiate() as Node2D
+	var projectile: Node2D = _spawn_pooled_combat_node(projectile_scene, parent, &"projectile") as Node2D
 	if projectile == null:
 		return null
 
-	if projectile.has_method("setup"):
-		projectile.call(&"setup", object_params)
 	var spawn_position: Vector2 = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
 	if Engine.is_in_physics_frame():
-		parent.call_deferred("add_child", projectile)
 		projectile.set_deferred("global_position", spawn_position)
 	else:
-		parent.add_child(projectile)
 		projectile.global_position = spawn_position
+	if projectile.has_method("prepare_for_pool_spawn"):
+		projectile.call(&"prepare_for_pool_spawn", object_params)
+	elif projectile.has_method("setup"):
+		projectile.call(&"setup", object_params)
 
 	return projectile
 
@@ -39,20 +40,22 @@ static func create_area_effect(params: Dictionary) -> Node2D:
 	if area_effect_scene == null or parent == null:
 		return null
 
-	var area_effect: Node2D = area_effect_scene.instantiate() as Node2D
+	var area_effect: Node2D = _spawn_pooled_combat_node(area_effect_scene, parent, &"area") as Node2D
 	if area_effect == null:
 		return null
 
 	var spawn_position: Vector2 = _get_vector2(object_params.get("position", Vector2.ZERO), Vector2.ZERO)
 	if Engine.is_in_physics_frame():
-		parent.call_deferred("add_child", area_effect)
 		area_effect.set_deferred("global_position", spawn_position)
-		if area_effect.has_method("setup"):
+		if area_effect.has_method("prepare_for_pool_spawn"):
+			area_effect.call_deferred(&"prepare_for_pool_spawn", object_params)
+		elif area_effect.has_method("setup"):
 			area_effect.call_deferred(&"setup", object_params)
 	else:
-		parent.add_child(area_effect)
 		area_effect.global_position = spawn_position
-		if area_effect.has_method("setup"):
+		if area_effect.has_method("prepare_for_pool_spawn"):
+			area_effect.call(&"prepare_for_pool_spawn", object_params)
+		elif area_effect.has_method("setup"):
 			area_effect.call(&"setup", object_params)
 
 	return area_effect
@@ -133,6 +136,34 @@ static func _resolve_parent(value: Variant) -> Node:
 		return tree.current_scene
 
 	return null
+
+
+static func _spawn_pooled_combat_node(scene: PackedScene, parent: Node, category: StringName) -> Node:
+	if scene == null:
+		return null
+	var pool: Node = RuntimePoolRegistryScript.get_or_create(parent)
+	var key: StringName = _pool_key_for_scene(scene, category)
+	var factory: Callable = Callable(CombatObjectFactory, "_instantiate_scene").bind(scene)
+	if pool != null and pool.has_method("spawn"):
+		return pool.call("spawn", key, factory, parent) as Node
+	var node: Node = scene.instantiate()
+	if node != null and parent != null:
+		if Engine.is_in_physics_frame():
+			parent.call_deferred("add_child", node)
+		else:
+			parent.add_child(node)
+	return node
+
+
+static func _instantiate_scene(scene: PackedScene) -> Node:
+	return scene.instantiate() if scene != null else null
+
+
+static func _pool_key_for_scene(scene: PackedScene, category: StringName) -> StringName:
+	var scene_path: String = scene.resource_path
+	if scene_path == "":
+		scene_path = "anonymous"
+	return StringName("combat_scene:%s:%s" % [String(category), scene_path])
 
 
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:

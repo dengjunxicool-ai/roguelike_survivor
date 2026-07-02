@@ -1,7 +1,11 @@
 [gd_scene format=3 uid="uid://dr01ug3ixfehx"]
 
 [ext_resource type="PackedScene" uid="uid://bxxmyd7pal4o3" path="res://scenes/ui/ui_prototype.tscn" id="1_qytja"]
+[ext_resource type="Script" path="res://scripts/debug/real_full_run_profiler.gd" id="2_m7xje"]
 
 [node name="AppBootstrap" type="Node" unique_id=167997749]
 
 [node name="UIManager" parent="." unique_id=2092238991 instance=ExtResource("1_qytja")]
+
+[node name="RealFullRunProfiler" type="Node" parent="."]
+script = ExtResource("2_m7xje")

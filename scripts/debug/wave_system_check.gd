@@ -33,7 +33,7 @@ func _run_checks_impl() -> void:
 		return
 
 	_apply_default_map_background(main)
-	player.call("reset_for_loadout", CharacterLoadoutServiceScript.build_loadout(&"mage", &"fire_staff"))
+	player.call("reset_for_loadout", CharacterLoadoutServiceScript.build_loadout(&"mage"))
 	spawner.call("reset_for_run")
 	spawner.call("_process_discrete_wave", 0.0)
 	await physics_frame

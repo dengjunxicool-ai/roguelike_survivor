@@ -80,6 +80,49 @@ func setup(params: Dictionary) -> void:
 	_enforce_max_active(int(params.get("max_active", 0)))
 
 
+func prepare_for_pool_spawn(params: Dictionary) -> void:
+	visible = true
+	set_process(true)
+	set_physics_process(true)
+	setup(params)
+
+
+func prepare_for_pool_despawn() -> void:
+	_damage_window_finished = true
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
+	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if animated_sprite != null:
+		animated_sprite.stop()
+	event_bus = null
+	skill_instance = null
+	caster = null
+	skill_manager = null
+	relic_manager = null
+	impact_target = null
+	actions_on_apply.clear()
+	actions_on_tick.clear()
+	actions_on_hit.clear()
+	actions_on_expire.clear()
+	actions_on_death.clear()
+	_damaged_body_ids.clear()
+	visible = false
+
+
+func despawn_or_free() -> void:
+	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
+		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
+		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
+		if pool_variant is Node and is_instance_valid(pool_variant) and (pool_variant as Node).has_method("despawn"):
+			prepare_for_pool_despawn()
+			(pool_variant as Node).call("despawn", key, self)
+			return
+	queue_free()
+
+
 func _apply_area_core_params(params: Dictionary) -> void:
 	damage = maxi(int(params.get("damage", damage)), 0)
 	duration = maxf(float(params.get("duration", duration)), 0.05)
@@ -223,7 +266,7 @@ func _enforce_max_active(max_active: int) -> void:
 	var matches: Array[Node] = []
 	for child: Node in get_parent().get_children():
 		var area: AreaEffect = child as AreaEffect
-		if area == null or not is_instance_valid(area) or area.is_queued_for_deletion():
+		if area == null or not is_instance_valid(area) or area.is_queued_for_deletion() or not area.visible:
 			continue
 		var area_grouping_key: StringName = area.get("area_id") if area.get("area_id") != &"" else area.get("source_id")
 		if String(area_grouping_key) != String(grouping_key):
@@ -235,7 +278,10 @@ func _enforce_max_active(max_active: int) -> void:
 		if oldest == null:
 			return
 		matches.erase(oldest)
-		oldest.queue_free()
+		if oldest.has_method("despawn_or_free"):
+			oldest.call("despawn_or_free")
+		else:
+			oldest.queue_free()
 
 
 func _oldest_area_effect(areas: Array[Node]) -> Node:
@@ -759,10 +805,10 @@ func _finish_damage_window() -> void:
 		collision_shape.set_deferred("disabled", true)
 
 	if _uses_programmatic_visual():
-		queue_free()
+		despawn_or_free()
 		return
 	if not _wait_for_non_loop_visual_finish():
-		queue_free()
+		despawn_or_free()
 
 
 func _wait_for_non_loop_visual_finish() -> bool:
@@ -782,7 +828,7 @@ func _wait_for_non_loop_visual_finish() -> bool:
 
 
 func _on_visual_animation_finished() -> void:
-	queue_free()
+	despawn_or_free()
 
 
 func _emit_area_event(event_name: StringName, target: Node) -> void:

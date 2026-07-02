@@ -5,6 +5,7 @@ class_name EnemyActionExecutor
 const EnemySpawnRequestScript: Script = preload("res://scripts/enemies/spawning/enemy_spawn_request.gd")
 const EnemySpawnServiceScript: Script = preload("res://scripts/enemies/spawning/enemy_spawn_service.gd")
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
+const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
 
 var _owner: Node2D
 var _spawn_service: RefCounted = EnemySpawnServiceScript.new()
@@ -55,17 +56,15 @@ func spawn_enemy_projectile(
 		return
 
 	var projectile_scene: PackedScene = _owner.get("enemy_projectile_scene") as PackedScene
-	var projectile: Node2D = projectile_scene.instantiate() as Node2D
+	var projectile: Node2D = CombatObjectFactoryScript._spawn_pooled_combat_node(projectile_scene, _owner.get_parent(), &"enemy_projectile") as Node2D
 	if projectile == null:
 		return
 
 	var normalized_direction: Vector2 = direction.normalized() if direction != Vector2.ZERO else Vector2.RIGHT
-	_owner.get_parent().add_child(projectile)
 	projectile.add_to_group(&"enemy_projectiles")
 	projectile.add_to_group(&"enemy_projectile")
 	projectile.global_position = _owner.global_position + normalized_direction * float(behavior.get("projectile_spawn_offset", 20.0))
-	if projectile.has_method("setup"):
-		projectile.call(&"setup", {
+	var setup_params: Dictionary = {
 			"direction": normalized_direction,
 			"damage": projectile_damage,
 			"speed": projectile_speed,
@@ -77,7 +76,11 @@ func spawn_enemy_projectile(
 			"damage_packet": EnemyDamagePacketBuilderScript.build(_owner, projectile_damage, "projectile", &"enemy_projectile", behavior),
 			"visual_color": behavior.get("projectile_color", [1.0, 0.9, 0.08, 1.0]),
 			"visual": _get_dictionary(behavior.get("projectile_visual", {}))
-		})
+		}
+	if projectile.has_method("prepare_for_pool_spawn"):
+		projectile.call(&"prepare_for_pool_spawn", setup_params)
+	elif projectile.has_method("setup"):
+		projectile.call(&"setup", setup_params)
 
 
 func spawn_damage_area(
@@ -103,14 +106,12 @@ func spawn_damage_area_at(
 		return
 
 	var damage_area_scene: PackedScene = _owner.get("damage_area_scene") as PackedScene
-	var damage_area: Node2D = damage_area_scene.instantiate() as Node2D
+	var damage_area: Node2D = CombatObjectFactoryScript._spawn_pooled_combat_node(damage_area_scene, _owner.get_parent(), &"enemy_area") as Node2D
 	if damage_area == null:
 		return
 
-	_owner.get_parent().add_child(damage_area)
 	damage_area.global_position = area_position
-	if damage_area.has_method("setup"):
-		damage_area.call(&"setup", {
+	var setup_params: Dictionary = {
 			"damage": area_damage,
 			"duration": area_duration,
 			"tick_interval": area_tick_interval,
@@ -120,7 +121,11 @@ func spawn_damage_area_at(
 			"source_id": StringName(_get_damage_source_id()),
 			"source_type": &"area",
 			"damage_packet": _build_enemy_damage_packet(area_damage, "area", "enemy_area")
-		})
+		}
+	if damage_area.has_method("prepare_for_pool_spawn"):
+		damage_area.call(&"prepare_for_pool_spawn", setup_params)
+	elif damage_area.has_method("setup"):
+		damage_area.call(&"setup", setup_params)
 
 
 func damage_targets_in_radius(area_damage: int, area_radius: float) -> void:

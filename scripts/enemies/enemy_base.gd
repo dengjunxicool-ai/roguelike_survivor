@@ -18,6 +18,7 @@ const EnemySkillControllerScript: Script = preload("res://scripts/enemies/skills
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
 const EnemyStateControllerScript: Script = preload("res://scripts/enemies/enemy_state_controller.gd")
 const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_config_helper.gd")
+const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
 const NEARBY_ENEMY_CELL_SIZE: float = 128.0
 const MOTION_LIMIT_EXTRA_RADIUS: float = 96.0
 const CROWDED_ENEMY_LOD_THRESHOLD: int = 60
@@ -590,18 +591,44 @@ func _update_fuse_visual() -> void:
 
 
 func _drop_experience_crystal() -> void:
-	if dropped_experience <= 0 or experience_crystal_scene == null or get_parent() == null:
+	var parent: Node = get_parent()
+	if dropped_experience <= 0 or experience_crystal_scene == null or parent == null:
 		return
 
-	var crystal: Node2D = experience_crystal_scene.instantiate() as Node2D
+	var crystal: Node2D = _spawn_experience_crystal(parent)
 	if crystal == null:
 		return
 
 	crystal.global_position = global_position
 
-	if crystal.has_method("set_experience_amount"):
+	if crystal.has_method("prepare_for_pool_spawn"):
+		crystal.call(&"prepare_for_pool_spawn", dropped_experience)
+	elif crystal.has_method("set_experience_amount"):
 		crystal.call(&"set_experience_amount", dropped_experience)
-	get_parent().call_deferred("add_child", crystal)
+
+
+func _spawn_experience_crystal(parent: Node) -> Node2D:
+	var pool: Node = RuntimePoolRegistryScript.get_or_create(parent)
+	if pool != null and pool.has_method("spawn"):
+		return pool.call("spawn", _experience_crystal_pool_key(), Callable(self, "_instantiate_experience_crystal"), parent) as Node2D
+	var crystal: Node2D = _instantiate_experience_crystal() as Node2D
+	if crystal != null:
+		if Engine.is_in_physics_frame():
+			parent.call_deferred("add_child", crystal)
+		else:
+			parent.add_child(crystal)
+	return crystal
+
+
+func _instantiate_experience_crystal() -> Node:
+	return experience_crystal_scene.instantiate() if experience_crystal_scene != null else null
+
+
+func _experience_crystal_pool_key() -> StringName:
+	var scene_path: String = experience_crystal_scene.resource_path if experience_crystal_scene != null else "anonymous"
+	if scene_path == "":
+		scene_path = "anonymous"
+	return StringName("pickup_scene:%s" % scene_path)
 
 
 func _apply_enemy_config() -> void:
@@ -922,16 +949,6 @@ func _get_enemy_visual_update_interval() -> float:
 
 
 func _get_priority_status_visual_state() -> String:
-	if has_status(&"freeze") or has_status(&"stun") or has_status(&"paralyze"):
-		return "freeze"
-	if has_status(&"burning") or has_status(&"heat") or has_status(&"oil"):
-		return "burn"
-	if has_status(&"poison") or has_status(&"residue") or has_status(&"corrosion"):
-		return "poison"
-	if has_status(&"bleed") or has_status(&"wound"):
-		return "bleed"
-	if has_status(&"slow") or has_status(&"chill") or has_status(&"snare_mark"):
-		return "slow"
 	return ""
 
 
