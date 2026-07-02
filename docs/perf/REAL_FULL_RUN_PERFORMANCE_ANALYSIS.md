@@ -421,3 +421,84 @@ Interpretation:
 - AoE pooling improved node churn but did not reach the original 70% reduction target. The next pass should inspect why area roots still exit the tree and whether max-active eviction, parent cleanup, or pool retention limits are forcing destruction.
 - ObjectDB delta barely improved because pooling retains live roots and children at the stop point. This is expected for scene-root pooling, but PR-4/PR-5 should keep reporting retained pool counts separately from leak-like unattributed ObjectDB growth.
 - The next highest-value work remains bounded AoE retention correctness, enemy/internal status-node churn, pickup roots, dash afterimages, and status labels. The existing summon targeting error should be fixed in a separate correctness PR because it pollutes long-run logs and may affect determinism.
+
+## PR-4 Acceptance: Pickup Pooling And ObjectDB Delta Explanation
+
+Change summary:
+- `ExpGem` now supports pool spawn/despawn hooks, resets collection state, target, visibility, monitoring, and collision state on reuse, and returns to the runtime pool after collection.
+- `EnemyBase._drop_experience_crystal()` now spawns `experience_crystal.tscn` roots through `RuntimePoolRegistry` with a direct instantiate fallback.
+- Wave cleanup and run-scene cleanup paths now prefer `despawn_or_free()` for pickup roots, so active pickups can be retained by the pool instead of destroyed.
+- Hidden pooled pickups are removed from the `experience_crystal` group while despawned, so pickup counters and full-screen collection only see active pickups.
+- No experience amount, pickup radius, magnet radius, movement speed, drop rules, enemy stats, UI, or resource visuals were intentionally changed.
+
+Acceptance run:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 708.19s
+- Boss damage done: 1003
+- Boss HP modified by profiler: false
+- Log caveat: focused scan found 0 `ExpGem`, `experience_crystal`, runtime pool, freed-instance, or `SCRIPT ERROR` entries.
+
+Before/after versus PR-3:
+
+| Metric | After PR-3 | After PR-4 | Delta |
+| --- | ---: | ---: | ---: |
+| Total nodes created | 6,773 | 5,254 | -22.4% |
+| Total nodes destroyed | 6,273 | 4,559 | -27.3% |
+| Pickup-category nodes created | 474 | 84 | -82.3% |
+| Pickup-category nodes destroyed | 447 | 0 | -100.0% |
+| `experience_crystal` root + child nodes created | 474 | 84 | -82.3% |
+| `experience_crystal` root + child nodes destroyed | 447 | 0 | -100.0% |
+| Active pickup count at stop | not isolated | 19 | active group only |
+| Max active pickup count in samples | not isolated | 27 | active group only |
+| Frames > 50ms | 93 | 3,714 | worse |
+| Frames > 100ms | 13 | 2,371 | worse |
+| p95 frame time | 17.44ms | 255.67ms | worse |
+| p99 frame time | 22.79ms | 464.42ms | worse |
+| Max frame time | 139.87ms | 959.84ms | worse |
+| Average FPS | 197.30 | 18.49 | worse |
+| ObjectDB delta | +1,190 | +1,163 | -2.3% |
+| Node-backed ObjectDB net | +500 | +695 | worse |
+| Unattributed ObjectDB delta | +690 | +468 | improved |
+
+PR-4 target status:
+
+| Target | Result |
+| --- | --- |
+| `experience_crystal` created down 70%+ | PASS: 474 -> 84, down 82.3% |
+| Pickup destroyed churn removed | PASS: 447 -> 0 destroyed events |
+| Pickup active group does not include hidden pool entries | PASS by implementation: despawn removes `experience_crystal` group, spawn restores it; stop sample shows 19 active pickups, max sample 27 |
+| Cleanup paths despawn active pickups | PASS by contract and wave check pickup assertions; `wave_system_check.gd` still exits 1 on an unrelated camera-distance assertion |
+| ObjectDB retained pool explanation | PASS: pickup contributes +84 node-backed net objects, matching retained roots and child nodes; this is expected retained pool capacity, not destroyed churn |
+| Frame spike improvement | FAIL / not accepted as solved: PR-4's real run had severe spike regression and needs a separate repeat/profile investigation before attributing it to a code path |
+
+ObjectDB interpretation:
+- PR-4 trades pickup allocation churn for retained pickup objects. The pickup category now contributes +84 net node-backed objects because 28 crystal scene roots and their two child nodes remain retained/live at the stop point.
+- Overall ObjectDB delta changed only slightly, +1,190 -> +1,163. Node-backed net increased because retained pool objects are still live, while unattributed delta improved from +690 -> +468.
+- Godot still does not expose ObjectDB enumeration through `Performance.OBJECT_COUNT`, so non-Node `Object` / `RefCounted` / `Resource` deltas remain unattributed. PR-5 should keep this distinction in the report instead of treating all retained pool objects as leaks.
+
+Remaining top churn after PR-4:
+
+| Created | Key |
+| ---: | --- |
+| 566 | `area_effect.tscn / AnimatedSprite2D` |
+| 566 | `area_effect.tscn / CollisionShape2D` |
+| 566 | `area_effect.tscn / Sprite2D` |
+| 285 | `enemy.tscn / CollisionShape2D` |
+| 285 | `enemy.tscn / Sprite2D` |
+| 285 | `enemy.tscn / StatusEffectManager` |
+| 252 | `StatusLabel` |
+| 248 | anonymous `AnimatedSprite2D` |
+| 246 | `StatusVisualOverlay` |
+| 139 | `area_effect.tscn / AreaEffect` |
+| 97 | `DashAfterimage` |
+
+Interpretation:
+- PR-4 successfully removes pickup creation/destruction churn and makes the ObjectDB retention tradeoff explicit.
+- The frame-time regression in this run is too large to ignore, but it does not correlate with pickup creation/destruction because pickup churn is near zero in spike-frame context. Re-run profiling before PR-5 or after PR-5 to separate environmental variance from AoE/status/physics pressure.
+- The next optimization candidates are still AoE root retention correctness, status label/visual churn, enemy internal nodes, and dash afterimages.

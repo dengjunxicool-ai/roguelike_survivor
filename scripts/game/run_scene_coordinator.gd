@@ -118,7 +118,20 @@ func clear_runtime_nodes(tree: SceneTree) -> void:
 		return
 	for group_name: StringName in [&"enemy", &"experience_crystal", &"map_hazard"]:
 		for node: Node in tree.get_nodes_in_group(group_name):
-			node.queue_free()
+			_despawn_or_free_runtime_node(node)
+
+
+## Params:
+## - node: Transient runtime node being removed while changing run state.
+## Returns:
+## - Nothing.
+func _despawn_or_free_runtime_node(node: Node) -> void:
+	if node == null or not is_instance_valid(node):
+		return
+	if node.has_method("despawn_or_free"):
+		node.call("despawn_or_free")
+	else:
+		node.queue_free()
 
 
 ## Params:

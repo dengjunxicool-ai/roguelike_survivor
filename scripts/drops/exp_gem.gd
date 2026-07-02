@@ -12,8 +12,7 @@ var _is_collected: bool = false
 
 
 func _ready() -> void:
-	add_to_group(&"experience_crystal")
-	target = _find_target()
+	_prepare_active_state()
 
 
 func _physics_process(delta: float) -> void:
@@ -43,6 +42,35 @@ func set_experience_amount(amount: int) -> void:
 	experience_amount = maxi(amount, 1)
 
 
+func prepare_for_pool_spawn(amount: Variant = null) -> void:
+	if amount != null:
+		set_experience_amount(int(amount))
+	_prepare_active_state()
+
+
+func prepare_for_pool_despawn() -> void:
+	_is_collected = true
+	target = null
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
+	remove_from_group(&"experience_crystal")
+	visible = false
+
+
+func despawn_or_free() -> void:
+	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
+		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
+		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
+		if pool_variant is Node and is_instance_valid(pool_variant) and (pool_variant as Node).has_method("despawn"):
+			prepare_for_pool_despawn()
+			(pool_variant as Node).call("despawn", key, self)
+			return
+	queue_free()
+
+
 func collect_to_player(player: Node2D = null) -> void:
 	var collector: Node2D = player
 	if collector == null:
@@ -52,6 +80,8 @@ func collect_to_player(player: Node2D = null) -> void:
 
 
 func _find_target() -> Node2D:
+	if not is_inside_tree():
+		return null
 	return get_tree().get_first_node_in_group(target_group) as Node2D
 
 
@@ -61,7 +91,22 @@ func _collect(player: Node2D) -> void:
 
 	_is_collected = true
 	player.call(&"add_experience", experience_amount)
-	queue_free()
+	despawn_or_free()
+
+
+func _prepare_active_state() -> void:
+	_is_collected = false
+	visible = true
+	set_process(true)
+	set_physics_process(true)
+	set_deferred("monitoring", true)
+	set_deferred("monitorable", true)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", false)
+	if not is_in_group(&"experience_crystal"):
+		add_to_group(&"experience_crystal")
+	target = _find_target()
 
 
 func _get_target_pickup_radius() -> float:
