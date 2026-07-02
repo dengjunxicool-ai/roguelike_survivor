@@ -42,6 +42,7 @@ var _choice_card_cells: Array[Control] = []
 var _choice_card_buttons: Array[Button] = []
 var _choice_card_labels: Array[Dictionary] = []
 var _choice_gap_spacers: Array[Control] = []
+var _choice_card_pools: Dictionary = {}
 
 
 func setup(
@@ -82,21 +83,14 @@ func has_pending_reward() -> bool:
 
 
 func refresh_level_up_modal() -> void:
-	_clear_children(_level_up_options)
-	_choice_card_cells.clear()
-	_choice_card_buttons.clear()
-	_choice_card_labels.clear()
-	_choice_gap_spacers.clear()
-	_prepare_choice_card_layout(_level_up_options)
 	var options: Array[Dictionary] = _get_level_up_options_from_pool(LEVEL_UP_OPTION_COUNT)
 	if options.is_empty():
 		pending_level_up_count = 0
+		_hide_choice_card_pool(_level_up_options)
 		call_deferred("_emit_transition", STATE_RUNNING)
 		return
 
-	for option: Dictionary in options:
-		_add_upgrade_choice_card(_level_up_options, option, STATE_RUNNING, true)
-	_finish_choice_card_layout(_level_up_options)
+	_refresh_choice_card_modal(_level_up_options, options, STATE_RUNNING, true)
 
 
 func refresh_curse_choice_modal() -> void:
@@ -107,13 +101,8 @@ func refresh_curse_choice_modal() -> void:
 
 
 func refresh_reward_modal() -> void:
-	_clear_children(_reward_options)
-	_choice_card_cells.clear()
-	_choice_card_buttons.clear()
-	_choice_card_labels.clear()
-	_choice_gap_spacers.clear()
-	_prepare_choice_card_layout(_reward_options)
 	if pending_reward_kinds.is_empty():
+		_hide_choice_card_pool(_reward_options)
 		call_deferred("_emit_transition", STATE_RUNNING)
 		return
 	var reward_kind: String = pending_reward_kinds[0]
@@ -121,11 +110,10 @@ func refresh_reward_modal() -> void:
 	var options: Array[Dictionary] = _reward_pool.call("generate_reward_options", player, reward_kind)
 	if options.is_empty():
 		pending_reward_kinds.remove_at(0)
+		_hide_choice_card_pool(_reward_options)
 		call_deferred("_emit_transition", STATE_RUNNING)
 		return
-	for option: Dictionary in options:
-		_add_upgrade_choice_card(_reward_options, option, STATE_RUNNING, false)
-	_finish_choice_card_layout(_reward_options)
+	_refresh_choice_card_modal(_reward_options, options, STATE_RUNNING, false)
 
 
 func _get_available_level_options() -> Array[Dictionary]:
@@ -237,6 +225,287 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 	if not parent.resized.is_connected(resize_callable):
 		parent.resized.connect(resize_callable)
 	call_deferred("_update_choice_card_sizes", parent)
+
+
+func _refresh_choice_card_modal(container: BoxContainer, options: Array[Dictionary], return_state: String, consumes_pending_level: bool) -> void:
+	if container == null:
+		return
+	_prepare_choice_card_layout(container)
+	_ensure_choice_card_pool(container, LEVEL_UP_OPTION_COUNT)
+	_activate_choice_card_pool(container)
+	var pool: Array = _get_choice_card_pool(container)
+	for index: int in range(pool.size()):
+		var slot: Dictionary = pool[index]
+		if index < options.size():
+			_bind_choice_card(slot, options[index], return_state, consumes_pending_level)
+		else:
+			_set_choice_card_slot_visible(slot, false)
+	call_deferred("_update_choice_card_sizes", container)
+
+
+func _ensure_choice_card_pool(container: BoxContainer, count: int) -> void:
+	if container == null:
+		return
+	var key: int = int(container.get_instance_id())
+	if _choice_card_pools.has(key):
+		return
+	_choice_card_cells.clear()
+	_choice_card_buttons.clear()
+	_choice_card_labels.clear()
+	_choice_gap_spacers.clear()
+	_prepare_choice_card_layout(container)
+	var pool: Array[Dictionary] = []
+	_add_choice_edge_spacer(container)
+	for index: int in range(count):
+		if index > 0:
+			_add_choice_inner_gap(container)
+		pool.append(_create_choice_card_slot(container))
+	_add_choice_edge_spacer(container)
+	_choice_card_pools[key] = {
+		"slots": pool,
+		"cells": _choice_card_cells.duplicate(),
+		"buttons": _choice_card_buttons.duplicate(),
+		"labels": _choice_card_labels.duplicate(true),
+		"gaps": _choice_gap_spacers.duplicate()
+	}
+	var resize_callable: Callable = Callable(self, "_update_choice_card_sizes").bind(container)
+	if not container.resized.is_connected(resize_callable):
+		container.resized.connect(resize_callable)
+
+
+func _get_choice_card_pool(container: BoxContainer) -> Array:
+	if container == null:
+		return []
+	var key: int = int(container.get_instance_id())
+	var pool_data: Dictionary = _get_dictionary(_choice_card_pools.get(key, {}))
+	return pool_data.get("slots", []) as Array
+
+
+func _activate_choice_card_pool(container: BoxContainer) -> void:
+	var key: int = int(container.get_instance_id())
+	var pool_data: Dictionary = _get_dictionary(_choice_card_pools.get(key, {}))
+	_choice_card_cells.clear()
+	_choice_card_buttons.clear()
+	_choice_card_labels.clear()
+	_choice_gap_spacers.clear()
+	for cell: Control in pool_data.get("cells", []):
+		_choice_card_cells.append(cell)
+	for button: Button in pool_data.get("buttons", []):
+		_choice_card_buttons.append(button)
+	for label_info: Dictionary in pool_data.get("labels", []):
+		_choice_card_labels.append(label_info)
+	for spacer: Control in pool_data.get("gaps", []):
+		_choice_gap_spacers.append(spacer)
+
+
+func _hide_choice_card_pool(container: BoxContainer) -> void:
+	for slot_variant: Variant in _get_choice_card_pool(container):
+		if slot_variant is Dictionary:
+			_set_choice_card_slot_visible(slot_variant as Dictionary, false)
+
+
+func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
+	var label_start: int = _choice_card_labels.size()
+	var cell: CenterContainer = CenterContainer.new()
+	cell.custom_minimum_size = CARD_DESIGN_SIZE
+	cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	parent.add_child(cell)
+
+	var button: Button = Button.new()
+	button.text = ""
+	button.clip_contents = true
+	button.custom_minimum_size = CARD_DESIGN_SIZE
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.size_flags_stretch_ratio = 1.0
+	button.add_theme_stylebox_override("normal", _create_card_style())
+	button.add_theme_stylebox_override("hover", _create_card_style())
+	button.add_theme_stylebox_override("pressed", _create_card_style())
+	UIButtonSkin.apply_text_only(button)
+	cell.add_child(button)
+	_choice_card_cells.append(cell)
+	_choice_card_buttons.append(button)
+
+	var background: TextureRect = TextureRect.new()
+	background.name = "SkillCardBackground"
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_SCALE
+	button.add_child(background)
+
+	var content_layer: Control = Control.new()
+	content_layer.name = "SkillCardContentLayer"
+	content_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	content_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(content_layer)
+
+	var title_label: Label = _add_card_label(content_layer, "", 23, VERTICAL_ALIGNMENT_CENTER)
+	title_label.name = "SkillCardTitle"
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.38, 1.0))
+	_set_card_slot(title_label, 0.14, 0.062, 0.86, 0.145)
+
+	var icon_frame: Control = _create_card_icon_slot(content_layer)
+	_set_card_slot(icon_frame, 0.285, 0.165, 0.715, 0.405)
+	var icon_texture: TextureRect = icon_frame.get_meta("icon_texture") as TextureRect
+
+	var description_label: Label = _add_card_label(content_layer, "", 15, VERTICAL_ALIGNMENT_CENTER)
+	description_label.name = "SkillCardDescription"
+	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
+	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
+	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
+
+	var rarity_label: Label = _add_card_label(content_layer, "", 18, VERTICAL_ALIGNMENT_CENTER)
+	rarity_label.name = "SkillCardRarity"
+	rarity_label.add_theme_color_override("font_color", Color(0.74, 0.84, 1.0, 1.0))
+	_set_card_slot(rarity_label, 0.27, 0.634, 0.73, 0.684)
+
+	var values: VBoxContainer = VBoxContainer.new()
+	values.name = "SkillCardValues"
+	values.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	values.add_theme_constant_override("separation", 4)
+	content_layer.add_child(values)
+	_set_card_slot(values, 0.14, 0.684, 0.86, 0.872)
+
+	var value_rows: Array[HBoxContainer] = []
+	var value_icons: Array[TextureRect] = []
+	var value_names: Array[Label] = []
+	var value_amounts: Array[Label] = []
+	for index: int in range(SKILL_CARD_MAX_VALUE_ROWS):
+		var row: HBoxContainer = HBoxContainer.new()
+		row.name = "SkillCardValueRow%d" % (index + 1)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 8)
+		values.add_child(row)
+		value_rows.append(row)
+
+		var icon: TextureRect = TextureRect.new()
+		icon.name = "SkillCardValueIcon"
+		icon.custom_minimum_size = Vector2(22, 22)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.self_modulate = Color(1.0, 0.52, 0.12, 0.95)
+		row.add_child(icon)
+		value_icons.append(icon)
+
+		var name_label: Label = _add_value_row_label(row, "", 14, HORIZONTAL_ALIGNMENT_LEFT)
+		name_label.name = "SkillCardValueName"
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		value_names.append(name_label)
+
+		var value_label: Label = _add_value_row_label(row, "", 14, HORIZONTAL_ALIGNMENT_RIGHT)
+		value_label.name = "SkillCardValueAmount"
+		value_label.custom_minimum_size = Vector2(64, 0)
+		value_amounts.append(value_label)
+
+	var slot_labels: Array[Dictionary] = []
+	for index: int in range(label_start, _choice_card_labels.size()):
+		slot_labels.append(_choice_card_labels[index])
+	return {
+		"cell": cell,
+		"button": button,
+		"background": background,
+		"title": title_label,
+		"icon": icon_texture,
+		"description": description_label,
+		"rarity": rarity_label,
+		"value_rows": value_rows,
+		"value_icons": value_icons,
+		"value_names": value_names,
+		"value_amounts": value_amounts,
+		"labels": slot_labels
+	}
+
+
+func _create_card_icon_slot(parent: Node) -> Control:
+	var frame: Control = Control.new()
+	frame.name = "SkillCardIconFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(frame)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(center)
+
+	var texture_rect: TextureRect = TextureRect.new()
+	texture_rect.name = "SkillCardIconTexture"
+	texture_rect.custom_minimum_size = Vector2(122, 122)
+	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	center.add_child(texture_rect)
+	frame.set_meta("icon_texture", texture_rect)
+	return frame
+
+
+func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
+	var button: Button = slot.get("button") as Button
+	if button == null:
+		return
+	for connection: Dictionary in button.pressed.get_connections():
+		var callable: Callable = connection.get("callable")
+		if button.pressed.is_connected(callable):
+			button.pressed.disconnect(callable)
+	button.pressed.connect(Callable(self, "_select_upgrade_option").bind(option, return_state, consumes_pending_level))
+	var background: TextureRect = slot.get("background") as TextureRect
+	var background_texture: Texture2D = _load_texture(_get_choice_card_background_texture(option))
+	if background != null:
+		background.texture = background_texture
+		background.visible = background_texture != null
+	var title: Label = slot.get("title") as Label
+	if title != null:
+		title.text = _get_option_title(option)
+	var icon: TextureRect = slot.get("icon") as TextureRect
+	if icon != null:
+		icon.texture = _load_texture(_get_option_icon_texture(option))
+	var description: Label = slot.get("description") as Label
+	if description != null:
+		description.text = _get_option_description_text(option)
+	var rarity: Label = slot.get("rarity") as Label
+	if rarity != null:
+		rarity.text = _get_option_rarity_text(option)
+	_bind_value_rows(slot, option)
+	_set_choice_card_slot_visible(slot, true)
+
+
+func _bind_value_rows(slot: Dictionary, option: Dictionary) -> void:
+	var lines: Array[String] = _get_option_value_lines(option)
+	var rows: Array = slot.get("value_rows", []) as Array
+	var names: Array = slot.get("value_names", []) as Array
+	var amounts: Array = slot.get("value_amounts", []) as Array
+	var icons: Array = slot.get("value_icons", []) as Array
+	for index: int in range(rows.size()):
+		var row: HBoxContainer = rows[index] as HBoxContainer
+		var visible: bool = index < lines.size()
+		if row != null:
+			row.visible = visible
+		if not visible:
+			continue
+		var parts: Dictionary = _split_value_line(lines[index])
+		var name_label: Label = names[index] as Label
+		if name_label != null:
+			name_label.text = str(parts.get("name", ""))
+		var value_label: Label = amounts[index] as Label
+		if value_label != null:
+			value_label.text = str(parts.get("value", ""))
+		var icon: TextureRect = icons[index] as TextureRect
+		if icon != null:
+			icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
+
+
+func _set_choice_card_slot_visible(slot: Dictionary, visible: bool) -> void:
+	var cell: Control = slot.get("cell") as Control
+	if cell != null:
+		cell.visible = visible
+	var button: Button = slot.get("button") as Button
+	if button != null:
+		button.disabled = not visible
 
 
 func _prepare_choice_card_layout(container: BoxContainer) -> void:

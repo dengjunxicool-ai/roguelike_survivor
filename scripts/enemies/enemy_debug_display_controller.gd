@@ -16,7 +16,7 @@ func setup(owner: Node2D) -> void:
 
 
 func update_health(current_health: int, max_health: int) -> void:
-	if not OS.is_debug_build() or _owner == null:
+	if not _debug_health_display_enabled() or _owner == null:
 		return
 
 	_ensure_health_display()
@@ -46,6 +46,15 @@ func show_damage_number(amount: int, damage_result_or_type: Variant = &"") -> vo
 		"drift_x": float((_popup_offset_index % 3) - 1) * 5.0
 	})
 	_popup_offset_index += 1
+
+
+func _debug_health_display_enabled() -> bool:
+	if not OS.is_debug_build() or _owner == null:
+		return false
+	var tree: SceneTree = _owner.get_tree()
+	if tree == null or tree.root == null:
+		return false
+	return bool(tree.root.get_meta("developer_mode_enabled", false))
 
 
 func _ensure_health_display() -> void:

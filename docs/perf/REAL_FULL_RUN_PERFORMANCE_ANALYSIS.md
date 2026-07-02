@@ -1,0 +1,264 @@
+# Real Full Run Performance Analysis
+
+Source files:
+- `reports/real-full-run-profile/latest_attribution.json`
+- `reports/real-full-run-profile/latest_samples.json`
+
+Run scope:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS appeared, then lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 783.42s
+- Boss HP: 5000 -> 4000
+- Boss HP modified by profiler: false
+- Survival guard: true; player health was modified to keep the measurement alive
+- Debug panel: off
+
+This attribution run is shorter than the earlier 900s pressure sample. Use it to identify creation/destruction sources and pooling candidates. Use the 900s sample for long-duration pressure magnitude.
+
+## Node Creation / Destruction Attribution
+
+Total node lifecycle churn in this attribution run:
+
+| Metric | Count |
+| --- | ---: |
+| Nodes created | 28,105 |
+| Nodes destroyed | 27,601 |
+| Net nodes | +504 |
+
+By category:
+
+| Category | Created | Destroyed | Net |
+| --- | ---: | ---: | ---: |
+| UI | 9,029 | 8,784 | +245 |
+| Other | 7,128 | 7,091 | +37 |
+| Projectile | 4,896 | 4,858 | +38 |
+| Status | 2,243 | 2,204 | +39 |
+| AoE | 1,591 | 1,586 | +5 |
+| Damage number | 1,211 | 1,209 | +2 |
+| Enemy | 1,185 | 1,128 | +57 |
+| Pickup | 669 | 588 | +81 |
+| Transient VFX | 153 | 153 | 0 |
+
+Top creation sources by scene/class key:
+
+| Created | Scene / script | Class / name |
+| ---: | --- | --- |
+| 1,553 | no scene / no script | `AnimatedSprite2D / AnimatedSprite2D` |
+| 1,537 | no scene / no script | `Node2D / StatusVisualOverlay` |
+| 1,461 | `res://scenes/combat/area_effect.tscn` | `CollisionShape2D / CollisionShape2D` |
+| 1,461 | `res://scenes/combat/area_effect.tscn` | `AnimatedSprite2D / AnimatedSprite2D` |
+| 1,461 | `res://scenes/combat/area_effect.tscn` | `Sprite2D / Sprite2D` |
+| 864 | no scene / no script | `Label / DamageNumber` |
+| 840 | `res://scenes/combat/fireball_projectile.tscn` | `Sprite2D / Sprite2D` |
+| 840 | `res://scenes/combat/fireball_projectile.tscn` | `AnimatedSprite2D / AnimatedSprite2D` |
+| 840 | `res://scenes/combat/fireball_projectile.tscn` | `CollisionShape2D / CollisionShape2D` |
+| 678 | `res://scenes/combat/fireball_projectile.tscn` / `res://scripts/combat/projectile.gd` | `Area2D / FireballProjectile` |
+
+Top destruction sources match the same objects:
+
+| Destroyed | Scene / script | Class / name |
+| ---: | --- | --- |
+| 1,549 | no scene / no script | `AnimatedSprite2D / AnimatedSprite2D` |
+| 1,534 | no scene / no script | `Node2D / StatusVisualOverlay` |
+| 1,457 | `res://scenes/combat/area_effect.tscn` | `Sprite2D / Sprite2D` |
+| 1,457 | `res://scenes/combat/area_effect.tscn` | `AnimatedSprite2D / AnimatedSprite2D` |
+| 1,457 | `res://scenes/combat/area_effect.tscn` | `CollisionShape2D / CollisionShape2D` |
+| 863 | no scene / no script | `Label / DamageNumber` |
+| 838 | `res://scenes/combat/fireball_projectile.tscn` | `CollisionShape2D / CollisionShape2D` |
+| 838 | `res://scenes/combat/fireball_projectile.tscn` | `AnimatedSprite2D / AnimatedSprite2D` |
+| 838 | `res://scenes/combat/fireball_projectile.tscn` | `Sprite2D / Sprite2D` |
+| 677 | `res://scenes/combat/fireball_projectile.tscn` / `res://scripts/combat/projectile.gd` | `Area2D / FireballProjectile` |
+
+The largest churn is not a leak pattern: most top sources have near-matching created/destroyed counts. The primary performance risk is allocation/free churn during combat, not retained live nodes.
+
+## Spike Frame Attribution
+
+Profiler recorded:
+
+| Spike threshold | Frames |
+| --- | ---: |
+| frame_ms > 50 | 1,873 |
+| frame_ms > 100 | 430 |
+
+Current spike-frame activity:
+
+| Threshold | AoE create/destroy | Status create/destroy | Pickup create/destroy | Transient VFX create/destroy | Status tick | Reaction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| >50ms | 537 / 479 | 755 / 551 | 297 / 234 | 47 / 39 | 0 | 0 |
+| >100ms | 207 / 181 | 255 / 130 | 78 / 126 | 16 / 8 | 0 | 0 |
+
+Previous 5-frame context around spike frames:
+
+| Threshold | AoE create/destroy | Status create/destroy | Pickup create/destroy | Transient VFX create/destroy | Status tick | Reaction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| >50ms context | 1,833 / 1,563 | 1,692 / 1,096 | 375 / 540 | 197 / 110 | 0 | 0 |
+| >100ms context | 634 / 503 | 577 / 296 | 117 / 222 | 57 / 31 | 0 | 0 |
+
+Interpretation:
+- AoE and status visual creation are strongly represented near spike frames.
+- Pickups contribute more in destruction/collection context than in creation-only spikes.
+- Transient VFX is present but much smaller than AoE/status/projectile churn in this run.
+- Status tick/reaction are not directly observable from public signals. The profiler listens to `RunStatsTracker.event_recorded`; status applications were observed, but no status-dot `damage_done` events or reaction-damage events were emitted during this run.
+
+Observed run events:
+
+| Event | Count |
+| --- | ---: |
+| `apply_status` | 9,159 |
+| `status_applied` | 9,159 |
+| `damage_done` | 8,187 |
+| `damage_taken` | 428 |
+| `enemy_killed` | 223 |
+| `elite_reward` | 2 |
+| `boss_blessing_reward` | 1 |
+| `map_event` | 1 |
+
+## Damage Number Diagnosis
+
+The earlier `damage_number_count = 0` was a selector problem, not proof that damage numbers were disabled.
+
+Attribution found:
+
+| Metric | Count |
+| --- | ---: |
+| Damage number nodes created | 1,211 |
+| Damage number nodes destroyed | 1,209 |
+| Current selector-visible nodes at stop | 2 |
+| Damage events observed | 8,615 |
+
+Root cause: `DamageNumberPopup.show()` creates plain `Label` nodes named `DamageNumber` / `PlayerDamageNumber`. They do not have `damage_number_popup.gd` as their script, so the old selector `_count_nodes_by_script("damage_number_popup.gd")` missed them.
+
+The attribution selector now recognizes these generated `Label` nodes by name.
+
+## ObjectDB Delta Attribution
+
+ObjectDB changed:
+
+| Metric | Count |
+| --- | ---: |
+| ObjectDB start | 3,682 |
+| ObjectDB end | 4,882 |
+| ObjectDB delta | +1,200 |
+| Node-backed net attribution | +504 |
+| Unattributed ObjectDB delta | +696 |
+
+Node-backed net attribution:
+
+| Category | Net |
+| --- | ---: |
+| UI | +245 |
+| Pickup | +81 |
+| Enemy | +57 |
+| Status | +39 |
+| Projectile | +38 |
+| Other | +37 |
+| AoE | +5 |
+| Damage number | +2 |
+| Transient VFX | 0 |
+
+Limitation: Godot `Performance.OBJECT_COUNT` exposes total ObjectDB count but does not expose object enumeration. The +696 unattributed delta is likely non-Node `Object`/`RefCounted`/`Resource` churn or retained objects and needs a separate targeted probe if it remains stable across repeated runs.
+
+## Top 5 Pooling Candidates
+
+Do not implement these yet; this is the priority list for the next optimization pass.
+
+1. `StatusVisualOverlay` and child `AnimatedSprite2D`
+   - Evidence: 1,537 `StatusVisualOverlay` creates and 1,534 destroys; anonymous `AnimatedSprite2D` churn is the top single class bucket at 1,553 / 1,549.
+   - Why first: large churn, tightly correlated with status pressure and spike context.
+
+2. `res://scenes/combat/area_effect.tscn`
+   - Evidence: 374 root `AreaEffect` creates, but each instance also creates/destroys `CollisionShape2D`, `Sprite2D`, and `AnimatedSprite2D`; each child bucket is 1,461 creates / 1,457 destroys.
+   - Why second: AoE creation/destruction is heavily represented near >50ms and >100ms spike frames.
+
+3. `res://scenes/combat/fireball_projectile.tscn`
+   - Evidence: 678 root `FireballProjectile` creates / 677 destroys, plus 840 creates each for sprite, animated sprite, and collision shape.
+   - Why third: projectile category created 4,896 nodes and destroyed 4,858, making it the largest non-UI combat churn bucket.
+
+4. Damage number labels
+   - Evidence: 864 `DamageNumber` creates, 347 `PlayerDamageNumber` creates, 1,211 total damage-number creates.
+   - Why fourth: short-lived UI/VFX labels are pure churn; old profiling missed them because they are generated labels without the popup script.
+
+5. `res://scenes/enemies/enemy_projectile.tscn`
+   - Evidence: 512 sprite creates and 512 collision-shape creates; 502 destroys for each. Net +10 for both child nodes at stop.
+   - Why fifth: smaller than fireball projectile churn, but still a repeated projectile scene with clear pool boundaries.
+
+Secondary watch list:
+- `res://scenes/drops/experience_crystal.tscn`: only 669 pickup nodes created, but net +81 pickup-category nodes remained at stop and pickups show up in spike context.
+- Enemy scene internals: enemy root churn is expected gameplay pressure, but `StatusEffectManager`, debug HP bars, status labels, and enemy sprites remain visible in net attribution.
+- UI reward/skill card nodes: UI is the largest category by count, but most of it comes from modal/reward/card churn. Pooling UI should be considered only after combat churn is reduced, because the user-facing UI flow is less frequent than per-combat projectile/AoE/status churn.
+
+## PR-1 Acceptance: UI Dynamic Rebuild And Debug UI Gating
+
+Change summary:
+- `LevelUpModal` / `RunRewardModal` choice cards are pre-created and rebound instead of clearing and rebuilding the modal card tree.
+- Skill card value rows, labels, icons, background, and content layers are reused and hidden when unused.
+- Enemy debug HP bars are gated by runtime `developer_mode_enabled`; when the debug panel is off, `DebugHpBar` / `DebugHpLagBar` are not created.
+- No gameplay, skill, status, monster, drop, combat math, or visible card content changes were intended.
+
+Acceptance run:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 507.27s
+- Boss damage done: 1003
+- Boss HP modified by profiler: false
+
+Before/after:
+
+| Metric | Before | After PR-1 | Delta |
+| --- | ---: | ---: | ---: |
+| Total nodes created | 28,105 | 15,375 | -45.3% |
+| Total nodes destroyed | 27,601 | 14,983 | -45.7% |
+| UI nodes created | 9,029 | 2,352 | -73.9% |
+| UI nodes destroyed | 8,784 | 2,113 | -75.9% |
+| Frames > 50ms | 1,873 | 836 | -55.4% |
+| Frames > 100ms | 430 | 240 | -44.2% |
+| p95 frame time | 27.14ms | 19.63ms | -27.7% |
+| p99 frame time | 74.60ms | 50.03ms | -32.9% |
+| Max frame time | 414.83ms | 657.21ms | worse |
+| ObjectDB delta | +1,200 | +671 | -44.1% |
+| Unattributed ObjectDB delta | +696 | +279 | -59.9% |
+
+PR-1 target status:
+
+| Target | Result |
+| --- | --- |
+| UI created <= 3,500 | PASS: 2,352 |
+| Total node created <= 16,000 | PASS: 15,375 |
+| Total node destroyed <= 16,000 | PASS: 14,983 |
+| Frames > 50ms <= 1,100 | PASS: 836 |
+| Frames > 100ms <= 250 | PASS: 240 |
+| p99 <= 60ms | PASS: 50.03ms |
+| max <= 250ms | FAIL: 657.21ms |
+| DebugHpBar / DebugHpLagBar absent while debug panel off | PASS: 0 created |
+
+Remaining top UI churn after PR-1:
+
+| Created | Key |
+| ---: | --- |
+| 488 | `Label / DamageNumber` |
+| 191 | `Label / StatusLabel` |
+| 145 | `Label / PlayerDamageNumber` |
+| 18 | `TextureRect / SkillCardValueIcon` |
+| 6 | `TextureRect / SkillCardIconTexture` |
+| 6 | `VBoxContainer / SkillCardValues` |
+| 6 | `Control / SkillCardIconFrame` |
+| 6 | `Control / SkillCardContentLayer` |
+| 6 | `TextureRect / SkillCardBackground` |
+| 6 | `HBoxContainer / SkillCardValueRow1` |
+| 6 | `HBoxContainer / SkillCardValueRow2` |
+| 6 | `HBoxContainer / SkillCardValueRow3` |
+
+Interpretation:
+- PR-1 achieved the intended UI churn reduction. Modal card rebuild churn is no longer the dominant UI source.
+- Remaining UI churn is now mostly damage number labels and status labels, which belongs to PR-2.
+- The single max-frame outlier did not improve and must remain open. PR-2/PR-3 should focus on short-lived damage/status/AoE/projectile churn and then re-check max-frame outliers.
