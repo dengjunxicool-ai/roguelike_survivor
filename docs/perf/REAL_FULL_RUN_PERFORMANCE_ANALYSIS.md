@@ -340,3 +340,84 @@ Interpretation:
 - The profiler now exposes the next true bottleneck more clearly: AoE and projectile scene roots dominate created/destroyed attribution.
 - PR-2 also increases retained ObjectDB count at the stop point. That is expected for pooling, but PR-4/cleanup work should add explicit run-end pool cleanup or bounded retention reporting so retained pool objects are not confused with leaks.
 - Frame spikes are not solved by PR-2. PR-3 should proceed with whole-scene AoE/projectile pooling, and the summon target freed-reference error should be tracked separately because it pollutes the run log and may affect long-run determinism.
+
+## PR-3 Acceptance: Combat Scene-Root Pooling For AoE And Projectiles
+
+Change summary:
+- `CombatObjectFactory` now routes player projectile and AoE scene roots through the runtime pool.
+- Enemy projectile and damage-area action paths now use the same combat scene-root pool helper instead of direct scene instantiation.
+- `AreaEffect`, `Projectile`, and `DamageArea` now expose pool spawn/despawn hooks and return their roots to the pool on normal expiry paths.
+- Runtime pool reuse now validates stale candidate references before type checks, preventing freed-instance errors during long runs.
+- No gameplay, damage math, skill tuning, enemy tuning, drop behavior, UI behavior, or visual resources were intentionally changed.
+
+Acceptance run:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 858.3s
+- Boss damage done: 1001
+- Boss HP modified by profiler: false
+- Log caveat: no `RuntimeObjectPool`, combat factory, enemy action executor/registry, or freed-instance pool errors were present. The run still contains repeated existing `SummonTargetingComponent.update()` errors from `scripts/summons/summon_controller.gd:93`; those are outside PR-3's touched paths and should be tracked separately.
+
+Before/after versus PR-2:
+
+| Metric | After PR-2 | After PR-3 | Delta |
+| --- | ---: | ---: | ---: |
+| Total nodes created | 13,653 | 6,773 | -50.4% |
+| Total nodes destroyed | 13,096 | 6,273 | -52.1% |
+| Projectile-category nodes created | 3,697 | 54 | -98.5% |
+| Projectile-category nodes destroyed | 3,667 | 0 | -100.0% |
+| AoE-category nodes created | 1,389 | 750 | -46.0% |
+| AoE-category nodes destroyed | 1,386 | 747 | -46.1% |
+| Fireball root created / destroyed | 605 / 605+ | 6 / 0 | root churn mostly removed |
+| Fireball child created / destroyed | 607 each / 607 each | 18 total / 0 | child churn mostly removed |
+| Enemy projectile root created / destroyed | not isolated | 10 / 0 | retained pool/live roots |
+| Enemy projectile child created / destroyed | not isolated | 20 / 0 | retained pool/live children |
+| Damage area root created / destroyed | not isolated | 1 / 0 | retained pool/live root |
+| Damage area child created / destroyed | not isolated | 2 / 0 | retained pool/live children |
+| Frames > 50ms | 1,141 | 93 | -91.8% |
+| Frames > 100ms | 275 | 13 | -95.3% |
+| p95 frame time | 26.01ms | 17.44ms | -33.0% |
+| p99 frame time | 64.08ms | 22.79ms | -64.4% |
+| Max frame time | 428.62ms | 139.87ms | -67.4% |
+| Average FPS | 106.37 | 197.30 | +85.5% |
+| ObjectDB delta | +1,217 | +1,190 | -2.2% |
+| Node-backed ObjectDB net | +557 | +500 | -10.2% |
+| Unattributed ObjectDB delta | +660 | +690 | worse |
+
+PR-3 target status:
+
+| Target | Result |
+| --- | --- |
+| Player projectile scene-root churn reduced by >= 70% | PASS: projectile-category created/destroyed fell 98.5% / 100.0% |
+| Enemy projectile scene-root churn reduced by >= 70% | PASS: final run shows only 10 enemy projectile roots and 20 child nodes created, with 0 destroyed |
+| Damage-area root lifecycle uses pool | PASS: final run shows 1 root / 2 children created, 0 destroyed |
+| AoE scene-root churn reduced by >= 70% | PARTIAL: AoE category fell about 46%; still above target |
+| Spike frames reduced | PASS: >50ms frames fell 91.8%, >100ms frames fell 95.3%, p99 fell 64.4% |
+| No PR-3 runtime errors | PASS: focused log scan found 0 pool/factory/enemy-action/freed-instance errors |
+
+Remaining top churn after PR-3:
+
+| Created | Key |
+| ---: | --- |
+| 750 | `area_effect.tscn / AnimatedSprite2D` |
+| 750 | `area_effect.tscn / CollisionShape2D` |
+| 750 | `area_effect.tscn / Sprite2D` |
+| 373 | `enemy.tscn / CollisionShape2D` |
+| 373 | `enemy.tscn / Sprite2D` |
+| 373 | `enemy.tscn / StatusEffectManager` |
+| 216 | `area_effect.tscn / AreaEffect` |
+| 167 | `DashAfterimage` |
+| 158 | `experience_crystal.tscn / CollisionShape2D` |
+| 158 | `experience_crystal.tscn / Sprite2D` |
+| 157 | `StatusLabel` |
+
+Interpretation:
+- PR-3 achieved the intended projectile pooling result and strongly improved real-run frame spikes.
+- AoE pooling improved node churn but did not reach the original 70% reduction target. The next pass should inspect why area roots still exit the tree and whether max-active eviction, parent cleanup, or pool retention limits are forcing destruction.
+- ObjectDB delta barely improved because pooling retains live roots and children at the stop point. This is expected for scene-root pooling, but PR-4/PR-5 should keep reporting retained pool counts separately from leak-like unattributed ObjectDB growth.
+- The next highest-value work remains bounded AoE retention correctness, enemy/internal status-node churn, pickup roots, dash afterimages, and status labels. The existing summon targeting error should be fixed in a separate correctness PR because it pollutes long-run logs and may affect determinism.

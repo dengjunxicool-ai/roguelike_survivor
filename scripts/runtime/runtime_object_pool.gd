@@ -3,6 +3,7 @@ class_name RuntimeObjectPool
 
 
 const POOL_KEY_META: StringName = &"runtime_pool_key"
+const POOL_OWNER_META: StringName = &"runtime_pool_owner"
 const DEFAULT_MAX_RETAINED_PER_KEY: int = 512
 
 var max_retained_per_key: int = DEFAULT_MAX_RETAINED_PER_KEY
@@ -36,13 +37,17 @@ func spawn(key: StringName, factory: Callable, parent: Node) -> Node:
 
 	var current_parent: Node = node.get_parent()
 	if parent != null and node.get_parent() == null:
-		parent.add_child(node)
+		if Engine.is_in_physics_frame():
+			parent.call_deferred("add_child", node)
+		else:
+			parent.add_child(node)
 	elif current_parent != null and current_parent != parent:
 		return spawn(key, factory, parent)
 	_set_node_visible(node, true)
 	node.set_process(true)
 	node.set_physics_process(true)
 	node.set_meta(POOL_KEY_META, key)
+	node.set_meta(POOL_OWNER_META, self)
 	_active_keys[int(node.get_instance_id())] = key
 	_increment_stat(&"spawned", key)
 	return node
@@ -85,6 +90,7 @@ func _create_node(key: StringName, factory: Callable) -> Node:
 		return null
 	var node: Node = created
 	node.set_meta(POOL_KEY_META, key)
+	node.set_meta(POOL_OWNER_META, self)
 	_increment_stat(&"created", key)
 	return node
 
@@ -108,7 +114,10 @@ func _find_available_for_parent(key: StringName, parent: Node) -> Node:
 	var bucket: Array = _get_bucket(key)
 	for index: int in range(bucket.size() - 1, -1, -1):
 		var candidate: Variant = bucket[index]
-		if not (candidate is Node) or not is_instance_valid(candidate):
+		if not is_instance_valid(candidate):
+			bucket.remove_at(index)
+			continue
+		if not (candidate is Node):
 			bucket.remove_at(index)
 			continue
 		var node: Node = candidate

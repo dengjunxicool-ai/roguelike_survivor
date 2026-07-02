@@ -60,6 +60,7 @@ func _ready() -> void:
 
 
 func setup(params: Dictionary) -> void:
+	_clear_projectile_runtime_meta()
 	_apply_projectile_core_params(params)
 	_apply_projectile_payload_params(params)
 	_apply_projectile_context_params(params)
@@ -71,6 +72,47 @@ func setup(params: Dictionary) -> void:
 	_apply_visual_config(params)
 	_attach_visual_effect_scene()
 	queue_redraw()
+
+
+func prepare_for_pool_spawn(params: Dictionary) -> void:
+	visible = true
+	set_process(true)
+	set_physics_process(true)
+	setup(params)
+
+
+func prepare_for_pool_despawn() -> void:
+	_is_destroying = true
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
+	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if animated_sprite != null:
+		animated_sprite.stop()
+	if _visual_effect_node != null and is_instance_valid(_visual_effect_node):
+		_visual_effect_node.queue_free()
+	_visual_effect_node = null
+	event_bus = null
+	skill_instance = null
+	caster = null
+	skill_manager = null
+	relic_manager = null
+	actions_on_hit.clear()
+	_hit_bodies.clear()
+	visible = false
+
+
+func despawn_or_free() -> void:
+	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
+		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
+		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
+		if pool_variant is Node and is_instance_valid(pool_variant) and (pool_variant as Node).has_method("despawn"):
+			prepare_for_pool_despawn()
+			(pool_variant as Node).call("despawn", key, self)
+			return
+	queue_free()
 
 
 func _apply_projectile_core_params(params: Dictionary) -> void:
@@ -133,6 +175,19 @@ func _apply_projectile_runtime_meta(params: Dictionary) -> void:
 		set_meta("arcane_page_hit_ids", params["arcane_page_hit_ids"])
 
 
+func _clear_projectile_runtime_meta() -> void:
+	for key: StringName in [
+		&"hot_rapid_fire_crit",
+		&"hot_rapid_fire_crit_chance_add",
+		&"forbidden_page",
+		&"arcane_page_copy",
+		&"arcane_page_hit_ids",
+		&"cast_instance_id"
+	]:
+		if has_meta(key):
+			remove_meta(key)
+
+
 func _reset_projectile_runtime_state(params: Dictionary) -> void:
 	_hit_bodies.clear()
 	_is_destroying = false
@@ -143,6 +198,9 @@ func _reset_projectile_runtime_state(params: Dictionary) -> void:
 	_reset_pierce_counter()
 	_collision_radius = maxf(float(params.get("radius", params.get("area_radius", 12.0))), 1.0)
 	_apply_area_radius(_collision_radius)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", false)
 
 
 func _physics_process(delta: float) -> void:
@@ -151,7 +209,7 @@ func _physics_process(delta: float) -> void:
 
 	_age += delta
 	if _age >= lifetime:
-		queue_free()
+		despawn_or_free()
 		return
 
 	if _trajectory_mode == "curve":
@@ -204,8 +262,8 @@ func _emit_hit_event(body: Node) -> bool:
 		"target_group": target_group,
 		"damage_packet": damage_packet,
 		"damage_type": damage_type,
-		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit", false)),
-		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add", 0.0))
+		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit")) if has_meta("hot_rapid_fire_crit") else false,
+		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add")) if has_meta("hot_rapid_fire_crit_chance_add") else 0.0
 	})
 	_emit_primary_attack_hit_event(event_context)
 	event_bus.call_deferred("emit_skill_event", event_on_hit, event_context)
@@ -241,7 +299,7 @@ func _play_hit_visual_then_free() -> void:
 		collision_shape.set_deferred("disabled", true)
 
 	if not _has_visual_state("hit"):
-		queue_free()
+		despawn_or_free()
 		return
 
 	_play_visual_state("hit", true)
@@ -251,25 +309,25 @@ func _play_hit_visual_then_free() -> void:
 func _free_when_hit_visual_finishes() -> void:
 	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if animated_sprite == null or animated_sprite.sprite_frames == null:
-		queue_free()
+		despawn_or_free()
 		return
 
 	var animation_name: StringName = animated_sprite.animation
 	if animation_name == &"":
 		animation_name = &"hit"
 	if not animated_sprite.sprite_frames.has_animation(animation_name):
-		queue_free()
+		despawn_or_free()
 		return
 	if animated_sprite.sprite_frames.get_animation_loop(animation_name):
 		push_warning("[Projectile] Hit animation must be non-looping to free on animation_finished: %s" % String(animation_name))
-		queue_free()
+		despawn_or_free()
 		return
 	if not animated_sprite.animation_finished.is_connected(Callable(self, "_on_hit_visual_finished")):
 		animated_sprite.animation_finished.connect(Callable(self, "_on_hit_visual_finished"), CONNECT_ONE_SHOT)
 
 
 func _on_hit_visual_finished() -> void:
-	queue_free()
+	despawn_or_free()
 
 
 func _get_damage_payload(target: Node = null) -> Variant:
@@ -369,7 +427,7 @@ func _update_curve_trajectory(delta: float) -> void:
 	if homing_enabled and _resolve_swept_homing_hit(previous_position, global_position):
 		return
 	if t >= 1.0:
-		queue_free()
+		despawn_or_free()
 
 
 func _update_homing_direction(delta: float) -> void:

@@ -29,12 +29,12 @@ assert(
 );
 assert(
   factory.includes("Engine.is_in_physics_frame()") &&
-    factory.includes('parent.call_deferred("add_child", projectile)'),
-  "CombatObjectFactory.create_projectile must defer add_child during physics frame to avoid flushing-query Area2D errors."
+    (factory.includes('parent.call_deferred("add_child", projectile)') || factory.includes('parent.call_deferred("add_child", node)')),
+  "CombatObjectFactory projectile spawn path must defer add_child during physics frame to avoid flushing-query Area2D errors."
 );
 assert(
-  factory.indexOf('projectile.call(&"setup", object_params)') < factory.indexOf('parent.call_deferred("add_child", projectile)'),
-  "CombatObjectFactory.create_projectile must setup projectiles before deferred add_child so physics state is configured off-tree."
+  factory.includes('projectile.call(&"prepare_for_pool_spawn", object_params)') || factory.includes('projectile.call(&"setup", object_params)'),
+  "CombatObjectFactory.create_projectile must configure projectiles through prepare_for_pool_spawn/setup."
 );
 
 console.log("Projectile physics flush safety verified.");

@@ -23,6 +23,37 @@ func _ready() -> void:
 	_apply_area_radius(area_radius)
 
 
+func prepare_for_pool_spawn(params: Dictionary) -> void:
+	visible = true
+	set_process(true)
+	set_physics_process(true)
+	setup(params)
+
+
+func prepare_for_pool_despawn() -> void:
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
+	damage_packet.clear()
+	_age = 0.0
+	_tick_timer = 0.0
+	_one_shot = false
+	visible = false
+
+
+func despawn_or_free() -> void:
+	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
+		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
+		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
+		if pool_variant is Node and is_instance_valid(pool_variant) and (pool_variant as Node).has_method("despawn"):
+			prepare_for_pool_despawn()
+			(pool_variant as Node).call("despawn", key, self)
+			return
+	queue_free()
+
+
 func setup(
 	new_damage: Variant,
 	new_duration: float = 3.0,
@@ -49,6 +80,7 @@ func setup(
 	_tick_timer = tick_interval
 	_one_shot = _is_one_shot_duration()
 	_apply_area_radius(area_radius)
+	_enable_area_monitoring()
 	_apply_visual_color(visual_color)
 
 
@@ -67,6 +99,7 @@ func _setup_from_dictionary(params: Dictionary) -> void:
 	_tick_timer = tick_interval
 	_one_shot = _is_one_shot_duration()
 	_apply_area_radius(area_radius)
+	_enable_area_monitoring()
 	_apply_visual_color(_get_color(params.get("visual_color", Color(0.35, 0.95, 0.2, 0.32))))
 
 
@@ -81,7 +114,7 @@ func _physics_process(delta: float) -> void:
 	_age += delta
 	if _one_shot:
 		_apply_damage_to_overlaps()
-		queue_free()
+		despawn_or_free()
 		return
 
 	_tick_timer -= delta
@@ -90,7 +123,7 @@ func _physics_process(delta: float) -> void:
 		_apply_damage_to_overlaps()
 
 	if _age >= duration:
-		queue_free()
+		despawn_or_free()
 
 
 func _apply_damage_to_overlaps() -> void:
@@ -162,6 +195,14 @@ func _apply_area_radius(radius: float) -> void:
 
 	var circle_shape: CircleShape2D = collision_shape.shape as CircleShape2D
 	circle_shape.radius = maxf(radius, 1.0)
+
+
+func _enable_area_monitoring() -> void:
+	set_deferred("monitoring", true)
+	set_deferred("monitorable", true)
+	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", false)
 
 
 func _get_dictionary(value: Variant) -> Dictionary:
