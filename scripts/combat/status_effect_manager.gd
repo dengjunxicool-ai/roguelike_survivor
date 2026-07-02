@@ -472,11 +472,7 @@ func _get_or_create_status_visual_overlay() -> Node2D:
 func _hide_status_visual() -> void:
 	if _status_visual_overlay == null or not is_instance_valid(_status_visual_overlay):
 		return
-	var parent_node: Node = _status_visual_overlay.get_parent()
-	if parent_node != null:
-		parent_node.remove_child(_status_visual_overlay)
-	_status_visual_overlay.queue_free()
-	_status_visual_overlay = null
+	_status_visual_overlay.visible = false
 	_status_visual_key = ""
 
 

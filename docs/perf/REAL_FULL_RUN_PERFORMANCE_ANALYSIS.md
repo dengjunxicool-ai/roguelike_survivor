@@ -262,3 +262,81 @@ Interpretation:
 - PR-1 achieved the intended UI churn reduction. Modal card rebuild churn is no longer the dominant UI source.
 - Remaining UI churn is now mostly damage number labels and status labels, which belongs to PR-2.
 - The single max-frame outlier did not improve and must remain open. PR-2/PR-3 should focus on short-lived damage/status/AoE/projectile churn and then re-check max-frame outliers.
+
+## PR-2 Acceptance: Damage Number Pool And Status Visual Reuse
+
+Change summary:
+- Added a local `RuntimePoolRegistry` and `RuntimeObjectPool` resolved from the scene root, without project autoload changes.
+- `DamageNumber` / `PlayerDamageNumber` labels are spawned from the runtime pool, reset on reuse, and returned on tween completion.
+- Pooled damage labels remain under their original parent while hidden; they are not removed/re-added on every popup, because profiler node created/destroyed attribution counts scene-tree enter/exit churn.
+- `StatusVisualOverlay` is hidden and reused on normal status clear instead of being removed and `queue_free()`'d.
+- No gameplay, damage math, status math, skill behavior, enemy behavior, drops, or visible UI text changes were intended.
+
+Acceptance run:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 695.5s
+- Boss damage done: 1003
+- Boss HP modified by profiler: false
+- Log caveat: repeated `SummonTargetingComponent.update()` errors were present in the run log. They point at a previously freed summon target argument in `scripts/summons/summon_controller.gd:93` and are outside PR-2's touched files. No `damage_number_popup`, `runtime_object_pool`, `runtime_pool_registry`, `status_effect_manager`, `StatusVisualOverlay`, or `get_meta` errors appeared after the PR-2 metadata guard fix.
+
+Before/after versus PR-1:
+
+| Metric | After PR-1 | After PR-2 | Delta |
+| --- | ---: | ---: | ---: |
+| Total nodes created | 15,375 | 13,653 | -11.2% |
+| Total nodes destroyed | 14,983 | 13,096 | -12.6% |
+| UI nodes created | 2,352 | 451 | -80.8% |
+| UI nodes destroyed | 2,113 | 120 | -94.3% |
+| Damage-number nodes created | 633 | 0 | -100.0% |
+| Damage-number nodes destroyed | 631 | 0 | -100.0% |
+| Current damage-number selector count | 2 | 92 | retained pool/live labels |
+| Status-category nodes created | 1,271 | 943 | -25.8% |
+| Status-category nodes destroyed | 1,256 | 899 | -28.4% |
+| `StatusVisualOverlay` creates | not isolated in PR-1 | 159 | <= 300 target |
+| `StatusVisualOverlay` destroys | not isolated in PR-1 | 149 | mostly parent enemy cleanup |
+| Frames > 50ms | 836 | 1,141 | worse |
+| Frames > 100ms | 240 | 275 | worse |
+| p95 frame time | 19.63ms | 26.01ms | worse |
+| p99 frame time | 50.03ms | 64.08ms | worse |
+| Max frame time | 657.21ms | 428.62ms | improved but still high |
+| ObjectDB delta | +671 | +1,217 | worse |
+| Node-backed ObjectDB net | +392 | +557 | worse |
+| Unattributed ObjectDB delta | +279 | +660 | worse |
+
+PR-2 target status:
+
+| Target | Result |
+| --- | --- |
+| DamageNumber created <= 300 | PASS: 0 created/destroyed events; 92 current retained/live selector candidates |
+| StatusVisualOverlay created <= 300 | PASS: 159 |
+| No stale text/color/animation | PASS by reset contract and successful real run; no PR-2 runtime errors in log |
+| No gameplay/status/math changes | PASS by touched-file review; only popup lifecycle and status visual hide behavior changed |
+| Spike frame reduction | FAIL: >50ms, >100ms, p95, and p99 all worsened in this longer run |
+| ObjectDB delta explanation | WATCH: retained pooled labels trade allocation churn for live ObjectDB/RID retention at stop |
+
+Remaining top churn after PR-2:
+
+| Created | Key |
+| ---: | --- |
+| 1,389 | `area_effect.tscn / AnimatedSprite2D` |
+| 1,389 | `area_effect.tscn / CollisionShape2D` |
+| 1,389 | `area_effect.tscn / Sprite2D` |
+| 607 | `fireball_projectile.tscn / AnimatedSprite2D` |
+| 607 | `fireball_projectile.tscn / CollisionShape2D` |
+| 607 | `fireball_projectile.tscn / Sprite2D` |
+| 605 | `fireball_projectile.tscn / FireballProjectile` |
+| 449 | `enemy.tscn / CollisionShape2D` |
+| 449 | `enemy.tscn / Sprite2D` |
+| 449 | `enemy.tscn / StatusEffectManager` |
+
+Interpretation:
+- PR-2 achieved the intended DamageNumber churn removal and reduced status visual churn enough to pass its object targets.
+- The profiler now exposes the next true bottleneck more clearly: AoE and projectile scene roots dominate created/destroyed attribution.
+- PR-2 also increases retained ObjectDB count at the stop point. That is expected for pooling, but PR-4/cleanup work should add explicit run-end pool cleanup or bounded retention reporting so retained pool objects are not confused with leaks.
+- Frame spikes are not solved by PR-2. PR-3 should proceed with whole-scene AoE/projectile pooling, and the summon target freed-reference error should be tracked separately because it pollutes the run log and may affect long-run determinism.
