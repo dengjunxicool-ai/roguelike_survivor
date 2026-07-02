@@ -155,6 +155,7 @@ func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Di
 		var expired_status: Dictionary = _get_dictionary(expired_snapshots.get(id, {}))
 		_execute_status_effects(expired_status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, expired_status)
+		_emit_profiler_status_event(&"status_expired", id, expired_status)
 
 
 func has_status(status_id: Variant) -> bool:
@@ -214,6 +215,7 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 		_statuses.erase(id)
 		_execute_status_effects(status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, status)
+		_emit_profiler_status_event(&"status_expired", id, status)
 	else:
 		_statuses[id] = status
 
@@ -258,12 +260,18 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 	var tick_timer: float = float(status.get("tick_timer", tick_interval)) - delta
 	var tick_damage: float = float(status.get("tick_damage", 0.0))
 	var stacks: int = int(status.get("stacks", 1))
+	var status_id: StringName = StringName(String(status.get("id", "")))
 
 	while tick_timer <= 0.0 and _has_status_tick_work(status) and float(status.get("duration_remaining", 0.0)) > 0.0:
+		_emit_profiler_status_event(&"status_tick_due", status_id, status, {"tick_interval": tick_interval})
 		if tick_damage > 0:
 			_apply_tick_damage(_get_tier_scaled_dot_damage(status, tick_damage * stacks), status)
 		_execute_status_effects(status, "on_tick_effects")
-		_emit_status_skill_event(&"status_tick", StringName(String(status.get("id", ""))), status)
+		_emit_status_skill_event(&"status_tick", status_id, status)
+		_emit_profiler_status_event(&"status_tick_applied", status_id, status, {
+			"tick_damage": tick_damage,
+			"tick_interval": tick_interval
+		})
 		if _should_consume_stack_on_tick(status):
 			stacks = maxi(stacks - 1, 0)
 			status["stacks"] = stacks
@@ -305,6 +313,7 @@ func _get_status_tick_damage_total(status: Dictionary) -> float:
 
 func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:
 	_emit_status_skill_event(&"status_max_stack_reached", status_id, status)
+	_emit_profiler_status_event(&"status_reaction_triggered", status_id, status, {"trigger": &"status_max_stack_reached"})
 	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
 	var max_stack_status: StringName = StringName(String(definition.get("max_stack_status", "")))
 	if max_stack_status != &"" and max_stack_status != status_id:
@@ -423,6 +432,10 @@ func _refresh_status_visual() -> void:
 	overlay.z_index = int(visual.get("overlay_z_index", 20))
 	_status_visual_key = visual_key
 	VisualConfigApplierScript.play_state(overlay, visual, state, "idle")
+	_emit_profiler_status_event(&"status_visual_update", StringName(String(visual.get("status_id", ""))), {}, {
+		"visual_key": visual_key,
+		"state": state
+	})
 
 
 func _get_active_status_visual() -> Dictionary:
@@ -466,6 +479,7 @@ func _get_or_create_status_visual_overlay() -> Node2D:
 	_status_visual_overlay.name = STATUS_VISUAL_NODE_NAME
 	_status_visual_overlay.visible = false
 	owning_node.add_child(_status_visual_overlay)
+	_emit_profiler_status_event(&"status_visual_spawn", &"", {}, {"owner": owning_node})
 	return _status_visual_overlay
 
 
@@ -609,6 +623,33 @@ func _notify_status_applied(status_id: StringName, status: Dictionary) -> void:
 		"status_id": status_id,
 		"status": status.duplicate(true)
 	})
+
+
+func _emit_profiler_status_event(event_name: StringName, status_id: StringName, status: Dictionary, extra: Dictionary = {}) -> void:
+	var profiler_callback: Callable = _real_full_run_profiler_status_callback()
+	if not profiler_callback.is_valid():
+		return
+	var payload: Dictionary = {
+		"status_id": status_id,
+		"target": get_parent(),
+		"stacks": int(status.get("stacks", 0)),
+		"duration_remaining": float(status.get("duration_remaining", 0.0))
+	}
+	for key_variant: Variant in extra.keys():
+		payload[key_variant] = extra[key_variant]
+	profiler_callback.call(event_name, payload)
+
+
+func _real_full_run_profiler_status_callback() -> Callable:
+	var tree: SceneTree = get_tree()
+	if tree == null or tree.root == null:
+		return Callable()
+	if not tree.root.has_meta(&"real_full_run_profiler_enabled") or not bool(tree.root.get_meta(&"real_full_run_profiler_enabled")):
+		return Callable()
+	if not tree.root.has_meta(&"real_full_run_profiler_status_event"):
+		return Callable()
+	var callback: Variant = tree.root.get_meta(&"real_full_run_profiler_status_event")
+	return callback if callback is Callable else Callable()
 
 
 func _apply_poison_slow_synergy() -> void:

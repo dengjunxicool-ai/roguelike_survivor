@@ -502,3 +502,100 @@ Interpretation:
 - PR-4 successfully removes pickup creation/destruction churn and makes the ObjectDB retention tradeoff explicit.
 - The frame-time regression in this run is too large to ignore, but it does not correlate with pickup creation/destruction because pickup churn is near zero in spike-frame context. Re-run profiling before PR-5 or after PR-5 to separate environmental variance from AoE/status/physics pressure.
 - The next optimization candidates are still AoE root retention correctness, status label/visual churn, enemy internal nodes, and dash afterimages.
+
+## PR-5 Acceptance: Status Tick Observability And Regression Reporting
+
+Change summary:
+- `StatusEffectManager` now emits profiler-only status events when the real full-run profiler is enabled.
+- The profiler-only path is gated by root metadata and calls a profiler callback directly. It does not go through gameplay skill events, `RunStatsTracker.event_recorded`, debug panel UI, or normal run-summary counters.
+- `RealFullRunProfiler` now records `status_tick_due`, `status_tick_applied`, `status_expired`, `status_visual_spawn`, `status_visual_update`, and `status_reaction_triggered` in frame buckets, spike context, run counts, and `status_tick_observation`.
+- The old `observability_gap` wording was removed. Normal status ticks are now directly observable in attribution output.
+- No status duration, stack, tick interval, damage, reaction, visual resource, enemy, skill, pickup, or UI behavior was intentionally changed.
+
+Acceptance run:
+- Character: mage
+- Map: abandoned_dungeon
+- Real startup: true
+- Headless: false
+- Time scale: 1.0
+- Stop condition: BOSS lost 1000 HP
+- Result: `BOSS_DAMAGE_REACHED`
+- Elapsed: 710.23s
+- Boss damage done: 1000
+- Boss HP modified by profiler: false
+- Log caveat: focused scan found 0 `StatusEffectManager`, `real_full_run_profiler`, status profiler event, or freed-instance errors. The run still contains 3,024 existing `SummonTargetingComponent.update()` script errors.
+
+Status observability:
+
+| Counter | Count |
+| --- | ---: |
+| `status_tick_due` | 10,155 |
+| `status_tick_applied` | 10,155 |
+| `status_expired` | 945 |
+| `status_visual_spawn` | 227 |
+| `status_visual_update` | 1,013 |
+| `status_reaction_triggered` | 7,698 |
+
+Spike status activity:
+
+| Threshold | tick due | tick applied | expired | visual spawn | visual update | reaction triggered |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| >50ms | 8,315 | 8,315 | 686 | 213 | 953 | 7,574 |
+| >100ms | 7,611 | 7,611 | 574 | 167 | 801 | 6,860 |
+
+PR-5 target status:
+
+| Target | Result |
+| --- | --- |
+| `status_tick_observation` no longer reports normal tick observability gap | PASS: `normal_status_tick_events_observable=true`, no `observability_gap` key |
+| Spike frames include status tick/reaction counts | PASS: explicit due/applied/reaction counters are present in `category_activity.status` |
+| No gameplay/status math changes | PASS by touched-file review and burn status runtime smoke; added path only runs when profiler metadata is enabled |
+| No high-frequency Debug panel UI refresh | PASS by contract: no debug panel update code was added |
+| Final rollout report | PASS: table below summarizes baseline through PR-5 |
+
+Before/after versus PR-4:
+
+| Metric | After PR-4 | After PR-5 | Delta |
+| --- | ---: | ---: | ---: |
+| Total nodes created | 5,254 | 26,242 | worse |
+| Total nodes destroyed | 4,559 | 25,338 | worse |
+| Status-category nodes created | 789 | 818 | +3.7% |
+| StatusVisualOverlay created | 246 | 227 | -7.7% |
+| Frames > 50ms | 3,714 | 2,518 | improved but still high |
+| Frames > 100ms | 2,371 | 1,696 | improved but still high |
+| p95 frame time | 255.67ms | 180.58ms | improved but still high |
+| p99 frame time | 464.42ms | 532.53ms | worse |
+| Max frame time | 959.84ms | 998.83ms | worse |
+| Average FPS | 18.49 | 26.34 | improved but still low |
+| ObjectDB delta | +1,163 | +1,640 | worse |
+
+Interpretation:
+- PR-5 achieved the observability goal: status tick/reaction pressure is now measured directly instead of inferred from `damage_done status_dot`.
+- The run is not a clean performance win. `SummonParticles` created 6,546 `GPUParticles2D` nodes, and the existing summon targeting script error remains noisy. That makes PR-5's long-run totals unsuitable as a pure comparison of the profiler-only callback overhead.
+- Status pressure is now clearly visible near spikes: most >100ms spike frames are accompanied by thousands of status ticks/reactions in aggregate context. This supports making status visual/label churn and summon VFX correctness the next focused investigations.
+
+## PR-1 Through PR-5 Rollout Summary
+
+| Metric | Baseline | PR-1 | PR-2 | PR-3 | PR-4 | PR-5 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Node created total | 28,105 | 15,375 | 13,653 | 6,773 | 5,254 | 26,242 |
+| Node destroyed total | 27,601 | 14,983 | 13,096 | 6,273 | 4,559 | 25,338 |
+| UI created | 9,029 | 2,352 | 451 | 370 | 426 | 518 |
+| DamageNumber created | 1,211 | 633 | 0 | 2 | 2 | 2 |
+| StatusVisualOverlay created | 1,537 | not isolated | 159 | not isolated | 246 | 227 |
+| AoE created | high: area children 1,461 each | not isolated | 1,389 | 750 | 573 | 780 |
+| Projectile created | 4,896 | not isolated | 3,697 | 54 | 38 | 62 |
+| Pickup net live | +81 | not isolated | not isolated | not isolated | +84 | +93 |
+| ObjectDB delta | +1,200 | +671 | +1,217 | +1,190 | +1,163 | +1,640 |
+| Frames > 50ms | 1,873 | 836 | 1,141 | 93 | 3,714 | 2,518 |
+| Frames > 100ms | 430 | 240 | 275 | 13 | 2,371 | 1,696 |
+| p95 frame time | 27.14ms | 19.63ms | 26.01ms | 17.44ms | 255.67ms | 180.58ms |
+| p99 frame time | 74.60ms | 50.03ms | 64.08ms | 22.79ms | 464.42ms | 532.53ms |
+| Max frame time | 414.83ms | 657.21ms | 428.62ms | 139.87ms | 959.84ms | 998.83ms |
+
+Final next-step priority:
+1. Fix the existing `SummonTargetingComponent.update()` error and profile summon VFX churn; `SummonParticles` dominated PR-5 node churn.
+2. Investigate why AoE roots/children still exit the tree despite scene-root pooling.
+3. Pool or reuse `StatusLabel` and remaining `StatusVisualOverlay` churn after status observability is now accurate.
+4. Keep pickup and projectile pools, but add retained-pool reporting so ObjectDB retained objects are separated from leaks.
+5. Re-run the BOSS -1000 HP profile after summon correctness is fixed, because PR-4/PR-5 frame spikes are currently polluted by unrelated summon errors and particle churn.
