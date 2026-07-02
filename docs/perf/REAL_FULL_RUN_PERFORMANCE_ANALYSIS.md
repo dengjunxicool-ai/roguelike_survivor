@@ -599,3 +599,25 @@ Final next-step priority:
 3. Pool or reuse `StatusLabel` and remaining `StatusVisualOverlay` churn after status observability is now accurate.
 4. Keep pickup and projectile pools, but add retained-pool reporting so ObjectDB retained objects are separated from leaks.
 5. Re-run the BOSS -1000 HP profile after summon correctness is fixed, because PR-4/PR-5 frame spikes are currently polluted by unrelated summon errors and particle churn.
+
+## 本局学习沉淀的技能
+
+这轮优化从“先不要全项目池化”开始，最终形成了一套可复用的性能治理流程。后续继续做性能工作时，应优先复用这些技能。
+
+| 技能 | 本局实践 | 后续复用方式 |
+| --- | --- | --- |
+| 真实运行驱动 profiling | 用真实启动流程、法师、真实地图、BOSS 掉 1000 HP 停止条件采集，而不是只跑短脚本或人工猜测热点 | 所有性能结论先绑定同一 stop condition，再比较 created/destroyed、spike、ObjectDB |
+| Attribution-first 优化 | 先增强 `latest_attribution.json`，回答 scene/class 来源、spike 周边活动、DamageNumber selector、ObjectDB node-backed/unattributed | 做任何池化前先证明对象类型和创建路径，不按直觉“全项目池化” |
+| PR-sized 性能切片 | PR-1 到 PR-5 分别处理 UI、DamageNumber/status visual、AoE/projectile、pickup、status observability | 每次只改一个压力来源，完成验收报告和 commit 后再进入下一刀 |
+| Contract-first 防回归 | 每个 PR 添加 `tools/verify/verify_pr*_*.js` 契约，先红灯再实现 | 对生命周期、pool 接入、debug gating、profiler output 这类行为继续用静态契约兜底 |
+| Godot scene-root pooling | 通过 `RuntimePoolRegistry` / `RuntimeObjectPool` 保留节点在树内隐藏复用，减少 profiler 看到的 enter/exit churn | 适用于 projectile、pickup、部分 AoE；接入前必须确认 reset/despawn 能恢复碰撞、可见性、group、metadata |
+| Pool retained object 解释 | 把 ObjectDB delta 拆成 node-backed net 和 unattributed，明确 retained pool 不是等同泄漏 | 后续报告必须同时写“减少 churn”和“保留对象成本”，避免误判池化收益 |
+| Debug/UI 污染隔离 | Debug panel 关闭时不新增高频 UI 刷新；PR-5 状态事件走 profiler-only root callback | 所有 profiler-only 观测都应与玩法事件、Debug UI、RunStats 正常统计解耦 |
+| Spike 上下文归因 | 将 `frame_ms > 50/100` 的当前帧和前 5 帧 activity 写入 attribution | 继续用 spike context 判断 AoE/status/pickup/VFX 哪个压力源真正伴随卡顿 |
+| 诚实验收 | PR-3 标记 AoE partial，PR-4/PR-5 标记 frame spike regression，不把局部目标成功包装成整体性能胜利 | 每份验收报告必须同时写 PASS、PARTIAL/FAIL、污染因素和下一步最小调查 |
+| 噪声识别与隔离 | 识别出 `SummonTargetingComponent.update()` 既有错误和 `SummonParticles` churn 污染 PR-5 长跑数据 | 下一轮先修 summon correctness/VFX，再重跑同一 profile，避免在污染样本上继续优化 |
+
+当前最重要的技术判断：
+- 已完成的池化保留收益：UI / DamageNumber / projectile / pickup 的 created/destroyed churn 明显下降。
+- 尚未收敛的主要压力：AoE root/child exit、status label/visual churn、summon targeting error、`SummonParticles` transient VFX。
+- 下一轮不应扩大为“全项目池化”；应先修 summon 错误并单独 profile summon VFX，再决定是否进入 status label/visual 或 AoE retention 修正。
