@@ -60,6 +60,9 @@ var _recent_frame_buckets: Array[Dictionary] = []
 var _frame_event_buckets: Array[Dictionary] = []
 var _spike_frames_over_50ms: Array[Dictionary] = []
 var _spike_frames_over_100ms: Array[Dictionary] = []
+var _ui_modal_spike_frames: Array[Dictionary] = []
+var _runtime_spike_frames_over_50ms: Array[Dictionary] = []
+var _runtime_spike_frames_over_100ms: Array[Dictionary] = []
 var _created_by_key: Dictionary = {}
 var _destroyed_by_key: Dictionary = {}
 var _created_by_category: Dictionary = {}
@@ -850,6 +853,8 @@ func _new_frame_bucket() -> Dictionary:
 	return {
 		"frame_index": _frame_index,
 		"elapsed_seconds": _elapsed,
+		"profile_phase": _profile_phase_for_frame(),
+		"ui_state": _ui_state_for_frame(),
 		"created_total": 0,
 		"destroyed_total": 0,
 		"created_by_category": {},
@@ -878,6 +883,8 @@ func _finalize_frame_bucket(frame_ms: float) -> void:
 	if _current_frame_bucket.is_empty():
 		_current_frame_bucket = _new_frame_bucket()
 	_current_frame_bucket["frame_ms"] = frame_ms
+	_current_frame_bucket["profile_phase"] = _profile_phase_for_frame()
+	_current_frame_bucket["ui_state"] = _ui_state_for_frame()
 	_current_frame_bucket["category_activity"] = _spike_category_activity(_current_frame_bucket)
 	var has_activity: bool = int(_current_frame_bucket.get("created_total", 0)) > 0 \
 		or int(_current_frame_bucket.get("destroyed_total", 0)) > 0 \
@@ -889,7 +896,13 @@ func _finalize_frame_bucket(frame_ms: float) -> void:
 	if frame_ms >= 50.0:
 		var spike: Dictionary = _current_frame_bucket.duplicate(true)
 		spike["context_previous_frames"] = _recent_frame_buckets.duplicate(true)
+		if String(spike.get("profile_phase", "")) == "ui_modal":
+			_ui_modal_spike_frames.append(spike.duplicate(true))
+		else:
+			_runtime_spike_frames_over_50ms.append(spike.duplicate(true))
 		if frame_ms >= 100.0:
+			if String(spike.get("profile_phase", "")) != "ui_modal":
+				_runtime_spike_frames_over_100ms.append(spike.duplicate(true))
 			_spike_frames_over_100ms.append(spike.duplicate(true))
 		_spike_frames_over_50ms.append(spike)
 	_recent_frame_buckets.append(_current_frame_bucket.duplicate(true))
@@ -897,6 +910,19 @@ func _finalize_frame_bucket(frame_ms: float) -> void:
 		_recent_frame_buckets.pop_front()
 	_frame_index += 1
 	_current_frame_bucket = _new_frame_bucket()
+
+
+func _profile_phase_for_frame() -> String:
+	var ui_state: String = _ui_state_for_frame()
+	if ["LEVEL_UP_MODAL", "RUN_REWARD_MODAL", "CURSE_CHOICE_MODAL"].has(ui_state):
+		return "ui_modal"
+	return "runtime"
+
+
+func _ui_state_for_frame() -> String:
+	if _ui == null:
+		return ""
+	return String(_ui.get("current_state"))
 
 
 func _spike_category_activity(bucket: Dictionary) -> Dictionary:
@@ -1297,6 +1323,9 @@ func _write_attribution_output(status: String) -> void:
 		"frame_event_buckets": _frame_event_buckets,
 		"spike_frames_over_50ms": _spike_frames_over_50ms,
 		"spike_frames_over_100ms": _spike_frames_over_100ms,
+		"ui_modal_spike_frames": _ui_modal_spike_frames,
+		"runtime_spike_frames_over_50ms": _runtime_spike_frames_over_50ms,
+		"runtime_spike_frames_over_100ms": _runtime_spike_frames_over_100ms,
 		"status_tick_observation": _status_tick_observation,
 		"run_event_counts": _run_event_counts,
 		"damage_number_diagnosis": _damage_number_diagnosis(),

@@ -99,10 +99,19 @@ assert(
 assert(
   profiler.includes("spike_frames_over_50ms") &&
     profiler.includes("spike_frames_over_100ms") &&
+    profiler.includes("ui_modal_spike_frames") &&
+    profiler.includes("runtime_spike_frames_over_50ms") &&
     profiler.includes("frame_event_buckets") &&
     profiler.includes("status_tick") &&
     profiler.includes("reaction"),
   "Real profiler must keep spike-frame attribution buckets for create/destroy/tick/reaction pressure."
+);
+assert(
+  profiler.includes("_profile_phase_for_frame") &&
+    profiler.includes("LEVEL_UP_MODAL") &&
+    profiler.includes("RUN_REWARD_MODAL") &&
+    profiler.includes("ui_modal"),
+  "Real profiler must classify UI modal spike frames separately from runtime combat frames."
 );
 assert(
   profiler.includes("damage_number_diagnosis") &&
