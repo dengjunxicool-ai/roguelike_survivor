@@ -58,6 +58,13 @@ func setup(
 	_rng.randomize()
 
 
+func prewarm_choice_card_pools() -> void:
+	_ensure_choice_card_pool(_level_up_options, LEVEL_UP_OPTION_COUNT)
+	_hide_choice_card_pool(_level_up_options)
+	_ensure_choice_card_pool(_reward_options, LEVEL_UP_OPTION_COUNT)
+	_hide_choice_card_pool(_reward_options)
+
+
 func reset_run() -> void:
 	pending_level_up_count = 0
 	pending_reward_kinds.clear()

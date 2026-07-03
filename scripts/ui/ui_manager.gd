@@ -374,6 +374,7 @@ func _setup_run_choice_modals() -> void:
 		_curse_options,
 		_reward_options
 	)
+	_run_choice_modal_controller.call("prewarm_choice_card_pools")
 
 
 func _build_pause_menu() -> void:
