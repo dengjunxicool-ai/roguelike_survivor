@@ -265,6 +265,15 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 	var tick_damage: float = float(status.get("tick_damage", 0.0))
 	var stacks: int = int(status.get("stacks", 1))
 	var status_id: StringName = StringName(String(status.get("id", "")))
+	var coalesced_tick_count: int = _coalesced_dot_tick_count(status, tick_timer, tick_interval, stacks)
+	if coalesced_tick_count > 1:
+		_apply_coalesced_damage_over_time(status, status_id, tick_damage, tick_interval, coalesced_tick_count)
+		if _should_consume_stack_on_tick(status):
+			stacks = maxi(stacks - coalesced_tick_count, 0)
+			status["stacks"] = stacks
+		tick_timer += tick_interval * coalesced_tick_count
+		status["tick_timer"] = tick_timer
+		return
 
 	while tick_timer <= 0.0 and _has_status_tick_work(status) and float(status.get("duration_remaining", 0.0)) > 0.0:
 		_emit_profiler_status_event(&"status_tick_due", status_id, status, {"tick_interval": tick_interval})
@@ -284,6 +293,65 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 		tick_timer += tick_interval
 
 	status["tick_timer"] = tick_timer
+
+
+func _coalesced_dot_tick_count(status: Dictionary, tick_timer: float, tick_interval: float, stacks: int) -> int:
+	if tick_timer > 0.0 or not _can_coalesce_dot_ticks(status) or not _has_status_tick_work(status):
+		return 1
+	if float(status.get("duration_remaining", 0.0)) <= 0.0:
+		return 1
+
+	var due_ticks: int = int(floor(-tick_timer / tick_interval)) + 1
+	if _should_consume_stack_on_tick(status):
+		due_ticks = mini(due_ticks, maxi(stacks, 0))
+	return maxi(due_ticks, 1)
+
+
+func _can_coalesce_dot_ticks(status: Dictionary) -> bool:
+	if StringName(String(status.get("id", ""))) != &"burning":
+		return false
+	if float(status.get("tick_damage", 0.0)) > 0.0:
+		return false
+
+	var effects: Array = _get_array(status.get("on_tick_effects", []))
+	if effects.is_empty():
+		return false
+	for effect_variant: Variant in effects:
+		if not (effect_variant is Dictionary):
+			return false
+		var effect: Dictionary = effect_variant
+		if String(effect.get("type", "")) != "damage":
+			return false
+		if not effect.has("power_scale") or effect.has("power_scale_per_stack") or effect.has("amount") or effect.has("amount_per_stack"):
+			return false
+	return true
+
+
+func _apply_coalesced_damage_over_time(status: Dictionary, status_id: StringName, tick_damage: float, tick_interval: float, tick_count: int) -> void:
+	var coalesced_status: Dictionary = status.duplicate(true)
+	coalesced_status["coalesced_tick_count"] = tick_count
+	coalesced_status["effective_tick_count"] = tick_count
+	coalesced_status["on_tick_effects"] = _coalesced_status_tick_effects(_get_array(status.get("on_tick_effects", [])), tick_count)
+	_emit_profiler_status_event(&"status_tick_due", status_id, coalesced_status, {
+		"coalesced_tick_count": tick_count,
+		"tick_interval": tick_interval
+	})
+	_execute_status_effects(coalesced_status, "on_tick_effects")
+	_emit_status_skill_event(&"status_tick", status_id, coalesced_status)
+	_emit_profiler_status_event(&"status_tick_applied", status_id, coalesced_status, {
+		"coalesced_tick_count": tick_count,
+		"tick_damage": tick_damage,
+		"tick_interval": tick_interval
+	})
+
+
+func _coalesced_status_tick_effects(effects: Array, tick_count: int) -> Array:
+	var coalesced_effects: Array = []
+	for effect_variant: Variant in effects:
+		var effect: Dictionary = (effect_variant as Dictionary).duplicate(true)
+		effect["power_scale"] = float(effect.get("power_scale", 0.0)) * float(tick_count)
+		coalesced_effects.append(effect)
+	return coalesced_effects
 
 
 func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
