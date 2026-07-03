@@ -19,6 +19,7 @@ const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
 var _statuses: Dictionary = {}
 var _status_visual_overlay: Node2D
 var _status_visual_key: String = ""
+var _status_visual_priority: float = -INF
 
 
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -52,7 +53,8 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	var next_tick_interval: float = float(status["tick_interval"])
 	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
 	_statuses[id] = status
-	_refresh_status_visual()
+	if _status_visual_refresh_needed_after_apply(id, definition):
+		_refresh_status_visual()
 
 	_notify_status_applied(id, status)
 	if new_stacks >= max_stacks and current_stacks < max_stacks:
@@ -431,11 +433,28 @@ func _refresh_status_visual() -> void:
 	overlay.visible = true
 	overlay.z_index = int(visual.get("overlay_z_index", 20))
 	_status_visual_key = visual_key
+	_status_visual_priority = float(visual.get("priority", 0.0))
 	VisualConfigApplierScript.play_state(overlay, visual, state, "idle")
 	_emit_profiler_status_event(&"status_visual_update", StringName(String(visual.get("status_id", ""))), {}, {
 		"visual_key": visual_key,
 		"state": state
 	})
+
+
+func _status_visual_refresh_needed_after_apply(status_id: StringName, definition: Dictionary) -> bool:
+	var visual: Dictionary = _get_dictionary(definition.get("visual", {}))
+	if not _has_visual_resource(visual):
+		return false
+
+	visual = visual.duplicate(true)
+	visual["status_id"] = status_id
+	var state: String = String(visual.get("state", visual.get("animation", visual.get("status_id", "idle"))))
+	var visual_key: String = _status_visual_identity(visual, state)
+	if _status_visual_overlay == null or not is_instance_valid(_status_visual_overlay) or not _status_visual_overlay.visible:
+		return true
+	if visual_key == _status_visual_key:
+		return false
+	return float(visual.get("priority", 0.0)) >= _status_visual_priority
 
 
 func _get_active_status_visual() -> Dictionary:
@@ -488,6 +507,7 @@ func _hide_status_visual() -> void:
 		return
 	_status_visual_overlay.visible = false
 	_status_visual_key = ""
+	_status_visual_priority = -INF
 
 
 func _status_visual_identity(visual: Dictionary, state: String) -> String:

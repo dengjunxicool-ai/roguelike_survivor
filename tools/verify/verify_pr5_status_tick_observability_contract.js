@@ -56,6 +56,21 @@ assert(
   "StatusEffectManager must count status visual spawn and update events."
 );
 assert(
+  statusManager.includes("_status_visual_refresh_needed_after_apply") &&
+    statusManager.includes("_status_visual_priority"),
+  "StatusEffectManager must skip status visual refresh work when repeated status application cannot change the visible overlay."
+);
+assert(
+  extractFunction(statusManager, "apply_status").includes("_status_visual_refresh_needed_after_apply(id, definition)") &&
+    !extractFunction(statusManager, "apply_status").includes("\n\t_refresh_status_visual()\n\n\t_notify_status_applied"),
+  "apply_status must not unconditionally refresh status visuals after every repeated status application."
+);
+assert(
+  extractFunction(statusManager, "_get_or_create_status_visual_overlay").includes("get_node_or_null(STATUS_VISUAL_NODE_NAME)") &&
+    extractFunction(statusManager, "_get_or_create_status_visual_overlay").includes("existing_overlay"),
+  "StatusVisualOverlay must be reused when an owner already has one."
+);
+assert(
   extractFunction(statusManager, "_handle_max_stack_reached").includes("status_reaction_triggered"),
   "StatusEffectManager must count status reaction triggers from max-stack status/event paths."
 );
