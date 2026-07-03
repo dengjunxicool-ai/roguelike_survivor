@@ -20,6 +20,7 @@ var _statuses: Dictionary = {}
 var _status_visual_overlay: Node2D
 var _status_visual_key: String = ""
 var _status_visual_priority: float = -INF
+var _status_visual_refresh_queued: bool = false
 
 
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -54,7 +55,7 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
 	_statuses[id] = status
 	if _status_visual_refresh_needed_after_apply(id, definition):
-		_refresh_status_visual()
+		_queue_status_visual_refresh()
 
 	_notify_status_applied(id, status)
 	if new_stacks >= max_stacks and current_stacks < max_stacks:
@@ -137,7 +138,7 @@ func update_status_effects(delta: float) -> void:
 
 	_expire_statuses(expired_statuses, expired_snapshots)
 	if not expired_statuses.is_empty():
-		_refresh_status_visual()
+		_queue_status_visual_refresh()
 	_apply_poison_slow_synergy()
 
 
@@ -202,7 +203,7 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 		status["stacks"] = stacks
 		_statuses[id] = status
 
-	_refresh_status_visual()
+	_queue_status_visual_refresh()
 	return true
 
 
@@ -221,7 +222,7 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 	else:
 		_statuses[id] = status
 
-	_refresh_status_visual()
+	_queue_status_visual_refresh()
 	_apply_poison_slow_synergy()
 	return true
 
@@ -232,6 +233,7 @@ func get_status_snapshot() -> Array[Dictionary]:
 
 func clear_statuses() -> void:
 	_statuses.clear()
+	_status_visual_refresh_queued = false
 	_refresh_status_visual()
 
 
@@ -439,6 +441,20 @@ func _refresh_status_visual() -> void:
 		"visual_key": visual_key,
 		"state": state
 	})
+
+
+func _queue_status_visual_refresh() -> void:
+	if _status_visual_refresh_queued:
+		return
+	_status_visual_refresh_queued = true
+	call_deferred("_flush_status_visual_refresh")
+
+
+func _flush_status_visual_refresh() -> void:
+	if not _status_visual_refresh_queued:
+		return
+	_status_visual_refresh_queued = false
+	_refresh_status_visual()
 
 
 func _status_visual_refresh_needed_after_apply(status_id: StringName, definition: Dictionary) -> bool:
