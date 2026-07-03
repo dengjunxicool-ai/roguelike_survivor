@@ -25,6 +25,8 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 			return {"type": "apply_status", "params": _normalize_status_params(params)}
 		"spawn_area":
 			return {"type": "spawn_area", "params": _normalize_area_params(params)}
+		"instant_area_hit":
+			return {"type": "instant_area_hit", "params": _normalize_area_params(params)}
 		"spawn_projectile":
 			return {"type": "spawn_projectile", "params": _normalize_projectile_params(params)}
 		"spawn_projectiles_at_targets":

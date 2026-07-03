@@ -4483,10 +4483,10 @@
 							]
 						},
 						{
-							"type": "spawn_area",
+							"type": "instant_area_hit",
 							"area_id": "chaos_weak_hit",
 							"radius_r": 0.65,
-							"duration": 0.12,
+							"visual_duration": 0.12,
 							"effects_on_apply": [
 								{
 									"type": "damage",

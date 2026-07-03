@@ -16,6 +16,8 @@ const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_
 const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/skill_special_rule_executor.gd")
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
 const ConditionEvaluatorScript: Script = preload("res://scripts/skills/condition_evaluator.gd")
+const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
+const InstantAreaHitVisualScript: Script = preload("res://scripts/combat/instant_area_hit_visual.gd")
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
@@ -58,6 +60,8 @@ func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 			return _spawn_projectiles_at_targets(params, context)
 		"spawn_area":
 			return _spawn_area(params, context, "area")
+		"instant_area_hit":
+			return _instant_area_hit(params, context)
 		"create_explosion":
 			return _spawn_area(params, context, "explosion")
 		"spawn_trap":
@@ -530,6 +534,87 @@ func _get_hail_same_target_decay_rule(context: Dictionary) -> Dictionary:
 	if rule_variant is Dictionary:
 		return (rule_variant as Dictionary).duplicate(true)
 	return {}
+
+
+func _instant_area_hit(params: Dictionary, context: Dictionary) -> bool:
+	context = _context_with_resolved_target(params, context)
+	var target: Node = context.get("target") as Node
+	if target == null:
+		return false
+
+	var parent: Node = _get_parent_node(context)
+	var position: Vector2 = _resolve_position(params, context)
+	var area_source_id: StringName = StringName(str(params.get("area_id", params.get("object_id", ""))))
+	var radius: float = maxf(float(params.get("radius", params.get("area_radius", 48.0))), 1.0)
+	var actions_on_apply: Array = _get_array(params.get("actions_on_apply", []))
+	if actions_on_apply.is_empty():
+		return false
+
+	var targets: Array[Node] = [target]
+	if bool(params.get("hit_all_targets", false)):
+		targets = []
+		var target_group: StringName = StringName(str(params.get("target_group", context.get("target_group", &"enemies"))))
+		for candidate: Node2D in _find_targets_around(position, radius, target_group, null):
+			targets.append(candidate)
+	for hit_target: Node in targets:
+		var target_context: Dictionary = context.duplicate(true)
+		target_context["target"] = hit_target
+		target_context["enemy"] = hit_target
+		target_context["position"] = position
+		target_context["source_id"] = area_source_id
+		target_context["source_skill_id"] = StringName(str(context.get("skill_id", "")))
+		execute_actions(actions_on_apply, target_context)
+	_play_instant_area_hit_visual(parent, position, radius, params, area_source_id, context)
+	return true
+
+
+func _play_instant_area_hit_visual(parent: Node, position: Vector2, radius: float, params: Dictionary, area_source_id: StringName, context: Dictionary) -> void:
+	if parent == null:
+		return
+	var pool: Node = RuntimePoolRegistryScript.get_or_create(parent)
+	if pool == null or not pool.has_method("spawn"):
+		return
+	var key: StringName = StringName("instant_area_hit_visual:%s" % String(area_source_id))
+	var visual: Node2D = pool.call("spawn", key, Callable(self, "_create_instant_area_hit_visual"), parent) as Node2D
+	if visual == null:
+		return
+	visual.global_position = position
+	visual.set_meta("source_id", area_source_id)
+	visual.set_meta("source_skill_id", StringName(str(context.get("skill_id", ""))))
+	var visual_params: Dictionary = _instant_area_hit_visual_params(params, area_source_id, radius)
+	if visual.has_method("setup"):
+		visual.call("setup", visual_params)
+
+
+func _create_instant_area_hit_visual() -> Node:
+	return InstantAreaHitVisualScript.new()
+
+
+func _instant_area_hit_visual_params(params: Dictionary, area_source_id: StringName, radius: float) -> Dictionary:
+	var visual_params: Dictionary = {
+		"radius": radius,
+		"duration": float(params.get("visual_duration", params.get("duration", 0.12)))
+	}
+	var definition: Dictionary = _get_combat_object_definition(area_source_id)
+	for key: String in ["visual_color", "visual_ring_color"]:
+		if params.has(key):
+			visual_params[key] = params[key]
+		elif definition.has(key):
+			visual_params[key] = definition[key]
+	return visual_params
+
+
+func _get_combat_object_definition(object_id: StringName) -> Dictionary:
+	if object_id == &"":
+		return {}
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return {}
+	var data_manager: Node = tree.root.get_node_or_null("DataManager")
+	if data_manager == null or not data_manager.has_method("get_combat_object_definition"):
+		return {}
+	var value: Variant = data_manager.call("get_combat_object_definition", object_id)
+	return value.duplicate(true) if value is Dictionary else {}
 
 
 func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = "area") -> bool:
