@@ -45,6 +45,8 @@ var _status: String = "UNKNOWN"
 var _failure_reason: String = ""
 var _startup_actions: Array[String] = []
 var _choices: Array[Dictionary] = []
+var _forced_profile_skill_ids: Array[StringName] = []
+var _forced_profile_skill_results: Dictionary = {}
 var _title_reveal_sent: bool = false
 var _survival_guard_enabled: bool = false
 var _player_health_modified: bool = false
@@ -87,6 +89,7 @@ func _ready() -> void:
 		set_process(false)
 		return
 	_survival_guard_enabled = OS.get_cmdline_args().has("--survival-guard") or OS.get_cmdline_user_args().has("--survival-guard")
+	_forced_profile_skill_ids = _parse_forced_profile_skill_ids()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Engine.time_scale = 1.0
 	if get_tree() != null and get_tree().root != null:
@@ -132,6 +135,7 @@ func _drive_state(state: String, delta_seconds: float) -> void:
 		"RUNNING":
 			_player = get_tree().get_first_node_in_group(&"player") as Node2D
 			_elapsed = maxf(_elapsed + delta_seconds, _runtime_elapsed_seconds())
+			_apply_forced_profile_skills()
 			_connect_run_stats_tracker()
 			_apply_survival_guard()
 			_drive_player(delta_seconds)
@@ -242,6 +246,57 @@ func _score_choice_button(button: Button) -> float:
 	if text.contains("curse") or text.contains("诅咒"):
 		score -= 20.0
 	return score
+
+
+func _parse_forced_profile_skill_ids() -> Array[StringName]:
+	var result: Array[StringName] = []
+	var args: Array = []
+	args.append_array(OS.get_cmdline_args())
+	args.append_array(OS.get_cmdline_user_args())
+	for arg_variant: Variant in args:
+		var arg: String = String(arg_variant)
+		if not arg.begins_with("--profile-force-skill="):
+			continue
+		var skill_text: String = arg.trim_prefix("--profile-force-skill=").strip_edges()
+		for item: String in skill_text.split(",", false):
+			var skill_id: StringName = StringName(item.strip_edges())
+			if skill_id != &"" and not result.has(skill_id):
+				result.append(skill_id)
+	return result
+
+
+func _apply_forced_profile_skills() -> void:
+	if _forced_profile_skill_ids.is_empty() or _player == null:
+		return
+	var manager: Node = _player.get_node_or_null("SkillManager")
+	if manager == null:
+		return
+	for skill_id: StringName in _forced_profile_skill_ids:
+		var key: String = String(skill_id)
+		if _forced_profile_skill_results.has(key):
+			continue
+		var already_owned: bool = manager.has_method("has_skill") and bool(manager.call("has_skill", skill_id))
+		var added: bool = false
+		if not already_owned and manager.has_method("add_skill"):
+			added = bool(manager.call("add_skill", skill_id))
+		var owned_after: bool = manager.has_method("has_skill") and bool(manager.call("has_skill", skill_id))
+		var primary_attack_id: String = ""
+		if manager.has_method("get_primary_attack_id"):
+			primary_attack_id = String(manager.call("get_primary_attack_id"))
+		_forced_profile_skill_results[key] = {
+			"skill_id": key,
+			"already_owned": already_owned,
+			"added": added,
+			"owned_after": owned_after,
+			"primary_attack_id": primary_attack_id,
+			"elapsed_seconds": _elapsed
+		}
+		print("[RealFullRunProfile] force_skill skill=%s added=%s owned_after=%s primary_attack=%s" % [
+			key,
+			str(added),
+			str(owned_after),
+			primary_attack_id
+		])
 
 
 func _drive_player(delta: float) -> void:
@@ -456,6 +511,8 @@ func _write_outputs(status: String) -> void:
 		"object_count_delta": _final_object_count - _initial_object_count,
 		"node_created_total": _node_created_total,
 		"node_destroyed_total": _node_destroyed_total,
+		"forced_profile_skills": _forced_profile_skill_report(),
+		"final_skills": _skills_snapshot(),
 		"startup_actions": _startup_actions,
 		"choices": _choices,
 		"samples": _samples
@@ -494,6 +551,8 @@ func _write_outputs(status: String) -> void:
 		"- object_count_delta: %d" % (_final_object_count - _initial_object_count),
 		"- node_created_total: %d" % _node_created_total,
 		"- node_destroyed_total: %d" % _node_destroyed_total,
+		"- forced_profile_skills: %s" % JSON.stringify(_forced_profile_skill_report()),
+		"- final_skills: %s" % JSON.stringify(_skills_snapshot()),
 		"- samples_json: %s" % ProjectSettings.globalize_path(SAMPLES_PATH),
 		"",
 		"## Samples",
@@ -1019,6 +1078,48 @@ func _object_delta_attribution() -> Dictionary:
 	}
 
 
+func _forced_profile_skill_report() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for skill_id: StringName in _forced_profile_skill_ids:
+		var key: String = String(skill_id)
+		var entry: Dictionary = _dict(_forced_profile_skill_results.get(key, {}))
+		if entry.is_empty():
+			entry = {
+				"skill_id": key,
+				"already_owned": false,
+				"added": false,
+				"owned_after": false,
+				"primary_attack_id": "",
+				"elapsed_seconds": _elapsed,
+				"pending": true
+			}
+		result.append(entry)
+	return result
+
+
+func _skills_snapshot() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if _player == null:
+		return result
+	var manager: Node = _player.get_node_or_null("SkillManager")
+	if manager == null or not manager.has_method("get_all_skills"):
+		return result
+	var skills_variant: Variant = manager.call("get_all_skills")
+	if not (skills_variant is Array):
+		return result
+	for item: Variant in skills_variant:
+		var skill: RefCounted = item as RefCounted
+		if skill == null:
+			continue
+		result.append({
+			"id": String(skill.get("skill_id")),
+			"level": int(skill.get("current_level")),
+			"type": String(skill.get("skill_type")),
+			"rarity": String(skill.get("current_rarity"))
+		})
+	return result
+
+
 func _write_attribution_output(status: String) -> void:
 	_finalize_frame_bucket(0.0)
 	var payload: Dictionary = {
@@ -1050,7 +1151,9 @@ func _write_attribution_output(status: String) -> void:
 		"status_tick_observation": _status_tick_observation,
 		"run_event_counts": _run_event_counts,
 		"damage_number_diagnosis": _damage_number_diagnosis(),
-		"object_delta_attribution": _object_delta_attribution()
+		"object_delta_attribution": _object_delta_attribution(),
+		"forced_profile_skills": _forced_profile_skill_report(),
+		"final_skills": _skills_snapshot()
 	}
 	var file: FileAccess = FileAccess.open(ATTRIBUTION_PATH, FileAccess.WRITE)
 	if file != null:

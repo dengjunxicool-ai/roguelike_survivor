@@ -54,6 +54,13 @@ assert(
   "Real profiler must write a dedicated latest_attribution.json output."
 );
 assert(
+  profiler.includes("--profile-force-skill=") &&
+    profiler.includes("_apply_forced_profile_skills") &&
+    profiler.includes("forced_profile_skills") &&
+    profiler.includes("final_skills"),
+  "Real profiler must support opt-in forced skill learning for reproducible skill-specific profiling and report the forced/final skill build."
+);
+assert(
   profiler.includes("BOSS_DAMAGE_STOP_AMOUNT") &&
     profiler.includes("BOSS_DAMAGE_RUN_MAX_SECONDS") &&
     profiler.includes("_boss_start_health") &&
