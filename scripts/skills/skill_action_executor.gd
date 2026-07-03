@@ -33,6 +33,9 @@ const ELEMENT_ALIASES: Dictionary = {
 	"curse": "arcane"
 }
 
+static var _projectile_burst_budget_frame_by_key: Dictionary = {}
+static var _projectile_burst_budget_used_by_key: Dictionary = {}
+
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 
 
@@ -1640,7 +1643,35 @@ func _prepare_shatter_damage_params(params: Dictionary) -> Dictionary:
 
 
 func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
-	return _spawn_projectile(_prepare_projectile_burst_params(params), context)
+	return _spawn_projectile_burst_with_budget(_prepare_projectile_burst_params(params), context)
+
+
+func _spawn_projectile_burst_with_budget(projectile_params: Dictionary, context: Dictionary) -> bool:
+	var budget_key: String = str(projectile_params.get("defer_budget_key", "")).strip_edges()
+	var max_per_frame: int = maxi(int(projectile_params.get("max_per_frame", projectile_params.get("per_frame_budget", 0))), 0)
+	if budget_key == "" or max_per_frame <= 0:
+		return _spawn_projectile(projectile_params, context)
+
+	var cost: int = maxi(int(projectile_params.get("count", 1)), 1)
+	var frame: int = Engine.get_physics_frames()
+	if int(_projectile_burst_budget_frame_by_key.get(budget_key, -1)) != frame:
+		_projectile_burst_budget_frame_by_key[budget_key] = frame
+		_projectile_burst_budget_used_by_key[budget_key] = 0
+	var used: int = int(_projectile_burst_budget_used_by_key.get(budget_key, 0))
+	if used + cost > max_per_frame:
+		_defer_projectile_burst_to_budget(projectile_params, context)
+		return true
+	_projectile_burst_budget_used_by_key[budget_key] = used + cost
+	return _spawn_projectile(projectile_params, context)
+
+
+func _defer_projectile_burst_to_budget(projectile_params: Dictionary, context: Dictionary) -> void:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		_spawn_projectile(projectile_params, context)
+		return
+	await tree.physics_frame
+	_spawn_projectile_burst_with_budget(projectile_params, context)
 
 
 func _prepare_projectile_burst_params(params: Dictionary) -> Dictionary:

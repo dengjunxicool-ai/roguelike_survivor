@@ -39,12 +39,30 @@ assert(
   chaosAttackEffects.some((effect) => effect.type === "instant_area_hit" && effect.area_id === "chaos_weak_hit"),
   "chaos_attack_chaotic must use instant_area_hit for chaos_weak_hit."
 );
+assert(
+  chaosAttackEffects.some((effect) => effect.type === "spawn_projectile_burst" && effect.defer_budget_key === "chaos_split_projectiles" && Number(effect.max_per_frame) > 0),
+  "chaos_attack_chaotic split burst must declare a per-frame chaos split budget."
+);
+
+const singularityBarrage = findSkill(skills, "chaos_cast_singularity_barrage");
+const singularityText = JSON.stringify(singularityBarrage);
+assert(
+  singularityText.includes('"defer_budget_key":"chaos_split_projectiles"') &&
+    singularityText.includes('"max_per_frame"'),
+  "chaos_cast_singularity_barrage split-on-hit must declare a per-frame chaos split budget."
+);
 
 const adapter = read("scripts/skills/skill_effect_adapter.gd");
 assert(adapter.includes('"instant_area_hit"'), "SkillEffectAdapter must adapt instant_area_hit effects.");
 
 const executor = read("scripts/skills/skill_action_executor.gd");
 assert(executor.includes('"instant_area_hit"'), "SkillActionExecutor must dispatch instant_area_hit.");
+assert(
+  executor.includes("_spawn_projectile_burst_with_budget") &&
+    executor.includes("_defer_projectile_burst_to_budget") &&
+    executor.includes("Engine.get_physics_frames()"),
+  "SkillActionExecutor must smooth budgeted projectile bursts across physics frames."
+);
 assert(executor.includes("func _instant_area_hit"), "SkillActionExecutor must implement instant area hit execution.");
 assert(
   executor.includes("_play_instant_area_hit_visual") &&
