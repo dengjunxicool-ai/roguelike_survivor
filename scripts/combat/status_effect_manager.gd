@@ -631,6 +631,9 @@ func _emit_profiler_status_event(event_name: StringName, status_id: StringName, 
 		return
 	var payload: Dictionary = {
 		"status_id": status_id,
+		"source_id": StringName(String(status.get("source_id", status.get("source_skill_id", status_id)))),
+		"source_skill_id": StringName(String(status.get("source_skill_id", status_id))),
+		"source_instance_id": String(status.get("source_instance_id", "")),
 		"target": get_parent(),
 		"stacks": int(status.get("stacks", 0)),
 		"duration_remaining": float(status.get("duration_remaining", 0.0))

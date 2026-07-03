@@ -75,6 +75,28 @@ assert(
   "Real profiler must attribute created/destroyed/net nodes by scene/script/class key."
 );
 assert(
+  profiler.includes("created_by_source_skill_id") &&
+    profiler.includes("destroyed_by_source_skill_id") &&
+    profiler.includes("created_by_source_id") &&
+    profiler.includes("destroyed_by_source_id") &&
+    profiler.includes("status_events_by_status_id") &&
+    profiler.includes("status_events_by_source_skill_id"),
+  "Real profiler must attribute runtime churn and status events by source_skill_id/source_id/status_id."
+);
+assert(
+  profiler.includes("_refresh_node_record_source_attribution") &&
+    profiler.includes("_source_attribution_record") &&
+    profiler.includes("source_skill_id") &&
+    profiler.includes("status_id"),
+  "Real profiler must defer-enrich node records after setup metadata is available."
+);
+assert(
+  profiler.includes("created_by_source_skill_id") &&
+    profiler.includes("chaos_attack_chaotic") &&
+    profiler.includes("chaos_cast_singularity_barrage"),
+  "Real profiler attribution schema must separate chaos_attack_chaotic and chaos_cast_singularity_barrage source_skill_id buckets."
+);
+assert(
   profiler.includes("spike_frames_over_50ms") &&
     profiler.includes("spike_frames_over_100ms") &&
     profiler.includes("frame_event_buckets") &&

@@ -14,6 +14,10 @@ const BOSS_DAMAGE_RUN_MAX_SECONDS: float = 1200.0
 const SPIKE_CONTEXT_FRAMES: int = 5
 const PROFILER_ENABLED_META: StringName = &"real_full_run_profiler_enabled"
 const PROFILER_STATUS_EVENT_META: StringName = &"real_full_run_profiler_status_event"
+const SOURCE_ATTRIBUTION_FOCUS_SKILLS: Array[String] = [
+	"chaos_attack_chaotic",
+	"chaos_cast_singularity_barrage"
+]
 
 var _enabled: bool = false
 var _ui: Node
@@ -60,6 +64,13 @@ var _created_by_key: Dictionary = {}
 var _destroyed_by_key: Dictionary = {}
 var _created_by_category: Dictionary = {}
 var _destroyed_by_category: Dictionary = {}
+var _created_by_source_skill_id: Dictionary = {}
+var _destroyed_by_source_skill_id: Dictionary = {}
+var _created_by_source_id: Dictionary = {}
+var _destroyed_by_source_id: Dictionary = {}
+var _status_events_by_status_id: Dictionary = {}
+var _status_events_by_source_skill_id: Dictionary = {}
+var _status_events_by_source_id: Dictionary = {}
 var _live_by_key: Dictionary = {}
 var _live_by_category: Dictionary = {}
 var _node_records_by_instance_id: Dictionary = {}
@@ -810,6 +821,7 @@ func _is_profiler_status_event(event_key: String) -> bool:
 
 func _record_profiler_status_event(event_key: String, _payload: Dictionary) -> void:
 	_increment_dict(_status_tick_observation, event_key, 1)
+	_record_status_source_attribution(event_key, _payload)
 	_add_frame_metric(event_key, "status", 1)
 	match event_key:
 		"status_tick_applied":
@@ -818,6 +830,20 @@ func _record_profiler_status_event(event_key: String, _payload: Dictionary) -> v
 		"status_reaction_triggered":
 			_add_frame_metric("reaction", "status", 1)
 			_increment_dict(_status_tick_observation, "status_reaction_events", 1)
+
+
+func _record_status_source_attribution(event_key: String, payload: Dictionary) -> void:
+	var status_id: String = _attribution_value(payload.get("status_id", ""))
+	var source_skill_id: String = _attribution_value(payload.get("source_skill_id", payload.get("source_id", "")))
+	var source_id: String = _attribution_value(payload.get("source_id", source_skill_id))
+	_increment_dict(_status_events_by_status_id, status_id, 1)
+	_increment_dict(_status_events_by_source_skill_id, source_skill_id, 1)
+	_increment_dict(_status_events_by_source_id, source_id, 1)
+	if _current_frame_bucket.is_empty():
+		_current_frame_bucket = _new_frame_bucket()
+	_increment_dict(_dict(_current_frame_bucket.get("status_events_by_status_id", {})), "%s|%s" % [status_id, event_key], 1)
+	_increment_dict(_dict(_current_frame_bucket.get("status_events_by_source_skill_id", {})), "%s|%s" % [source_skill_id, event_key], 1)
+	_increment_dict(_dict(_current_frame_bucket.get("status_events_by_source_id", {})), "%s|%s" % [source_id, event_key], 1)
 
 
 func _new_frame_bucket() -> Dictionary:
@@ -830,6 +856,13 @@ func _new_frame_bucket() -> Dictionary:
 		"destroyed_by_category": {},
 		"created_by_key": {},
 		"destroyed_by_key": {},
+		"created_by_source_skill_id": {},
+		"destroyed_by_source_skill_id": {},
+		"created_by_source_id": {},
+		"destroyed_by_source_id": {},
+		"status_events_by_status_id": {},
+		"status_events_by_source_skill_id": {},
+		"status_events_by_source_id": {},
 		"status_tick": 0,
 		"status_tick_due": 0,
 		"status_tick_applied": 0,
@@ -910,10 +943,14 @@ func _add_frame_node_event(kind: String, record: Dictionary) -> void:
 		_current_frame_bucket["created_total"] = int(_current_frame_bucket.get("created_total", 0)) + 1
 		_increment_dict(_dict(_current_frame_bucket.get("created_by_category", {})), category, 1)
 		_increment_dict(_dict(_current_frame_bucket.get("created_by_key", {})), key, 1)
+		_increment_dict(_dict(_current_frame_bucket.get("created_by_source_skill_id", {})), _attribution_value(record.get("source_skill_id", "")), 1)
+		_increment_dict(_dict(_current_frame_bucket.get("created_by_source_id", {})), _attribution_value(record.get("source_id", "")), 1)
 	else:
 		_current_frame_bucket["destroyed_total"] = int(_current_frame_bucket.get("destroyed_total", 0)) + 1
 		_increment_dict(_dict(_current_frame_bucket.get("destroyed_by_category", {})), category, 1)
 		_increment_dict(_dict(_current_frame_bucket.get("destroyed_by_key", {})), key, 1)
+		_increment_dict(_dict(_current_frame_bucket.get("destroyed_by_source_skill_id", {})), _attribution_value(record.get("source_skill_id", "")), 1)
+		_increment_dict(_dict(_current_frame_bucket.get("destroyed_by_source_id", {})), _attribution_value(record.get("source_id", "")), 1)
 
 
 func _add_frame_metric(metric: String, category: String, amount: int) -> void:
@@ -937,6 +974,7 @@ func _node_record(node: Node) -> Dictionary:
 		"script_path": script_path,
 		"scene_path": scene_path
 	}
+	record.merge(_source_attribution_record(node), true)
 	return record
 
 
@@ -978,6 +1016,55 @@ func _node_category(node: Node, script_path: String, scene_path: String) -> Stri
 	return "other"
 
 
+func _source_attribution_record(node: Node) -> Dictionary:
+	var damage_packet: Dictionary = _dict(_node_property(node, "damage_packet"))
+	var source_id: String = _node_source_string(node, "source_id")
+	var source_skill_id: String = _node_source_string(node, "source_skill_id")
+	var status_id: String = _node_source_string(node, "status_id")
+	if source_id == "":
+		source_id = String(damage_packet.get("source_id", ""))
+	if source_skill_id == "":
+		source_skill_id = String(damage_packet.get("source_skill_id", ""))
+	if status_id == "":
+		status_id = String(damage_packet.get("status_id", ""))
+	if source_skill_id == "":
+		var skill_instance: RefCounted = _node_property(node, "skill_instance") as RefCounted
+		if skill_instance != null:
+			source_skill_id = String(skill_instance.get("skill_id"))
+	if source_id == "" and status_id != "":
+		source_id = status_id
+	return {
+		"source_id": _attribution_value(source_id),
+		"source_skill_id": _attribution_value(source_skill_id),
+		"status_id": _attribution_value(status_id)
+	}
+
+
+func _node_source_string(node: Node, key: String) -> String:
+	if node == null:
+		return ""
+	if node.has_meta(StringName(key)):
+		return String(node.get_meta(StringName(key)))
+	if node.has_meta(key):
+		return String(node.get_meta(key))
+	var property_value: Variant = _node_property(node, key)
+	return String(property_value) if property_value != null else ""
+
+
+func _node_property(node: Node, key: String) -> Variant:
+	if node == null:
+		return null
+	for property: Dictionary in node.get_property_list():
+		if String(property.get("name", "")) == key:
+			return node.get(key)
+	return null
+
+
+func _attribution_value(value: Variant) -> String:
+	var text: String = String(value).strip_edges()
+	return text if text != "" else "unknown"
+
+
 func _is_damage_number_node(node: Node, script_path: String = "") -> bool:
 	var node_name: String = String(node.name).to_lower()
 	return script_path.ends_with("damage_number_popup.gd") \
@@ -992,6 +1079,57 @@ func _record_live_delta(record: Dictionary, delta: int) -> void:
 	_increment_dict(_live_by_key, key, delta)
 	_increment_dict(_live_by_category, category, delta)
 	_max_live_counts_by_category[category] = maxi(int(_max_live_counts_by_category.get(category, 0)), int(_live_by_category.get(category, 0)))
+
+
+func _record_node_source_created(record: Dictionary, amount: int) -> void:
+	_increment_dict(_created_by_source_skill_id, _attribution_value(record.get("source_skill_id", "")), amount)
+	_increment_dict(_created_by_source_id, _attribution_value(record.get("source_id", "")), amount)
+
+
+func _record_node_source_destroyed(record: Dictionary, amount: int) -> void:
+	_increment_dict(_destroyed_by_source_skill_id, _attribution_value(record.get("source_skill_id", "")), amount)
+	_increment_dict(_destroyed_by_source_id, _attribution_value(record.get("source_id", "")), amount)
+
+
+func _refresh_node_record_source_attribution(instance_id: int) -> void:
+	if not _node_records_by_instance_id.has(instance_id):
+		return
+	var object: Object = instance_from_id(instance_id)
+	if not (object is Node):
+		return
+	var node: Node = object as Node
+	if not is_instance_valid(node):
+		return
+	var old_record: Dictionary = _dict(_node_records_by_instance_id.get(instance_id, {}))
+	if old_record.is_empty():
+		return
+	var source_record: Dictionary = _source_attribution_record(node)
+	var new_record: Dictionary = old_record.duplicate(true)
+	new_record["source_id"] = source_record.get("source_id", "unknown")
+	new_record["source_skill_id"] = source_record.get("source_skill_id", "unknown")
+	new_record["status_id"] = source_record.get("status_id", "unknown")
+	if _source_record_key(old_record) == _source_record_key(new_record):
+		return
+	_record_node_source_created(old_record, -1)
+	_record_node_source_created(new_record, 1)
+	_adjust_current_frame_created_source(old_record, -1)
+	_adjust_current_frame_created_source(new_record, 1)
+	_node_records_by_instance_id[instance_id] = new_record
+
+
+func _adjust_current_frame_created_source(record: Dictionary, amount: int) -> void:
+	if _current_frame_bucket.is_empty():
+		return
+	_increment_dict(_dict(_current_frame_bucket.get("created_by_source_skill_id", {})), _attribution_value(record.get("source_skill_id", "")), amount)
+	_increment_dict(_dict(_current_frame_bucket.get("created_by_source_id", {})), _attribution_value(record.get("source_id", "")), amount)
+
+
+func _source_record_key(record: Dictionary) -> String:
+	return "%s|%s|%s" % [
+		_attribution_value(record.get("source_skill_id", "")),
+		_attribution_value(record.get("source_id", "")),
+		_attribution_value(record.get("status_id", ""))
+	]
 
 
 func _top_entries(source: Dictionary, limit: int = 25) -> Array[Dictionary]:
@@ -1140,11 +1278,22 @@ func _write_attribution_output(status: String) -> void:
 		"created_by_category": _created_by_category,
 		"destroyed_by_category": _destroyed_by_category,
 		"net_nodes_by_category": _net_nodes_by_category(),
+		"created_by_source_skill_id": _created_by_source_skill_id,
+		"destroyed_by_source_skill_id": _destroyed_by_source_skill_id,
+		"created_by_source_id": _created_by_source_id,
+		"destroyed_by_source_id": _destroyed_by_source_id,
+		"status_events_by_status_id": _status_events_by_status_id,
+		"status_events_by_source_skill_id": _status_events_by_source_skill_id,
+		"status_events_by_source_id": _status_events_by_source_id,
 		"live_by_category": _live_by_category,
 		"max_live_counts_by_category": _max_live_counts_by_category,
 		"top_created_by_key": _top_entries(_created_by_key, 40),
 		"top_destroyed_by_key": _top_entries(_destroyed_by_key, 40),
 		"top_net_nodes_by_key": _top_entries(_net_nodes_by_key(), 40),
+		"top_created_by_source_skill_id": _top_entries(_created_by_source_skill_id, 40),
+		"top_destroyed_by_source_skill_id": _top_entries(_destroyed_by_source_skill_id, 40),
+		"top_created_by_source_id": _top_entries(_created_by_source_id, 40),
+		"top_destroyed_by_source_id": _top_entries(_destroyed_by_source_id, 40),
 		"frame_event_buckets": _frame_event_buckets,
 		"spike_frames_over_50ms": _spike_frames_over_50ms,
 		"spike_frames_over_100ms": _spike_frames_over_100ms,
@@ -1223,8 +1372,10 @@ func _on_node_added(_node: Node) -> void:
 		_node_records_by_instance_id[instance_id] = record
 		_increment_dict(_created_by_key, String(record.get("key", "unknown")), 1)
 		_increment_dict(_created_by_category, String(record.get("category", "other")), 1)
+		_record_node_source_created(record, 1)
 		_record_live_delta(record, 1)
 		_add_frame_node_event("created", record)
+		call_deferred("_refresh_node_record_source_attribution", instance_id)
 		if String(record.get("category", "")) == "damage_number":
 			_damage_number_created_total += 1
 			_damage_number_selector_candidates[str(instance_id)] = record
@@ -1240,6 +1391,7 @@ func _on_node_removed(_node: Node) -> void:
 			record = _node_record(_node)
 		_increment_dict(_destroyed_by_key, String(record.get("key", "unknown")), 1)
 		_increment_dict(_destroyed_by_category, String(record.get("category", "other")), 1)
+		_record_node_source_destroyed(record, 1)
 		_record_live_delta(record, -1)
 		_add_frame_node_event("destroyed", record)
 		if String(record.get("category", "")) == "damage_number":
