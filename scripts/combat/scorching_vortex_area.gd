@@ -48,11 +48,9 @@ func _damage_body(body: Node) -> bool:
 func _damage_swept_targets(from_position: Vector2, to_position: Vector2) -> void:
 	if from_position.distance_squared_to(to_position) <= 0.0001:
 		return
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return
-	for node: Node in tree.get_nodes_in_group(target_group):
-		var body: Node2D = node as Node2D
+	var midpoint: Vector2 = (from_position + to_position) * 0.5
+	var sweep_radius: float = radius + from_position.distance_to(to_position) * 0.5
+	for body: Node2D in query_target_candidates(midpoint, sweep_radius):
 		if body == null or not _can_damage_body(body):
 			continue
 		if _swept_body_ids.has(body.get_instance_id()):
@@ -72,13 +70,9 @@ func _redirect_towards_dense_cluster(origin: Vector2) -> void:
 
 
 func _find_dense_cluster_center(origin: Vector2) -> Vector2:
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return Vector2.INF
 	var candidates: Array[Node2D] = []
 	var seek_radius_squared: float = density_seek_radius * density_seek_radius
-	for node: Node in tree.get_nodes_in_group(target_group):
-		var body: Node2D = node as Node2D
+	for body: Node2D in query_target_candidates(origin, density_seek_radius):
 		if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
 			continue
 		if body.has_method("is_dead") and bool(body.call("is_dead")):

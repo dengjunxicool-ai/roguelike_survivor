@@ -2,6 +2,8 @@ extends RefCounted
 class_name ConditionEvaluator
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
 static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 	var condition_type: String = str(condition.get("type", ""))
 	var params: Dictionary = _get_dictionary(condition.get("params", {}))
@@ -140,17 +142,18 @@ static func _target_has_meta(target: Node, key: String) -> bool:
 
 
 static func _enemy_count_in_radius(context: Dictionary, params: Dictionary) -> int:
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	var origin_node: Node2D = context.get("target") as Node2D
 	if origin_node == null:
 		origin_node = context.get("caster") as Node2D
-	if tree == null or origin_node == null:
+	if origin_node == null:
 		return 0
 
 	var radius: float = float(params.get("radius", 120.0))
 	var radius_squared: float = radius * radius
 	var count: int = 0
-	for node: Node in tree.get_nodes_in_group(&"enemies"):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(null)
+	var targets: Array = registry.call("get_targets_in_radius", origin_node.global_position, radius, &"enemies") if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy != null and origin_node.global_position.distance_squared_to(enemy.global_position) <= radius_squared:
 			count += 1

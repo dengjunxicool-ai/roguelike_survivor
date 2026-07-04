@@ -26,6 +26,7 @@ const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SummonManagerScript: Script = preload("res://scripts/summons/summon_manager.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 const ELEMENT_ALIASES: Dictionary = {
 	"frost": "ice",
@@ -35,6 +36,8 @@ const ELEMENT_ALIASES: Dictionary = {
 
 static var _projectile_burst_budget_frame_by_key: Dictionary = {}
 static var _projectile_burst_budget_used_by_key: Dictionary = {}
+static var _aoe_status_apply_frame: int = -1
+static var _aoe_status_apply_keys: Dictionary = {}
 
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 
@@ -246,9 +249,13 @@ func _apply_status(params: Dictionary, context: Dictionary) -> bool:
 	status_params = DamageTraceContextScript.apply_to_status_params(status_params, context)
 	status_params = _special_rule_executor.call("get_status_params", status_id, status_params, context)
 
+	if _should_coalesce_area_status_apply(target, status_id, context):
+		return true
 	if target.has_method("apply_status"):
+		_increment_area_tick_status_apply(context)
 		return bool(target.call("apply_status", status_id, status_params))
 	if target.has_method("add_status_effect"):
+		_increment_area_tick_status_apply(context)
 		target.call("add_status_effect", status_id)
 		return true
 
@@ -2291,6 +2298,30 @@ func _get_status_power_from_context(context: Dictionary) -> float:
 	return _get_caster_attack_power(context)
 
 
+func _should_coalesce_area_status_apply(target: Node, status_id: StringName, context: Dictionary) -> bool:
+	if target == null or status_id == &"":
+		return true
+	if not context.has("area") and not context.has("area_tick_stats"):
+		return false
+	var frame: int = int(Engine.get_physics_frames())
+	if _aoe_status_apply_frame != frame:
+		_aoe_status_apply_frame = frame
+		_aoe_status_apply_keys.clear()
+	var key: String = "%d|%s" % [int(target.get_instance_id()), String(status_id)]
+	if _aoe_status_apply_keys.has(key):
+		return true
+	_aoe_status_apply_keys[key] = true
+	return false
+
+
+func _increment_area_tick_status_apply(context: Dictionary) -> void:
+	var stats_variant: Variant = context.get("area_tick_stats", {})
+	if not (stats_variant is Dictionary):
+		return
+	var stats: Dictionary = stats_variant
+	stats["status_apply_count"] = int(stats.get("status_apply_count", 0)) + 1
+
+
 func _apply_status_to_target(target: Node, status_id: StringName, status_params: Dictionary = {}) -> bool:
 	if target == null or status_id == &"":
 		return false
@@ -2429,12 +2460,10 @@ func _get_status_ids(params: Dictionary) -> Array[StringName]:
 
 func _find_targets_around(origin: Vector2, radius: float, target_group: StringName, excluded: Variant = null) -> Array[Node2D]:
 	var targets: Array[Node2D] = []
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	if tree == null:
-		return targets
-
 	var radius_squared: float = radius * radius
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(null)
+	var candidates: Array = registry.call("get_targets_in_radius", origin, radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in candidates:
 		var target: Node2D = node as Node2D
 		if target == null or not is_instance_valid(target) or target == excluded:
 			continue

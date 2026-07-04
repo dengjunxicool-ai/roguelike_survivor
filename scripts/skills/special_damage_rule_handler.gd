@@ -11,6 +11,7 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 const SpecialRuleCommonScript: Script = preload("res://scripts/skills/special_rules/special_rule_common.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 static var _death_explosion_cooldowns: Dictionary = {}
 static var _lava_zone_cooldowns: Dictionary = {}
@@ -2698,11 +2699,11 @@ static func _count_active_lava_zones(parent: Node) -> int:
 static func _knockback_targets(parent: Node, origin: Vector2, radius: float, force: float, target_group: Variant) -> void:
 	if parent == null or force <= 0.0:
 		return
-	var tree: SceneTree = parent.get_tree()
-	if tree == null:
-		return
 	var radius_squared: float = radius * radius
-	for node: Node in tree.get_nodes_in_group(StringName(String(target_group))):
+	var group_name: StringName = StringName(String(target_group))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(parent)
+	var targets: Array = registry.call("get_targets_in_radius", origin, radius, group_name) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var target: Node2D = node as Node2D
 		if target == null or target.global_position.distance_squared_to(origin) > radius_squared:
 			continue
@@ -2718,12 +2719,12 @@ static func _find_targets_in_radius(context: Dictionary, origin: Vector2, radius
 		parent = player.get_parent() if player != null else null
 	if parent == null:
 		return []
-	var tree: SceneTree = parent.get_tree()
-	if tree == null:
-		return []
 	var targets: Array[Node2D] = []
 	var radius_squared: float = radius * radius
-	for node: Node in tree.get_nodes_in_group(StringName(String(context.get("target_group", &"enemies")))):
+	var target_group: StringName = StringName(String(context.get("target_group", &"enemies")))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(parent)
+	var candidates: Array = registry.call("get_targets_in_radius", origin, radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in candidates:
 		var target: Node2D = node as Node2D
 		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 			continue
@@ -2735,12 +2736,12 @@ static func _find_targets_in_radius(context: Dictionary, origin: Vector2, radius
 static func _find_nearest_target(parent: Node, origin: Vector2, target_group: Variant, excluded: Node = null) -> Node2D:
 	if parent == null:
 		return null
-	var tree: SceneTree = parent.get_tree()
-	if tree == null:
-		return null
 	var best: Node2D = null
 	var best_distance: float = INF
-	for node: Node in tree.get_nodes_in_group(StringName(String(target_group))):
+	var group_name: StringName = StringName(String(target_group))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(parent)
+	var targets: Array = registry.call("get_targets", group_name) if registry != null and registry.has_method("get_targets") else []
+	for node: Node in targets:
 		var target: Node2D = node as Node2D
 		if target == null or target == excluded or not is_instance_valid(target) or target.is_queued_for_deletion():
 			continue
@@ -2754,13 +2755,13 @@ static func _find_nearest_target(parent: Node, origin: Vector2, target_group: Va
 static func _find_nearest_target_excluding(parent: Node, origin: Vector2, target_group: Variant, excluded_ids: Array, max_distance: float) -> Node2D:
 	if parent == null:
 		return null
-	var tree: SceneTree = parent.get_tree()
-	if tree == null:
-		return null
 	var max_distance_squared: float = max_distance * max_distance
 	var best: Node2D = null
 	var best_distance: float = INF
-	for node: Node in tree.get_nodes_in_group(StringName(String(target_group))):
+	var group_name: StringName = StringName(String(target_group))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(parent)
+	var targets: Array = registry.call("get_targets_in_radius", origin, max_distance, group_name) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var target: Node2D = node as Node2D
 		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 			continue
@@ -2777,13 +2778,13 @@ static func _find_nearest_target_excluding(parent: Node, origin: Vector2, target
 static func _find_lowest_hp_target(parent: Node, origin: Vector2, target_group: Variant) -> Node2D:
 	if parent == null:
 		return null
-	var tree: SceneTree = parent.get_tree()
-	if tree == null:
-		return null
 	var best: Node2D = null
 	var best_health: float = INF
 	var best_distance: float = INF
-	for node: Node in tree.get_nodes_in_group(StringName(String(target_group))):
+	var group_name: StringName = StringName(String(target_group))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(parent)
+	var targets: Array = registry.call("get_targets", group_name) if registry != null and registry.has_method("get_targets") else []
+	for node: Node in targets:
 		var target: Node2D = node as Node2D
 		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 			continue

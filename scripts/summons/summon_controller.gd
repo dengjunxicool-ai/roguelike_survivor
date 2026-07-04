@@ -7,6 +7,7 @@ const SummonMovementComponentScript: Script = preload("res://scripts/summons/sum
 const SummonAttackComponentScript: Script = preload("res://scripts/summons/summon_attack_component.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
 
 const STATE_FOLLOW: StringName = &"FOLLOW"
 const STATE_CHASE: StringName = &"CHASE"
@@ -61,6 +62,12 @@ func _scaled_attack_config(config: Dictionary, skill_instance: RefCounted) -> Di
 
 
 func _physics_process(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_physics_process_profiled(delta)
+	HotPathProfilerScript.end(self, &"summon_update", hot_path_start)
+
+
+func _physics_process_profiled(delta: float) -> void:
 	if state == STATE_EXPIRED:
 		return
 	_remaining_duration -= delta
@@ -89,7 +96,9 @@ func _physics_process(delta: float) -> void:
 
 	_attack.tick(delta)
 	var current_target: Node2D = _get_valid_target()
+	var targeting_hot_path_start: int = HotPathProfilerScript.begin(self)
 	target = _targeting.update(delta, self, current_target, float(_movement.get("leash_distance")))
+	HotPathProfilerScript.end(self, &"summon_targeting", targeting_hot_path_start)
 	if target == null:
 		state = STATE_FOLLOW
 		_movement.move_follow(self, summon_owner, delta)

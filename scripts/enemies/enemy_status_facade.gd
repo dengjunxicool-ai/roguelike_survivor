@@ -42,8 +42,16 @@ func ensure_manager() -> Node:
 ## Returns:
 ## - Nothing.
 func update_status_effects(delta: float) -> void:
-	var manager: Node = ensure_manager()
-	if manager != null and manager.has_method("update_status_effects"):
+	var manager: Node = _manager if _manager != null and is_instance_valid(_manager) else null
+	if manager == null:
+		return
+	if manager.has_method("has_active_statuses") and not bool(manager.call("has_active_statuses")):
+		return
+	if manager.has_method("should_update_status_effects") and not bool(manager.call("should_update_status_effects", delta)):
+		return
+	if manager.has_method("consume_pending_status_update_delta"):
+		delta = float(manager.call("consume_pending_status_update_delta"))
+	if manager.has_method("update_status_effects"):
 		manager.call("update_status_effects", delta)
 
 
@@ -143,6 +151,13 @@ func get_status_snapshot() -> Array[Dictionary]:
 	if manager == null or not manager.has_method("get_status_snapshot"):
 		return []
 	return manager.call("get_status_snapshot")
+
+
+func consume_status_display_dirty() -> bool:
+	var manager: Node = _manager if _manager != null and is_instance_valid(_manager) else null
+	if manager == null or not manager.has_method("consume_status_display_dirty"):
+		return false
+	return bool(manager.call("consume_status_display_dirty"))
 
 
 ## Params:

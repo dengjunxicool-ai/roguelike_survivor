@@ -2,10 +2,12 @@ extends RefCounted
 class_name SummonTargetingComponent
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
 var owner: Node2D
 var target_group: StringName = &"enemies"
 var detect_range: float = 300.0
-var retarget_interval: float = 0.25
+var retarget_interval: float = 0.2
 var target_priority: String = "nearest_to_summon"
 var _retarget_timer: float = 0.0
 
@@ -22,9 +24,11 @@ func setup(config: Dictionary, summon_owner: Node2D, group: StringName) -> void:
 func update(delta: float, summon: Node2D, current_target: Variant, leash_distance: float) -> Node2D:
 	_retarget_timer -= delta
 	if is_target_valid(current_target, leash_distance):
-		return current_target as Node2D
-	if _retarget_timer > 0.0:
-		return null
+		if _retarget_timer > 0.0:
+			return current_target as Node2D
+		_retarget_timer = retarget_interval
+		var refreshed_target: Node2D = find_target(summon)
+		return refreshed_target if refreshed_target != null else current_target as Node2D
 	_retarget_timer = retarget_interval
 	return find_target(summon)
 
@@ -50,10 +54,7 @@ func is_target_valid(target: Variant, leash_distance: float) -> bool:
 func find_target(summon: Node2D) -> Node2D:
 	if summon == null:
 		return null
-	var tree: SceneTree = _get_scene_tree(summon)
-	if tree == null:
-		return null
-	var candidates: Array[Node2D] = _collect_target_candidates(tree, summon)
+	var candidates: Array[Node2D] = _collect_target_candidates(summon)
 	if candidates.is_empty():
 		return null
 	var priority_status_id: StringName = _get_priority_status_id()
@@ -62,17 +63,12 @@ func find_target(summon: Node2D) -> Node2D:
 	return _select_nearest_target(candidates, _get_default_target_origin(summon))
 
 
-func _get_scene_tree(summon: Node2D) -> SceneTree:
-	var tree: SceneTree = summon.get_tree()
-	if tree == null:
-		tree = Engine.get_main_loop() as SceneTree
-	return tree
-
-
-func _collect_target_candidates(tree: SceneTree, summon: Node2D) -> Array[Node2D]:
+func _collect_target_candidates(summon: Node2D) -> Array[Node2D]:
 	var candidates: Array[Node2D] = []
 	var range_squared: float = detect_range * detect_range
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(summon)
+	var targets: Array = registry.call("get_targets_in_radius", summon.global_position, detect_range, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 			continue

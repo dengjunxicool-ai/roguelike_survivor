@@ -35,7 +35,7 @@ const enemyScene = readProjectFile("scenes/enemies/enemy.tscn");
 const bossScene = readProjectFile("scenes/enemies/boss.tscn");
 
 const limitActorMotion = extractFunction(enemyBase, "_limit_actor_motion");
-const physicsProcess = extractFunction(enemyBase, "_physics_process");
+const physicsProcess = extractFunction(enemyBase, "_physics_process_profiled");
 const separationDirection = extractFunction(enemyBehavior, "_get_separation_direction");
 const meleeCrowdCheck = extractFunction(enemyBehavior, "_idle_if_melee_space_blocked");
 const contactDamage = extractFunction(enemyBase, "_apply_contact_damage");
@@ -44,7 +44,7 @@ const statusDisplaySetup = extractFunction(enemyStatusDisplay, "setup");
 const timelineProcess = extractFunction(enemyTimelineController, "process");
 const areaCollisionSetup = extractFunction(areaEffect, "_enable_area_collision");
 const areaTargetCollection = extractFunction(areaEffect, "_collect_tick_damage_targets");
-const areaPhysicsProcess = extractFunction(areaEffect, "_physics_process");
+const areaPhysicsProcess = extractFunction(areaEffect, "_physics_process_profiled");
 const areaSetup = extractFunction(areaEffect, "setup");
 const playerApplyMovement = extractFunction(playerController, "_apply_dash_or_walk_velocity");
 const playerLimitActorMotion = extractFunction(playerController, "_limit_actor_motion");
@@ -136,8 +136,11 @@ assert(
 );
 
 assert(
-  !areaCollisionSetup.includes("monitoring\", true") && !areaCollisionSetup.includes("monitoring = true"),
-  "Player area effects should not enable Area2D monitoring; tick damage should use bounded scripted queries to avoid physics broadphase churn."
+  areaCollisionSetup.includes("_connect_candidate_signals") &&
+    areaCollisionSetup.includes("monitoring\", true") &&
+    areaEffect.includes("body_entered.connect") &&
+    areaEffect.includes("body_exited.connect"),
+  "Player area effects should use Area2D monitoring only for candidate cache enter/exit signals."
 );
 
 assert(

@@ -41,8 +41,8 @@ assert(
   "StatusEffectManager profiler events must be gated by the real profiler and routed through a profiler-only callback."
 );
 assert(
-  extractFunction(statusManager, "_update_damage_over_time").includes("status_tick_due") &&
-    extractFunction(statusManager, "_update_damage_over_time").includes("status_tick_applied"),
+  extractFunction(statusManager, "_update_damage_over_time_profiled").includes("status_tick_due") &&
+    extractFunction(statusManager, "_update_damage_over_time_profiled").includes("status_tick_applied"),
   "StatusEffectManager must count due and applied status ticks inside the DOT tick loop."
 );
 assert(
@@ -61,8 +61,8 @@ assert(
   "StatusEffectManager must skip status visual refresh work when repeated status application cannot change the visible overlay."
 );
 assert(
-  extractFunction(statusManager, "apply_status").includes("_status_visual_refresh_needed_after_apply(id, definition)") &&
-    !extractFunction(statusManager, "apply_status").includes("\n\t_refresh_status_visual()\n\n\t_notify_status_applied"),
+  extractFunction(statusManager, "_apply_status_profiled").includes("_status_visual_refresh_needed_after_apply(id, definition)") &&
+    !extractFunction(statusManager, "_apply_status_profiled").includes("\n\t_refresh_status_visual()\n\n\t_notify_status_applied"),
   "apply_status must not unconditionally refresh status visuals after every repeated status application."
 );
 assert(
@@ -71,7 +71,7 @@ assert(
   "StatusVisualOverlay must be reused when an owner already has one."
 );
 assert(
-  extractFunction(statusManager, "_handle_max_stack_reached").includes("status_reaction_triggered"),
+  extractFunction(statusManager, "_execute_status_reaction").includes("status_reaction_triggered"),
   "StatusEffectManager must count status reaction triggers from max-stack status/event paths."
 );
 

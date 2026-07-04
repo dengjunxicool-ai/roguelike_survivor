@@ -1,6 +1,12 @@
 extends Area2D
 class_name ExpGem
 
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const PickupManagerScript: Script = preload("res://scripts/drops/pickup_manager.gd")
+const PICKUP_STATE_IDLE: StringName = &"idle"
+const PICKUP_STATE_MAGNETIZED: StringName = &"magnetized"
+const PICKUP_STATE_COLLECTING: StringName = &"collecting"
+
 @export_range(1, 10000, 1, "or_greater") var experience_amount: int = 25
 @export_range(1.0, 1000.0, 1.0, "or_greater") var magnet_radius: float = 180.0
 @export_range(1.0, 200.0, 1.0, "or_greater") var pickup_radius: float = 24.0
@@ -9,33 +15,23 @@ class_name ExpGem
 
 var target: Node2D
 var _is_collected: bool = false
+var _pickup_state: StringName = PICKUP_STATE_IDLE
 
 
 func _ready() -> void:
 	_prepare_active_state()
 
 
+func _exit_tree() -> void:
+	_unregister_pickup_manager()
+
+
 func _physics_process(delta: float) -> void:
-	if _is_collected:
-		return
+	pass
 
-	if not is_instance_valid(target):
-		target = _find_target()
 
-	if target == null:
-		return
-
-	var distance_to_target: float = global_position.distance_to(target.global_position)
-	var target_pickup_radius: float = _get_target_pickup_radius()
-	if distance_to_target <= pickup_radius:
-		_collect(target)
-		return
-
-	if distance_to_target <= target_pickup_radius:
-		global_position = global_position.move_toward(
-			target.global_position,
-			fly_speed * delta
-		)
+func _physics_process_profiled(delta: float) -> void:
+	manager_active_update(delta, target, target.global_position if target != null else global_position, _get_target_pickup_radius())
 
 
 func set_experience_amount(amount: int) -> void:
@@ -50,6 +46,7 @@ func prepare_for_pool_spawn(amount: Variant = null) -> void:
 
 func prepare_for_pool_despawn() -> void:
 	_is_collected = true
+	_unregister_pickup_manager()
 	target = null
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
@@ -79,6 +76,45 @@ func collect_to_player(player: Node2D = null) -> void:
 		_collect(collector)
 
 
+func get_pickup_state() -> StringName:
+	return _pickup_state
+
+
+func manager_idle_check(player: Node2D, player_position: Vector2, target_pickup_radius: float) -> void:
+	if _is_collected:
+		return
+	target = player
+	if target == null:
+		return
+	var distance_to_target: float = global_position.distance_to(player_position)
+	if distance_to_target <= pickup_radius:
+		_collect(target)
+		return
+	if distance_to_target <= maxf(target_pickup_radius, magnet_radius):
+		_set_pickup_state(PICKUP_STATE_MAGNETIZED)
+
+
+func manager_active_update(delta: float, player: Node2D, player_position: Vector2, target_pickup_radius: float) -> void:
+	if _is_collected:
+		return
+	target = player
+	if target == null:
+		_set_pickup_state(PICKUP_STATE_IDLE)
+		return
+	var distance_to_target: float = global_position.distance_to(player_position)
+	if distance_to_target <= pickup_radius:
+		_collect(target)
+		return
+	var effective_pickup_radius: float = maxf(target_pickup_radius, magnet_radius)
+	if distance_to_target > effective_pickup_radius and _pickup_state == PICKUP_STATE_MAGNETIZED:
+		_set_pickup_state(PICKUP_STATE_IDLE)
+		return
+	global_position = global_position.move_toward(
+		player_position,
+		fly_speed * delta
+	)
+
+
 func _find_target() -> Node2D:
 	if not is_inside_tree():
 		return null
@@ -90,15 +126,21 @@ func _collect(player: Node2D) -> void:
 		return
 
 	_is_collected = true
-	player.call(&"add_experience", experience_amount)
+	_set_pickup_state(PICKUP_STATE_COLLECTING)
+	var manager: Node = PickupManagerScript.get_or_create(self)
+	if manager != null and manager.has_method("queue_experience_reward"):
+		manager.call("queue_experience_reward", player, experience_amount)
+	else:
+		player.call(&"add_experience", experience_amount)
 	despawn_or_free()
 
 
 func _prepare_active_state() -> void:
 	_is_collected = false
+	_pickup_state = PICKUP_STATE_IDLE
 	visible = true
 	set_process(true)
-	set_physics_process(true)
+	set_physics_process(false)
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
@@ -107,6 +149,7 @@ func _prepare_active_state() -> void:
 	if not is_in_group(&"experience_crystal"):
 		add_to_group(&"experience_crystal")
 	target = _find_target()
+	_register_pickup_manager()
 
 
 func _get_target_pickup_radius() -> float:
@@ -120,3 +163,25 @@ func _get_target_pickup_radius() -> float:
 		return magnet_radius
 
 	return maxf(float(configured_radius), magnet_radius)
+
+
+func _set_pickup_state(new_state: StringName) -> void:
+	if _pickup_state == new_state:
+		return
+	var old_state: StringName = _pickup_state
+	_pickup_state = new_state
+	var manager: Node = PickupManagerScript.get_or_create(self)
+	if manager != null and manager.has_method("notify_state_changed"):
+		manager.call("notify_state_changed", self, old_state, new_state)
+
+
+func _register_pickup_manager() -> void:
+	var manager: Node = PickupManagerScript.get_or_create(self)
+	if manager != null and manager.has_method("register_pickup"):
+		manager.call("register_pickup", self)
+
+
+func _unregister_pickup_manager() -> void:
+	var manager: Node = PickupManagerScript.get_or_create(self)
+	if manager != null and manager.has_method("unregister_pickup"):
+		manager.call("unregister_pickup", self)

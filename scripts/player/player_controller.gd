@@ -24,6 +24,7 @@ const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/ski
 const FireSkillRuntimeScript: Script = preload("res://scripts/skills/fire_skill_runtime.gd")
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
 const PlayerStatusDisplayControllerScript: Script = preload("res://scripts/player/player_status_display_controller.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 const RECENT_ENEMY_DAMAGE_PRIORITY_WINDOW_SECONDS: float = 0.75
 
@@ -187,12 +188,23 @@ func _ensure_status_manager() -> Node:
 
 
 func _update_status_effects(delta: float) -> void:
-	var manager: Node = _ensure_status_manager()
-	if manager != null and manager.has_method("update_status_effects"):
+	var manager: Node = _status_manager if _status_manager != null and is_instance_valid(_status_manager) else null
+	if manager == null:
+		return
+	if manager.has_method("has_active_statuses") and not bool(manager.call("has_active_statuses")):
+		return
+	if manager.has_method("should_update_status_effects") and not bool(manager.call("should_update_status_effects", delta)):
+		return
+	if manager.has_method("consume_pending_status_update_delta"):
+		delta = float(manager.call("consume_pending_status_update_delta"))
+	if manager.has_method("update_status_effects"):
 		manager.call("update_status_effects", delta)
 
 
 func _update_status_label() -> void:
+	var manager: Node = _ensure_status_manager()
+	if manager != null and manager.has_method("consume_status_display_dirty") and not bool(manager.call("consume_status_display_dirty")):
+		return
 	_status_display_controller.call("update", get_status_snapshot())
 
 
@@ -453,10 +465,9 @@ func _update_dash_cooldown(delta: float) -> void:
 
 
 func _apply_dash_collision_exceptions() -> void:
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return
-	for node: Node in tree.get_nodes_in_group(&"enemies"):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	var targets: Array = registry.call("get_targets", &"enemies") if registry != null and registry.has_method("get_targets") else []
+	for node: Node in targets:
 		var body: PhysicsBody2D = node as PhysicsBody2D
 		if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
 			continue
@@ -817,7 +828,26 @@ func add_experience(amount: int) -> void:
 	if amount <= 0:
 		return
 
-	var final_amount: int = maxi(roundi(float(amount) * experience_gain_multiplier), 1)
+	_apply_experience_total(_calculate_experience_gain(amount))
+
+
+func add_experience_batch(amounts: Array) -> void:
+	var final_amount: int = 0
+	for amount_variant: Variant in amounts:
+		final_amount += _calculate_experience_gain(int(amount_variant))
+	_apply_experience_total(final_amount)
+
+
+func _calculate_experience_gain(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	return maxi(roundi(float(amount) * experience_gain_multiplier), 1)
+
+
+func _apply_experience_total(final_amount: int) -> void:
+	if final_amount <= 0:
+		return
+
 	current_experience += final_amount
 
 	while current_experience >= experience_to_next_level:

@@ -18,7 +18,9 @@ const EnemySkillControllerScript: Script = preload("res://scripts/enemies/skills
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
 const EnemyStateControllerScript: Script = preload("res://scripts/enemies/enemy_state_controller.gd")
 const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_config_helper.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
 const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const NEARBY_ENEMY_CELL_SIZE: float = 128.0
 const MOTION_LIMIT_EXTRA_RADIUS: float = 96.0
 const CROWDED_ENEMY_LOD_THRESHOLD: int = 60
@@ -29,7 +31,12 @@ const CROWDED_RUNTIME_SKIP_DISTANCE_SQUARED: float = 420.0 * 420.0
 const VISUAL_UPDATE_CROWDED_INTERVAL: float = 0.05
 const VISUAL_UPDATE_HEAVY_CROWD_INTERVAL: float = 0.10
 const VISUAL_UPDATE_FAR_INTERVAL: float = 0.20
+const VISUAL_UPDATE_OFFSCREEN_INTERVAL: float = 0.35
 const VISUAL_UPDATE_FAR_DISTANCE_SQUARED: float = 900.0 * 900.0
+const VISUAL_UPDATE_OFFSCREEN_MARGIN: float = 160.0
+const ENEMY_NEIGHBOR_CHECK_INTERVAL: float = 0.1
+const MAX_ENEMY_NEIGHBOR_CHECKS_PER_FRAME: int = 12
+const MAX_NEARBY_ENEMY_CANDIDATES: int = 8
 
 signal health_changed(current_health: int, max_health: int)
 signal died
@@ -89,16 +96,20 @@ var _behavior_controller: RefCounted = EnemyBehaviorControllerScript.new()
 var _skill_controller: RefCounted = EnemySkillControllerScript.new()
 var _state_controller: RefCounted = EnemyStateControllerScript.new()
 var _visual_update_timer: float = 0.0
+var _neighbor_check_timer: float = 0.0
 static var _nearby_enemy_index_frame: int = -1
 static var _nearby_enemy_index_tree_id: int = 0
 static var _nearby_enemy_grid: Dictionary = {}
 static var _nearby_enemy_total_count: int = 0
 static var _enemy_profile_sections: Dictionary = {}
+static var _neighbor_check_budget_frame: int = -1
+static var _neighbor_checks_this_frame: int = 0
 
 
 func _ready() -> void:
 	add_to_group(&"enemy")
 	add_to_group(&"enemies")
+	_register_combat_target()
 	_visual_controller.call("setup", self)
 	_debug_display_controller.call("setup", self)
 	_status_display_controller.call("setup", self)
@@ -112,6 +123,7 @@ func _ready() -> void:
 	_behavior_controller.call("setup", self, _behavior)
 	_skill_controller.call("setup", self, _enemy_skill_refs, _behavior)
 	_visual_update_timer = float(int(get_instance_id()) % 7) * 0.01
+	_neighbor_check_timer = _neighbor_check_initial_offset()
 
 	current_health = max_health
 	health_changed.emit(current_health, max_health)
@@ -120,13 +132,24 @@ func _ready() -> void:
 		target = _find_target_in_group()
 
 
+func _exit_tree() -> void:
+	_unregister_combat_target()
+
+
 func _physics_process(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_physics_process_profiled(delta)
+	HotPathProfilerScript.end(self, &"enemy_update", hot_path_start)
+
+
+func _physics_process_profiled(delta: float) -> void:
 	if _is_dead:
 		return
 
 	var profile_start: int = _profile_start()
 	_update_enemy_runtime_tick(delta)
 	_profile_add("runtime_tick", profile_start)
+	var ai_hot_path_start: int = HotPathProfilerScript.begin(self)
 	profile_start = _profile_start()
 	_state_controller.call("update", delta)
 	var debug_forced_state: String = _get_debug_enemy_forced_state()
@@ -134,16 +157,19 @@ func _physics_process(delta: float) -> void:
 		_state_controller.call("set_forced_state", debug_forced_state)
 		_apply_debug_forced_state(delta, debug_forced_state)
 		_profile_add("debug_forced_state", profile_start)
+		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		return
 	_state_controller.call("clear_forced_state")
 	if _is_debug_control_mode():
 		_stop_motion_and_update_visual(delta)
 		_profile_add("debug_control", profile_start)
+		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		return
 
 	if _is_movement_frozen():
 		_stop_motion_and_update_visual(delta)
 		_profile_add("movement_frozen", profile_start)
+		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		return
 	_profile_add("state_update", profile_start)
 
@@ -159,36 +185,51 @@ func _physics_process(delta: float) -> void:
 	if not _resolve_current_target():
 		_stop_motion()
 		_profile_add("resolve_target_missing", profile_start)
+		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		return
 	_profile_add("resolve_target", profile_start)
 
 	if _should_skip_crowded_runtime_frame():
+		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
+		var skipped_movement_start: int = HotPathProfilerScript.begin(self)
 		move_and_slide()
+		HotPathProfilerScript.end(self, &"enemy_movement", skipped_movement_start)
 		return
 
 	profile_start = _profile_start()
 	_update_behavior(delta)
 	_profile_add("behavior", profile_start)
+	HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
+
 	profile_start = _profile_start()
-	if _should_limit_actor_motion():
-		_limit_actor_motion(delta, true)
+	var should_limit_motion: bool = _should_limit_actor_motion()
+	if should_limit_motion:
+		_limit_actor_motion(delta, true, _should_run_neighbor_check(delta))
 	_profile_add("motion_limit", profile_start)
+	var movement_hot_path_start: int = HotPathProfilerScript.begin(self)
 	profile_start = _profile_start()
 	move_and_slide()
 	_profile_add("move_and_slide", profile_start)
+	HotPathProfilerScript.end(self, &"enemy_movement", movement_hot_path_start)
+	var animation_hot_path_start: int = HotPathProfilerScript.begin(self)
 	profile_start = _profile_start()
 	if _should_update_enemy_visual_state(delta):
 		_update_enemy_visual_state(delta)
 	_profile_add("visual", profile_start)
+	HotPathProfilerScript.end(self, &"enemy_animation_update", animation_hot_path_start)
 
+	var attack_hot_path_start: int = HotPathProfilerScript.begin(self)
 	profile_start = _profile_start()
 	_apply_contact_damage()
 	_profile_add("contact_damage", profile_start)
+	HotPathProfilerScript.end(self, &"enemy_attack_update", attack_hot_path_start)
 
 
 func _update_enemy_runtime_tick(delta: float) -> void:
 	_update_status_effects(delta)
+	var status_visual_hot_path_start: int = HotPathProfilerScript.begin(self)
 	_update_status_label()
+	HotPathProfilerScript.end(self, &"enemy_status_visual_update", status_visual_hot_path_start)
 
 
 func _update_enemy_action_cooldowns(delta: float) -> void:
@@ -203,6 +244,18 @@ func _resolve_current_target() -> bool:
 	if not is_instance_valid(target):
 		target = _find_target_in_group()
 	return target != null
+
+
+func _register_combat_target() -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	if registry != null and registry.has_method("register_enemy"):
+		registry.call("register_enemy", self)
+
+
+func _unregister_combat_target() -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	if registry != null and registry.has_method("unregister_enemy"):
+		registry.call("unregister_enemy", self)
 
 
 func _stop_motion() -> void:
@@ -239,7 +292,7 @@ func _apply_debug_forced_state(delta: float, forced_state: String) -> void:
 		_:
 			velocity = Vector2.ZERO
 
-	_limit_actor_motion(delta, true)
+	_limit_actor_motion(delta, true, true)
 	move_and_slide()
 	_update_enemy_visual_state(delta)
 
@@ -319,6 +372,8 @@ func _update_status_effects(delta: float) -> void:
 
 
 func _update_status_label() -> void:
+	if not bool(_status_facade.call("consume_status_display_dirty")):
+		return
 	_status_display_controller.call("update", get_status_snapshot())
 
 
@@ -447,6 +502,7 @@ func _finish_death(cause: String = "damage") -> void:
 	if _is_dead:
 		return
 
+	_unregister_combat_target()
 	var context: Dictionary = EnemyDeathContextScript.create(cause, _get_death_policy(cause), {
 		"enemy_id": String(enemy_id),
 		"enemy_type": String(get_meta("enemy_type", "normal")),
@@ -739,7 +795,7 @@ func _apply_collision_radius(radius: float) -> void:
 		circle_shape.radius = radius
 
 
-func _limit_actor_motion(delta: float, include_player: bool = false) -> void:
+func _limit_actor_motion(delta: float, include_player: bool = false, include_enemy_neighbors: bool = true) -> void:
 	if velocity.length_squared() <= 0.01 or delta <= 0.0:
 		return
 
@@ -747,7 +803,7 @@ func _limit_actor_motion(delta: float, include_player: bool = false) -> void:
 	var scale: float = 1.0
 	if include_player and target != null and is_instance_valid(target):
 		scale = minf(scale, _get_actor_motion_scale(motion, target))
-	if _should_skip_enemy_neighbor_motion_limit():
+	if not include_enemy_neighbors or _should_skip_enemy_neighbor_motion_limit():
 		if scale < 1.0:
 			velocity *= maxf(scale, 0.0)
 		return
@@ -755,27 +811,21 @@ func _limit_actor_motion(delta: float, include_player: bool = false) -> void:
 		motion.length() + _get_collision_radius(self, 24.0) + MOTION_LIMIT_EXTRA_RADIUS,
 		NEARBY_ENEMY_CELL_SIZE
 	)
-	for enemy: Node2D in _nearby_enemies(global_position, query_radius):
+	for enemy: Node2D in _nearby_enemies(global_position, query_radius, MAX_NEARBY_ENEMY_CANDIDATES):
 		scale = minf(scale, _get_actor_motion_scale(motion, enemy))
 	if scale < 1.0:
 		velocity *= maxf(scale, 0.0)
 
 
 func _should_limit_actor_motion() -> bool:
+	if velocity.length_squared() <= 0.01:
+		return false
 	if _is_strong_enemy():
 		return true
 	if target != null and is_instance_valid(target):
 		if global_position.distance_squared_to(target.global_position) <= MOTION_LIMIT_ALWAYS_DISTANCE_SQUARED:
 			return true
-
-	_ensure_nearby_enemy_index()
-	var enemy_count: int = _nearby_enemy_total_count
-	if enemy_count < CROWDED_ENEMY_LOD_THRESHOLD:
-		return true
-
-	var throttle_frames: int = 2 if enemy_count < HEAVY_CROWD_ENEMY_LOD_THRESHOLD else 3
-	var frame: int = int(Engine.get_physics_frames())
-	return frame % throttle_frames == int(get_instance_id()) % throttle_frames
+	return true
 
 
 func _should_skip_enemy_neighbor_motion_limit() -> bool:
@@ -783,7 +833,7 @@ func _should_skip_enemy_neighbor_motion_limit() -> bool:
 
 
 func _should_skip_melee_neighbor_logic() -> bool:
-	return not _is_strong_enemy() and _is_crowded_enemy_lod_active()
+	return not _is_strong_enemy() and not _should_run_neighbor_check(0.0)
 
 
 func _should_skip_crowded_runtime_frame() -> bool:
@@ -807,7 +857,8 @@ func _is_crowded_enemy_lod_active() -> bool:
 	return _nearby_enemy_total_count >= CROWDED_ENEMY_LOD_THRESHOLD
 
 
-func _nearby_enemies(center: Vector2, radius: float) -> Array[Node2D]:
+func _nearby_enemies(center: Vector2, radius: float, max_results: int = 0) -> Array[Node2D]:
+	var neighbor_hot_path_start: int = HotPathProfilerScript.begin(self)
 	_ensure_nearby_enemy_index()
 	var result: Array[Node2D] = []
 	var query_radius: float = maxf(radius, 0.0)
@@ -824,7 +875,42 @@ func _nearby_enemies(center: Vector2, radius: float) -> Array[Node2D]:
 					continue
 				if enemy.global_position.distance_squared_to(center) <= radius_squared:
 					result.append(enemy)
+					if max_results > 0 and result.size() >= max_results:
+						HotPathProfilerScript.end(self, &"enemy_neighbor_check", neighbor_hot_path_start)
+						return result
+	HotPathProfilerScript.end(self, &"enemy_neighbor_check", neighbor_hot_path_start)
 	return result
+
+
+func _should_run_neighbor_check(delta: float) -> bool:
+	if _is_strong_enemy():
+		return true
+	_neighbor_check_timer = maxf(_neighbor_check_timer - maxf(delta, 0.0), 0.0)
+	if _neighbor_check_timer > 0.0:
+		return false
+	if not _try_consume_neighbor_check_budget():
+		return false
+	_reset_neighbor_check_timer()
+	return true
+
+
+func _reset_neighbor_check_timer() -> void:
+	_neighbor_check_timer = ENEMY_NEIGHBOR_CHECK_INTERVAL + _neighbor_check_initial_offset() * 0.25
+
+
+func _neighbor_check_initial_offset() -> float:
+	return float(int(get_instance_id()) % 100) / 100.0 * ENEMY_NEIGHBOR_CHECK_INTERVAL
+
+
+func _try_consume_neighbor_check_budget() -> bool:
+	var frame: int = int(Engine.get_physics_frames())
+	if _neighbor_check_budget_frame != frame:
+		_neighbor_check_budget_frame = frame
+		_neighbor_checks_this_frame = 0
+	if _neighbor_checks_this_frame >= MAX_ENEMY_NEIGHBOR_CHECKS_PER_FRAME:
+		return false
+	_neighbor_checks_this_frame += 1
+	return true
 
 
 func _ensure_nearby_enemy_index() -> void:
@@ -842,8 +928,10 @@ func _ensure_nearby_enemy_index() -> void:
 	_nearby_enemy_total_count = 0
 	_nearby_enemy_index_frame = frame
 	_nearby_enemy_index_tree_id = tree_id
-	for node: Node in tree.get_nodes_in_group(&"enemies"):
-		var enemy: Node2D = node as Node2D
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	var targets: Array = registry.call("get_targets", &"enemies") if registry != null and registry.has_method("get_targets") else []
+	for target_variant: Variant in targets:
+		var enemy: Node2D = target_variant as Node2D
 		if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 			continue
 		if enemy.has_method("is_dead") and bool(enemy.call("is_dead")):
@@ -936,6 +1024,8 @@ func _should_update_enemy_visual_state(delta: float) -> bool:
 func _get_enemy_visual_update_interval() -> float:
 	if not _is_normal_enemy():
 		return 0.0
+	if _is_offscreen_for_visual_update():
+		return VISUAL_UPDATE_OFFSCREEN_INTERVAL
 	_ensure_nearby_enemy_index()
 	if target != null and is_instance_valid(target):
 		var distance_squared: float = global_position.distance_squared_to(target.global_position)
@@ -946,6 +1036,15 @@ func _get_enemy_visual_update_interval() -> float:
 	if _nearby_enemy_total_count >= CROWDED_ENEMY_LOD_THRESHOLD:
 		return VISUAL_UPDATE_CROWDED_INTERVAL
 	return 0.0
+
+
+func _is_offscreen_for_visual_update() -> bool:
+	var viewport: Viewport = get_viewport()
+	if viewport == null:
+		return false
+	var visible_rect: Rect2 = viewport.get_visible_rect().grow(VISUAL_UPDATE_OFFSCREEN_MARGIN)
+	var screen_position: Vector2 = viewport.get_canvas_transform() * global_position
+	return not visible_rect.has_point(screen_position)
 
 
 func _get_priority_status_visual_state() -> String:

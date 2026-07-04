@@ -42,6 +42,7 @@ const UIScreenFactoryScript: Script = preload("res://scripts/ui/ui_screen_factor
 const UIResponsiveLayoutScript: Script = preload("res://scripts/ui/ui_responsive_layout.gd")
 const UISettingsServiceScript: Script = preload("res://scripts/ui/ui_settings_service.gd")
 const LocalizationServiceScript: Script = preload("res://scripts/ui/localization_service.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
 const UIScreenHostScript: Script = preload("res://scripts/ui/ui_screen_host.gd")
 const UIScreenRegistryScript: Script = preload("res://scripts/ui/ui_screen_registry.gd")
 const UIPausePolicyScript: Script = preload("res://scripts/ui/ui_pause_policy.gd")
@@ -777,10 +778,12 @@ func _teardown_run_scene() -> void:
 
 
 func _update_run_hud() -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_run_scene_ui_bridge.call("connect_enemy_death_signals", get_tree(), self)
 	_update_run_stats_snapshots()
 	if _run_hud_controller != null:
 		_run_hud_controller.call("update", get_tree(), _get_run_hud_state())
+	HotPathProfilerScript.end(self, &"ui_update", hot_path_start)
 
 
 func _get_run_hud_state() -> Dictionary:

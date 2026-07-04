@@ -83,7 +83,7 @@ func _idle_if_melee_space_blocked() -> bool:
 
 	var max_nearby: int = int(config.get("melee_crowd_limit", 10))
 	var count: int = 0
-	for other: Node2D in _nearby_enemies(target.global_position, radius):
+	for other: Node2D in _nearby_enemies(target.global_position, radius, max_nearby):
 		if other.has_method("get_behavior_type") and not _is_melee_behavior(String(other.call("get_behavior_type"))):
 			continue
 		if other.global_position.distance_squared_to(target.global_position) <= radius * radius:
@@ -99,9 +99,10 @@ func _get_separation_direction() -> Vector2:
 	if body == null:
 		return Vector2.ZERO
 	var radius: float = float(config.get("separation_radius", 30.0))
+	var max_neighbors: int = 8
 	var separation: Vector2 = Vector2.ZERO
 	var checked: int = 0
-	for other: Node2D in _nearby_enemies(body.global_position, radius):
+	for other: Node2D in _nearby_enemies(body.global_position, radius, max_neighbors):
 		var offset: Vector2 = body.global_position - other.global_position
 		var distance_squared: float = offset.length_squared()
 		if distance_squared <= 0.01 or distance_squared > radius * radius:
@@ -117,9 +118,9 @@ func _is_melee_behavior(behavior_type: String) -> bool:
 	return behavior_type == "chase_player" or behavior_type == "explode_near_player" or behavior_type == "dash_attack"
 
 
-func _nearby_enemies(center: Vector2, radius: float) -> Array:
+func _nearby_enemies(center: Vector2, radius: float, max_results: int = 0) -> Array:
 	if enemy != null and enemy.has_method("_nearby_enemies"):
-		return enemy.call("_nearby_enemies", center, radius)
+		return enemy.call("_nearby_enemies", center, radius, max_results)
 	return []
 
 

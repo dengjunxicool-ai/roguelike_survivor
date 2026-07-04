@@ -1,6 +1,8 @@
 extends Node2D
 class_name MarsSparkMissileEffect
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
 @export_range(0.05, 10.0, 0.05, "or_greater") var lifetime: float = 1.65
 @export_range(0.05, 10.0, 0.05, "or_greater") var continuous_duration: float = 4.0
 @export_range(0.05, 3.0, 0.01, "or_greater") var fire_interval: float = 0.24
@@ -115,12 +117,11 @@ func _spawn_direction() -> Vector2:
 
 
 func _find_nearest_enemy() -> Node2D:
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return null
 	var nearest: Node2D = null
 	var nearest_distance_squared: float = seek_range * seek_range
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	var targets: Array = registry.call("get_targets_in_radius", global_position, seek_range, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 			continue

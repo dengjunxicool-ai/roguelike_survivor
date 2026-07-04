@@ -6,6 +6,9 @@ const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_c
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+const PROJECTILE_RETARGET_INTERVAL: float = 0.1
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 15
 @export_range(1.0, 3000.0, 10.0, "or_greater") var speed: float = 520.0
@@ -49,6 +52,8 @@ var _curve_duration: float = 0.0
 var _curve_elapsed: float = 0.0
 var _visual_effect_node: Node2D
 var _collision_radius: float = 12.0
+var _homing_target: Node2D
+var _homing_retarget_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -101,6 +106,8 @@ func prepare_for_pool_despawn() -> void:
 	relic_manager = null
 	actions_on_hit.clear()
 	_hit_bodies.clear()
+	_homing_target = null
+	_homing_retarget_timer = 0.0
 	visible = false
 
 
@@ -194,6 +201,8 @@ func _reset_projectile_runtime_state(params: Dictionary) -> void:
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
 	_age = 0.0
+	_homing_target = null
+	_homing_retarget_timer = 0.0
 	_update_direction_state()
 	_reset_pierce_counter()
 	_collision_radius = maxf(float(params.get("radius", params.get("area_radius", 12.0))), 1.0)
@@ -204,6 +213,12 @@ func _reset_projectile_runtime_state(params: Dictionary) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_physics_process_profiled(delta)
+	HotPathProfilerScript.end(self, &"projectile_update", hot_path_start)
+
+
+func _physics_process_profiled(delta: float) -> void:
 	if _is_destroying:
 		return
 
@@ -431,9 +446,19 @@ func _update_curve_trajectory(delta: float) -> void:
 
 
 func _update_homing_direction(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_update_homing_direction_profiled(delta)
+	HotPathProfilerScript.end(self, &"projectile_targeting", hot_path_start)
+
+
+func _update_homing_direction_profiled(delta: float) -> void:
 	if not homing_enabled:
 		return
-	var target: Node2D = _find_nearest_homing_target()
+	_homing_retarget_timer = maxf(_homing_retarget_timer - delta, 0.0)
+	if not _is_valid_homing_target(_homing_target) or _homing_retarget_timer <= 0.0:
+		_homing_target = _find_nearest_homing_target()
+		_homing_retarget_timer = PROJECTILE_RETARGET_INTERVAL
+	var target: Node2D = _homing_target
 	if target == null:
 		return
 	var desired_direction: Vector2 = global_position.direction_to(target.global_position)
@@ -444,15 +469,14 @@ func _update_homing_direction(delta: float) -> void:
 
 
 func _find_nearest_homing_target() -> Node2D:
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return null
 	var seek_range: float = homing_seek_range
 	if seek_range <= 0.0:
 		seek_range = maxf(speed * lifetime, 1.0)
 	var nearest: Node2D = null
 	var nearest_distance_squared: float = seek_range * seek_range
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	var candidates: Array = registry.call("get_targets_in_radius", global_position, seek_range, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in candidates:
 		var target: Node2D = node as Node2D
 		if not _is_valid_homing_target(target):
 			continue
@@ -464,15 +488,26 @@ func _find_nearest_homing_target() -> Node2D:
 
 
 func _resolve_swept_homing_hit(from_position: Vector2, to_position: Vector2) -> bool:
-	var tree: SceneTree = get_tree()
-	if tree == null or from_position == to_position:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	var result: bool = _resolve_swept_homing_hit_profiled(from_position, to_position)
+	HotPathProfilerScript.end(self, &"projectile_targeting", hot_path_start)
+	return result
+
+
+func _resolve_swept_homing_hit_profiled(from_position: Vector2, to_position: Vector2) -> bool:
+	if from_position == to_position:
 		return false
 
 	var nearest_target: Node = null
 	var nearest_t: float = INF
 	var segment: Vector2 = to_position - from_position
 	var segment_length_squared: float = segment.length_squared()
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var segment_length: float = sqrt(segment_length_squared)
+	var query_origin: Vector2 = from_position.lerp(to_position, 0.5)
+	var query_radius: float = segment_length * 0.5 + _collision_radius + 128.0
+	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+	var candidates: Array = registry.call("get_targets_in_radius", query_origin, query_radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in candidates:
 		var target: Node2D = node as Node2D
 		if target == null or _hit_bodies.has(target) or not _is_valid_homing_target(target):
 			continue

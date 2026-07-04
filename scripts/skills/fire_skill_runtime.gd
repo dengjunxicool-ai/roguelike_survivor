@@ -4,6 +4,7 @@ class_name FireSkillRuntime
 
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 # First-pass compatibility adapter for fire passive runtime_rules. Every rule
 # listed here has a concrete runtime effect or a deliberately simplified mapping
@@ -501,12 +502,12 @@ static func _ensure_action_target(context: Dictionary) -> Node:
 	var caster: Node2D = context.get("caster") as Node2D
 	if caster == null:
 		return null
-	var tree: SceneTree = caster.get_tree()
-	if tree == null:
-		return null
 	var nearest: Node2D = null
 	var nearest_distance: float = INF
-	for node: Node in tree.get_nodes_in_group(StringName(String(context.get("target_group", &"enemies")))):
+	var target_group: StringName = StringName(String(context.get("target_group", &"enemies")))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(caster)
+	var targets: Array = registry.call("get_targets", target_group) if registry != null and registry.has_method("get_targets") else []
+	for node: Node in targets:
 		var candidate: Node2D = node as Node2D
 		if candidate == null or not is_instance_valid(candidate) or candidate.is_queued_for_deletion():
 			continue

@@ -3,6 +3,7 @@ class_name TargetingService
 
 
 const ENEMY_GROUP: StringName = &"enemies"
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 
 static func find_target(caster: Node, mode: String, params: Dictionary = {}) -> Node2D:
@@ -276,12 +277,10 @@ static func _find_enemies_around(caster: Node2D, params: Dictionary) -> Array:
 
 
 static func _get_valid_enemies() -> Array:
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	if tree == null:
-		return []
-
 	var enemies: Array = []
-	for node: Node in tree.get_nodes_in_group(ENEMY_GROUP):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(null)
+	var candidates: Array = registry.call("get_targets", ENEMY_GROUP) if registry != null and registry.has_method("get_targets") else []
+	for node: Node in candidates:
 		var enemy: Node2D = node as Node2D
 		if _is_valid_enemy(enemy):
 			enemies.append(enemy)
@@ -356,7 +355,11 @@ static func _get_enemy_health(enemy: Node2D) -> int:
 static func _nearby_enemy_count(center: Vector2, radius: float) -> int:
 	var radius_squared: float = radius * radius
 	var count: int = 0
-	for enemy: Node2D in _get_valid_enemies():
+	var registry: Node = CombatTargetRegistryScript.get_or_create(null)
+	var candidates: Array = registry.call("get_targets_in_radius", center, radius, ENEMY_GROUP) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for enemy: Node2D in candidates:
+		if not _is_valid_enemy(enemy):
+			continue
 		if center.distance_squared_to(enemy.global_position) <= radius_squared:
 			count += 1
 	return count

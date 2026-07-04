@@ -12,6 +12,7 @@ const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 const BurnStatusRuleHelperScript: Script = preload("res://scripts/skills/special_rules/burn_status_rule_helper.gd")
 const SkillSpecialRuleSourceScript: Script = preload("res://scripts/skills/special_rules/skill_special_rule_source.gd")
 const SpecialRuleCommonScript: Script = preload("res://scripts/skills/special_rules/special_rule_common.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 static var _soulburn_target_cooldowns: Dictionary = {}
 static var _flame_core_burst_cooldowns: Dictionary = {}
@@ -1864,10 +1865,9 @@ func _update_corrosive_film(rules: Dictionary, context: Dictionary) -> void:
 		return
 	player.set_meta("corrosive_film_next_corrosion_at", now_seconds + interval)
 	var radius: float = maxf(float(rule.get("radius", 120.0)), 1.0)
-	var tree: SceneTree = player.get_tree()
-	if tree == null:
-		return
-	for node: Node in tree.get_nodes_in_group(&"enemies"):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(player)
+	var targets: Array = registry.call("get_targets_in_radius", player.global_position, radius, &"enemies") if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or not enemy.has_method("apply_status"):
 			continue
@@ -2625,10 +2625,10 @@ func _apply_frost_aura_slow(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("frost_aura_slow", {}))
 	var radius: float = maxf(float(rule.get("radius", 120.0)) * maxf(1.0 + float(rule.get("radius_multiplier_add", 0.0)), 0.05), 1.0)
 	var radius_squared: float = radius * radius
-	var tree: SceneTree = caster.get_tree()
-	if tree == null:
-		return
-	for node: Node in tree.get_nodes_in_group(context.get("target_group", &"enemies")):
+	var target_group: StringName = StringName(String(context.get("target_group", &"enemies")))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(caster)
+	var targets: Array = registry.call("get_targets_in_radius", caster.global_position, radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or caster.global_position.distance_squared_to(enemy.global_position) > radius_squared:
 			continue
@@ -2648,10 +2648,10 @@ func _apply_freeze_frostbite_near_player(rules: Dictionary, context: Dictionary)
 	var rule: Dictionary = _get_dictionary(rules.get("freeze_frostbite_near_player", {}))
 	var radius: float = maxf(float(rule.get("radius", 90.0)), 1.0)
 	var radius_squared: float = radius * radius
-	var tree: SceneTree = caster.get_tree()
-	if tree == null:
-		return
-	for node: Node in tree.get_nodes_in_group(context.get("target_group", &"enemies")):
+	var target_group: StringName = StringName(String(context.get("target_group", &"enemies")))
+	var registry: Node = CombatTargetRegistryScript.get_or_create(caster)
+	var targets: Array = registry.call("get_targets_in_radius", caster.global_position, radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or not enemy.has_method("get_status_stack") or caster.global_position.distance_squared_to(enemy.global_position) > radius_squared:
 			continue

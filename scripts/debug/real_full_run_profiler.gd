@@ -9,14 +9,44 @@ const REPORT_DIR: String = "res://reports/real-full-run-profile"
 const SAMPLES_PATH: String = "res://reports/real-full-run-profile/latest_samples.json"
 const REPORT_PATH: String = "res://reports/real-full-run-profile/report.md"
 const ATTRIBUTION_PATH: String = "res://reports/real-full-run-profile/latest_attribution.json"
+const HOT_PATH_PATH: String = "res://reports/real-full-run-profile/latest_hot_path.json"
 const BOSS_DAMAGE_STOP_AMOUNT: int = 1000
 const BOSS_DAMAGE_RUN_MAX_SECONDS: float = 1200.0
 const SPIKE_CONTEXT_FRAMES: int = 5
 const PROFILER_ENABLED_META: StringName = &"real_full_run_profiler_enabled"
 const PROFILER_STATUS_EVENT_META: StringName = &"real_full_run_profiler_status_event"
+const PROFILER_HOT_PATH_EVENT_META: StringName = &"real_full_run_profiler_hot_path_event"
+const PROFILER_AOE_TICK_EVENT_META: StringName = &"real_full_run_profiler_aoe_tick_event"
 const SOURCE_ATTRIBUTION_FOCUS_SKILLS: Array[String] = [
 	"chaos_attack_chaotic",
 	"chaos_cast_singularity_barrage"
+]
+const HOT_PATH_SECTIONS: Array[String] = [
+	"skill_update_total",
+	"skill_cast_tick",
+	"status_update_total",
+	"status_apply",
+	"status_tick",
+	"status_reaction",
+	"status_visual_update",
+	"area_effect_update",
+	"area_effect_tick",
+	"projectile_update",
+	"projectile_targeting",
+	"summon_update",
+	"summon_targeting",
+	"enemy_update",
+	"enemy_movement",
+	"enemy_ai_update",
+	"enemy_attack_update",
+	"enemy_neighbor_check",
+	"enemy_animation_update",
+	"enemy_status_visual_update",
+	"pickup_update",
+	"pickup_idle_check",
+	"pickup_active_update",
+	"pickup_reward_flush",
+	"ui_update"
 ]
 
 var _enabled: bool = false
@@ -95,6 +125,12 @@ var _damage_number_created_total: int = 0
 var _damage_number_destroyed_total: int = 0
 var _damage_number_selector_candidates: Dictionary = {}
 var _max_live_counts_by_category: Dictionary = {}
+var _hot_path_window_start_seconds: float = 0.0
+var _hot_path_window_start_frame: int = 0
+var _hot_path_window_sections: Dictionary = {}
+var _hot_path_run_sections: Dictionary = {}
+var _hot_path_windows: Array[Dictionary] = []
+var _area_effect_tick_stats: Dictionary = {}
 
 
 func _ready() -> void:
@@ -109,6 +145,8 @@ func _ready() -> void:
 	if get_tree() != null and get_tree().root != null:
 		get_tree().root.set_meta(PROFILER_ENABLED_META, true)
 		get_tree().root.set_meta(PROFILER_STATUS_EVENT_META, Callable(self, "_on_profiler_status_event"))
+		get_tree().root.set_meta(PROFILER_HOT_PATH_EVENT_META, Callable(self, "_on_hot_path_event"))
+		get_tree().root.set_meta(PROFILER_AOE_TICK_EVENT_META, Callable(self, "_on_area_effect_tick_event"))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(REPORT_DIR))
 	if not get_tree().node_added.is_connected(_on_node_added):
 		get_tree().node_added.connect(_on_node_added)
@@ -117,6 +155,8 @@ func _ready() -> void:
 	_last_tick_usec = Time.get_ticks_usec()
 	_window_start_seconds = 0.0
 	_current_frame_bucket = _new_frame_bucket()
+	_area_effect_tick_stats = _new_area_effect_tick_stats()
+	_reset_hot_path_window(0.0)
 	print("[RealFullRunProfile] enabled real startup profile character=%s map=%s" % [String(CHARACTER_ID), String(MAP_ID)])
 
 
@@ -478,6 +518,7 @@ func _record_sample(reason: String) -> void:
 		"player": _player_snapshot()
 	}
 	_samples.append(sample)
+	_snapshot_hot_path_window(reason)
 	print("[RealFullRunProfile] t=%.1f fps=%.1f p95=%.2fms p99=%.2fms enemies=%d projectiles=%d areas=%d pickups=%d statuses=%d obj_delta=%d debug=%s" % [
 		_elapsed,
 		float(sample.get("avg_fps", 0.0)),
@@ -498,6 +539,7 @@ func _record_sample(reason: String) -> void:
 
 func _write_outputs(status: String) -> void:
 	_status = status
+	_snapshot_hot_path_window("final")
 	var payload: Dictionary = {
 		"status": status,
 		"failure_reason": _failure_reason,
@@ -536,6 +578,8 @@ func _write_outputs(status: String) -> void:
 		file.store_string(JSON.stringify(payload, "\t"))
 		file.close()
 	_write_attribution_output(status)
+	_write_hot_path_output(status)
+	var hot_path_top: Array[Dictionary] = _top_hot_path_entries(_hot_path_run_sections, _frame_ms_values.size(), 10)
 	var lines: Array[String] = [
 		"# Real Full Run Performance Profile",
 		"",
@@ -568,12 +612,33 @@ func _write_outputs(status: String) -> void:
 		"- forced_profile_skills: %s" % JSON.stringify(_forced_profile_skill_report()),
 		"- final_skills: %s" % JSON.stringify(_skills_snapshot()),
 		"- samples_json: %s" % ProjectSettings.globalize_path(SAMPLES_PATH),
+		"- hot_path_json: %s" % ProjectSettings.globalize_path(HOT_PATH_PATH),
+		"",
+		"## Hot Path Top 10",
+		"",
+		"| rank | section | total ms | avg ms | p95 ms | max ms | calls | calls/frame |",
+		"| ---: | :--- | ---: | ---: | ---: | ---: | ---: | ---: |"
+	]
+	var rank: int = 1
+	for entry: Dictionary in hot_path_top:
+		lines.append("| %d | %s | %.3f | %.4f | %.4f | %.4f | %d | %.3f |" % [
+			rank,
+			String(entry.get("section", "")),
+			float(entry.get("total_ms", 0.0)),
+			float(entry.get("avg_ms", 0.0)),
+			float(entry.get("p95_ms", 0.0)),
+			float(entry.get("max_ms", 0.0)),
+			int(entry.get("call_count", 0)),
+			float(entry.get("calls_per_frame", 0.0))
+		])
+		rank += 1
+	lines.append_array([
 		"",
 		"## Samples",
 		"",
 		"| t | fps | p95 ms | p99 ms | enemies | projectiles | areas | pickups | damage nums | statuses | create/min | destroy/min | objects delta | debug |",
 		"| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :--- |"
-	]
+	])
 	for sample: Dictionary in _samples:
 		lines.append("| %.1f | %.1f | %.2f | %.2f | %d | %d | %d | %d | %d | %d | %.1f | %.1f | %d | %s |" % [
 			float(sample.get("elapsed_seconds", 0.0)),
@@ -1284,6 +1349,240 @@ func _skills_snapshot() -> Array[Dictionary]:
 	return result
 
 
+func _on_hot_path_event(section: Variant, duration_usec: Variant) -> void:
+	if not _enabled:
+		return
+	var section_key: String = String(section)
+	if not HOT_PATH_SECTIONS.has(section_key):
+		return
+	var elapsed_usec: int = maxi(int(duration_usec), 0)
+	if elapsed_usec <= 0:
+		return
+	_record_hot_path_stat(_dict(_hot_path_window_sections.get(section_key, {})), elapsed_usec)
+	_record_hot_path_stat(_dict(_hot_path_run_sections.get(section_key, {})), elapsed_usec)
+
+
+func _on_area_effect_tick_event(payload_variant: Variant) -> void:
+	if not _enabled or not (payload_variant is Dictionary):
+		return
+	var payload: Dictionary = payload_variant
+	_record_area_effect_tick_stat(_area_effect_tick_stats, payload)
+	_record_area_effect_tick_group(_dict(_area_effect_tick_stats.get("by_area_id", {})), String(payload.get("area_id", "unknown")), payload)
+	_record_area_effect_tick_group(_dict(_area_effect_tick_stats.get("by_source_id", {})), String(payload.get("source_id", "unknown")), payload)
+	_record_area_effect_tick_group(_dict(_area_effect_tick_stats.get("by_source_skill_id", {})), String(payload.get("source_skill_id", "unknown")), payload)
+
+
+func _new_area_effect_tick_stats() -> Dictionary:
+	return {
+		"tick_count": 0,
+		"candidate_count": 0,
+		"hit_count": 0,
+		"status_apply_count": 0,
+		"max_candidate_count": 0,
+		"max_hit_count": 0,
+		"max_status_apply_count": 0,
+		"by_area_id": {},
+		"by_source_id": {},
+		"by_source_skill_id": {}
+	}
+
+
+func _record_area_effect_tick_group(groups: Dictionary, key: String, payload: Dictionary) -> void:
+	var group_key: String = key if key.strip_edges() != "" else "unknown"
+	var stat: Dictionary = _dict(groups.get(group_key, {}))
+	if stat.is_empty():
+		stat = _new_area_effect_tick_stats()
+		stat.erase("by_area_id")
+		stat.erase("by_source_id")
+		stat.erase("by_source_skill_id")
+		groups[group_key] = stat
+	_record_area_effect_tick_stat(stat, payload)
+
+
+func _record_area_effect_tick_stat(stat: Dictionary, payload: Dictionary) -> void:
+	var candidate_count: int = int(payload.get("candidate_count", 0))
+	var hit_count: int = int(payload.get("hit_count", 0))
+	var status_apply_count: int = int(payload.get("status_apply_count", 0))
+	stat["tick_count"] = int(stat.get("tick_count", 0)) + 1
+	stat["candidate_count"] = int(stat.get("candidate_count", 0)) + candidate_count
+	stat["hit_count"] = int(stat.get("hit_count", 0)) + hit_count
+	stat["status_apply_count"] = int(stat.get("status_apply_count", 0)) + status_apply_count
+	stat["max_candidate_count"] = maxi(int(stat.get("max_candidate_count", 0)), candidate_count)
+	stat["max_hit_count"] = maxi(int(stat.get("max_hit_count", 0)), hit_count)
+	stat["max_status_apply_count"] = maxi(int(stat.get("max_status_apply_count", 0)), status_apply_count)
+
+
+func _area_effect_tick_stats_report() -> Dictionary:
+	var report: Dictionary = _area_effect_tick_stat_report(_area_effect_tick_stats)
+	report["by_area_id"] = _area_effect_tick_group_report(_dict(_area_effect_tick_stats.get("by_area_id", {})))
+	report["by_source_id"] = _area_effect_tick_group_report(_dict(_area_effect_tick_stats.get("by_source_id", {})))
+	report["by_source_skill_id"] = _area_effect_tick_group_report(_dict(_area_effect_tick_stats.get("by_source_skill_id", {})))
+	return report
+
+
+func _area_effect_tick_group_report(groups: Dictionary) -> Dictionary:
+	var result: Dictionary = {}
+	for key_variant: Variant in groups.keys():
+		var key: String = String(key_variant)
+		result[key] = _area_effect_tick_stat_report(_dict(groups.get(key_variant, {})))
+	return result
+
+
+func _area_effect_tick_stat_report(stat: Dictionary) -> Dictionary:
+	var tick_count: int = int(stat.get("tick_count", 0))
+	var candidate_count: int = int(stat.get("candidate_count", 0))
+	var hit_count: int = int(stat.get("hit_count", 0))
+	var status_apply_count: int = int(stat.get("status_apply_count", 0))
+	return {
+		"tick_count": tick_count,
+		"candidate_count": candidate_count,
+		"hit_count": hit_count,
+		"status_apply_count": status_apply_count,
+		"avg_candidate_count": float(candidate_count) / float(tick_count) if tick_count > 0 else 0.0,
+		"avg_hit_count": float(hit_count) / float(tick_count) if tick_count > 0 else 0.0,
+		"avg_status_apply_count": float(status_apply_count) / float(tick_count) if tick_count > 0 else 0.0,
+		"max_candidate_count": int(stat.get("max_candidate_count", 0)),
+		"max_hit_count": int(stat.get("max_hit_count", 0)),
+		"max_status_apply_count": int(stat.get("max_status_apply_count", 0))
+	}
+
+
+func _reset_hot_path_window(start_seconds: float) -> void:
+	_hot_path_window_start_seconds = start_seconds
+	_hot_path_window_start_frame = _frame_index
+	_hot_path_window_sections = _new_hot_path_sections()
+	if _hot_path_run_sections.is_empty():
+		_hot_path_run_sections = _new_hot_path_sections()
+
+
+func _new_hot_path_sections() -> Dictionary:
+	var sections: Dictionary = {}
+	for section: String in HOT_PATH_SECTIONS:
+		sections[section] = _new_hot_path_stat()
+	return sections
+
+
+func _new_hot_path_stat() -> Dictionary:
+	return {
+		"total_usec": 0,
+		"max_usec": 0,
+		"call_count": 0,
+		"durations_usec": []
+	}
+
+
+func _record_hot_path_stat(stat: Dictionary, elapsed_usec: int) -> void:
+	stat["total_usec"] = int(stat.get("total_usec", 0)) + elapsed_usec
+	stat["max_usec"] = maxi(int(stat.get("max_usec", 0)), elapsed_usec)
+	stat["call_count"] = int(stat.get("call_count", 0)) + 1
+	var durations: Array = stat.get("durations_usec", [])
+	durations.append(elapsed_usec)
+	stat["durations_usec"] = durations
+
+
+func _snapshot_hot_path_window(reason: String) -> void:
+	if _hot_path_window_sections.is_empty():
+		_reset_hot_path_window(_elapsed)
+		return
+	var has_calls: bool = false
+	for section: String in HOT_PATH_SECTIONS:
+		if int(_dict(_hot_path_window_sections.get(section, {})).get("call_count", 0)) > 0:
+			has_calls = true
+			break
+	if not has_calls:
+		_hot_path_window_start_seconds = _elapsed
+		_hot_path_window_start_frame = _frame_index
+		return
+	var frame_count: int = maxi(_frame_index - _hot_path_window_start_frame, 1)
+	_hot_path_windows.append({
+		"reason": reason,
+		"start_seconds": _hot_path_window_start_seconds,
+		"end_seconds": _elapsed,
+		"duration_seconds": maxf(_elapsed - _hot_path_window_start_seconds, 0.0),
+		"start_frame": _hot_path_window_start_frame,
+		"end_frame": _frame_index,
+		"frame_count": frame_count,
+		"sections": _hot_path_report_sections(_hot_path_window_sections, frame_count)
+	})
+	_reset_hot_path_window(_elapsed)
+
+
+func _hot_path_report_sections(source: Dictionary, frame_count: int) -> Dictionary:
+	var result: Dictionary = {}
+	for section: String in HOT_PATH_SECTIONS:
+		result[section] = _hot_path_section_report(_dict(source.get(section, {})), frame_count)
+	return result
+
+
+func _hot_path_section_report(stat: Dictionary, frame_count: int) -> Dictionary:
+	var call_count: int = int(stat.get("call_count", 0))
+	var total_usec: int = int(stat.get("total_usec", 0))
+	return {
+		"avg_ms": (float(total_usec) / float(call_count) / 1000.0) if call_count > 0 else 0.0,
+		"max_ms": float(int(stat.get("max_usec", 0))) / 1000.0,
+		"p95_ms": _percentile_usec(stat.get("durations_usec", []), 0.95),
+		"call_count": call_count,
+		"calls_per_frame": float(call_count) / float(maxi(frame_count, 1)),
+		"total_ms": float(total_usec) / 1000.0
+	}
+
+
+func _top_hot_path_entries(source: Dictionary, frame_count: int, limit: int = 10) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for section: String in HOT_PATH_SECTIONS:
+		var entry: Dictionary = _hot_path_section_report(_dict(source.get(section, {})), frame_count)
+		entry["section"] = section
+		entries.append(entry)
+	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("total_ms", 0.0)) > float(b.get("total_ms", 0.0))
+	)
+	return entries.slice(0, mini(limit, entries.size()))
+
+
+func _write_hot_path_output(status: String) -> void:
+	var frame_count: int = _frame_ms_values.size()
+	var payload: Dictionary = {
+		"status": status,
+		"failure_reason": _failure_reason,
+		"character": String(CHARACTER_ID),
+		"map": String(MAP_ID),
+		"elapsed_seconds": _elapsed,
+		"sample_interval_seconds": SAMPLE_INTERVAL_SECONDS,
+		"boss_seen": _boss_seen,
+		"boss_start_health": _boss_start_health,
+		"boss_damage_done": _boss_damage_done,
+		"boss_damage_stop_amount": BOSS_DAMAGE_STOP_AMOUNT,
+		"frame_count": frame_count,
+		"sections": HOT_PATH_SECTIONS,
+		"windows": _hot_path_windows,
+		"summary": {
+			"sections": _hot_path_report_sections(_hot_path_run_sections, frame_count),
+			"top_10_hot_paths": _top_hot_path_entries(_hot_path_run_sections, frame_count, 10),
+			"area_effect_tick_stats": _area_effect_tick_stats_report()
+		},
+		"area_effect_tick_stats": _area_effect_tick_stats_report(),
+		"forced_profile_skills": _forced_profile_skill_report(),
+		"final_skills": _skills_snapshot()
+	}
+	var file: FileAccess = FileAccess.open(HOT_PATH_PATH, FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify(payload, "\t"))
+		file.close()
+	print("[RealFullRunProfile] hot_path=%s" % ProjectSettings.globalize_path(HOT_PATH_PATH))
+
+
+func _percentile_usec(values_variant: Variant, percentile: float) -> float:
+	if not (values_variant is Array):
+		return 0.0
+	var values: Array = values_variant
+	if values.is_empty():
+		return 0.0
+	var sorted: Array = values.duplicate()
+	sorted.sort()
+	var index: int = clampi(int(ceil(percentile * float(sorted.size()))) - 1, 0, sorted.size() - 1)
+	return float(int(sorted[index])) / 1000.0
+
+
 func _write_attribution_output(status: String) -> void:
 	_finalize_frame_bucket(0.0)
 	var payload: Dictionary = {
@@ -1474,6 +1773,10 @@ func _finish(exit_code: int) -> void:
 			get_tree().root.remove_meta(PROFILER_ENABLED_META)
 		if get_tree().root.has_meta(PROFILER_STATUS_EVENT_META):
 			get_tree().root.remove_meta(PROFILER_STATUS_EVENT_META)
+		if get_tree().root.has_meta(PROFILER_HOT_PATH_EVENT_META):
+			get_tree().root.remove_meta(PROFILER_HOT_PATH_EVENT_META)
+		if get_tree().root.has_meta(PROFILER_AOE_TICK_EVENT_META):
+			get_tree().root.remove_meta(PROFILER_AOE_TICK_EVENT_META)
 	_release_movement()
 	get_tree().quit(exit_code)
 

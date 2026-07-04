@@ -5,7 +5,11 @@ class_name AreaEffect
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const AreaEffectManagerScript: Script = preload("res://scripts/combat/area_effect_manager.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const PROGRAMMATIC_VISUAL_REDRAW_INTERVAL: float = 0.08
+const MAX_TICK_HITS_PER_AREA_FRAME: int = 2
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
@@ -48,6 +52,14 @@ var _expand_from_radius: float = -1.0
 var _expand_to_radius: float = -1.0
 var _damaged_body_ids: Dictionary = {}
 var _current_tick_targets_hit: int = 0
+var _candidate_body_ids: Dictionary = {}
+var _candidate_body_order: Array[int] = []
+var _candidate_cache_seeded: bool = false
+var _area_effect_manager: Node = null
+var _current_tick_stats: Dictionary = {}
+var _pending_tick_target_ids: Array[int] = []
+var _pending_tick_index: int = 0
+var _pending_tick_stats: Dictionary = {}
 var event_bus: Node
 var skill_instance: RefCounted
 var caster: Node
@@ -60,9 +72,13 @@ var actions_on_hit: Array = []
 var actions_on_expire: Array = []
 var actions_on_death: Array = []
 
+static var _status_apply_coalesce_frame: int = -1
+static var _status_apply_coalesce_keys: Dictionary = {}
+
 
 func _ready() -> void:
 	_visual_seed = float(get_instance_id() % 997) / 997.0 * TAU
+	_connect_candidate_signals()
 	_apply_radius(radius)
 
 
@@ -76,6 +92,7 @@ func setup(params: Dictionary) -> void:
 	_enable_area_collision()
 	_apply_radius(radius)
 	_apply_visual(params)
+	_register_area_effect()
 	_execute_apply_actions()
 	_enforce_max_active(int(params.get("max_active", 0)))
 
@@ -109,6 +126,9 @@ func prepare_for_pool_despawn() -> void:
 	actions_on_expire.clear()
 	actions_on_death.clear()
 	_damaged_body_ids.clear()
+	_clear_pending_tick_damage()
+	_clear_candidate_cache()
+	_unregister_area_effect()
 	visible = false
 
 
@@ -196,16 +216,173 @@ func _reset_area_runtime_state(params: Dictionary) -> void:
 	_expand_to_radius = float(params.get("expand_to_radius", -1.0))
 	_damaged_body_ids.clear()
 	_current_tick_targets_hit = 0
+	_current_tick_stats = {}
+	_clear_pending_tick_damage()
+	_clear_candidate_cache()
 	if _uses_expanding_radius():
 		radius = maxf(_expand_from_radius, 1.0)
 
 
 func _enable_area_collision() -> void:
-	set_deferred("monitoring", false)
+	_connect_candidate_signals()
+	set_deferred("monitoring", true)
 	set_deferred("monitorable", false)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null:
-		collision_shape.set_deferred("disabled", true)
+		collision_shape.set_deferred("disabled", false)
+
+
+func _connect_candidate_signals() -> void:
+	if not body_entered.is_connected(Callable(self, "_on_body_entered")):
+		body_entered.connect(Callable(self, "_on_body_entered"))
+	if not body_exited.is_connected(Callable(self, "_on_body_exited")):
+		body_exited.connect(Callable(self, "_on_body_exited"))
+
+
+func _register_area_effect() -> void:
+	_area_effect_manager = AreaEffectManagerScript.get_or_create(self)
+	if _area_effect_manager != null and _area_effect_manager.has_method("register_area"):
+		_area_effect_manager.call("register_area", self, tick_interval)
+
+
+func _unregister_area_effect() -> void:
+	if _area_effect_manager != null and is_instance_valid(_area_effect_manager) and _area_effect_manager.has_method("unregister_area"):
+		_area_effect_manager.call("unregister_area", self)
+	_area_effect_manager = null
+
+
+func _area_effect_manager_allows_tick() -> bool:
+	if _area_effect_manager == null or not is_instance_valid(_area_effect_manager):
+		_register_area_effect()
+	if _area_effect_manager == null or not _area_effect_manager.has_method("request_tick"):
+		return true
+	return bool(_area_effect_manager.call("request_tick", self))
+
+
+func _new_tick_stats() -> Dictionary:
+	return {
+		"candidate_count": 0,
+		"hit_count": 0,
+		"status_apply_count": 0
+	}
+
+
+func _record_current_tick_stats() -> void:
+	if _area_effect_manager == null or not is_instance_valid(_area_effect_manager):
+		_register_area_effect()
+	if _area_effect_manager != null and _area_effect_manager.has_method("record_tick"):
+		_area_effect_manager.call("record_tick", self, _current_tick_stats)
+
+
+func _request_tick_hit_budget(desired_count: int) -> int:
+	if desired_count <= 0:
+		return 0
+	if _area_effect_manager == null or not is_instance_valid(_area_effect_manager):
+		_register_area_effect()
+	if _area_effect_manager != null and _area_effect_manager.has_method("request_hit_budget"):
+		return int(_area_effect_manager.call("request_hit_budget", self, desired_count))
+	return desired_count
+
+
+func _clear_candidate_cache() -> void:
+	_candidate_body_ids.clear()
+	_candidate_body_order.clear()
+	_candidate_cache_seeded = false
+
+
+func _clear_pending_tick_damage() -> void:
+	_pending_tick_target_ids.clear()
+	_pending_tick_index = 0
+	_pending_tick_stats = {}
+
+
+func _on_body_entered(body: Node) -> void:
+	_add_candidate(body)
+
+
+func _on_body_exited(body: Node) -> void:
+	_remove_candidate(body)
+
+
+func _add_candidate(body: Node) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	if not body.is_in_group(target_group):
+		return
+	var body_id: int = int(body.get_instance_id())
+	if _candidate_body_ids.has(body_id):
+		return
+	_candidate_body_ids[body_id] = true
+	_candidate_body_order.append(body_id)
+
+
+func _remove_candidate(body: Node) -> void:
+	if body == null:
+		return
+	var body_id: int = int(body.get_instance_id())
+	if not _candidate_body_ids.has(body_id):
+		return
+	_candidate_body_ids.erase(body_id)
+	_candidate_body_order.erase(body_id)
+
+
+func _seed_candidate_cache_if_needed() -> void:
+	if _candidate_cache_seeded:
+		return
+	_candidate_cache_seeded = true
+	for body: Node2D in query_target_candidates(global_position, radius):
+		_add_candidate(body)
+
+
+func query_target_candidates(origin: Vector2, query_radius: float) -> Array[Node2D]:
+	var candidates: Array[Node2D] = []
+	if target_group == &"enemies" or target_group == &"enemy":
+		var registry: Node = CombatTargetRegistryScript.get_or_create(self)
+		var targets: Array = registry.call("get_targets_in_radius", origin, query_radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+		for node: Node in targets:
+			var target: Node2D = node as Node2D
+			if target == null or _candidate_should_prune(target):
+				continue
+			candidates.append(target)
+		return candidates
+
+	var world: World2D = get_world_2d()
+	if world == null:
+		return candidates
+	var shape := CircleShape2D.new()
+	shape.radius = maxf(query_radius, 1.0)
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.transform = Transform2D(0.0, origin)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	query.collision_mask = collision_mask
+	var hits: Array[Dictionary] = world.direct_space_state.intersect_shape(query, 512)
+	for hit: Dictionary in hits:
+		var body: Node2D = hit.get("collider") as Node2D
+		if body == null or not body.is_in_group(target_group):
+			continue
+		if _candidate_should_prune(body):
+			continue
+		candidates.append(body)
+	return candidates
+
+
+func _candidate_should_prune(body: Node) -> bool:
+	if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
+		return true
+	if not body.is_in_group(target_group):
+		return true
+	if body.has_method("is_dead") and bool(body.call("is_dead")):
+		return true
+	return false
+
+
+func _prune_candidate_id(body_id: int) -> void:
+	if body_id == 0:
+		return
+	_candidate_body_ids.erase(body_id)
+	_candidate_body_order.erase(body_id)
 
 
 func extend_duration(target_duration: float, max_duration: float = 5.0) -> void:
@@ -228,6 +405,12 @@ func apply_immediate_tick_once() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_physics_process_profiled(delta)
+	HotPathProfilerScript.end(self, &"area_effect_update", hot_path_start)
+
+
+func _physics_process_profiled(delta: float) -> void:
 	if _damage_window_finished:
 		return
 
@@ -238,8 +421,13 @@ func _physics_process(delta: float) -> void:
 	if _uses_programmatic_visual():
 		_queue_programmatic_visual_redraw(delta)
 
+	if not _pending_tick_target_ids.is_empty():
+		_apply_tick_damage()
+		if not _pending_tick_target_ids.is_empty():
+			return
+
 	_tick_timer -= delta
-	if _tick_timer <= 0.0:
+	if _tick_timer <= 0.0 and _area_effect_manager_allows_tick():
 		_tick_timer = tick_interval
 		_apply_tick_damage()
 
@@ -299,16 +487,62 @@ func _oldest_area_effect(areas: Array[Node]) -> Node:
 
 
 func _apply_tick_damage() -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_apply_tick_damage_profiled()
+	HotPathProfilerScript.end(self, &"area_effect_tick", hot_path_start)
+
+
+func _apply_tick_damage_profiled() -> void:
+	if not _pending_tick_target_ids.is_empty():
+		_drain_pending_tick_damage()
+		return
+
 	if damage <= 0 and status_on_hit == &"" and statuses_on_hit.is_empty() and event_on_hit == &"" and actions_on_tick.is_empty() and actions_on_hit.is_empty() and actions_on_death.is_empty():
 		return
 
+	_pending_tick_stats = _new_tick_stats()
+	_current_tick_stats = _pending_tick_stats
 	var targets: Array[Node] = _collect_tick_damage_targets()
+	_pending_tick_target_ids = _get_target_instance_ids(targets)
+	_pending_tick_index = 0
 	_current_tick_targets_hit = targets.size()
-	for body: Node in targets:
+	_pending_tick_stats["hit_count"] = targets.size()
+	_drain_pending_tick_damage()
+
+
+func _drain_pending_tick_damage() -> void:
+	if _pending_tick_target_ids.is_empty():
+		return
+	var grant: int = _request_tick_hit_budget(mini(MAX_TICK_HITS_PER_AREA_FRAME, _pending_tick_target_ids.size() - _pending_tick_index))
+	if grant <= 0:
+		return
+	_current_tick_stats = _pending_tick_stats
+	var processed: int = 0
+	while processed < grant and _pending_tick_index < _pending_tick_target_ids.size():
 		if _damage_window_finished:
 			break
+		var body_id: int = int(_pending_tick_target_ids[_pending_tick_index])
+		_pending_tick_index += 1
+		processed += 1
+		var body: Node = instance_from_id(body_id) as Node
+		if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
+			_prune_candidate_id(body_id)
+			continue
 		_damage_body(body)
-	_current_tick_targets_hit = 0
+	if _damage_window_finished or _pending_tick_index >= _pending_tick_target_ids.size():
+		_record_current_tick_stats()
+		_clear_pending_tick_damage()
+		_current_tick_targets_hit = 0
+	_current_tick_stats = {}
+
+
+func _get_target_instance_ids(targets: Array[Node]) -> Array[int]:
+	var target_ids: Array[int] = []
+	for target: Node in targets:
+		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
+			continue
+		target_ids.append(int(target.get_instance_id()))
+	return target_ids
 
 
 func _collect_tick_damage_targets() -> Array[Node]:
@@ -316,25 +550,31 @@ func _collect_tick_damage_targets() -> Array[Node]:
 	var damaged_bodies: Dictionary = {}
 	var damaged_count: int = 0
 
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return targets
-
+	_seed_candidate_cache_if_needed()
+	var candidate_count: int = 0
 	var radius_squared: float = radius * radius
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var snapshot: Array[int] = _candidate_body_order.duplicate()
+	for body_id: int in snapshot:
 		if _damage_window_finished:
 			break
 		if max_targets > 0 and damaged_count >= max_targets:
 			break
-		var body: Node2D = node as Node2D
+		var body: Node2D = instance_from_id(body_id) as Node2D
 		if body == null or damaged_bodies.has(body):
+			_prune_candidate_id(body_id)
 			continue
+		if _candidate_should_prune(body):
+			_prune_candidate_id(body_id)
+			continue
+		candidate_count += 1
 		if not _can_damage_body(body):
 			continue
 		if global_position.distance_squared_to(body.global_position) <= radius_squared and _body_in_effect_shape(body):
 			targets.append(body)
 			damaged_bodies[body] = true
 			damaged_count += 1
+	if not _current_tick_stats.is_empty():
+		_current_tick_stats["candidate_count"] = candidate_count
 	return targets
 
 
@@ -370,7 +610,7 @@ func _damage_body(body: Node) -> bool:
 
 	if damage > 0 and body.has_method("take_damage"):
 		body.call(&"take_damage", _get_damage_payload(body), damage_type)
-	_apply_status(body)
+	_increment_current_tick_status_apply(_apply_status(body))
 	_emit_area_event(&"area_tick", body)
 	_emit_area_event(event_on_hit, body)
 	_execute_adapted_actions(actions_on_tick, body)
@@ -430,22 +670,48 @@ func _stabilize_damage_packet_source(default_source_type: String, params: Dictio
 		damage_packet["source_origin_id"] = StringName(String(params.get("source_origin_id", "")))
 
 
-func _apply_status(body: Node) -> void:
+func _apply_status(body: Node) -> int:
 	if statuses_on_hit.is_empty() and status_on_hit != &"":
 		statuses_on_hit = [status_on_hit]
 	if statuses_on_hit.is_empty():
-		return
+		return 0
 	if status_normal_only and _is_strong_target(body):
-		return
+		return 0
 
+	var applied_count: int = 0
 	for status_id: StringName in statuses_on_hit:
 		if status_id == &"":
+			continue
+		if _should_coalesce_status_apply(body, status_id):
 			continue
 
 		if body.has_method("apply_status"):
 			body.call(&"apply_status", status_id, status_params)
+			applied_count += 1
 		elif body.has_method("add_status_effect"):
 			body.call(&"add_status_effect", status_id)
+			applied_count += 1
+	return applied_count
+
+
+func _increment_current_tick_status_apply(amount: int) -> void:
+	if amount <= 0 or _current_tick_stats.is_empty():
+		return
+	_current_tick_stats["status_apply_count"] = int(_current_tick_stats.get("status_apply_count", 0)) + amount
+
+
+func _should_coalesce_status_apply(body: Node, status_id: StringName) -> bool:
+	if body == null or status_id == &"":
+		return true
+	var frame: int = int(Engine.get_physics_frames())
+	if _status_apply_coalesce_frame != frame:
+		_status_apply_coalesce_frame = frame
+		_status_apply_coalesce_keys.clear()
+	var key: String = "%d|%s" % [int(body.get_instance_id()), String(status_id)]
+	if _status_apply_coalesce_keys.has(key):
+		return true
+	_status_apply_coalesce_keys[key] = true
+	return false
 
 
 func _is_strong_target(body: Node) -> bool:
@@ -795,6 +1061,7 @@ func _finish_damage_window() -> void:
 	if _damage_window_finished:
 		return
 	_damage_window_finished = true
+	_unregister_area_effect()
 	if not _finished_by_damage:
 		_emit_area_event(event_on_expire, null)
 		_execute_adapted_actions(actions_on_expire, null)
@@ -895,6 +1162,7 @@ func _execute_adapted_actions(actions: Array, target: Node) -> void:
 		"target_group": target_group,
 		"damage_type": damage_type,
 		"damage_packet": damage_packet,
+		"area_tick_stats": _current_tick_stats,
 		"position": global_position
 	}))
 

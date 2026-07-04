@@ -5,6 +5,7 @@ class_name SkillExecutor
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const SkillComponentRunnerScript: Script = preload("res://scripts/skills/skill_component_runner.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
 
 @export var skill_manager_path: NodePath = NodePath("../SkillManager")
 @export var relic_manager_path: NodePath = NodePath("../RelicManager")
@@ -24,6 +25,12 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_physics_process_profiled(delta)
+	HotPathProfilerScript.end(self, &"skill_update_total", hot_path_start)
+
+
+func _physics_process_profiled(delta: float) -> void:
 	if _skill_manager == null:
 		_skill_manager = get_node_or_null(skill_manager_path)
 	if _skill_manager == null or not _skill_manager.has_method("get_all_skills"):

@@ -12,6 +12,8 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
 const StatusEffectQueryScript: Script = preload("res://scripts/combat/status_effect_query.gd")
 const StatusEffectTickHelperScript: Script = preload("res://scripts/combat/status_effect_tick_helper.gd")
+const StatusTickSchedulerScript: Script = preload("res://scripts/combat/status_tick_scheduler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
 const DOT_STATUS_IDS: Array[StringName] = [&"burning", &"poison", &"bleed"]
 const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"frozen", &"stun", &"paralyze"]
 const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
@@ -21,9 +23,30 @@ var _status_visual_overlay: Node2D
 var _status_visual_key: String = ""
 var _status_visual_priority: float = -INF
 var _status_visual_refresh_queued: bool = false
+var _status_display_dirty: bool = true
+var _status_tick_scheduler: RefCounted = StatusTickSchedulerScript.new()
+var _reaction_queue: Array[Dictionary] = []
+var _processing_reaction_queue: bool = false
+var _pending_status_update_delta: float = 0.0
+
+static var _status_definition_cache: Dictionary = {}
+static var _apply_coalesce_frame: int = -1
+static var _apply_coalesce_keys: Dictionary = {}
 
 
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
+	var id: StringName = StringName(String(status_id))
+	if id == &"":
+		return false
+	if _should_coalesce_status_apply(id):
+		return _merge_coalesced_status_apply(id, params)
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	var result: bool = _apply_status_profiled(id, params)
+	HotPathProfilerScript.end(self, &"status_apply", hot_path_start)
+	return result
+
+
+func _apply_status_profiled(status_id: Variant, params: Dictionary = {}) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"":
 		return false
@@ -54,10 +77,65 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	var next_tick_interval: float = float(status["tick_interval"])
 	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
 	_statuses[id] = status
+	_sync_status_tick_scheduler(id, status)
+	_pending_status_update_delta = 0.0
+	_mark_status_display_dirty()
 	if _status_visual_refresh_needed_after_apply(id, definition):
 		_queue_status_visual_refresh()
 
 	_notify_status_applied(id, status)
+	if new_stacks >= max_stacks and current_stacks < max_stacks:
+		_handle_max_stack_reached(id, status)
+	_apply_poison_slow_synergy()
+	return true
+
+
+func _should_coalesce_status_apply(status_id: StringName) -> bool:
+	if status_id == &"":
+		return false
+	var target: Node = get_parent()
+	if target == null:
+		return false
+	var frame: int = int(Engine.get_physics_frames())
+	if _apply_coalesce_frame != frame:
+		_apply_coalesce_frame = frame
+		_apply_coalesce_keys.clear()
+	var key: String = "%d|%s" % [int(target.get_instance_id()), String(status_id)]
+	if _apply_coalesce_keys.has(key):
+		return true
+	_apply_coalesce_keys[key] = true
+	return false
+
+
+func _merge_coalesced_status_apply(id: StringName, params: Dictionary) -> bool:
+	if id == &"":
+		return false
+	var definition: Dictionary = _get_status_definition(id)
+	if definition.is_empty():
+		return false
+	definition = _apply_enemy_tier_rules(id, definition)
+	if definition.is_empty():
+		return true
+	var converted_status_id: StringName = StringName(String(definition.get("convert_to_status", "")))
+	if converted_status_id != &"" and converted_status_id != id:
+		var converted_params: Dictionary = params.duplicate(true)
+		for key: Variant in definition.keys():
+			if key != "convert_to_status" and not converted_params.has(key):
+				converted_params[key] = definition[key]
+		return _merge_coalesced_status_apply(converted_status_id, converted_params)
+	var stack_data: Dictionary = _resolve_status_stack_data(id, definition, params)
+	var current_stacks: int = int(stack_data.get("current_stacks", 0))
+	var status: Dictionary = _build_status_runtime_data(id, definition, params, stack_data)
+	var new_stacks: int = int(stack_data.get("new_stacks", 0))
+	var max_stacks: int = int(stack_data.get("max_stacks", 1))
+	var next_tick_interval: float = float(status["tick_interval"])
+	status["tick_timer"] = minf(float(status.get("tick_timer", next_tick_interval)), next_tick_interval)
+	_statuses[id] = status
+	_sync_status_tick_scheduler(id, status)
+	_pending_status_update_delta = 0.0
+	_mark_status_display_dirty()
+	if _status_visual_refresh_needed_after_apply(id, definition):
+		_queue_status_visual_refresh()
 	if new_stacks >= max_stacks and current_stacks < max_stacks:
 		_handle_max_stack_reached(id, status)
 	_apply_poison_slow_synergy()
@@ -120,7 +198,15 @@ func _build_status_runtime_data(id: StringName, definition: Dictionary, params: 
 
 
 func update_status_effects(delta: float) -> void:
-	if delta <= 0.0:
+	if _statuses.is_empty():
+		return
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_update_status_effects_profiled(delta)
+	HotPathProfilerScript.end(self, &"status_update_total", hot_path_start)
+
+
+func _update_status_effects_profiled(delta: float) -> void:
+	if delta <= 0.0 or _statuses.is_empty():
 		return
 
 	var expired_statuses: Array[StringName] = []
@@ -128,13 +214,17 @@ func update_status_effects(delta: float) -> void:
 	for id_variant: Variant in _statuses.keys():
 		var id: StringName = StringName(String(id_variant))
 		var status: Dictionary = _statuses[id]
+		var previous_stacks: int = int(status.get("stacks", 0))
 		_advance_status_tick(status, delta)
+		if int(status.get("stacks", 0)) != previous_stacks:
+			_mark_status_display_dirty()
 
 		if _is_status_expired(status):
 			expired_statuses.append(id)
 			expired_snapshots[id] = status.duplicate(true)
 		else:
 			_statuses[id] = status
+			_sync_status_tick_scheduler(id, status)
 
 	_expire_statuses(expired_statuses, expired_snapshots)
 	if not expired_statuses.is_empty():
@@ -145,7 +235,9 @@ func update_status_effects(delta: float) -> void:
 func _advance_status_tick(status: Dictionary, delta: float) -> void:
 	StatusEffectTickHelperScript.advance_duration(status, delta)
 	if _is_dot_status(status):
-		_update_damage_over_time(status, delta)
+		var status_id: StringName = StringName(String(status.get("id", "")))
+		if _status_tick_scheduler != null and _status_tick_scheduler.call("advance_and_is_due", self, status_id, status, delta):
+			_update_damage_over_time(status, 0.0)
 
 
 func _is_status_expired(status: Dictionary) -> bool:
@@ -155,10 +247,13 @@ func _is_status_expired(status: Dictionary) -> bool:
 func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Dictionary) -> void:
 	for id: StringName in expired_statuses:
 		_statuses.erase(id)
+		_unregister_status_tick(id)
 		var expired_status: Dictionary = _get_dictionary(expired_snapshots.get(id, {}))
 		_execute_status_effects(expired_status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, expired_status)
 		_emit_profiler_status_event(&"status_expired", id, expired_status)
+	if not expired_statuses.is_empty():
+		_mark_status_display_dirty()
 
 
 func has_status(status_id: Variant) -> bool:
@@ -183,6 +278,8 @@ func merge_status_fields(status_id: Variant, fields: Dictionary, duration: float
 	if duration > 0.0:
 		status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), duration)
 	_statuses[id] = status
+	_sync_status_tick_scheduler(id, status)
+	_mark_status_display_dirty()
 	return true
 
 
@@ -199,10 +296,12 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	var stacks: int = int(status.get("stacks", 0)) - maxi(stack_count, 1)
 	if stacks <= 0:
 		_statuses.erase(id)
+		_unregister_status_tick(id)
 	else:
 		status["stacks"] = stacks
 		_statuses[id] = status
 
+	_mark_status_display_dirty()
 	_queue_status_visual_refresh()
 	return true
 
@@ -216,12 +315,14 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 	status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - maxf(seconds, 0.0)
 	if float(status.get("duration_remaining", 0.0)) <= 0.0:
 		_statuses.erase(id)
+		_unregister_status_tick(id)
 		_execute_status_effects(status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, status)
 		_emit_profiler_status_event(&"status_expired", id, status)
 	else:
 		_statuses[id] = status
 
+	_mark_status_display_dirty()
 	_queue_status_visual_refresh()
 	_apply_poison_slow_synergy()
 	return true
@@ -231,9 +332,36 @@ func get_status_snapshot() -> Array[Dictionary]:
 	return StatusEffectQueryScript.get_status_snapshot(_statuses)
 
 
+func should_update_status_effects(delta: float) -> bool:
+	if _statuses.is_empty():
+		_pending_status_update_delta = 0.0
+		return false
+	_pending_status_update_delta += maxf(delta, 0.0)
+	return _pending_status_update_delta >= _next_status_update_delay()
+
+
+func consume_pending_status_update_delta() -> float:
+	var pending_delta: float = _pending_status_update_delta
+	_pending_status_update_delta = 0.0
+	return pending_delta
+
+
+func has_active_statuses() -> bool:
+	return not _statuses.is_empty()
+
+
+func consume_status_display_dirty() -> bool:
+	var dirty: bool = _status_display_dirty
+	_status_display_dirty = false
+	return dirty
+
+
 func clear_statuses() -> void:
 	_statuses.clear()
+	if _status_tick_scheduler != null:
+		_status_tick_scheduler.call("unregister_all_for_owner", self)
 	_status_visual_refresh_queued = false
+	_mark_status_display_dirty()
 	_refresh_status_visual()
 
 
@@ -257,6 +385,12 @@ func get_vulnerability_total(damage_type: Variant = &"", category: Variant = &""
 
 
 func _update_damage_over_time(status: Dictionary, delta: float) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_update_damage_over_time_profiled(status, delta)
+	HotPathProfilerScript.end(self, &"status_tick", hot_path_start)
+
+
+func _update_damage_over_time_profiled(status: Dictionary, delta: float) -> void:
 	var tick_interval: float = maxf(
 		float(status.get("tick_interval", 0.5)) * float(status.get("tick_interval_multiplier", 1.0)),
 		0.05
@@ -371,6 +505,38 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 		owning_node.call(&"take_damage", DamagePacketBuilderScript.from_status_dot(tick_packet_args))
 
 
+func _sync_status_tick_scheduler(status_id: StringName, status: Dictionary) -> void:
+	if _status_tick_scheduler == null:
+		return
+	if _is_dot_status(status) and _has_status_tick_work(status):
+		_status_tick_scheduler.call("register_status", self, status_id, status)
+	else:
+		_status_tick_scheduler.call("unregister_status", self, status_id)
+
+
+func _unregister_status_tick(status_id: StringName) -> void:
+	if _status_tick_scheduler != null:
+		_status_tick_scheduler.call("unregister_status", self, status_id)
+
+
+func _next_status_update_delay() -> float:
+	var next_delay: float = INF
+	for status_variant: Variant in _statuses.values():
+		if not (status_variant is Dictionary):
+			continue
+		var status: Dictionary = status_variant
+		next_delay = minf(next_delay, maxf(float(status.get("duration_remaining", 0.0)), 0.0))
+		if _is_dot_status(status) and _has_status_tick_work(status):
+			var tick_interval: float = maxf(
+				float(status.get("tick_interval", 0.5)) * float(status.get("tick_interval_multiplier", 1.0)),
+				0.05
+			)
+			next_delay = minf(next_delay, maxf(float(status.get("tick_timer", tick_interval)), 0.0))
+	if next_delay == INF:
+		return 0.1
+	return maxf(next_delay, 0.0)
+
+
 func _has_status_tick_work(status: Dictionary) -> bool:
 	return StatusEffectTickHelperScript.has_status_tick_work(status)
 
@@ -384,6 +550,36 @@ func _get_status_tick_damage_total(status: Dictionary) -> float:
 
 
 func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_handle_max_stack_reached_profiled(status_id, status)
+	HotPathProfilerScript.end(self, &"status_reaction", hot_path_start)
+
+
+func _handle_max_stack_reached_profiled(status_id: StringName, status: Dictionary) -> void:
+	_enqueue_status_reaction(status_id, status)
+	_process_status_reaction_queue()
+
+
+func _enqueue_status_reaction(status_id: StringName, status: Dictionary) -> void:
+	if status_id == &"":
+		return
+	_reaction_queue.append({
+		"status_id": status_id,
+		"status": status.duplicate(true)
+	})
+
+
+func _process_status_reaction_queue() -> void:
+	if _processing_reaction_queue:
+		return
+	_processing_reaction_queue = true
+	while not _reaction_queue.is_empty():
+		var item: Dictionary = _reaction_queue.pop_front()
+		_execute_status_reaction(StringName(String(item.get("status_id", ""))), _get_dictionary(item.get("status", {})))
+	_processing_reaction_queue = false
+
+
+func _execute_status_reaction(status_id: StringName, status: Dictionary) -> void:
 	_emit_status_skill_event(&"status_max_stack_reached", status_id, status)
 	_emit_profiler_status_event(&"status_reaction_triggered", status_id, status, {"trigger": &"status_max_stack_reached"})
 	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
@@ -486,6 +682,12 @@ func _get_player() -> Node:
 
 
 func _refresh_status_visual() -> void:
+	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	_refresh_status_visual_profiled()
+	HotPathProfilerScript.end(self, &"status_visual_update", hot_path_start)
+
+
+func _refresh_status_visual_profiled() -> void:
 	var visual: Dictionary = _get_active_status_visual()
 	if visual.is_empty():
 		_hide_status_visual()
@@ -516,6 +718,10 @@ func _queue_status_visual_refresh() -> void:
 		return
 	_status_visual_refresh_queued = true
 	call_deferred("_flush_status_visual_refresh")
+
+
+func _mark_status_display_dirty() -> void:
+	_status_display_dirty = true
 
 
 func _flush_status_visual_refresh() -> void:
@@ -675,13 +881,20 @@ func _damage_packet_value(packet: Variant, key: Variant, fallback: Variant = nul
 
 
 func _get_status_definition(status_id: StringName) -> Dictionary:
+	var cache_key: String = String(status_id)
+	if _status_definition_cache.has(cache_key):
+		var cached_definition: Dictionary = _get_dictionary(_status_definition_cache.get(cache_key, {}))
+		return cached_definition.duplicate(true)
 	var data_manager: Node = get_node_or_null("/root/DataManager")
 	if data_manager != null and data_manager.has_method("get_status_definition"):
 		var data: Variant = data_manager.call("get_status_definition", status_id)
 		if data is Dictionary:
-			return data
+			var definition: Dictionary = (data as Dictionary).duplicate(true)
+			_status_definition_cache[cache_key] = definition
+			return definition.duplicate(true)
 	var status_data: Dictionary = _get_status_definition_from_game_data(status_id)
 	if not status_data.is_empty():
+		_status_definition_cache[cache_key] = status_data.duplicate(true)
 		return status_data
 	return {}
 

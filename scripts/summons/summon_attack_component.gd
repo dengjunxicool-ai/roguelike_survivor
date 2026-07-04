@@ -2,6 +2,8 @@ extends RefCounted
 class_name SummonAttackComponent
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
 var attack_type: String = "melee"
 var attack_range: float = 48.0
 var attack_cooldown: float = 1.2
@@ -83,13 +85,10 @@ func _apply_area_pulse(summon: Node2D, player_power: float, context: Dictionary)
 	if summon == null:
 		return
 	var target_group: StringName = StringName(str(context.get("target_group", &"enemies")))
-	var tree: SceneTree = summon.get_tree()
-	if tree == null:
-		tree = Engine.get_main_loop() as SceneTree
-	if tree == null:
-		return
 	var radius_squared: float = pulse_radius * pulse_radius
-	for node: Node in tree.get_nodes_in_group(target_group):
+	var registry: Node = CombatTargetRegistryScript.get_or_create(summon)
+	var targets: Array = registry.call("get_targets_in_radius", summon.global_position, pulse_radius, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
+	for node: Node in targets:
 		var target: Node2D = node as Node2D
 		if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 			continue
