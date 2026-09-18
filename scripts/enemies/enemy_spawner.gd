@@ -395,15 +395,27 @@ func _collect_all_experience_crystals() -> void:
 
 
 func _get_wave_total_count(wave: Dictionary) -> int:
+	var desired_total: int = 0
 	if wave.has("total_count"):
-		return _scale_spawn_count(maxi(int(wave["total_count"]), 0))
-	if wave.has("fixed_count"):
-		return _scale_spawn_count(maxi(int(wave["fixed_count"]), 0))
+		desired_total = _scale_spawn_count(maxi(int(wave["total_count"]), 0))
+	elif wave.has("fixed_count"):
+		desired_total = _scale_spawn_count(maxi(int(wave["fixed_count"]), 0))
+	else:
+		var legacy_interval: float = maxf(float(wave.get("spawn_interval", spawn_interval)), 0.05)
+		var legacy_spawn_ticks: int = maxi(floori(_wave_duration / legacy_interval), 1)
+		var average_group_count: float = _get_weighted_average_group_count(wave)
+		desired_total = maxi(roundi(float(legacy_spawn_ticks) * average_group_count * maxf(1.0 + _spawn_count_multiplier_bonus, 0.01)), 1)
+	return mini(desired_total, _get_reachable_wave_spawn_capacity())
 
-	var interval: float = maxf(float(wave.get("spawn_interval", spawn_interval)), 0.05)
-	var spawn_ticks: int = maxi(floori(_wave_duration / interval), 1)
-	var average_group_count: float = _get_weighted_average_group_count(wave)
-	return maxi(roundi(float(spawn_ticks) * average_group_count * maxf(1.0 + _spawn_count_multiplier_bonus, 0.01)), 1)
+
+func _get_reachable_wave_spawn_capacity() -> int:
+	var interval: float = maxf(_spawn_batch_interval, 0.001)
+	var first_batch_delay: float = maxf(_normal_spawn_cooldown, 0.0)
+	if first_batch_delay > _wave_duration:
+		return 0
+	var available_after_first: float = maxf(_wave_duration - first_batch_delay, 0.0)
+	var reachable_batches: int = floori((available_after_first + 0.0001) / interval) + 1
+	return maxi(reachable_batches, 0) * _max_spawn_batch_size
 
 
 func _get_weighted_average_group_count(source: Dictionary) -> float:

@@ -5,6 +5,8 @@ const WaveDirectorScript: Script = preload("res://scripts/enemies/timeline/wave_
 const BossEncounterControllerScript: Script = preload("res://scripts/enemies/timeline/boss_encounter_controller.gd")
 const EnemySpawnServiceScript: Script = preload("res://scripts/enemies/spawning/enemy_spawn_service.gd")
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+const EnemySpawnerScript: Script = preload("res://scripts/enemies/enemy_spawner.gd")
 
 var _failed: bool = false
 
@@ -66,7 +68,9 @@ func _init() -> void:
 func _run() -> void:
 	_test_wave_batch_limit_and_interval()
 	_test_boss_minion_batch_limit_and_interval()
+	_test_wave_total_fits_batch_capacity()
 	await _test_visible_spawn_and_reveal()
+	await _test_special_sources_remain_immediate()
 	if not _failed:
 		print("[verify_enemy_visible_batch_spawn] PASS")
 	quit(1 if _failed else 0)
@@ -109,6 +113,20 @@ func _test_boss_minion_batch_limit_and_interval() -> void:
 	owner.queue_free()
 
 
+func _test_wave_total_fits_batch_capacity() -> void:
+	var spawner: Node = EnemySpawnerScript.new()
+	spawner.set("_wave_duration", 35.0)
+	spawner.set("_normal_spawn_cooldown", 15.0)
+	spawner.set("_spawn_batch_interval", 15.0)
+	spawner.set("_max_spawn_batch_size", 15)
+	var total: int = int(spawner.call("_get_wave_total_count", {
+		"spawn_interval": 0.5,
+		"groups": [{"enemy_ids": ["small_slime"], "weight": 100}]
+	}))
+	_expect(total == 30, "wave total fits the two batches reachable during its remaining schedule", total)
+	spawner.free()
+
+
 func _test_visible_spawn_and_reveal() -> void:
 	var owner := Node2D.new()
 	root.add_child(owner)
@@ -143,14 +161,46 @@ func _test_visible_spawn_and_reveal() -> void:
 		_expect(enemy.process_mode == Node.PROCESS_MODE_DISABLED, "pending enemy behavior is disabled", enemy.process_mode)
 		_expect(enemy.collision_layer == 0 and enemy.collision_mask == 0, "pending enemy collision is disabled", [enemy.collision_layer, enemy.collision_mask])
 		_expect(not TargetingServiceScript.is_valid_target(enemy), "pending enemy cannot be selected as a combat target")
+		var registry: Node = CombatTargetRegistryScript.get_or_create(enemy)
+		var pending_registry_targets: Array = registry.call("get_targets", &"enemies") if registry != null else []
+		_expect(not pending_registry_targets.has(enemy), "pending enemy is hidden from registry-based combat queries")
 		await create_timer(0.2).timeout
 		_expect(not bool(enemy.get_meta("spawn_reveal_pending", false)), "enemy activates after the reveal")
 		_expect(enemy.process_mode != Node.PROCESS_MODE_DISABLED, "enemy behavior resumes after the reveal", enemy.process_mode)
 		_expect(enemy.collision_layer != 0, "enemy collision returns after the reveal", enemy.collision_layer)
 		_expect(TargetingServiceScript.is_valid_target(enemy), "activated enemy becomes a valid combat target")
+		var active_registry_targets: Array = registry.call("get_targets", &"enemies") if registry != null else []
+		_expect(active_registry_targets.has(enemy), "activated enemy returns to registry-based combat queries")
 		enemy.queue_free()
 	player.queue_free()
 	owner.queue_free()
+
+
+func _test_special_sources_remain_immediate() -> void:
+	root.set_meta("debug_manual_spawn_only", true)
+	var player := Node2D.new()
+	player.add_to_group(&"player")
+	root.add_child(player)
+	var spawner: Node = EnemySpawnerScript.new()
+	root.add_child(spawner)
+	await process_frame
+	_expect(is_equal_approx(float(spawner.get("_spawn_warning_duration")), 1.5), "configured warning reveal lasts 1.5 seconds", spawner.get("_spawn_warning_duration"))
+	for source_type: StringName in [&"boss", &"elite_event", &"map_event"]:
+		var enemy: Node2D = spawner.call("_spawn_enemy", &"small_slime", false, {}, &"normal", source_type) as Node2D
+		_expect(enemy != null and not bool(enemy.get_meta("spawn_reveal_pending", false)), "%s source remains immediate" % String(source_type))
+		if enemy != null:
+			enemy.queue_free()
+	var summon: Node2D = spawner.get("_spawn_service").call("spawn", {
+		"enemy_id": &"small_slime",
+		"source_type": "summon",
+		"position": Vector2.ZERO
+	}) as Node2D
+	_expect(summon != null and not bool(summon.get_meta("spawn_reveal_pending", false)), "skill summon source remains immediate")
+	if summon != null:
+		summon.queue_free()
+	spawner.queue_free()
+	player.queue_free()
+	root.remove_meta("debug_manual_spawn_only")
 
 
 func _expect(condition: bool, label: String, actual: Variant = null) -> void:

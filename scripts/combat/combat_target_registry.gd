@@ -81,6 +81,8 @@ func get_targets(group: StringName = ENEMY_GROUP) -> Array[Node2D]:
 		if not _is_live_target(target):
 			stale_ids.append(int(id_variant))
 			continue
+		if not _is_available_target(target):
+			continue
 		result.append(target)
 
 	for stale_id: int in stale_ids:
@@ -195,6 +197,10 @@ func _is_live_target(target: Node) -> bool:
 	if health_variant != null and int(health_variant) <= 0:
 		return false
 	return true
+
+
+func _is_available_target(target: Node) -> bool:
+	return target != null and not bool(target.get_meta("spawn_reveal_pending", false))
 
 
 func _is_enemy_group(group: StringName) -> bool:
