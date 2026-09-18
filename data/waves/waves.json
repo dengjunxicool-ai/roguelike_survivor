@@ -25,6 +25,11 @@
 	}
   },
   "spawn_rules": {
+	"spawn_batch_interval_seconds": 15.0,
+	"max_spawn_batch_size": 15,
+	"spawn_warning_duration_seconds": 1.5,
+	"visible_spawn_margin": 64.0,
+	"spawn_player_safe_radius": 120.0,
 	"max_normal_enemies_alive": 40,
 	"first_level_up_choice": {
 	  "option_count": 3
@@ -328,7 +333,7 @@
 	"minion_spawn": {
 	  "enabled": true,
 	  "max_alive": 35,
-	  "spawn_interval": 3,
+	  "spawn_interval": 15,
 	  "enemy_multipliers": {
 		"hp": 2.1,
 		"defense_add": 2,

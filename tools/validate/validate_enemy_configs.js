@@ -528,6 +528,7 @@ function checkDeathPolicy(where, deathPolicy) {
 }
 
 function checkWaveDefinitions(waveConfig, enemyById) {
+  checkSpawnRules(waveConfig.spawn_rules);
   const waves = getArray(waveConfig.waves);
   if (!Array.isArray(waveConfig.waves)) {
     error("waves.waves", "must be an array");
@@ -596,6 +597,39 @@ function checkWaveDefinitions(waveConfig, enemyById) {
     }
   }
   checkRewards("waves.rewards", waveConfig.rewards);
+}
+
+function checkSpawnRules(spawnRules) {
+  const where = "waves.spawn_rules";
+  if (!isObject(spawnRules)) {
+    error(where, "must be an object");
+    return;
+  }
+  for (const key of [
+    "spawn_batch_interval_seconds",
+    "max_spawn_batch_size",
+    "spawn_warning_duration_seconds",
+    "visible_spawn_margin",
+    "spawn_player_safe_radius",
+  ]) {
+    checkNumber(where, spawnRules, key, true);
+  }
+  if (Number(spawnRules.spawn_batch_interval_seconds) < 15) {
+    error(`${where}.spawn_batch_interval_seconds`, "must be at least 15 seconds");
+  }
+  const maxBatchSize = Number(spawnRules.max_spawn_batch_size);
+  if (!Number.isInteger(maxBatchSize) || maxBatchSize < 1 || maxBatchSize > 15) {
+    error(`${where}.max_spawn_batch_size`, "must be an integer from 1 to 15");
+  }
+  if (Number(spawnRules.spawn_warning_duration_seconds) <= 0) {
+    error(`${where}.spawn_warning_duration_seconds`, "must be greater than 0");
+  }
+  if (Number(spawnRules.visible_spawn_margin) < 0) {
+    error(`${where}.visible_spawn_margin`, "must not be negative");
+  }
+  if (Number(spawnRules.spawn_player_safe_radius) < 0) {
+    error(`${where}.spawn_player_safe_radius`, "must not be negative");
+  }
 }
 
 function checkBossFairness(where, fairness) {

@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "verify:enemy-visible-batch-spawn": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_enemy_visible_batch_spawn.gd",
     "verify:enemy-motion-neighbor-limit": "node tools\\verify\\verify_enemy_motion_neighbor_limit.js",
     "verify:obsolete-weapon-runtime-removed": "node tools\\verify\\verify_obsolete_runtime_removed.js",
     "verify:fire-skill-system-contract": "node tools\\verify\\verify_fire_skill_system_contract.js",
