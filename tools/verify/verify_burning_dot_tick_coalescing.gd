@@ -52,13 +52,13 @@ func _run() -> void:
 	event_bus.emitted_events.clear()
 	event_bus.executed_actions.clear()
 
-	manager.call("update_status_effects", 1.51)
+	manager.call("update_status_effects", 3.01)
 
 	_expect(_count_profiler_events(&"status_tick_due") == 1, "coalesced burning emits one tick_due profiler event", _count_profiler_events(&"status_tick_due"))
 	_expect(_count_profiler_events(&"status_tick_applied") == 1, "coalesced burning emits one tick_applied profiler event", _count_profiler_events(&"status_tick_applied"))
 	_expect(_first_tick_applied_count() == 3, "coalesced burning records three effective ticks", _first_tick_applied_count())
 	_expect(event_bus.executed_actions.size() == 1, "coalesced burning executes one adapted action batch", event_bus.executed_actions.size())
-	_expect(_first_damage_power_scale(event_bus) == 0.54, "coalesced burning damage action keeps total tick power", _first_damage_power_scale(event_bus))
+	_expect(_first_damage_power_scale(event_bus) == 1.08, "coalesced burning damage action keeps total tick power", _first_damage_power_scale(event_bus))
 	_expect(int(manager.call("get_status_stack", &"burning")) == 2, "coalesced burning consumes three stacks", manager.call("get_status_snapshot"))
 
 	enemy.queue_free()

@@ -34,7 +34,7 @@ for (const id of requiredIds) {
 const burning = byId.get("burning");
 assert(burning.type === "dot", "burning must be dot");
 approx(burning.duration, 4.0, "burning duration");
-approx(burning.tick_interval, 0.5, "burning tick interval");
+approx(burning.tick_interval, 1.0, "burning tick interval");
 assert(burning.max_stacks === 5, "burning max_stacks");
 assert(burning.consume_stack_on_tick === true, "burning must consume one stack per tick");
 assert(burning.damage_type === "status_dot", "burning damage_type");
@@ -47,9 +47,9 @@ assert(
     effect.type === "damage" &&
     effect.damage_type === "fire" &&
     effect.source_type === "status" &&
-    effect.power_scale === 0.18
+    effect.power_scale === 0.36
   ),
-  "burning must tick 0.18P fire status damage"
+  "burning must tick 0.36P fire status damage"
 );
 
 const chilled = byId.get("chilled");

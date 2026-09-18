@@ -3,11 +3,12 @@ class_name SkillActionAreaBuilder
 
 
 static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
-	var area_params: Dictionary = _get_dictionary(input.get("area_params", {}))
+	var area_params: Dictionary = _get_dictionary(input.get("area_params", input.get("params", {})))
 	var context: Dictionary = _get_dictionary(input.get("context", {}))
 	var damage_packet: Dictionary = _get_dictionary(input.get("damage_packet", {}))
 	var area_source_id: StringName = StringName(str(input.get("area_source_id", &"")))
 	var impact_target: Node = context.get("target") as Node
+	var dash_path_filter: bool = bool(area_params.get("dash_path_filter", false))
 	var area_effect_params: Dictionary = {
 		"parent": input.get("parent"),
 		"area_id": area_source_id,
@@ -18,7 +19,7 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 		"source_origin_id": StringName(str(damage_packet.get("source_origin_id", context.get("source_origin_id", "")))),
 		"source_skill_id": StringName(str(damage_packet.get("source_skill_id", context.get("skill_id", "")))),
 		"duration": float(input.get("duration", 0.12)),
-		"tick_interval": float(input.get("tick_interval", 0.5)),
+		"tick_interval": float(input.get("tick_interval", 1.0)),
 		"radius": float(input.get("radius", 48.0)),
 		"cone_width_degrees": float(area_params.get("cone_width_degrees", 0.0)),
 		"cone_direction": _get_vector2(input.get("cone_direction", Vector2.RIGHT), Vector2.RIGHT),
@@ -46,8 +47,12 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 		"skill_instance": context.get("skill_instance"),
 		"caster": context.get("caster"),
 		"skill_manager": context.get("skill_manager"),
-		"relic_manager": context.get("relic_manager")
+		"relic_manager": context.get("relic_manager"),
+		"dash_path_filter": dash_path_filter
 	}
+	if dash_path_filter:
+		area_effect_params["dash_path_start"] = context.get("dash_path_start", Vector2.ZERO)
+		area_effect_params["dash_path_end"] = context.get("dash_path_end", Vector2.ZERO)
 	if area_params.has("visual_style"):
 		area_effect_params["visual_style"] = str(area_params.get("visual_style", ""))
 	return area_effect_params

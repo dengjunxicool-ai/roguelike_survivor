@@ -184,6 +184,7 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 
 	var button: Button = Button.new()
 	button.text = ""
+	button.tooltip_text = ""
 	button.clip_contents = true
 	button.custom_minimum_size = CARD_DESIGN_SIZE
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -460,6 +461,7 @@ func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: Strin
 		if button.pressed.is_connected(callable):
 			button.pressed.disconnect(callable)
 	button.pressed.connect(Callable(self, "_select_upgrade_option").bind(option, return_state, consumes_pending_level))
+	button.tooltip_text = ""
 	var background: TextureRect = slot.get("background") as TextureRect
 	var background_texture: Texture2D = _load_texture(_get_choice_card_background_texture(option))
 	if background != null:
@@ -474,6 +476,7 @@ func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: Strin
 	var description: Label = slot.get("description") as Label
 	if description != null:
 		description.text = _get_option_description_text(option)
+		description.visible = true
 	var rarity: Label = slot.get("rarity") as Label
 	if rarity != null:
 		rarity.text = _get_option_rarity_text(option)

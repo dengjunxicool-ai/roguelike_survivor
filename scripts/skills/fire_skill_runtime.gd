@@ -443,8 +443,8 @@ static func _apply_blackflame_conversion(rules: Dictionary, context: Dictionary,
 			"params": {
 				"status_id": "blackfire",
 				"duration": maxf(3.0 * float(rules.get("blackflame_duration_multiplier", 0.65)), 0.1),
-				"damage": maxi(roundi(float(base_damage) * float(rules.get("blackflame_damage_multiplier", 1.75))), 1),
-				"tick_interval": 0.5,
+				"damage": maxi(roundi(float(base_damage) * float(rules.get("blackflame_damage_multiplier", 1.75)) * 2.0), 1),
+				"tick_interval": 1.0,
 				"element": "fire"
 			}
 		}], context)

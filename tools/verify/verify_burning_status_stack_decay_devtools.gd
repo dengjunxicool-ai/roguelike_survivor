@@ -24,14 +24,14 @@ func _run() -> void:
 
 	var panel: CanvasLayer = DevDebugPanelScript.new()
 	var initial_text: String = String(panel.call("_format_statuses", enemy.call("get_status_snapshot")))
-	_expect(initial_text == "statuses:Brn(5, 18.0, 4.0s)", "dev tools status text includes stacks, tick damage, and duration", initial_text)
+	_expect(initial_text == "statuses:Brn(5, 36.0, 4.0s)", "dev tools status text includes stacks, tick damage, and duration", initial_text)
 
-	enemy.call("_update_status_effects", 0.51)
+	enemy.call("_update_status_effects", 1.01)
 	_expect(enemy.call("get_status_stack", &"burning") == 4, "burning consumes one stack after first tick", enemy.call("get_status_snapshot"))
 	var first_tick_text: String = String(panel.call("_format_statuses", enemy.call("get_status_snapshot")))
-	_expect(first_tick_text == "statuses:Brn(4, 18.0, 3.5s)", "dev tools status text updates remaining duration after first tick", first_tick_text)
+	_expect(first_tick_text == "statuses:Brn(4, 36.0, 3.0s)", "dev tools status text updates remaining duration after first tick", first_tick_text)
 
-	enemy.call("_update_status_effects", 0.51)
+	enemy.call("_update_status_effects", 1.01)
 	_expect(enemy.call("get_status_stack", &"burning") == 3, "burning consumes one stack after second tick", enemy.call("get_status_snapshot"))
 
 	enemy.call("apply_status", &"burning", {

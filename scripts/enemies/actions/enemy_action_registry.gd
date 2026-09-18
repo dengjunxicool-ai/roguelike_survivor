@@ -88,13 +88,16 @@ func _execute_damage_area(context: Dictionary) -> bool:
 	if damage_area == null:
 		return false
 
+	var area_tick_interval: float = _get_area_tick_interval(action, params, runtime)
 	var amount: int = _get_damage_amount(owner, params, "damage", int(runtime.get("damage", owner.get("contact_damage"))))
+	if _should_scale_inherited_tick_damage(action, params, area_tick_interval):
+		amount *= 2
 	var area_position: Vector2 = _get_vector2(runtime.get("position", owner.global_position), owner.global_position)
 	damage_area.global_position = area_position
 	var setup_params: Dictionary = {
 			"damage": amount,
 			"duration": _get_area_duration(action, params, runtime),
-			"tick_interval": _get_area_tick_interval(action, params, runtime),
+			"tick_interval": area_tick_interval,
 			"target_group": owner.get("target_group"),
 			"area_radius": float(params.get("radius", params.get("area_radius", runtime.get("radius", 72.0)))),
 			"visual_color": _get_color(params.get("visual_color", runtime.get("visual_color", Color(0.35, 0.95, 0.2, 0.32)))),
@@ -241,7 +244,16 @@ func _get_area_tick_interval(action: Dictionary, params: Dictionary, runtime: Di
 		return maxf(float(params.get("delay", runtime.get("delay", 1.0))), 0.05)
 	if action_type == "shockwave":
 		return maxf(float(params.get("warning_time", runtime.get("warning_time", 0.8))), 0.05)
-	return float(runtime.get("tick_interval", 0.5))
+	return float(runtime.get("tick_interval", 1.0))
+
+
+func _should_scale_inherited_tick_damage(action: Dictionary, params: Dictionary, tick_interval: float) -> bool:
+	if params.has("damage"):
+		return false
+	var action_type: String = String(action.get("type", "damage_area"))
+	if action_type != "damage_area":
+		return false
+	return tick_interval >= 0.99
 
 
 func _get_dictionary(value: Variant) -> Dictionary:

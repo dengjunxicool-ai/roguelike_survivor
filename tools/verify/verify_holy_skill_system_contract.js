@@ -86,7 +86,7 @@ const barrier = byId.get("holy_cast_divine_barrier");
 const barrierRule = (barrier.trigger_rules || []).find((rule) => rule.trigger === "cast_skill");
 approx(barrierRule && barrierRule.cooldown, 10.0, "divine barrier cooldown");
 const barrierEffect = (barrierRule.effects || []).find((effect) => effect.type === "spawn_area" && effect.area_id === "divine_barrier_field");
-assert(barrierEffect && barrierEffect.radius_r === 2.3 && barrierEffect.duration === 5.0 && barrierEffect.tick_interval === 0.5, "divine barrier must use R2.3, 5s duration, 0.5s ticks");
+assert(barrierEffect && barrierEffect.radius_r === 2.3 && barrierEffect.duration === 5.0 && barrierEffect.tick_interval === 1.0, "divine barrier must use R2.3, 5s duration, 1s ticks");
 
 const hammer = byId.get("holy_cast_judgment_hammer");
 const hammerRule = (hammer.trigger_rules || []).find((rule) => rule.trigger === "cast_skill");

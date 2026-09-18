@@ -133,7 +133,8 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 
 	var base_amount: Variant = params.get("amount", ModifierResolverScript.get_stat(context, "damage", 0))
 	var amount: int = maxi(roundi(_resolve_scaled_amount(base_amount, context, "damage")), 0)
-	var damage_type: StringName = _get_damage_type(params, context, "skill", _get_damage_origin(params, context, "skill"))
+	var source_type: String = _effective_action_source_type(params, "skill")
+	var damage_type: StringName = _get_damage_type(params, context, source_type, _get_damage_origin(params, context, source_type))
 	var targets: Array[Node] = _resolve_damage_targets(params, context, target)
 	var requires_low_hp_execute: bool = params.has("low_hp_execute_threshold") and float(params.get("low_hp_execute_threshold", 0.0)) > 0.0
 	var damaged_any: bool = false
@@ -211,6 +212,8 @@ func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dict
 	for key_variant: Variant in runtime_packet.keys():
 		var key: String = str(key_variant)
 		if key == "raw_amount" or key == "amount" or key == "target_id":
+			continue
+		if (key == "damage_origin" or key == "source_type" or key == "damage_type" or key == "element") and packet.has(key):
 			continue
 		packet[key] = runtime_packet[key_variant]
 	if target != null:
@@ -310,6 +313,7 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 
 
 func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> bool:
+	params = _prepare_projectile_burst_params(params)
 	var caster: Node2D = context.get("caster") as Node2D
 	if caster == null:
 		return false
@@ -399,10 +403,40 @@ func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Di
 
 
 func _spawn_targeted_projectile_instance(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int) -> void:
+	var spawn_delay: float = _same_target_projectile_spawn_delay(projectile_params, same_target_hit_index)
+	if spawn_delay > 0.0:
+		_spawn_targeted_projectile_instance_after_delay(
+			params,
+			projectile_params.duplicate(true),
+			projectile_context.duplicate(true),
+			caster,
+			target,
+			runtime_data.duplicate(true),
+			source_context.duplicate(true),
+			same_target_hit_index,
+			spawn_delay
+		)
+		return
+	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
+
+
+func _spawn_targeted_projectile_instance_after_delay(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int, spawn_delay: float) -> void:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
+		return
+	await tree.create_timer(spawn_delay).timeout
+	if caster == null or target == null or not is_instance_valid(caster) or not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
+
+
+func _spawn_targeted_projectile_instance_now(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int) -> void:
 	var launch_data: Dictionary = _build_targeted_projectile_launch_data(params, caster.global_position, target.global_position, same_target_hit_index)
 	var visual_start_position: Vector2 = launch_data.get("position", caster.global_position)
 	var visual_target_position: Vector2 = launch_data.get("target_position", target.global_position)
 	var direction: Vector2 = launch_data.get("direction", Vector2.RIGHT)
+	projectile_params = _projectile_params_for_same_target_hit(projectile_params, same_target_hit_index)
 	var damage: int = int(runtime_data.get("damage", 0))
 	var damage_packet: Dictionary = _build_damage_packet(projectile_params, projectile_context, damage, "projectile")
 	_apply_projectile_damage_sequence(damage_packet, projectile_params, same_target_hit_index, source_context)
@@ -427,6 +461,31 @@ func _spawn_targeted_projectile_instance(params: Dictionary, projectile_params: 
 		visual_start_position,
 		visual_target_position
 	))
+
+
+func _same_target_projectile_spawn_delay(params: Dictionary, same_target_hit_index: int) -> float:
+	if same_target_hit_index <= 0:
+		return 0.0
+	return maxf(float(params.get("same_target_spawn_delay", 0.0)), 0.0) * float(same_target_hit_index)
+
+
+func _projectile_params_for_same_target_hit(params: Dictionary, same_target_hit_index: int) -> Dictionary:
+	if same_target_hit_index <= 0 or not bool(params.get("same_target_repeat_damage_only", false)):
+		return params
+	var adjusted: Dictionary = params.duplicate(true)
+	adjusted["actions_on_hit"] = _damage_only_actions(_get_array(params.get("actions_on_hit", [])))
+	return adjusted
+
+
+func _damage_only_actions(actions: Array) -> Array:
+	var adjusted: Array = []
+	for action_variant: Variant in actions:
+		if not (action_variant is Dictionary):
+			continue
+		var action: Dictionary = action_variant
+		if str(action.get("type", "")) == "deal_damage":
+			adjusted.append(action.duplicate(true))
+	return adjusted
 
 
 func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) -> Dictionary:
@@ -1939,6 +1998,8 @@ func _get_damage_origin(params: Dictionary, context: Dictionary, source_type: St
 		return "status_dot"
 	if source_type == "area":
 		return "field"
+	if source_type == "cast":
+		return "field"
 	return "primary_attack"
 
 
@@ -1959,6 +2020,7 @@ func _normalize_element_name(value: String) -> String:
 
 
 func _build_damage_packet(params: Dictionary, context: Dictionary, amount: int, source_type: String) -> Dictionary:
+	source_type = _effective_action_source_type(params, source_type)
 	var damage_origin: String = _get_damage_origin(params, context, source_type)
 	var damage_type: StringName = _get_damage_type(params, context, source_type, damage_origin)
 	var element: StringName = _get_element(params, context)
@@ -1977,6 +2039,11 @@ func _build_damage_packet(params: Dictionary, context: Dictionary, amount: int, 
 	_apply_damage_packet_modifiers(packet, params, context)
 	_apply_shared_primary_attack_crit(packet, params, context, caster)
 	return packet
+
+
+func _effective_action_source_type(params: Dictionary, fallback: String) -> String:
+	var configured: String = str(params.get("source_type", ""))
+	return configured if configured != "" else fallback
 
 
 func _apply_damage_packet_modifiers(packet: Dictionary, params: Dictionary, context: Dictionary) -> void:

@@ -29,7 +29,7 @@ assert((firstSkill.trigger_rules || []).some((rule) => rule.trigger === "attack_
 assert((firstSkill.effects || []).some((effect) => effect.type === "add_modifier"), "fire_attack_searing must carry its passive attack modifier");
 
 const fireEffectDescriptions = {
-  fire_attack_searing: "攻击变强，命中施加 Burning，并有概率在目标脚下生成短暂火焰路径",
+  fire_attack_searing: "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域",
   fire_dash_blazing_run: "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning",
   fire_cast_meteor_rain: "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面",
   fire_cast_lava_rift: "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害",

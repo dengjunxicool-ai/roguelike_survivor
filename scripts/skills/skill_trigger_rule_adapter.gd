@@ -53,7 +53,7 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 
 	var event: Dictionary = {
 		"trigger": event_name,
-		"conditions": _normalize_conditions(rule.get("conditions", [])),
+		"conditions": _normalize_conditions(rule.get("conditions", []), _skill_instance),
 		"actions": SkillEffectAdapterScript.to_actions(_get_array(rule.get("effects", [])), _skill_instance)
 	}
 	for optional_key: String in ["source_id", "counter_key", "threshold", "cooldown", "max_triggers_per_second"]:
@@ -72,7 +72,7 @@ static func can_execute_rule_event(event: Dictionary, context: Dictionary, skill
 	return true
 
 
-static func _normalize_conditions(value: Variant) -> Array:
+static func _normalize_conditions(value: Variant, skill_instance: RefCounted = null) -> Array:
 	var normalized: Array = []
 	for condition_variant: Variant in _get_array(value):
 		if not (condition_variant is Dictionary):
@@ -99,6 +99,10 @@ static func _normalize_conditions(value: Variant) -> Array:
 			"random_chance":
 				if condition.has("chance") and not params.has("chance"):
 					params["chance"] = condition["chance"]
+				if condition.has("chance_per_level") or params.has("chance_per_level"):
+					var chance_per_level: float = float(params.get("chance_per_level", condition.get("chance_per_level", 0.0)))
+					var max_chance: float = clampf(float(params.get("max_chance", condition.get("max_chance", 1.0))), 0.0, 1.0)
+					params["chance"] = clampf(chance_per_level * float(_skill_level(skill_instance)), 0.0, max_chance)
 			"target_hp_below":
 				if condition.has("percent") and not params.has("percent"):
 					params["percent"] = condition["percent"]
@@ -126,6 +130,12 @@ static func _normalize_conditions(value: Variant) -> Array:
 			"params": params
 		})
 	return normalized
+
+
+static func _skill_level(skill_instance: RefCounted) -> int:
+	if skill_instance == null:
+		return 1
+	return maxi(int(skill_instance.get("current_level")), 1)
 
 
 static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bool:

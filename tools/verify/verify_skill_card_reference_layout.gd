@@ -19,8 +19,8 @@ func _run() -> void:
 	var option: Dictionary = {
 		"id": "skill_level_up:fire_attack_searing:2",
 		"type": "skill_level_up",
-		"display_name": "Reference Skill",
-		"description": "Reference description text.",
+		"display_name": "Reference Skill Lv2",
+		"description": "提升 Reference Skill 至 Lv2。",
 		"rarity": "rare",
 		"payload": {
 			"skill_id": &"fire_attack_searing",
@@ -36,44 +36,75 @@ func _run() -> void:
 	var button: Button = _first_button(parent)
 	_expect(button != null, "creates a card button")
 	if button != null:
-		var title := button.find_child("SkillCardTitle", true, false) as Label
-		var icon := button.find_child("SkillCardIconTexture", true, false) as TextureRect
-		var description := button.find_child("SkillCardDescription", true, false) as Label
-		var rarity := button.find_child("SkillCardRarity", true, false) as Label
-		var values := button.find_child("SkillCardValues", true, false) as VBoxContainer
-		var content_layer := button.find_child("SkillCardContentLayer", true, false) as Control
-		_expect(title != null and title.text == "Reference Skill", "title is first-class content")
-		_expect(title != null and title.get_theme_font_size("font_size") <= 23, "title font is compact enough for one-line skill names", title.get_theme_font_size("font_size") if title != null else 0)
-		_expect(icon != null and icon.texture != null, "icon placeholder texture is loaded")
-		_expect(description != null and description.text == "Reference description text.", "description uses option text")
-		_expect(content_layer != null, "card uses an absolute content layer")
-		_expect(_ratio_close(button.custom_minimum_size.x / button.custom_minimum_size.y, 720.0 / 1240.0), "card size matches the new background aspect ratio", button.custom_minimum_size)
-		_expect(rarity != null and rarity.text == "稀有", "rarity section shows only the rarity name", rarity.text if rarity != null else "")
-		_expect(rarity != null and not _has_extra_words(rarity.text), "rarity section has no extra prefix text", rarity.text if rarity != null else "")
-		_expect(values != null, "values section is a row list")
-		_expect(values != null and _value_rows(values).size() > 0, "values section has value rows")
-		_expect(values != null and _value_rows(values).size() <= 3, "values section matches the three prepared background rows", _value_rows(values).size() if values != null else 0)
-		_expect(values != null and _joined_value_text(values).contains("27%"), "values section shows scaled numeric summary", _joined_value_text(values) if values != null else "")
-		_expect(values != null and not _has_extra_words(_joined_value_text(values)), "values section has no header or meta text", _joined_value_text(values) if values != null else "")
-		_expect(values != null and not _joined_value_text(values).contains("searing_fire_path"), "values section does not expose internal ids", _joined_value_text(values) if values != null else "")
-		if content_layer != null:
-			_expect(_content_order(content_layer) == [
-				"SkillCardTitle",
-				"SkillCardIconFrame",
-				"SkillCardDescription",
-				"SkillCardRarity",
-				"SkillCardValues"
-			], "card content follows reference order", _content_order(content_layer))
-			_expect(_is_vertical_reference_order(content_layer), "card content is positioned from top to bottom", _content_offsets(content_layer))
-			_expect(_slot_close(description, 0.472, 0.626), "description slot is centered on the background description panel", _slot_bounds(description))
-			_expect(_slot_close(rarity, 0.634, 0.684), "rarity slot is centered on the background rarity plaque", _slot_bounds(rarity))
-			_expect(_slot_close(values, 0.684, 0.872), "values slot is centered on the background value rows", _slot_bounds(values))
+		_verify_card(button, "direct")
 
+	var pooled_parent := HBoxContainer.new()
+	root.add_child(pooled_parent)
+	var slot_variant: Variant = controller.call("_create_choice_card_slot", pooled_parent)
+	if slot_variant is Dictionary:
+		var pooled_slot: Dictionary = slot_variant
+		controller.call("_bind_choice_card", pooled_slot, option, "RUNNING", false)
+		await process_frame
+		var pooled_button: Button = pooled_slot.get("button") as Button
+		_expect(pooled_button != null, "pooled card creates a button")
+		if pooled_button != null:
+			_verify_card(pooled_button, "pooled")
+	else:
+		_expect(false, "pooled card slot can be created", slot_variant)
+
+	pooled_parent.queue_free()
 	parent.queue_free()
+	await process_frame
+	await process_frame
 	await process_frame
 	if not _failed:
 		print("[verify_skill_card_reference_layout] PASS")
 	quit(1 if _failed else 0)
+
+
+func _verify_card(button: Button, context: String) -> void:
+	_expect(button.tooltip_text == "", "%s card does not store option tooltip text" % context, button.tooltip_text)
+	var title := button.find_child("SkillCardTitle", true, false) as Label
+	var icon := button.find_child("SkillCardIconTexture", true, false) as TextureRect
+	var description := button.find_child("SkillCardDescription", true, false) as Label
+	var rarity := button.find_child("SkillCardRarity", true, false) as Label
+	var values := button.find_child("SkillCardValues", true, false) as VBoxContainer
+	var content_layer := button.find_child("SkillCardContentLayer", true, false) as Control
+
+	_expect(title != null and title.text == "Reference Skill Lv2", "%s title is first-class content" % context)
+	_expect(title != null and title.get_theme_font_size("font_size") <= 23, "%s title font is compact enough" % context, title.get_theme_font_size("font_size") if title != null else 0)
+	_expect(icon != null and icon.texture != null, "%s icon placeholder texture is loaded" % context)
+	_expect(description != null and description.visible and description.text == "提升 Reference Skill 至 Lv2。", "%s description stores plain option text" % context, description.text if description != null else "")
+	_expect(content_layer != null, "%s card uses an absolute content layer" % context)
+	_expect(_ratio_close(button.custom_minimum_size.x / button.custom_minimum_size.y, 720.0 / 1240.0), "%s card size matches background aspect ratio" % context, button.custom_minimum_size)
+	_expect(rarity != null and rarity.text == "稀有", "%s rarity section shows only rarity name" % context, rarity.text if rarity != null else "")
+	_expect(values != null and _value_rows(values).size() > 0, "%s values section has value rows" % context)
+	_expect(values != null and _value_rows(values).size() <= 3, "%s values section matches prepared rows" % context, _value_rows(values).size() if values != null else 0)
+	_expect(values != null and _joined_value_text(values).contains("27%"), "%s values section shows scaled numeric summary" % context, _joined_value_text(values) if values != null else "")
+	_expect(values != null and not _joined_value_text(values).contains("searing_fire_path"), "%s values section does not expose internal ids" % context, _joined_value_text(values) if values != null else "")
+
+	button.mouse_entered.emit()
+	_expect(description != null and description.visible and description.text == "提升 Reference Skill 至 Lv2。", "%s whole-card hover does not alter description" % context, description.text if description != null else "")
+	button.mouse_exited.emit()
+
+	_expect(button.find_child("SkillCardDescriptionParts", true, false) == null, "%s card does not create split description parts" % context)
+	_expect(button.find_child("SkillCardDescriptionDisplayName", true, false) == null, "%s card does not create display-name hover text" % context)
+	_expect(button.find_child("SkillCardDescriptionHelpIcon", true, false) == null, "%s card does not show a ? icon after display_name" % context)
+	_expect(button.find_child("SkillCardDisplayNameHoverArea", true, false) == null, "%s card removes display-name hover interaction" % context)
+	_expect(button.find_child("SkillCardDescriptionHelpPoll", true, false) == null, "%s card does not create description hover polling" % context)
+
+	if content_layer != null:
+		_expect(_content_order(content_layer) == [
+			"SkillCardTitle",
+			"SkillCardIconFrame",
+			"SkillCardDescription",
+			"SkillCardRarity",
+			"SkillCardValues"
+		], "%s card content follows reference order" % context, _content_order(content_layer))
+		_expect(_is_vertical_reference_order(content_layer), "%s card content is positioned top to bottom" % context, _content_offsets(content_layer))
+		_expect(_slot_close(description, 0.472, 0.626), "%s description slot is centered on background panel" % context, _slot_bounds(description))
+		_expect(_slot_close(rarity, 0.634, 0.684), "%s rarity slot is centered on plaque" % context, _slot_bounds(rarity))
+		_expect(_slot_close(values, 0.684, 0.872), "%s values slot is centered on rows" % context, _slot_bounds(values))
 
 
 func _first_button(parent: Node) -> Button:
@@ -142,13 +173,6 @@ func _joined_value_text(values: VBoxContainer) -> String:
 			if child is Label:
 				parts.append((child as Label).text)
 	return "\n".join(parts)
-
-
-func _has_extra_words(text: String) -> bool:
-	for word: String in ["稀有度", "当前", "标签", "技能数值", "RARE", "normal"]:
-		if text.contains(word):
-			return true
-	return false
 
 
 func _ratio_close(actual: float, expected: float) -> bool:

@@ -53,6 +53,7 @@ var level: int
 var current_experience: int
 var experience_to_next_level: int
 var pickup_radius: float = 80.0
+var attack_power: float = 24.0
 var damage_multiplier: float = 1.0
 var attack_speed_multiplier: float = 1.0
 var crit_chance: float = 0.0
@@ -307,6 +308,7 @@ func _reset_core_runtime_stats() -> void:
 	base_experience_to_next_level = 100
 	experience_growth_per_level = 1.25
 	pickup_radius = 80.0
+	attack_power = 24.0
 	damage_multiplier = 1.0
 	attack_speed_multiplier = 1.0
 	crit_chance = 0.0
@@ -392,6 +394,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if was_dash_active and not is_dash_active():
 		_clear_dash_collision_exceptions()
+		_emit_dash_skill_event(&"dash_end")
 	_clamp_to_movement_bounds()
 	_update_trait_movement(input_direction, delta)
 	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
@@ -466,15 +469,55 @@ func _update_dash_cooldown(delta: float) -> void:
 
 func _apply_dash_collision_exceptions() -> void:
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
-	var targets: Array = registry.call("get_targets", &"enemies") if registry != null and registry.has_method("get_targets") else []
+	var targets: Array = _get_dash_collision_candidates(registry)
 	for node: Node in targets:
 		var body: PhysicsBody2D = node as PhysicsBody2D
 		if body == null or not is_instance_valid(body) or body.is_queued_for_deletion():
+			continue
+		if not _is_body_near_dash_path(body):
 			continue
 		if _dash_collision_exceptions.has(body):
 			continue
 		add_collision_exception_with(body)
 		_dash_collision_exceptions.append(body)
+
+
+func _get_dash_collision_candidates(registry: Node) -> Array:
+	if registry == null:
+		return []
+	var remaining_distance: float = _dash_remaining_distance()
+	var player_radius: float = _get_collision_radius(self, 24.0)
+	var path_center: Vector2 = global_position + _dash_direction * remaining_distance * 0.5
+	var query_radius: float = remaining_distance * 0.5 + player_radius + 96.0
+	if registry.has_method("get_targets_in_radius"):
+		return registry.call("get_targets_in_radius", path_center, query_radius, &"enemies")
+	if registry.has_method("get_targets"):
+		return registry.call("get_targets", &"enemies")
+	return []
+
+
+func _is_body_near_dash_path(body: PhysicsBody2D) -> bool:
+	var target: Node2D = body as Node2D
+	if target == null:
+		return false
+	var remaining_distance: float = _dash_remaining_distance()
+	if remaining_distance <= 0.0:
+		return false
+	var start: Vector2 = global_position
+	var end: Vector2 = start + _dash_direction * remaining_distance
+	var path: Vector2 = end - start
+	var path_length_squared: float = path.length_squared()
+	if path_length_squared <= 0.001:
+		return false
+	var target_offset: Vector2 = target.global_position - start
+	var along_path: float = clampf(target_offset.dot(path) / path_length_squared, 0.0, 1.0)
+	var closest_point: Vector2 = start + path * along_path
+	var clearance: float = _get_collision_radius(self, 24.0) + _get_collision_radius(target, 24.0) + 8.0
+	return closest_point.distance_squared_to(target.global_position) <= clearance * clearance
+
+
+func _dash_remaining_distance() -> float:
+	return maxf(dash_speed * _dash_time_remaining, 0.0)
 
 
 func _clear_dash_collision_exceptions() -> void:
@@ -976,6 +1019,7 @@ func _apply_base_stats(base_stats: Dictionary) -> void:
 	max_health = int(base_stats.get("max_hp", max_health))
 	move_speed = float(base_stats.get("move_speed", move_speed))
 	pickup_radius = float(base_stats.get("pickup_radius", pickup_radius))
+	attack_power = float(base_stats.get("attack_power", attack_power))
 	damage_multiplier = float(base_stats.get("damage_multiplier", damage_multiplier))
 	attack_speed_multiplier = float(base_stats.get("attack_speed_multiplier", attack_speed_multiplier))
 	crit_chance = float(base_stats.get("crit_chance", crit_chance))

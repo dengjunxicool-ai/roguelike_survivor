@@ -1,6 +1,9 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
+
 class SmokeEnemy:
 	extends Node2D
 
@@ -14,6 +17,7 @@ class SmokeEnemy:
 
 
 var _failed: bool = false
+var _registry: Node = null
 
 
 func _init() -> void:
@@ -30,26 +34,31 @@ func _run() -> void:
 	var vortex: Node2D = vortex_scene.instantiate() as Node2D
 	vortex.global_position = Vector2.ZERO
 	root.add_child(vortex)
+	_registry = CombatTargetRegistryScript.get_or_create(root)
 
 	var hit_enemy: SmokeEnemy = SmokeEnemy.new()
 	hit_enemy.global_position = Vector2(16.0, 0.0)
 	root.add_child(hit_enemy)
+	_register_enemy(hit_enemy)
 
 	var dense_a: SmokeEnemy = SmokeEnemy.new()
 	dense_a.global_position = Vector2(220.0, 0.0)
 	root.add_child(dense_a)
+	_register_enemy(dense_a)
 	var dense_b: SmokeEnemy = SmokeEnemy.new()
 	dense_b.global_position = Vector2(245.0, 12.0)
 	root.add_child(dense_b)
+	_register_enemy(dense_b)
 	var dense_c: SmokeEnemy = SmokeEnemy.new()
 	dense_c.global_position = Vector2(230.0, -18.0)
 	root.add_child(dense_c)
+	_register_enemy(dense_c)
 
 	vortex.call("setup", {
-		"damage": 7,
+		"damage": 14,
 		"radius": 64.0,
 		"duration": 4.0,
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"target_group": &"enemies",
 		"move_direction": Vector2.RIGHT,
 		"move_speed": 160.0,
@@ -77,11 +86,12 @@ func _run() -> void:
 	var swept_enemy: SmokeEnemy = SmokeEnemy.new()
 	swept_enemy.global_position = Vector2(75.0, 0.0)
 	root.add_child(swept_enemy)
+	_register_enemy(swept_enemy)
 	swept_vortex.call("setup", {
-		"damage": 7,
+		"damage": 14,
 		"radius": 24.0,
 		"duration": 1.0,
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"target_group": &"enemies",
 		"move_direction": Vector2.RIGHT,
 		"move_speed": 240.0,
@@ -106,3 +116,8 @@ func _expect(condition: bool, label: String, actual: Variant = "") -> void:
 		return
 	_failed = true
 	push_error("[verify_scorching_vortex_area_behavior] FAIL %s actual=%s" % [label, str(actual)])
+
+
+func _register_enemy(enemy: Node) -> void:
+	if _registry != null and _registry.has_method("register_enemy"):
+		_registry.call("register_enemy", enemy)

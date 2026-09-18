@@ -94,7 +94,8 @@
 	"skills": [
 		{
 			"id": "fire_attack_searing",
-			"name": "灼热攻击",
+			"name": "灼热火球",
+			"display_name": "灼热火球",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "attack",
@@ -131,21 +132,26 @@
 				},
 				{
 					"trigger": "attack_hit",
-					"counter_key": "searing_attack_hits",
-					"threshold": 4,
+					"conditions": [
+						{
+							"type": "random_chance",
+							"chance_per_level": 0.2,
+							"max_chance": 1.0
+						}
+					],
 					"effects": [
 						{
 							"type": "spawn_area",
 							"area_id": "searing_fire_path",
 							"radius": 67.2,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "area",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								},
 								{
 									"type": "apply_status",
@@ -166,11 +172,12 @@
 					"damage_type": "fire"
 				}
 			],
-			"description": "攻击变强，命中施加 Burning，并有概率在目标脚下生成短暂火焰路径"
+			"description": "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域"
 		},
 		{
 			"id": "fire_dash_blazing_run",
 			"name": "烈焰疾行",
+			"display_name": "烈焰疾行",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "dash",
@@ -202,7 +209,7 @@
 							"area_id": "blazing_run_path",
 							"radius": 63,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"max_active": 2,
 							"max_targets": 6,
 							"effects_on_tick": [
@@ -210,7 +217,7 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "dash",
-									"power_scale": 0.14
+									"power_scale": 0.28
 								},
 								{
 									"type": "apply_status",
@@ -238,7 +245,7 @@
 							"area_id": "blazing_run_path",
 							"radius": 63,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"max_active": 2,
 							"max_targets": 6,
 							"effects_on_tick": [
@@ -246,7 +253,7 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "dash",
-									"power_scale": 0.14
+									"power_scale": 0.28
 								},
 								{
 									"type": "apply_status",
@@ -273,6 +280,7 @@
 		{
 			"id": "fire_cast_meteor_rain",
 			"name": "流星火雨",
+			"display_name": "流星火雨",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "cast",
@@ -300,7 +308,7 @@
 					"cooldown": 6.5,
 					"effects": [
 						{
-							"type": "spawn_projectile_burst",
+							"type": "spawn_projectiles_at_targets",
 							"projectile_id": "meteor_rain_meteor",
 							"count": 3,
 							"collision_radius": 18,
@@ -311,6 +319,13 @@
 								-360,
 								-360
 							],
+							"damage_multiplier_sequence": [
+								1,
+								0.5,
+								0.25
+							],
+							"same_target_spawn_delay": 0.25,
+							"same_target_repeat_damage_only": true,
 							"on_hit": [
 								{
 									"type": "damage",
@@ -330,7 +345,7 @@
 									"area_id": "meteor_burning_ground",
 									"radius": 134.4,
 									"duration": 3,
-									"tick_interval": 0.5,
+									"tick_interval": 1.0,
 									"max_active": 2,
 									"max_targets": 12,
 									"effects_on_tick": [
@@ -338,7 +353,7 @@
 											"type": "damage",
 											"damage_type": "fire",
 											"source_type": "area",
-											"power_scale": 0.14
+											"power_scale": 0.28
 										},
 										{
 											"type": "apply_status",
@@ -359,6 +374,7 @@
 		{
 			"id": "fire_cast_lava_rift",
 			"name": "熔岩裂涌",
+			"display_name": "熔岩裂涌",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "cast",
@@ -391,7 +407,7 @@
 							"length": 504,
 							"width": 67.2,
 							"duration": 1.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"max_active": 1,
 							"max_targets": 12,
 							"effects_on_tick": [
@@ -399,7 +415,7 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "cast",
-									"power_scale": 0.533333
+									"power_scale": 1.066666
 								},
 								{
 									"type": "apply_status",
@@ -418,6 +434,7 @@
 		{
 			"id": "fire_cast_scorching_vortex",
 			"name": "焚风旋涡",
+			"display_name": "焚风旋涡",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "cast",
@@ -454,13 +471,13 @@
 							"move_speed": 120,
 							"radius": 184.8,
 							"duration": 4,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "area",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -479,6 +496,7 @@
 		{
 			"id": "fire_summon_crimson_dragon",
 			"name": "赤焰龙",
+			"display_name": "赤焰龙",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "summon",
@@ -538,6 +556,7 @@
 		{
 			"id": "fire_summon_ember_fox_pack",
 			"name": "余烬狐群",
+			"display_name": "余烬狐群",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "summon",
@@ -618,6 +637,7 @@
 		{
 			"id": "fire_passive_burning_focus",
 			"name": "炽燃专注",
+			"display_name": "炽燃专注",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "passive",
@@ -656,6 +676,7 @@
 		{
 			"id": "fire_passive_overheated_casting",
 			"name": "过热施法",
+			"display_name": "过热施法",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "passive",
@@ -709,6 +730,7 @@
 		{
 			"id": "fire_passive_scorched_ground_affinity",
 			"name": "焦土亲和",
+			"display_name": "焦土亲和",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "passive",
@@ -755,6 +777,7 @@
 		{
 			"id": "fire_power_combustion_chain",
 			"name": "燃爆连锁",
+			"display_name": "燃爆连锁",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "power",
@@ -810,6 +833,7 @@
 		{
 			"id": "fire_power_ember_attachment",
 			"name": "余烬附着",
+			"display_name": "余烬附着",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "power",
@@ -871,6 +895,7 @@
 		{
 			"id": "fire_power_ignite_core",
 			"name": "引燃核心",
+			"display_name": "引燃核心",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "power",
@@ -948,6 +973,7 @@
 		{
 			"id": "fire_core_inferno_cycle",
 			"name": "炼狱循环",
+			"display_name": "炼狱循环",
 			"school": "fire",
 			"fusion_school": null,
 			"type": "core",
@@ -1041,6 +1067,7 @@
 		{
 			"id": "frost_attack_frostbite",
 			"name": "寒霜攻击",
+			"display_name": "寒霜攻击",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "attack",
@@ -1107,6 +1134,7 @@
 		{
 			"id": "frost_dash_ice_shard_assault",
 			"name": "冰片突袭",
+			"display_name": "冰片突袭",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "dash",
@@ -1163,6 +1191,7 @@
 		{
 			"id": "frost_cast_frost_field",
 			"name": "冰霜领域",
+			"display_name": "冰霜领域",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "cast",
@@ -1195,13 +1224,13 @@
 							"targeting": "nearest_enemy",
 							"radius": 134.4,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "area",
-									"power_scale": 0.22
+									"power_scale": 0.44
 								},
 								{
 									"type": "apply_status",
@@ -1216,7 +1245,7 @@
 									"area_id": "frost_path",
 									"radius": 92.4,
 									"duration": 3,
-									"tick_interval": 0.5,
+									"tick_interval": 1.0,
 									"effects_on_tick": [
 										{
 											"type": "apply_status",
@@ -1237,6 +1266,7 @@
 		{
 			"id": "frost_cast_glacial_lance",
 			"name": "极寒冰矛",
+			"display_name": "极寒冰矛",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "cast",
@@ -1307,6 +1337,7 @@
 		{
 			"id": "frost_cast_blizzard_cloud",
 			"name": "暴雪云团",
+			"display_name": "暴雪云团",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "cast",
@@ -1341,13 +1372,13 @@
 							"move_speed": 70,
 							"radius": 168,
 							"duration": 5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "area",
-									"power_scale": 0.16
+									"power_scale": 0.32
 								},
 								{
 									"type": "apply_status",
@@ -1366,6 +1397,7 @@
 		{
 			"id": "frost_summon_frost_wolf",
 			"name": "霜狼",
+			"display_name": "霜狼",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "summon",
@@ -1405,6 +1437,7 @@
 		{
 			"id": "frost_summon_ice_crystal_guard",
 			"name": "冰晶守卫",
+			"display_name": "冰晶守卫",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "summon",
@@ -1444,6 +1477,7 @@
 		{
 			"id": "frost_power_shatter_execute",
 			"name": "碎冰处决",
+			"display_name": "碎冰处决",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "power",
@@ -1494,6 +1528,7 @@
 		{
 			"id": "frost_passive_frozen_vulnerability",
 			"name": "冰封易伤",
+			"display_name": "冰封易伤",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "passive",
@@ -1527,6 +1562,7 @@
 		{
 			"id": "frost_passive_chill_extension",
 			"name": "寒意延展",
+			"display_name": "寒意延展",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "passive",
@@ -1571,6 +1607,7 @@
 		{
 			"id": "frost_power_frost_ring_counter",
 			"name": "霜环反冲",
+			"display_name": "霜环反冲",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "power",
@@ -1627,6 +1664,7 @@
 		{
 			"id": "frost_power_ice_crack_chain",
 			"name": "冰裂连锁",
+			"display_name": "冰裂连锁",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "power",
@@ -1687,6 +1725,7 @@
 		{
 			"id": "frost_power_ice_mist_guard",
 			"name": "冰雾护身",
+			"display_name": "冰雾护身",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "power",
@@ -1763,6 +1802,7 @@
 		{
 			"id": "frost_core_absolute_zero",
 			"name": "绝对零度",
+			"display_name": "绝对零度",
 			"school": "frost",
 			"fusion_school": null,
 			"type": "core",
@@ -1823,7 +1863,7 @@
 							"area_id": "absolute_zero_field",
 							"radius": 84,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "apply_status",
@@ -1849,6 +1889,7 @@
 		{
 			"id": "thunder_attack_thundering",
 			"name": "雷鸣攻击",
+			"display_name": "雷鸣攻击",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "attack",
@@ -1924,6 +1965,7 @@
 		{
 			"id": "thunder_dash_ball_lightning",
 			"name": "球状闪电",
+			"display_name": "球状闪电",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "dash",
@@ -2009,13 +2051,13 @@
 							"position_mode": "caster",
 							"radius_r": 1.15,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "area",
-									"power_scale": 0.18
+									"power_scale": 0.36
 								},
 								{
 									"type": "apply_status",
@@ -2034,6 +2076,7 @@
 		{
 			"id": "thunder_cast_chain_lightning",
 			"name": "连锁闪电",
+			"display_name": "连锁闪电",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "cast",
@@ -2110,6 +2153,7 @@
 		{
 			"id": "thunder_cast_storm_circle",
 			"name": "雷暴法阵",
+			"display_name": "雷暴法阵",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "cast",
@@ -2175,6 +2219,7 @@
 		{
 			"id": "thunder_cast_emp_ring",
 			"name": "电磁脉冲",
+			"display_name": "电磁脉冲",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "cast",
@@ -2244,6 +2289,7 @@
 		{
 			"id": "thunder_summon_storm_lynx",
 			"name": "雷兽猞猁",
+			"display_name": "雷兽猞猁",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "summon",
@@ -2282,6 +2328,7 @@
 		{
 			"id": "thunder_summon_storm_crow",
 			"name": "风暴乌鸦",
+			"display_name": "风暴乌鸦",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "summon",
@@ -2320,6 +2367,7 @@
 		{
 			"id": "thunder_passive_high_frequency_discharge",
 			"name": "高频放电",
+			"display_name": "高频放电",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "passive",
@@ -2352,6 +2400,7 @@
 		{
 			"id": "thunder_passive_superconductor",
 			"name": "超导体",
+			"display_name": "超导体",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "passive",
@@ -2391,6 +2440,7 @@
 		{
 			"id": "thunder_passive_static_charge",
 			"name": "静电蓄能",
+			"display_name": "静电蓄能",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "passive",
@@ -2444,6 +2494,7 @@
 		{
 			"id": "thunder_power_overload_burst",
 			"name": "过载爆破",
+			"display_name": "过载爆破",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "power",
@@ -2510,6 +2561,7 @@
 		{
 			"id": "thunder_power_double_strike",
 			"name": "二重落雷",
+			"display_name": "二重落雷",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "power",
@@ -2572,6 +2624,7 @@
 		{
 			"id": "thunder_power_magnetic_pull",
 			"name": "雷磁牵引",
+			"display_name": "雷磁牵引",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "power",
@@ -2636,6 +2689,7 @@
 		{
 			"id": "thunder_core_storm_center",
 			"name": "雷暴中枢",
+			"display_name": "雷暴中枢",
 			"school": "thunder",
 			"fusion_school": null,
 			"type": "core",
@@ -2708,6 +2762,7 @@
 		{
 			"id": "curse_attack_cursing",
 			"name": "诅咒攻击",
+			"display_name": "诅咒攻击",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "attack",
@@ -2772,6 +2827,7 @@
 		{
 			"id": "curse_dash_soul_chain",
 			"name": "魂链疾行",
+			"display_name": "魂链疾行",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "dash",
@@ -2832,6 +2888,7 @@
 		{
 			"id": "curse_cast_black_serpent_hunt",
 			"name": "黑蛇追猎",
+			"display_name": "黑蛇追猎",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "cast",
@@ -2888,6 +2945,7 @@
 		{
 			"id": "curse_cast_death_scythe",
 			"name": "死镰回旋",
+			"display_name": "死镰回旋",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "cast",
@@ -2951,6 +3009,7 @@
 		{
 			"id": "curse_cast_doom_circle",
 			"name": "终末法阵",
+			"display_name": "终末法阵",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "cast",
@@ -3017,6 +3076,7 @@
 		{
 			"id": "curse_summon_bone_servant",
 			"name": "亡骸仆从",
+			"display_name": "亡骸仆从",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "summon",
@@ -3062,6 +3122,7 @@
 		{
 			"id": "curse_summon_soul_crow",
 			"name": "魂鸦",
+			"display_name": "魂鸦",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "summon",
@@ -3125,6 +3186,7 @@
 		{
 			"id": "curse_passive_vampiric_ritual",
 			"name": "吸血仪式",
+			"display_name": "吸血仪式",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "passive",
@@ -3184,6 +3246,7 @@
 		{
 			"id": "curse_passive_plague_spread",
 			"name": "疫咒扩散",
+			"display_name": "疫咒扩散",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "passive",
@@ -3236,6 +3299,7 @@
 		{
 			"id": "curse_passive_deathbed_deepen",
 			"name": "临终加深",
+			"display_name": "临终加深",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "passive",
@@ -3273,6 +3337,7 @@
 		{
 			"id": "curse_power_fear_whisper",
 			"name": "恐惧低语",
+			"display_name": "恐惧低语",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "power",
@@ -3346,6 +3411,7 @@
 		{
 			"id": "curse_power_soul_harvest",
 			"name": "灵魂收割",
+			"display_name": "灵魂收割",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "power",
@@ -3392,6 +3458,7 @@
 		{
 			"id": "curse_power_death_pact",
 			"name": "死亡契约",
+			"display_name": "死亡契约",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "power",
@@ -3464,6 +3531,7 @@
 		{
 			"id": "curse_core_grand_coffin",
 			"name": "万咒归棺",
+			"display_name": "万咒归棺",
 			"school": "curse",
 			"fusion_school": null,
 			"type": "core",
@@ -3553,6 +3621,7 @@
 		{
 			"id": "holy_attack_judgment",
 			"name": "裁决攻击",
+			"display_name": "裁决攻击",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "attack",
@@ -3621,6 +3690,7 @@
 		{
 			"id": "holy_dash_heavenly_wings",
 			"name": "天翼冲刺",
+			"display_name": "天翼冲刺",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "dash",
@@ -3712,6 +3782,7 @@
 		{
 			"id": "holy_cast_holy_ray",
 			"name": "圣光射线",
+			"display_name": "圣光射线",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "cast",
@@ -3768,6 +3839,7 @@
 		{
 			"id": "holy_cast_divine_barrier",
 			"name": "神圣结界",
+			"display_name": "神圣结界",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "cast",
@@ -3800,14 +3872,14 @@
 							"position_mode": "caster",
 							"radius_r": 2.3,
 							"duration": 5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"max_active": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "area",
-									"power_scale": 0.18
+									"power_scale": 0.36
 								},
 								{
 									"type": "apply_status",
@@ -3834,6 +3906,7 @@
 		{
 			"id": "holy_cast_judgment_hammer",
 			"name": "审判圣锤",
+			"display_name": "审判圣锤",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "cast",
@@ -3896,6 +3969,7 @@
 		{
 			"id": "holy_summon_seraph",
 			"name": "炽天使",
+			"display_name": "炽天使",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "summon",
@@ -3948,6 +4022,7 @@
 		{
 			"id": "holy_summon_shield_guardian",
 			"name": "圣盾卫士",
+			"display_name": "圣盾卫士",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "summon",
@@ -4014,6 +4089,7 @@
 		{
 			"id": "holy_passive_sanctuary",
 			"name": "庇护",
+			"display_name": "庇护",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "passive",
@@ -4056,6 +4132,7 @@
 		{
 			"id": "holy_passive_devotion",
 			"name": "虔诚",
+			"display_name": "虔诚",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "passive",
@@ -4100,6 +4177,7 @@
 		{
 			"id": "holy_passive_weakening_judgment",
 			"name": "弱化审判",
+			"display_name": "弱化审判",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "passive",
@@ -4138,6 +4216,7 @@
 		{
 			"id": "holy_power_divine_punishment",
 			"name": "神罚",
+			"display_name": "神罚",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "power",
@@ -4203,6 +4282,7 @@
 		{
 			"id": "holy_power_counter_seal",
 			"name": "反击圣印",
+			"display_name": "反击圣印",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "power",
@@ -4286,6 +4366,7 @@
 		{
 			"id": "holy_power_absolution_light",
 			"name": "赦免之光",
+			"display_name": "赦免之光",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "power",
@@ -4352,6 +4433,7 @@
 		{
 			"id": "holy_core_final_judgment_domain",
 			"name": "终裁神域",
+			"display_name": "终裁神域",
 			"school": "holy",
 			"fusion_school": null,
 			"type": "core",
@@ -4422,6 +4504,7 @@
 		{
 			"id": "chaos_attack_chaotic",
 			"name": "混沌攻击",
+			"display_name": "混沌攻击",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "attack",
@@ -4514,6 +4597,7 @@
 		{
 			"id": "chaos_dash_rift_step",
 			"name": "裂隙步",
+			"display_name": "裂隙步",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "dash",
@@ -4547,13 +4631,13 @@
 							"position_mode": "caster",
 							"radius_r": 1,
 							"duration": 4,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "dash",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								},
 								{
 									"type": "apply_status",
@@ -4574,13 +4658,13 @@
 							"position_mode": "caster",
 							"radius_r": 1,
 							"duration": 4,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "dash",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								},
 								{
 									"type": "apply_status",
@@ -4599,6 +4683,7 @@
 		{
 			"id": "chaos_cast_void_rift",
 			"name": "虚空裂缝",
+			"display_name": "虚空裂缝",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "cast",
@@ -4631,13 +4716,13 @@
 							"targeting": "densest_enemy_cluster",
 							"radius_r": 2.5,
 							"duration": 4,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "cast",
-									"power_scale": 0.16
+									"power_scale": 0.32
 								},
 								{
 									"type": "apply_status",
@@ -4662,6 +4747,7 @@
 		{
 			"id": "chaos_cast_singularity_barrage",
 			"name": "奇点弹幕",
+			"display_name": "奇点弹幕",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "cast",
@@ -4738,6 +4824,7 @@
 		{
 			"id": "chaos_cast_mutation_pulse",
 			"name": "异变脉冲",
+			"display_name": "异变脉冲",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "cast",
@@ -4806,6 +4893,7 @@
 		{
 			"id": "chaos_summon_chaos_clone",
 			"name": "混沌分身",
+			"display_name": "混沌分身",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "summon",
@@ -4847,6 +4935,7 @@
 		{
 			"id": "chaos_summon_void_maw",
 			"name": "虚空巨口",
+			"display_name": "虚空巨口",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "summon",
@@ -4889,6 +4978,7 @@
 		{
 			"id": "chaos_passive_entropy_growth",
 			"name": "熵增",
+			"display_name": "熵增",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "passive",
@@ -4940,6 +5030,7 @@
 		{
 			"id": "chaos_passive_geometric_imbalance",
 			"name": "几何失衡",
+			"display_name": "几何失衡",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "passive",
@@ -4978,6 +5069,7 @@
 		{
 			"id": "chaos_passive_anomalous_stability",
 			"name": "反常稳定",
+			"display_name": "反常稳定",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "passive",
@@ -5010,6 +5102,7 @@
 		{
 			"id": "chaos_power_fission_burst",
 			"name": "裂变爆发",
+			"display_name": "裂变爆发",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "power",
@@ -5060,13 +5153,13 @@
 							"area_id": "chaos_rift",
 							"radius_r": 0.9,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "power",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								},
 								{
 									"type": "apply_status",
@@ -5091,6 +5184,7 @@
 		{
 			"id": "chaos_power_echo_cast",
 			"name": "回声施法",
+			"display_name": "回声施法",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "power",
@@ -5153,6 +5247,7 @@
 		{
 			"id": "chaos_power_chaos_exchange",
 			"name": "混沌交换",
+			"display_name": "混沌交换",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "power",
@@ -5196,6 +5291,7 @@
 		{
 			"id": "chaos_core_chaos_singularity",
 			"name": "混沌奇点",
+			"display_name": "混沌奇点",
 			"school": "chaos",
 			"fusion_school": null,
 			"type": "core",
@@ -5236,7 +5332,7 @@
 							"position_mode": "caster",
 							"radius_r": 6,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "pull",
@@ -5293,6 +5389,7 @@
 		{
 			"id": "fusion_fire_frost_steam_mist",
 			"name": "蒸灼雾域",
+			"display_name": "蒸灼雾域",
 			"school": "fire",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -5340,13 +5437,13 @@
 							"area_id": "fusion_fire_frost_steam_mist_area",
 							"radius_r": 2,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.14
+									"power_scale": 0.28
 								},
 								{
 									"type": "apply_status",
@@ -5375,7 +5472,7 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.14
+									"power_scale": 0.28
 								}
 							]
 						},
@@ -5394,6 +5491,7 @@
 		{
 			"id": "fusion_fire_frost_shattered_ember",
 			"name": "碎冰余烬",
+			"display_name": "碎冰余烬",
 			"school": "fire",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -5440,7 +5538,7 @@
 							"area_id": "fusion_fire_frost_shattered_ember_area",
 							"radius_r": 3.5,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 6,
 							"effects_on_tick": [
 								{
@@ -5509,6 +5607,7 @@
 		{
 			"id": "fusion_fire_thunder_plasma_fire_path",
 			"name": "等离子火径",
+			"display_name": "等离子火径",
 			"school": "fire",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -5550,13 +5649,13 @@
 							"area_id": "fusion_fire_thunder_plasma_fire_path_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								}
 							],
 							"effects_on_apply": [
@@ -5577,6 +5676,7 @@
 		{
 			"id": "fusion_fire_thunder_thunderburn_meteor",
 			"name": "雷燃流星",
+			"display_name": "雷燃流星",
 			"school": "fire",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -5623,7 +5723,7 @@
 							"area_id": "fusion_fire_thunder_thunderburn_meteor_area",
 							"radius_r": 1.8,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 3,
 							"effects_on_tick": [
 								{
@@ -5664,6 +5764,7 @@
 		{
 			"id": "fusion_fire_curse_ash_curse_rune",
 			"name": "灰烬咒文",
+			"display_name": "灰烬咒文",
 			"school": "fire",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -5714,13 +5815,13 @@
 							"area_id": "fusion_fire_curse_ash_curse_rune_area",
 							"radius_r": 1.2,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -5746,6 +5847,7 @@
 		{
 			"id": "fusion_fire_curse_blackflame_serpents",
 			"name": "黑焰蛇群",
+			"display_name": "黑焰蛇群",
 			"school": "fire",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -5798,13 +5900,13 @@
 							"area_id": "fusion_fire_curse_blackflame_serpents_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.12
+									"power_scale": 0.24
 								},
 								{
 									"type": "apply_status",
@@ -5857,6 +5959,7 @@
 		{
 			"id": "fusion_fire_holy_holy_flame_absolution",
 			"name": "圣焰赦免",
+			"display_name": "圣焰赦免",
 			"school": "fire",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -5943,6 +6046,7 @@
 		{
 			"id": "fusion_fire_holy_burning_light_barrier",
 			"name": "燃光结界",
+			"display_name": "燃光结界",
 			"school": "fire",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -5990,13 +6094,13 @@
 							"area_id": "fusion_fire_holy_burning_light_barrier_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.1
+									"power_scale": 0.2
 								}
 							],
 							"effects_on_apply": [
@@ -6025,6 +6129,7 @@
 		{
 			"id": "fusion_fire_chaos_ember_echo",
 			"name": "余烬回声",
+			"display_name": "余烬回声",
 			"school": "fire",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -6066,13 +6171,13 @@
 							"area_id": "fusion_fire_chaos_ember_echo_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.13
+									"power_scale": 0.26
 								}
 							],
 							"effects_on_apply": [
@@ -6093,6 +6198,7 @@
 		{
 			"id": "fusion_fire_chaos_molten_split",
 			"name": "熔火分裂",
+			"display_name": "熔火分裂",
 			"school": "fire",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -6170,6 +6276,7 @@
 		{
 			"id": "fusion_frost_fire_crystalized_flame",
 			"name": "凝火成晶",
+			"display_name": "凝火成晶",
 			"school": "frost",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -6212,14 +6319,14 @@
 							"area_id": "fusion_frost_fire_crystalized_flame_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 5,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.7
 								},
 								{
 									"type": "apply_status",
@@ -6272,6 +6379,7 @@
 		{
 			"id": "fusion_frost_fire_frostburn_shards",
 			"name": "霜燃碎片",
+			"display_name": "霜燃碎片",
 			"school": "frost",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -6346,6 +6454,7 @@
 		{
 			"id": "fusion_frost_thunder_lightning_ice_pillar",
 			"name": "雷击冰柱",
+			"display_name": "雷击冰柱",
 			"school": "frost",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -6399,7 +6508,7 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -6447,6 +6556,7 @@
 		{
 			"id": "fusion_frost_thunder_aurora_frost_channel",
 			"name": "极光导霜",
+			"display_name": "极光导霜",
 			"school": "frost",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -6494,13 +6604,13 @@
 							"area_id": "fusion_frost_thunder_aurora_frost_channel_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.5
+									"power_scale": 1
 								},
 								{
 									"type": "apply_status",
@@ -6533,6 +6643,7 @@
 		{
 			"id": "fusion_frost_curse_ice_coffin_curse_burst",
 			"name": "冰棺咒爆",
+			"display_name": "冰棺咒爆",
 			"school": "frost",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -6579,7 +6690,7 @@
 							"area_id": "fusion_frost_curse_ice_coffin_curse_burst_area",
 							"radius_r": 1.6,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -6606,6 +6717,7 @@
 		{
 			"id": "fusion_frost_curse_cold_scythe_harvest",
 			"name": "寒镰收割",
+			"display_name": "寒镰收割",
 			"school": "frost",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -6674,6 +6786,7 @@
 		{
 			"id": "fusion_frost_holy_holy_frost_anchor",
 			"name": "圣霜锚点",
+			"display_name": "圣霜锚点",
 			"school": "frost",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -6729,7 +6842,7 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -6790,6 +6903,7 @@
 		{
 			"id": "fusion_frost_holy_judgment_ice_lance",
 			"name": "审判冰矛",
+			"display_name": "审判冰矛",
 			"school": "frost",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -6846,6 +6960,7 @@
 		{
 			"id": "fusion_frost_chaos_rift_avalanche",
 			"name": "裂隙雪崩",
+			"display_name": "裂隙雪崩",
 			"school": "frost",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -6894,13 +7009,13 @@
 							"area_id": "fusion_frost_chaos_rift_avalanche_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.9
+									"power_scale": 1.8
 								},
 								{
 									"type": "apply_status",
@@ -6962,6 +7077,7 @@
 		{
 			"id": "fusion_frost_chaos_inverted_ice_shard",
 			"name": "反相冰片",
+			"display_name": "反相冰片",
 			"school": "frost",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -7005,13 +7121,13 @@
 							"area_id": "fusion_frost_chaos_inverted_ice_shard_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -7064,6 +7180,7 @@
 		{
 			"id": "fusion_thunder_fire_arc_ignition",
 			"name": "轰燃电弧",
+			"display_name": "轰燃电弧",
 			"school": "thunder",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -7110,13 +7227,13 @@
 							"area_id": "fusion_thunder_fire_arc_ignition_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.55
+									"power_scale": 1.1
 								}
 							],
 							"effects_on_apply": [
@@ -7150,6 +7267,7 @@
 		{
 			"id": "fusion_thunder_fire_thunderfire_circuit",
 			"name": "雷火回路",
+			"display_name": "雷火回路",
 			"school": "thunder",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -7192,13 +7310,13 @@
 							"area_id": "fusion_thunder_fire_thunderfire_circuit_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.7
+									"power_scale": 1.4
 								},
 								{
 									"type": "apply_status",
@@ -7231,6 +7349,7 @@
 		{
 			"id": "fusion_thunder_frost_shatter_thunder",
 			"name": "破冰雷鸣",
+			"display_name": "破冰雷鸣",
 			"school": "thunder",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -7315,6 +7434,7 @@
 		{
 			"id": "fusion_thunder_frost_cryo_capacitor",
 			"name": "极寒电容",
+			"display_name": "极寒电容",
 			"school": "thunder",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -7377,6 +7497,7 @@
 		{
 			"id": "fusion_thunder_curse_curse_lightning_rebound",
 			"name": "咒雷回跳",
+			"display_name": "咒雷回跳",
 			"school": "thunder",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -7439,6 +7560,7 @@
 		{
 			"id": "fusion_thunder_curse_black_thunder_convergence",
 			"name": "黑雷收束",
+			"display_name": "黑雷收束",
 			"school": "thunder",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -7502,6 +7624,7 @@
 		{
 			"id": "fusion_thunder_holy_judgment_wire",
 			"name": "审判导线",
+			"display_name": "审判导线",
 			"school": "thunder",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -7548,13 +7671,13 @@
 							"area_id": "fusion_thunder_holy_judgment_wire_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.2
+									"power_scale": 0.4
 								}
 							],
 							"effects_on_apply": [
@@ -7575,6 +7698,7 @@
 		{
 			"id": "fusion_thunder_holy_shield_capacitor",
 			"name": "护盾电容",
+			"display_name": "护盾电容",
 			"school": "thunder",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -7667,6 +7791,7 @@
 		{
 			"id": "fusion_thunder_chaos_fractal_arc",
 			"name": "分形电弧",
+			"display_name": "分形电弧",
 			"school": "thunder",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -7714,14 +7839,14 @@
 							"area_id": "fusion_thunder_chaos_fractal_arc_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 2,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.7
 								}
 							],
 							"effects_on_apply": [
@@ -7755,6 +7880,7 @@
 		{
 			"id": "fusion_thunder_chaos_rift_lightning_orb",
 			"name": "裂隙雷球",
+			"display_name": "裂隙雷球",
 			"school": "thunder",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -7796,13 +7922,13 @@
 							"area_id": "fusion_thunder_chaos_rift_lightning_orb_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.18
+									"power_scale": 0.36
 								}
 							],
 							"effects_on_apply": [
@@ -7836,6 +7962,7 @@
 		{
 			"id": "fusion_curse_fire_ash_soul_pact",
 			"name": "灰烬魂契",
+			"display_name": "灰烬魂契",
 			"school": "curse",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -7903,6 +8030,7 @@
 		{
 			"id": "fusion_curse_fire_burning_soul_minion",
 			"name": "燃魂仆从",
+			"display_name": "燃魂仆从",
 			"school": "curse",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -7965,6 +8093,7 @@
 		{
 			"id": "fusion_curse_frost_ice_coffin_contract",
 			"name": "冰棺契约",
+			"display_name": "冰棺契约",
 			"school": "curse",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -8030,6 +8159,7 @@
 		{
 			"id": "fusion_curse_frost_cold_scythe_soul_chase",
 			"name": "寒镰追魂",
+			"display_name": "寒镰追魂",
 			"school": "curse",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -8090,6 +8220,7 @@
 		{
 			"id": "fusion_curse_thunder_curse_lightning_backlash",
 			"name": "雷咒反噬",
+			"display_name": "雷咒反噬",
 			"school": "curse",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -8174,6 +8305,7 @@
 		{
 			"id": "fusion_curse_thunder_black_serpent_conduction",
 			"name": "黑蛇导电",
+			"display_name": "黑蛇导电",
 			"school": "curse",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -8220,7 +8352,7 @@
 							"area_id": "fusion_curse_thunder_black_serpent_conduction_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 2,
 							"effects_on_tick": [
 								{
@@ -8280,6 +8412,7 @@
 		{
 			"id": "fusion_curse_holy_confession_curse_seal",
 			"name": "告解诅印",
+			"display_name": "告解诅印",
 			"school": "curse",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -8345,6 +8478,7 @@
 		{
 			"id": "fusion_curse_holy_absolution_harvest",
 			"name": "赦罪收割",
+			"display_name": "赦罪收割",
 			"school": "curse",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -8410,6 +8544,7 @@
 		{
 			"id": "fusion_curse_chaos_paradox_curse_mark",
 			"name": "悖论咒印",
+			"display_name": "悖论咒印",
 			"school": "curse",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -8483,6 +8618,7 @@
 		{
 			"id": "fusion_curse_chaos_rift_funeral",
 			"name": "裂隙葬礼",
+			"display_name": "裂隙葬礼",
 			"school": "curse",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -8530,13 +8666,13 @@
 							"area_id": "fusion_curse_chaos_rift_funeral_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.5
+									"power_scale": 1
 								},
 								{
 									"type": "apply_status",
@@ -8589,6 +8725,7 @@
 		{
 			"id": "fusion_holy_fire_holy_flame_purification",
 			"name": "圣焰净化",
+			"display_name": "圣焰净化",
 			"school": "holy",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -8658,6 +8795,7 @@
 		{
 			"id": "fusion_holy_fire_solar_hammer",
 			"name": "太阳圣锤",
+			"display_name": "太阳圣锤",
 			"school": "holy",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -8705,13 +8843,13 @@
 							"area_id": "fusion_holy_fire_solar_hammer_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.14
+									"power_scale": 0.28
 								},
 								{
 									"type": "apply_status",
@@ -8756,6 +8894,7 @@
 		{
 			"id": "fusion_holy_frost_crystal_shelter",
 			"name": "冰晶庇护",
+			"display_name": "冰晶庇护",
 			"school": "holy",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -8804,13 +8943,13 @@
 							"area_id": "fusion_holy_frost_crystal_shelter_area",
 							"radius_r": 1.5,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -8839,6 +8978,7 @@
 		{
 			"id": "fusion_holy_frost_holy_frost_beam",
 			"name": "圣霜光束",
+			"display_name": "圣霜光束",
 			"school": "holy",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -8890,13 +9030,13 @@
 							"area_id": "fusion_holy_frost_holy_frost_beam_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -8917,6 +9057,7 @@
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer",
 			"name": "雷盾祷告",
+			"display_name": "雷盾祷告",
 			"school": "holy",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -8965,7 +9106,7 @@
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9026,7 +9167,7 @@
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9091,6 +9232,7 @@
 		{
 			"id": "fusion_holy_thunder_holy_thunder_judgment",
 			"name": "圣雷裁决",
+			"display_name": "圣雷裁决",
 			"school": "holy",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -9165,6 +9307,7 @@
 		{
 			"id": "fusion_holy_curse_purifying_chain",
 			"name": "净罪锁链",
+			"display_name": "净罪锁链",
 			"school": "holy",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -9236,6 +9379,7 @@
 		{
 			"id": "fusion_holy_curse_penitence_barrier",
 			"name": "忏悔结界",
+			"display_name": "忏悔结界",
 			"school": "holy",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -9288,7 +9432,7 @@
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -9314,6 +9458,7 @@
 		{
 			"id": "fusion_holy_chaos_divine_domain_rift",
 			"name": "神域裂隙",
+			"display_name": "神域裂隙",
 			"school": "holy",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -9362,7 +9507,7 @@
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.4
+									"power_scale": 0.8
 								},
 								{
 									"type": "apply_status",
@@ -9395,6 +9540,7 @@
 		{
 			"id": "fusion_holy_chaos_judgment_echo",
 			"name": "裁决回声",
+			"display_name": "裁决回声",
 			"school": "holy",
 			"fusion_school": "chaos",
 			"type": "fusion",
@@ -9446,13 +9592,13 @@
 							"area_id": "fusion_holy_chaos_judgment_echo_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -9473,6 +9619,7 @@
 		{
 			"id": "fusion_chaos_fire_riftfire_fork",
 			"name": "裂火分叉",
+			"display_name": "裂火分叉",
 			"school": "chaos",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -9515,14 +9662,14 @@
 							"area_id": "fusion_chaos_fire_riftfire_fork_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"count": 2,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.7
 								}
 							],
 							"effects_on_apply": [
@@ -9556,6 +9703,7 @@
 		{
 			"id": "fusion_chaos_fire_lava_refraction",
 			"name": "熔岩折返",
+			"display_name": "熔岩折返",
 			"school": "chaos",
 			"fusion_school": "fire",
 			"type": "fusion",
@@ -9597,13 +9745,13 @@
 							"area_id": "fusion_chaos_fire_lava_refraction_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "fusion",
-									"power_scale": 0.8
+									"power_scale": 1.6
 								}
 							],
 							"effects_on_apply": [
@@ -9624,6 +9772,7 @@
 		{
 			"id": "fusion_chaos_frost_zero_rift",
 			"name": "零度裂隙",
+			"display_name": "零度裂隙",
 			"school": "chaos",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -9665,13 +9814,13 @@
 							"area_id": "fusion_chaos_frost_zero_rift_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -9711,6 +9860,7 @@
 		{
 			"id": "fusion_chaos_frost_shattered_ice_warp",
 			"name": "碎冰折跃",
+			"display_name": "碎冰折跃",
 			"school": "chaos",
 			"fusion_school": "frost",
 			"type": "fusion",
@@ -9755,13 +9905,13 @@
 							"area_id": "fusion_chaos_frost_shattered_ice_warp_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "fusion",
-									"power_scale": 0.3
+									"power_scale": 0.6
 								},
 								{
 									"type": "apply_status",
@@ -9823,6 +9973,7 @@
 		{
 			"id": "fusion_chaos_thunder_quantum_overload",
 			"name": "量子过载",
+			"display_name": "量子过载",
 			"school": "chaos",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -9873,7 +10024,7 @@
 							"area_id": "fusion_chaos_thunder_quantum_overload_area",
 							"radius_r": 1.6,
 							"duration": 0.24,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9917,6 +10068,7 @@
 		{
 			"id": "fusion_chaos_thunder_warp_lightning_orb",
 			"name": "跃迁雷球",
+			"display_name": "跃迁雷球",
 			"school": "chaos",
 			"fusion_school": "thunder",
 			"type": "fusion",
@@ -9958,13 +10110,13 @@
 							"area_id": "fusion_chaos_thunder_warp_lightning_orb_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -9998,6 +10150,7 @@
 		{
 			"id": "fusion_chaos_curse_curse_rune_echo",
 			"name": "咒文回声",
+			"display_name": "咒文回声",
 			"school": "chaos",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -10049,13 +10202,13 @@
 							"area_id": "fusion_chaos_curse_curse_rune_echo_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [
@@ -10076,6 +10229,7 @@
 		{
 			"id": "fusion_chaos_curse_rift_curse_exchange",
 			"name": "裂隙换咒",
+			"display_name": "裂隙换咒",
 			"school": "chaos",
 			"fusion_school": "curse",
 			"type": "fusion",
@@ -10122,13 +10276,13 @@
 							"area_id": "fusion_chaos_curse_rift_curse_exchange_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "curse",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								},
 								{
 									"type": "apply_status",
@@ -10186,6 +10340,7 @@
 		{
 			"id": "fusion_chaos_holy_void_holy_shield",
 			"name": "虚空圣盾",
+			"display_name": "虚空圣盾",
 			"school": "chaos",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -10229,13 +10384,13 @@
 							"area_id": "fusion_chaos_holy_void_holy_shield_area",
 							"radius_r": 2,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "fusion",
-									"power_scale": 0.35
+									"power_scale": 0.7
 								},
 								{
 									"type": "apply_status",
@@ -10268,6 +10423,7 @@
 		{
 			"id": "fusion_chaos_holy_echoing_judgment",
 			"name": "回响裁决",
+			"display_name": "回响裁决",
 			"school": "chaos",
 			"fusion_school": "holy",
 			"type": "fusion",
@@ -10318,13 +10474,13 @@
 							"area_id": "fusion_chaos_holy_echoing_judgment_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 0.5,
+							"tick_interval": 1.0,
 							"effects_on_tick": [
 								{
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "fusion",
-									"power_scale": 0.25
+									"power_scale": 0.5
 								}
 							],
 							"effects_on_apply": [

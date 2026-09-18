@@ -163,7 +163,7 @@ func _build_status_runtime_data(id: StringName, definition: Dictionary, params: 
 	status["definition"] = definition
 	status["stacks"] = int(stack_data.get("new_stacks", 0))
 	status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), float(stack_data.get("duration", 1.0)))
-	status["tick_interval"] = maxf(float(params.get("tick_interval", definition.get("tick_interval", 0.5))), 0.05)
+	status["tick_interval"] = maxf(float(params.get("tick_interval", definition.get("tick_interval", 1.0))), 0.05)
 	var configured_tick_damage: float = maxf(float(params.get("tick_damage", params.get("damage", definition.get("damage", 0.0)))), 0.0)
 	configured_tick_damage = maxf(configured_tick_damage * maxf(1.0 + float(params.get("damage_multiplier_add", 0.0)), 0.0), 0.0)
 	status["tick_damage"] = configured_tick_damage
@@ -392,7 +392,7 @@ func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 
 func _update_damage_over_time_profiled(status: Dictionary, delta: float) -> void:
 	var tick_interval: float = maxf(
-		float(status.get("tick_interval", 0.5)) * float(status.get("tick_interval_multiplier", 1.0)),
+		float(status.get("tick_interval", 1.0)) * float(status.get("tick_interval_multiplier", 1.0)),
 		0.05
 	)
 	var tick_timer: float = float(status.get("tick_timer", tick_interval)) - delta
@@ -528,7 +528,7 @@ func _next_status_update_delay() -> float:
 		next_delay = minf(next_delay, maxf(float(status.get("duration_remaining", 0.0)), 0.0))
 		if _is_dot_status(status) and _has_status_tick_work(status):
 			var tick_interval: float = maxf(
-				float(status.get("tick_interval", 0.5)) * float(status.get("tick_interval_multiplier", 1.0)),
+				float(status.get("tick_interval", 1.0)) * float(status.get("tick_interval_multiplier", 1.0)),
 				0.05
 			)
 			next_delay = minf(next_delay, maxf(float(status.get("tick_timer", tick_interval)), 0.0))
@@ -983,7 +983,7 @@ func _apply_poison_slow_synergy() -> void:
 
 	var poison: Dictionary = _statuses[&"poison"]
 	poison["tick_interval_multiplier"] = multiplier
-	var adjusted_interval: float = maxf(float(poison.get("tick_interval", 0.5)) * multiplier, 0.05)
+	var adjusted_interval: float = maxf(float(poison.get("tick_interval", 1.0)) * multiplier, 0.05)
 	poison["tick_timer"] = minf(float(poison.get("tick_timer", adjusted_interval)), adjusted_interval)
 	_statuses[&"poison"] = poison
 

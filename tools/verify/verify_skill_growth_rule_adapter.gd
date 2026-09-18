@@ -62,9 +62,51 @@ func _run() -> void:
 	var tick_actions: Array = params.get("actions_on_tick", [])
 	_expect_close(float(apply_actions[0].get("params", {}).get("power_scale", 0.0)), 1.0 * 1.12 * 1.25, "apply damage scaled")
 	_expect_close(float(tick_actions[0].get("params", {}).get("power_scale", 0.0)), 0.25, "tick damage not scaled")
+	_verify_random_chance_per_level()
 	if not _failed:
 		print("[verify_skill_growth_rule_adapter] PASS")
 	quit(1 if _failed else 0)
+
+
+func _verify_random_chance_per_level() -> void:
+	var definition: RefCounted = SkillDefinitionScript.new({
+		"id": "test_chance_growth",
+		"name": "test_chance_growth",
+		"type": "attack",
+		"rarity": "normal",
+		"max_level": 5,
+		"trigger_rules": [
+			{
+				"trigger": "attack_hit",
+				"conditions": [
+					{
+						"type": "random_chance",
+						"chance_per_level": 0.2,
+						"max_chance": 1.0
+					}
+				],
+				"effects": [
+					{"type": "spawn_area", "area_id": "test_area"}
+				]
+			}
+		]
+	})
+	var skill: RefCounted = SkillInstanceScript.new(definition)
+	skill.set("current_level", 1)
+	var level_one_event: Dictionary = SkillTriggerRuleAdapterScript.to_events(skill, definition)[0]
+	_expect_close(_first_condition_chance(level_one_event), 0.2, "random_chance Lv1 uses 20 percent")
+	skill.set("current_level", 5)
+	var level_five_event: Dictionary = SkillTriggerRuleAdapterScript.to_events(skill, definition)[0]
+	_expect_close(_first_condition_chance(level_five_event), 1.0, "random_chance Lv5 caps at 100 percent")
+
+
+func _first_condition_chance(event: Dictionary) -> float:
+	var conditions: Array = event.get("conditions", [])
+	if conditions.is_empty():
+		_fail("event has random_chance condition", event)
+		return 0.0
+	var params: Dictionary = conditions[0].get("params", {})
+	return float(params.get("chance", -1.0))
 
 
 func _expect_close(actual: float, expected: float, label: String) -> void:

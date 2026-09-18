@@ -2212,8 +2212,8 @@ func _apply_poison_status_from_toxic_vial(rules: Dictionary, context: Dictionary
 	var base: Dictionary = _get_dictionary(rules.get("toxic_vial_base", {}))
 	var poison_params: Dictionary = _get_poison_status_params({
 		"duration": float(base.get("poison_duration", 4.0)),
-		"damage": int(base.get("poison_damage", 6)),
-		"tick_interval": float(base.get("poison_tick_interval", 0.5)),
+		"damage": int(base.get("poison_damage", 12)),
+		"tick_interval": float(base.get("poison_tick_interval", 1.0)),
 		"stacks": 1,
 		"max_stacks": int(base.get("poison_max_stacks", 3))
 	}, context.merged({"target": target}))
@@ -2311,8 +2311,8 @@ func _get_poison_status_params(params: Dictionary, context: Dictionary) -> Dicti
 	var base: Dictionary = _get_dictionary(rules.get("toxic_vial_base", {}))
 	if not base.is_empty():
 		params["duration"] = float(params.get("duration", base.get("poison_duration", 4.0)))
-		params["damage"] = int(params.get("damage", base.get("poison_damage", 6)))
-		params["tick_interval"] = float(params.get("tick_interval", base.get("poison_tick_interval", 0.5)))
+		params["damage"] = int(params.get("damage", base.get("poison_damage", 12)))
+		params["tick_interval"] = float(params.get("tick_interval", base.get("poison_tick_interval", 1.0)))
 	params["max_stacks"] = _poison_max_stacks_for_target(rules, target)
 	if (_is_elite(target) or _is_boss(target)) and rules.has("poison_elite_boss_tuning"):
 		var tuning: Dictionary = _get_dictionary(rules.get("poison_elite_boss_tuning", {}))

@@ -59,7 +59,7 @@ func _on_enemy_killed(event: Dictionary) -> void:
 	var zone: Node2D = CombatObjectFactoryScript.create_area_effect({
 		"parent": parent,
 		"position": event.get("position", Vector2.ZERO),
-		"damage": int(params.get("area_damage", 6)),
+		"damage": int(params.get("area_damage", 12)),
 		"damage_type": &"status_dot",
 		"element": &"poison",
 		"damage_packet": {
@@ -73,7 +73,7 @@ func _on_enemy_killed(event: Dictionary) -> void:
 			"uses_skill_level_coefficient": false
 		},
 		"duration": float(params.get("area_duration", 2.5)),
-		"tick_interval": float(params.get("area_tick_interval", 0.5)),
+		"tick_interval": float(params.get("area_tick_interval", 1.0)),
 		"target_group": event.get("target_group", &"enemies"),
 		"radius": float(params.get("area_radius", 56.0)),
 		"visual_style": "poison_zone",

@@ -13,7 +13,7 @@ const MAX_TICK_HITS_PER_AREA_FRAME: int = 2
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
-@export_range(0.05, 10.0, 0.05, "or_greater") var tick_interval: float = 0.5
+@export_range(0.05, 10.0, 0.05, "or_greater") var tick_interval: float = 1.0
 @export_range(1.0, 1000.0, 1.0, "or_greater") var radius: float = 52.0
 @export_range(0, 1000, 1, "or_greater") var max_targets: int = 0
 @export_range(0.0, 360.0, 1.0) var cone_width_degrees: float = 0.0
@@ -60,6 +60,9 @@ var _current_tick_stats: Dictionary = {}
 var _pending_tick_target_ids: Array[int] = []
 var _pending_tick_index: int = 0
 var _pending_tick_stats: Dictionary = {}
+var _dash_path_filter: bool = false
+var _dash_path_start: Vector2 = Vector2.ZERO
+var _dash_path_end: Vector2 = Vector2.ZERO
 var event_bus: Node
 var skill_instance: RefCounted
 var caster: Node
@@ -120,6 +123,9 @@ func prepare_for_pool_despawn() -> void:
 	skill_manager = null
 	relic_manager = null
 	impact_target = null
+	_dash_path_filter = false
+	_dash_path_start = Vector2.ZERO
+	_dash_path_end = Vector2.ZERO
 	actions_on_apply.clear()
 	actions_on_tick.clear()
 	actions_on_hit.clear()
@@ -184,6 +190,9 @@ func _apply_area_action_params(params: Dictionary) -> void:
 	damage_once_per_body = bool(params.get("damage_once_per_body", damage_once_per_body))
 	impact_target_id = String(params.get("impact_target_id", impact_target_id))
 	impact_target_damage_multiplier = maxf(float(params.get("impact_target_damage_multiplier", impact_target_damage_multiplier)), 0.0)
+	_dash_path_filter = bool(params.get("dash_path_filter", false))
+	_dash_path_start = _get_vector2(params.get("dash_path_start", Vector2.ZERO), Vector2.ZERO)
+	_dash_path_end = _get_vector2(params.get("dash_path_end", Vector2.ZERO), Vector2.ZERO)
 
 
 func _apply_area_context_params(params: Dictionary) -> void:
@@ -583,7 +592,33 @@ func _can_damage_body(body: Node) -> bool:
 		return false
 	if damage_once_per_body and _damaged_body_ids.has(body.get_instance_id()):
 		return false
+	if _dash_path_filter and not _is_body_on_dash_path(body):
+		return false
 	return true
+
+
+func _is_body_on_dash_path(body: Node) -> bool:
+	var body_node: Node2D = body as Node2D
+	if body_node == null:
+		return false
+	var path: Vector2 = _dash_path_end - _dash_path_start
+	var path_length_squared: float = path.length_squared()
+	if path_length_squared <= 0.001:
+		return false
+	var body_offset: Vector2 = body_node.global_position - _dash_path_start
+	var along_path: float = clampf(body_offset.dot(path) / path_length_squared, 0.0, 1.0)
+	var closest_point: Vector2 = _dash_path_start + path * along_path
+	var clearance: float = _get_collision_radius(caster as Node2D, 24.0) + _get_collision_radius(body_node, 24.0) + 8.0
+	return closest_point.distance_squared_to(body_node.global_position) <= clearance * clearance
+
+
+func _get_collision_radius(node: Node2D, fallback: float) -> float:
+	if node == null:
+		return fallback
+	var collision_shape: CollisionShape2D = node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape != null and collision_shape.shape is CircleShape2D:
+		return maxf((collision_shape.shape as CircleShape2D).radius, 0.0)
+	return fallback
 
 
 func _body_in_effect_shape(body: Node) -> bool:
@@ -602,11 +637,9 @@ func _body_in_effect_shape(body: Node) -> bool:
 
 
 func _damage_body(body: Node) -> bool:
-	if body == null or not body.is_in_group(target_group):
+	if not _can_damage_body(body):
 		return false
 	var body_id: int = body.get_instance_id()
-	if damage_once_per_body and _damaged_body_ids.has(body_id):
-		return false
 
 	if damage > 0 and body.has_method("take_damage"):
 		body.call(&"take_damage", _get_damage_payload(body), damage_type)
@@ -1171,7 +1204,8 @@ func _execute_apply_actions() -> void:
 	if actions_on_apply.is_empty():
 		return
 	if impact_target != null:
-		_execute_adapted_actions(actions_on_apply, impact_target)
+		if _can_damage_body(impact_target):
+			_execute_adapted_actions(actions_on_apply, impact_target)
 		return
 	for target: Node in _collect_tick_damage_targets():
 		_execute_adapted_actions(actions_on_apply, target)

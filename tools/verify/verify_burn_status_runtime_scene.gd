@@ -23,8 +23,8 @@ func _run() -> void:
 
 	_apply_burning_stacks(normal, 5, trace_id)
 	_apply_burning_stacks(boss, 5, trace_id)
-	normal.call("_update_status_effects", 0.51)
-	boss.call("_update_status_effects", 0.51)
+	normal.call("_update_status_effects", 1.01)
+	boss.call("_update_status_effects", 1.01)
 	await process_frame
 
 	var records: Array = DebugCombatTraceScript.get_records(root)
@@ -35,12 +35,12 @@ func _run() -> void:
 	_expect(not boss_record.is_empty(), "records Boss burning tick")
 	if not normal_record.is_empty():
 		_lines.append("normal_raw=%.2f normal_final=%d" % [float(normal_record.get("raw_amount", 0.0)), int(normal_record.get("final_amount", 0))])
-		_expect(_approx(float(normal_record.get("raw_amount", 0.0)), 18.0), "normal burning raw tick is 18.0 at 100 power")
-		_expect(int(normal_record.get("final_amount", 0)) == 18, "normal burning final tick is 18")
+		_expect(_approx(float(normal_record.get("raw_amount", 0.0)), 36.0), "normal burning raw tick is 36.0 at 100 power")
+		_expect(int(normal_record.get("final_amount", 0)) == 36, "normal burning final tick is 36")
 	if not boss_record.is_empty():
 		_lines.append("boss_raw=%.2f boss_final=%d" % [float(boss_record.get("raw_amount", 0.0)), int(boss_record.get("final_amount", 0))])
-		_expect(_approx(float(boss_record.get("raw_amount", 0.0)), 18.0), "Boss burning raw tick is 18.0 at 100 power")
-		_expect(int(boss_record.get("final_amount", 0)) == 11, "Boss burning final tick includes Boss target mitigation")
+		_expect(_approx(float(boss_record.get("raw_amount", 0.0)), 36.0), "Boss burning raw tick is 36.0 at 100 power")
+		_expect(int(boss_record.get("final_amount", 0)) == 23, "Boss burning final tick includes Boss target mitigation")
 
 	_write_result()
 	quit(1 if _failed else 0)

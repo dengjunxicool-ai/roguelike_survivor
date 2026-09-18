@@ -179,7 +179,7 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 	duration += float(rules.get("lava_duration_add", 0.0))
 	var radius: float = 42.0
 	radius *= maxf(1.0 + float(rules.get("lava_radius_multiplier_add", 0.0)), 0.05)
-	var damage: int = maxi(roundi(float(base_damage) * float(active_rule.get("damage_from_fireball_base", 0.25))), 1)
+	var damage: int = maxi(roundi(float(base_damage) * float(active_rule.get("damage_from_fireball_base", 0.5))), 1)
 	var field_model: String = String(active_rule.get("field_damage_model", "direct_tick"))
 	var position: Vector2 = target.global_position
 	if String(active_rule.get("spawn_position", "")) == "player" and caster != null:
@@ -194,7 +194,7 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 		"damage_type": &"status_dot" if field_model == "dot_tick" else &"area_direct",
 		"damage_packet": lava_packet,
 		"duration": duration,
-		"tick_interval": float(active_rule.get("tick_interval", 0.5)),
+		"tick_interval": float(active_rule.get("tick_interval", 1.0)),
 		"radius": radius,
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_style": "lava_zone",
@@ -268,7 +268,7 @@ static func execute_protective_lava_ring_on_player_damaged(rules: Dictionary, co
 		"position": player.global_position,
 		"damage": 0,
 		"duration": duration,
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"radius": radius,
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_style": "protective_lava_zone",
@@ -1150,7 +1150,7 @@ static func execute_toxic_vial_small_cloud(rules: Dictionary, context: Dictionar
 		"damage_type": StringName(String(rule.get("damage_type", "status_dot"))),
 		"damage_packet": packet,
 		"duration": duration,
-		"tick_interval": float(rule.get("tick_interval", 0.5)),
+		"tick_interval": float(rule.get("tick_interval", 1.0)),
 		"radius": radius,
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_style": "poison_zone",
@@ -1273,7 +1273,7 @@ static func execute_antidote_cloud(rules: Dictionary, context: Dictionary) -> No
 		"position": player.global_position,
 		"damage": 0,
 		"duration": maxf(float(rule.get("duration", 2.5)), 0.05),
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"radius": maxf(float(rule.get("radius", 105.0)), 1.0),
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_style": "poison_zone",
@@ -2392,7 +2392,7 @@ static func execute_trap_kill_fragment_field(rules: Dictionary, context: Diction
 		"damage_type": StringName(String(rule.get("damage_type", "trap_damage"))),
 		"damage_packet": packet,
 		"duration": float(rule.get("duration", 1.5)),
-		"tick_interval": float(rule.get("tick_interval", 0.5)),
+		"tick_interval": float(rule.get("tick_interval", 1.0)),
 		"radius": float(rule.get("radius", 80.0)),
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_color": Color(0.95, 0.32, 0.18, 0.24)
@@ -2423,7 +2423,7 @@ static func execute_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> 
 		"position": caster.global_position,
 		"damage": 0,
 		"duration": float(rule.get("duration", 4.0)),
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"radius": float(rule.get("radius", 90.0)),
 		"target_group": context.get("target_group", &"enemies"),
 		"visual_color": Color(0.45, 0.85, 1.0, 0.26),

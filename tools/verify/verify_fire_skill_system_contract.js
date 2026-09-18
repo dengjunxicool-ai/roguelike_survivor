@@ -134,6 +134,7 @@ const SUPPORTED_EFFECTS = new Set([
   "trigger_overload",
   "shatter_frozen",
   "spawn_projectile_burst",
+  "spawn_projectiles_at_targets",
   "repeat_area_path",
   "spawn_area_from_existing_area",
 ]);
@@ -353,8 +354,15 @@ function validateMeteorRainSkill(skills) {
   const skill = findSkill(skills, "fire_cast_meteor_rain");
   assert(isObject(skill), "fire_cast_meteor_rain must exist");
   const effect = firstEffect(skill);
-  assert(effect.type === "spawn_projectile_burst", "fire_cast_meteor_rain must spawn a projectile burst");
+  assert(effect.type === "spawn_projectiles_at_targets", "fire_cast_meteor_rain must launch meteors at prioritized targets");
   assert(effect.projectile_id === "meteor_rain_meteor", "fire_cast_meteor_rain must spawn meteor_rain_meteor");
+  assert(effect.count === 3, "fire_cast_meteor_rain must launch exactly three meteors");
+  assert(Array.isArray(effect.damage_multiplier_sequence), "fire_cast_meteor_rain must declare repeated-target damage multipliers");
+  assertClose(effect.damage_multiplier_sequence[0], 1.0, "fire_cast_meteor_rain first hit on a target must keep full damage");
+  assertClose(effect.damage_multiplier_sequence[1], 0.5, "fire_cast_meteor_rain second hit on the same target must deal 50% damage");
+  assertClose(effect.damage_multiplier_sequence[2], 0.25, "fire_cast_meteor_rain third hit on the same target must deal 25% damage");
+  assertClose(effect.same_target_spawn_delay, 0.25, "fire_cast_meteor_rain repeated same-target meteors must fall sequentially at 0.25s intervals");
+  assert(effect.same_target_repeat_damage_only === true, "fire_cast_meteor_rain repeated same-target meteors must not reapply Burning or burning ground");
   assert(effect.trajectory_mode === "linear", "fire_cast_meteor_rain meteors must fall in a straight line");
   assert(!Object.prototype.hasOwnProperty.call(effect, "curve_height"), "fire_cast_meteor_rain meteors must not use curve_height");
   assert(Array.isArray(effect.visual_start_offset), "fire_cast_meteor_rain must set a visual_start_offset");
@@ -363,6 +371,7 @@ function validateMeteorRainSkill(skills) {
   assert(!Object.prototype.hasOwnProperty.call(effect, "radius"), "fire_cast_meteor_rain projectile collision must not be stored as skill range radius");
   const damageEffect = effect.on_hit.find((child) => child.type === "damage");
   assert(isObject(damageEffect), "fire_cast_meteor_rain must deal impact damage on hit");
+  assertClose(damageEffect.power_scale, 2.2, "fire_cast_meteor_rain impact damage must be 2.2P");
   assertClose(damageEffect.radius, rangePx(1.6), "fire_cast_meteor_rain impact damage radius must be 1.6R");
   const areaEffect = effect.on_hit.find((child) => child.type === "spawn_area" && child.area_id === "meteor_burning_ground");
   assert(isObject(areaEffect), "fire_cast_meteor_rain must spawn meteor_burning_ground on hit");
@@ -402,6 +411,22 @@ function validateBaseFireRangePixels(skills) {
   assertClose(requireEffect(byId.get("fire_power_ignite_core"), 0, 1).radius, rangePx(1.2), "fire_power_ignite_core projectile hit radius must be 1.2R");
   assertClose(requireEffect(byId.get("fire_power_ignite_core"), 1, 1).radius, rangePx(1.2), "fire_power_ignite_core area tick radius must be 1.2R");
   assertClose(requireEffect(byId.get("fire_core_inferno_cycle"), 0, 0).radius, rangePx(1.4), "fire_core_inferno_cycle burst radius must be 1.4R");
+}
+
+function validateSearingAttackChanceScaling(skills) {
+  const searing = findSkill(skills, "fire_attack_searing");
+  assert(isObject(searing), "fire_attack_searing must exist");
+  const pathRule = searing.trigger_rules.find((rule) =>
+    Array.isArray(rule.effects) && rule.effects.some((effect) => effect.type === "spawn_area" && effect.area_id === "searing_fire_path")
+  );
+  assert(isObject(pathRule), "fire_attack_searing must have a fire path trigger rule");
+  assert(!Object.prototype.hasOwnProperty.call(pathRule, "counter_key"), "fire_attack_searing fire path must not use deterministic hit counter");
+  assert(!Object.prototype.hasOwnProperty.call(pathRule, "threshold"), "fire_attack_searing fire path must not use deterministic threshold");
+  assert(Array.isArray(pathRule.conditions), "fire_attack_searing fire path must declare trigger conditions");
+  const chanceCondition = pathRule.conditions.find((condition) => condition.type === "random_chance");
+  assert(isObject(chanceCondition), "fire_attack_searing fire path must use random_chance");
+  assertClose(chanceCondition.chance_per_level, 0.2, "fire_attack_searing fire path chance must increase by 20% per level");
+  assertClose(chanceCondition.max_chance, 1.0, "fire_attack_searing fire path chance must cap at 100%");
 }
 
 function validateNoRawRangeUnits(value, location) {
@@ -455,6 +480,7 @@ function main() {
 		validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedMetadataById);
 	}
 	validateMeteorRainSkill(fireSkills);
+	validateSearingAttackChanceScaling(fireSkills);
 	validateBaseFireRangePixels(fireSkills);
 	validateNoRawRangeUnits(fireSkills, "data/skills/skills.json.skills");
 

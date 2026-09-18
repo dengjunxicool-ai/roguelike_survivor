@@ -7,7 +7,7 @@ const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_tra
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
-@export_range(0.05, 10.0, 0.05, "or_greater") var tick_interval: float = 0.5
+@export_range(0.05, 10.0, 0.05, "or_greater") var tick_interval: float = 1.0
 @export_range(1.0, 1000.0, 1.0, "or_greater") var area_radius: float = 52.0
 @export var target_group: StringName = &"player"
 @export var source_id: StringName = &"area"
@@ -57,7 +57,7 @@ func despawn_or_free() -> void:
 func setup(
 	new_damage: Variant,
 	new_duration: float = 3.0,
-	new_tick_interval: float = 0.5,
+	new_tick_interval: float = 1.0,
 	new_target_group: StringName = &"player",
 	new_area_radius: float = 52.0,
 	visual_color: Color = Color(0.35, 0.95, 0.2, 0.32),

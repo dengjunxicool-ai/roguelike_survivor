@@ -27,8 +27,8 @@ func _run() -> void:
 			"spawn_position": "player",
 			"near_player_radius": 160,
 			"duration": 2.0,
-			"tick_interval": 0.5,
-			"damage_from_fireball_base": 0.2,
+			"tick_interval": 1.0,
+			"damage_from_fireball_base": 0.4,
 			"same_source_cooldown": 3.0
 		},
 		"lava_slow": {
@@ -50,8 +50,8 @@ func _run() -> void:
 	if area != null:
 		_expect(area.global_position.distance_to(caster.global_position) < 0.01, "Lava Lv3 spawns at player position")
 		_expect(_approx(float(area.get("duration")), 2.0), "Lava Lv3 duration is 2s")
-		_expect(_approx(float(area.get("tick_interval")), 0.5), "Lava Lv3 tick interval is 0.5s")
-		_expect(int(area.get("damage")) == 3, "Lava Lv3 damage is 20% of 16 fireball damage")
+		_expect(_approx(float(area.get("tick_interval")), 1.0), "Lava Lv3 tick interval is 1s")
+		_expect(int(area.get("damage")) == 6, "Lava Lv3 damage is 40% of 16 fireball damage")
 		var packet: Dictionary = area.get("damage_packet")
 		_expect(String(packet.get("source_type", "")) == "area", "Lava Lv3 damage packet has source_type")
 		var status_params: Dictionary = area.get("status_params")

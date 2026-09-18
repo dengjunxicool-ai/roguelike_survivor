@@ -26,7 +26,7 @@ assert(!burn, "legacy burn status must be removed; use burning");
 assert(burning, "burning status must exist");
 assert(burning.type === "dot", "burning must be a DOT status");
 assertApprox(burning.duration, 4, "burning duration");
-assertApprox(burning.tick_interval, 0.5, "burning tick interval");
+assertApprox(burning.tick_interval, 1.0, "burning tick interval");
 assert(burning.max_stacks === 5, "burning max stacks must be 5");
 assert(burning.consume_stack_on_tick === true, "burning must consume one stack per tick");
 assert(burning.damage_type === "status_dot", "burning damage_type must be status_dot");

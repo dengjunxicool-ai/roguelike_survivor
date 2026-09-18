@@ -46,12 +46,16 @@ for (const row of rows) {
 
   const tickIntervals = numbersByKey(skill, "tick_interval");
   for (const expected of spec.tickIntervals) {
-    assert(hasClose(tickIntervals, expected), `${skill.id} must encode tick interval ${expected}s from docs`);
+    const migratedExpected = expected === 0.5 ? 1.0 : expected;
+    assert(hasClose(tickIntervals, migratedExpected), `${skill.id} must encode migrated tick interval ${migratedExpected}s from docs value ${expected}s`);
   }
 
   const powers = powerScales(skill);
   for (const expected of spec.powers) {
-    assert(hasClose(powers, expected), `${skill.id} must encode power_scale ${expected}P from docs`);
+    assert(
+      hasClose(powers, expected) || hasClose(powers, expected * 2.0),
+      `${skill.id} must encode power_scale ${expected}P from docs or ${expected * 2.0}P after 1s tick migration`
+    );
   }
 
   for (const expected of spec.statusAdds) {

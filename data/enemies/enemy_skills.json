@@ -44,7 +44,7 @@
 					"type": "damage_area",
 					"params": {
 						"duration": 3.0,
-						"tick_interval": 0.5,
+						"tick_interval": 1.0,
 						"radius": 72.0,
 						"element": "physical",
 						"damage_type": "area_direct",
@@ -62,7 +62,7 @@
 					"type": "damage_area",
 					"params": {
 						"duration": 3.0,
-						"tick_interval": 0.5,
+						"tick_interval": 1.0,
 						"radius": 72.0,
 						"element": "poison",
 						"damage_type": "area_direct",
@@ -80,7 +80,7 @@
 					"type": "damage_area",
 					"params": {
 						"duration": 3.0,
-						"tick_interval": 0.5,
+						"tick_interval": 1.0,
 						"radius": 72.0,
 						"element": "fire",
 						"damage_type": "area_direct",
@@ -98,8 +98,8 @@
 					"params": {
 						"status_id": "poison",
 						"duration": 3.0,
-						"damage": 3,
-						"tick_interval": 0.5,
+						"damage": 6,
+						"tick_interval": 1.0,
 						"stack": 1
 					}
 				}

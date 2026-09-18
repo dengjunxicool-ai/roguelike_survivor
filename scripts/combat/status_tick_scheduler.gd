@@ -35,7 +35,7 @@ func advance_and_is_due(owner: Object, status_id: StringName, status: Dictionary
 		return false
 	register_status(owner, status_id, status)
 	var tick_interval: float = maxf(
-		float(status.get("tick_interval", 0.5)) * float(status.get("tick_interval_multiplier", 1.0)),
+		float(status.get("tick_interval", 1.0)) * float(status.get("tick_interval_multiplier", 1.0)),
 		0.05
 	)
 	var tick_timer: float = float(status.get("tick_timer", tick_interval)) - delta

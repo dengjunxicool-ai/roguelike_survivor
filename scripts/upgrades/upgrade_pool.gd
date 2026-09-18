@@ -108,19 +108,17 @@ func _build_skill_level_up_options(player: Node) -> Array:
 		var skill_name: String = _string_or(skill_id, "")
 		var rarity: String = "common"
 		var current_rarity: String = _string_or(skill_instance.get("current_rarity"), "normal")
-		var description: String = "提升 %s 至 Lv%d。" % [skill_name, next_level]
 		var max_level: int = next_level
 		if definition != null:
 			skill_name = _get_definition_string(definition, "display_name", skill_name)
 			max_level = int(definition.get("max_level"))
 			rarity = SkillGrowthScalingScript.pick_rarity_for_max_level(max_level, _rng)
-			description = _get_skill_level_description(definition, next_level, description)
 
 		options.append(_make_option({
 			"id": "skill_level_up:%s:%d:%s" % [_string_or(skill_id, ""), next_level, rarity],
 			"type": "skill_level_up",
 			"display_name": "%s Lv%d" % [skill_name, next_level],
-			"description": description,
+			"description": _build_skill_level_up_description(skill_name, next_level),
 			"rarity": rarity,
 			"tags": ["skill", "level_up"],
 			"affected_origin": "当前技能",
@@ -566,12 +564,8 @@ func _replace_with_tagged_option(player: Node, selected_options: Array, _request
 		return
 
 
-func _get_skill_level_description(definition: RefCounted, next_level: int, fallback: String) -> String:
-	var descriptions: Array = _get_array(definition.get("level_descriptions"))
-	var index: int = next_level - 1
-	if index >= 0 and index < descriptions.size():
-		return str(descriptions[index])
-	return fallback
+func _build_skill_level_up_description(skill_name: String, next_level: int) -> String:
+	return "提升 %s 至 Lv%d。" % [skill_name, next_level]
 
 
 func _get_definition_string(definition: RefCounted, property_name: String, fallback: String) -> String:

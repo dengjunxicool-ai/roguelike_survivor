@@ -77,7 +77,7 @@ func _run() -> void:
 	_expect(_count_area_effects(&"fusion_fire_frost_steam_mist_area") > 0, "fire frost steam mist reacts to area_tick", _count_area_effects(&"fusion_fire_frost_steam_mist_area"))
 	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "radius"), 168.0), "steam mist runtime radius uses R2.0", _area_float(&"fusion_fire_frost_steam_mist_area", "radius"))
 	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "duration"), 3.0), "steam mist runtime duration is 3s", _area_float(&"fusion_fire_frost_steam_mist_area", "duration"))
-	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"), 0.5), "steam mist runtime tick is 0.5s", _area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"))
+	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"), 1.0), "steam mist runtime tick is 1s", _area_float(&"fusion_fire_frost_steam_mist_area", "tick_interval"))
 
 	_enemy.call("apply_status", &"frozen", {"stacks": 1, "duration": 1.2, "power": 24.0})
 	_emit(&"post_damage_hit", _skill_manager.call("get_skill", &"fusion_frost_thunder_lightning_ice_pillar") as RefCounted, {"target": _enemy, "damage_packet": _packet(&"lightning")})

@@ -124,9 +124,9 @@ func _run() -> void:
 	_expect(_enemy.damage_packets.size() > 0, "fire_attack_searing Burning ticks after skill-applied status", _enemy.damage_packets.size())
 	_expect(_max_recorded_raw_damage() > 0.0, "fire_attack_searing Burning tick damage is positive", _enemy.damage_packets)
 	_expect(_first_recorded_damage_origin() == &"status_dot", "fire_attack_searing Burning tick uses status_dot origin", _enemy.damage_packets)
-	for _index in range(3):
-		_emit(&"attack_hit", skill_instance)
-	_expect(_count_area_effects(&"searing_fire_path") > 0, "fire_attack_searing creates a short fire path every 4 hits", _count_area_effects(&"searing_fire_path"))
+	skill_instance.set("current_level", 5)
+	_emit(&"attack_hit", skill_instance)
+	_expect(_count_area_effects(&"searing_fire_path") > 0, "fire_attack_searing creates a short fire path at 100 percent Lv5 chance", _count_area_effects(&"searing_fire_path"))
 	_emit(&"dash_start", _skill_manager.call("get_skill", &"fire_dash_blazing_run") as RefCounted)
 	_expect(_count_area_effects(&"blazing_run_path") > 0, "fire_dash_blazing_run creates a dash fire path", _count_area_effects(&"blazing_run_path"))
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"fire_cast_meteor_rain") as RefCounted)

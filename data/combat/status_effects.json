@@ -261,7 +261,7 @@
 		},
 		{
 			"duration": 4.0,
-			"tick_interval": 0.5,
+			"tick_interval": 1.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "burning",
@@ -277,7 +277,7 @@
 					"type": "damage",
 					"damage_type": "fire",
 					"source_type": "status",
-					"power_scale": 0.18
+					"power_scale": 0.36
 				}
 			],
 			"damage_type": "status_dot",
@@ -303,7 +303,7 @@
 		},
 		{
 			"duration": 4.0,
-			"tick_interval": 0.5,
+			"tick_interval": 1.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "poison",
@@ -313,7 +313,7 @@
 			"effect": {
 				"dot": true
 			},
-			"damage": 6.0,
+			"damage": 12.0,
 			"damage_type": "status_dot",
 			"element": "poison",
 			"boss_modifiers": {
@@ -326,7 +326,7 @@
 		},
 		{
 			"duration": 4.0,
-			"tick_interval": 0.5,
+			"tick_interval": 1.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "bleed",
@@ -336,13 +336,13 @@
 			"effect": {
 				"dot": true
 			},
-			"damage": 4.0,
+			"damage": 8.0,
 			"damage_type": "status_dot",
 			"element": "physical"
 		},
 		{
 			"duration": 3.0,
-			"tick_interval": 0.5,
+			"tick_interval": 1.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "dot_resist",
 			"id": "blackfire",
@@ -352,7 +352,7 @@
 			"effect": {
 				"dot": true
 			},
-			"damage": 6.0,
+			"damage": 12.0,
 			"damage_type": "status_dot",
 			"element": "fire"
 		},
@@ -495,7 +495,7 @@
 		},
 		{
 			"duration": 0.5,
-			"tick_interval": 0.5,
+			"tick_interval": 1.0,
 			"refresh_rule": "field_tick",
 			"boss_conversion_rule": "none",
 			"id": "radiance",
@@ -505,7 +505,7 @@
 			"effect": {
 				"dot": true
 			},
-			"damage": 6.0,
+			"damage": 12.0,
 			"damage_type": "status_dot",
 			"element": "holy"
 		},

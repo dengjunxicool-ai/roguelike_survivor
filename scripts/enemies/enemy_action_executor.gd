@@ -31,9 +31,9 @@ func apply_death_effect(death_effect: Dictionary) -> void:
 	match String(death_effect.get("type", "")):
 		"poison_pool":
 			spawn_damage_area(
-				int(death_effect.get("damage", 4)),
+				int(death_effect.get("damage", 8)),
 				float(death_effect.get("duration", 3.0)),
-				float(death_effect.get("tick_interval", 0.5)),
+				float(death_effect.get("tick_interval", 1.0)),
 				float(death_effect.get("area_radius", 52.0)),
 				Color(0.35, 0.95, 0.2, 0.32)
 			)

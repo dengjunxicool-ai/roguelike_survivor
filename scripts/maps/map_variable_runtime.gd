@@ -65,7 +65,7 @@ func _spawn_hazard() -> void:
 		"parent": parent,
 		"area_id": StringName("map_%s" % _variable_type),
 		"position": position,
-		"damage": 9 if is_lava else 5,
+		"damage": 18 if is_lava else 10,
 		"damage_type": &"status_dot",
 		"element": &"fire" if is_lava else &"poison",
 		"source_id": StringName("map_lava" if is_lava else "map_toxic_fog"),
@@ -82,15 +82,15 @@ func _spawn_hazard() -> void:
 			"uses_skill_level_coefficient": false
 		},
 		"duration": 2.2 if is_lava else 3.0,
-		"tick_interval": 0.5,
+		"tick_interval": 1.0,
 		"radius": 96.0 if is_lava else 130.0,
 		"target_group": _target_group,
 		"visual_color": Color(1.0, 0.22, 0.05, 0.28) if is_lava else Color(0.35, 0.9, 0.2, 0.24),
 		"statuses_on_hit": [&"burning"] if is_lava else [&"poison"],
 		"status_params": {
 			"duration": 2.5,
-			"damage": 3,
-			"tick_interval": 0.5
+			"damage": 6,
+			"tick_interval": 1.0
 		}
 	})
 	if hazard != null:
