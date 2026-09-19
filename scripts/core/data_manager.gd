@@ -30,10 +30,14 @@ const COMBAT_OBJECTS_KEY: String = "combat_objects"
 const MAPS_KEY: String = "maps"
 const DAILY_CHALLENGES_KEY: String = "daily_challenges"
 const WEEKLY_CHALLENGES_KEY: String = "weekly_challenges"
+const CURSE_CHOICES_KEY: String = "curse_choices"
+const LEVEL_UP_UPGRADES_KEY: String = "level_up_upgrades"
+const PERMANENT_UPGRADES_KEY: String = "permanent_upgrades"
+const RARITY_WEIGHTS_KEY: String = "rarity_weights"
 const UPGRADE_KEYS: Array[String] = [
-	"curse_choices",
-	"level_up_upgrades",
-	"permanent_upgrades"
+	CURSE_CHOICES_KEY,
+	LEVEL_UP_UPGRADES_KEY,
+	PERMANENT_UPGRADES_KEY
 ]
 
 var _skill_definitions: Dictionary = {}
@@ -41,6 +45,10 @@ var _enemy_definitions: Dictionary = {}
 var _enemy_skill_definitions: Dictionary = {}
 var _upgrade_definitions: Dictionary = {}
 var _level_up_upgrade_definitions: Dictionary = {}
+var _curse_choice_pool: Array[Dictionary] = []
+var _level_up_upgrade_pool: Array[Dictionary] = []
+var _permanent_upgrade_pool: Array[Dictionary] = []
+var _rarity_weights: Dictionary = {}
 var _status_definitions: Dictionary = {}
 var _relic_definitions: Dictionary = {}
 var _combat_object_definitions: Dictionary = {}
@@ -63,6 +71,10 @@ func load_all() -> void:
 	_enemy_skill_definitions.clear()
 	_upgrade_definitions.clear()
 	_level_up_upgrade_definitions.clear()
+	_curse_choice_pool.clear()
+	_level_up_upgrade_pool.clear()
+	_permanent_upgrade_pool.clear()
+	_rarity_weights.clear()
 	_status_definitions.clear()
 	_relic_definitions.clear()
 	_combat_object_definitions.clear()
@@ -81,6 +93,15 @@ func load_all() -> void:
 	_index_definitions(enemy_skills_document, ENEMY_SKILLS_KEY, "id", _enemy_skill_definitions, ENEMY_SKILLS_PATH)
 
 	var upgrades_document: Dictionary = _load_json_document(UPGRADES_PATH)
+	_curse_choice_pool = _get_dictionary_array(upgrades_document, CURSE_CHOICES_KEY, UPGRADES_PATH)
+	_level_up_upgrade_pool = _get_dictionary_array(upgrades_document, LEVEL_UP_UPGRADES_KEY, UPGRADES_PATH)
+	_permanent_upgrade_pool = _get_dictionary_array(upgrades_document, PERMANENT_UPGRADES_KEY, UPGRADES_PATH)
+	var rarity_weights_value: Variant = upgrades_document.get(RARITY_WEIGHTS_KEY, {})
+	if rarity_weights_value is Dictionary:
+		var rarity_weights_data: Dictionary = rarity_weights_value
+		_rarity_weights = rarity_weights_data.duplicate(true)
+	else:
+		push_error("[DataManager] Expected %s.%s to be an object." % [UPGRADES_PATH, RARITY_WEIGHTS_KEY])
 	for upgrade_key: String in UPGRADE_KEYS:
 		_index_upgrade_definitions(upgrades_document, upgrade_key, UPGRADES_PATH)
 
@@ -178,8 +199,20 @@ func get_upgrade_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_upgrade_definitions)
 
 
+func get_curse_choice_definitions() -> Array[Dictionary]:
+	return _curse_choice_pool.duplicate(true)
+
+
 func get_level_up_upgrade_definitions() -> Array[Dictionary]:
-	return _get_definition_values(_level_up_upgrade_definitions)
+	return _level_up_upgrade_pool.duplicate(true)
+
+
+func get_permanent_upgrade_definitions() -> Array[Dictionary]:
+	return _permanent_upgrade_pool.duplicate(true)
+
+
+func get_rarity_weights() -> Dictionary:
+	return _rarity_weights.duplicate(true)
 
 
 func get_character_definitions() -> Array[Dictionary]:

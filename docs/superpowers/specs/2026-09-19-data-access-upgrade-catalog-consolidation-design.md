@@ -185,12 +185,12 @@ An unusable result for one category must not change the source selected by eithe
 
 `GameData.get_permanent_upgrade(upgrade_id)` remains public. It will:
 
-1. call `_get_definition_from_data_manager("get_upgrade_definition", upgrade_id)`;
-2. return a non-empty manager result;
+1. call `_get_pool_from_data_manager("get_permanent_upgrade_definitions")`;
+2. search only the non-empty manager-owned permanent-upgrade pool;
 3. otherwise find the ID only within the JSON `permanent_upgrades` array;
 4. deep-duplicate the fallback definition before returning it.
 
-The fallback must remain category-restricted. It must not return a curse or level-up definition that happens to share an ID.
+Both the normal manager path and the fallback must remain category-restricted. Neither may return a curse or level-up definition that happens to share an ID.
 
 ### Rarity-weight facade
 
@@ -242,7 +242,7 @@ The verifier must check at least:
 - all four owner accessors exist and return deep copies;
 - the three pool facades call the intended owner accessor;
 - each pool facade retains its own deep-copy JSON fallback;
-- `get_permanent_upgrade()` delegates to `get_upgrade_definition` and retains a category-restricted deep-copy fallback;
+- `get_permanent_upgrade()` delegates to the permanent-upgrade owner pool and retains a category-restricted deep-copy fallback;
 - the rarity facade delegates to the owner and retains a deep-copy JSON fallback;
 - no generic string-keyed category API is introduced;
 - protected consumers and `upgrades.json` are not part of the implementation diff.

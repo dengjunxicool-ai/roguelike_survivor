@@ -11,7 +11,7 @@
 已确认的关键现状：
 
 - `project.godot` 主场景为 `res://scenes/app/app_bootstrap.tscn`。
-- `DataManager` 是唯一 autoload 和运行时配置所有者，负责加载并索引主要 JSON 配置、持有完整配置文档或有序配置池；Stage 5B 由 `DataManager.get_progression_goals()` 提供正常运行的进度目标文档，Stage 5C 由两个 challenge accessor 提供每日/每周挑战池；对应 `GameData` 方法保持稳定消费门面和 JSON fallback。
+- `DataManager` 是唯一 autoload 和运行时配置所有者，负责加载并索引主要 JSON 配置、持有完整配置文档或有序配置池；Stage 5B 由 `DataManager.get_progression_goals()` 提供正常运行的进度目标文档，Stage 5C 由两个 challenge accessor 提供每日/每周挑战池，Stage 5D 持有三个有序升级分类池和稀有度权重；对应五个升级 `GameData` 方法保持稳定的 manager-first 门面和独立 JSON fallback。
 - 当前主流程已不再存在 `scripts/weapons/` 和 `data/weapons/` 运行时目录；角色通过 `characters.json.starting_skill_id` 进入起始技能链路。
 - 技能、投射物、区域、伤害、状态、怪物、掉落、升级、UI 都有现有验证覆盖，但几个大文件仍是后续职责拆分风险点。
 
@@ -48,6 +48,8 @@ npm run verify:*
 
 其中 `npm run verify:*` 指按 `package.json` 中所有 `verify:*` 脚本逐一执行，最终输出 `ALL_PACKAGE_VERIFICATIONS_PASSED`。
 
+新建工作树在首次 headless 验证前，需要运行一次 `Godot --headless --editor --path . --quit`，生成被忽略的全局类缓存；随后只清理由这次扫描新生成且未跟踪的精确 `.gd.uid` 文件。缺少该元数据会造成与生产代码无关的全局类解析失败。
+
 ## 当前核心依赖关系
 
 ```mermaid
@@ -83,7 +85,7 @@ flowchart TD
 
 | 系统 | 当前职责 | 存在问题 | 推荐边界 | 是否需要重构 | 优先级 | 风险 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 数据配置 | `DataManager` autoload 持有运行时索引、完整文档或有序配置池，`GameData` 提供稳定读取门面和兼容 fallback；Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池 | 部分数据域仍在正常运行中落到 GameData JSON cache，新字段容易只接一边 | 新配置先登记到 `DataPaths` 并进入 DataManager 所有权，再验证 manager、facade 与 fallback 一致 | 需要继续小步收口 | 高 | 中 |
+| 数据配置 | `DataManager` autoload 持有运行时索引、完整文档或有序配置池，`GameData` 提供稳定读取门面和兼容 fallback；Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池，Stage 5D 已收口三个有序升级分类池和稀有度权重 | 部分数据域仍在正常运行中落到 GameData JSON cache，新字段容易只接一边 | 新配置先登记到 `DataPaths` 并进入 DataManager 所有权，再验证 manager、facade 与 fallback 一致 | 需要继续小步收口 | 高 | 中 |
 | 角色系统 | `CharacterLoadoutService` 校验角色，`CharacterRuntime` 保存角色运行数据和动态 modifier，`CharacterRunInitializer` 应用起始技能 | 当前边界清晰；后续复杂特质可能膨胀到 Player 或技能层 | 角色只定义基础属性、起始技能、trait；战斗触发通过 trait/event 接入 | 暂缓大改 | 中 | 中 |
 | 旧武器/新起始技能 | 旧武器运行时目录已不存在；当前等价入口是角色起始技能和技能池 | 文档和需求口径仍可能说“武器”，容易误导新增内容 | 短期把“武器”视为未来 Equipment/Skill 配置模型，不恢复旧 runtime 绑定 | 需要文档规范 | 高 | 中 |
 | 技能管理 | `SkillManager` 持有技能实例、学习、升级、被替换攻击技能、passive modifier | 学习规则、旧 fire learn 合成、modifier 应用集中在一个类 | 管理持有和生命周期；offer/构造/效果适配继续外移 | 需要 | 高 | 中 |
@@ -104,7 +106,7 @@ flowchart TD
 | 问题 | 证据 | 影响 | 建议 |
 | --- | --- | --- | --- |
 | 大文件职责仍重 | `special_damage_rule_handler.gd` 2896 行、`dev_debug_panel.gd` 2882 行、`skill_special_rule_executor.gd` 2850 行、`skill_action_executor.gd` 2444 行 | 后续新增神系/技能/调试入口会继续堆叠 | Stage 3 已抽离 SkillActionExecutor 的部分纯数据构建职责；后续仅在具备独立行为覆盖时继续拆 action-family |
-| `DataManager` 与 `GameData` 仍有双读取路径 | Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池；升级分类池、稀有度权重以及已验证的消费端自建 fallback 仍未收口。Stage 5C 未改变挑战规则、完成行为、配置值或存档结果 | 新配置字段可能只验证其中一路 | 保持 GameData 门面兼容，按数据域补 DataManager accessor 和三路径一致性测试后再减少 fallback |
+| `DataManager` 与 `GameData` 仍有双读取路径 | Stage 5A–5D 已依次收口状态池、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重；剩余债务仅限有独立证据的消费端自建 fallback 或其他未声明数据域。Stage 5D 保持五个升级 `GameData` 公共入口，未改变升级规则、权重值、随机调用、UI 流程、玩家应用、配置或存档结果 | 新配置字段可能只验证其中一路 | 保持 GameData 门面兼容，按数据域补 DataManager accessor 和三路径一致性测试后再减少 fallback |
 | “武器”概念已从运行时移除但需求仍常出现 | 当前无 `scripts/weapons/`、无 `data/weapons/` | 未来新增武器可能误恢复旧绑定 | 先定义 Equipment/Skill 数据模型，不直接复活旧 runtime |
 | 死亡/重启完整端到端验证仍可加强 | 已有结算诊断和运行时 smoke，但没有完整自动游玩死亡到重启覆盖 | 变更 UI/结算时风险较高 | 后续补 `full_flow_autoplay` 或专门结果页端到端验证 |
 | 缺少统一跨配置引用验证器 | 现有 validator 覆盖敌人、词条、技能 contract，但未统一检查所有引用 | 新内容增加时可能漏路径/ID/图标 | 后续实现 dev-only content validator |
@@ -115,7 +117,7 @@ flowchart TD
 2. 拆 `DevDebugPanel` 页面职责：先拆技能卡、敌人生成、特效页，风险低且可由现有 devtools 验证覆盖。
 3. 拆 `SkillActionExecutor` 构建职责：先抽 projectile/area 参数构建与 visual/runtime data，保留 `execute_action()` API。
 4. Stage 4 已拆出 `UpgradePool` 的纯 learn skill option-data builder；权重策略和更广泛的卡片构建收口延后，需另行设计和验证。
-5. 继续收口 `DataManager`/`GameData` 配置入口：Stage 5A 已处理状态池，Stage 5B 已处理进度目标，Stage 5C 已处理每日/每周挑战池且不改变挑战规则或存档行为；后续按独立批次处理升级分类池、稀有度权重和已验证的消费端重复 fallback。
+5. 继续收口 `DataManager`/`GameData` 配置入口：Stage 5A–5D 已处理状态池、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重；后续只按独立证据处理消费端重复 fallback 或其他未声明数据域。
 6. 小步拆 `StatusEffectManager` 查询、tick、事件发射辅助。
 7. 最后再动 `DamageSystem`、`EnemyBase`、`EnemySpawner` 等高风险核心链路。
 

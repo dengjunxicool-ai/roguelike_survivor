@@ -66,7 +66,7 @@ flowchart LR
     A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
 ```
 
-`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池；无可用 autoload 或有效结果时仍保留 JSON fallback。升级分类池、稀有度权重和已验证的消费端 fallback 继续按独立批次处理。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
+`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池。Stage 5D 已收口 `upgrades.json` 的三个有序分类池和稀有度权重；五个 `GameData` 入口保留稳定门面与各自独立的 JSON fallback，升级选择、权重计算、UI、应用和存档消费者保持不变。已验证的消费端 fallback 和其他未声明数据域继续按独立批次处理。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
 
 ### 3.2 开局流
 
