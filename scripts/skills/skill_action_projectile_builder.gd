@@ -114,6 +114,52 @@ static func build_target_sequence(targets: Array, count: int) -> Array:
 	return result
 
 
+static func resolve_same_target_spawn_delay(params: Dictionary, same_target_hit_index: int) -> float:
+	if same_target_hit_index <= 0:
+		return 0.0
+	return maxf(float(params.get("same_target_spawn_delay", 0.0)), 0.0) * float(same_target_hit_index)
+
+
+static func build_same_target_hit_params(params: Dictionary, same_target_hit_index: int) -> Dictionary:
+	if same_target_hit_index <= 0 or not bool(params.get("same_target_repeat_damage_only", false)):
+		return params
+	var adjusted: Dictionary = params.duplicate(true)
+	adjusted["actions_on_hit"] = filter_damage_actions(_get_array(params.get("actions_on_hit", [])))
+	return adjusted
+
+
+static func filter_damage_actions(actions: Array) -> Array:
+	var adjusted: Array = []
+	for action_variant: Variant in actions:
+		if not (action_variant is Dictionary):
+			continue
+		var action: Dictionary = action_variant
+		if str(action.get("type", "")) == "deal_damage":
+			adjusted.append(action.duplicate(true))
+	return adjusted
+
+
+static func normalize_status_ids(values: Array) -> Array[StringName]:
+	var statuses: Array[StringName] = []
+	for value: Variant in values:
+		statuses.append(StringName(str(value)))
+	return statuses
+
+
+static func build_runtime_data(input: Dictionary) -> Dictionary:
+	return {
+		"speed": float(input.get("speed", 420.0)),
+		"pierce": int(input.get("pierce", 0)),
+		"radius": float(input.get("radius", 10.0)),
+		"lifetime": float(input.get("lifetime", 2.0)),
+		"damage": int(input.get("damage", 0)),
+		"source_id": StringName(str(input.get("source_id", &""))),
+		"statuses_on_hit": normalize_status_ids(_get_array(input.get("statuses_on_hit", []))),
+		"parent": input.get("parent"),
+		"cast_instance_id": str(input.get("cast_instance_id", "")),
+	}
+
+
 static func _resolve_visual_start_position(start_position: Vector2, target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	if same_target_hit_index <= 0:
 		return start_position

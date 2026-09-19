@@ -58,6 +58,19 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 	return area_effect_params
 
 
+static func build_instant_hit_visual_params(params: Dictionary, definition: Dictionary, radius: float) -> Dictionary:
+	var visual_params: Dictionary = {
+		"radius": radius,
+		"duration": float(params.get("visual_duration", params.get("duration", 0.12))),
+	}
+	for key: String in ["visual_color", "visual_ring_color"]:
+		if params.has(key):
+			visual_params[key] = params[key]
+		elif definition.has(key):
+			visual_params[key] = definition[key]
+	return visual_params
+
+
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value
