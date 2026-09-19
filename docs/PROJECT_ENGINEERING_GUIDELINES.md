@@ -224,9 +224,12 @@
 ### 修改配置
 
 1. 修改前确认由哪个系统消费。
-2. 新字段同步 `DataPaths`、`DataManager`、`GameData`、validator 和文档。
-3. 数值变更必须有明确玩法意图，不在重构提交里混入。
-4. schema 变更必须提供迁移说明。
+2. 新配置路径先登记到 `DataPaths`。
+3. 正常运行数据由 `DataManager` 加载、索引并通过深拷贝 accessor 输出。
+4. `GameData` 作为稳定门面优先委托给 `DataManager`；兼容 fallback 在迁移证据充分前保留。
+5. 每个数据域必须验证 manager、facade 与 fallback 的 ID、顺序、字段和值一致。
+6. validator 和文档必须与真实读取路径同步。
+7. 数值或 schema 变化不得混入读取路径重构；schema 变更必须另附迁移说明。
 
 ### 上线前检查
 
@@ -239,13 +242,26 @@ npm run verify:coverage-report
 
 涉及核心系统时还要跑对应 `package.json` 中的 `verify:*` 脚本。合并前至少保证本次影响范围内的 Godot headless 验证通过。
 
+### Windows 受控沙箱运行说明
+
+Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容性问题：经 `npm`、Node.js、Python、`cmd /c` 或二级 PowerShell 启动 Godot 时，可能在 headless 初始化早期以 `signal 11` / `0xC0000005` 崩溃。该现象在未显式指定 `--path` 并使用 `--disable-file-logging` 的最小 headless 命令中仍可发生；同一 Godot 命令直接启动正常，同一 npm 命令在沙箱外也正常，因此不能仅凭该崩溃认定项目代码回归。
+
+受控沙箱中的验证流程：
+
+1. 从 `package.json` 读取目标 `verify:*` 的 Godot 参数。
+2. 在沙箱内直接调用 Godot 可执行文件，保持原工作目录、参数和验证入口不变。
+3. 如果本次目标包含 npm 包装入口本身，则在获得所需授权后，于沙箱外复跑完全相同的 npm 命令。
+4. 沙箱内二级启动崩溃只记录为环境兼容性失败，不作为业务测试结果；直接调用或沙箱外复核仍失败时，才进入项目回归诊断。
+5. 不得通过跳过测试、删除断言、放宽阈值或修改生产逻辑规避该问题。
+
+普通本地终端和 CI 不受此规则影响，仍以 `package.json` 中的 `npm run verify:*` 作为标准入口。
+
 ## 后续工程化优先级
 
 1. 统一内容校验工具：检查重复 ID、引用存在、路径存在、非法数值、空字段。
 2. Debug 面板页面拆分：降低 2882 行开发工具文件的维护成本。
 3. SkillActionExecutor action family 拆分：先拆 projectile/area/status/summon 的构建和执行辅助。
 4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
-5. DataManager/GameData 读取路径收口：减少双入口造成的配置遗漏。
+5. DataManager/GameData 读取路径收口：Stage 5A 先收口状态池，其余数据域继续按契约测试逐项迁移。
 6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
 7. 最后才处理 DamageSystem、EnemyBase、EnemySpawner 的深层行为重构。
-

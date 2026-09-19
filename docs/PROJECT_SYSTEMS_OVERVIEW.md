@@ -35,7 +35,7 @@ flowchart TD
 | 系统 | 核心职责 | 主要入口 | 主要数据源 | 改造边界 |
 | --- | --- | --- | --- | --- |
 | 启动与单局编排 | 从 UI 选择进入单局，创建/销毁运行场景，重置运行源 | `scripts/ui/ui_manager.gd`, `scripts/game/run_scene_coordinator.gd` | `RunLoadout`, `maps.json` | 单局初始化统一走 `RunSceneCoordinator.start_run()`；不要从 UI 直接操作 Player/Spawner 内部初始化细节 |
-| 数据配置 | 读取并索引 JSON 定义，给运行时提供深拷贝配置 | `scripts/core/data_manager.gd`, `scripts/game/game_data.gd` | `data/*.json` | 新配置优先加到 DataManager/GameData 合约；运行时不要污染返回的配置字典 |
+| 数据配置 | `DataManager` 加载并索引 JSON 定义，`GameData` 提供稳定消费门面和兼容 fallback | `scripts/core/data_manager.gd`, `scripts/game/game_data.gd` | `data/*.json` | 新配置先进入 DataManager 所有权，再由 GameData 委托；运行时不要污染返回的配置字典 |
 | UI 状态与弹窗 | 标题、选角、选图、HUD、升级、奖励、暂停、结算、设置、图鉴 | `scripts/ui/ui_manager.gd`, `ui_state_registry.gd`, `ui_screen_host.gd`, `ui_state_prepare_router.gd` | UI 控制器、ViewModel、SaveManager、RunStatsTracker | 新状态要同步 registry、screen host、prepare router、pause policy 和跳转允许列表 |
 | HUD 与运行状态展示 | 将 Player/Spawner/Tracker 状态转为 HUD 文本、血条、Boss 条、调试信息 | `scripts/ui/run_scene_ui_bridge.gd`, `scripts/ui/hud/*` | Player、EnemySpawner、RunStatsTracker | HUD 不应持有战斗真状态，只读运行源并渲染 |
 | 角色与装配 | 角色定义、起始技能、基础属性、特质初始化 | `scripts/characters/*`, `scripts/player/player_controller.gd` | `characters.json`, `skills.json` | 单局角色入口是 `RunLoadout`；角色运行状态集中在 `CharacterRuntime` |
@@ -61,11 +61,12 @@ flowchart TD
 flowchart LR
     A["data/*.json"] --> B["DataManager.load_all"]
     B --> C["按 id 索引并返回 duplicate"]
-    C --> D["GameData 静态门面"]
+    C --> D["GameData 稳定消费门面"]
     D --> E["角色/技能/神系/怪物/地图/UI"]
+    A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
 ```
 
-`DataManager` 是 autoload，负责启动时加载技能、神系、怪物、敌方技能、升级、状态、遗物、协同、战斗对象、角色、波次和地图。多数运行代码优先访问 `/root/DataManager`，部分旧门面仍会通过 `GameData` 回退读取 JSON。改数据结构时要同时查 DataManager、GameData、验证脚本和对应消费端。
+`DataManager` 是运行时配置所有者，负责启动加载、索引和隔离副本输出；`GameData` 是现有消费端的稳定读取门面。正常运行中，已收口的数据域由 `GameData` 委托给 `DataManager`；无 autoload 或缺少 accessor 的隔离/headless 环境仍保留 JSON fallback。Stage 5A 已将状态池接入 `DataManager.get_status_definitions()`，其他 fallback 数据域仍需逐项迁移和验证。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
 
 ### 3.2 开局流
 
@@ -245,7 +246,7 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 
 | 风险点 | 说明 | 建议 |
 | --- | --- | --- |
-| `GameData` 与 `DataManager` 并存 | 多数代码优先 DataManager，但仍有直接 GameData fallback | 新字段同步两个读取路径或逐步收口到 DataManager |
+| `GameData` 与 `DataManager` 并存 | DataManager 是运行时所有者，GameData 是消费门面，但部分数据域仍把 JSON fallback 当作正常读取路径 | 新字段先进入 DataManager；按数据域验证 manager、facade 与 fallback 一致后再逐步减少正常运行 fallback |
 | Damage 输入兼容数字、Dictionary、RefCounted packet | 老接口仍能工作，但 typed DamagePacket 更稳定 | 新伤害只写完整 DamagePacket |
 | `EnemySpawner` 保留旧包装方法 | 实际波次逻辑已拆到 timeline 服务 | 改波次优先看 `timeline/`，不要只改包装函数 |
 | `enemy_type` 与 `enemy_rank` 判断并存 | Boss/Elite/Minion 分类在多个系统读取 | 新怪物分类要实际验证伤害、目标选择、统计和奖励 |
