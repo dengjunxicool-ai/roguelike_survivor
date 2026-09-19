@@ -89,6 +89,13 @@ static func get_relic_pool() -> Array[Dictionary]:
 
 
 static func get_progression_goals() -> Dictionary:
+	var data_manager: Node = _get_data_manager()
+	if data_manager != null and data_manager.has_method("get_progression_goals"):
+		var data: Variant = data_manager.call("get_progression_goals")
+		if data is Dictionary:
+			var goals_data: Dictionary = data
+			if not goals_data.is_empty():
+				return goals_data
 	return _load_document(PROGRESSION_GOALS_PATH).duplicate(true)
 
 

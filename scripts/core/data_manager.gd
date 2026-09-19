@@ -15,6 +15,7 @@ const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
 const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
 const WAVES_PATH: String = DataPathsScript.WAVES_PATH
 const MAPS_PATH: String = DataPathsScript.MAPS_PATH
+const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
 
 const STARTING_SKILLS_KEY: String = "starting_skills"
 const SKILLS_KEY: String = "skills"
@@ -44,6 +45,7 @@ var _character_definitions: Dictionary = {}
 var _map_definitions: Dictionary = {}
 var _synergy_definitions: Array[Dictionary] = []
 var _wave_config: Dictionary = {}
+var _progression_goals: Dictionary = {}
 
 
 func _ready() -> void:
@@ -63,6 +65,7 @@ func load_all() -> void:
 	_map_definitions.clear()
 	_synergy_definitions.clear()
 	_wave_config.clear()
+	_progression_goals.clear()
 
 	var enemies_document: Dictionary = _load_json_document(ENEMIES_PATH)
 	_index_definitions(enemies_document, ENEMIES_KEY, "id", _enemy_definitions, ENEMIES_PATH)
@@ -97,6 +100,7 @@ func load_all() -> void:
 	_synergy_definitions = _get_dictionary_array(synergies_document, SYNERGIES_KEY, SYNERGIES_PATH)
 
 	_wave_config = _load_json_document(WAVES_PATH)
+	_progression_goals = _load_json_document(PROGRESSION_GOALS_PATH)
 
 
 func get_skill_definition(skill_id: Variant) -> Dictionary:
@@ -177,6 +181,10 @@ func get_synergy_definitions() -> Array[Dictionary]:
 
 func get_wave_config() -> Dictionary:
 	return _wave_config.duplicate(true)
+
+
+func get_progression_goals() -> Dictionary:
+	return _progression_goals.duplicate(true)
 
 
 func _load_json_document(path: String) -> Dictionary:
