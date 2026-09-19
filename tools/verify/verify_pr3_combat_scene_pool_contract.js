@@ -69,7 +69,10 @@ assert(areaFinish.includes("despawn_or_free()"), "AreaEffect normal finish must 
 assert(extractFunction(areaEffect, "_on_visual_animation_finished").includes("despawn_or_free()"), "AreaEffect visual finish must despawn_or_free().");
 assert(extractFunction(areaEffect, "_enforce_max_active").includes("despawn_or_free"), "AreaEffect max-active eviction must despawn_or_free().");
 
-assert(extractFunction(projectile, "_physics_process").includes("despawn_or_free()"), "Projectile lifetime expiry must despawn_or_free().");
+const projectilePhysicsProcess = extractFunction(projectile, "_physics_process");
+const projectilePhysicsProcessProfiled = extractFunction(projectile, "_physics_process_profiled");
+assert(projectilePhysicsProcess.includes("_physics_process_profiled(delta)"), "Projectile physics wrapper must delegate to its profiled implementation.");
+assert(projectilePhysicsProcessProfiled.includes("despawn_or_free()"), "Projectile lifetime expiry must despawn_or_free().");
 assert(extractFunction(projectile, "_play_hit_visual_then_free").includes("despawn_or_free()"), "Projectile hit finish fallback must despawn_or_free().");
 assert(extractFunction(projectile, "_free_when_hit_visual_finishes").includes("despawn_or_free()"), "Projectile hit visual setup fallback must despawn_or_free().");
 assert(extractFunction(projectile, "_on_hit_visual_finished").includes("despawn_or_free()"), "Projectile hit visual finish must despawn_or_free().");

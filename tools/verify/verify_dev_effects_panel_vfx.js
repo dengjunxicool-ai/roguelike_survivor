@@ -91,89 +91,89 @@ function getTscnSectionBody(text, header) {
   return nextSectionOffset >= 0 ? rest.slice(0, nextSectionOffset) : rest;
 }
 
-function expectPanelContract(panel, failures) {
+function expectPanelContract(panel, effectsPage, failures) {
   const functions = collectFunctionBlocks(panel);
+  const pageFunctions = collectFunctionBlocks(effectsPage);
   const buildPanel = findFunction(functions, "_build_panel");
   const categoryNavigation = findFunction(functions, "_add_category_navigation");
   const buildEffectsPage = findFunction(functions, "_build_effects_page");
   const populateOptions = findFunction(functions, "_populate_options");
-  const populateEffects = findFunction(functions, "_populate_effect_options");
-  const dispatcher = findFunction(functions, "_trigger_selected_effect");
-  const continuousCallback = findFunction(functions, "_start_continuous_effect_fire");
-  const singleCallback = findFunction(functions, "_fire_single_effect");
-  const marsSpawn = findFunction(functions, "_spawn_mars_spark_missile_effect");
 
   failures.push(...[
-    [panel.includes("MARS_SPARK_MISSILE_EFFECT_SCENE"), "DevDebugPanel must preload the Mars Spark Missile effect scene"],
-    [/\bvar\s+_effect_option\s*:\s*OptionButton\b/.test(panel), "DevDebugPanel must keep an _effect_option OptionButton member"],
+    [/\bvar\s+_effect_option\s*:\s*OptionButton\b/.test(panel), "DevDebugPanel must keep an _effect_option OptionButton compatibility alias"],
+    [/\bvar\s+_effects_page\s*:\s*VBoxContainer\b/.test(panel), "DevDebugPanel must keep the mounted Effects page"],
     [Boolean(buildPanel), "DevDebugPanel must implement _build_panel()"],
     [Boolean(populateOptions), "DevDebugPanel must implement _populate_options()"],
-    [Boolean(populateEffects), "DevDebugPanel must implement _populate_effect_options()"],
-    [Boolean(dispatcher) && /\bcontinuous\s*:\s*bool\b/.test(dispatcher.params), "_trigger_selected_effect must accept continuous: bool"],
-    [Boolean(continuousCallback), "DevDebugPanel must implement _start_continuous_effect_fire()"],
-    [Boolean(singleCallback), "DevDebugPanel must implement _fire_single_effect()"],
-    [Boolean(marsSpawn), "DevDebugPanel must implement _spawn_mars_spark_missile_effect()"],
+    [Boolean(buildEffectsPage), "DevDebugPanel must implement _build_effects_page()"],
+    [effectsPage.includes("MARS_SPARK_MISSILE_EFFECT_SCENE"), "DevDebugEffectsPage must preload the Mars Spark Missile effect scene"],
   ].filter(([condition]) => !condition).map(([, message]) => message));
 
   if (buildPanel) {
     const categoryNavigationBody = categoryNavigation ? categoryNavigation.body : buildPanel.body;
-    const effectsPageBody = buildEffectsPage ? buildEffectsPage.body : buildPanel.body;
     if (!hasCallWithArgs(categoryNavigationBody, "_add_category_button", ['"effects"', '"Effects"'])) {
       failures.push('DevDebugPanel must expose an Effects category button for id "effects"');
     }
-    if (!hasCallWithArgs(effectsPageBody, "_add_category_page", ['"effects"', '"Effects"'])) {
+  }
+  if (buildEffectsPage) {
+    if (!hasCallWithArgs(buildEffectsPage.body, "_add_category_page", ['"effects"', '"Effects"'])) {
       failures.push('DevDebugPanel must register an Effects page for id "effects"');
     }
-    if (!effectsPageBody.includes('_add_option_row(effects_page, "Effect")')) {
-      failures.push("Effects page must create the _effect_option dropdown on effects_page");
-    }
-    if (!hasCallWithArgs(effectsPageBody, "_add_button", ['"持续发射"', 'Callable(self, "_start_continuous_effect_fire")'])) {
-      failures.push("Effects page must wire 持续发射 to _start_continuous_effect_fire");
-    }
-    if (!hasCallWithArgs(effectsPageBody, "_add_button", ['"单次发射"', 'Callable(self, "_fire_single_effect")'])) {
-      failures.push("Effects page must wire 单次发射 to _fire_single_effect");
+    for (const required of [
+      "DevDebugEffectsPageScript.new()",
+      'Callable(self, "_get_player")',
+      'Callable(self, "_get_nearest_enemy")',
+      'call("get_effect_option")',
+    ]) {
+      if (!buildEffectsPage.body.includes(required)) {
+        failures.push(`DevDebugPanel _build_effects_page() must include ${required}`);
+      }
     }
   }
-
   if (populateOptions && !/_populate_effect_options\s*\(\s*\)/.test(populateOptions.body)) {
     failures.push("_populate_options() must call _populate_effect_options()");
   }
 
-  if (populateEffects) {
-    if (!hasCallWithArgs(populateEffects.body, "_add_option_item", ["_effect_option", '"Fire Tornado"', '"fire_tornado"'])) {
-      failures.push("_populate_effect_options() must add Fire Tornado/fire_tornado to _effect_option");
-    }
-    if (!hasCallWithArgs(populateEffects.body, "_add_option_item", ["_effect_option", '"火星飞弹"', '"mars_spark_missile"'])) {
-      failures.push("_populate_effect_options() must add 火星飞弹/mars_spark_missile to _effect_option");
-    }
-  }
-
-  if (continuousCallback && !/_trigger_selected_effect\s*\(\s*true\s*\)/.test(continuousCallback.body)) {
-    failures.push("_start_continuous_effect_fire() must call _trigger_selected_effect(true)");
-  }
-  if (singleCallback && !/_trigger_selected_effect\s*\(\s*false\s*\)/.test(singleCallback.body)) {
-    failures.push("_fire_single_effect() must call _trigger_selected_effect(false)");
-  }
-
-  if (dispatcher) {
-    if (!dispatcher.body.includes("_effect_option") || !dispatcher.body.includes("_get_selected_id")) {
-      failures.push("_trigger_selected_effect() must read the selected effect id from _effect_option");
-    }
-    if (!dispatcher.body.includes('&"fire_tornado"') || !dispatcher.body.includes("_spawn_fire_tornado_effect()")) {
-      failures.push("_trigger_selected_effect() must dispatch fire_tornado to _spawn_fire_tornado_effect()");
-    }
-    if (!dispatcher.body.includes('&"mars_spark_missile"') || !/_spawn_mars_spark_missile_effect\s*\(\s*continuous\s*\)/.test(dispatcher.body)) {
-      failures.push("_trigger_selected_effect() must dispatch mars_spark_missile to _spawn_mars_spark_missile_effect(continuous)");
+  const delegates = [
+    ["_populate_effect_options", "populate_options"],
+    ["_start_continuous_effect_fire", "start_continuous_effect"],
+    ["_fire_single_effect", "fire_single_effect"],
+    ["_trigger_selected_effect", "trigger_selected_effect"],
+    ["_spawn_mars_spark_missile_effect", "spawn_mars_spark_missile_effect"],
+  ];
+  for (const [panelMethod, pageMethod] of delegates) {
+    const fn = findFunction(functions, panelMethod);
+    if (!fn || !fn.body.includes(`_effects_page.call("${pageMethod}"`)) {
+      failures.push(`DevDebugPanel ${panelMethod}() must delegate to ${pageMethod}()`);
     }
   }
 
-  if (marsSpawn) {
-    if (!/MARS_SPARK_MISSILE_EFFECT_SCENE\s*\.\s*instantiate\s*\(/.test(marsSpawn.body)) {
-      failures.push("_spawn_mars_spark_missile_effect() must instantiate MARS_SPARK_MISSILE_EFFECT_SCENE");
-    }
-    if (!/configure\s*\([^)]*\bcontinuous\b[^)]*\)/.test(marsSpawn.body) && !/set_continuous\s*\(\s*continuous\s*\)/.test(marsSpawn.body)) {
-      failures.push("_spawn_mars_spark_missile_effect() must configure continuous firing mode");
-    }
+  const pageBuild = findFunction(pageFunctions, "build");
+  const pagePopulate = findFunction(pageFunctions, "populate_options");
+  const pageDispatch = findFunction(pageFunctions, "trigger_selected_effect");
+  const pageMarsSpawn = findFunction(pageFunctions, "spawn_mars_spark_missile_effect");
+  if (!pageBuild || !pageBuild.body.includes('"持续发射"') || !pageBuild.body.includes('Callable(self, "start_continuous_effect")')) {
+    failures.push("DevDebugEffectsPage must wire 持续发射 to start_continuous_effect");
+  }
+  if (!pageBuild || !pageBuild.body.includes('"单次发射"') || !pageBuild.body.includes('Callable(self, "fire_single_effect")')) {
+    failures.push("DevDebugEffectsPage must wire 单次发射 to fire_single_effect");
+  }
+  if (!pagePopulate || !hasCallWithArgs(pagePopulate.body, "_add_option_item", ['"Fire Tornado"', '"fire_tornado"'])) {
+    failures.push("DevDebugEffectsPage must expose Fire Tornado/fire_tornado");
+  }
+  if (!pagePopulate || !hasCallWithArgs(pagePopulate.body, "_add_option_item", ['"火星飞弹"', '"mars_spark_missile"'])) {
+    failures.push("DevDebugEffectsPage must expose 火星飞弹/mars_spark_missile");
+  }
+  if (!pageDispatch || !pageDispatch.body.includes('&"fire_tornado"') || !pageDispatch.body.includes("spawn_fire_tornado_effect()")) {
+    failures.push("DevDebugEffectsPage must dispatch the selected Fire Tornado effect");
+  }
+  if (!pageDispatch || !pageDispatch.body.includes('&"mars_spark_missile"') || !pageDispatch.body.includes("spawn_mars_spark_missile_effect(continuous)")) {
+    failures.push("DevDebugEffectsPage must dispatch the selected Mars effect");
+  }
+  if (!pageMarsSpawn || !/MARS_SPARK_MISSILE_EFFECT_SCENE\s*\.\s*instantiate\s*\(/.test(pageMarsSpawn.body)) {
+    failures.push("DevDebugEffectsPage must instantiate MARS_SPARK_MISSILE_EFFECT_SCENE");
+  }
+  if (!pageMarsSpawn || !/set_continuous\s*\(\s*continuous\s*\)/.test(pageMarsSpawn.body)) {
+    failures.push("DevDebugEffectsPage must configure continuous firing mode");
   }
 }
 
@@ -291,8 +291,8 @@ function expectMarsScriptContract(script, failures) {
   if (!/@export var target_group: StringName = &"enemies"/.test(script)) {
     failures.push("Mars Spark Missile script must expose target_group for enemy homing");
   }
-  if (!script.includes("get_nodes_in_group(target_group)")) {
-    failures.push("Mars Spark Missile script must search its configurable target_group when homing");
+  if (!script.includes("CombatTargetRegistryScript.get_or_create(self)") || !script.includes('get_targets_in_radius", global_position, seek_range, target_group')) {
+    failures.push("Mars Spark Missile script must query CombatTargetRegistry with its configurable target_group when homing");
   }
   if (script.includes("ParticleProcessMaterial.new()") || /process_material\s*=/.test(script)) {
     failures.push("Mars Spark Missile script must not create or assign particle materials; edit them in .tres resources");
@@ -350,6 +350,7 @@ function readNumericResourceProperty(text, propertyName) {
 function main() {
   const failures = [];
   const panel = readText("scripts/debug/dev_debug_panel.gd", failures);
+  const effectsPage = readText("scripts/debug/pages/dev_debug_effects_page.gd", failures);
   const scene = readText("scenes/effects/mars_spark_missile_effect.tscn", failures);
   const script = readText("scripts/effects/mars_spark_missile_effect.gd", failures);
   const materials = MARS_PARTICLE_MATERIALS.map(([, materialPath]) => [
@@ -357,8 +358,8 @@ function main() {
     readText(materialPath, failures),
   ]);
 
-  if (panel) {
-    expectPanelContract(panel, failures);
+  if (panel && effectsPage) {
+    expectPanelContract(panel, effectsPage, failures);
   }
   if (scene) {
     expectMarsSceneContract(scene, failures);

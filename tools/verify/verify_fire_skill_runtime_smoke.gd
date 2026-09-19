@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
 const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_effect_manager.gd")
@@ -85,6 +86,7 @@ var _skill_manager: Node
 var _event_bus: Node
 var _enemy_status_manager: Node
 var _area_tick_events: int = 0
+var _registered_enemies: Array[Node] = []
 
 
 func _init() -> void:
@@ -98,9 +100,10 @@ func _run() -> void:
 	_expect(generated_options is Array, "UpgradePool handles null fire skill offer fields", typeof(generated_options))
 	var skill_ids: Array[StringName] = _load_skill_ids()
 	_expect(skill_ids.size() == 34, "loads all 34 first-version fire skills", skill_ids.size())
+	_expect(bool(_skill_manager.call("add_skill", &"frost_cast_blizzard_cloud")), "seeds a second god school for fusion skill prerequisites", "add_skill=false")
 	for skill_id: StringName in skill_ids:
 		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % String(skill_id), "add_skill=false")
-	_expect(_skill_manager.call("get_all_skills").size() == 34, "SkillManager learned 34 skills", _skill_manager.call("get_all_skills").size())
+	_expect(_skill_manager.call("get_all_skills").size() == 35, "SkillManager learned 34 fire/fusion skills plus one prerequisite skill", _skill_manager.call("get_all_skills").size())
 	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.2, "fire_attack_searing applies primary attack modifier")
 	_expect_skill_modifier("fire_damage_multiplier_add", 0.0, "fire_attack_searing does not also apply global fire damage")
 	_expect_damage_modifier("primary_attack_damage_multiplier_add", 0.2, "fire_attack_searing exposes primary attack modifier to damage runtime")
@@ -120,14 +123,16 @@ func _run() -> void:
 	_emit(&"attack_hit", skill_instance)
 	_expect(_enemy.call("get_status_stack", &"burning") > 0, "fire_attack_searing attack_hit applies Burning", _enemy.call("get_status_stack", &"burning"))
 	_enemy.damage_packets.clear()
-	_enemy_status_manager.call("update_status_effects", 0.6)
+	_enemy_status_manager.call("update_status_effects", 1.0)
 	_expect(_enemy.damage_packets.size() > 0, "fire_attack_searing Burning ticks after skill-applied status", _enemy.damage_packets.size())
 	_expect(_max_recorded_raw_damage() > 0.0, "fire_attack_searing Burning tick damage is positive", _enemy.damage_packets)
 	_expect(_first_recorded_damage_origin() == &"status_dot", "fire_attack_searing Burning tick uses status_dot origin", _enemy.damage_packets)
 	skill_instance.set("current_level", 5)
 	_emit(&"attack_hit", skill_instance)
+	await process_frame
 	_expect(_count_area_effects(&"searing_fire_path") > 0, "fire_attack_searing creates a short fire path at 100 percent Lv5 chance", _count_area_effects(&"searing_fire_path"))
 	_emit(&"dash_start", _skill_manager.call("get_skill", &"fire_dash_blazing_run") as RefCounted)
+	await process_frame
 	_expect(_count_area_effects(&"blazing_run_path") > 0, "fire_dash_blazing_run creates a dash fire path", _count_area_effects(&"blazing_run_path"))
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"fire_cast_meteor_rain") as RefCounted)
 	_emit(&"on_enemy_killed", _skill_manager.call("get_skill", &"fire_power_combustion_chain") as RefCounted)
@@ -142,7 +147,7 @@ func _run() -> void:
 
 	_enemy.call("apply_status", &"burning", {"stacks": 1, "duration": 4.0, "power": 16.0})
 	_enemy.damage_packets.clear()
-	_enemy_status_manager.call("update_status_effects", 0.6)
+	_enemy_status_manager.call("update_status_effects", 1.0)
 	_expect(_enemy.damage_packets.size() > 0, "burning tick produces a damage packet", _enemy.damage_packets.size())
 	_expect(_max_recorded_raw_damage() > 0.0, "burning tick damage is positive", _enemy.damage_packets)
 	_expect(_first_recorded_damage_origin() == &"status_dot", "burning tick uses status_dot origin", _enemy.damage_packets)
@@ -164,6 +169,7 @@ func _run() -> void:
 	_expect(int(_player.get_meta("fire_passive_shield", 0)) > 0, "grant_shield writes absorbable shield", _player.get_meta("fire_passive_shield", 0))
 
 	await process_frame
+	_unregister_test_enemies()
 	if not _failed:
 		print("[verify_fire_skill_runtime_smoke] PASS")
 	quit(1 if _failed else 0)
@@ -176,6 +182,7 @@ func _build_nodes() -> void:
 
 	_skill_manager = SkillManagerScript.new()
 	_skill_manager.name = "SkillManager"
+	_skill_manager.set("max_active_skills", 128)
 	_player.add_child(_skill_manager)
 
 	_event_bus = SkillEventBusScript.new()
@@ -186,6 +193,7 @@ func _build_nodes() -> void:
 	_enemy.name = "SmokeEnemy"
 	_enemy.global_position = Vector2(140.0, 0.0)
 	root.add_child(_enemy)
+	_register_enemy(_enemy)
 
 	_enemy_status_manager = StatusEffectManagerScript.new()
 	_enemy_status_manager.name = "StatusEffectManager"
@@ -195,11 +203,26 @@ func _build_nodes() -> void:
 	_nearby_enemy.name = "NearbySmokeEnemy"
 	_nearby_enemy.global_position = _enemy.global_position + Vector2(190.0, 0.0)
 	root.add_child(_nearby_enemy)
+	_register_enemy(_nearby_enemy)
 
 	_far_enemy = SmokeEnemy.new()
 	_far_enemy.name = "FarSmokeEnemy"
 	_far_enemy.global_position = _enemy.global_position + Vector2(240.0, 0.0)
 	root.add_child(_far_enemy)
+	_register_enemy(_far_enemy)
+
+
+func _register_enemy(enemy: Node) -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
+	_registered_enemies.append(enemy)
+
+
+func _unregister_test_enemies() -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	for enemy: Node in _registered_enemies:
+		registry.call("unregister_enemy", enemy)
+	_registered_enemies.clear()
 
 
 func _load_skill_ids() -> Array[StringName]:

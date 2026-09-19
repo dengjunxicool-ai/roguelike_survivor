@@ -74,6 +74,7 @@ function validateProjectile(text) {
   const errors = [];
   const nearestBody = extractGdFunctionBody(text, /^func\s+_find_nearest_homing_target\s*\(/m);
   const sweptBody = extractGdFunctionBody(text, /^func\s+_resolve_swept_homing_hit\s*\(/m);
+  const sweptProfiledBody = extractGdFunctionBody(text, /^func\s+_resolve_swept_homing_hit_profiled\s*\(/m);
   const validBody = extractGdFunctionBody(text, /^func\s+_is_valid_homing_target\s*\(/m);
 
   if (!text.includes('preload("res://scripts/skills/targeting_service.gd")')) {
@@ -88,8 +89,14 @@ function validateProjectile(text) {
 
   if (sweptBody === "") {
     errors.push("Projectile._resolve_swept_homing_hit must exist.");
-  } else if (!sweptBody.includes("_is_valid_homing_target(target)")) {
-    errors.push("Projectile._resolve_swept_homing_hit must reuse _is_valid_homing_target.");
+  } else if (!sweptBody.includes("_resolve_swept_homing_hit_profiled(from_position, to_position)")) {
+    errors.push("Projectile._resolve_swept_homing_hit must delegate to its profiled implementation.");
+  }
+
+  if (sweptProfiledBody === "") {
+    errors.push("Projectile._resolve_swept_homing_hit_profiled must exist.");
+  } else if (!sweptProfiledBody.includes("_is_valid_homing_target(target)")) {
+    errors.push("Projectile._resolve_swept_homing_hit_profiled must reuse _is_valid_homing_target.");
   }
 
   if (validBody === "") {

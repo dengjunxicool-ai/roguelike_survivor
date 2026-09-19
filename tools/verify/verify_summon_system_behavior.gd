@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SummonManagerScript: Script = preload("res://scripts/summons/summon_manager.gd")
 
@@ -118,6 +119,8 @@ func _run() -> void:
 	var enemy: SmokeEnemy = SmokeEnemy.new()
 	enemy.global_position = summon_a.global_position + Vector2(180.0, 0.0)
 	root.add_child(enemy)
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
 	summon_a.call("_physics_process", 0.3)
 	_expect(String(summon_a.get("state")) == "CHASE", "summon chases detected enemies outside attack range", summon_a.get("state"))
 
@@ -131,6 +134,7 @@ func _run() -> void:
 	var replacement: SmokeEnemy = SmokeEnemy.new()
 	replacement.global_position = summon_a.global_position + Vector2(120.0, 0.0)
 	root.add_child(replacement)
+	registry.call("register_enemy", replacement)
 	summon_a.call("_physics_process", 0.3)
 	_expect(summon_a.get("target") == replacement, "summon retargets when current target dies", summon_a.get("target"))
 
@@ -160,6 +164,8 @@ func _run() -> void:
 	await create_timer(0.35).timeout
 	_expect(not is_instance_valid(short_summon) or short_summon.is_queued_for_deletion(), "summon expires after configured duration")
 
+	registry.call("unregister_enemy", enemy)
+	registry.call("unregister_enemy", replacement)
 	if not _failed:
 		print("[verify_summon_system_behavior] PASS")
 	quit(1 if _failed else 0)

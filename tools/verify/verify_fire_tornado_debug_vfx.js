@@ -60,6 +60,7 @@ function main() {
   const scenePath = path.join(root, "scenes/effects/fire_tornado_effect.tscn");
   const scriptPath = path.join(root, "scripts/effects/fire_tornado_effect.gd");
   const debugPanelPath = path.join(root, "scripts/debug/dev_debug_panel.gd");
+  const effectsPagePath = path.join(root, "scripts/debug/pages/dev_debug_effects_page.gd");
   assert(fs.existsSync(scenePath), "fire tornado effect scene must exist");
   assert(fs.existsSync(scriptPath), "fire tornado effect script must exist");
 
@@ -133,13 +134,25 @@ function main() {
   assert(!script.includes(".visibility_rect"), "FireTornadoEffect must not assign unsupported GPUParticles2D.visibility_rect");
 
   assert(fs.existsSync(debugPanelPath), "debug panel script must exist");
+  assert(fs.existsSync(effectsPagePath), "Effects page script must exist");
   const debugPanel = readText("scripts/debug/dev_debug_panel.gd");
-  assert(debugPanel.includes("FIRE_TORNADO_EFFECT_SCENE"), "debug panel must preload the fire tornado scene");
-  assert(debugPanel.includes('"Fire Tornado"'), "debug panel must expose a Fire Tornado button");
-  assert(debugPanel.includes("func _spawn_fire_tornado_effect() -> void:"), "debug panel must implement fire tornado spawning");
+  const effectsPage = readText("scripts/debug/pages/dev_debug_effects_page.gd");
+  assert(effectsPage.includes("FIRE_TORNADO_EFFECT_SCENE"), "Effects page must preload the fire tornado scene");
+  assert(effectsPage.includes('"Fire Tornado"'), "Effects page must expose Fire Tornado");
+  assert(effectsPage.includes("func spawn_fire_tornado_effect() -> void:"), "Effects page must implement fire tornado spawning");
   const resolveSpawnSignature = "func _resolve_fire_tornado_spawn_position(player: Node2D) -> Vector2:";
-  const resolveSpawnBody = extractGdFunctionBody(debugPanel, resolveSpawnSignature);
-  assert(resolveSpawnBody.includes("_get_nearest_enemy()"), "spawn position must use nearest enemy direction when available");
+  const pageResolveSpawnSignature = "func resolve_fire_tornado_spawn_position(player: Node2D) -> Vector2:";
+  const resolveSpawnBody = extractGdFunctionBody(effectsPage, pageResolveSpawnSignature);
+  assert(resolveSpawnBody.includes("_resolve_nearest_enemy()"), "Effects page spawn position must use nearest enemy direction");
+  assert(debugPanel.includes("DevDebugEffectsPageScript.new()"), "Debug panel must mount the Effects page");
+  assert(
+    extractGdFunctionBody(debugPanel, "func _spawn_fire_tornado_effect() -> void:").includes('call("spawn_fire_tornado_effect")'),
+    "Debug panel fire tornado method must delegate"
+  );
+  assert(
+    extractGdFunctionBody(debugPanel, resolveSpawnSignature).includes('call("resolve_fire_tornado_spawn_position"'),
+    "Debug panel fire tornado position method must delegate"
+  );
 
   console.log("Fire tornado debug VFX verified.");
 }

@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
 const StatusEffectManagerScript: Script = preload("res://scripts/combat/status_effect_manager.gd")
@@ -68,6 +69,7 @@ var _cursed_enemy: SmokeEnemy
 var _elite_enemy: SmokeEnemy
 var _skill_manager: Node
 var _event_bus: Node
+var _registered_enemies: Array[Node] = []
 
 
 func _init() -> void:
@@ -123,6 +125,7 @@ func _run() -> void:
 		await process_frame
 	_expect(_count_summons(&"soul_crow") > 0 or _count_projectiles(&"soul_bolt_projectile") > 0, "soul crow reacts to Cursed deaths", _count_summons(&"soul_crow"))
 
+	_unregister_test_enemies()
 	if not _failed:
 		print("[verify_curse_skill_runtime_smoke] PASS")
 	quit(1 if _failed else 0)
@@ -135,6 +138,7 @@ func _build_nodes() -> void:
 
 	_skill_manager = SkillManagerScript.new()
 	_skill_manager.name = "SkillManager"
+	_skill_manager.set("max_active_skills", 64)
 	_player.add_child(_skill_manager)
 
 	_event_bus = SkillEventBusScript.new()
@@ -154,10 +158,24 @@ func _create_enemy(enemy_name: String, position: Vector2) -> SmokeEnemy:
 	enemy.name = enemy_name
 	enemy.global_position = position
 	root.add_child(enemy)
+	_register_enemy(enemy)
 	var status_manager: Node = StatusEffectManagerScript.new()
 	status_manager.name = "StatusEffectManager"
 	enemy.add_child(status_manager)
 	return enemy
+
+
+func _register_enemy(enemy: Node) -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
+	_registered_enemies.append(enemy)
+
+
+func _unregister_test_enemies() -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	for enemy: Node in _registered_enemies:
+		registry.call("unregister_enemy", enemy)
+	_registered_enemies.clear()
 
 
 func _load_curse_skill_ids() -> Array[StringName]:
