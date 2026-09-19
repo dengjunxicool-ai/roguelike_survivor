@@ -103,7 +103,7 @@ flowchart TD
 
 | 问题 | 证据 | 影响 | 建议 |
 | --- | --- | --- | --- |
-| 大文件职责仍重 | `special_damage_rule_handler.gd` 2896 行、`dev_debug_panel.gd` 2882 行、`skill_special_rule_executor.gd` 2850 行、`skill_action_executor.gd` 2444 行 | 后续新增神系/技能/调试入口会继续堆叠 | 优先拆 DebugPanel 和 SkillActionExecutor 的低耦合子域 |
+| 大文件职责仍重 | `special_damage_rule_handler.gd` 2896 行、`dev_debug_panel.gd` 2882 行、`skill_special_rule_executor.gd` 2850 行、`skill_action_executor.gd` 2444 行 | 后续新增神系/技能/调试入口会继续堆叠 | Stage 3 已抽离 SkillActionExecutor 的部分纯数据构建职责；后续仅在具备独立行为覆盖时继续拆 action-family |
 | `DataManager` 与 `GameData` 双读取入口 | 两者都加载配置，`GameData` 还有 fallback cache | 新配置字段可能只验证其中一路 | 开发规范要求新配置同步双入口，后续再逐步收口 |
 | “武器”概念已从运行时移除但需求仍常出现 | 当前无 `scripts/weapons/`、无 `data/weapons/` | 未来新增武器可能误恢复旧绑定 | 先定义 Equipment/Skill 数据模型，不直接复活旧 runtime |
 | 死亡/重启完整端到端验证仍可加强 | 已有结算诊断和运行时 smoke，但没有完整自动游玩死亡到重启覆盖 | 变更 UI/结算时风险较高 | 后续补 `full_flow_autoplay` 或专门结果页端到端验证 |
@@ -124,7 +124,9 @@ flowchart TD
 - `docs/` 工程规范、系统说明、模板。
 - `tools/validate/` 和 `tools/verify/` 中的开发期检查工具。
 - `scripts/debug/dev_debug_panel.gd` 的页面级拆分，前提是 devtools 验证补齐。
-- `scripts/skills/skill_action_executor.gd` 的纯参数构建辅助拆分，前提是 API 和验证不变。
+- Stage 3 已将确定性的重复投射物参数、已解析运行时数据、状态 ID 归一化和瞬时区域视觉参数变换移入现有 projectile/area Builders。
+- `SkillActionExecutor` 仍负责 action 分发、modifier 解析、特殊规则、damage packet、运行时标识、factory 调用和副作用。
+- 后续 action-family 拆分继续延后，必须先具备独立行为覆盖。
 - `scripts/upgrades/upgrade_pool.gd` 的选项构建辅助拆分，前提是选项 ID 和权重输出不变。
 
 ## 暂时不要动的区域
@@ -134,4 +136,3 @@ flowchart TD
 - `EnemyDeathPipeline` 与奖励、统计、Boss 胜利信号。
 - `Player.take_damage()`、`Player.apply_upgrade()`、`SkillManager.add_skill()` 的外部行为。
 - 旧 numeric damage 兼容入口，除非已有完整迁移和红绿验证。
-

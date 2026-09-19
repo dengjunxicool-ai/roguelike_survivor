@@ -464,28 +464,15 @@ func _spawn_targeted_projectile_instance_now(params: Dictionary, projectile_para
 
 
 func _same_target_projectile_spawn_delay(params: Dictionary, same_target_hit_index: int) -> float:
-	if same_target_hit_index <= 0:
-		return 0.0
-	return maxf(float(params.get("same_target_spawn_delay", 0.0)), 0.0) * float(same_target_hit_index)
+	return SkillActionProjectileBuilderScript.resolve_same_target_spawn_delay(params, same_target_hit_index)
 
 
 func _projectile_params_for_same_target_hit(params: Dictionary, same_target_hit_index: int) -> Dictionary:
-	if same_target_hit_index <= 0 or not bool(params.get("same_target_repeat_damage_only", false)):
-		return params
-	var adjusted: Dictionary = params.duplicate(true)
-	adjusted["actions_on_hit"] = _damage_only_actions(_get_array(params.get("actions_on_hit", [])))
-	return adjusted
+	return SkillActionProjectileBuilderScript.build_same_target_hit_params(params, same_target_hit_index)
 
 
 func _damage_only_actions(actions: Array) -> Array:
-	var adjusted: Array = []
-	for action_variant: Variant in actions:
-		if not (action_variant is Dictionary):
-			continue
-		var action: Dictionary = action_variant
-		if str(action.get("type", "")) == "deal_damage":
-			adjusted.append(action.duplicate(true))
-	return adjusted
+	return SkillActionProjectileBuilderScript.filter_damage_actions(actions)
 
 
 func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) -> Dictionary:
@@ -501,24 +488,21 @@ func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) 
 
 
 func _build_projectile_runtime_data(projectile_stats: Dictionary, params: Dictionary, context: Dictionary) -> Dictionary:
-	return {
-		"speed": float(projectile_stats.get("speed", 420.0)),
-		"pierce": int(projectile_stats.get("pierce", 0)),
-		"radius": float(projectile_stats.get("radius", 10.0)),
-		"lifetime": float(projectile_stats.get("lifetime", 2.0)),
-		"damage": int(projectile_stats.get("damage", 0)),
-		"source_id": StringName(str(projectile_stats.get("source_id", ""))),
+	return SkillActionProjectileBuilderScript.build_runtime_data({
+		"speed": projectile_stats.get("speed", 420.0),
+		"pierce": projectile_stats.get("pierce", 0),
+		"radius": projectile_stats.get("radius", 10.0),
+		"lifetime": projectile_stats.get("lifetime", 2.0),
+		"damage": projectile_stats.get("damage", 0),
+		"source_id": projectile_stats.get("source_id", &""),
 		"statuses_on_hit": _get_statuses_on_hit(params, context),
 		"parent": _get_parent_node(context),
-		"cast_instance_id": _next_cast_instance_id(context)
-	}
+		"cast_instance_id": _next_cast_instance_id(context),
+	})
 
 
 func _get_projectile_runtime_statuses_on_hit(runtime_data: Dictionary) -> Array[StringName]:
-	var statuses: Array[StringName] = []
-	for status_variant: Variant in _get_array(runtime_data.get("statuses_on_hit", [])):
-		statuses.append(StringName(str(status_variant)))
-	return statuses
+	return SkillActionProjectileBuilderScript.normalize_status_ids(_get_array(runtime_data.get("statuses_on_hit", [])))
 
 
 func _build_targeted_projectile_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
@@ -660,17 +644,11 @@ func _create_instant_area_hit_visual() -> Node:
 
 
 func _instant_area_hit_visual_params(params: Dictionary, area_source_id: StringName, radius: float) -> Dictionary:
-	var visual_params: Dictionary = {
-		"radius": radius,
-		"duration": float(params.get("visual_duration", params.get("duration", 0.12)))
-	}
-	var definition: Dictionary = _get_combat_object_definition(area_source_id)
-	for key: String in ["visual_color", "visual_ring_color"]:
-		if params.has(key):
-			visual_params[key] = params[key]
-		elif definition.has(key):
-			visual_params[key] = definition[key]
-	return visual_params
+	return SkillActionAreaBuilderScript.build_instant_hit_visual_params(
+		params,
+		_get_combat_object_definition(area_source_id),
+		radius
+	)
 
 
 func _get_combat_object_definition(object_id: StringName) -> Dictionary:
