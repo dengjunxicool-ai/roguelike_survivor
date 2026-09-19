@@ -262,6 +262,6 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 2. Debug 面板页面拆分：降低 2882 行开发工具文件的维护成本。
 3. SkillActionExecutor action family 拆分：先拆 projectile/area/status/summon 的构建和执行辅助。
 4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
-5. DataManager/GameData 读取路径收口：Stage 5A 先收口状态池，其余数据域继续按契约测试逐项迁移。
+5. DataManager/GameData 读取路径收口：Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档；其余数据域继续按契约测试逐项迁移。
 6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
 7. 最后才处理 DamageSystem、EnemyBase、EnemySpawner 的深层行为重构。

@@ -2,6 +2,8 @@
   "scripts": {
     "verify:data-access-status-pool": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_status_pool.gd",
     "verify:data-access-status-pool-boundary": "node tools\\verify\\verify_data_access_status_pool_boundary.js",
+    "verify:data-access-progression-goals": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_progression_goals.gd",
+    "verify:data-access-progression-goals-boundary": "node tools\\verify\\verify_data_access_progression_goals_boundary.js",
     "verify:skill-learn-option-builder-boundary": "node tools\\verify\\verify_skill_learn_option_builder_boundary.js",
     "verify:skill-learn-option-builder": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_learn_option_builder.gd",
     "verify:skill-action-builder-pure-data": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_action_builder_pure_data.gd",
