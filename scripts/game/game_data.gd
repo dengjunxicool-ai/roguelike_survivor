@@ -100,11 +100,17 @@ static func get_progression_goals() -> Dictionary:
 
 
 static func get_daily_challenge_pool() -> Array[Dictionary]:
-	return _get_dictionary_array(CHALLENGES_PATH, "daily_challenges")
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_daily_challenge_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(CHALLENGES_PATH, "daily_challenges").duplicate(true)
 
 
 static func get_weekly_challenge_pool() -> Array[Dictionary]:
-	return _get_dictionary_array(CHALLENGES_PATH, "weekly_challenges")
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_weekly_challenge_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(CHALLENGES_PATH, "weekly_challenges").duplicate(true)
 
 
 static func get_skill_pool() -> Array[Dictionary]:

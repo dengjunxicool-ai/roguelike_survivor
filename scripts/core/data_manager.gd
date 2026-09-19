@@ -16,6 +16,7 @@ const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
 const WAVES_PATH: String = DataPathsScript.WAVES_PATH
 const MAPS_PATH: String = DataPathsScript.MAPS_PATH
 const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
+const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
 
 const STARTING_SKILLS_KEY: String = "starting_skills"
 const SKILLS_KEY: String = "skills"
@@ -27,6 +28,8 @@ const RELICS_KEY: String = "relics"
 const SYNERGIES_KEY: String = "synergies"
 const COMBAT_OBJECTS_KEY: String = "combat_objects"
 const MAPS_KEY: String = "maps"
+const DAILY_CHALLENGES_KEY: String = "daily_challenges"
+const WEEKLY_CHALLENGES_KEY: String = "weekly_challenges"
 const UPGRADE_KEYS: Array[String] = [
 	"curse_choices",
 	"level_up_upgrades",
@@ -46,6 +49,8 @@ var _map_definitions: Dictionary = {}
 var _synergy_definitions: Array[Dictionary] = []
 var _wave_config: Dictionary = {}
 var _progression_goals: Dictionary = {}
+var _daily_challenge_definitions: Array[Dictionary] = []
+var _weekly_challenge_definitions: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -66,6 +71,8 @@ func load_all() -> void:
 	_synergy_definitions.clear()
 	_wave_config.clear()
 	_progression_goals.clear()
+	_daily_challenge_definitions.clear()
+	_weekly_challenge_definitions.clear()
 
 	var enemies_document: Dictionary = _load_json_document(ENEMIES_PATH)
 	_index_definitions(enemies_document, ENEMIES_KEY, "id", _enemy_definitions, ENEMIES_PATH)
@@ -101,6 +108,10 @@ func load_all() -> void:
 
 	_wave_config = _load_json_document(WAVES_PATH)
 	_progression_goals = _load_json_document(PROGRESSION_GOALS_PATH)
+
+	var challenges_document: Dictionary = _load_json_document(CHALLENGES_PATH)
+	_daily_challenge_definitions = _get_dictionary_array(challenges_document, DAILY_CHALLENGES_KEY, CHALLENGES_PATH)
+	_weekly_challenge_definitions = _get_dictionary_array(challenges_document, WEEKLY_CHALLENGES_KEY, CHALLENGES_PATH)
 
 
 func get_skill_definition(skill_id: Variant) -> Dictionary:
@@ -185,6 +196,14 @@ func get_wave_config() -> Dictionary:
 
 func get_progression_goals() -> Dictionary:
 	return _progression_goals.duplicate(true)
+
+
+func get_daily_challenge_definitions() -> Array[Dictionary]:
+	return _daily_challenge_definitions.duplicate(true)
+
+
+func get_weekly_challenge_definitions() -> Array[Dictionary]:
+	return _weekly_challenge_definitions.duplicate(true)
 
 
 func _load_json_document(path: String) -> Dictionary:
