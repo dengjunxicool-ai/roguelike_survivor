@@ -8,6 +8,7 @@ const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_opti
 const UpgradeOfferPolicyScript: Script = preload("res://scripts/upgrades/upgrade_offer_policy.gd")
 const UpgradeSelectionHelperScript: Script = preload("res://scripts/upgrades/upgrade_selection_helper.gd")
 const SkillLearnDefinitionRepositoryScript: Script = preload("res://scripts/upgrades/skill_learn_definition_repository.gd")
+const SkillLearnOptionBuilderScript: Script = preload("res://scripts/upgrades/skill_learn_option_builder.gd")
 const SkillOfferServiceScript: Script = preload("res://scripts/skills/skill_offer_service.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
@@ -188,25 +189,10 @@ func _build_god_skill_learn_options(player: Node) -> Array:
 		var max_level: int = maxi(int(skill.get("max_level", upgrade.get("max_level", 1))), 1)
 		var rarity: String = SkillGrowthScalingScript.pick_rarity_for_max_level(max_level, _rng)
 
-		options.append(_make_option({
-			"id": "level_up_upgrade:%s:%s" % [_string_or(upgrade_id, ""), rarity],
-			"type": "level_up_upgrade",
-			"display_name": _string_or(upgrade.get("display_name", skill.get("display_name", skill_id)), _string_or(skill_id, "")),
-			"description": _get_level_up_upgrade_description(upgrade),
-			"rarity": rarity,
-			"background_texture": _get_option_background_texture(skill),
-			"tags": _get_array(upgrade.get("tags", [])),
-			"affected_origin": "神系技能",
-			"does_not_affect": "不替换角色初始技能。",
-			"recommended_reason": "从神系技能池学习一个新技能。",
-			"level_text": "Lv1 / %d" % max_level,
-			"payload": {
-				"upgrade_id": upgrade_id,
-				"learn_skill_id": skill_id,
-				"level": 1,
-				"target_rarity": rarity
-			}
-		}))
+		var option_data: Dictionary = SkillLearnOptionBuilderScript.build_option_data(skill, upgrade, rarity)
+		if option_data.is_empty():
+			continue
+		options.append(_make_option(option_data))
 
 	return options
 

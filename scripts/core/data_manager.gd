@@ -155,6 +155,10 @@ func get_enemy_skill_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_enemy_skill_definitions)
 
 
+func get_status_definitions() -> Array[Dictionary]:
+	return _get_definition_values(_status_definitions)
+
+
 func get_upgrade_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_upgrade_definitions)
 
