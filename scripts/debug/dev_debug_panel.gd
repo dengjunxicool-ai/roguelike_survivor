@@ -10,11 +10,10 @@ const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_ac
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const EnemyAttackRangeOverlayScript: Script = preload("res://scripts/debug/enemy_attack_range_overlay.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
+const DevDebugEffectsPageScript: Script = preload("res://scripts/debug/pages/dev_debug_effects_page.gd")
 const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/skill_effect_summary_builder.gd")
 const StatusShortNameFormatterScript: Script = preload("res://scripts/ui/status_short_name_formatter.gd")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/enemy.tscn")
-const FIRE_TORNADO_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/fire_tornado_effect.tscn")
-const MARS_SPARK_MISSILE_EFFECT_SCENE: PackedScene = preload("res://scenes/effects/mars_spark_missile_effect.tscn")
 const GODS_DATA_PATH: String = DataPathsScript.GODS_PATH
 const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 
@@ -29,6 +28,7 @@ var _character_option: OptionButton
 var _map_option: OptionButton
 var _enemy_option: OptionButton
 var _enemy_state_option: OptionButton
+var _effects_page: VBoxContainer
 var _effect_option: OptionButton
 var _fire_skill_option: OptionButton
 var _status_option: OptionButton
@@ -337,11 +337,15 @@ func _build_enemy_spawn_page(page_root: VBoxContainer) -> void:
 
 
 func _build_effects_page(page_root: VBoxContainer) -> void:
-	var effects_page: VBoxContainer = _add_category_page(page_root, "effects", "Effects")
-	_effect_option = _add_option_row(effects_page, "Effect")
-	var effects_row: HBoxContainer = _add_row(effects_page)
-	_add_button(effects_row, "持续发射", Callable(self, "_start_continuous_effect_fire"), 116)
-	_add_button(effects_row, "单次发射", Callable(self, "_fire_single_effect"), 116)
+	var effects_category: VBoxContainer = _add_category_page(page_root, "effects", "Effects")
+	_effects_page = DevDebugEffectsPageScript.new() as VBoxContainer
+	_effects_page.name = "DevDebugEffectsPage"
+	effects_category.add_child(_effects_page)
+	_effects_page.call("setup", Callable(self, "_get_player"), Callable(self, "_get_nearest_enemy"))
+	if not _effects_page.is_connected("log_requested", Callable(self, "_on_effects_page_log_requested")):
+		_effects_page.connect("log_requested", Callable(self, "_on_effects_page_log_requested"))
+	_effects_page.call("build")
+	_effect_option = _effects_page.call("get_effect_option") as OptionButton
 
 
 func _build_status_page(page_root: VBoxContainer) -> void:
@@ -456,12 +460,8 @@ func _populate_enemy_state_options() -> void:
 
 
 func _populate_effect_options() -> void:
-	if _effect_option == null:
-		return
-	_effect_option.clear()
-	_add_option_item(_effect_option, "Fire Tornado", "fire_tornado")
-	_add_option_item(_effect_option, "火星飞弹", "mars_spark_missile")
-	_select_first_enabled_option(_effect_option)
+	if _effects_page != null:
+		_effects_page.call("populate_options")
 
 
 func _populate_god_skill_buttons() -> void:
@@ -934,115 +934,49 @@ func _spawn_configured_enemies() -> void:
 
 
 func _spawn_fire_tornado_effect() -> void:
-	var player: Node2D = _get_player() as Node2D
-	if player == null:
-		_log_warn("Cannot spawn Fire Tornado: player not found.")
-		return
-	if FIRE_TORNADO_EFFECT_SCENE == null:
-		_log_error("Cannot spawn Fire Tornado: scene failed to load.")
-		return
-
-	var effect: Node2D = FIRE_TORNADO_EFFECT_SCENE.instantiate() as Node2D
-	if effect == null:
-		_log_error("Cannot spawn Fire Tornado: scene root is not Node2D.")
-		return
-
-	var parent: Node = player.get_parent()
-	if parent == null:
-		parent = get_tree().current_scene
-	if parent == null:
-		effect.queue_free()
-		_log_error("Cannot spawn Fire Tornado: no scene parent available.")
-		return
-
-	parent.add_child(effect)
-	effect.global_position = _resolve_fire_tornado_spawn_position(player)
-	_log("Spawned Fire Tornado VFX.")
+	if _effects_page != null:
+		_effects_page.call("spawn_fire_tornado_effect")
 
 
 func _start_continuous_effect_fire() -> void:
-	_trigger_selected_effect(true)
+	if _effects_page != null:
+		_effects_page.call("start_continuous_effect")
 
 
 func _fire_single_effect() -> void:
-	_trigger_selected_effect(false)
+	if _effects_page != null:
+		_effects_page.call("fire_single_effect")
 
 
 func _trigger_selected_effect(continuous: bool) -> void:
-	var effect_id: StringName = _get_selected_id(_effect_option)
-	match effect_id:
-		&"fire_tornado":
-			_spawn_fire_tornado_effect()
-		&"mars_spark_missile":
-			_spawn_mars_spark_missile_effect(continuous)
-		_:
-			_log_warn("No effect selected.")
+	if _effects_page != null:
+		_effects_page.call("trigger_selected_effect", continuous)
 
 
 func _spawn_mars_spark_missile_effect(continuous: bool) -> void:
-	var player: Node2D = _get_player() as Node2D
-	if player == null:
-		_log_warn("Cannot spawn Mars Spark Missile: player not found.")
-		return
-	if MARS_SPARK_MISSILE_EFFECT_SCENE == null:
-		_log_error("Cannot spawn Mars Spark Missile: scene failed to load.")
-		return
-
-	var effect: Variant = MARS_SPARK_MISSILE_EFFECT_SCENE.instantiate()
-	if not (effect is Node2D):
-		_log_error("Cannot spawn Mars Spark Missile: scene root is not MarsSparkMissileEffect.")
-		return
-
-	var parent: Node = player.get_parent()
-	if parent == null:
-		parent = get_tree().current_scene
-	if parent == null:
-		effect.queue_free()
-		_log_error("Cannot spawn Mars Spark Missile: no scene parent available.")
-		return
-
-	parent.add_child(effect)
-	var origin: Vector2 = _resolve_mars_spark_missile_spawn_position(player)
-	var target: Vector2 = _resolve_mars_spark_missile_target_position(player, origin)
-	effect.configure(origin, target, false)
-	effect.set_continuous(continuous)
-	_log("Spawned %s Mars Spark Missile VFX." % ("continuous" if continuous else "single"))
+	if _effects_page != null:
+		_effects_page.call("spawn_mars_spark_missile_effect", continuous)
 
 
 func _resolve_fire_tornado_spawn_position(player: Node2D) -> Vector2:
-	if player == null:
+	if _effects_page == null:
 		return Vector2.ZERO
-	var direction: Vector2 = Vector2.RIGHT
-	var nearest_enemy: Node2D = _get_nearest_enemy() as Node2D
-	if nearest_enemy != null and is_instance_valid(nearest_enemy):
-		var to_enemy: Vector2 = nearest_enemy.global_position - player.global_position
-		if to_enemy.length_squared() > 0.0001:
-			direction = to_enemy.normalized()
-	return player.global_position + direction * 96.0
+	var result: Variant = _effects_page.call("resolve_fire_tornado_spawn_position", player)
+	return result if result is Vector2 else Vector2.ZERO
 
 
 func _resolve_mars_spark_missile_spawn_position(player: Node2D) -> Vector2:
-	if player == null:
+	if _effects_page == null:
 		return Vector2.ZERO
-	var direction: Vector2 = Vector2.RIGHT
-	var nearest_enemy: Node2D = _get_nearest_enemy() as Node2D
-	if nearest_enemy != null and is_instance_valid(nearest_enemy):
-		direction = player.global_position.direction_to(nearest_enemy.global_position)
-		if direction.length_squared() <= 0.0001:
-			direction = Vector2.RIGHT
-	return player.global_position + direction.normalized() * 32.0
+	var result: Variant = _effects_page.call("resolve_mars_spark_missile_spawn_position", player)
+	return result if result is Vector2 else Vector2.ZERO
 
 
 func _resolve_mars_spark_missile_target_position(player: Node2D, origin: Vector2) -> Vector2:
-	var nearest_enemy: Node2D = _get_nearest_enemy() as Node2D
-	if nearest_enemy != null and is_instance_valid(nearest_enemy):
-		return nearest_enemy.global_position
-	var direction: Vector2 = Vector2.RIGHT
-	if player != null:
-		direction = player.global_position.direction_to(origin)
-		if direction.length_squared() <= 0.0001:
-			direction = Vector2.RIGHT
-	return origin + direction.normalized() * 360.0
+	if _effects_page == null:
+		return Vector2.ZERO
+	var result: Variant = _effects_page.call("resolve_mars_spark_missile_target_position", player, origin)
+	return result if result is Vector2 else Vector2.ZERO
 
 
 func _spawn_all_enemy_types() -> void:
@@ -2818,6 +2752,16 @@ func _get_selected_id(option: OptionButton) -> StringName:
 
 func _display_name(data: Dictionary, fallback: String) -> String:
 	return String(data.get("display_name", fallback))
+
+
+func _on_effects_page_log_requested(level: StringName, message: String) -> void:
+	match level:
+		&"error":
+			_log_error(message)
+		&"warning":
+			_log_warn(message)
+		_:
+			_log(message)
 
 
 func _log(message: String) -> void:

@@ -2,6 +2,7 @@ extends SceneTree
 
 
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const ProjectileScript: Script = preload("res://scripts/combat/projectile.gd")
 
 
@@ -55,6 +56,8 @@ func _run() -> void:
 	target.global_position = Vector2(80.0, 8.0)
 	target.add_to_group(&"enemies")
 	root.add_child(target)
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", target)
 
 	var projectile: Node2D = ProjectileScript.new() as Node2D
 	projectile.global_position = Vector2.ZERO
@@ -80,6 +83,7 @@ func _run() -> void:
 	_expect(target.last_damage_amount > 0, "swept homing hit applies projectile damage")
 	_expect(projectile.global_position.distance_to(target.global_position) <= 12.0, "homing projectile impact point is on the enemy")
 
+	registry.call("unregister_enemy", target)
 	quit(1 if _failed else 0)
 
 

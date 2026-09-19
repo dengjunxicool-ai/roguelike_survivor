@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const EFFECT_SCENE_PATH: String = "res://scenes/effects/mars_spark_missile_effect.tscn"
 const EFFECT_CLASS_NAME: String = "MarsSparkMissileEffect"
 const MIN_GPU_PARTICLE_NODES: int = 3
@@ -8,6 +9,7 @@ const MIN_GPU_PARTICLE_NODES: int = 3
 
 var _failed: bool = false
 var _instances: Array[Node] = []
+var _registered_enemies: Array[Node] = []
 
 
 func _init() -> void:
@@ -53,6 +55,7 @@ func _run_check() -> void:
 		enemy.global_position = Vector2(96.0, -180.0)
 		enemy.add_to_group(&"enemies")
 		root.add_child(enemy)
+		_register_enemy(enemy)
 		_instances.append(enemy)
 		if homing_effect.has_method("configure"):
 			homing_effect.call("configure", Vector2.ZERO, Vector2(260.0, 0.0), false)
@@ -146,6 +149,9 @@ func _expect(condition: bool, message: String) -> void:
 
 
 func _finish() -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	for enemy: Node in _registered_enemies:
+		registry.call("unregister_enemy", enemy)
 	for instance: Node in _instances:
 		if is_instance_valid(instance):
 			instance.queue_free()
@@ -154,3 +160,9 @@ func _finish() -> void:
 		return
 	print("Mars Spark Missile runtime scene verified.")
 	quit(0)
+
+
+func _register_enemy(enemy: Node) -> void:
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
+	_registered_enemies.append(enemy)

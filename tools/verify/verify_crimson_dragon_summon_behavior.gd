@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SummonManagerScript: Script = preload("res://scripts/summons/summon_manager.gd")
 
@@ -60,6 +61,8 @@ func _run() -> void:
 	enemy.name = "InsidePlayerRange"
 	enemy.global_position = Vector2(535.0, 0.0)
 	root.add_child(enemy)
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
 
 	dragon.global_position = Vector2(540.0, 0.0)
 	dragon.call("_physics_process", 0.25)
@@ -76,6 +79,7 @@ func _run() -> void:
 
 	dragon.queue_free()
 	player.queue_free()
+	registry.call("unregister_enemy", enemy)
 	enemy.queue_free()
 	await process_frame
 	if not _failed:

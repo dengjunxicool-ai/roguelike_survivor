@@ -66,6 +66,8 @@
     "verify:projectile-factory-physics-frame": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_projectile_factory_physics_frame.gd",
     "verify:projectile-physics-flush-safe": "node tools\\verify\\verify_projectile_physics_flush_safe.js",
     "verify:dev-effects-panel-vfx": "node tools\\verify\\verify_dev_effects_panel_vfx.js",
+    "verify:dev-debug-effects-page-boundary": "node tools\\verify\\verify_dev_debug_effects_page_boundary.js",
+    "verify:dev-debug-effects-page-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_dev_debug_effects_page.gd",
     "verify:fire-tornado-debug-vfx": "node tools\\verify\\verify_fire_tornado_debug_vfx.js",
     "verify:fire-tornado-effect-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_fire_tornado_effect_runtime.gd",
     "verify:mars-spark-missile-effect-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_mars_spark_missile_effect_runtime.gd",

@@ -60,11 +60,11 @@ function validateSkillActionExecutor(text) {
     return ["SkillActionExecutor._context_with_resolved_target must exist."];
   }
 
-  if (!contextBody.includes("TargetingServiceScript.is_valid_target(target)")) {
-    errors.push("_context_with_resolved_target must use TargetingServiceScript.is_valid_target(target).");
+  if (!contextBody.includes("TargetingServiceScript.is_valid_target(target_2d)")) {
+    errors.push("_context_with_resolved_target must validate the Node2D target through TargetingServiceScript.is_valid_target.");
   }
 
-  if (!/if\s+not\s+force_configured_targeting\s+and\s+TargetingServiceScript\.is_valid_target\(target\):\s*\n\s*return context/.test(contextBody)) {
+  if (!/if\s+not\s+force_configured_targeting\s+and\s+target\s*!=\s*null\s+and\s+\(target_2d\s*==\s*null\s+or\s+TargetingServiceScript\.is_valid_target\(target_2d\)\):\s*\n\s*return context/.test(contextBody)) {
     errors.push("_context_with_resolved_target must keep live implicit targets without retargeting.");
   }
 
@@ -85,7 +85,7 @@ function validateSkillActionExecutor(text) {
   }
 
   const staleClearPattern =
-    /if\s+resolved_target\s*==\s*null:\s*\n\s*if\s+not\s+force_configured_targeting\s+and\s+target\s*!=\s*null:[\s\S]*?cleared_context\.erase\("target"\)[\s\S]*?cleared_context\.erase\("enemy"\)[\s\S]*?return cleared_context[\s\S]*?return context/;
+    /if\s+resolved_target\s*==\s*null:\s*\n\s*if\s+[^\n]*(?:has_invalid_target_reference|has_invalid_enemy_reference)[^\n]*:\s*[\s\S]*?cleared_context\.erase\("target"\)[\s\S]*?cleared_context\.erase\("enemy"\)[\s\S]*?return cleared_context[\s\S]*?return context/;
   if (!staleClearPattern.test(contextBody)) {
     errors.push("_context_with_resolved_target must clear stale target/enemy when an invalid target has no replacement.");
   }
