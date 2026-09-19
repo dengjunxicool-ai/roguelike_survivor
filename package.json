@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "verify:data-access-upgrade-catalog": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_upgrade_catalog.gd",
+    "verify:data-access-upgrade-catalog-boundary": "node tools\\verify\\verify_data_access_upgrade_catalog_boundary.js",
     "verify:data-access-challenge-pools": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_challenge_pools.gd",
     "verify:data-access-challenge-pools-boundary": "node tools\\verify\\verify_data_access_challenge_pools_boundary.js",
     "verify:data-access-status-pool": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_status_pool.gd",

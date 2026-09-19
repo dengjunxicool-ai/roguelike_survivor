@@ -159,14 +159,17 @@ static func get_status_pool() -> Array[Dictionary]:
 
 
 static func get_curse_choice_pool() -> Array[Dictionary]:
-	return _get_dictionary_array(UPGRADES_PATH, "curse_choices")
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_curse_choice_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(UPGRADES_PATH, "curse_choices").duplicate(true)
 
 
 static func get_level_up_upgrade_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_level_up_upgrade_definitions")
 	if not data.is_empty():
 		return data
-	return _get_dictionary_array(UPGRADES_PATH, "level_up_upgrades")
+	return _get_dictionary_array(UPGRADES_PATH, "level_up_upgrades").duplicate(true)
 
 
 static func get_upgrade(upgrade_id: StringName) -> Dictionary:
@@ -292,19 +295,32 @@ static func _get_skill_god_id(skill: Dictionary) -> StringName:
 
 
 static func get_permanent_upgrade(upgrade_id: StringName) -> Dictionary:
-	return _find_by_id(_get_array(UPGRADES_PATH, "permanent_upgrades"), upgrade_id)
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_permanent_upgrade_definitions")
+	if not data.is_empty():
+		return _find_by_id(data, upgrade_id)
+	return _find_by_id(_get_array(UPGRADES_PATH, "permanent_upgrades"), upgrade_id).duplicate(true)
 
 
 static func get_permanent_upgrade_pool() -> Array[Dictionary]:
-	return _get_dictionary_array(UPGRADES_PATH, "permanent_upgrades")
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_permanent_upgrade_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(UPGRADES_PATH, "permanent_upgrades").duplicate(true)
 
 
 static func get_rarity_weights() -> Dictionary:
+	var data_manager: Node = _get_data_manager()
+	if data_manager != null and data_manager.has_method("get_rarity_weights"):
+		var data: Variant = data_manager.call("get_rarity_weights")
+		if data is Dictionary:
+			var weight_data: Dictionary = data
+			if not weight_data.is_empty():
+				return weight_data
 	var document: Dictionary = _load_document(UPGRADES_PATH)
 	var weights: Variant = document.get("rarity_weights", {})
 	if weights is Dictionary:
-		var weight_data: Dictionary = weights
-		return weight_data
+		var fallback_weights: Dictionary = weights
+		return fallback_weights.duplicate(true)
 
 	return {}
 

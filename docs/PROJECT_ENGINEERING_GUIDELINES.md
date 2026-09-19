@@ -248,11 +248,12 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 
 受控沙箱中的验证流程：
 
-1. 从 `package.json` 读取目标 `verify:*` 的 Godot 参数。
-2. 在沙箱内直接调用 Godot 可执行文件，保持原工作目录、参数和验证入口不变。
-3. 如果本次目标包含 npm 包装入口本身，则在获得所需授权后，于沙箱外复跑完全相同的 npm 命令。
-4. 沙箱内二级启动崩溃只记录为环境兼容性失败，不作为业务测试结果；直接调用或沙箱外复核仍失败时，才进入项目回归诊断。
-5. 不得通过跳过测试、删除断言、放宽阈值或修改生产逻辑规避该问题。
+1. 新建工作树若缺少被忽略的 `.godot/global_script_class_cache.cfg`，先直接运行一次 `Godot --headless --editor --path . --quit` 生成全局类元数据；只检查并清理由该次扫描新生成且未跟踪的精确 `.gd.uid` 文件。
+2. 从 `package.json` 读取目标 `verify:*` 的 Godot 参数。
+3. 在沙箱内直接调用 Godot 可执行文件，保持原工作目录、参数和验证入口不变。
+4. 如果本次目标包含 npm 包装入口本身，则在获得所需授权后，于沙箱外复跑完全相同的 npm 命令。
+5. 沙箱内二级启动崩溃只记录为环境兼容性失败，不作为业务测试结果；直接调用或沙箱外复核仍失败时，才进入项目回归诊断。
+6. 不得通过跳过测试、删除断言、放宽阈值或修改生产逻辑规避该问题。
 
 普通本地终端和 CI 不受此规则影响，仍以 `package.json` 中的 `npm run verify:*` 作为标准入口。
 
@@ -262,6 +263,6 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 2. Debug 面板页面拆分：降低 2882 行开发工具文件的维护成本。
 3. SkillActionExecutor action family 拆分：先拆 projectile/area/status/summon 的构建和执行辅助。
 4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
-5. DataManager/GameData 读取路径收口：Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池；其余数据域继续按契约测试逐项迁移。
+5. DataManager/GameData 读取路径收口：Stage 5A 已收口状态池，Stage 5B 已收口进度目标文档，Stage 5C 已收口每日/每周挑战池，Stage 5D 已收口升级分类池与稀有度权重，并保持五个 `GameData` 公共入口兼容；消费端重复 fallback 与其余数据域继续按证据和契约测试逐项处理。
 6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
 7. 最后才处理 DamageSystem、EnemyBase、EnemySpawner 的深层行为重构。
