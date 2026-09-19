@@ -17,6 +17,7 @@ const COLOR_BAR_TRACK := Color(0.018, 0.014, 0.014, 0.96)
 const HUD_EDGE_MARGIN: float = 16.0
 const HUD_PANEL_GAP: float = 12.0
 const HUD_CENTER_GAP: float = 8.0
+const HUD_MIN_SCALE: float = 0.45
 const HUD_AVATAR_FRAME_TEXTURE: String = "res://assets/ui/hud/avatar_frame.png"
 const HUD_SKILL_SLOT_TEXTURE: String = "res://assets/ui/hud/skill_slot.png"
 const HUD_SKILL_SLOT_FEATURED_TEXTURE: String = "res://assets/ui/hud/skill_slot_featured.png"
@@ -77,13 +78,20 @@ func update_layout() -> void:
 	if viewport_size == Vector2.ZERO:
 		return
 	_last_layout_size = viewport_size
+	var design_width: float = 1.0
+	for item in _layout_items:
+		var control: Control = item.control
+		if is_instance_valid(control) and control.get_parent() == _root:
+			var rect: Rect2 = item.rect
+			design_width = maxf(design_width, rect.size.x + absf(rect.position.x) * 2.0)
+	var hud_scale: float = clampf((viewport_size.x - HUD_EDGE_MARGIN * 2.0) / design_width, HUD_MIN_SCALE, 1.0)
 	for item in _layout_items:
 		var control: Control = item.control
 		if not is_instance_valid(control):
 			continue
 		var rect: Rect2 = item.rect
 		var anchor: String = String(item.get("anchor", "top_left"))
-		_apply_layout_rect(control, rect, anchor, viewport_size)
+		_apply_layout_rect(control, rect, anchor, viewport_size, hud_scale if control.get_parent() == _root else 1.0)
 	for item in _font_items:
 		var label: Label = item.label
 		if not is_instance_valid(label):
@@ -132,7 +140,7 @@ func _build_pause_button() -> void:
 	var pause_button := Button.new()
 	pause_button.name = "PauseButton"
 	pause_button.text = ""
-	pause_button.focus_mode = Control.FOCUS_NONE
+	pause_button.focus_mode = Control.FOCUS_ALL
 	pause_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	pause_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	pause_button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
@@ -314,21 +322,24 @@ func _register_layout(control: Control, rect: Rect2, anchor: String = "top_left"
 	_layout_items.append({"control": control, "rect": rect, "anchor": anchor})
 
 
-func _apply_layout_rect(control: Control, rect: Rect2, anchor: String, viewport_size: Vector2) -> void:
-	var position: Vector2 = rect.position
+func _apply_layout_rect(control: Control, rect: Rect2, anchor: String, viewport_size: Vector2, layout_scale: float = 1.0) -> void:
+	# Scale only root groups; descendants retain their design-space geometry.
+	control.scale = Vector2.ONE * layout_scale
+	var scaled_size: Vector2 = rect.size * layout_scale
+	var position: Vector2 = rect.position * layout_scale
 	match anchor:
 		"top_center":
-			position.x = (viewport_size.x - rect.size.x) * 0.5 + rect.position.x
+			position.x += (viewport_size.x - scaled_size.x) * 0.5
 		"top_right":
-			position.x = viewport_size.x - rect.position.x - rect.size.x
+			position.x = viewport_size.x - position.x - scaled_size.x
 		"bottom_left":
-			position.y = viewport_size.y - rect.position.y - rect.size.y
+			position.y = viewport_size.y - position.y - scaled_size.y
 		"bottom_center":
-			position.x = (viewport_size.x - rect.size.x) * 0.5 + rect.position.x
-			position.y = viewport_size.y - rect.position.y - rect.size.y
+			position.x += (viewport_size.x - scaled_size.x) * 0.5
+			position.y = viewport_size.y - position.y - scaled_size.y
 		"bottom_right":
-			position.x = viewport_size.x - rect.position.x - rect.size.x
-			position.y = viewport_size.y - rect.position.y - rect.size.y
+			position.x = viewport_size.x - position.x - scaled_size.x
+			position.y = viewport_size.y - position.y - scaled_size.y
 		_:
 			pass
 	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -348,8 +359,8 @@ func _enforce_fixed_panel_spacing(viewport_size: Vector2) -> void:
 		_place_below(timer_panel, boss_panel, HUD_CENTER_GAP)
 	elif is_instance_valid(timer_panel) and viewport_size != Vector2.ZERO:
 		var timer_rect := _get_control_rect(timer_panel)
-		timer_rect.position.x = (viewport_size.x - timer_rect.size.x) * 0.5
-		timer_rect.position.y = 48.0
+		timer_rect.position.x = (viewport_size.x - timer_rect.size.x * timer_panel.scale.x) * 0.5
+		timer_rect.position.y = 48.0 * timer_panel.scale.y
 		_set_control_rect(timer_panel, timer_rect)
 	_place_below(warning_label, timer_panel if is_instance_valid(timer_panel) else timer_label, HUD_CENTER_GAP)
 
@@ -376,7 +387,7 @@ func _place_below(control: Control, previous: Control, gap: float) -> void:
 		return
 	var previous_rect := _get_control_rect(previous)
 	var control_rect := _get_control_rect(control)
-	control_rect.position.y = previous_rect.position.y + previous_rect.size.y + gap
+	control_rect.position.y = previous_rect.position.y + (previous_rect.size.y + gap) * previous.scale.y
 	_set_control_rect(control, control_rect)
 
 

@@ -9,6 +9,10 @@ const MapRuntimeScript: Script = preload("res://scripts/maps/map_runtime.gd")
 var _unlocks_by_result_key: Dictionary = {}
 
 
+func reset_for_new_run() -> void:
+	_unlocks_by_result_key.clear()
+
+
 func apply_result_unlocks(state: String, run_seconds: float, selected_map_id: StringName, selected_map_name: String) -> Array[String]:
 	var result_key: String = _get_result_key(state, run_seconds, selected_map_id)
 	if _unlocks_by_result_key.has(result_key):

@@ -40,6 +40,7 @@ var _prompt_label: Label
 var _title_accent: ColorRect
 var _action_menu: PanelContainer
 var _action_list: VBoxContainer
+var _menu_scroll: ScrollContainer
 var _menu_margin: MarginContainer
 var _menu_title_label: Label
 var _footer_label: Label
@@ -190,9 +191,16 @@ func _build_action_menu(parent: Control) -> void:
 	_menu_margin.add_theme_constant_override("margin_bottom", 20)
 	_action_menu.add_child(_menu_margin)
 
+	_menu_scroll = ScrollContainer.new()
+	_menu_scroll.name = "ActionMenuScroll"
+	_menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_menu_scroll.follow_focus = true
+	_menu_margin.add_child(_menu_scroll)
+
 	_action_list = VBoxContainer.new()
+	_action_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_action_list.add_theme_constant_override("separation", 9)
-	_menu_margin.add_child(_action_list)
+	_menu_scroll.add_child(_action_list)
 
 	_menu_title_label = _add_label(_action_list, _tr("title.menu", "主菜单"))
 	_menu_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -275,11 +283,13 @@ func _update_menu_layout(viewport_size: Vector2, compact: bool, ui_scale: float)
 
 	var menu_width: float = clampf(viewport_size.x * 0.235, 276.0, 348.0)
 	var menu_height: float = 424.0 * ui_scale
+	_menu_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if compact else ScrollContainer.SCROLL_MODE_DISABLED
 	if compact:
 		menu_width = minf(viewport_size.x - 40.0, 360.0)
-		menu_height = minf(viewport_size.y - 252.0, 402.0)
+		var compact_top: float = minf(246.0, maxf(20.0, viewport_size.y - 150.0))
+		menu_height = minf(viewport_size.y - compact_top - 30.0, 402.0)
 		var compact_left: float = maxf((viewport_size.x - menu_width) * 0.5, 20.0)
-		var compact_top: float = maxf(viewport_size.y - menu_height - 30.0, 246.0)
+		compact_top = maxf(viewport_size.y - menu_height - 30.0, compact_top)
 		_set_control_rect(_action_menu, Rect2(Vector2(compact_left, compact_top), Vector2(menu_width, menu_height)))
 	else:
 		var right_margin: float = maxf(viewport_size.x * 0.055, 58.0)

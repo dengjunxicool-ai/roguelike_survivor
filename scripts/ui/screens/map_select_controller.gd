@@ -75,14 +75,37 @@ func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var content_row: HBoxContainer = _layout_controls.get("content_row", null) as HBoxContainer
+	var content_row: BoxContainer = _layout_controls.get("content_row", null) as BoxContainer
+	_set_control_min_size("map_list_panel", Vector2(210, 0))
+	_set_control_min_size("preview_panel", Vector2(360, 0))
+	_set_control_min_size("detail_panel", Vector2(260, 0))
+	var is_compact: bool = _horizontal_content_width(content_row) > _available_content_width(viewport_size.x)
 	if content_row != null:
+		content_row.vertical = is_compact
 		content_row.custom_minimum_size = Vector2(0, maxf(300.0, viewport_size.y * 0.55))
 
-	_set_control_min_size("map_list_panel", Vector2(maxf(150.0, 210.0), 0))
-	_set_control_min_size("preview_panel", Vector2(maxf(240.0, 360.0), 0))
-	_set_control_min_size("detail_panel", Vector2(maxf(210.0, 260.0), 0))
+	if is_compact:
+		_set_control_min_size("map_list_panel", Vector2.ZERO)
+		_set_control_min_size("preview_panel", Vector2.ZERO)
+		_set_control_min_size("detail_panel", Vector2.ZERO)
 	_set_control_min_size("loadout_panel", Vector2(0, maxf(96.0, 120.0)))
+
+
+func _horizontal_content_width(row: BoxContainer) -> float:
+	if row == null:
+		return 0.0
+	var width: float = 0.0
+	for panel: Control in row.get_children():
+		width += panel.get_combined_minimum_size().x
+	return width + row.get_theme_constant("separation") * maxi(0, row.get_child_count() - 1)
+
+
+func _available_content_width(viewport_width: float) -> float:
+	var margin: MarginContainer = _layout_controls.get("margin") as MarginContainer
+	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
+	# Reserve the scrollbar even before layout so changing orientation cannot
+	# change the breakpoint on the next resize.
+	return viewport_width - margin.get_theme_constant("margin_left") - margin.get_theme_constant("margin_right") - scroll.get_v_scroll_bar().get_combined_minimum_size().x
 
 
 func _build_nav_bar(root: VBoxContainer) -> void:
@@ -112,6 +135,7 @@ func _build_body(root: VBoxContainer) -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
+	_layout_controls["body_scroll"] = scroll
 
 	var body: VBoxContainer = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -119,7 +143,8 @@ func _build_body(root: VBoxContainer) -> void:
 	body.add_theme_constant_override("separation", 14)
 	scroll.add_child(body)
 
-	var content_row: HBoxContainer = HBoxContainer.new()
+	var content_row: BoxContainer = BoxContainer.new()
+	content_row.name = "MapContentRow"
 	content_row.custom_minimum_size = Vector2(0, 380)
 	content_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -133,8 +158,9 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_loadout_panel(body)
 
 
-func _build_map_list(parent: HBoxContainer) -> void:
+func _build_map_list(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(210, 0), 0.9)
+	panel.name = "MapListPanel"
 	parent.add_child(panel)
 	_layout_controls["map_list_panel"] = panel
 	var margin: MarginContainer = _create_margin_container(14, 14, 14, 14)
@@ -148,8 +174,9 @@ func _build_map_list(parent: HBoxContainer) -> void:
 	margin.add_child(_map_list)
 
 
-func _build_preview(parent: HBoxContainer) -> void:
+func _build_preview(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(360, 0), 2.1)
+	panel.name = "MapPreviewPanel"
 	panel.clip_contents = true
 	parent.add_child(panel)
 	_layout_controls["preview_panel"] = panel
@@ -176,8 +203,9 @@ func _build_preview(parent: HBoxContainer) -> void:
 	_preview_description_label.custom_minimum_size = Vector2(0, 72)
 
 
-func _build_detail_panel(parent: HBoxContainer) -> void:
+func _build_detail_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(260, 0), 1.15)
+	panel.name = "MapDetailPanel"
 	parent.add_child(panel)
 	_layout_controls["detail_panel"] = panel
 	var margin: MarginContainer = _create_margin_container(18, 16, 18, 16)
@@ -190,9 +218,12 @@ func _build_detail_panel(parent: HBoxContainer) -> void:
 	margin.add_child(layout)
 
 	var detail_scroll: ScrollContainer = ScrollContainer.new()
+	detail_scroll.custom_minimum_size = Vector2(0, 240)
 	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# Keep its width stable while switching between stacked and side-by-side panels.
+	detail_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	layout.add_child(detail_scroll)
 
 	var detail_body: VBoxContainer = VBoxContainer.new()

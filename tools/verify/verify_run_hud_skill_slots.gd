@@ -182,6 +182,7 @@ func _run() -> void:
 	ok = await _verify_hud_controller_draws_skill_slots() and ok
 	ok = await _verify_hud_controller_draws_fixed_categorized_slots() and ok
 	ok = await _verify_player_hud_avatar_bar_composition() and ok
+	ok = await _verify_hud_viewport_bounds() and ok
 	if ok:
 		print("[verify_run_hud_skill_slots] PASS")
 	quit(0 if ok else 1)
@@ -398,6 +399,71 @@ func _verify_player_hud_avatar_bar_composition() -> bool:
 
 	screen.queue_free()
 	return ok
+
+
+func _verify_hud_viewport_bounds() -> bool:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	root.add_child(viewport)
+	var controller: RefCounted = RunHudControllerScript.new()
+	var screen: CanvasLayer = controller.call("build", self) as CanvasLayer
+	viewport.add_child(screen)
+	screen.visible = true
+	await process_frame
+	var skill_bar := screen.find_child("SkillBar", true, false) as Control
+	var player_panel := screen.find_child("PlayerStatusPanel", true, false) as Control
+	var hud_root := screen.find_child("BattleHUD", true, false) as Control
+	var ok := _expect(skill_bar != null and player_panel != null and hud_root != null, "HUD bounds fixture has fixed panels")
+	if not ok:
+		viewport.queue_free()
+		return false
+	# Returning to desktop also catches stale compact scale after a resize.
+	for viewport_width: int in [1280, 720, 360, 1280]:
+		viewport.size = Vector2i(viewport_width, 720)
+		await process_frame
+		controller.call("update_layout")
+		await process_frame
+		var skill_rect := _visual_rect(skill_bar)
+		var player_rect := _visual_rect(player_panel)
+		var context := {"width": viewport_width, "skill_bar": skill_rect, "player_panel": player_rect}
+		print("[verify_run_hud_skill_slots] bounds ", context)
+		ok = _expect(skill_rect.position.x >= 0.0, "skill bar left edge is visible", context) and ok
+		ok = _expect(skill_rect.end.x <= float(viewport_width), "skill bar right edge is visible", context) and ok
+		ok = _expect(player_rect.position.x >= 0.0 and player_rect.end.x <= float(viewport_width), "player panel fits viewport", context) and ok
+		ok = _expect(skill_rect.position.y >= 0.0 and skill_rect.end.y <= 720.0, "skill bar stays inside viewport height", context) and ok
+		for child: Node in hud_root.get_children():
+			var control := child as Control
+			if control == null:
+				continue
+			var control_rect := _visual_rect(control)
+			ok = _expect(control_rect.position.x >= 0.0 and control_rect.end.x <= float(viewport_width), "fixed HUD group visual bounds stay on screen", {"control": control.name, "rect": control_rect, "width": viewport_width}) and ok
+			ok = _expect(control.scale.is_equal_approx(skill_bar.scale), "fixed HUD groups share a uniform scale", {"control": control.name, "scale": control.scale}) and ok
+			if control.name == &"TimerPanel":
+				ok = _expect(is_equal_approx(control_rect.get_center().x, float(viewport_width) * 0.5), "timer remains centered after spacing adjustment", control_rect) and ok
+			if viewport_width == 1280:
+				ok = _expect(control.scale == Vector2.ONE, "desktop HUD scale stays one", control.name) and ok
+			else:
+				var above_scale_floor: bool = control.scale.x >= 0.45 or is_equal_approx(control.scale.x, 0.45)
+				ok = _expect(above_scale_floor and control.scale.x <= 1.0 and is_equal_approx(control.scale.x, control.scale.y), "compact HUD scale stays readable and uniform", control.scale) and ok
+		if viewport_width == 360:
+			ok = _expect(skill_bar.scale.is_equal_approx(Vector2(0.45, 0.45)), "smallest viewport respects approved readable scale floor", skill_bar.scale) and ok
+		if viewport_width == 1280:
+			ok = _expect(skill_rect.is_equal_approx(Rect2(250, 578, 780, 112)), "desktop skill bar layout is preserved", skill_rect) and ok
+			ok = _expect(player_rect.is_equal_approx(Rect2(18, 18, 392, 118)), "desktop player panel layout is preserved", player_rect) and ok
+		var slots := skill_bar.get_children()
+		ok = _expect(slots.size() == 10, "resize preserves all ten skill slots", slots.size()) and ok
+		for slot: Node in slots:
+			var slot_control := slot as Control
+			ok = _expect(slot_control != null and slot_control.visible, "resize keeps every skill slot visible", slot.name) and ok
+			if slot_control != null:
+				var slot_rect := _visual_rect(slot_control)
+				ok = _expect(slot_rect.position.x >= 0.0 and slot_rect.end.x <= float(viewport_width), "skill slot visual bounds stay on screen", {"slot": slot.name, "rect": slot_rect, "width": viewport_width}) and ok
+	viewport.queue_free()
+	return ok
+
+
+func _visual_rect(control: Control) -> Rect2:
+	return control.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, control.size)
 
 
 func _rect_for(control: Control) -> Rect2:

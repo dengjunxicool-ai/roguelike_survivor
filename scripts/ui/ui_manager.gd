@@ -146,6 +146,15 @@ func _update_hud_refresh_timer(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel") and not event.is_echo():
+		if current_state == STATE_RUNNING:
+			transition_to(STATE_PAUSE_MENU)
+			get_viewport().set_input_as_handled()
+			return
+		if current_state == STATE_PAUSE_MENU:
+			transition_to(STATE_RUNNING)
+			get_viewport().set_input_as_handled()
+			return
 	if current_state == STATE_TITLE and _title_controller != null:
 		_title_controller.call("handle_input", event)
 
@@ -592,6 +601,8 @@ func _start_run(map_id: Variant) -> void:
 	_result_reward_claimed = false
 	_result_progression_recorded = false
 	_last_progression_summary.clear()
+	if _result_controller != null:
+		_result_controller.call("reset_for_new_run")
 	_announcement_timer = 0.0
 	_run_scene_ui_bridge.call("reset")
 	_wave_index = 0

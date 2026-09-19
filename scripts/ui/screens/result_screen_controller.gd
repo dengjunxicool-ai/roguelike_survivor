@@ -19,6 +19,10 @@ var _result_unlock_service: RefCounted = ResultUnlockServiceScript.new()
 var _view_model_builder: RefCounted = ResultScreenViewModelBuilderScript.new()
 
 
+func reset_for_new_run() -> void:
+	_result_unlock_service.call("reset_for_new_run")
+
+
 func build(body: VBoxContainer, state: String) -> void:
 	var labels: Dictionary = {}
 	labels["title"] = _add_label(body, "结果：", HORIZONTAL_ALIGNMENT_CENTER)

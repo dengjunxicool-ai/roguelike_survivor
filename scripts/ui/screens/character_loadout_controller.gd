@@ -87,10 +87,35 @@ func refresh(character_id: StringName = &"") -> void:
 func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
+	var content_row: BoxContainer = _layout_controls.get("content_row", null) as BoxContainer
 	_set_control_min_size("character_list_panel", Vector2(maxf(LIST_MIN_WIDTH, viewport_size.x * 0.22), 0))
 	_set_control_min_size("character_preview_panel", Vector2(maxf(PREVIEW_MIN_WIDTH, viewport_size.x * 0.30), 0))
 	_set_control_min_size("character_detail_panel", Vector2(maxf(DETAIL_MIN_WIDTH, viewport_size.x * 0.28), 0))
+	var is_compact: bool = _horizontal_content_width(content_row) > _available_content_width(viewport_size.x)
+	if content_row != null:
+		content_row.vertical = is_compact
+	if is_compact:
+		_set_control_min_size("character_list_panel", Vector2.ZERO)
+		_set_control_min_size("character_preview_panel", Vector2.ZERO)
+		_set_control_min_size("character_detail_panel", Vector2.ZERO)
 	_set_control_min_size("confirm_panel", Vector2(0, maxf(88.0, viewport_size.y * 0.12)))
+
+
+func _horizontal_content_width(row: BoxContainer) -> float:
+	if row == null:
+		return 0.0
+	var width: float = 0.0
+	for panel: Control in row.get_children():
+		width += panel.get_combined_minimum_size().x
+	return width + row.get_theme_constant("separation") * maxi(0, row.get_child_count() - 1)
+
+
+func _available_content_width(viewport_width: float) -> float:
+	var margin: MarginContainer = _layout_controls.get("margin") as MarginContainer
+	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
+	# Reserve the scrollbar even before layout so changing orientation cannot
+	# change the breakpoint on the next resize.
+	return viewport_width - margin.get_theme_constant("margin_left") - margin.get_theme_constant("margin_right") - scroll.get_v_scroll_bar().get_combined_minimum_size().x
 
 
 func _build_nav_bar(root: VBoxContainer) -> void:
@@ -121,6 +146,7 @@ func _build_body(root: VBoxContainer) -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
+	_layout_controls["body_scroll"] = scroll
 
 	var body: VBoxContainer = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -128,12 +154,14 @@ func _build_body(root: VBoxContainer) -> void:
 	body.add_theme_constant_override("separation", 14)
 	scroll.add_child(body)
 
-	var content_row: HBoxContainer = HBoxContainer.new()
+	var content_row: BoxContainer = BoxContainer.new()
+	content_row.name = "CharacterContentRow"
 	content_row.custom_minimum_size = Vector2(0, 430)
 	content_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content_row.add_theme_constant_override("separation", 16)
 	body.add_child(content_row)
+	_layout_controls["content_row"] = content_row
 
 	_build_character_list(content_row)
 	_build_preview_panel(content_row)
@@ -141,7 +169,7 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_confirm_panel(body)
 
 
-func _build_character_list(parent: HBoxContainer) -> void:
+func _build_character_list(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(LIST_MIN_WIDTH, 0), 0.95)
 	panel.name = "CharacterListPanel"
 	parent.add_child(panel)
@@ -167,7 +195,7 @@ func _build_character_list(parent: HBoxContainer) -> void:
 	layout.add_child(_character_list)
 
 
-func _build_preview_panel(parent: HBoxContainer) -> void:
+func _build_preview_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(PREVIEW_MIN_WIDTH, 0), 1.35)
 	panel.name = "CharacterPreviewPanel"
 	panel.clip_contents = true
@@ -207,7 +235,7 @@ func _build_preview_panel(parent: HBoxContainer) -> void:
 	_description_label.custom_minimum_size = Vector2(0, 80)
 
 
-func _build_detail_panel(parent: HBoxContainer) -> void:
+func _build_detail_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(DETAIL_MIN_WIDTH, 0), 1.2)
 	panel.name = "CharacterDetailPanel"
 	parent.add_child(panel)

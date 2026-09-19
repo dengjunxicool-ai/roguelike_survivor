@@ -207,6 +207,7 @@
 						{
 							"type": "spawn_area",
 							"area_id": "blazing_run_path",
+							"dash_path_filter": true,
 							"radius": 63,
 							"duration": 3,
 							"tick_interval": 1.0,
@@ -243,6 +244,7 @@
 						{
 							"type": "spawn_area",
 							"area_id": "blazing_run_path",
+							"dash_path_filter": true,
 							"radius": 63,
 							"duration": 3,
 							"tick_interval": 1.0,
