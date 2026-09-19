@@ -207,14 +207,19 @@ flowchart TD
 | `run.experience_formula.type` | `Player._get_experience_required_for_level()` | 支持 `table`、`linear` 和默认 exponential。 |
 | `run.experience_formula.values` | Player | table 模式下按 `level - 1` 取值，超过表长度用最后一项。 |
 | `spawn_rules.max_normal_enemies_alive` | Spawner/WaveDirector | 全局普通怪存活上限，与 wave `max_alive` 取较小值。 |
-| `spawn_rules.spawn_radius_min/max` | `EnemySpawnService` | 控制围绕玩家生成半径；地图也可用 `set_spawn_radius_range()` 调整。 |
+| `spawn_rules.spawn_batch_interval_seconds` | Spawner/WaveDirector/BossEncounterController | 普通波次怪与 Boss 小怪的全局批次间隔，运行时强制不低于 15 秒。 |
+| `spawn_rules.max_spawn_batch_size` | Spawner/WaveDirector/BossEncounterController | 单批最多生成数量，运行时和配置校验均限制为不超过 15。 |
+| `spawn_rules.spawn_warning_duration_seconds` | `EnemySpawnService` | 可视区出生预警和敌人渐显时长。 |
+| `spawn_rules.visible_spawn_margin` | `EnemySpawnService` | 出生点与屏幕边缘的安全距离。 |
+| `spawn_rules.spawn_player_safe_radius` | `EnemySpawnService` | 可视区出生点与玩家之间的最小期望距离。 |
+| `spawn_rules.spawn_radius_min/max` | `EnemySpawnService` | 保留给 Boss、精英事件、地图事件等非批次生成入口。 |
 | `spawn_rules.despawn_radius` | `EnemyCleanupService` | 只清远处 `normal` 和 `boss_minion`，不会清 Boss。 |
 | `spawn_rules.wave_transition_notice_seconds` | `WaveDirector.finish_wave()` | 波间等待时间；为 0 时立即进下一波。 |
 | `spawn_rules.upgrade_phase_weights` | `UpgradeOfferPolicy` | 影响普通升级标签权重；条件可看技能阶段和运行时间。 |
 | `spawn_rules.low_hp_rule` | `UpgradeOfferPolicy` | 低血量时保底指定标签，例如 `survival`、`heal`。 |
 | `waves[].id` | UI、事件 key、文档 | 稳定标识；改名会影响调试和显示。 |
 | `waves[].duration_seconds` | `WaveDirector.start_wave()` | 当前真实波次时长。 |
-| `waves[].spawn_interval` | `WaveDirector.process_wave_spawn()` | 刷怪冷却，同时参与自动估算总刷怪量。 |
+| `waves[].spawn_interval` | `EnemySpawner._get_wave_total_count()` | 仅保留为旧密度配置，用于估算期望总量；实际批次冷却由 `spawn_batch_interval_seconds` 控制，总量会被本波可执行批次容量截断。 |
 | `waves[].max_alive` | WaveDirector | 单波存活上限。 |
 | `waves[].groups[].weight` | `SpawnGroupPicker` | 组权重；权重总和为 0 时不刷怪。 |
 | `waves[].groups[].enemy_ids` | `SpawnGroupPicker` | 组内随机选一个敌人 ID。 |

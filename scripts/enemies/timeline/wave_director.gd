@@ -71,24 +71,21 @@ func process_wave_spawn(delta: float, wave: Dictionary) -> void:
 	var max_alive: int = mini(int(wave.get("max_alive", _owner.get("_max_normal_enemies_alive"))), int(_owner.get("_max_normal_enemies_alive")))
 	var alive_count: int = int(_owner.call("_get_alive_normal_enemy_count"))
 	if alive_count >= max_alive:
-		_owner.set("_normal_spawn_cooldown", float(wave.get("spawn_interval", _owner.get("spawn_interval"))))
-		return
-
-	var enemy_group_config: Dictionary = _owner.call("_pick_enemy_group", wave)
-	if enemy_group_config.is_empty():
+		_owner.set("_normal_spawn_cooldown", float(_owner.get("_spawn_batch_interval")))
 		return
 
 	var remaining_budget: int = maxi(int(_owner.get("_wave_total_count")) - int(_owner.get("_wave_spawned_count")), 0)
 	var available_slots: int = maxi(max_alive - alive_count, 0)
+	var batch_limit: int = mini(int(_owner.get("_max_spawn_batch_size")), mini(remaining_budget, available_slots))
 	var spawned: int = int(_owner.call(
-		"_spawn_from_group_config",
-		enemy_group_config,
+		"_spawn_batch_from_source",
+		wave,
 		_owner.call("_get_wave_enemy_multipliers", wave),
 		&"normal",
-		mini(remaining_budget, available_slots)
+		batch_limit
 	))
 	_owner.set("_wave_spawned_count", int(_owner.get("_wave_spawned_count")) + spawned)
-	_owner.set("_normal_spawn_cooldown", float(wave.get("spawn_interval", _owner.get("spawn_interval"))))
+	_owner.set("_normal_spawn_cooldown", float(_owner.get("_spawn_batch_interval")))
 
 
 func start_wave(wave_index: int) -> void:
@@ -109,7 +106,6 @@ func start_wave(wave_index: int) -> void:
 	_owner.set("_wave_spawned_count", 0)
 	_owner.set("_wave_total_count", int(_owner.call("_get_wave_total_count", wave)))
 	_owner.set("_wave_transition_timer", 0.0)
-	_owner.set("_normal_spawn_cooldown", 0.0)
 	_owner.emit_signal(&"wave_changed", wave_id)
 	_owner.emit_signal(&"wave_timer_changed", wave_index + 1, wave_id, wave_duration, wave_duration, 0, int(_owner.get("_wave_total_count")))
 	_owner.emit_signal(

@@ -295,6 +295,8 @@ static func is_valid_target(enemy: Node2D) -> bool:
 static func _is_valid_enemy(enemy: Node2D) -> bool:
 	if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 		return false
+	if bool(enemy.get_meta("spawn_reveal_pending", false)):
+		return false
 
 	if enemy.has_method("get_runtime_state") and str(enemy.call("get_runtime_state")) == "dead":
 		return false

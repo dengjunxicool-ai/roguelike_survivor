@@ -28,7 +28,7 @@ func process_boss_event() -> void:
 	var boss: Node2D = _owner.call("_spawn_enemy", enemy_id, true, _owner.call("_get_boss_enemy_multipliers", boss_event), &"boss", &"boss") as Node2D
 	_owner.set("_triggered_boss_event", true)
 	_owner.set("_boss_active", boss != null)
-	_owner.set("_boss_minion_spawn_cooldown", 0.0)
+	_owner.set("_boss_minion_spawn_cooldown", maxf(float(_owner.get("_normal_spawn_cooldown")), 0.0))
 	if boss != null and boss.has_signal(&"died"):
 		boss.connect(&"died", Callable(_owner, "_on_boss_died"))
 
@@ -51,11 +51,13 @@ func process_boss_minion_spawn(delta: float) -> void:
 	if cooldown > 0.0:
 		return
 
-	var group_config: Dictionary = _owner.call("_pick_enemy_group", minion_spawn)
-	if not group_config.is_empty():
-		_owner.call("_spawn_from_group_config", group_config, _get_dictionary(minion_spawn.get("enemy_multipliers", {})), &"boss_minion")
+	var max_alive: int = maxi(int(minion_spawn.get("max_alive", 0)), 0)
+	var available_slots: int = maxi(max_alive - int(_owner.call("_get_alive_boss_minion_count")), 0)
+	var batch_limit: int = mini(int(_owner.get("_max_spawn_batch_size")), available_slots)
+	if batch_limit > 0:
+		_owner.call("_spawn_batch_from_source", minion_spawn, _get_dictionary(minion_spawn.get("enemy_multipliers", {})), &"boss_minion", batch_limit)
 
-	_owner.set("_boss_minion_spawn_cooldown", float(minion_spawn.get("spawn_interval", 3.0)))
+	_owner.set("_boss_minion_spawn_cooldown", float(_owner.get("_spawn_batch_interval")))
 
 
 func _get_dictionary(value: Variant) -> Dictionary:

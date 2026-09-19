@@ -75,10 +75,11 @@
 ### 普通 Wave
 
 1. `WaveDirector.start_wave(index)` 读取 `waves[index]`，设置当前 wave id、持续时间、总生成数量和 UI 计时信号。
-2. `WaveDirector.process_wave_spawn()` 按 `spawn_interval`、`max_alive`、全局 `_max_normal_enemies_alive` 和剩余总量决定是否刷怪。
-3. `SpawnGroupPicker` 先按 group weight 选组，再从 `enemy_ids` 中随机选一个怪物 id。
-4. `EnemySpawner._spawn_from_group_config()` 计算本次刷怪数量，叠加 `enemy_multipliers` 后调用 `_spawn_enemy()`。
-5. `_spawn_enemy()` 组装 `EnemySpawnRequest`，交给 `EnemySpawnService.spawn()` 统一实例化。
+2. `WaveDirector.process_wave_spawn()` 按全局 15 秒批次冷却、单批 15 只上限、`max_alive`、全局 `_max_normal_enemies_alive` 和剩余总量决定是否刷怪。
+3. `EnemySpawner._get_wave_total_count()` 保留旧 `spawn_interval` 作为期望密度输入，但会按当前批次冷却和波次时长截断为实际可达总量。
+4. `SpawnGroupPicker` 先按 group weight 选组，再从 `enemy_ids` 中随机选一个怪物 id。
+5. `EnemySpawner._spawn_batch_from_source()` 在批次上限内反复选组，再由 `_spawn_from_group_config()` 叠加 `enemy_multipliers` 并调用 `_spawn_enemy()`。
+6. 普通波次怪和 Boss 小怪由 `EnemySpawnService` 选取摄像机可视区内出生点，先显示圆环预警并渐显；预警期间暂停行为、碰撞和战斗目标查询。Boss、精英事件、地图事件和技能召唤保持原生成路径。
 
 ### Boss Encounter
 
