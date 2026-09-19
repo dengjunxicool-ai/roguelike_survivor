@@ -24,6 +24,7 @@ function bodyOf(source, functionName) {
 
 const skillsDocument = readJsonFile(path.join(root, "data", "skills", "skills.json"));
 const upgradePool = read("scripts/upgrades/upgrade_pool.gd");
+const skillLearnOptionBuilder = read("scripts/upgrades/skill_learn_option_builder.gd");
 const skillManager = read("scripts/skills/skill_manager.gd");
 const gameData = read("scripts/game/game_data.gd");
 const offerService = read("scripts/skills/skill_offer_service.gd");
@@ -53,8 +54,9 @@ assert(definitionBody.includes("GameData.get_skill_pool()"), "learn options must
 assert(definitionBody.includes("offer_rule"), "learn options must include new offer_rule skills");
 assert(formalBuilderBody.includes("is_skill_available"), "learn options must ask SkillOfferService before offering cards");
 assert(!formalBuilderBody.includes("mars_spark_missile_projectile"), "formal learn options must not hardcode a single old skill implementation");
-assert(formalBuilderBody.includes('"id": "level_up_upgrade:%s:%s"'), "learn cards must use level_up_upgrade option ids with rarity suffix");
-assert(formalBuilderBody.includes('"learn_skill_id"'), "learn card payload must carry learn_skill_id");
+assert(formalBuilderBody.includes("SkillLearnOptionBuilderScript.build_option_data"), "learn options must delegate card data to SkillLearnOptionBuilder");
+assert(skillLearnOptionBuilder.includes('"id": "level_up_upgrade:%s:%s"'), "learn cards must use level_up_upgrade option ids with rarity suffix");
+assert(skillLearnOptionBuilder.includes('"learn_skill_id"'), "learn card payload must carry learn_skill_id");
 assert(upgradePool.includes("func _build_fire_skill_learn_options"), "UpgradePool must keep fire debug learn option compatibility");
 
 for (const token of ["required_schools", "required_min_skill_count", "blocked_by_exclusive_group", "fusion"]) {

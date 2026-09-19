@@ -94,7 +94,7 @@ flowchart TD
 | 投射物/区域对象 | `Projectile`、`AreaEffect`、`OrbitObject` 承载命中、tick、表现和伤害触发 | 部分视觉/命中/生命周期仍在同类内交织 | 运行对象只负责生命周期和命中，构建参数由工厂/技能 executor 提供 | 需要 | 中 | 高 |
 | 怪物系统 | `EnemyBase` 作为聚合根，行为、技能、视觉、状态、死亡和奖励已拆出若干 controller/pipeline | `EnemyBase` 仍有 814 行兼容入口和私有状态，新增行为容易回写进去 | 新行为走 `behaviors/`，新 action 走 `EnemyActionRegistry`，死亡统一走 pipeline | 需要小步 | 中 | 高 |
 | 怪物生成/波次 | `EnemySpawner` 保留门面，timeline、wave、Boss、spawn service 已拆分 | Spawner 仍有 485 行并持有较多信号和兼容流程 | 新波次和 Boss 逻辑优先扩 timeline 子服务，不扩大 Spawner | 需要 | 中 | 中 |
-| 掉落/经验/升级 | `RunRewardPool` 生成奖励，`UpgradePool` 生成升级选项，Player 应用升级 | `UpgradePool` 606 行，技能学习/升级/保底/权重混合 | 选项生成、权重策略、learn skill builder 分层 | 需要 | 高 | 中 |
+| 掉落/经验/升级 | `RunRewardPool` 生成奖励，`UpgradePool` 生成升级选项，Player 应用升级；Stage 4 已将纯 learn-skill 卡片数据构建移入 `SkillLearnOptionBuilder` | `UpgradePool` 仍负责定义、资格、RNG/稀有度、最终选项实例化、权重、去重和保底 | 后续只在独立设计与验证下拆权重策略或扩展其他卡片构建边界 | 需要小步 | 高 | 中 |
 | UI 系统 | `UIManager` 状态机、screen 构建、HUD、modal、运行场景桥接 | `UIManager` 818 行，但已有 registry/host/router/pause policy | 新页面必须走 state registry + controller + prepare router；UI 不直接改战斗状态 | 需要小步 | 中 | 中 |
 | 调试系统 | `DevDebugPanel` 提供开发者入口、技能卡、敌人生成、状态、特效、工具按钮 | 2882 行，是最大非核心风险；调试 UI 与业务调用混在一个文件 | 按页面拆成独立 debug page/controller，保留 F12 面板门面 | 需要 | 高 | 中 |
 | 存档/结算/进度 | `SaveManager`、`RunProgressionService`、result view model 处理局外成长和结算 | 结果页和进度依赖 RunStatsTracker 字段，新增统计易漏 | 新统计先定义记录点，再定义结算读取点和 UI 展示 | 暂缓大改 | 中 | 高 |
@@ -114,7 +114,7 @@ flowchart TD
 1. 补开发期统一内容校验工具：重复 ID、引用存在、路径存在、空字段、非法数值、未注册内容。
 2. 拆 `DevDebugPanel` 页面职责：先拆技能卡、敌人生成、特效页，风险低且可由现有 devtools 验证覆盖。
 3. 拆 `SkillActionExecutor` 构建职责：先抽 projectile/area 参数构建与 visual/runtime data，保留 `execute_action()` API。
-4. 拆 `UpgradePool` 的 learn skill builder 与权重策略，减少新增技能时的耦合。
+4. Stage 4 已拆出 `UpgradePool` 的纯 learn skill option-data builder；权重策略和更广泛的卡片构建收口延后，需另行设计和验证。
 5. 收口 `DataManager`/`GameData` 配置入口，先文档约束，再逐步减少 fallback。
 6. 小步拆 `StatusEffectManager` 查询、tick、事件发射辅助。
 7. 最后再动 `DamageSystem`、`EnemyBase`、`EnemySpawner` 等高风险核心链路。
@@ -128,6 +128,8 @@ flowchart TD
 - `SkillActionExecutor` 仍负责 action 分发、modifier 解析、特殊规则、damage packet、运行时标识、factory 调用和副作用。
 - 后续 action-family 拆分继续延后，必须先具备独立行为覆盖。
 - `scripts/upgrades/upgrade_pool.gd` 的选项构建辅助拆分，前提是选项 ID 和权重输出不变。
+- Stage 4 已将确定性的 learn-skill option-data 构建移入 `SkillLearnOptionBuilder`；`UpgradePool` 继续负责定义、资格、RNG/稀有度、`UpgradeOption` 实例化、权重、去重和保底。
+- Stage 4 属于架构批次，性能对比不适用，也不声明性能提升。
 
 ## 暂时不要动的区域
 

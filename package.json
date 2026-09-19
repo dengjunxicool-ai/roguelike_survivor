@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "verify:skill-learn-option-builder-boundary": "node tools\\verify\\verify_skill_learn_option_builder_boundary.js",
+    "verify:skill-learn-option-builder": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_learn_option_builder.gd",
     "verify:skill-action-builder-pure-data": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_action_builder_pure_data.gd",
     "verify:skill-action-builder-boundary": "node tools\\verify\\verify_skill_action_builder_boundary.js",
     "verify:enemy-visible-batch-spawn": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_enemy_visible_batch_spawn.gd",
