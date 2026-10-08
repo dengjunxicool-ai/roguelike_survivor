@@ -38,9 +38,12 @@ func _run_checks_impl() -> void:
 	spawner.call("_process_discrete_wave", 0.0)
 	await physics_frame
 	await physics_frame
+	# These checks drive wave transitions explicitly, not by wall-clock timing.
+	spawner.set_process(false)
+	player.set_physics_process(false)
 
 	await _check_player_bounds(main, player)
-	_check_camera_limits(player)
+	await _check_camera_limits(main, player)
 	_check_wave_started(spawner)
 	_check_wave_spawn_cap(spawner)
 	await _check_wave_end_collects_experience(main, player, spawner)
@@ -81,14 +84,37 @@ func _check_player_bounds(main: Node, player: Node2D) -> void:
 	_expect(bounds.has_point(player.global_position), "player clamped inside background bounds")
 
 
-func _check_camera_limits(player: Node2D) -> void:
+func _check_camera_limits(main: Node, player: Node2D) -> void:
 	var camera: Camera2D = player.get_node_or_null("Camera2D") as Camera2D
 	if camera == null:
 		_fail("player camera missing")
 		return
 	_expect(camera.enabled, "player camera is enabled")
-	_expect(camera.zoom.x > 1.0 and camera.zoom.y > 1.0, "player camera is close enough for run exploration")
-	_expect(camera.limit_right > camera.limit_left and camera.limit_bottom > camera.limit_top, "camera limits are set")
+	_expect(camera == root.get_camera_2d(), "player camera is the active run camera")
+	_expect(is_finite(camera.zoom.x) and is_finite(camera.zoom.y) and camera.zoom.x > 0.0 and camera.zoom.y > 0.0, "camera zoom defines a finite positive visible world")
+	var background: Sprite2D = main.get_node("DungeonBackground") as Sprite2D
+	var original_size: Vector2i = root.size
+	for viewport_size: Vector2i in [Vector2i(1280, 720), Vector2i(1920, 1080), Vector2i(900, 1440)]:
+		root.size = viewport_size
+		background.call("refresh_layout")
+		await process_frame
+		await process_frame
+		var bounds: Rect2 = Rect2(background.global_position, background.texture.get_size() * background.global_scale.abs())
+		_expect(camera.limit_left == floori(bounds.position.x) and camera.limit_top == floori(bounds.position.y) and camera.limit_right == ceili(bounds.end.x) and camera.limit_bottom == ceili(bounds.end.y), "camera limits match resized background %s" % viewport_size)
+		var visible_size: Vector2 = root.get_visible_rect().size / camera.zoom
+		_expect(bounds.size.x >= visible_size.x and bounds.size.y >= visible_size.y, "background covers visible world %s" % viewport_size)
+		for destination: Vector2 in [bounds.get_center(), bounds.position, Vector2(bounds.end.x, bounds.position.y), bounds.end, Vector2(bounds.position.x, bounds.end.y)]:
+			player.global_position = destination
+			player.call("_clamp_to_movement_bounds")
+			camera.reset_smoothing()
+			camera.force_update_scroll()
+			await physics_frame
+			await process_frame
+			var visible_world: Rect2 = Rect2(camera.get_screen_center_position() - visible_size * 0.5, visible_size)
+			_expect(bounds.grow(1.0).encloses(visible_world), "camera visible world stays inside map at %s / %s" % [viewport_size, destination])
+	root.size = original_size
+	background.call("refresh_layout")
+	await process_frame
 
 
 func _check_wave_started(spawner: Node) -> void:
@@ -120,8 +146,11 @@ func _check_wave_end_collects_experience(main: Node, player: Node2D, spawner: No
 	var before_exp: int = int(player.get("current_experience"))
 	var before_level: int = int(player.get("level"))
 	spawner.call("_finish_wave", true)
-	for frame_index in range(4):
+	for frame_index in range(8):
+		await physics_frame
 		await process_frame
+		if int(player.get("level")) > before_level or int(player.get("current_experience")) > before_exp:
+			break
 	var after_exp: int = int(player.get("current_experience"))
 	var after_level: int = int(player.get("level"))
 	_expect(after_level > before_level or after_exp > before_exp, "wave end auto-collects experience crystals")
@@ -142,12 +171,22 @@ func _check_wave_transition_collects_deferred_experience(main: Node, player: Nod
 	spawner.call("_finish_wave", true)
 	await process_frame
 	spawner.call("_process_discrete_wave", 0.1)
-	await process_frame
+	# Collection queues XP; PickupManager publishes rewards on a physics tick.
+	for frame_index in range(8):
+		await physics_frame
+		await process_frame
+		if int(player.get("level")) > before_level or int(player.get("current_experience")) > before_exp:
+			break
 
 	var after_exp: int = int(player.get("current_experience"))
 	var after_level: int = int(player.get("level"))
 	_expect(after_level > before_level or after_exp > before_exp, "wave transition collects deferred experience crystals")
 	_expect(get_nodes_in_group("experience_crystal").is_empty(), "wave transition removes deferred crystals")
+	for frame_index in range(2):
+		spawner.call("_collect_all_experience_crystals")
+		await physics_frame
+		await process_frame
+	_expect(int(player.get("current_experience")) == after_exp and int(player.get("level")) == after_level, "repeated wave collection does not grant deferred experience twice")
 	spawner.call("_start_wave", 0)
 
 

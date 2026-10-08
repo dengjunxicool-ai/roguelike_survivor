@@ -331,3 +331,7 @@ godot --headless --path . --script res://tools/verify/verify_run_terminal_progre
 5. 跑对应验证命令。
 
 当前唯一契约与验收结果见重构文档和稳定性报告。新增内容通过 schema、策略、family、registry 和既有公开入口接入，避免重新引入字段推断和第二条读盘路径。
+
+合并后相机/波次、显形生命周期、真实渲染与受控性能证据见 [稳定性收尾](PROJECT_POST_MERGE_STABILITY.md)。生成显形的延迟工作绑定 warning 生命周期，回调以 WeakRef 查询敌人；后续生成链路改动应复跑 verify:spawn-reveal-lifecycle 和 verify:wave-system。
+
+追加刷怪修改使用每波 `total_count` 与批次间隔，删除普通怪/波次/Boss 仆从的存活数量上限，空场提前启动下一批。`verify:wave-population-progression` 验证完整预算、数量与实际属性成长及警示不被距离清理取消。结算通过 tracker → RunResultStateBuilder → RunDiagnosticService → ResultScreenViewModelBuilder 传递真实数据，动态学习定义由 SkillLearnDefinitionRepository 解析；`verify:run-result-diagnostics` 覆盖真实伤害、学习、技能快照与主动结束语义。

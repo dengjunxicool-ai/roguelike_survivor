@@ -33,11 +33,10 @@ var _normal_phase_duration: float = 240.0
 var _boss_spawn_time: float = 240.0
 var _hard_time_limit: float = 300.0
 var _despawn_radius: float = 1100.0
-var _max_normal_enemies_alive: int = 190
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _spawn_radius_min: float = 520.0
 var _spawn_radius_max: float = 760.0
-var _spawn_batch_interval: float = 15.0
+var _spawn_batch_interval: float = 3.0
 var _max_spawn_batch_size: int = 15
 var _spawn_warning_duration: float = 1.5
 var _visible_spawn_margin: float = 64.0
@@ -305,13 +304,12 @@ func _apply_timeline_config() -> void:
 	var rules: Dictionary = _get_dictionary(wave_config.get("spawn_rules", {}))
 	_spawn_radius_min = float(rules.get("spawn_radius_min", _spawn_radius_min))
 	_spawn_radius_max = float(rules.get("spawn_radius_max", _spawn_radius_max))
-	_spawn_batch_interval = maxf(float(rules.get("spawn_batch_interval_seconds", 15.0)), 15.0)
-	_max_spawn_batch_size = clampi(int(rules.get("max_spawn_batch_size", 15)), 1, 15)
+	_spawn_batch_interval = maxf(float(rules.get("spawn_batch_interval_seconds", 3.0)), 0.05)
+	_max_spawn_batch_size = maxi(int(rules.get("max_spawn_batch_size", 15)), 1)
 	_spawn_warning_duration = maxf(float(rules.get("spawn_warning_duration_seconds", 1.5)), 0.0)
 	_visible_spawn_margin = maxf(float(rules.get("visible_spawn_margin", 64.0)), 0.0)
 	_spawn_player_safe_radius = maxf(float(rules.get("spawn_player_safe_radius", 120.0)), 0.0)
 	_despawn_radius = float(rules.get("despawn_radius", _despawn_radius))
-	_max_normal_enemies_alive = int(rules.get("max_normal_enemies_alive", _max_normal_enemies_alive))
 	_wave_duration = float(rules.get("wave_duration_seconds", 55.0))
 	_wave_transition_notice_seconds = float(rules.get("wave_transition_notice_seconds", _wave_transition_notice_seconds))
 	for wave_variant: Variant in _get_config_array("waves"):
@@ -375,27 +373,7 @@ func _collect_all_experience_crystals() -> void:
 
 
 func _get_wave_total_count(wave: Dictionary) -> int:
-	var desired_total: int = 0
-	if wave.has("total_count"):
-		desired_total = _scale_spawn_count(maxi(int(wave["total_count"]), 0))
-	elif wave.has("fixed_count"):
-		desired_total = _scale_spawn_count(maxi(int(wave["fixed_count"]), 0))
-	else:
-		var legacy_interval: float = maxf(float(wave.get("spawn_interval", spawn_interval)), 0.05)
-		var legacy_spawn_ticks: int = maxi(floori(_wave_duration / legacy_interval), 1)
-		var average_group_count: float = _get_weighted_average_group_count(wave)
-		desired_total = maxi(roundi(float(legacy_spawn_ticks) * average_group_count * maxf(1.0 + _spawn_count_multiplier_bonus, 0.01)), 1)
-	return mini(desired_total, _get_reachable_wave_spawn_capacity())
-
-
-func _get_reachable_wave_spawn_capacity() -> int:
-	var interval: float = maxf(_spawn_batch_interval, 0.001)
-	var first_batch_delay: float = maxf(_normal_spawn_cooldown, 0.0)
-	if first_batch_delay > _wave_duration:
-		return 0
-	var available_after_first: float = maxf(_wave_duration - first_batch_delay, 0.0)
-	var reachable_batches: int = floori((available_after_first + 0.0001) / interval) + 1
-	return maxi(reachable_batches, 0) * _max_spawn_batch_size
+	return _scale_spawn_count(int(wave.get("total_count", 0)))
 
 
 func _get_weighted_average_group_count(source: Dictionary) -> float:
@@ -458,6 +436,10 @@ func _scale_spawn_count(base_count: int) -> int:
 
 func _get_alive_normal_enemy_count() -> int:
 	return int(_cleanup_service.call("get_alive_normal_enemy_count"))
+
+
+func _get_alive_enemy_count() -> int:
+	return int(_cleanup_service.call("get_alive_enemy_count"))
 
 
 func _get_alive_boss_minion_count() -> int:

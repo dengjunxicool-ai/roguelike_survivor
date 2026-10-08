@@ -3,6 +3,7 @@ extends CharacterBody2D
 
 const SKILL_LEVEL_UP_OPTION_PREFIX: String = "skill_level_up:"
 const LEVEL_UP_UPGRADE_PREFIX: String = "level_up_upgrade:"
+const SkillLearnDefinitionRepositoryScript: Script = preload("res://scripts/upgrades/skill_learn_definition_repository.gd")
 const PlayerDebugOverlayScript: Script = preload("res://scripts/runtime/player_debug_overlay.gd")
 const CharacterRuntimeScript: Script = preload("res://scripts/characters/character_runtime.gd")
 const CharacterTraitSystemScript: Script = preload("res://scripts/characters/character_trait_system.gd")
@@ -936,7 +937,7 @@ func _apply_upgrade_data(_definition_upgrade_id: StringName, emitted_upgrade_id:
 
 
 func _apply_level_up_upgrade(upgrade_id: StringName, rarity: String = "") -> bool:
-	var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
+	var upgrade: Dictionary = SkillLearnDefinitionRepositoryScript.resolve_upgrade(upgrade_id)
 	if upgrade.is_empty():
 		return false
 

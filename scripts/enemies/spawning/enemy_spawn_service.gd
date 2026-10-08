@@ -226,19 +226,22 @@ func _begin_spawn_reveal(enemy: Node2D, duration: float) -> void:
 	var target_color: Color = enemy.get_meta("spawn_reveal_modulate", Color.WHITE)
 	var target_scale: Vector2 = enemy.scale / 0.72
 	var tween: Tween = parent.create_tween()
+	tween.bind_node(warning)
 	tween.set_parallel(true)
 	tween.set_trans(Tween.TRANS_QUAD)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(enemy, "modulate", target_color, duration)
 	tween.tween_property(enemy, "scale", target_scale, duration)
 	tween.tween_method(Callable(warning, "set_progress"), 0.0, 1.0, duration)
-	tween.chain().tween_callback(Callable(self, "_finish_spawn_reveal").bind(enemy, warning))
+	tween.chain().tween_callback(Callable(self, "_finish_spawn_reveal").bind(weakref(enemy), weakref(warning)))
 
 
-func _finish_spawn_reveal(enemy: Node2D, warning: Node2D) -> void:
+func _finish_spawn_reveal(enemy_ref: WeakRef, warning_ref: WeakRef) -> void:
+	var warning: Node2D = warning_ref.get_ref() as Node2D
 	if is_instance_valid(warning):
 		warning.queue_free()
-	if is_instance_valid(enemy):
+	var enemy: Node2D = enemy_ref.get_ref() as Node2D
+	if is_instance_valid(enemy) and not enemy.is_queued_for_deletion():
 		_activate_spawned_enemy(enemy)
 
 

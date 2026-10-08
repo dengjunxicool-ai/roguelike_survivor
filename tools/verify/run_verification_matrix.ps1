@@ -29,10 +29,11 @@ foreach ($entry in $package.scripts.PSObject.Properties) {
     $ErrorActionPreference = $previousPreference
     $log | Out-File -LiteralPath $logPath -Encoding UTF8
     $scriptErrors = @($log | Where-Object { "$_" -match 'SCRIPT ERROR:|Parse Error:|Compile Error:' })
-    $passed = $exitCode -eq 0 -and $scriptErrors.Count -eq 0
-    $results += [pscustomobject]@{name=$entry.Name; passed=$passed; exit_code=$exitCode; log=$logPath; script_errors=$scriptErrors.Count}
+    $engineErrors = @($log | Where-Object { "$_" -match '^ERROR:' })
+    $passed = $exitCode -eq 0 -and $scriptErrors.Count -eq 0 -and $engineErrors.Count -eq 0
+    $results += [pscustomobject]@{name=$entry.Name; passed=$passed; exit_code=$exitCode; log=$logPath; script_errors=$scriptErrors.Count; engine_errors=$engineErrors.Count}
     if ($passed) { Write-Output "PASS $($entry.Name)" }
-    else { Write-Output "FAIL $($entry.Name) exit=$exitCode script_errors=$($scriptErrors.Count)"; $log | Select-Object -Last 18 | Write-Output }
+    else { Write-Output "FAIL $($entry.Name) exit=$exitCode script_errors=$($scriptErrors.Count) engine_errors=$($engineErrors.Count)"; $log | Select-Object -Last 18 | Write-Output }
 }
 $results | ConvertTo-Json -Depth 4 | Out-File -LiteralPath (Join-Path $outputRoot 'results.json') -Encoding UTF8
 $failed = @($results | Where-Object { -not $_.passed })
