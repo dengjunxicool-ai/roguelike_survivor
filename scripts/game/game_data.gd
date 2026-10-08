@@ -57,7 +57,7 @@ static func get_character(character_id: StringName) -> Dictionary:
 	var data: Dictionary = _get_definition_from_data_manager("get_character_definition", character_id)
 	if not data.is_empty():
 		return data
-	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id)
+	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id).duplicate(true)
 
 
 static func get_map(map_id: StringName) -> Dictionary:

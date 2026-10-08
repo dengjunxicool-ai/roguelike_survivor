@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "verify:data-access-characters": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_characters.gd",
+    "verify:data-access-characters-boundary": "node tools\\verify\\verify_data_access_characters_boundary.js",
     "verify:data-access-relics": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_relics.gd",
     "verify:data-access-relics-boundary": "node tools\\verify\\verify_data_access_relics_boundary.js",
     "verify:data-access-upgrade-catalog": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_data_access_upgrade_catalog.gd",

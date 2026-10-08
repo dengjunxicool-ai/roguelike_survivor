@@ -66,7 +66,7 @@ flowchart LR
     A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
 ```
 
-`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback，升级选择、权重计算、UI、应用和存档消费者保持不变。当前阶段 6 遗物批次将 `RelicManager` 的定义读取统一到 manager-first 的 `GameData` 遗物池和单条门面；`DataManager` 仍是正常运行所有者，JSON 仍是独立兼容 fallback，遗物局内状态和效果行为仍由 `RelicManager` 持有。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
+`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物以及角色定义等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`RelicManager` 和 `CharacterRuntime` 仅通过 `GameData` 读取定义，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，角色 fallback 返回深拷贝。遗物局内状态、角色初始化、属性、起始技能、升级选择、UI 和存档行为保持不变。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
 
 ### 3.2 开局流
 
