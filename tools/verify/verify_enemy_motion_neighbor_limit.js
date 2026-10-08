@@ -220,9 +220,10 @@ for (const area of blazingRunAreas) {
 }
 
 assert(
-  Number(wavesData.spawn_rules?.max_normal_enemies_alive || 0) > 0 &&
-    Number(wavesData.spawn_rules.max_normal_enemies_alive) <= 40,
-  "Wave spawn rules should cap normal enemies at 40 to stay within the verified real-run performance budget."
+  !Object.hasOwn(wavesData.spawn_rules, "max_normal_enemies_alive") &&
+    wavesData.waves.every((wave) => !Object.hasOwn(wave, "max_alive")) &&
+    !Object.hasOwn(wavesData.boss_event.minion_spawn, "max_alive"),
+  "Spawn configuration must not cap the living enemy population; neighbor query budgets remain independent."
 );
 
 console.log("verify_enemy_motion_neighbor_limit: PASS");

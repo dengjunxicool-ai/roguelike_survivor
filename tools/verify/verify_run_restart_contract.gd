@@ -8,9 +8,11 @@ const CHARACTER_ID: StringName = &"mage"
 const MAP_ID: StringName = &"abandoned_dungeon"
 const LEARNED_SKILL_ID: StringName = &"fire_cast_meteor_rain"
 const MODIFIER_SOURCE: StringName = &"restart_contract"
+const RunEnvironment: Script = preload("res://tools/verify/verification_run_environment.gd")
 
 var _failed: bool = false
 var _save_path: String = ""
+var _capture_dir: String = ""
 
 
 func _init() -> void:
@@ -22,6 +24,16 @@ func _run() -> void:
 	if not _expect(_save_path.to_lower().begins_with("e:/codex/"), "save directory is isolated under E:/codex", _save_path):
 		quit(1)
 		return
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--capture-dir="):
+			_capture_dir = argument.trim_prefix("--capture-dir=").replace("\\", "/").simplify_path()
+	if _capture_dir != "":
+		if not _expect(_capture_dir.to_lower().begins_with("e:/codex/") and DisplayServer.get_name() != "headless", "capture requires rendering and an E:/codex directory"):
+			quit(1)
+			return
+		if not _expect(DirAccess.make_dir_recursive_absolute(_capture_dir) == OK, "capture directory can be created"):
+			quit(1)
+			return
 	create_timer(15.0, true).timeout.connect(_timeout)
 	_clean_save()
 	var owner: Node = root.get_node_or_null("DataManager")
@@ -32,6 +44,10 @@ func _run() -> void:
 	root.add_child(app)
 	for _frame: int in range(4):
 		await process_frame
+	if not _expect(await RunEnvironment.configure_rendered_viewport(), "rendered viewport settles at the requested size"):
+		await _finish(app, app.get_node("UIManager"))
+		return
+	await process_frame
 	var ui: Node = app.get_node("UIManager")
 	_expect(String(ui.get("current_state")) == "TITLE", "real application reaches title")
 	ui.call("transition_to", "CHARACTER_SELECT")
@@ -71,6 +87,7 @@ func _run() -> void:
 	_expect(store.call("get_debug_sources").has(String(MODIFIER_SOURCE)), "first run stores a structured modifier source")
 	_expect(player.call("apply_status", &"burning", {"duration": 10.0, "damage": 1.0}), "first run holds a transient status")
 	player.set("_dash_cooldown_remaining", 7.0)
+	await _capture("first-run", ui)
 	var expected_souls: int = Save.get_soul_stones()
 	var expected_crystals: int = get_nodes_in_group(&"experience_crystal").size()
 	for rank: String in ["normal", "elite"]:
@@ -108,6 +125,7 @@ func _run() -> void:
 	_expect(Save.get_counter(&"total_runs") == 1 and String(ui.get("current_state")) == "RESULT_DEFEAT", "repeat refresh and late victory preserve first result")
 	var summary: Dictionary = Save.get_last_run_summary()
 	_expect(int(summary.get("kill_count", -1)) == 2, "persisted summary includes real kill signals")
+	await _capture("first-defeat", ui)
 	var scene_id: int = main.get_instance_id()
 	await ui.call("_start_run", MAP_ID)
 	_expect(coordinator.call("get_run_scene_parent", self).get_instance_id() == scene_id, "restart resets the same real scene")
@@ -121,13 +139,33 @@ func _run() -> void:
 	_expect(int(ui.get("_kill_count")) == 0 and int(tracker.get("kill_count")) == 0 and int(tracker.get("elite_kill_count")) == 0 and tracker.get("damage_done_by_origin").is_empty(), "restart clears UI and tracker combat statistics")
 	_expect(not bool(ui.get("_result_progression_recorded")) and ui.get("_last_progression_summary").is_empty(), "restart clears terminal persistence lock and summary")
 	_expect(Save.get_counter(&"total_runs") == 1, "restart preserves only the first persisted run")
+	await _capture("restarted", ui)
 	player.call("take_damage", _lethal_packet(null, player, &"", "restart_player_second"))
 	_expect(int(player.get("current_health")) == 0, "second run also dies through typed damage")
 	ui.call("_refresh_result_screen", "RESULT_DEFEAT")
 	ui.call("_on_player_died")
 	_expect(String(ui.get("current_state")) == "RESULT_DEFEAT" and Save.get_counter(&"total_runs") == 2 and Save.get_counter(&"defeats") == 2, "second death records exactly the second run")
 	_expect(int(Save.get_last_run_summary().get("kill_count", -1)) == 0, "second summary contains no first-run kill state")
+	await _capture("second-defeat", ui)
 	await _finish(app, ui)
+
+
+func _capture(label: String, ui: Node) -> void:
+	if _capture_dir == "":
+		return
+	# _start_run returns before the production overlay's 0.18s fade completes.
+	# Observe completion instead of capturing a transient loading frame.
+	var deadline: int = Time.get_ticks_msec() + 2000
+	while bool(ui.get("_run_loading_active")) and Time.get_ticks_msec() < deadline:
+		await process_frame
+	var overlay: Control = ui.get("_run_loading_overlay")
+	if not _expect(not bool(ui.get("_run_loading_active")) and (overlay == null or not overlay.visible), "rendered " + label + " finishes the loading transition"):
+		return
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var shot: Image = root.get_texture().get_image()
+	if _expect(shot != null and not shot.is_empty(), "rendered " + label + " contains pixels"):
+		_expect(shot.save_png(_capture_dir.path_join(label + ".png")) == OK, "rendered " + label + " is saved")
 
 
 func _lethal_packet(attacker: Node, target: Node, skill_id: StringName, identity: String) -> DamagePacket:

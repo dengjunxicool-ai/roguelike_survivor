@@ -19,12 +19,29 @@ func get_alive_boss_minion_count() -> int:
 	return _get_alive_enemy_count(true)
 
 
+func get_alive_enemy_count() -> int:
+	var tree: SceneTree = _get_tree()
+	if tree == null:
+		return 0
+	var count: int = 0
+	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
+		if _is_alive(enemy):
+			count += 1
+	return count
+
+
+func _is_alive(enemy: Node) -> bool:
+	return is_instance_valid(enemy) and not enemy.is_queued_for_deletion() and not (enemy.has_method("is_dead") and bool(enemy.call("is_dead")))
+
+
 func _get_alive_enemy_count(boss_minions: bool) -> int:
 	var tree: SceneTree = _get_tree()
 	if tree == null:
 		return 0
 	var count: int = 0
 	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
+		if not _is_alive(enemy):
+			continue
 		var is_minion: bool = String(enemy.get_meta("spawn_source_type", "")) == "boss_minion"
 		if (is_minion if boss_minions else String(enemy.get_meta("enemy_rank", "normal")) == "normal" and not is_minion):
 			count += 1
@@ -43,7 +60,7 @@ func despawn_far_enemies(despawn_radius: float) -> void:
 	var despawn_radius_squared: float = despawn_radius * despawn_radius
 	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
 		var enemy_node: Node2D = enemy as Node2D
-		if enemy_node == null:
+		if enemy_node == null or not _is_alive(enemy_node) or bool(enemy_node.get_meta("spawn_reveal_pending", false)):
 			continue
 
 		if String(enemy_node.get_meta("enemy_rank", "normal")) != "normal":

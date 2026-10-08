@@ -951,7 +951,9 @@
 		},
 		"waves": {
 			"required": [
-				"id"
+				"id",
+				"total_count",
+				"duration_seconds"
 			],
 			"fields": {
 				"start_time": [
@@ -960,10 +962,10 @@
 				"end_time": [
 					"number"
 				],
-				"max_alive": [
+				"total_count": [
 					"number"
 				],
-				"spawn_interval": [
+				"spawn_batch_interval_seconds": [
 					"number"
 				],
 				"enemy_multipliers": [

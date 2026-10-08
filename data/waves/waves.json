@@ -25,12 +25,11 @@
 	}
   },
   "spawn_rules": {
-	"spawn_batch_interval_seconds": 15.0,
+	"spawn_batch_interval_seconds": 3.0,
 	"max_spawn_batch_size": 15,
 	"spawn_warning_duration_seconds": 1.5,
 	"visible_spawn_margin": 64.0,
 	"spawn_player_safe_radius": 120.0,
-	"max_normal_enemies_alive": 40,
 	"first_level_up_choice": {
 	  "option_count": 3
 	},
@@ -104,8 +103,8 @@
 	{
 	  "start_time": 0,
 	  "end_time": 25,
-	  "max_alive": 35,
-	  "spawn_interval": 1.1,
+	  "total_count": 35,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 1,
 		"defense_add": 0,
@@ -128,8 +127,8 @@
 	{
 	  "start_time": 25,
 	  "end_time": 55,
-	  "max_alive": 50,
-	  "spawn_interval": 0.95,
+	  "total_count": 50,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 1.15,
 		"defense_add": 0,
@@ -153,8 +152,8 @@
 	{
 	  "start_time": 55,
 	  "end_time": 85,
-	  "max_alive": 70,
-	  "spawn_interval": 0.8,
+	  "total_count": 65,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 1.3,
 		"defense_add": 1,
@@ -178,8 +177,8 @@
 	{
 	  "start_time": 85,
 	  "end_time": 115,
-	  "max_alive": 80,
-	  "spawn_interval": 0.75,
+	  "total_count": 80,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 1.55,
 		"defense_add": 1,
@@ -210,8 +209,8 @@
 	{
 	  "start_time": 115,
 	  "end_time": 150,
-	  "max_alive": 100,
-	  "spawn_interval": 0.65,
+	  "total_count": 95,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 1.85,
 		"defense_add": 2,
@@ -236,8 +235,8 @@
 	{
 	  "start_time": 150,
 	  "end_time": 185,
-	  "max_alive": 120,
-	  "spawn_interval": 0.55,
+	  "total_count": 110,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 2.2,
 		"defense_add": 2,
@@ -262,8 +261,8 @@
 	{
 	  "start_time": 185,
 	  "end_time": 220,
-	  "max_alive": 135,
-	  "spawn_interval": 0.52,
+	  "total_count": 125,
+	  "spawn_batch_interval_seconds": 3,
 	  "enemy_multipliers": {
 		"hp": 2.5,
 		"defense_add": 3,
@@ -295,8 +294,8 @@
 	{
 	  "start_time": 220,
 	  "end_time": 240,
-	  "max_alive": 160,
-	  "spawn_interval": 0.38,
+	  "total_count": 140,
+	  "spawn_batch_interval_seconds": 2,
 	  "enemy_multipliers": {
 		"hp": 2.75,
 		"defense_add": 3,
@@ -332,7 +331,6 @@
 	},
 	"minion_spawn": {
 	  "enabled": true,
-	  "max_alive": 35,
 	  "spawn_interval": 15,
 	  "enemy_multipliers": {
 		"hp": 2.1,

@@ -8,6 +8,10 @@ const SAMPLE_INTERVAL_SECONDS: float = 5.0
 const REPORT_DIR: String = "res://reports/performance-run"
 const SAMPLES_PATH: String = "res://reports/performance-run/latest_samples.json"
 const REPORT_PATH: String = "res://reports/performance-run/report.md"
+const RunEnvironment: Script = preload("res://tools/verify/verification_run_environment.gd")
+
+var _environment: Dictionary = {}
+var _report_dir: String = REPORT_DIR
 
 var _main_scene: Node
 var _ui: Node
@@ -25,6 +29,7 @@ var _spike_50ms_count: int = 0
 var _last_tick_usec: int = 0
 var _failure_reason: String = ""
 var _run_seconds: float = RUN_SECONDS
+var _assist_max_health: int = 750
 
 
 func _init() -> void:
@@ -32,6 +37,19 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_environment = RunEnvironment.initialize(REPORT_DIR)
+	if _environment.is_empty():
+		quit(1)
+		return
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--survival-health="):
+			var value: String = argument.trim_prefix("--survival-health=")
+			if not value.is_valid_int() or int(value) <= 0:
+				push_error("survival-health must be a positive integer")
+				quit(1)
+				return
+			_assist_max_health = int(value)
+	_report_dir = String(_environment.report_dir)
 	Engine.time_scale = 1.0
 	_run_seconds = _get_duration_arg(RUN_SECONDS)
 	if OS.get_cmdline_user_args().has("--disable-player-attack"):
@@ -46,6 +64,10 @@ func _run() -> void:
 	_main_scene = packed_scene.instantiate()
 	_main_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 	root.add_child(_main_scene)
+	await process_frame
+	if not await RunEnvironment.configure_rendered_viewport():
+		_fail("rendered viewport setup failed")
+		return
 	await process_frame
 	_ui = _main_scene.get_node_or_null("UIManager")
 	if _ui == null:
@@ -133,7 +155,10 @@ func _start_run() -> void:
 	await process_frame
 	_ui.call("_on_loadout_confirmed", CHARACTER_ID)
 	await process_frame
-	_ui.call("_start_run", MAP_ID)
+	await _ui.call("_start_run", MAP_ID)
+	if not RunEnvironment.seed_gameplay_rngs(_ui, _environment):
+		_fail("gameplay RNG setup failed")
+		return
 	await process_frame
 	await physics_frame
 
@@ -282,6 +307,9 @@ func _record_sample(reason: String) -> void:
 		"physics_process_ms": float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0,
 		"node_count": int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
 		"orphan_node_count": int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)),
+		"object_count": int(Performance.get_monitor(Performance.OBJECT_COUNT)),
+		"resource_count": int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT)),
+		"static_memory_bytes": int(Performance.get_monitor(Performance.MEMORY_STATIC)),
 		"enemy_count": get_nodes_in_group(&"enemy").size(),
 		"experience_count": get_nodes_in_group(&"experience_crystal").size(),
 		"enemy_projectile_count": get_nodes_in_group(&"enemy_projectile").size(),
@@ -312,6 +340,18 @@ func _record_sample(reason: String) -> void:
 
 func _write_outputs(status: String) -> void:
 	var payload: Dictionary = {
+		"revision": _environment.get("revision"),
+		"seed": _environment.get("seed"),
+		"rng_seeds": _environment.get("rng_seeds"),
+		"character": String(CHARACTER_ID),
+		"map": String(MAP_ID),
+		"time_scale": Engine.time_scale,
+		"display_driver": DisplayServer.get_name(),
+		"rendering_method": RenderingServer.get_current_rendering_method(),
+		"video_adapter": RenderingServer.get_video_adapter_name(),
+		"viewport_size": [root.get_visible_rect().size.x, root.get_visible_rect().size.y],
+		"vsync_mode": DisplayServer.window_get_vsync_mode(),
+		"survival_assist": true,
 		"status": status,
 		"failure_reason": _failure_reason,
 		"duration_seconds": _elapsed,
@@ -324,7 +364,13 @@ func _write_outputs(status: String) -> void:
 		"spike_50ms_count": _spike_50ms_count,
 		"samples": _samples
 	}
-	var file: FileAccess = FileAccess.open(SAMPLES_PATH, FileAccess.WRITE)
+	var samples_path: String = _report_dir.path_join("latest_samples.json")
+	var file: FileAccess = FileAccess.open(samples_path, FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot write performance samples: " + samples_path)
+		_failure_reason = "sample output failed"
+		_finish(1)
+		return
 	if file != null:
 		file.store_string(JSON.stringify(payload, "\t"))
 		file.close()
@@ -343,7 +389,7 @@ func _write_outputs(status: String) -> void:
 		"- max_frame_ms: %.2f" % _max_frame_ms,
 		"- frames_over_33ms: %d" % _spike_33ms_count,
 		"- frames_over_50ms: %d" % _spike_50ms_count,
-		"- samples_json: %s" % ProjectSettings.globalize_path(SAMPLES_PATH),
+		"- samples_json: %s" % ProjectSettings.globalize_path(samples_path),
 		"",
 		"## Samples",
 		"",
@@ -364,11 +410,16 @@ func _write_outputs(status: String) -> void:
 			int(sample.get("damage_popup_count", 0)),
 			int(sample.get("area_effect_count", 0))
 		])
-	file = FileAccess.open(REPORT_PATH, FileAccess.WRITE)
+	file = FileAccess.open(_report_dir.path_join("report.md"), FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot write performance report")
+		_failure_reason = "report output failed"
+		_finish(1)
+		return
 	if file != null:
 		file.store_string("\n".join(lines))
 		file.close()
-	print("[PerformanceRun] report=%s" % ProjectSettings.globalize_path(REPORT_PATH))
+	print("[PerformanceRun] report=%s" % ProjectSettings.globalize_path(_report_dir.path_join("report.md")))
 
 
 func _count_nodes_by_script(script_name: String) -> int:
@@ -438,7 +489,7 @@ func _profile_summary(profile: Dictionary) -> String:
 func _apply_autoplay_survival_assist() -> void:
 	if _player == null:
 		return
-	var assisted_max_health: int = maxi(int(_player.get("max_health")), 750)
+	var assisted_max_health: int = maxi(int(_player.get("max_health")), _assist_max_health)
 	_player.set("max_health", assisted_max_health)
 	_player.set("current_health", assisted_max_health)
 
@@ -448,6 +499,8 @@ func _maintain_autoplay_survival_assist() -> void:
 		return
 	var max_health: int = maxi(int(_player.get("max_health")), 1)
 	var current_health: int = int(_player.get("current_health"))
+	if current_health <= 0:
+		return
 	if current_health < int(float(max_health) * 0.35):
 		_player.set("current_health", int(float(max_health) * 0.6))
 
@@ -591,6 +644,16 @@ func _finish(exit_code: int) -> void:
 	_finished = true
 	Engine.time_scale = 1.0
 	_release_movement()
+	if not RunEnvironment.cleanup_save(_environment):
+		push_error("Cannot clean isolated performance save")
+		exit_code = 1
+	if is_instance_valid(_ui):
+		_ui.call("_teardown_run_scene")
+	if is_instance_valid(_main_scene):
+		_main_scene.queue_free()
+	await physics_frame
+	await process_frame
+	await process_frame
 	quit(exit_code)
 
 

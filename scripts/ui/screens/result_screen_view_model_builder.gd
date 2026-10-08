@@ -24,16 +24,16 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 			"time": "时间：%s" % _format_time(run_seconds),
 			"kill": "击杀：%d" % kill_count,
 			"progress": _get_progress_text(run_state),
-			"cause": "死亡原因：%s" % String(diagnostic.get("death_cause", "未记录")),
+			"cause": "死亡原因：%s" % _get_death_cause(state, run_state, diagnostic),
 			"boss": "Boss DPS：%.1f / 核心处理：%d 个，平均 %.1fs" % [
 				float(diagnostic.get("boss_dps", 0.0)),
 				int(diagnostic.get("boss_core_destroyed_count", 0)),
 				float(diagnostic.get("boss_core_average_lifetime", 0.0))
 			],
 			"summary": "构筑摘要：%s" % String(diagnostic.get("build_summary", "")),
-			"upgrades": "高贡献升级：%s" % String(diagnostic.get("upgrade_summary", "无")),
-			"damage": "伤害结构：%s" % _format_percent_dictionary(_get_dictionary(diagnostic.get("damage_share", {}))),
-			"taken": "受伤来源：%s" % _format_percent_dictionary(_get_dictionary(diagnostic.get("damage_taken_share", {}))),
+			"upgrades": "已选升级：%s" % String(diagnostic.get("upgrade_summary", "无")),
+			"damage": "伤害结构：%s" % _format_percent_dictionary(_get_dictionary(diagnostic.get("damage_share", {})), "本局未造成伤害"),
+			"taken": "受伤来源：%s" % _format_percent_dictionary(_get_dictionary(diagnostic.get("damage_taken_share", {})), "本局未受到伤害"),
 			"diagnosis": "诊断：%s" % String(diagnostic.get("diagnosis_text", "")),
 			"suggestion": "下局建议：%s" % String(diagnostic.get("next_run_suggestion", "")),
 			"soul": "本局获得：%d / 总灵魂石：%d" % [run_souls_earned, SaveManager.get_soul_stones()],
@@ -43,21 +43,32 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 	}
 
 
+func _get_death_cause(state: String, run_state: Dictionary, diagnostic: Dictionary) -> String:
+	if state == STATE_RESULT_VICTORY:
+		return "未死亡"
+	var player_dead: Variant = run_state.get("player_dead", null)
+	if player_dead == null:
+		return "未记录"
+	if not bool(player_dead):
+		return "主动结束 / 未死亡"
+	return String(diagnostic.get("death_cause", "未记录"))
+
+
 func _get_progress_text(run_state: Dictionary) -> String:
 	var level: int = int(run_state.get("main_attack_level", 1))
-	return "初始技能：Lv.%d" % level
+	return "主攻技能：Lv.%d" % level
 
 
-func _format_percent_dictionary(dictionary: Dictionary) -> String:
+func _format_percent_dictionary(dictionary: Dictionary, empty_text: String) -> String:
 	if dictionary.is_empty():
-		return "暂无"
+		return empty_text
 	var parts: Array[String] = []
 	for key: Variant in dictionary.keys():
 		var value: float = float(dictionary[key])
 		if value <= 0.0:
 			continue
 		parts.append("%s %.0f%%" % [_label_for_key(String(key)), value * 100.0])
-	return "、".join(parts) if not parts.is_empty() else "暂无"
+	return "、".join(parts) if not parts.is_empty() else empty_text
 
 
 func _label_for_key(key: String) -> String:
@@ -72,10 +83,18 @@ func _label_for_key(key: String) -> String:
 			return "区域"
 		"trap":
 			return "陷阱"
+		"special":
+			return "特殊"
+		"enemy":
+			return "敌人"
 		"contact", "physical":
 			return "接触"
 		"boss":
 			return "Boss"
+		"ranged", "projectile":
+			return "远程伤害"
+		"map_toxic_fog":
+			return "毒雾"
 		"poison":
 			return "中毒"
 		"fire", "lava", "map_lava":

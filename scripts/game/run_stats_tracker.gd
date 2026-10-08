@@ -279,12 +279,10 @@ func _ready() -> void:
 
 
 func _extract_origin(packet: Variant, result: Dictionary) -> String:
-	if packet is Dictionary:
-		var data: Dictionary = packet
-		for key: String in ["damage_origin", "origin", "source_type"]:
-			var value: String = String(data.get(key, ""))
-			if value != "":
-				return value
+	for key: String in ["damage_origin", "origin", "source_type"]:
+		var value: String = _packet_string_value(packet, key)
+		if value != "":
+			return value
 	var damage_type: String = String(result.get("damage_type", ""))
 	if damage_type == "status_dot":
 		return "status_dot"
@@ -296,13 +294,19 @@ func _extract_origin(packet: Variant, result: Dictionary) -> String:
 
 
 func _extract_taken_source(packet: Variant, result: Dictionary) -> String:
-	if packet is Dictionary:
-		var data: Dictionary = packet
-		for key: String in ["source_id", "source", "source_type", "element"]:
-			var value: String = String(data.get(key, ""))
-			if value != "":
-				return value
+	for key: String in ["source_id", "source", "source_type", "element"]:
+		var value: String = _packet_string_value(packet, key)
+		if value != "":
+			return value
 	return String(result.get("element", "contact"))
+
+
+func _packet_string_value(packet: Variant, key: String) -> String:
+	if packet is DamagePacket:
+		return String(packet.get_value(key, ""))
+	if packet is Dictionary:
+		return String(packet.get(key, ""))
+	return ""
 
 
 func _is_boss(node: Node) -> bool:

@@ -5,13 +5,17 @@ const CHARACTER_ID: StringName = &"mage"
 const MAP_ID: StringName = &"abandoned_dungeon"
 const SNAPSHOT_EVERY: float = 60.0
 const MAX_RUN_SECONDS: float = 620.0
-const REPORT_DIR: String = "res://reports/mage-full-run"
-const SNAPSHOT_PATH: String = "res://reports/mage-full-run/latest_scene.json"
-const TERMINAL_SNAPSHOT_PATH: String = "res://reports/mage-full-run/terminal_scene.json"
-const REPORT_PATH: String = "res://reports/mage-full-run/report.md"
-const CHARACTER_BUILD_SCREENSHOT_PATH: String = "res://reports/mage-full-run/character_build.png"
-const RUN_SKILL_BUILD_SCREENSHOT_PATH: String = "res://reports/mage-full-run/run_skill_build.png"
-const RESULT_SCREENSHOT_PATH: String = "res://reports/mage-full-run/result_screen.png"
+const RunEnvironment: Script = preload("res://tools/verify/verification_run_environment.gd")
+
+var _environment: Dictionary = {}
+var _screenshot_failed: bool = false
+var _report_dir: String = "res://reports/mage-full-run"
+var _snapshot_path: String = "res://reports/mage-full-run/latest_scene.json"
+var _terminal_snapshot_path: String = "res://reports/mage-full-run/terminal_scene.json"
+var _report_path: String = "res://reports/mage-full-run/report.md"
+var _character_build_screenshot_path: String = "res://reports/mage-full-run/character_build.png"
+var _run_skill_build_screenshot_path: String = "res://reports/mage-full-run/run_skill_build.png"
+var _result_screenshot_path: String = "res://reports/mage-full-run/result_screen.png"
 
 var _main_scene: Node
 var _ui: Node
@@ -22,6 +26,8 @@ var _movement_phase: float = 0.0
 var _finished: bool = false
 var _last_state: String = ""
 var _boss_seen: bool = false
+var _boss_capture_pending: bool = false
+var _pending_gameplay_captures: int = 0
 var _status: String = "UNKNOWN"
 var _failure_reason: String = ""
 var _choices: Array[Dictionary] = []
@@ -34,6 +40,7 @@ var _boss_damage_assist_accumulator: float = 0.0
 var _result_finalizing: bool = false
 var _screenshot_paths: Dictionary = {}
 var _captured_run_skill_build: bool = false
+var _assist_max_health: int = 750
 
 
 func _init() -> void:
@@ -41,8 +48,27 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_environment = RunEnvironment.initialize(_report_dir)
+	if _environment.is_empty():
+		quit(1)
+		return
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--survival-health="):
+			var value: String = argument.trim_prefix("--survival-health=")
+			if not value.is_valid_int() or int(value) <= 0:
+				push_error("survival-health must be a positive integer")
+				quit(1)
+				return
+			_assist_max_health = int(value)
+	_report_dir = String(_environment.report_dir)
+	_snapshot_path = _report_dir.path_join("latest_scene.json")
+	_terminal_snapshot_path = _report_dir.path_join("terminal_scene.json")
+	_report_path = _report_dir.path_join("report.md")
+	_character_build_screenshot_path = _report_dir.path_join("character_build.png")
+	_run_skill_build_screenshot_path = _report_dir.path_join("run_skill_build.png")
+	_result_screenshot_path = _report_dir.path_join("result_screen.png")
 	Engine.time_scale = 5.0
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(REPORT_DIR))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_report_dir))
 
 	var packed_scene: PackedScene = load("res://scenes/app/app_bootstrap.tscn") as PackedScene
 	if packed_scene == null:
@@ -51,6 +77,10 @@ func _run() -> void:
 	_main_scene = packed_scene.instantiate()
 	_main_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 	root.add_child(_main_scene)
+	await process_frame
+	if not await RunEnvironment.configure_rendered_viewport():
+		_fail("rendered viewport setup failed")
+		return
 	await process_frame
 
 	_ui = _main_scene.get_node_or_null("UIManager")
@@ -79,7 +109,6 @@ func _run() -> void:
 func _tick(delta: float) -> void:
 	if _finished or _ui == null:
 		return
-	_maintain_autoplay_survival_assist()
 	var state: String = String(_ui.get("current_state"))
 	if state != _last_state:
 		_log("state %s -> %s at %.1fs" % [_last_state, state, _elapsed])
@@ -90,6 +119,7 @@ func _tick(delta: float) -> void:
 	match state:
 		"RUNNING":
 			paused = false
+			_maintain_autoplay_survival_assist()
 			_elapsed = maxf(_elapsed + delta, _runtime_elapsed_seconds())
 			_drive_player(delta)
 			_track_boss()
@@ -98,7 +128,7 @@ func _tick(delta: float) -> void:
 				_write_snapshot("minute")
 				if not _captured_run_skill_build and _elapsed >= 240.0:
 					_captured_run_skill_build = true
-					_capture_screenshot("run_skill_build", RUN_SKILL_BUILD_SCREENSHOT_PATH)
+					_capture_running_after_draw("run_skill_build", _run_skill_build_screenshot_path)
 				_next_snapshot += SNAPSHOT_EVERY
 			if _elapsed > MAX_RUN_SECONDS:
 				_fail("exceeded %.0fs without victory" % MAX_RUN_SECONDS)
@@ -140,10 +170,13 @@ func _start_mage_run() -> void:
 	if loadout_controller != null:
 		loadout_controller.call("refresh", CHARACTER_ID)
 	await process_frame
-	_capture_screenshot("character_build", CHARACTER_BUILD_SCREENSHOT_PATH)
+	_capture_screenshot("character_build", _character_build_screenshot_path)
 	_ui.call("_on_loadout_confirmed", CHARACTER_ID)
 	await process_frame
-	_ui.call("_start_run", MAP_ID)
+	await _ui.call("_start_run", MAP_ID)
+	if not RunEnvironment.seed_gameplay_rngs(_ui, _environment):
+		_fail("gameplay RNG setup failed")
+		return
 	await process_frame
 	await physics_frame
 
@@ -154,8 +187,8 @@ func _finish_victory() -> void:
 	await process_frame
 	if not _captured_run_skill_build:
 		_captured_run_skill_build = true
-		_capture_screenshot("run_skill_build", RUN_SKILL_BUILD_SCREENSHOT_PATH)
-	_capture_screenshot("result_screen", RESULT_SCREENSHOT_PATH)
+		_capture_screenshot("run_skill_build", _run_skill_build_screenshot_path)
+	_capture_screenshot("result_screen", _result_screenshot_path)
 	_write_snapshot("victory")
 	_write_report()
 	_finish(0)
@@ -166,7 +199,7 @@ func _finish_defeat() -> void:
 	_failure_reason = "player reached defeat result"
 	await process_frame
 	await process_frame
-	_capture_screenshot("result_screen", RESULT_SCREENSHOT_PATH)
+	_capture_screenshot("result_screen", _result_screenshot_path)
 	_write_snapshot("defeat")
 	_write_report()
 	_finish(1)
@@ -274,6 +307,7 @@ func _choose_level_option() -> void:
 		return
 	_record_choice("level", option)
 	controller.call("_select_upgrade_option", option, "RUNNING", true)
+	_handled_modal_state = ""
 
 
 func _choose_reward_option() -> void:
@@ -295,6 +329,7 @@ func _choose_reward_option() -> void:
 		return
 	_record_choice("reward:%s" % reward_kind, option)
 	controller.call("_select_upgrade_option", option, "RUNNING", false)
+	_handled_modal_state = ""
 
 
 func _choose_curse_option() -> void:
@@ -397,7 +432,7 @@ func _record_choice(kind: String, option: Dictionary) -> void:
 func _write_snapshot(reason: String) -> void:
 	var snapshot: Dictionary = _snapshot(reason)
 	_snapshots.append(_elapsed)
-	var path: String = TERMINAL_SNAPSHOT_PATH if reason == "defeat" or reason == "failure" else SNAPSHOT_PATH
+	var path: String = _terminal_snapshot_path if reason == "defeat" or reason == "failure" else _snapshot_path
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		push_error("[MageFullRun] cannot write snapshot")
@@ -424,9 +459,11 @@ func _snapshot(reason: String) -> Dictionary:
 		"map_id": String(MAP_ID),
 		"restored": _restored,
 		"autoplay_assist": _autoplay_assist_enabled,
+		"survival_assist_health": _assist_max_health,
 		"player": _player_snapshot(),
 		"skills": _skills_snapshot(),
 		"ui": _ui_snapshot(),
+		"result_state": _ui.call("_get_result_state") if _ui != null and String(_ui.get("current_state")) in ["RESULT_VICTORY", "RESULT_DEFEAT"] else {},
 		"spawner": _spawner_snapshot(spawner),
 		"enemy_count": get_nodes_in_group(&"enemy").size(),
 		"enemies": _enemies_snapshot(),
@@ -437,10 +474,10 @@ func _snapshot(reason: String) -> Dictionary:
 
 
 func _restore_latest_snapshot() -> void:
-	if not FileAccess.file_exists(SNAPSHOT_PATH):
+	if not FileAccess.file_exists(_snapshot_path):
 		_log("restore requested but snapshot missing")
 		return
-	var file: FileAccess = FileAccess.open(SNAPSHOT_PATH, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(_snapshot_path, FileAccess.READ)
 	if file == null:
 		_log("restore requested but snapshot unreadable")
 		return
@@ -502,10 +539,14 @@ func _write_report() -> void:
 		"- failure_reason: %s" % _failure_reason,
 		"- character: %s" % String(CHARACTER_ID),
 		"- map: %s" % String(MAP_ID),
+		"- seed: %s / revision: %s" % [_environment.get("seed"), _environment.get("revision")],
+		"- RNG streams: %s" % str(_environment.get("rng_seeds")),
+		"- renderer: %s / adapter: %s" % [RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name()],
+		"- time_scale: 5.0; verification-only survival and Boss damage assists enabled",
 		"- elapsed_seconds: %.1f" % _elapsed,
 		"- boss_seen: %s" % str(_boss_seen),
 		"- restored: %s" % str(_restored),
-		"- latest_snapshot: %s" % ProjectSettings.globalize_path(SNAPSHOT_PATH),
+		"- latest_snapshot: %s" % ProjectSettings.globalize_path(_snapshot_path),
 		"",
 		"## Snapshot Times"
 	]
@@ -517,8 +558,8 @@ func _write_report() -> void:
 		lines.append("- %.1fs [%s] %s %s" % [float(choice.get("time", 0.0)), _report_text(choice.get("kind", "")), _report_text(choice.get("id", "")), _report_text(choice.get("name", ""))])
 	lines.append("")
 	lines.append("## Skill Build")
-	lines.append("- character_select_screenshot: %s" % _screenshot_path("character_build", CHARACTER_BUILD_SCREENSHOT_PATH))
-	lines.append("- run_skill_build_screenshot: %s" % _screenshot_path("run_skill_build", RUN_SKILL_BUILD_SCREENSHOT_PATH))
+	lines.append("- character_select_screenshot: %s" % _screenshot_path("character_build", _character_build_screenshot_path))
+	lines.append("- run_skill_build_screenshot: %s" % _screenshot_path("run_skill_build", _run_skill_build_screenshot_path))
 	lines.append("- starting_primary: %s" % _starting_skill_id())
 	lines.append("- starting_dash: %s" % _starting_dash_skill_id())
 	lines.append("- active_skill_limit: 5 active skills, excluding primary and dash")
@@ -528,11 +569,11 @@ func _write_report() -> void:
 		lines.append("  - %s Lv.%d (%s)" % [String(skill.get("id", "")), int(skill.get("level", 0)), String(skill.get("type", ""))])
 	lines.append("")
 	lines.append("## Screenshots")
-	lines.append("- character_build: %s" % _screenshot_path("character_build", CHARACTER_BUILD_SCREENSHOT_PATH))
+	lines.append("- character_build: %s" % _screenshot_path("character_build", _character_build_screenshot_path))
 	lines.append("![Character Build](character_build.png)")
-	lines.append("- run_skill_build: %s" % _screenshot_path("run_skill_build", RUN_SKILL_BUILD_SCREENSHOT_PATH))
+	lines.append("- run_skill_build: %s" % _screenshot_path("run_skill_build", _run_skill_build_screenshot_path))
 	lines.append("![Run Skill Build](run_skill_build.png)")
-	lines.append("- result_screen: %s" % _screenshot_path("result_screen", RESULT_SCREENSHOT_PATH))
+	lines.append("- result_screen: %s" % _screenshot_path("result_screen", _result_screenshot_path))
 	lines.append("![Result Screen](result_screen.png)")
 	lines.append("")
 	lines.append("## Observations")
@@ -543,28 +584,39 @@ func _write_report() -> void:
 	for fix: String in _fixes_applied_summary():
 		lines.append("- %s" % fix)
 
-	var file: FileAccess = FileAccess.open(REPORT_PATH, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(_report_path, FileAccess.WRITE)
+	if file == null:
+		_screenshot_failed = true
+		push_error("Cannot write autoplay report: " + _report_path)
+		return
 	if file != null:
 		file.store_string("\n".join(lines))
 		file.close()
-	print("[MageFullRun] report=%s" % ProjectSettings.globalize_path(REPORT_PATH))
+	print("[MageFullRun] report=%s" % ProjectSettings.globalize_path(_report_path))
 
 
 func _capture_screenshot(label: String, path: String) -> void:
+	if DisplayServer.get_name() == "headless":
+		_log("screenshot_%s skipped in headless mode" % label)
+		return
 	var viewport: Viewport = root.get_viewport()
 	if viewport == null:
+		_screenshot_failed = true
 		_log("screenshot_%s failed: viewport missing" % label)
 		return
 	var texture: ViewportTexture = viewport.get_texture()
 	if texture == null:
+		_screenshot_failed = true
 		_log("screenshot_%s failed: viewport texture missing" % label)
 		return
 	var image: Image = texture.get_image()
 	if image == null or image.is_empty():
+		_screenshot_failed = true
 		_log("screenshot_%s failed: image empty" % label)
 		return
 	var error: Error = image.save_png(path)
 	if error != OK:
+		_screenshot_failed = true
 		_log("screenshot_%s failed: save_png error=%d" % [label, int(error)])
 		return
 	var absolute_path: String = ProjectSettings.globalize_path(path)
@@ -621,7 +673,7 @@ func _player_snapshot() -> Dictionary:
 func _apply_autoplay_survival_assist() -> void:
 	if _player == null:
 		return
-	var assisted_max_health: int = maxi(int(_player.get("max_health")), 750)
+	var assisted_max_health: int = maxi(int(_player.get("max_health")), _assist_max_health)
 	_player.set("max_health", assisted_max_health)
 	_player.set("current_health", assisted_max_health)
 	_autoplay_assist_enabled = true
@@ -633,13 +685,15 @@ func _maintain_autoplay_survival_assist() -> void:
 		return
 	var max_health: int = maxi(int(_player.get("max_health")), 1)
 	var current_health: int = int(_player.get("current_health"))
+	if current_health <= 0:
+		return
 	if current_health < int(float(max_health) * 0.35):
 		_player.set("current_health", int(float(max_health) * 0.6))
 
 
 func _apply_boss_damage_assist(delta: float) -> void:
 	var boss: Node2D = _boss()
-	if boss == null or not _autoplay_assist_enabled:
+	if boss == null or not _autoplay_assist_enabled or _boss_capture_pending:
 		return
 	_boss_damage_assist_accumulator += 5000.0 * delta
 	var amount: int = int(floor(_boss_damage_assist_accumulator))
@@ -728,6 +782,8 @@ func _track_boss() -> void:
 	var boss: Node2D = _boss()
 	if boss != null and not _boss_seen:
 		_boss_seen = true
+		_boss_capture_pending = DisplayServer.get_name() != "headless"
+		_capture_boss_after_draw()
 		_log("boss_spawned hp=%d/%d at %.1fs" % [int(boss.get("current_health")), int(boss.get("max_health")), _elapsed])
 
 
@@ -960,12 +1016,76 @@ func _fail(reason: String) -> void:
 	_finish(1)
 
 
+func _capture_boss_after_draw() -> void:
+	await _capture_running_after_draw("boss", _report_dir.path_join("boss.png"))
+	_boss_capture_pending = false
+
+
+func _capture_running_after_draw(label: String, path: String) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	if _finished:
+		return
+	_pending_gameplay_captures += 1
+	var deadline: int = Time.get_ticks_msec() + 2000
+	while not _finished and Time.get_ticks_msec() < deadline:
+		await process_frame
+		if _finished or not is_instance_valid(_ui):
+			_pending_gameplay_captures -= 1
+			_screenshot_failed = true
+			return
+		if String(_ui.get("current_state")) != "RUNNING":
+			continue
+		if label == "boss" and not _boss_capture_ready():
+			continue
+		await RenderingServer.frame_post_draw
+		if _finished or not is_instance_valid(_ui):
+			_pending_gameplay_captures -= 1
+			_screenshot_failed = true
+			return
+		if String(_ui.get("current_state")) == "RUNNING" and (label != "boss" or _boss_capture_ready()):
+			_capture_screenshot(label, path)
+			_pending_gameplay_captures -= 1
+			return
+	_pending_gameplay_captures -= 1
+	_screenshot_failed = true
+	push_error("Cannot capture running gameplay for " + label)
+
+
+func _boss_capture_ready() -> bool:
+	var boss: Node2D = _boss()
+	if boss == null or bool(boss.get_meta("spawn_reveal_pending", false)):
+		return false
+	var hud: RefCounted = _ui.get("_run_hud_controller") as RefCounted
+	if hud == null:
+		return false
+	var panels: Dictionary = hud.get("_panels")
+	var panel: Control = panels.get("BossStatusPanel", null) as Control
+	return is_instance_valid(panel) and panel.is_visible_in_tree()
+
+
 func _finish(exit_code: int) -> void:
 	if _finished:
 		return
 	_finished = true
 	Engine.time_scale = 1.0
 	_release_movement()
+	if _pending_gameplay_captures > 0:
+		push_error("Autoplay ended with pending gameplay screenshots")
+		exit_code = 1
+	if _screenshot_failed:
+		push_error("Rendered autoplay screenshot output failed")
+		exit_code = 1
+	if not RunEnvironment.cleanup_save(_environment):
+		push_error("Cannot clean isolated autoplay save")
+		exit_code = 1
+	if is_instance_valid(_ui):
+		_ui.call("_teardown_run_scene")
+	if is_instance_valid(_main_scene):
+		_main_scene.queue_free()
+	await physics_frame
+	await process_frame
+	await process_frame
 	quit(exit_code)
 
 

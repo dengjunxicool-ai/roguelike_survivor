@@ -547,9 +547,22 @@ function checkWaveDefinitions(waveConfig, enemyById) {
       error(where, "must not remain as a normal wave; migrate to boss_event.minion_spawn");
     }
 
-    checkNumber(where, wave, "spawn_interval");
-    checkNumber(where, wave, "max_alive");
-    checkNumber(where, wave, "duration_seconds");
+    checkNumber(where, wave, "total_count", true);
+    checkNumber(where, wave, "spawn_batch_interval_seconds");
+    checkNumber(where, wave, "duration_seconds", true);
+    if (!Number.isInteger(wave.total_count) || wave.total_count <= 0) {
+      error(`${where}.total_count`, "must be a positive integer");
+    }
+    for (const key of ["max_alive", "spawn_interval", "fixed_count"]) {
+      if (Object.hasOwn(wave, key)) error(`${where}.${key}`, "obsolete wave field; use total_count and spawn_batch_interval_seconds");
+    }
+    const interval = Number(wave.spawn_batch_interval_seconds ?? waveConfig.spawn_rules.spawn_batch_interval_seconds);
+    const batches = Math.ceil(wave.total_count / waveConfig.spawn_rules.max_spawn_batch_size);
+    if (!(interval > 0)) error(`${where}.spawn_batch_interval_seconds`, "must be greater than 0");
+    if (!(wave.duration_seconds > 0)) error(`${where}.duration_seconds`, "must be greater than 0");
+    if ((batches - 1) * interval + Number(waveConfig.spawn_rules.spawn_warning_duration_seconds) >= wave.duration_seconds) {
+      error(where, "all configured batches must reveal before the wave timeout");
+    }
 
     checkMultipliers(`${where}.enemy_multipliers`, wave.enemy_multipliers);
     checkGroups(`${where}.groups`, wave.groups, enemyById);
@@ -583,11 +596,10 @@ function checkWaveDefinitions(waveConfig, enemyById) {
     } else {
       checkBoolean("waves.boss_event.minion_spawn", bossEvent.minion_spawn, "enabled", true);
       checkNumber("waves.boss_event.minion_spawn", bossEvent.minion_spawn, "spawn_interval", bossEvent.minion_spawn.enabled === true);
-      checkNumber("waves.boss_event.minion_spawn", bossEvent.minion_spawn, "max_alive", bossEvent.minion_spawn.enabled === true);
+      if (Object.hasOwn(bossEvent.minion_spawn, "max_alive")) {
+        error("waves.boss_event.minion_spawn.max_alive", "living enemy caps have been removed");
+      }
       if (bossEvent.minion_spawn.enabled === true) {
-        if (Number(bossEvent.minion_spawn.max_alive) <= 0) {
-          error("waves.boss_event.minion_spawn.max_alive", "must be greater than 0 when enabled");
-        }
         if (Number(bossEvent.minion_spawn.spawn_interval) <= 0) {
           error("waves.boss_event.minion_spawn.spawn_interval", "must be greater than 0 when enabled");
         }
@@ -614,12 +626,15 @@ function checkSpawnRules(spawnRules) {
   ]) {
     checkNumber(where, spawnRules, key, true);
   }
-  if (Number(spawnRules.spawn_batch_interval_seconds) < 15) {
-    error(`${where}.spawn_batch_interval_seconds`, "must be at least 15 seconds");
+  if (Object.hasOwn(spawnRules, "max_normal_enemies_alive")) {
+    error(`${where}.max_normal_enemies_alive`, "living enemy caps have been removed");
+  }
+  if (Number(spawnRules.spawn_batch_interval_seconds) <= 0) {
+    error(`${where}.spawn_batch_interval_seconds`, "must be greater than 0");
   }
   const maxBatchSize = Number(spawnRules.max_spawn_batch_size);
-  if (!Number.isInteger(maxBatchSize) || maxBatchSize < 1 || maxBatchSize > 15) {
-    error(`${where}.max_spawn_batch_size`, "must be an integer from 1 to 15");
+  if (!Number.isInteger(maxBatchSize) || maxBatchSize < 1) {
+    error(`${where}.max_spawn_batch_size`, "must be a positive integer");
   }
   if (Number(spawnRules.spawn_warning_duration_seconds) <= 0) {
     error(`${where}.spawn_warning_duration_seconds`, "must be greater than 0");

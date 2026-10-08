@@ -18,8 +18,8 @@ class BatchOwner:
 	var _wave_total_count: int = 100
 	var _normal_spawn_cooldown: float = 0.0
 	var _boss_minion_spawn_cooldown: float = 0.0
-	var _max_normal_enemies_alive: int = 100
 	var _spawn_batch_interval: float = 15.0
+	var _spawn_warning_duration: float = 1.5
 	var _max_spawn_batch_size: int = 15
 	var spawn_interval: float = 0.5
 	var alive_normal: int = 0
@@ -29,7 +29,6 @@ class BatchOwner:
 	var boss_event: Dictionary = {
 		"minion_spawn": {
 			"enabled": true,
-			"max_alive": 40,
 			"spawn_interval": 3.0,
 			"groups": [{"enemy_ids": ["small_slime"], "weight": 100}]
 		}
@@ -37,6 +36,9 @@ class BatchOwner:
 
 	func _get_alive_normal_enemy_count() -> int:
 		return alive_normal
+
+	func _get_alive_enemy_count() -> int:
+		return alive_normal + alive_boss_minions
 
 	func _get_alive_boss_minion_count() -> int:
 		return alive_boss_minions
@@ -68,7 +70,7 @@ func _init() -> void:
 func _run() -> void:
 	_test_wave_batch_limit_and_interval()
 	_test_boss_minion_batch_limit_and_interval()
-	_test_wave_total_fits_batch_capacity()
+	_test_wave_total_is_not_truncated()
 	await _test_visible_spawn_and_reveal()
 	await _test_special_sources_remain_immediate()
 	if not _failed:
@@ -82,14 +84,13 @@ func _test_wave_batch_limit_and_interval() -> void:
 	var director: RefCounted = WaveDirectorScript.new()
 	director.call("setup", owner)
 	var wave: Dictionary = {
-		"max_alive": 100,
-		"spawn_interval": 0.5,
 		"groups": [{"enemy_ids": ["small_slime"], "weight": 100}]
 	}
 	director.call("process_wave_spawn", 0.0, wave)
 	_expect(owner.last_limit == 15, "normal wave batch is capped at 15", owner.last_limit)
 	_expect(is_equal_approx(owner._normal_spawn_cooldown, 15.0), "normal wave batch starts a 15 second cooldown", owner._normal_spawn_cooldown)
 	var calls_after_first_batch: int = owner.spawn_calls
+	owner.alive_normal = 15
 	director.call("process_wave_spawn", 14.99, wave)
 	_expect(owner.spawn_calls == calls_after_first_batch, "normal wave cannot start another batch before 15 seconds", owner.spawn_calls)
 	director.call("process_wave_spawn", 0.01, wave)
@@ -104,26 +105,26 @@ func _test_boss_minion_batch_limit_and_interval() -> void:
 	controller.call("setup", owner)
 	controller.call("process_boss_minion_spawn", 0.0)
 	_expect(owner.last_limit == 15, "Boss minion batch is capped at 15", owner.last_limit)
-	_expect(is_equal_approx(owner._boss_minion_spawn_cooldown, 15.0), "Boss minion batch starts a 15 second cooldown", owner._boss_minion_spawn_cooldown)
+	_expect(is_equal_approx(owner._boss_minion_spawn_cooldown, 3.0), "Boss minion batch uses its own configured cooldown", owner._boss_minion_spawn_cooldown)
 	var calls_after_first_batch: int = owner.spawn_calls
-	controller.call("process_boss_minion_spawn", 14.99)
-	_expect(owner.spawn_calls == calls_after_first_batch, "Boss minions cannot start another batch before 15 seconds", owner.spawn_calls)
+	controller.call("process_boss_minion_spawn", 2.99)
+	_expect(owner.spawn_calls == calls_after_first_batch, "Boss minions cannot start another batch before their configured interval", owner.spawn_calls)
 	controller.call("process_boss_minion_spawn", 0.01)
-	_expect(owner.spawn_calls == calls_after_first_batch + 1, "Boss minions can start the next batch after 15 seconds", owner.spawn_calls)
+	_expect(owner.spawn_calls == calls_after_first_batch + 1, "Boss minions can start the next batch after their configured interval", owner.spawn_calls)
 	owner.queue_free()
 
 
-func _test_wave_total_fits_batch_capacity() -> void:
+func _test_wave_total_is_not_truncated() -> void:
 	var spawner: Node = EnemySpawnerScript.new()
 	spawner.set("_wave_duration", 35.0)
 	spawner.set("_normal_spawn_cooldown", 15.0)
 	spawner.set("_spawn_batch_interval", 15.0)
 	spawner.set("_max_spawn_batch_size", 15)
 	var total: int = int(spawner.call("_get_wave_total_count", {
-		"spawn_interval": 0.5,
+		"total_count": 140,
 		"groups": [{"enemy_ids": ["small_slime"], "weight": 100}]
 	}))
-	_expect(total == 30, "wave total fits the two batches reachable during its remaining schedule", total)
+	_expect(total == 140, "wave retains its configured total regardless of the previous cooldown", total)
 	spawner.free()
 
 
@@ -164,7 +165,9 @@ func _test_visible_spawn_and_reveal() -> void:
 		var registry: Node = CombatTargetRegistryScript.get_or_create(enemy)
 		var pending_registry_targets: Array = registry.call("get_targets", &"enemies") if registry != null else []
 		_expect(not pending_registry_targets.has(enemy), "pending enemy is hidden from registry-based combat queries")
-		await create_timer(0.2).timeout
+		var reveal_deadline: int = Time.get_ticks_msec() + 2000
+		while bool(enemy.get_meta("spawn_reveal_pending", false)) and Time.get_ticks_msec() < reveal_deadline:
+			await process_frame
 		_expect(not bool(enemy.get_meta("spawn_reveal_pending", false)), "enemy activates after the reveal")
 		_expect(enemy.process_mode != Node.PROCESS_MODE_DISABLED, "enemy behavior resumes after the reveal", enemy.process_mode)
 		_expect(enemy.collision_layer != 0, "enemy collision returns after the reveal", enemy.collision_layer)

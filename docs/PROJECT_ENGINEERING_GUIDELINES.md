@@ -283,3 +283,7 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 ## 当前维护重点
 
 唯一契约重构已完成配置所有权、技能/怪物字段、严格伤害接口、Modifier 输入、动作/规则族、调试页面与选项构建拆分，详见 [重构文档](PROJECT_CANONICAL_RUNTIME_REFACTOR.md)。后续新增内容优先扩展现有策略、registry、family 或页面，保持已有状态调度与数值顺序。旧阶段验收记录属于历史证据，本次最终结果以 [稳定性报告](PROJECT_STABILITY_AND_BOUNDARY_REPORT.md) 为准。
+
+合并后稳定性收尾与真实渲染/性能证据见 [收尾报告](PROJECT_POST_MERGE_STABILITY.md)。生成链路新增 verify:spawn-reveal-lifecycle；相机与波次新增 verify:wave-system。渲染验收应确认实际视口与私有随机流，非零退出、脚本错误及普通 ERROR: 均阻断验收。
+
+刷怪维护还须复跑 `verify:wave-population-progression`，不得以存活数量上限或批次容量裁剪吞掉波次预算；警示中的实体计占场并保留到显现。学习和结算维护须复跑 `verify:run-result-diagnostics`，动态学习定义通过现有学习仓库解析，统计来源保留 DamagePacket 字段，结算展示实际等级和选取次数，不虚构伤害贡献。

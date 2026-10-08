@@ -154,6 +154,10 @@
     "validate:modifiers": "node tools\\validate\\validate_modifier_effects.js",
     "verify:debug-run-restart": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_debug_run_restart.gd",
     "verify:runtime-dependency-boundary": "node tools\\verify\\verify_runtime_dependency_boundary.js",
-    "verify:run-restart-contract": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_run_restart_contract.gd"
+    "verify:run-restart-contract": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_run_restart_contract.gd",
+    "verify:wave-system": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://scripts/debug/wave_system_check.gd",
+    "verify:spawn-reveal-lifecycle": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_enemy_spawn_reveal_lifecycle.gd",
+    "verify:wave-population-progression": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_wave_population_progression.gd",
+    "verify:run-result-diagnostics": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_run_result_diagnostics.gd"
   }
 }
