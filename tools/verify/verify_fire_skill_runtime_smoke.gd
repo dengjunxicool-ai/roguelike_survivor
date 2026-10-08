@@ -1,5 +1,7 @@
 extends SceneTree
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
+
 
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
@@ -58,7 +60,8 @@ class SmokeEnemy:
 	func _init() -> void:
 		add_to_group(&"enemies")
 
-	func take_damage(packet: Variant, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		damage_packets.append(packet)
 
 	func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -297,7 +300,9 @@ func _expect_damage_modifier(key: String, expected: float, label: String, packet
 		"element": &"fire",
 		"source_skill_id": &"fire_attack_searing"
 		}
-	var modifiers: Dictionary = ModifierAggregatorScript.collect(ModifierQueryScript.for_damage(packet, _player), _skill_manager)
+	var query_fields: Dictionary = {"raw_amount": 1, "source_instance_id": "fire_smoke:damage_scope"}
+	query_fields.merge(packet, true)
+	var modifiers: Dictionary = ModifierAggregatorScript.collect(ModifierQueryScript.for_damage(DamagePacketScript.from_dictionary(query_fields), _player), _skill_manager)
 	var actual: float = float(modifiers.get(key, 0.0))
 	_expect(absf(actual - expected) <= 0.0001, label, actual)
 
@@ -311,12 +316,13 @@ func _expect_primary_attack_damage_multiplier(expected_multiplier: float, label:
 		"element": &"fire",
 		"source_type": "projectile",
 		"source_skill_id": &"fire_attack_searing",
+		"source_instance_id": "fire_smoke:primary_scaling",
 		"attacker": _player,
 		"can_crit": false,
 		"uses_character_damage_multiplier": false,
 		"uses_skill_level_coefficient": false
 	}
-	var result: Dictionary = DamageSystemScript.calculate(packet, _enemy, &"", _player)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet, _player), _enemy).to_dictionary()
 	var stages: Dictionary = result.get("stages", {})
 	var actual: float = float(stages.get("origin_multiplier", 0.0)) * float(stages.get("element_multiplier", 0.0))
 	_expect(absf(actual - expected_multiplier) <= 0.0001, label, stages)

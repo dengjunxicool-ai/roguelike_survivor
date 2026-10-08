@@ -7,7 +7,7 @@ const SummonMovementComponentScript: Script = preload("res://scripts/summons/sum
 const SummonAttackComponentScript: Script = preload("res://scripts/summons/summon_attack_component.gd")
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 
 const STATE_FOLLOW: StringName = &"FOLLOW"
 const STATE_CHASE: StringName = &"CHASE"

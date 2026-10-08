@@ -206,7 +206,9 @@ func _start_wave_event(event_key: String, event: Dictionary) -> void:
 				return
 			var enemy_id: StringName = StringName(String(event.get("enemy_id", "")))
 			if enemy_id != &"":
-				var enemy: Node2D = _spawn_enemy(enemy_id, false, _get_event_enemy_multipliers(event), &"elite", &"elite_event")
+				var enemy: Node2D = spawn_enemy(EnemySpawnRequestScript.create(enemy_id, {
+					"multipliers": _get_event_enemy_multipliers(event), "enemy_rank": "elite", "source_type": "elite_event"
+				}))
 				if enemy != null:
 					_wave_spawned_count += 1
 			timeline_event_started.emit(
@@ -241,7 +243,7 @@ func _process_boss_minion_spawn(delta: float) -> void:
 	_boss_encounter_controller.call("process_boss_minion_spawn", delta)
 
 
-func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary = {}, enemy_type_override: StringName = &"", limit: int = -1) -> int:
+func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary = {}, source_type: StringName = &"wave", limit: int = -1) -> int:
 	var count_min: int = int(group_config.get("count_min", 1))
 	var count_max: int = int(group_config.get("count_max", count_min))
 	var spawn_count: int = _rng.randi_range(count_min, maxi(count_max, count_min))
@@ -254,20 +256,20 @@ func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary 
 	var enemy_id: StringName = _pick_enemy_id_from_group(group_config)
 	var spawned_count: int = 0
 	for _spawn_index in range(spawn_count):
-		var source_type: StringName = &"boss_minion" if enemy_type_override == &"boss_minion" else &"wave"
-		if _spawn_enemy(enemy_id, false, multipliers, enemy_type_override, source_type) != null:
+		var request: Dictionary = EnemySpawnRequestScript.create(enemy_id, {"multipliers": multipliers, "source_type": String(source_type)})
+		if spawn_enemy(request) != null:
 			spawned_count += 1
 	return spawned_count
 
 
-func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, enemy_type_override: StringName = &"", limit: int = -1) -> int:
+func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, source_type: StringName = &"wave", limit: int = -1) -> int:
 	var remaining: int = maxi(limit, 0)
 	var spawned_count: int = 0
 	while remaining > 0:
 		var group_config: Dictionary = _pick_enemy_group(source)
 		if group_config.is_empty():
 			break
-		var spawned: int = _spawn_from_group_config(group_config, multipliers, enemy_type_override, remaining)
+		var spawned: int = _spawn_from_group_config(group_config, multipliers, source_type, remaining)
 		if spawned <= 0:
 			break
 		spawned_count += spawned
@@ -275,20 +277,9 @@ func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, 
 	return spawned_count
 
 
-func _spawn_enemy(
-	enemy_id: StringName,
-	use_boss_scene: bool = false,
-	multipliers: Dictionary = {},
-	enemy_type_override: StringName = &"",
-	source_type: StringName = &"wave"
-) -> Node2D:
-	var request: Dictionary = EnemySpawnRequestScript.create(enemy_id, {
-		"use_boss_scene": use_boss_scene,
-		"multipliers": multipliers,
-		"enemy_type_override": String(enemy_type_override),
-		"source_type": String(source_type)
-	})
-	if source_type == &"wave" or source_type == &"boss_minion":
+func spawn_enemy(request: Dictionary) -> Node2D:
+	var source_type: String = String(request.get("source_type", "unknown"))
+	if source_type == "wave" or source_type == "boss_minion":
 		request["visible_spawn_warning"] = true
 		request["spawn_warning_duration"] = _spawn_warning_duration
 	return _spawn_service.call("spawn", request) as Node2D
@@ -300,17 +291,6 @@ func _on_boss_died() -> void:
 
 	_boss_active = false
 	boss_defeated.emit(_elapsed_time)
-
-
-func _get_spawn_position() -> Vector2:
-	var target: Node2D = get_tree().get_first_node_in_group(target_group) as Node2D
-	var center: Vector2 = global_position
-	if target != null:
-		center = target.global_position
-
-	var angle: float = _rng.randf_range(0.0, TAU)
-	var radius: float = _rng.randf_range(_spawn_radius_min, _spawn_radius_max)
-	return center + Vector2.RIGHT.rotated(angle) * radius
 
 
 func _apply_timeline_config() -> void:
@@ -500,7 +480,7 @@ func _apply_boss_health_bonus_to_alive_bosses(previous_bonus: float, new_bonus: 
 
 	var ratio: float = new_multiplier / previous_multiplier
 	for enemy: Node in get_tree().get_nodes_in_group(&"enemy"):
-		if String(enemy.get_meta("enemy_type", "normal")) != "boss":
+		if String(enemy.get_meta("enemy_rank", "normal")) != "boss":
 			continue
 
 		var current_max_health: int = int(enemy.get("max_health"))

@@ -4,9 +4,9 @@ class_name Projectile
 
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const PROJECTILE_RETARGET_INTERVAL: float = 0.1
 
@@ -250,7 +250,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	if body.has_method("take_damage"):
-		body.call(&"take_damage", _get_damage_payload(body), damage_type)
+		body.call(&"take_damage", _get_damage_payload(body))
 	_apply_status(body)
 	_consume_pierce()
 
@@ -345,8 +345,8 @@ func _on_hit_visual_finished() -> void:
 	despawn_or_free()
 
 
-func _get_damage_payload(target: Node = null) -> Variant:
-	return DamagePacketBuilderScript.from_combat_object_hit({
+func _get_damage_payload(target: Node = null) -> DamagePacket:
+	return DamagePacketBuilderScript.from_combat_object_hit_object({
 		"template": damage_packet,
 		"target": target,
 		"owner": caster,

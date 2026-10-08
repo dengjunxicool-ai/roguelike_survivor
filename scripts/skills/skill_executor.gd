@@ -5,7 +5,7 @@ class_name SkillExecutor
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const SkillComponentRunnerScript: Script = preload("res://scripts/skills/skill_component_runner.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 
 @export var skill_manager_path: NodePath = NodePath("../SkillManager")
 @export var relic_manager_path: NodePath = NodePath("../RelicManager")

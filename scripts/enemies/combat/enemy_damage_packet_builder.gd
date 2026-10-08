@@ -5,12 +5,12 @@ class_name EnemyDamagePacketBuilder
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 
 
-static func build(owner: Node, amount: int, source_type: String, source_skill_id: Variant, params: Dictionary = {}) -> Dictionary:
+static func build(owner: Node, amount: int, source_type: String, source_skill_id: Variant, params: Dictionary = {}) -> DamagePacket:
 	var enemy_id: StringName = StringName(String(owner.get("enemy_id"))) if owner != null else &"enemy"
 	var source_id_value: String = String(params.get("source_id", source_id_for(owner, source_type)))
 	var skill_id: StringName = StringName(String(source_skill_id))
 	var target: Node = params.get("target") as Node
-	return DamagePacketBuilderScript.from_enemy_action({
+	return DamagePacketBuilderScript.from_enemy_action_object({
 		"owner": owner,
 		"amount": amount,
 		"source_type": source_type,
@@ -28,7 +28,7 @@ static func build(owner: Node, amount: int, source_type: String, source_skill_id
 static func source_id_for(owner: Node, fallback: String = "enemy") -> String:
 	if owner == null:
 		return fallback
-	var rank: String = String(owner.get_meta("enemy_rank", owner.get_meta("enemy_type", "normal")))
+	var rank: String = String(owner.get_meta("enemy_rank", "normal"))
 	return "boss" if rank == "boss" else "enemy"
 
 

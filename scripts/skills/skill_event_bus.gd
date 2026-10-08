@@ -8,7 +8,7 @@ const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_ac
 const SkillTriggerRuleAdapterScript: Script = preload("res://scripts/skills/skill_trigger_rule_adapter.gd")
 const FireSkillRuntimeScript: Script = preload("res://scripts/skills/fire_skill_runtime.gd")
 const SkillSpecialRuleExecutorScript: Script = preload("res://scripts/skills/skill_special_rule_executor.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 var _listeners: Dictionary = {}
 var _action_executor: RefCounted = SkillActionExecutorScript.new()

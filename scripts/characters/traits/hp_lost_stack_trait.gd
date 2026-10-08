@@ -8,7 +8,7 @@ const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skil
 func get_modifiers(_query: RefCounted) -> Dictionary:
 	var modifiers: Dictionary = {}
 	var params: Dictionary = _get_params()
-	SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("base_penalties", {})))
+	SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("base_penalties", [])))
 	var owner: Node = null
 	if context != null:
 		owner = context.get("owner") as Node
@@ -19,7 +19,7 @@ func get_modifiers(_query: RefCounted) -> Dictionary:
 	var lost_percent: float = 1.0 - current_health / max_health
 	var step: float = maxf(float(params.get("hp_step_percent", 0.2)), 0.01)
 	var stack_count: int = mini(floori(lost_percent / step), maxi(int(params.get("max_stacks", 5)), 0))
-	var per_stack: Dictionary = _get_modifier_values(params.get("modifiers_per_stack", {}))
+	var per_stack: Dictionary = _get_modifier_values(params.get("modifiers_per_stack", []))
 	for _stack_index in range(stack_count):
 		SkillModifierCalculatorScript.merge_modifiers(modifiers, per_stack)
 	return modifiers

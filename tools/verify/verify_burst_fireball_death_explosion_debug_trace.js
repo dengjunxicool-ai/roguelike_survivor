@@ -1,3 +1,4 @@
+const { readDebugPanelSources, readSpecialRuleSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -19,7 +20,7 @@ function main() {
   const deathExplosionEnd = specialHandler.indexOf("\n\nstatic func spawn_ground_fire_or_lava", deathExplosionStart);
   assert(deathExplosionStart >= 0 && deathExplosionEnd > deathExplosionStart, "Burst fireball death explosion function must exist");
   const deathExplosionHandler = specialHandler.slice(deathExplosionStart, deathExplosionEnd);
-  const specialRuleExecutor = read("scripts/skills/skill_special_rule_executor.gd");
+  const specialRuleExecutor = readSpecialRuleSources(root);
   const synergyData = JSON.parse(read("data/relics/synergies.json"));
   const synergyManager = read("scripts/skills/synergy_manager.gd");
 
@@ -50,7 +51,7 @@ function main() {
     "Burst fireball death explosion must create a debug explosion record"
   );
   assert(
-    deathExplosionHandler.includes('DamageIntentScript.create(target, packet, &"area_direct").call("apply")') &&
+    deathExplosionHandler.includes('DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)).call("apply")') &&
       deathExplosionHandler.includes('"damage": 0') &&
       deathExplosionHandler.includes('packet["source_type"] = "explosion"'),
     "Burst fireball death explosion must apply traced damage directly and leave AreaEffect as a visual/debug area"
@@ -61,7 +62,7 @@ function main() {
       specialRuleExecutor.includes("_apply_explosion_burn_rules"),
     "Burst fireball explosion burn must preserve debug trace id so burn DOT kills can trigger traceable fireball_burning_death_explosion records"
   );
-  const debugPanel = read("scripts/debug/dev_debug_panel.gd");
+  const debugPanel = readDebugPanelSources(root);
   assert(
     debugPanel.includes('source_skill_id.find("fireball_burning_death_explosion")') && debugPanel.includes('return "爆裂小爆炸"'),
     "DevDebugPanel must label fireball_burning_death_explosion damage records"

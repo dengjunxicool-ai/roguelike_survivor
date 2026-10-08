@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+
 
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
@@ -41,9 +43,10 @@ class SmokeEnemy:
 	func _init() -> void:
 		add_to_group(&"enemies")
 
-	func take_damage(packet: Variant, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		damage_packets.append(packet)
-		var amount: int = int(packet.get("amount", packet.get("raw_amount", 0))) if packet is Dictionary else int(packet)
+		var amount: int = int(packet.get("amount", packet.get("raw_amount", 0)))
 		current_health = maxi(current_health - amount, 0)
 
 	func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -68,6 +71,7 @@ var _unstable_enemy: SmokeEnemy
 var _cluster_enemy: SmokeEnemy
 var _skill_manager: Node
 var _event_bus: Node
+var _registered_enemies: Array[Node] = []
 
 
 func _init() -> void:
@@ -134,6 +138,10 @@ func _run() -> void:
 	await process_frame
 	_expect(_count_area_effects(&"instability_fission_burst") > 0, "Instability max stack triggers fission burst", _count_area_effects(&"instability_fission_burst"))
 
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	for enemy: Node in _registered_enemies:
+		registry.call("unregister_enemy", enemy)
+	_registered_enemies.clear()
 	if not _failed:
 		print("[verify_chaos_skill_runtime_smoke] PASS")
 	quit(1 if _failed else 0)
@@ -146,6 +154,10 @@ func _build_nodes() -> void:
 
 	_skill_manager = SkillManagerScript.new()
 	_skill_manager.name = "SkillManager"
+	# This integration fixture exercises all 14 cards in one scene. Production
+	# slot limits are covered separately by verify_skill_slot_capacity_rules.
+	_skill_manager.max_active_skills = 20
+	_skill_manager.max_passive_skills = 20
 	_player.add_child(_skill_manager)
 
 	_event_bus = SkillEventBusScript.new()
@@ -164,6 +176,9 @@ func _create_enemy(enemy_name: String, position: Vector2) -> SmokeEnemy:
 	enemy.name = enemy_name
 	enemy.global_position = position
 	root.add_child(enemy)
+	var registry: Node = CombatTargetRegistryScript.get_or_create(root)
+	registry.call("register_enemy", enemy)
+	_registered_enemies.append(enemy)
 	var status_manager: Node = StatusEffectManagerScript.new()
 	status_manager.name = "StatusEffectManager"
 	enemy.add_child(status_manager)

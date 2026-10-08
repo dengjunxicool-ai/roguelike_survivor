@@ -30,16 +30,11 @@ func _run() -> void:
 		"verify_data_access_progression_goals"
 	)
 	var manager_result: Dictionary = _call_dictionary(data_manager, "get_progression_goals")
-	GameDataScript._document_cache.clear()
 	var facade_result: Dictionary = GameDataScript.get_progression_goals()
 
 	_expect(not source.is_empty(), "source progression-goals document is non-empty")
 	_expect(manager_result == source, "DataManager values match the source document")
 	_expect(facade_result == manager_result, "GameData normal path matches DataManager")
-	_expect(
-		not GameDataScript._document_cache.has(DataPathsScript.PROGRESSION_GOALS_PATH),
-		"GameData normal path does not enter the JSON document cache"
-	)
 	_expect(
 		_character_sequences(manager_result) == _character_sequences(source),
 		"character and goal order matches the source",
@@ -54,25 +49,11 @@ func _run() -> void:
 	_verify_manager_result_isolation(data_manager, source)
 	_verify_facade_result_isolation(data_manager, source)
 
-	var original_manager_name: StringName = data_manager.name
-	data_manager.name = &"Stage5BUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback_result: Dictionary = GameDataScript.get_progression_goals()
-	var fallback_loaded_document: bool = GameDataScript._document_cache.has(DataPathsScript.PROGRESSION_GOALS_PATH)
-	data_manager.name = original_manager_name
-	GameDataScript._document_cache.clear()
-
-	_expect(fallback_result == source, "fallback values match the source document")
-	_expect(fallback_loaded_document, "fallback enters the JSON document cache")
-	_expect(
-		_character_sequences(fallback_result) == _character_sequences(source),
-		"fallback preserves character and goal order"
-	)
-	_expect(
-		_map_sequences(fallback_result) == _map_sequences(source),
-		"fallback preserves map and objective order"
-	)
-	_expect(GameDataScript.get_progression_goals() == manager_result, "restored facade returns manager-backed values")
+	var original: Dictionary = (data_manager.get("_progression_goals") as Dictionary).duplicate(true)
+	data_manager.set("_progression_goals", {})
+	_expect(GameDataScript.get_progression_goals().is_empty(), "empty owner is authoritative and does not reload JSON")
+	data_manager.set("_progression_goals", original)
+	_expect(GameDataScript.get_progression_goals() == manager_result, "restored owner preserves values")
 
 	_finish()
 

@@ -1,0 +1,1109 @@
+{
+	"version": 1,
+	"documents": [
+		{
+			"path": "res://data/skills/skills.json",
+			"keys": [
+				"starting_skills",
+				"skills"
+			],
+			"sections": [
+				{
+					"key": "starting_skills",
+					"domain": "skills",
+					"id_key": "id"
+				},
+				{
+					"key": "skills",
+					"domain": "skills",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"starting_skills": [
+					"array"
+				],
+				"skills": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/skills/gods.json",
+			"keys": [
+				"gods"
+			],
+			"sections": [
+				{
+					"key": "gods",
+					"domain": "gods",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"gods": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/enemies/enemies.json",
+			"keys": [
+				"monsters"
+			],
+			"sections": [
+				{
+					"key": "monsters",
+					"domain": "enemies",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"monsters": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/enemies/enemy_skills.json",
+			"keys": [
+				"enemy_skills"
+			],
+			"sections": [
+				{
+					"key": "enemy_skills",
+					"domain": "enemy_skills",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"enemy_skills": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/combat/status_effects.json",
+			"keys": [
+				"statuses"
+			],
+			"sections": [
+				{
+					"key": "statuses",
+					"domain": "statuses",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"statuses": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/combat/combat_objects.json",
+			"keys": [
+				"combat_objects"
+			],
+			"sections": [
+				{
+					"key": "combat_objects",
+					"domain": "combat_objects",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"combat_objects": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/summons/summons.json",
+			"keys": [
+				"summons"
+			],
+			"sections": [
+				{
+					"key": "summons",
+					"domain": "summons",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"summons": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/characters/characters.json",
+			"keys": [
+				"characters"
+			],
+			"sections": [
+				{
+					"key": "characters",
+					"domain": "characters",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"characters": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/maps/maps.json",
+			"keys": [
+				"maps"
+			],
+			"sections": [
+				{
+					"key": "maps",
+					"domain": "maps",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"maps": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/relics/relics.json",
+			"keys": [
+				"relics"
+			],
+			"sections": [
+				{
+					"key": "relics",
+					"domain": "relics",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"relics": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/relics/synergies.json",
+			"keys": [
+				"synergies"
+			],
+			"sections": [
+				{
+					"key": "synergies",
+					"domain": "synergies",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"synergies": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/upgrades/upgrades.json",
+			"keys": [
+				"rarity_weights",
+				"curse_choices",
+				"permanent_upgrades",
+				"level_up_upgrades"
+			],
+			"sections": [
+				{
+					"key": "curse_choices",
+					"domain": "upgrades",
+					"id_key": "id"
+				},
+				{
+					"key": "level_up_upgrades",
+					"domain": "upgrades",
+					"id_key": "id"
+				},
+				{
+					"key": "permanent_upgrades",
+					"domain": "upgrades",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"rarity_weights": [
+					"object"
+				],
+				"curse_choices": [
+					"array"
+				],
+				"permanent_upgrades": [
+					"array"
+				],
+				"level_up_upgrades": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/waves/waves.json",
+			"keys": [
+				"run",
+				"spawn_rules",
+				"waves",
+				"boss_event",
+				"rewards"
+			],
+			"sections": [
+				{
+					"key": "waves",
+					"domain": "waves",
+					"id_key": "id"
+				}
+			],
+			"root_fields": {
+				"run": [
+					"object"
+				],
+				"spawn_rules": [
+					"object"
+				],
+				"waves": [
+					"array"
+				],
+				"boss_event": [
+					"object"
+				],
+				"rewards": [
+					"object"
+				]
+			}
+		},
+		{
+			"path": "res://data/progression/progression_goals.json",
+			"keys": [
+				"character_specializations",
+				"map_challenges"
+			],
+			"sections": [
+				{
+					"key": "character_specializations",
+					"domain": "specializations",
+					"id_key": ""
+				},
+				{
+					"key": "map_challenges",
+					"domain": "map_challenges",
+					"id_key": ""
+				}
+			],
+			"root_fields": {
+				"character_specializations": [
+					"array"
+				],
+				"map_challenges": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/progression/challenges.json",
+			"keys": [
+				"daily_challenges",
+				"weekly_challenges"
+			],
+			"sections": [
+				{
+					"key": "daily_challenges",
+					"domain": "challenges",
+					"id_key": "challenge_id"
+				},
+				{
+					"key": "weekly_challenges",
+					"domain": "challenges",
+					"id_key": "challenge_id"
+				}
+			],
+			"root_fields": {
+				"daily_challenges": [
+					"array"
+				],
+				"weekly_challenges": [
+					"array"
+				]
+			}
+		},
+		{
+			"path": "res://data/config/skill_system_config.json",
+			"keys": [
+				"range_unit_px"
+			],
+			"sections": [],
+			"root_fields": {
+				"range_unit_px": [
+					"number"
+				]
+			}
+		}
+	],
+	"domains": {
+		"skills": {
+			"required": [
+				"id",
+				"display_name",
+				"school",
+				"skill_type",
+				"slot_category"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"tags": [
+					"array"
+				],
+				"max_level": [
+					"number"
+				],
+				"base": [
+					"object"
+				],
+				"components": [
+					"array"
+				],
+				"events": [
+					"array"
+				],
+				"damage_scaling": [
+					"object"
+				],
+				"runtime_family": [
+					"string"
+				],
+				"is_starting_skill": [
+					"boolean"
+				],
+				"offer_in_upgrade_pool": [
+					"boolean"
+				],
+				"particle": [
+					"object"
+				],
+				"skill_type": [
+					"string"
+				],
+				"school": [
+					"string"
+				],
+				"slot_category": [
+					"string"
+				],
+				"fusion_school": [
+					"null",
+					"string"
+				],
+				"rarity": [
+					"string"
+				],
+				"exclusive_group": [
+					"string",
+					"null"
+				],
+				"mechanic_family": [
+					"string"
+				],
+				"offer_rule": [
+					"object"
+				],
+				"trigger_rules": [
+					"array"
+				],
+				"effects": [
+					"array"
+				],
+				"runtime_rules": [
+					"object"
+				],
+				"base_special_rules": [
+					"object"
+				],
+				"skill_modifiers": [
+					"array"
+				],
+				"replaces_skill": [
+					"string"
+				],
+				"learnable_from_pool": [
+					"boolean"
+				]
+			}
+		},
+		"gods": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"title": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"tags": [
+					"array"
+				],
+				"color": [
+					"object"
+				],
+				"implemented": [
+					"boolean"
+				]
+			}
+		},
+		"enemies": {
+			"required": [
+				"id",
+				"display_name",
+				"enemy_rank",
+				"base_stats"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"base_stats": [
+					"object"
+				],
+				"behavior": [
+					"object"
+				],
+				"skills": [
+					"array"
+				],
+				"visual": [
+					"object"
+				],
+				"enemy_rank": [
+					"string"
+				],
+				"death_policy": [
+					"object"
+				]
+			},
+			"object_fields": {
+				"base_stats": {
+					"max_hp": [
+						"number"
+					],
+					"move_speed": [
+						"number"
+					],
+					"contact_damage": [
+						"number"
+					],
+					"armor": [
+						"number"
+					],
+					"resistances": [
+						"object"
+					],
+					"attack_range": [
+						"number"
+					],
+					"exp_drop": [
+						"number"
+					],
+					"soul_drop": [
+						"number"
+					],
+					"collision_radius": [
+						"number"
+					],
+					"contact_interval": [
+						"number"
+					]
+				}
+			},
+			"object_required": {
+				"base_stats": [
+					"max_hp",
+					"move_speed",
+					"contact_damage",
+					"contact_interval",
+					"armor",
+					"exp_drop"
+				]
+			}
+		},
+		"enemy_skills": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"cooldown": [
+					"number"
+				],
+				"actions": [
+					"array"
+				],
+				"runtime": [
+					"string"
+				]
+			}
+		},
+		"statuses": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"duration": [
+					"number"
+				],
+				"tick_interval": [
+					"number"
+				],
+				"refresh_rule": [
+					"string"
+				],
+				"boss_conversion_rule": [
+					"string"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"type": [
+					"string"
+				],
+				"max_stacks": [
+					"number"
+				],
+				"effect": [
+					"object"
+				],
+				"max_stack_status": [
+					"string"
+				],
+				"max_stack_event": [
+					"string"
+				],
+				"on_expire": [
+					"array"
+				],
+				"consume_stack_on_tick": [
+					"boolean"
+				],
+				"on_tick_effects": [
+					"array"
+				],
+				"damage_type": [
+					"string"
+				],
+				"element": [
+					"string"
+				],
+				"can_crit": [
+					"boolean"
+				],
+				"visual": [
+					"object"
+				],
+				"damage": [
+					"number"
+				],
+				"boss_modifiers": [
+					"object"
+				],
+				"elite_modifiers": [
+					"object"
+				],
+				"elite_duration": [
+					"number"
+				],
+				"boss_duration": [
+					"number"
+				]
+			}
+		},
+		"combat_objects": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"type": [
+					"string"
+				],
+				"scene": [
+					"string"
+				],
+				"collision_radius": [
+					"number"
+				],
+				"destroy_on_wall": [
+					"boolean"
+				],
+				"destroy_on_hit": [
+					"boolean"
+				],
+				"visual": [
+					"object"
+				],
+				"visual_style": [
+					"string"
+				],
+				"visual_mode": [
+					"string"
+				],
+				"visual_color": [
+					"array"
+				],
+				"visual_ring_color": [
+					"array"
+				],
+				"persistent": [
+					"boolean"
+				],
+				"follow_owner": [
+					"boolean"
+				],
+				"visual_effect_scene": [
+					"string"
+				]
+			}
+		},
+		"summons": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"name": [
+					"string"
+				],
+				"scene_path": [
+					"string"
+				],
+				"max_count": [
+					"number"
+				],
+				"duration": [
+					"number"
+				],
+				"movement": [
+					"object"
+				],
+				"targeting": [
+					"object"
+				],
+				"attack": [
+					"object"
+				],
+				"visual": [
+					"object"
+				]
+			}
+		},
+		"characters": {
+			"required": [
+				"id",
+				"display_name",
+				"starting_skill_id"
+			],
+			"fields": {
+				"visual": [
+					"object"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"role": [
+					"string"
+				],
+				"unlock": [
+					"object"
+				],
+				"trait": [
+					"object"
+				],
+				"base_stats": [
+					"object"
+				],
+				"starting_skill_id": [
+					"string"
+				]
+			},
+			"object_fields": {
+				"base_stats": {
+					"max_hp": [
+						"number"
+					],
+					"move_speed": [
+						"number"
+					],
+					"attack_power": [
+						"number"
+					],
+					"damage_multiplier": [
+						"number"
+					],
+					"attack_speed_multiplier": [
+						"number"
+					],
+					"crit_chance": [
+						"number"
+					],
+					"crit_damage": [
+						"number"
+					],
+					"armor": [
+						"number"
+					],
+					"pickup_radius": [
+						"number"
+					],
+					"soul_gain_multiplier": [
+						"number"
+					]
+				}
+			}
+		},
+		"maps": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"map_variable": [
+					"object"
+				],
+				"difficulty": [
+					"number"
+				],
+				"boss_id": [
+					"string"
+				],
+				"elite_preview_ids": [
+					"array"
+				],
+				"visual": [
+					"object"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"unlock": [
+					"object"
+				]
+			}
+		},
+		"relics": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"rarity": [
+					"string"
+				],
+				"tags": [
+					"array"
+				],
+				"trigger_condition": [
+					"object"
+				],
+				"cooldown": [
+					"number"
+				],
+				"limit_rule": [
+					"object"
+				],
+				"negative_modifier": [
+					"array"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"modifiers": [
+					"array"
+				],
+				"unlock": [
+					"object"
+				]
+			}
+		},
+		"synergies": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"required_skill_tags": [
+					"array"
+				],
+				"effect": [
+					"object"
+				]
+			}
+		},
+		"upgrades": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"rarity": [
+					"string"
+				],
+				"tags": [
+					"array"
+				],
+				"required_player_state": [
+					"object"
+				],
+				"exclude_tags": [
+					"array"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"description": [
+					"string"
+				],
+				"enabled": [
+					"boolean"
+				],
+				"base_weight": [
+					"number"
+				],
+				"weight_decay": [
+					"number"
+				],
+				"max_level": [
+					"number"
+				],
+				"modifiers": [
+					"array"
+				],
+				"level_modifiers": [
+					"array"
+				],
+				"level_descriptions": [
+					"array"
+				]
+			}
+		},
+		"waves": {
+			"required": [
+				"id"
+			],
+			"fields": {
+				"start_time": [
+					"number"
+				],
+				"end_time": [
+					"number"
+				],
+				"max_alive": [
+					"number"
+				],
+				"spawn_interval": [
+					"number"
+				],
+				"enemy_multipliers": [
+					"object"
+				],
+				"groups": [
+					"array"
+				],
+				"id": [
+					"string"
+				],
+				"display_name": [
+					"string"
+				],
+				"duration_seconds": [
+					"number"
+				],
+				"events": [
+					"array"
+				]
+			}
+		},
+		"specializations": {
+			"required": [
+				"character_id",
+				"goals"
+			],
+			"fields": {
+				"character_id": [
+					"string"
+				],
+				"goals": [
+					"array"
+				]
+			}
+		},
+		"map_challenges": {
+			"required": [
+				"map_id",
+				"objectives"
+			],
+			"fields": {
+				"map_id": [
+					"string"
+				],
+				"objectives": [
+					"array"
+				]
+			}
+		},
+		"challenges": {
+			"required": [
+				"challenge_id",
+				"character_id",
+				"map_id"
+			],
+			"fields": {
+				"challenge_id": [
+					"string"
+				],
+				"character_id": [
+					"string"
+				],
+				"map_id": [
+					"string"
+				],
+				"modifiers": [
+					"array"
+				],
+				"display_name": [
+					"string"
+				]
+			}
+		}
+	},
+	"skill_types": [
+		"attack",
+		"dash",
+		"cast",
+		"summon",
+		"passive",
+		"power",
+		"core",
+		"fusion"
+	],
+	"enemy_ranks": [
+		"normal",
+		"elite",
+		"boss"
+	],
+	"modifier_operations": [
+		"add",
+		"multiply",
+		"multiplier_add",
+		"override",
+		"raw"
+	],
+	"modifier_fields": [
+		"modifiers",
+		"negative_modifier",
+		"positive_modifier",
+		"modifiers_per_stack",
+		"full_stack_modifiers",
+		"modifiers_per_level",
+		"base_penalties",
+		"skill_modifiers",
+		"active_modifiers",
+		"penalty_modifiers",
+		"base_modifiers",
+		"shield_active_modifiers",
+		"runtime_modifiers"
+	],
+	"modifier_scope_keys": [
+		"domain",
+		"skill_id",
+		"source_origin_id",
+		"object_type",
+		"damage_origin",
+		"element",
+		"target_type",
+		"status_id",
+		"tag"
+	],
+	"modifier_domains": [
+		"player",
+		"skill",
+		"damage",
+		"status",
+		"object",
+		"economy",
+		"enemy_spawn",
+		"progression"
+	],
+	"resource_fields": [
+		"texture",
+		"sprite_frames",
+		"scene",
+		"material",
+		"visual_effect_scene",
+		"scene_path",
+		"background"
+	]
+}

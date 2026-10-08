@@ -3,7 +3,7 @@ extends Node
 
 const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
-const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
+const DebugCombatTraceScript: Script = preload("res://scripts/runtime/debug_combat_trace.gd")
 
 var _failed: bool = false
 var _lines: Array[String] = []

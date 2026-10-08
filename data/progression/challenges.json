@@ -11,7 +11,8 @@
 					"value": 0.15,
 					"scope": {
 						"domain": "enemy_spawn"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"display_name": "每日示例：火焰法师"
@@ -29,7 +30,8 @@
 					"value": 0.12,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				},
 				{
 					"stat": "soul_gain",
@@ -37,7 +39,8 @@
 					"value": 0.2,
 					"scope": {
 						"domain": "economy"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"display_name": "每周示例：纯生存"

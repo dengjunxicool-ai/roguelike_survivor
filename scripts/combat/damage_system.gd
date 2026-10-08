@@ -1,10 +1,10 @@
-﻿extends RefCounted
+extends RefCounted
 class_name DamageSystem
 
 
 const DamageRoundingServiceScript: Script = preload("res://scripts/combat/damage_rounding_service.gd")
 const DamageCalculationContextScript: Script = preload("res://scripts/combat/damage_calculation_context.gd")
-const DamagePacketNormalizerScript: Script = preload("res://scripts/combat/damage_packet_normalizer.gd")
+const DamagePacketPreparationScript: Script = preload("res://scripts/combat/damage_packet_preparation.gd")
 const DamageResultScript: Script = preload("res://scripts/combat/damage_result.gd")
 const DamageStageScript: Script = preload("res://scripts/combat/damage_stage.gd")
 const DamagePipelineScript: Script = preload("res://scripts/combat/damage_pipeline.gd")
@@ -53,18 +53,13 @@ const TYPE_TRAP_DAMAGE: String = "trap_damage"
 const TYPE_SUMMON_DAMAGE: String = "summon_damage"
 const TYPE_TRUE_DAMAGE: String = "true_damage"
 const TYPE_TRUE_PERCENT_DAMAGE: String = "true_percent_damage"
-static func calculate(amount_or_packet: Variant, target: Node, legacy_damage_type: Variant = &"", attacker: Node = null) -> Dictionary:
-	var calculation_context: RefCounted = _create_calculation_context(amount_or_packet, legacy_damage_type, attacker, target)
-	return _calculate_context(calculation_context)
+static func calculate(packet: DamagePacket, target: Node) -> DamageResult:
+	var calculation_context: RefCounted = _create_calculation_context(packet, target)
+	if calculation_context == null:
+		return DamageResultScript.make(packet, 0, false, 0.0, 1.0, {}) as DamageResult
+	_calculate_context(calculation_context)
+	return calculation_context.get("result_object") as DamageResult
 
-
-static func calculate_result(amount_or_packet: Variant, target: Node, legacy_damage_type: Variant = &"", attacker: Node = null) -> RefCounted:
-	var calculation_context: RefCounted = _create_calculation_context(amount_or_packet, legacy_damage_type, attacker, target)
-	var result: Dictionary = _calculate_context(calculation_context)
-	var result_object: RefCounted = calculation_context.get("result_object") as RefCounted
-	if result_object != null:
-		return result_object
-	return DamageResultScript.from_dictionary(result)
 
 
 static func _calculate_context(calculation_context: RefCounted) -> Dictionary:
@@ -83,11 +78,11 @@ static func _calculate_context(calculation_context: RefCounted) -> Dictionary:
 	return _calculate_standard_damage(calculation_context)
 
 
-static func _calculate_standard_damage(calculation_context: RefCounted) -> Dictionary:
+static func _calculate_standard_damage(calculation_context: DamageCalculationContext) -> Dictionary:
 	var raw_amount: float = float(calculation_context.get("raw_amount"))
 	var source_attacker: Node = calculation_context.call("packet_value", "attacker", calculation_context.get("attacker")) as Node
-	var damage_modifiers: Dictionary = _get_attacker_damage_modifiers_for_context(calculation_context, source_attacker)
 	calculation_context.set("attacker", source_attacker)
+	var damage_modifiers: Dictionary = _get_attacker_damage_modifiers_for_context(calculation_context)
 	calculation_context.set("damage_modifiers", damage_modifiers)
 	var stages: Dictionary = calculation_context.get("stages")
 	calculation_context.call("set_stage_order", [
@@ -273,32 +268,13 @@ static func _apply_player_rounding_stage(calculation_context: RefCounted, after_
 	return DamagePlayerIncomingResolverScript.apply_player_rounding_stage(calculation_context, after_reduction)
 
 
-static func _normalize_packet(amount_or_packet: Variant, legacy_damage_type: Variant, attacker: Node, target: Node = null) -> Dictionary:
-	return DamagePacketNormalizerScript.normalize_to_dictionary(amount_or_packet, legacy_damage_type, attacker, target)
 
 
-static func _create_calculation_context(amount_or_packet: Variant, legacy_damage_type: Variant, attacker: Node, target: Node = null) -> RefCounted:
-	var packet_object: RefCounted = _normalize_packet_object(amount_or_packet, legacy_damage_type, attacker, target)
-	var packet: Dictionary = packet_object.call("to_dictionary")
-	var source_attacker: Node = packet.get("attacker", attacker) as Node
-	return DamageCalculationContextScript.create(packet_object, target, source_attacker)
-
-
-static func _normalize_packet_object(amount_or_packet: Variant, legacy_damage_type: Variant, attacker: Node, target: Node = null) -> RefCounted:
-	return DamagePacketNormalizerScript.normalize_to_packet(amount_or_packet, legacy_damage_type, attacker, target)
-
-
-static func _normalize_element(value: String, packet: Dictionary) -> String:
-	return DamagePacketNormalizerScript.normalize_element(value, packet)
-
-
-static func _normalize_damage_type(value: String, origin: String) -> String:
-	return DamagePacketNormalizerScript.normalize_damage_type(value, origin)
-
-
-static func _normalize_origin(value: String, packet: Dictionary) -> String:
-	return DamagePacketNormalizerScript.normalize_origin(value, packet)
-
+static func _create_calculation_context(packet: DamagePacket, target: Node = null) -> RefCounted:
+	var prepared: DamagePacket = DamagePacketPreparationScript.prepare(packet, target)
+	if prepared == null:
+		return null
+	return DamageCalculationContextScript.create(prepared, target, prepared.source_context.attacker)
 
 static func _apply_defense(pre_mitigation: float, packet: Dictionary, target: Node) -> float:
 	return DamageDefenseResolverScript.apply_defense(pre_mitigation, packet, target)
@@ -336,17 +312,17 @@ static func _get_target_class_origin_modifier_for_context(calculation_context: R
 	return DamageTargetMitigationScript.target_class_origin_modifier_for_context(calculation_context)
 
 
-static func _get_attacker_damage_modifiers(packet: Dictionary, attacker: Node) -> Dictionary:
+static func _get_attacker_damage_modifiers(packet: DamagePacket, attacker: Node) -> Dictionary:
 	if attacker == null:
 		return {}
 	return ModifierAggregatorScript.collect(ModifierQueryScript.for_damage(packet, attacker))
 
 
-static func _get_attacker_damage_modifiers_for_context(calculation_context: RefCounted, attacker: Node) -> Dictionary:
-	if attacker == null:
+static func _get_attacker_damage_modifiers_for_context(calculation_context: DamageCalculationContext) -> Dictionary:
+	if calculation_context.attacker == null:
 		return {}
-	var damage_query: RefCounted = DamageModifierQueryScript.make(calculation_context, attacker)
-	return ModifierAggregatorScript.collect(damage_query.call("to_modifier_query"))
+	var damage_query: DamageModifierQuery = DamageModifierQueryScript.make(calculation_context.packet, calculation_context.attacker, calculation_context.target_profile)
+	return ModifierAggregatorScript.collect(damage_query.to_modifier_query())
 
 
 static func _get_character_damage_multiplier(packet: Dictionary, attacker: Node, damage_modifiers: Dictionary = {}) -> float:
@@ -413,12 +389,10 @@ static func _get_special_final_modifier_for_context(calculation_context: RefCoun
 	return DamageSpecialFinalResolverScript.special_final_modifier_for_context(calculation_context)
 
 
-static func _warn_invalid_origin_type(packet: Dictionary) -> void:
-	DamagePacketNormalizerScript.warn_invalid_origin_type(packet)
 
 
 static func _is_legal_origin_type(origin: String, damage_type: String) -> bool:
-	return DamagePacketNormalizerScript.is_legal_origin_type(origin, damage_type)
+	return DamageRuleRegistryScript.is_legal_origin_type(origin, damage_type)
 
 
 static func _is_player_target(target: Node) -> bool:

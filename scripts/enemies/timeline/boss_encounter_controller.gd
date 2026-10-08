@@ -2,6 +2,8 @@ extends RefCounted
 class_name BossEncounterController
 
 
+const EnemySpawnRequestScript: Script = preload("res://scripts/enemies/spawning/enemy_spawn_request.gd")
+
 var _owner: Node
 
 
@@ -25,7 +27,13 @@ func process_boss_event() -> void:
 		_owner.call("_clear_normal_enemies")
 
 	var enemy_id: StringName = StringName(String(boss_event.get("boss_id", boss_event.get("enemy_id", "dungeon_heart"))))
-	var boss: Node2D = _owner.call("_spawn_enemy", enemy_id, true, _owner.call("_get_boss_enemy_multipliers", boss_event), &"boss", &"boss") as Node2D
+	var request: Dictionary = EnemySpawnRequestScript.create(enemy_id, {
+		"use_boss_scene": true,
+		"multipliers": _owner.call("_get_boss_enemy_multipliers", boss_event),
+		"enemy_rank": "boss",
+		"source_type": "boss"
+	})
+	var boss: Node2D = _owner.call("spawn_enemy", request) as Node2D
 	_owner.set("_triggered_boss_event", true)
 	_owner.set("_boss_active", boss != null)
 	_owner.set("_boss_minion_spawn_cooldown", maxf(float(_owner.get("_normal_spawn_cooldown")), 0.0))

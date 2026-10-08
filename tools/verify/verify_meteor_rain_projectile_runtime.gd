@@ -1,5 +1,7 @@
 extends SceneTree
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
+
 
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
@@ -32,9 +34,10 @@ class TestTarget:
 	func _init() -> void:
 		add_to_group(&"enemies")
 
-	func take_damage(packet: Dictionary, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		damage_packets.append(packet.duplicate(true))
-		damage_results.append(DamageSystemScript.calculate(packet, self))
+		damage_results.append(DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), self).to_dictionary())
 
 	func apply_status(status_id: StringName, _params: Dictionary = {}) -> bool:
 		status_applications.append(status_id)

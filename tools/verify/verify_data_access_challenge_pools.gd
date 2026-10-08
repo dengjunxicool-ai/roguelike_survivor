@@ -35,7 +35,6 @@ func _run() -> void:
 	var manager_daily: Array[Dictionary] = _call_pool(data_manager, "get_daily_challenge_definitions")
 	var manager_weekly: Array[Dictionary] = _call_pool(data_manager, "get_weekly_challenge_definitions")
 
-	GameDataScript._document_cache.clear()
 	var facade_daily: Array[Dictionary] = GameDataScript.get_daily_challenge_pool()
 	var facade_weekly: Array[Dictionary] = GameDataScript.get_weekly_challenge_pool()
 
@@ -47,15 +46,10 @@ func _run() -> void:
 	_expect(_signatures(manager_weekly) == _signatures(source_weekly), "weekly order and modifiers match source", _signatures(manager_weekly))
 	_expect(facade_daily == manager_daily, "daily facade matches DataManager")
 	_expect(facade_weekly == manager_weekly, "weekly facade matches DataManager")
-	_expect(
-		not GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH),
-		"normal challenge facades do not enter the JSON cache"
-	)
 
 	_verify_manager_isolation(data_manager, source_daily, source_weekly)
 	_verify_facade_isolation(data_manager, source_daily, source_weekly)
-	_verify_independent_empty_pool_fallback(data_manager, manager_daily, manager_weekly, source_daily, source_weekly)
-	_verify_full_fallback(data_manager, manager_daily, manager_weekly, source_daily, source_weekly)
+	_verify_independent_empty_owner(data_manager, manager_daily, manager_weekly, source_daily, source_weekly)
 
 	_finish()
 
@@ -80,65 +74,16 @@ func _verify_facade_isolation(data_manager: Node, source_daily: Array[Dictionary
 	_expect(_call_pool(data_manager, "get_weekly_challenge_definitions") == source_weekly, "weekly facade mutation does not affect DataManager")
 
 
-func _verify_independent_empty_pool_fallback(
-	data_manager: Node,
-	manager_daily: Array[Dictionary],
-	manager_weekly: Array[Dictionary],
-	source_daily: Array[Dictionary],
-	source_weekly: Array[Dictionary]
-) -> void:
-	var empty_pool: Array[Dictionary] = []
-	data_manager.set("_daily_challenge_definitions", empty_pool)
-	GameDataScript._document_cache.clear()
-	var daily_fallback: Array[Dictionary] = GameDataScript.get_daily_challenge_pool()
-	var daily_used_fallback: bool = GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH)
-	GameDataScript._document_cache.clear()
-	var weekly_still_manager: Array[Dictionary] = GameDataScript.get_weekly_challenge_pool()
-	var weekly_avoided_fallback: bool = not GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH)
-	data_manager.set("_daily_challenge_definitions", manager_daily.duplicate(true))
-
-	data_manager.set("_weekly_challenge_definitions", empty_pool)
-	GameDataScript._document_cache.clear()
-	var weekly_fallback: Array[Dictionary] = GameDataScript.get_weekly_challenge_pool()
-	var weekly_used_fallback: bool = GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH)
-	GameDataScript._document_cache.clear()
-	var daily_still_manager: Array[Dictionary] = GameDataScript.get_daily_challenge_pool()
-	var daily_avoided_fallback: bool = not GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH)
-	data_manager.set("_weekly_challenge_definitions", manager_weekly.duplicate(true))
-	GameDataScript._document_cache.clear()
-
-	_expect(daily_fallback == source_daily and daily_used_fallback, "empty daily manager pool falls back independently")
-	_expect(weekly_still_manager == source_weekly and weekly_avoided_fallback, "valid weekly manager pool remains manager-backed")
-	_expect(weekly_fallback == source_weekly and weekly_used_fallback, "empty weekly manager pool falls back independently")
-	_expect(daily_still_manager == source_daily and daily_avoided_fallback, "valid daily manager pool remains manager-backed")
-
-
-func _verify_full_fallback(
-	data_manager: Node,
-	manager_daily: Array[Dictionary],
-	manager_weekly: Array[Dictionary],
-	source_daily: Array[Dictionary],
-	source_weekly: Array[Dictionary]
-) -> void:
-	var original_manager_name: StringName = data_manager.name
-	data_manager.name = &"Stage5CUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback_daily: Array[Dictionary] = GameDataScript.get_daily_challenge_pool()
-	var fallback_weekly: Array[Dictionary] = GameDataScript.get_weekly_challenge_pool()
-	var fallback_loaded_document: bool = GameDataScript._document_cache.has(DataPathsScript.CHALLENGES_PATH)
-	var daily_mutated: bool = _mutate_first_scope(fallback_daily, "__stage5c_daily_fallback__")
-	var weekly_mutated: bool = _mutate_first_scope(fallback_weekly, "__stage5c_weekly_fallback__")
-	var fresh_fallback_daily: Array[Dictionary] = GameDataScript.get_daily_challenge_pool()
-	var fresh_fallback_weekly: Array[Dictionary] = GameDataScript.get_weekly_challenge_pool()
-	data_manager.name = original_manager_name
-	GameDataScript._document_cache.clear()
-
-	_expect(fallback_loaded_document, "fallback enters the challenge JSON cache")
-	_expect(daily_mutated and weekly_mutated, "fallback pools expose nested scope probes")
-	_expect(fresh_fallback_daily == source_daily, "daily fallback output is deeply isolated")
-	_expect(fresh_fallback_weekly == source_weekly, "weekly fallback output is deeply isolated")
-	_expect(GameDataScript.get_daily_challenge_pool() == manager_daily, "restored daily facade is manager-backed")
-	_expect(GameDataScript.get_weekly_challenge_pool() == manager_weekly, "restored weekly facade is manager-backed")
+func _verify_independent_empty_owner(data_manager: Node, manager_daily: Array[Dictionary], manager_weekly: Array[Dictionary], source_daily: Array[Dictionary], source_weekly: Array[Dictionary]) -> void:
+	var empty: Array[Dictionary] = []
+	data_manager.set("_daily_challenge_definitions", empty)
+	_expect(GameDataScript.get_daily_challenge_pool().is_empty(), "empty daily owner stays authoritative")
+	_expect(GameDataScript.get_weekly_challenge_pool() == source_weekly, "weekly owner remains independent")
+	data_manager.set("_daily_challenge_definitions", manager_daily)
+	data_manager.set("_weekly_challenge_definitions", empty)
+	_expect(GameDataScript.get_weekly_challenge_pool().is_empty(), "empty weekly owner stays authoritative")
+	_expect(GameDataScript.get_daily_challenge_pool() == source_daily, "daily owner remains independent")
+	data_manager.set("_weekly_challenge_definitions", manager_weekly)
 
 
 func _mutate_first_scope(pool: Array[Dictionary], marker: String) -> bool:

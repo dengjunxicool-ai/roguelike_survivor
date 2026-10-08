@@ -36,9 +36,9 @@ func get_modifiers(_query: RefCounted) -> Dictionary:
 	var params: Dictionary = _get_params()
 	var required_time: float = maxf(float(params.get("moving_seconds_required", 2.5)), 0.0)
 	if _moving_time >= required_time:
-		return _get_modifier_values(params.get("active_modifiers", {}))
+		return _get_modifier_values(params.get("active_modifiers", []))
 	if _movement_penalty_remaining > 0.0:
-		return _get_modifier_values(params.get("penalty_modifiers", {}))
+		return _get_modifier_values(params.get("penalty_modifiers", []))
 	return {}
 
 

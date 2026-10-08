@@ -4,16 +4,18 @@ class_name DamageModifierQuery
 
 const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 
-var query: RefCounted
+var query: ModifierQuery
 
 
-static func make(packet_source: Variant, attacker: Node = null) -> RefCounted:
-	var result: RefCounted = new()
-	result.query = ModifierQueryScript.for_damage_any(packet_source, attacker)
+static func make(packet: DamagePacket, attacker: Node = null, target_profile: TargetDamageProfile = null) -> DamageModifierQuery:
+	var result: DamageModifierQuery = new()
+	result.query = ModifierQueryScript.for_damage(packet, attacker)
+	if result.query.target_type == &"" and target_profile != null:
+		result.query.target_type = target_profile.target_type
 	return result
 
 
-func to_modifier_query() -> RefCounted:
+func to_modifier_query() -> ModifierQuery:
 	return query
 
 

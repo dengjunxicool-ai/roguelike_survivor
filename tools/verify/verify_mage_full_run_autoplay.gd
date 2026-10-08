@@ -717,8 +717,7 @@ func _enemy_snapshot(enemy: Node2D) -> Dictionary:
 		return {}
 	return {
 		"id": String(enemy.get("enemy_id")),
-		"type": String(enemy.get_meta("enemy_type", "normal")),
-		"rank": String(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "normal"))),
+		"enemy_rank": String(enemy.get_meta("enemy_rank", "normal")),
 		"current_health": int(enemy.get("current_health")),
 		"max_health": int(enemy.get("max_health")),
 		"position": _vec(enemy.global_position)
@@ -913,7 +912,7 @@ func _boss() -> Node2D:
 
 
 func _is_boss(enemy: Node) -> bool:
-	return enemy != null and (enemy.is_in_group(&"bosses") or String(enemy.get_meta("enemy_rank", "")) == "boss" or String(enemy.get_meta("enemy_type", "")) == "boss")
+	return enemy != null and String(enemy.get_meta("enemy_rank", "")) == "boss"
 
 
 func _find_button(root: Node, text: String) -> Button:

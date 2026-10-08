@@ -1,25 +1,19 @@
 {
 	"monsters": [
 		{
-			"move_speed": 45.0,
-			"contact_damage": 6.0,
-			"contact_interval": 0.8,
-			"collision_radius": 18.0,
-			"resistances": {},
 			"id": "small_slime",
 			"display_name": "小史莱姆",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 18.0,
-				"move_speed": 45.0,
-				"contact_damage": 6.0,
-				"armor": 0.0,
-				"defense": 0.0,
+				"max_hp": 18,
+				"move_speed": 45,
+				"contact_damage": 6,
+				"armor": 0,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 3.0,
-				"soul_drop": 0.0,
-				"collision_radius": 18.0
+				"attack_range": 48,
+				"exp_drop": 3,
+				"soul_drop": 0,
+				"collision_radius": 18,
+				"contact_interval": 0.8
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -43,28 +37,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 52.0,
-			"contact_damage": 9.0,
-			"contact_interval": 0.9,
-			"collision_radius": 20.0,
-			"resistances": {},
 			"id": "skeleton",
 			"display_name": "骷髅兵",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 30.0,
-				"move_speed": 52.0,
-				"contact_damage": 9.0,
-				"armor": 1.0,
-				"defense": 1.0,
+				"max_hp": 30,
+				"move_speed": 52,
+				"contact_damage": 9,
+				"armor": 1,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 5.0,
-				"soul_drop": 0.0,
-				"collision_radius": 20.0
+				"attack_range": 48,
+				"exp_drop": 5,
+				"soul_drop": 0,
+				"collision_radius": 20,
+				"contact_interval": 0.9
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -88,28 +77,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 82.0,
-			"contact_damage": 7.0,
-			"contact_interval": 0.7,
-			"collision_radius": 14.0,
-			"resistances": {},
 			"id": "bat",
 			"display_name": "蝙蝠",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 22.0,
-				"move_speed": 82.0,
-				"contact_damage": 7.0,
-				"armor": 0.0,
-				"defense": 0.0,
+				"max_hp": 22,
+				"move_speed": 82,
+				"contact_damage": 7,
+				"armor": 0,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 4.0,
-				"soul_drop": 0.0,
-				"collision_radius": 14.0
+				"attack_range": 48,
+				"exp_drop": 4,
+				"soul_drop": 0,
+				"collision_radius": 14,
+				"contact_interval": 0.7
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -133,34 +117,29 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 42.0,
-			"contact_damage": 8.0,
-			"contact_interval": 1.1,
-			"collision_radius": 18.0,
-			"resistances": {},
 			"id": "archer_skeleton",
 			"display_name": "弓箭骷髅",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 38.0,
-				"move_speed": 42.0,
-				"contact_damage": 8.0,
-				"armor": 1.0,
-				"defense": 1.0,
+				"max_hp": 38,
+				"move_speed": 42,
+				"contact_damage": 8,
+				"armor": 1,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 7.0,
-				"soul_drop": 0.0,
-				"collision_radius": 18.0
+				"attack_range": 48,
+				"exp_drop": 7,
+				"soul_drop": 0,
+				"collision_radius": 18,
+				"contact_interval": 1.1
 			},
 			"behavior": {
 				"type": "keep_distance_and_shoot",
 				"projectile_warning_time": 0.45,
-				"projectile_warning_width": 8.0,
-				"projectile_warning_range": 420.0
+				"projectile_warning_width": 8,
+				"projectile_warning_range": 420
 			},
 			"skills": [
 				{
@@ -186,28 +165,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 58.0,
-			"contact_damage": 7.0,
-			"contact_interval": 0.8,
-			"collision_radius": 16.0,
-			"resistances": {},
 			"id": "toxic_bug",
 			"display_name": "毒虫",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 36.0,
-				"move_speed": 58.0,
-				"contact_damage": 7.0,
-				"armor": 0.0,
-				"defense": 0.0,
+				"max_hp": 36,
+				"move_speed": 58,
+				"contact_damage": 7,
+				"armor": 0,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 5.0,
-				"soul_drop": 0.0,
-				"collision_radius": 16.0
+				"attack_range": 48,
+				"exp_drop": 5,
+				"soul_drop": 0,
+				"collision_radius": 16,
+				"contact_interval": 0.8
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -235,28 +209,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 54.0,
-			"contact_damage": 18.0,
-			"contact_interval": 1.0,
-			"collision_radius": 20.0,
-			"resistances": {},
 			"id": "bomber",
 			"display_name": "炸弹怪",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 45.0,
-				"move_speed": 54.0,
-				"contact_damage": 18.0,
-				"armor": 0.0,
-				"defense": 0.0,
+				"max_hp": 45,
+				"move_speed": 54,
+				"contact_damage": 18,
+				"armor": 0,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 6.0,
-				"soul_drop": 0.0,
-				"collision_radius": 20.0
+				"attack_range": 48,
+				"exp_drop": 6,
+				"soul_drop": 0,
+				"collision_radius": 20,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "explode_near_player"
@@ -293,55 +262,45 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 38.0,
-			"contact_damage": 14.0,
-			"contact_interval": 1.0,
-			"collision_radius": 24.0,
-			"resistances": {},
 			"id": "armored_skeleton",
 			"display_name": "重甲骷髅",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 70.0,
-				"move_speed": 38.0,
-				"contact_damage": 14.0,
-				"armor": 5.0,
-				"defense": 5.0,
+				"max_hp": 70,
+				"move_speed": 38,
+				"contact_damage": 14,
+				"armor": 5,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 9.0,
-				"soul_drop": 0.0,
-				"collision_radius": 24.0
+				"attack_range": 48,
+				"exp_drop": 9,
+				"soul_drop": 0,
+				"collision_radius": 24,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "chase_player"
 			},
 			"skills": [],
-			"visual": {}
+			"visual": {},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 40.0,
-			"contact_damage": 10.0,
-			"contact_interval": 1.1,
-			"collision_radius": 20.0,
-			"resistances": {},
 			"id": "skeleton_priest",
 			"display_name": "骷髅祭司",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 55.0,
-				"move_speed": 40.0,
-				"contact_damage": 10.0,
-				"armor": 2.0,
-				"defense": 2.0,
+				"max_hp": 55,
+				"move_speed": 40,
+				"contact_damage": 10,
+				"armor": 2,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 10.0,
-				"soul_drop": 0.0,
-				"collision_radius": 20.0
+				"attack_range": 48,
+				"exp_drop": 10,
+				"soul_drop": 0,
+				"collision_radius": 20,
+				"contact_interval": 1.1
 			},
 			"behavior": {
 				"type": "summon_and_chase"
@@ -369,28 +328,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 46.0,
-			"contact_damage": 10.0,
-			"contact_interval": 1.0,
-			"collision_radius": 20.0,
-			"resistances": {},
 			"id": "war_drum_goblin",
 			"display_name": "战鼓哥布林",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 65.0,
-				"move_speed": 46.0,
-				"contact_damage": 10.0,
-				"armor": 2.0,
-				"defense": 2.0,
+				"max_hp": 65,
+				"move_speed": 46,
+				"contact_damage": 10,
+				"armor": 2,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 10.0,
-				"soul_drop": 0.0,
-				"collision_radius": 20.0
+				"attack_range": 48,
+				"exp_drop": 10,
+				"soul_drop": 0,
+				"collision_radius": 20,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "chase_and_cast_pool"
@@ -418,28 +372,23 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 55.0,
-			"contact_damage": 8.0,
-			"contact_interval": 0.8,
-			"collision_radius": 18.0,
-			"resistances": {},
 			"id": "gem_slime",
 			"display_name": "宝石史莱姆",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 80.0,
-				"move_speed": 55.0,
-				"contact_damage": 8.0,
-				"armor": 1.0,
-				"defense": 1.0,
+				"max_hp": 80,
+				"move_speed": 55,
+				"contact_damage": 8,
+				"armor": 1,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 24.0,
-				"soul_drop": 0.0,
-				"collision_radius": 18.0
+				"attack_range": 48,
+				"exp_drop": 24,
+				"soul_drop": 0,
+				"collision_radius": 18,
+				"contact_interval": 0.8
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -463,61 +412,51 @@
 						"animation": "attack"
 					}
 				}
-			}
+			},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 78.0,
-			"contact_damage": 16.0,
-			"contact_interval": 0.8,
-			"collision_radius": 18.0,
-			"resistances": {},
 			"id": "shadow_hunter",
 			"display_name": "暗影猎手",
-			"type": "normal",
 			"base_stats": {
-				"max_hp": 95.0,
-				"move_speed": 78.0,
-				"contact_damage": 16.0,
-				"armor": 3.0,
-				"defense": 3.0,
+				"max_hp": 95,
+				"move_speed": 78,
+				"contact_damage": 16,
+				"armor": 3,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 12.0,
-				"soul_drop": 0.0,
-				"collision_radius": 18.0
+				"attack_range": 48,
+				"exp_drop": 12,
+				"soul_drop": 0,
+				"collision_radius": 18,
+				"contact_interval": 0.8
 			},
 			"behavior": {
 				"type": "dash_attack",
-				"dash_trigger_range": 180.0,
-				"dash_stop_distance": 44.0
+				"dash_trigger_range": 180,
+				"dash_stop_distance": 44
 			},
 			"skills": [
 				{
 					"skill_id": "shadow_dash"
 				}
 			],
-			"visual": {}
+			"visual": {},
+			"enemy_rank": "normal"
 		},
 		{
-			"move_speed": 42.0,
-			"contact_damage": 16.0,
-			"contact_interval": 1.1,
-			"collision_radius": 34.0,
-			"resistances": {},
 			"id": "giant_slime",
 			"display_name": "巨型史莱姆",
-			"type": "elite",
 			"base_stats": {
-				"max_hp": 560.0,
-				"move_speed": 42.0,
-				"contact_damage": 16.0,
-				"armor": 5.0,
-				"defense": 5.0,
+				"max_hp": 560,
+				"move_speed": 42,
+				"contact_damage": 16,
+				"armor": 5,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 90.0,
-				"soul_drop": 20.0,
-				"collision_radius": 34.0
+				"attack_range": 48,
+				"exp_drop": 90,
+				"soul_drop": 20,
+				"collision_radius": 34,
+				"contact_interval": 1.1
 			},
 			"behavior": {
 				"type": "chase_player"
@@ -547,28 +486,23 @@
 						"animation": "death"
 					}
 				}
-			}
+			},
+			"enemy_rank": "elite"
 		},
 		{
-			"move_speed": 52.0,
-			"contact_damage": 22.0,
-			"contact_interval": 1.0,
-			"collision_radius": 28.0,
-			"resistances": {},
 			"id": "skeleton_captain",
 			"display_name": "骷髅队长",
-			"type": "elite",
 			"base_stats": {
-				"max_hp": 1150.0,
-				"move_speed": 52.0,
-				"contact_damage": 22.0,
-				"armor": 9.0,
-				"defense": 9.0,
+				"max_hp": 1150,
+				"move_speed": 52,
+				"contact_damage": 22,
+				"armor": 9,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 150.0,
-				"soul_drop": 35.0,
-				"collision_radius": 28.0
+				"attack_range": 48,
+				"exp_drop": 150,
+				"soul_drop": 35,
+				"collision_radius": 28,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "dash_attack"
@@ -601,28 +535,23 @@
 						"animation": "death"
 					}
 				}
-			}
+			},
+			"enemy_rank": "elite"
 		},
 		{
-			"move_speed": 48.0,
-			"contact_damage": 22.0,
-			"contact_interval": 1.0,
-			"collision_radius": 30.0,
-			"resistances": {},
 			"id": "toxic_matriarch",
 			"display_name": "毒虫女王",
-			"type": "elite",
 			"base_stats": {
-				"max_hp": 1050.0,
-				"move_speed": 48.0,
-				"contact_damage": 22.0,
-				"armor": 9.0,
-				"defense": 9.0,
+				"max_hp": 1050,
+				"move_speed": 48,
+				"contact_damage": 22,
+				"armor": 9,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 140.0,
-				"soul_drop": 35.0,
-				"collision_radius": 30.0
+				"attack_range": 48,
+				"exp_drop": 140,
+				"soul_drop": 35,
+				"collision_radius": 30,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "chase_and_cast_pool"
@@ -632,30 +561,23 @@
 					"skill_id": "toxic_pool"
 				}
 			],
-			"visual": {
-
-			}
+			"visual": {},
+			"enemy_rank": "elite"
 		},
 		{
-			"move_speed": 36.0,
-			"contact_damage": 28.0,
-			"contact_interval": 1.1,
-			"collision_radius": 36.0,
-			"resistances": {},
 			"id": "lava_golem",
 			"display_name": "熔岩魔像",
-			"type": "elite",
 			"base_stats": {
-				"max_hp": 1400.0,
-				"move_speed": 36.0,
-				"contact_damage": 28.0,
-				"armor": 12.0,
-				"defense": 12.0,
+				"max_hp": 1400,
+				"move_speed": 36,
+				"contact_damage": 28,
+				"armor": 12,
 				"resistances": {},
-				"attack_range": 48.0,
-				"exp_drop": 170.0,
-				"soul_drop": 45.0,
-				"collision_radius": 36.0
+				"attack_range": 48,
+				"exp_drop": 170,
+				"soul_drop": 45,
+				"collision_radius": 36,
+				"contact_interval": 1.1
 			},
 			"behavior": {
 				"type": "chase_and_cast_pool"
@@ -665,141 +587,130 @@
 					"skill_id": "lava_pool"
 				}
 			],
-			"visual": {}
+			"visual": {},
+			"enemy_rank": "elite"
 		},
 		{
-			"move_speed": 24.0,
-			"contact_damage": 30.0,
-			"contact_interval": 1.0,
-			"collision_radius": 62.0,
-			"resistances": {
-				"armor": 0.08,
-				"magic": 0.08,
-				"poison": 0.18,
-				"acid": 0.1,
-				"holy": 0.0
-			},
 			"id": "dungeon_heart",
 			"display_name": "地牢之心",
-			"type": "boss",
 			"base_stats": {
-				"max_hp": 5000.0,
-				"move_speed": 24.0,
-				"contact_damage": 30.0,
-				"armor": 10.0,
-				"defense": 10.0,
+				"max_hp": 5000,
+				"move_speed": 24,
+				"contact_damage": 30,
+				"armor": 10,
 				"resistances": {
 					"armor": 0.08,
 					"magic": 0.08,
 					"poison": 0.18,
 					"acid": 0.1,
-					"holy": 0.0
+					"holy": 0
 				},
-				"attack_range": 760.0,
-				"exp_drop": 0.0,
-				"soul_drop": 200.0,
-				"collision_radius": 62.0
+				"attack_range": 760,
+				"exp_drop": 0,
+				"soul_drop": 200,
+				"collision_radius": 62,
+				"contact_interval": 1
 			},
 			"behavior": {
 				"type": "boss_dungeon_heart",
-				"rage_after_seconds": 300.0,
-				"skill_range": 760.0,
+				"rage_after_seconds": 300,
+				"skill_range": 760,
 				"phases": [
 					{
 						"hp_percent_min": 0.7,
 						"hp_percent_max": 1.01,
-						"max_concurrent_skills": 1.0,
+						"max_concurrent_skills": 1,
 						"skills": [
 							{
 								"skill_id": "red_circle",
 								"type": "delayed_area_blast",
-								"radius": 78.0,
-								"damage": 22.0,
+								"radius": 78,
+								"damage": 22,
 								"delay": 0.9,
-								"cooldown": 5.0
+								"cooldown": 5
 							},
 							{
 								"skill_id": "ring_bullets",
 								"type": "ring_projectiles",
-								"projectile_count": 12.0,
-								"speed": 230.0,
-								"damage": 12.0,
-								"safe_gap_count": 2.0,
-								"cooldown": 7.0
+								"projectile_count": 12,
+								"speed": 230,
+								"damage": 12,
+								"safe_gap_count": 2,
+								"cooldown": 7
 							}
 						]
 					},
 					{
 						"hp_percent_min": 0.35,
 						"hp_percent_max": 0.7,
-						"max_concurrent_skills": 2.0,
+						"max_concurrent_skills": 2,
 						"skills": [
 							{
 								"skill_id": "red_circle",
 								"type": "delayed_area_blast",
-								"radius": 86.0,
-								"damage": 24.0,
+								"radius": 86,
+								"damage": 24,
 								"delay": 0.85,
 								"cooldown": 4.4
 							},
 							{
 								"skill_id": "corrupted_cores",
 								"type": "corrupted_cores",
-								"count": 2.0,
-								"hp": 120.0,
-								"cooldown": 18.0
+								"count": 2,
+								"hp": 120,
+								"cooldown": 18
 							},
 							{
 								"skill_id": "corruption_gaze",
 								"type": "corruption_gaze",
-								"radius": 52.0,
-								"damage": 14.0,
+								"radius": 52,
+								"damage": 14,
 								"delay": 1.2,
 								"duration": 2.5,
-								"tick_interval": 1.0,
-								"cooldown": 10.0
+								"tick_interval": 1,
+								"cooldown": 10
 							}
 						]
 					},
 					{
-						"hp_percent_min": 0.0,
+						"hp_percent_min": 0,
 						"hp_percent_max": 0.35,
-						"max_concurrent_skills": 2.0,
+						"max_concurrent_skills": 2,
 						"skills": [
 							{
 								"skill_id": "red_circle",
 								"type": "delayed_area_blast",
-								"radius": 94.0,
-								"damage": 28.0,
+								"radius": 94,
+								"damage": 28,
 								"delay": 0.8,
 								"cooldown": 3.8
 							},
 							{
 								"skill_id": "ring_bullets",
 								"type": "ring_projectiles",
-								"projectile_count": 20.0,
-								"speed": 290.0,
-								"damage": 16.0,
-								"safe_gap_count": 3.0,
-								"cooldown": 6.0
+								"projectile_count": 20,
+								"speed": 290,
+								"damage": 16,
+								"safe_gap_count": 3,
+								"cooldown": 6
 							},
 							{
 								"skill_id": "shockwave",
 								"type": "shockwave",
-								"radius": 360.0,
-								"damage": 28.0,
+								"radius": 360,
+								"damage": 28,
 								"warning_time": 0.8,
-								"cooldown": 7.0
+								"cooldown": 7
 							},
 							{
 								"skill_id": "corruption_gaze",
 								"type": "corruption_gaze",
-								"radius": 52.0,
-								"damage": 14.0,
+								"radius": 52,
+								"damage": 14,
 								"delay": 1.2,
 								"duration": 2.5,
-								"tick_interval": 1.0,
-								"cooldown": 9.0
+								"tick_interval": 1,
+								"cooldown": 9
 							}
 						]
 					}
@@ -827,7 +738,8 @@
 			],
 			"visual": {
 				"texture": "res://assets/enemies/boss_heart/preview.png"
-			}
+			},
+			"enemy_rank": "boss"
 		}
 	]
 }

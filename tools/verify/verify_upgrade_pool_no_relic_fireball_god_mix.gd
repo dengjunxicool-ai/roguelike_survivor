@@ -52,10 +52,10 @@ func _run() -> void:
 	}
 	_expect(pool.call("_is_relic_related_upgrade", relic_upgrade) == true, "relic-like level-up upgrade is detected as relic-related", relic_upgrade)
 
-	var frost_upgrade: Dictionary = GameData.get_upgrade(&"learn_skill_frost_attack_frostbite")
+	var frost_upgrade: Dictionary = SkillLearnDefinitionRepository.resolve_upgrade(&"learn_skill_frost_attack_frostbite")
 	_expect(not frost_upgrade.is_empty(), "generic skill learn upgrade resolves frost skills", frost_upgrade)
 	_expect(String(frost_upgrade.get("learn_skill_id", "")) == "frost_attack_frostbite", "generic frost learn upgrade points at frost skill", frost_upgrade)
-	_expect(GameData.get_upgrade(&"learn_fire_skill_frost_attack_frostbite").is_empty(), "legacy fire learn prefix does not resolve frost skills")
+	_expect(SkillLearnDefinitionRepository.resolve_upgrade(&"learn_fire_skill_frost_attack_frostbite").is_empty(), "legacy fire learn prefix does not resolve frost skills")
 
 	var god_options: Array = pool.call("_build_god_skill_learn_options", player)
 	_expect(_has_school(god_options, &"frost"), "normal god skill learn options include non-fire schools when offer rules allow them", _summarize(god_options))

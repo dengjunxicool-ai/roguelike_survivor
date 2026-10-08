@@ -49,8 +49,8 @@ const byId = new Map(chaosSkills.map((skill) => [skill.id, skill]));
 for (const [id, name, type, description] of expected) {
   const skill = byId.get(id);
   assert(skill, `missing chaos skill ${id}`);
-  assert(skill.name === name, `${id} name mismatch`);
-  assert(skill.type === type, `${id} type mismatch`);
+  assert(skill.display_name === name, `${id} name mismatch`);
+  assert(skill.skill_type === type, `${id} type mismatch`);
   assert(skill.description === description, `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("chaos"), `${id} must be tagged chaos`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
@@ -63,7 +63,7 @@ assert(Array.isArray(chaosGod.tags) && chaosGod.tags.includes("implemented"), "c
 
 const attack = byId.get("chaos_attack_chaotic");
 assert(attack.exclusive_group === "attack_school", "chaos attack must replace the starting attack slot");
-assert((attack.effects || []).some((effect) => effect.type === "add_modifier" && effect.modifier === "attack_damage_multiplier" && effect.value === 0.14), "chaos attack must add exactly +14% attack damage");
+assert((attack.effects || []).some((effect) => effect.type === "add_modifier" && effect.stat === "primary_attack_damage" && effect.op === "multiplier_add" && effect.value === 0.14), "chaos attack must add exactly +14% attack damage");
 assert((attack.trigger_rules || []).some((rule) => rule.trigger === "attack_hit" && (rule.effects || []).some((effect) => effect.type === "apply_status" && effect.status === "instability")), "chaos attack must apply Instability on hit");
 assert((attack.trigger_rules || []).some((rule) => rule.trigger === "attack_hit" && rule.threshold === 3 && (rule.effects || []).some((effect) => effect.type === "spawn_projectile_burst")), "chaos attack must trigger a chaos mutation every third hit");
 
@@ -101,7 +101,7 @@ assert((exchangeRule.effects || []).some((effect) => effect.type === "swap_targe
 const core = byId.get("chaos_core_chaos_singularity");
 assert(core.exclusive_group === "core_school", "chaos singularity must occupy the core exclusive group");
 assert((core.trigger_rules || []).some((rule) => rule.trigger === "status_max_stack_reached" && rule.threshold === 25), "chaos singularity must count 25 Instability fissions");
-assert((core.effects || []).some((effect) => effect.type === "add_modifier" && effect.modifier === "instability_fission_stacks_retained" && effect.value === 1), "chaos singularity must retain 1 Instability stack after fission");
+assert((core.effects || []).some((effect) => effect.type === "add_modifier" && effect.stat === "instability_fission_stacks_retained" && effect.value === 1), "chaos singularity must retain 1 Instability stack after fission");
 
 for (const objectId of [
   "chaos_rift",

@@ -88,7 +88,7 @@ func play_state(state: String, force: bool = false) -> void:
 
 
 func _is_normal_enemy() -> bool:
-	return _owner != null and String(_owner.get_meta("enemy_rank", _owner.get_meta("enemy_type", "normal"))) == "normal"
+	return _owner != null and String(_owner.get_meta("enemy_rank", "normal")) == "normal" and String(_owner.get_meta("spawn_source_type", "")) != "boss_minion"
 
 
 func _start_hurt_flash() -> void:

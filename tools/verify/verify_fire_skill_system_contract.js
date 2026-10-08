@@ -64,10 +64,10 @@ const FIRE_FUSION_IDS = [
 
 const REQUIRED_SKILL_FIELDS = [
   "id",
-  "name",
+  "display_name",
   "school",
   "fusion_school",
-  "type",
+  "skill_type",
   "rarity",
   "max_level",
   "exclusive_group",
@@ -310,7 +310,7 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   if (skill.fusion_school !== null) {
     assert(ALLOWED_SCHOOLS.has(skill.fusion_school), `${skill.id} invalid fusion_school`);
   }
-  assert(ALLOWED_TYPES.has(skill.type), `${skill.id} invalid type`);
+  assert(ALLOWED_TYPES.has(skill.skill_type), `${skill.id} invalid type`);
   assert(ALLOWED_RARITIES.has(skill.rarity), `${skill.id} invalid rarity`);
   assert(Number.isInteger(skill.max_level) && skill.max_level >= 1, `${skill.id} invalid max_level`);
   assert(Array.isArray(skill.tags) && skill.tags.length > 0, `${skill.id} must have non-empty tags`);
@@ -320,12 +320,12 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   assert(skill.school === expectedMetadata.school, `${skill.id} must set school ${expectedMetadata.school}`);
   assert(skill.fusion_school === expectedMetadata.fusion_school, `${skill.id} must set fusion_school ${expectedMetadata.fusion_school}`);
   if (fireFusionIds.has(skill.id)) {
-    assert(skill.type === "fusion", `${skill.id} fusion skill id must set type fusion`);
+    assert(skill.skill_type === "fusion", `${skill.id} fusion skill id must set type fusion`);
     assert(skill.fusion_school !== null, `${skill.id} fusion skill must set fusion_school`);
     validateRequiredMinSkillCount(skill, expectedMetadata);
   }
   if (fireBaseIds.has(skill.id)) {
-    assert(skill.type !== "fusion", `${skill.id} base skill id must not set type fusion`);
+    assert(skill.skill_type !== "fusion", `${skill.id} base skill id must not set type fusion`);
     assert(skill.fusion_school === null, `${skill.id} base skill id must set fusion_school null`);
   }
 

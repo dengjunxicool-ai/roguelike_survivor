@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -95,7 +96,7 @@ function validateSkillActionExecutor(text) {
 
 function main() {
   const targetingService = readProjectFile("scripts/skills/targeting_service.gd");
-  const skillActionExecutor = readProjectFile("scripts/skills/skill_action_executor.gd");
+  const skillActionExecutor = readActionSources(root);
   const errors = [
     ...validateTargetingService(targetingService),
     ...validateSkillActionExecutor(skillActionExecutor),

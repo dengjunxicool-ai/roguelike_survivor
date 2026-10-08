@@ -811,7 +811,7 @@ func _update_debug_stats(run_state: Dictionary) -> void:
 func _get_primary_attack_data(run_state: Dictionary) -> Dictionary:
 	var attack_id: StringName = StringName(String(run_state.get("main_attack", "")))
 	if attack_id != &"":
-		var attack: Dictionary = GameData.get_primary_attack(attack_id)
+		var attack: Dictionary = GameData.get_skill(attack_id)
 		if not attack.is_empty():
 			return attack
 	return {}

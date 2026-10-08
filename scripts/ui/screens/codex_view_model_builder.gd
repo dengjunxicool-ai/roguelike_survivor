@@ -29,7 +29,7 @@ func _build_skill_rows() -> Array[String]:
 	for skill: Dictionary in GameData.get_skill_pool():
 		rows.append("%s：%s / %s" % [
 			String(skill.get("display_name", skill.get("id", ""))),
-			String(skill.get("god_id", "")),
+			String(skill.get("school", "")),
 			String(skill.get("description", ""))
 		])
 	return rows
@@ -40,7 +40,7 @@ func _build_enemy_rows() -> Array[String]:
 	for enemy: Dictionary in GameData.get_enemy_pool():
 		rows.append("%s：%s，HP %s，防御 %s" % [
 			String(enemy.get("display_name", enemy.get("id", ""))),
-			String(enemy.get("type", "normal")),
+			String(enemy.get("enemy_rank", "normal")),
 			str(_get_dictionary(enemy.get("base_stats", {})).get("max_hp", "-")),
 			str(_get_dictionary(enemy.get("base_stats", {})).get("armor", "-"))
 		])

@@ -1,9 +1,9 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 
 const SKILL_LEVEL_UP_OPTION_PREFIX: String = "skill_level_up:"
 const LEVEL_UP_UPGRADE_PREFIX: String = "level_up_upgrade:"
-const PlayerDebugOverlayScript: Script = preload("res://scripts/debug/player_debug_overlay.gd")
+const PlayerDebugOverlayScript: Script = preload("res://scripts/runtime/player_debug_overlay.gd")
 const CharacterRuntimeScript: Script = preload("res://scripts/characters/character_runtime.gd")
 const CharacterTraitSystemScript: Script = preload("res://scripts/characters/character_trait_system.gd")
 const CharacterLoadoutServiceScript: Script = preload("res://scripts/characters/character_loadout_service.gd")
@@ -669,11 +669,11 @@ func _apply_camera_limits(background_bounds: Rect2) -> void:
 	camera.limit_smoothed = true
 
 
-func take_damage(amount_or_packet: Variant, _damage_type: Variant = &"") -> void:
-	DamageApplicationServiceScript.apply_player_damage(self, amount_or_packet, _damage_type)
+func take_damage(packet: DamagePacket) -> void:
+	DamageApplicationServiceScript.apply_player_damage(self, packet)
 
 
-func _record_damage_taken(amount: int, damage_result: Dictionary, source_packet: Variant) -> void:
+func _record_damage_taken(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	var tracker: Node = RunStatsTrackerScript.get_active(get_tree())
 	if tracker != null and tracker.has_method("record_damage_taken"):
 		tracker.call("record_damage_taken", amount, damage_result, source_packet)
@@ -701,7 +701,7 @@ func get_recent_enemy_damage_priority(enemy: Node, window_seconds: float = RECEN
 	return maxf(float(record.get("amount", 0.0)), 0.0)
 
 
-func _record_recent_enemy_damage_source(amount: int, source_packet: Variant, damage_result: Dictionary = {}) -> void:
+func _record_recent_enemy_damage_source(amount: int, source_packet: DamagePacket, damage_result: Dictionary = {}) -> void:
 	if amount <= 0:
 		return
 
@@ -719,12 +719,12 @@ func _record_recent_enemy_damage_source(amount: int, source_packet: Variant, dam
 	_prune_recent_enemy_damage_sources(now_seconds)
 
 
-func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: Dictionary = {}, amount: int = 0) -> void:
+func _trigger_damage_taken_special_rules(source_packet: DamagePacket, damage_result: Dictionary = {}, amount: int = 0) -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
 		return
 	var event_bus: Node = get_node_or_null("SkillEventBus")
-	var damage_context: Dictionary = PlayerSkillEventContextScript.build_damage_taken_context(self, source_packet, damage_result, amount, skill_manager, get_node_or_null("RelicManager"), event_bus)
+	var damage_context: Dictionary = PlayerSkillEventContextScript.build_damage_taken_context(self, source_packet.to_dictionary(), damage_result, amount, skill_manager, get_node_or_null("RelicManager"), event_bus)
 	FireSkillRuntimeScript.execute_passive_event(&"on_player_damaged", damage_context, skill_manager)
 	if event_bus != null and event_bus.has_method("emit_skill_event"):
 		var skill_rule_context: Dictionary = damage_context.duplicate(true)
@@ -734,18 +734,18 @@ func _trigger_damage_taken_special_rules(source_packet: Variant, damage_result: 
 		var skill_instance: RefCounted = skill_variant as RefCounted
 		if skill_instance == null:
 			continue
-		_skill_special_rule_executor.call("execute_player_damaged", PlayerSkillEventContextScript.build_skill_instance_damage_context(self, source_packet, damage_result, amount, skill_instance, skill_manager, get_node_or_null("RelicManager")))
+		_skill_special_rule_executor.call("execute_player_damaged", PlayerSkillEventContextScript.build_skill_instance_damage_context(self, source_packet.to_dictionary(), damage_result, amount, skill_instance, skill_manager, get_node_or_null("RelicManager")))
 		var rules_variant: Variant = skill_instance.get("runtime_special_rules")
 		if not (rules_variant is Dictionary):
 			continue
 		var rules: Dictionary = rules_variant
 		if not rules.has("protective_lava_ring_on_player_damaged"):
 			if rules.has("frost_ring_on_player_damaged"):
-				SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
+				SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet.to_dictionary(), damage_result, skill_instance))
 			continue
-		SpecialDamageRuleHandlerScript.execute_protective_lava_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
+		SpecialDamageRuleHandlerScript.execute_protective_lava_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet.to_dictionary(), damage_result, skill_instance))
 		if rules.has("frost_ring_on_player_damaged"):
-			SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet, damage_result, skill_instance))
+			SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet.to_dictionary(), damage_result, skill_instance))
 
 
 func _update_player_tick_special_rules(_delta: float) -> void:
@@ -812,7 +812,7 @@ func _show_damage_number(amount: int, damage_result: Dictionary) -> void:
 	_damage_popup_offset_index += 1
 
 
-func _apply_boss_overlap_protection(amount: int, source_packet: Variant) -> int:
+func _apply_boss_overlap_protection(amount: int, source_packet: DamagePacket) -> int:
 	if amount <= 0:
 		return amount
 	if String(_damage_source_value(source_packet, "source_id", "")) != "boss":
@@ -825,10 +825,7 @@ func _apply_boss_overlap_protection(amount: int, source_packet: Variant) -> int:
 	return adjusted_amount
 
 
-func _is_damage_blocked_by_hit_protection(source_packet: Variant) -> bool:
-	if not (source_packet is Dictionary) and not (source_packet is RefCounted and source_packet.has_method("get_value")):
-		return false
-
+func _is_damage_blocked_by_hit_protection(source_packet: DamagePacket) -> bool:
 	var now_seconds: float = float(Time.get_ticks_msec()) / 1000.0
 	var source_type: String = String(_damage_source_value(source_packet, "source_type", ""))
 	if source_type == "contact":
@@ -848,12 +845,8 @@ func _is_damage_blocked_by_hit_protection(source_packet: Variant) -> bool:
 	return false
 
 
-func _damage_source_value(source_packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
-	if source_packet is Dictionary:
-		return (source_packet as Dictionary).get(key, fallback)
-	if source_packet is RefCounted and source_packet.has_method("get_value"):
-		return source_packet.call("get_value", key, fallback)
-	return fallback
+func _damage_source_value(source_packet: DamagePacket, key: Variant, fallback: Variant = null) -> Variant:
+	return source_packet.get_value(key, fallback)
 
 
 func _update_visual_state(input_direction: Vector2, delta: float) -> void:

@@ -23,8 +23,7 @@ func _run() -> void:
 	var source: Array[Dictionary] = _source_relics()
 	_expect(not source.is_empty(), "source relic pool is non-empty")
 	_verify_owner_and_facade(manager, source)
-	_verify_manager_source_and_fallback(manager, source)
-	_verify_full_fallback(manager, source)
+	_verify_manager_source_and_empty_owner(manager, source)
 	_verify_relic_manager_contract(manager, source)
 	_finish()
 
@@ -62,7 +61,7 @@ func _verify_owner_and_facade(manager: Node, source: Array[Dictionary]) -> void:
 	_expect(GameDataScript.get_relic(first_id) == source[0], "single facade lookup is isolated")
 
 
-func _verify_manager_source_and_fallback(manager: Node, source: Array[Dictionary]) -> void:
+func _verify_manager_source_and_empty_owner(manager: Node, source: Array[Dictionary]) -> void:
 	var original: Dictionary = manager.get("_relic_definitions").duplicate(true)
 	var sentinel_id: StringName = &"__phase6_relic_manager__"
 	var sentinel: Dictionary = {
@@ -74,47 +73,14 @@ func _verify_manager_source_and_fallback(manager: Node, source: Array[Dictionary
 	var sentinel_index: Dictionary = {}
 	sentinel_index[sentinel_id] = sentinel.duplicate(true)
 	manager.set("_relic_definitions", sentinel_index)
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_relic_pool() == [sentinel], "pool facade prefers manager sentinel")
 	_expect(GameDataScript.get_relic(sentinel_id) == sentinel, "lookup facade prefers manager sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.RELICS_PATH), "manager path avoids JSON cache")
 
 	manager.set("_relic_definitions", {})
-	GameDataScript._document_cache.clear()
-	var fallback_pool: Array[Dictionary] = GameDataScript.get_relic_pool()
-	var fallback_lookup: Dictionary = GameDataScript.get_relic(StringName(String(source[0].get("id", ""))))
-	_expect(fallback_pool == source, "empty owner pool falls back")
-	_expect(fallback_lookup == source[0], "empty owner lookup falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.RELICS_PATH), "fallback uses relic document cache")
-	_mutate_nested_relic(fallback_pool, "__phase6_relic_pool_fallback__")
-	_mutate_definition(fallback_lookup, "__phase6_relic_lookup_fallback__")
-	_expect(GameDataScript.get_relic_pool() == source, "pool fallback is isolated")
-	_expect(GameDataScript.get_relic(StringName(String(source[0].get("id", "")))) == source[0], "lookup fallback is isolated")
+	_expect(GameDataScript.get_relic_pool().is_empty(), "empty relic owner pool stays authoritative")
+	_expect(GameDataScript.get_relic(StringName(String(source[0].get("id", "")))).is_empty(), "empty relic lookup does not reload JSON")
 
 	manager.set("_relic_definitions", original)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	var original_cache: Dictionary = GameDataScript._document_cache.duplicate(true)
-	manager.name = &"Phase6RelicUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback_pool: Array[Dictionary] = GameDataScript.get_relic_pool()
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	var fallback_lookup: Dictionary = GameDataScript.get_relic(first_id)
-	var loaded: bool = GameDataScript._document_cache.has(DataPathsScript.RELICS_PATH)
-	_mutate_nested_relic(fallback_pool, "__phase6_relic_full_pool__")
-	_mutate_definition(fallback_lookup, "__phase6_relic_full_lookup__")
-	var fresh_pool: Array[Dictionary] = GameDataScript.get_relic_pool()
-	var fresh_lookup: Dictionary = GameDataScript.get_relic(first_id)
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-	GameDataScript._document_cache.merge(original_cache, true)
-
-	_expect(loaded, "full fallback loads relic document")
-	_expect(fresh_pool == source, "full pool fallback is isolated")
-	_expect(fresh_lookup == source[0], "full lookup fallback is isolated")
 
 
 func _verify_relic_manager_contract(manager: Node, source: Array[Dictionary]) -> void:

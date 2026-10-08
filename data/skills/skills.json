@@ -81,24 +81,23 @@
 					1
 				]
 			},
-			"category": "active",
-			"god_id": "fire",
 			"runtime_family": "projectile",
 			"is_starting_skill": true,
 			"offer_in_upgrade_pool": false,
 			"particle": {
 				"profile": "fire_projectile"
-			}
+			},
+			"skill_type": "attack",
+			"school": "fire",
+			"slot_category": "active"
 		}
 	],
 	"skills": [
 		{
 			"id": "fire_attack_searing",
-			"name": "灼热火球",
 			"display_name": "灼热火球",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -136,7 +135,7 @@
 						{
 							"type": "random_chance",
 							"chance_per_level": 0.2,
-							"max_chance": 1.0
+							"max_chance": 1
 						}
 					],
 					"effects": [
@@ -145,7 +144,7 @@
 							"area_id": "searing_fire_path",
 							"radius": 67.2,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -167,20 +166,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.2,
-					"damage_type": "fire"
+					"damage_type": "fire",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域"
+			"description": "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_dash_blazing_run",
-			"name": "烈焰疾行",
 			"display_name": "烈焰疾行",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -210,7 +212,7 @@
 							"dash_path_filter": true,
 							"radius": 63,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"max_active": 2,
 							"max_targets": 6,
 							"effects_on_tick": [
@@ -247,7 +249,7 @@
 							"dash_path_filter": true,
 							"radius": 63,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"max_active": 2,
 							"max_targets": 6,
 							"effects_on_tick": [
@@ -277,15 +279,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning"
+			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_cast_meteor_rain",
-			"name": "流星火雨",
 			"display_name": "流星火雨",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -347,7 +349,7 @@
 									"area_id": "meteor_burning_ground",
 									"radius": 134.4,
 									"duration": 3,
-									"tick_interval": 1.0,
+									"tick_interval": 1,
 									"max_active": 2,
 									"max_targets": 12,
 									"effects_on_tick": [
@@ -371,15 +373,15 @@
 				}
 			],
 			"effects": [],
-			"description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面"
+			"description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_cast_lava_rift",
-			"name": "熔岩裂涌",
 			"display_name": "熔岩裂涌",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -409,7 +411,7 @@
 							"length": 504,
 							"width": 67.2,
 							"duration": 1.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"max_active": 1,
 							"max_targets": 12,
 							"effects_on_tick": [
@@ -431,15 +433,15 @@
 				}
 			],
 			"effects": [],
-			"description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害"
+			"description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_cast_scorching_vortex",
-			"name": "焚风旋涡",
 			"display_name": "焚风旋涡",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -473,7 +475,7 @@
 							"move_speed": 120,
 							"radius": 184.8,
 							"duration": 4,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -493,15 +495,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人"
+			"description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_summon_crimson_dragon",
-			"name": "赤焰龙",
 			"display_name": "赤焰龙",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -553,15 +555,15 @@
 				}
 			],
 			"effects": [],
-			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning"
+			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_summon_ember_fox_pack",
-			"name": "余烬狐群",
 			"display_name": "余烬狐群",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -634,15 +636,15 @@
 				}
 			],
 			"effects": [],
-			"description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花"
+			"description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_passive_burning_focus",
-			"name": "炽燃专注",
 			"display_name": "炽燃专注",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -664,24 +666,30 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "burning_damage_multiplier",
-					"value": 0.25
+					"value": 0.25,
+					"stat": "dot_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "burning_duration_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "status_duration",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Burning 持续时间和伤害提高"
+			"description": "Burning 持续时间和伤害提高",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "fire_passive_overheated_casting",
-			"name": "过热施法",
 			"display_name": "过热施法",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -713,29 +721,35 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "cast_damage_multiplier",
 							"value": 0.3,
-							"duration": 5
+							"duration": 5,
+							"stat": "cast_damage",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						},
 						{
 							"type": "add_modifier",
-							"modifier": "cast_radius_multiplier",
 							"value": 0.15,
-							"duration": 5
+							"duration": 5,
+							"stat": "cast_radius",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围"
+			"description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "fire_passive_scorched_ground_affinity",
-			"name": "焦土亲和",
 			"display_name": "焦土亲和",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -766,23 +780,26 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "burning_damage_taken_multiplier",
 							"value": 0.35,
-							"duration": 0.6
+							"duration": 0.6,
+							"stat": "burning_damage_taken",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高"
+			"description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "fire_power_combustion_chain",
-			"name": "燃爆连锁",
 			"display_name": "燃爆连锁",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -830,15 +847,15 @@
 				}
 			],
 			"effects": [],
-			"description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆"
+			"description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_power_ember_attachment",
-			"name": "余烬附着",
 			"display_name": "余烬附着",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -892,15 +909,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标"
+			"description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_power_ignite_core",
-			"name": "引燃核心",
 			"display_name": "引燃核心",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -970,15 +987,15 @@
 				}
 			],
 			"effects": [],
-			"description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发"
+			"description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "fire_core_inferno_cycle",
-			"name": "炼狱循环",
 			"display_name": "炼狱循环",
 			"school": "fire",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -1064,15 +1081,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨"
+			"description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_attack_frostbite",
-			"name": "寒霜攻击",
 			"display_name": "寒霜攻击",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -1126,20 +1143,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.18,
-					"damage_type": "frost"
+					"damage_type": "frost",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，并施加 Chilled；对已 Chilled 敌人额外提高冻结效率"
+			"description": "攻击变强，并施加 Chilled；对已 Chilled 敌人额外提高冻结效率",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_dash_ice_shard_assault",
-			"name": "冰片突袭",
 			"display_name": "冰片突袭",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -1188,15 +1208,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时向周围投掷冰片，造成伤害并施加 Chilled"
+			"description": "冲刺时向周围投掷冰片，造成伤害并施加 Chilled",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_cast_frost_field",
-			"name": "冰霜领域",
 			"display_name": "冰霜领域",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1226,7 +1246,7 @@
 							"targeting": "nearest_enemy",
 							"radius": 134.4,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -1247,7 +1267,7 @@
 									"area_id": "frost_path",
 									"radius": 92.4,
 									"duration": 3,
-									"tick_interval": 1.0,
+									"tick_interval": 1,
 									"effects_on_tick": [
 										{
 											"type": "apply_status",
@@ -1263,15 +1283,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 Chilled"
+			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 Chilled",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_cast_glacial_lance",
-			"name": "极寒冰矛",
 			"display_name": "极寒冰矛",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1334,15 +1354,15 @@
 				}
 			],
 			"effects": [],
-			"description": "向生命最高或最近精英发射穿透冰矛；命中 Frozen 敌人时产生碎冰溅射"
+			"description": "向生命最高或最近精英发射穿透冰矛；命中 Frozen 敌人时产生碎冰溅射",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_cast_blizzard_cloud",
-			"name": "暴雪云团",
 			"display_name": "暴雪云团",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1374,7 +1394,7 @@
 							"move_speed": 70,
 							"radius": 168,
 							"duration": 5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -1394,15 +1414,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在怪物密集区域生成移动暴雪，持续施加 Chilled，并降低敌人移动速度"
+			"description": "在怪物密集区域生成移动暴雪，持续施加 Chilled，并降低敌人移动速度",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_summon_frost_wolf",
-			"name": "霜狼",
 			"display_name": "霜狼",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1434,15 +1454,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冰狼协助作战，攻击命中敌人时施加 Chilled；优先扑击 Frozen 目标"
+			"description": "冰狼协助作战，攻击命中敌人时施加 Chilled；优先扑击 Frozen 目标",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_summon_ice_crystal_guard",
-			"name": "冰晶守卫",
 			"display_name": "冰晶守卫",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1474,15 +1494,15 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤固定冰晶守卫，周期性释放冰脉冲，减速附近敌人"
+			"description": "召唤固定冰晶守卫，周期性释放冰脉冲，减速附近敌人",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_power_shatter_execute",
-			"name": "碎冰处决",
 			"display_name": "碎冰处决",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1525,15 +1545,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Chilled / Frozen 敌人低于一定生命阈值时，直接碎裂死亡"
+			"description": "Chilled / Frozen 敌人低于一定生命阈值时，直接碎裂死亡",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_passive_frozen_vulnerability",
-			"name": "冰封易伤",
 			"display_name": "冰封易伤",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1555,19 +1575,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "frozen_damage_taken_multiplier",
-					"value": 0.25
+					"value": 0.25,
+					"stat": "frozen_damage_taken",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "被 Frozen、定身或强控的敌人受到更多伤害"
+			"description": "被 Frozen、定身或强控的敌人受到更多伤害",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "frost_passive_chill_extension",
-			"name": "寒意延展",
 			"display_name": "寒意延展",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1590,29 +1613,38 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "chilled_duration_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "chilled_duration",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "frozen_duration_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "frozen_duration",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "frost_area_duration_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "frost_area_duration",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Chilled 和 Frozen 持续时间提高；冰霜区域持续时间提高"
+			"description": "Chilled 和 Frozen 持续时间提高；冰霜区域持续时间提高",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "frost_power_frost_ring_counter",
-			"name": "霜环反冲",
 			"display_name": "霜环反冲",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1661,15 +1693,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周围敌人数量过多或冲刺结束时，有概率从自身释放冰霜环，伤害并冻结敌人"
+			"description": "周围敌人数量过多或冲刺结束时，有概率从自身释放冰霜环，伤害并冻结敌人",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_power_ice_crack_chain",
-			"name": "冰裂连锁",
 			"display_name": "冰裂连锁",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1722,15 +1754,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 敌人受到重击或技能伤害时，向周围发射碎冰片"
+			"description": "Frozen 敌人受到重击或技能伤害时，向周围发射碎冰片",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_power_ice_mist_guard",
-			"name": "冰雾护身",
 			"display_name": "冰雾护身",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -1799,15 +1831,15 @@
 				}
 			],
 			"effects": [],
-			"description": "每冻结一定数量敌人，获得一层冰雾护盾；护盾破裂时冻结附近敌人"
+			"description": "每冻结一定数量敌人，获得一层冰雾护盾；护盾破裂时冻结附近敌人",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "frost_core_absolute_zero",
-			"name": "绝对零度",
 			"display_name": "绝对零度",
 			"school": "frost",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -1865,7 +1897,7 @@
 							"area_id": "absolute_zero_field",
 							"radius": 84,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "apply_status",
@@ -1882,19 +1914,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "chilled_freeze_threshold_override",
-					"value": 5
+					"value": 5,
+					"stat": "chilled_freeze_threshold",
+					"op": "override",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "敌人被冻结所需的 Chilled 层数降低；每隔数秒，全场敌人获得一层 Chilled；Frozen 敌人碎裂时会在原地生成小型冰霜领域"
+			"description": "敌人被冻结所需的 Chilled 层数降低；每隔数秒，全场敌人获得一层 Chilled；Frozen 敌人碎裂时会在原地生成小型冰霜领域",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_attack_thundering",
-			"name": "雷鸣攻击",
 			"display_name": "雷鸣攻击",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -1957,20 +1992,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.15,
-					"damage_type": "thunder"
+					"damage_type": "thunder",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Conductive；每数次攻击额外向附近敌人弹射一道电弧"
+			"description": "攻击变强，命中施加 Conductive；每数次攻击额外向附近敌人弹射一道电弧",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_dash_ball_lightning",
-			"name": "球状闪电",
 			"display_name": "球状闪电",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -2053,7 +2091,7 @@
 							"position_mode": "caster",
 							"radius_r": 1.15,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -2073,15 +2111,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时化作短暂球状闪电，伤害经过敌人，并在终点留下一个放电雷球"
+			"description": "冲刺时化作短暂球状闪电，伤害经过敌人，并在终点留下一个放电雷球",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_cast_chain_lightning",
-			"name": "连锁闪电",
 			"display_name": "连锁闪电",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2150,15 +2188,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 Conductive 敌人"
+			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 Conductive 敌人",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_cast_storm_circle",
-			"name": "雷暴法阵",
 			"display_name": "雷暴法阵",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2216,15 +2254,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 Conductive 敌人"
+			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 Conductive 敌人",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_cast_emp_ring",
-			"name": "电磁脉冲",
 			"display_name": "电磁脉冲",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2286,15 +2324,15 @@
 				}
 			],
 			"effects": [],
-			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 Conductive 敌人伤害更高"
+			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 Conductive 敌人伤害更高",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_summon_storm_lynx",
-			"name": "雷兽猞猁",
 			"display_name": "雷兽猞猁",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2325,15 +2363,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷兽在敌人之间跳跃攻击，优先攻击 Conductive 目标，并补充导电层数"
+			"description": "雷兽在敌人之间跳跃攻击，优先攻击 Conductive 目标，并补充导电层数",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_summon_storm_crow",
-			"name": "风暴乌鸦",
 			"display_name": "风暴乌鸦",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2364,15 +2402,15 @@
 				}
 			],
 			"effects": [],
-			"description": "乌鸦盘旋在玩家周围，周期性标记远处敌人并召唤落雷"
+			"description": "乌鸦盘旋在玩家周围，周期性标记远处敌人并召唤落雷",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_passive_high_frequency_discharge",
-			"name": "高频放电",
 			"display_name": "高频放电",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2393,19 +2431,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "thunder_cooldown_multiplier_add",
-					"value": -0.15
+					"value": -0.15,
+					"stat": "thunder_cooldown",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "雷电类技能触发间隔降低"
+			"description": "雷电类技能触发间隔降低",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "thunder_passive_superconductor",
-			"name": "超导体",
 			"display_name": "超导体",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2428,24 +2469,30 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "conductive_lightning_damage_taken_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "conductive_lightning_damage_taken",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "lightning_chain_range_multiplier",
-					"value": 0.15
+					"value": 0.15,
+					"stat": "lightning_chain_range",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高"
+			"description": "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "thunder_passive_static_charge",
-			"name": "静电蓄能",
 			"display_name": "静电蓄能",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2477,29 +2524,35 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "attack_speed_multiplier",
 							"value": 0.2,
-							"duration": 4
+							"duration": 4,
+							"stat": "attack_speed",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						},
 						{
 							"type": "add_modifier",
-							"modifier": "thunder_cooldown_multiplier_add",
 							"value": -0.1,
-							"duration": 4
+							"duration": 4,
+							"stat": "thunder_cooldown",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "每次雷电命中获得静电层数；满层后短时间提高攻击速度和技能触发频率"
+			"description": "每次雷电命中获得静电层数；满层后短时间提高攻击速度和技能触发频率",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "thunder_power_overload_burst",
-			"name": "过载爆破",
 			"display_name": "过载爆破",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2558,15 +2611,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive"
+			"description": "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_power_double_strike",
-			"name": "二重落雷",
 			"display_name": "二重落雷",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2621,15 +2674,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人"
+			"description": "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_power_magnetic_pull",
-			"name": "雷磁牵引",
 			"display_name": "雷磁牵引",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2686,15 +2739,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中"
+			"description": "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "thunder_core_storm_center",
-			"name": "雷暴中枢",
 			"display_name": "雷暴中枢",
 			"school": "thunder",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -2755,19 +2808,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "overload_conductive_stacks_retained",
-					"value": 2
+					"value": 2,
+					"stat": "overload_conductive_stacks_retained",
+					"op": "raw",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁"
+			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_attack_cursing",
-			"name": "诅咒攻击",
 			"display_name": "诅咒攻击",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -2819,20 +2875,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.18,
-					"damage_type": "curse"
+					"damage_type": "curse",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Cursed；对低生命敌人施加额外诅咒伤害"
+			"description": "攻击变强，命中施加 Cursed；对低生命敌人施加额外诅咒伤害",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_dash_soul_chain",
-			"name": "魂链疾行",
 			"display_name": "魂链疾行",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -2885,15 +2944,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时向附近 Cursed 敌人连接魂链，造成伤害并吸取少量生命"
+			"description": "冲刺时向附近 Cursed 敌人连接魂链，造成伤害并吸取少量生命",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_cast_black_serpent_hunt",
-			"name": "黑蛇追猎",
 			"display_name": "黑蛇追猎",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -2942,15 +3001,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 Cursed"
+			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 Cursed",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_cast_death_scythe",
-			"name": "死镰回旋",
 			"display_name": "死镰回旋",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3006,15 +3065,15 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 Cursed 敌人造成额外伤害"
+			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 Cursed 敌人造成额外伤害",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_cast_doom_circle",
-			"name": "终末法阵",
 			"display_name": "终末法阵",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3073,15 +3132,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高"
+			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_summon_bone_servant",
-			"name": "亡骸仆从",
 			"display_name": "亡骸仆从",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3119,15 +3178,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间"
+			"description": "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_summon_soul_crow",
-			"name": "魂鸦",
 			"display_name": "魂鸦",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3183,15 +3242,15 @@
 				}
 			],
 			"effects": [],
-			"description": "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人"
+			"description": "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_passive_vampiric_ritual",
-			"name": "吸血仪式",
 			"display_name": "吸血仪式",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3243,15 +3302,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 造成伤害或击杀时，为玩家恢复少量生命"
+			"description": "Cursed 造成伤害或击杀时，为玩家恢复少量生命",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "curse_passive_plague_spread",
-			"name": "疫咒扩散",
 			"display_name": "疫咒扩散",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3296,15 +3355,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人"
+			"description": "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "curse_passive_deathbed_deepen",
-			"name": "临终加深",
 			"display_name": "临终加深",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3325,24 +3384,30 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "cursed_low_hp_damage_multiplier",
-					"value": 0.4
+					"value": 0.4,
+					"stat": "cursed_low_hp_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "cursed_low_hp_boss_effect_multiplier",
-					"value": 0.3
+					"value": 0.3,
+					"stat": "cursed_low_hp_boss_effect",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低"
+			"description": "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "curse_power_fear_whisper",
-			"name": "恐惧低语",
 			"display_name": "恐惧低语",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3408,15 +3473,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离"
+			"description": "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_power_soul_harvest",
-			"name": "灵魂收割",
 			"display_name": "灵魂收割",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3447,23 +3512,26 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "direct_damage_multiplier_add",
 							"value": 0.35,
-							"duration": 5
+							"duration": 5,
+							"stat": "direct_damage",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害"
+			"description": "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_power_death_pact",
-			"name": "死亡契约",
 			"display_name": "死亡契约",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3528,15 +3596,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性标记附近生命最高的敌人；若其在持续时间内死亡，则产生灵魂爆炸"
+			"description": "周期性标记附近生命最高的敌人；若其在持续时间内死亡，则产生灵魂爆炸",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "curse_core_grand_coffin",
-			"name": "万咒归棺",
 			"display_name": "万咒归棺",
 			"school": "curse",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -3618,15 +3686,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人"
+			"description": "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_attack_judgment",
-			"name": "裁决攻击",
 			"display_name": "裁决攻击",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -3682,20 +3750,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.16,
-					"damage_type": "holy"
+					"damage_type": "holy",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值"
+			"description": "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_dash_heavenly_wings",
-			"name": "天翼冲刺",
 			"display_name": "天翼冲刺",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -3779,15 +3850,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment"
+			"description": "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_cast_holy_ray",
-			"name": "圣光射线",
 			"display_name": "圣光射线",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3836,15 +3907,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人"
+			"description": "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_cast_divine_barrier",
-			"name": "神圣结界",
 			"display_name": "神圣结界",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3874,7 +3945,7 @@
 							"position_mode": "caster",
 							"radius_r": 2.3,
 							"duration": 5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"max_active": 1,
 							"effects_on_tick": [
 								{
@@ -3903,15 +3974,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复"
+			"description": "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_cast_judgment_hammer",
-			"name": "审判圣锤",
 			"display_name": "审判圣锤",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -3966,15 +4037,15 @@
 				}
 			],
 			"effects": [],
-			"description": "对生命最高的敌人降下圣锤，造成高额伤害并短暂眩晕"
+			"description": "对生命最高的敌人降下圣锤，造成高额伤害并短暂眩晕",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_summon_seraph",
-			"name": "炽天使",
 			"display_name": "炽天使",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4019,15 +4090,15 @@
 				}
 			],
 			"effects": [],
-			"description": "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾"
+			"description": "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_summon_shield_guardian",
-			"name": "圣盾卫士",
 			"display_name": "圣盾卫士",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4086,15 +4157,15 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者"
+			"description": "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_passive_sanctuary",
-			"name": "庇护",
 			"display_name": "庇护",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4115,29 +4186,38 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "holy_shield_cap_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "holy_shield_cap",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "holy_shield_restore_multiplier",
-					"value": 0.2
+					"value": 0.2,
+					"stat": "holy_shield_restore",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "holy_damage_multiplier_add",
-					"value": 0.15
+					"value": 0.15,
+					"stat": "holy_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高"
+			"description": "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "holy_passive_devotion",
-			"name": "虔诚",
 			"display_name": "虔诚",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4166,23 +4246,26 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "direct_damage_multiplier_add",
 							"value": 0.2,
-							"duration": 4
+							"duration": 4,
+							"stat": "direct_damage",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "治疗和护盾溢出会转化为短时间伤害加成"
+			"description": "治疗和护盾溢出会转化为短时间伤害加成",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "holy_passive_weakening_judgment",
-			"name": "弱化审判",
 			"display_name": "弱化审判",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4204,24 +4287,30 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "judgment_holy_damage_taken_multiplier",
-					"value": 0.05
+					"value": 0.05,
+					"stat": "judgment_holy_damage_taken",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "judgment_damage_dealt_multiplier",
-					"value": -0.03
+					"value": -0.03,
+					"stat": "judgment_damage_dealt",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Judgment 敌人造成的伤害降低，并受到更多神圣伤害"
+			"description": "Judgment 敌人造成的伤害降低，并受到更多神圣伤害",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "holy_power_divine_punishment",
-			"name": "神罚",
 			"display_name": "神罚",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4279,15 +4368,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标"
+			"description": "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_power_counter_seal",
-			"name": "反击圣印",
 			"display_name": "反击圣印",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4363,15 +4452,15 @@
 				}
 			],
 			"effects": [],
-			"description": "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment"
+			"description": "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_power_absolution_light",
-			"name": "赦免之光",
 			"display_name": "赦免之光",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4430,15 +4519,15 @@
 				}
 			],
 			"effects": [],
-			"description": "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸"
+			"description": "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "holy_core_final_judgment_domain",
-			"name": "终裁神域",
 			"display_name": "终裁神域",
 			"school": "holy",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -4497,19 +4586,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "divine_punishment_judgment_stacks_retained",
-					"value": 2
+					"value": 2,
+					"stat": "divine_punishment_judgment_stacks_retained",
+					"op": "raw",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱"
+			"description": "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_attack_chaotic",
-			"name": "混沌攻击",
 			"display_name": "混沌攻击",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "attack",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "attack_school",
@@ -4589,20 +4681,23 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "attack_damage_multiplier",
 					"value": 0.14,
-					"damage_type": "arcane"
+					"damage_type": "arcane",
+					"stat": "primary_attack_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Instability；命中时有概率使弹体分裂、偏转或追加一次弱化命中"
+			"description": "攻击变强，命中施加 Instability；命中时有概率使弹体分裂、偏转或追加一次弱化命中",
+			"skill_type": "attack",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_dash_rift_step",
-			"name": "裂隙步",
 			"display_name": "裂隙步",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "dash",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": "dash_school",
@@ -4633,7 +4728,7 @@
 							"position_mode": "caster",
 							"radius_r": 1,
 							"duration": 4,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -4660,7 +4755,7 @@
 							"position_mode": "caster",
 							"radius_r": 1,
 							"duration": 4,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -4680,15 +4775,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 Instability"
+			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 Instability",
+			"skill_type": "dash",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_cast_void_rift",
-			"name": "虚空裂缝",
 			"display_name": "虚空裂缝",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4718,7 +4813,7 @@
 							"targeting": "densest_enemy_cluster",
 							"radius_r": 2.5,
 							"duration": 4,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -4744,15 +4839,15 @@
 				}
 			],
 			"effects": [],
-			"description": "在怪物密集区域打开裂缝，持续吸附附近敌人并造成虚空伤害"
+			"description": "在怪物密集区域打开裂缝，持续吸附附近敌人并造成虚空伤害",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_cast_singularity_barrage",
-			"name": "奇点弹幕",
 			"display_name": "奇点弹幕",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4821,15 +4916,15 @@
 				}
 			],
 			"effects": [],
-			"description": "发射数个会弹跳的混沌球，命中 Instability 敌人时有概率分裂"
+			"description": "发射数个会弹跳的混沌球，命中 Instability 敌人时有概率分裂",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_cast_mutation_pulse",
-			"name": "异变脉冲",
 			"display_name": "异变脉冲",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "cast",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4880,9 +4975,12 @@
 								},
 								{
 									"type": "add_modifier",
-									"modifier": "chaos_mutation_vulnerability",
 									"value": 0.08,
-									"duration": 3
+									"duration": 3,
+									"stat": "chaos_mutation_vulnerability",
+									"op": "raw",
+									"scope": {},
+									"source": "skill"
 								}
 							]
 						}
@@ -4890,15 +4988,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性释放脉冲，使敌人随机获得减速、易伤、缩小、沉默中的一种负面异变"
+			"description": "周期性释放脉冲，使敌人随机获得减速、易伤、缩小、沉默中的一种负面异变",
+			"skill_type": "cast",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_summon_chaos_clone",
-			"name": "混沌分身",
 			"display_name": "混沌分身",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4932,15 +5030,15 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤一个分身，模仿玩家最近一次普攻或技能，但伤害降低"
+			"description": "召唤一个分身，模仿玩家最近一次普攻或技能，但伤害降低",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_summon_void_maw",
-			"name": "虚空巨口",
 			"display_name": "虚空巨口",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "summon",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -4975,15 +5073,15 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤固定虚空巨口，持续吸附附近敌人，并吞噬低生命小怪"
+			"description": "召唤固定虚空巨口，持续吸附附近敌人，并吞噬低生命小怪",
+			"skill_type": "summon",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_passive_entropy_growth",
-			"name": "熵增",
 			"display_name": "熵增",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5013,29 +5111,35 @@
 					"effects": [
 						{
 							"type": "add_modifier",
-							"modifier": "chaos_entropy_damage_multiplier",
 							"value": 0.12,
-							"duration": 5
+							"duration": 5,
+							"stat": "chaos_entropy_damage",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						},
 						{
 							"type": "add_modifier",
-							"modifier": "chaos_entropy_range_multiplier",
 							"value": 0.12,
-							"duration": 5
+							"duration": 5,
+							"stat": "chaos_entropy_range",
+							"op": "multiplier_add",
+							"scope": {},
+							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取"
+			"description": "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "chaos_passive_geometric_imbalance",
-			"name": "几何失衡",
 			"display_name": "几何失衡",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5057,24 +5161,30 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "chaos_projectile_geometry_chance",
-					"value": 0.25
+					"value": 0.25,
+					"stat": "chaos_projectile_geometry_chance",
+					"op": "raw",
+					"scope": {},
+					"source": "skill"
 				},
 				{
 					"type": "add_modifier",
-					"modifier": "chaos_projectile_damage_multiplier_add",
-					"value": -0.1
+					"value": -0.1,
+					"stat": "chaos_projectile_damage",
+					"op": "multiplier_add",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低"
+			"description": "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "chaos_passive_anomalous_stability",
-			"name": "反常稳定",
 			"display_name": "反常稳定",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "passive",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5095,19 +5205,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "chaos_high_roll_after_triggers",
-					"value": 5
+					"value": 5,
+					"stat": "chaos_high_roll_after_triggers",
+					"op": "raw",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本"
+			"description": "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本",
+			"skill_type": "passive",
+			"slot_category": "passive"
 		},
 		{
 			"id": "chaos_power_fission_burst",
-			"name": "裂变爆发",
 			"display_name": "裂变爆发",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5155,7 +5268,7 @@
 							"area_id": "chaos_rift",
 							"radius_r": 0.9,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -5181,15 +5294,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙"
+			"description": "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_power_echo_cast",
-			"name": "回声施法",
 			"display_name": "回声施法",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5244,15 +5357,15 @@
 				}
 			],
 			"effects": [],
-			"description": "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低"
+			"description": "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_power_chaos_exchange",
-			"name": "混沌交换",
 			"display_name": "混沌交换",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "power",
 			"rarity": "normal",
 			"max_level": 5,
 			"exclusive_group": null,
@@ -5288,15 +5401,15 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害"
+			"description": "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害",
+			"skill_type": "power",
+			"slot_category": "active"
 		},
 		{
 			"id": "chaos_core_chaos_singularity",
-			"name": "混沌奇点",
 			"display_name": "混沌奇点",
 			"school": "chaos",
 			"fusion_school": null,
-			"type": "core",
 			"rarity": "normal",
 			"max_level": 1,
 			"exclusive_group": "core_school",
@@ -5334,7 +5447,7 @@
 							"position_mode": "caster",
 							"radius_r": 6,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "pull",
@@ -5382,19 +5495,22 @@
 			"effects": [
 				{
 					"type": "add_modifier",
-					"modifier": "instability_fission_stacks_retained",
-					"value": 1
+					"value": 1,
+					"stat": "instability_fission_stacks_retained",
+					"op": "raw",
+					"scope": {},
+					"source": "skill"
 				}
 			],
-			"description": "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发"
+			"description": "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发",
+			"skill_type": "core",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_frost_steam_mist",
-			"name": "蒸灼雾域",
 			"display_name": "蒸灼雾域",
 			"school": "fire",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5439,7 +5555,7 @@
 							"area_id": "fusion_fire_frost_steam_mist_area",
 							"radius_r": 2,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -5488,15 +5604,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人进入冰霜区域时，在区域边缘生成蒸汽伤害区；区域内敌人持续受到火焰伤害，并被施加 Chilled"
+			"description": "Burning 敌人进入冰霜区域时，在区域边缘生成蒸汽伤害区；区域内敌人持续受到火焰伤害，并被施加 Chilled",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_frost_shattered_ember",
-			"name": "碎冰余烬",
 			"display_name": "碎冰余烬",
 			"school": "fire",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5540,7 +5656,7 @@
 							"area_id": "fusion_fire_frost_shattered_ember_area",
 							"radius_r": 3.5,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 6,
 							"effects_on_tick": [
 								{
@@ -5604,15 +5720,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 敌人被火焰技能击杀或碎裂时，向周围喷出碎冰与余烬；碎冰施加 Chilled，余烬施加 Burning"
+			"description": "Frozen 敌人被火焰技能击杀或碎裂时，向周围喷出碎冰与余烬；碎冰施加 Chilled，余烬施加 Burning",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_thunder_plasma_fire_path",
-			"name": "等离子火径",
 			"display_name": "等离子火径",
 			"school": "fire",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5651,7 +5767,7 @@
 							"area_id": "fusion_fire_thunder_plasma_fire_path_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -5673,15 +5789,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电技能经过火焰路径、燃烧地面或熔岩裂缝时，使该区域短暂放电；区域内敌人同时受到火焰伤害和雷电伤害"
+			"description": "雷电技能经过火焰路径、燃烧地面或熔岩裂缝时，使该区域短暂放电；区域内敌人同时受到火焰伤害和雷电伤害",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_thunder_thunderburn_meteor",
-			"name": "雷燃流星",
 			"display_name": "雷燃流星",
 			"school": "fire",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5725,7 +5841,7 @@
 							"area_id": "fusion_fire_thunder_thunderburn_meteor_area",
 							"radius_r": 1.8,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 3,
 							"effects_on_tick": [
 								{
@@ -5761,15 +5877,15 @@
 				}
 			],
 			"effects": [],
-			"description": "流星、熔岩类技能命中 Conductive 敌人时，从落点向附近 Conductive 敌人释放电弧；电弧命中 Burning 敌人会延长 Burning 持续时间"
+			"description": "流星、熔岩类技能命中 Conductive 敌人时，从落点向附近 Conductive 敌人释放电弧；电弧命中 Burning 敌人会延长 Burning 持续时间",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_curse_ash_curse_rune",
-			"name": "灰烬咒文",
 			"display_name": "灰烬咒文",
 			"school": "fire",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5817,7 +5933,7 @@
 							"area_id": "fusion_fire_curse_ash_curse_rune_area",
 							"radius_r": 1.2,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -5844,15 +5960,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 每次造成伤害时，缩短目标身上 Cursed 的剩余结算时间；Cursed 结算时若目标仍在 Burning，则留下燃烧地面"
+			"description": "Burning 每次造成伤害时，缩短目标身上 Cursed 的剩余结算时间；Cursed 结算时若目标仍在 Burning，则留下燃烧地面",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_curse_blackflame_serpents",
-			"name": "黑焰蛇群",
 			"display_name": "黑焰蛇群",
 			"school": "fire",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -5902,7 +6018,7 @@
 							"area_id": "fusion_fire_curse_blackflame_serpents_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -5956,15 +6072,15 @@
 				}
 			],
 			"effects": [],
-			"description": "黑蛇、诅咒弹体类技能命中 Burning 敌人后，拖出黑焰路径；路径造成火焰伤害，并对经过敌人施加 Cursed"
+			"description": "黑蛇、诅咒弹体类技能命中 Burning 敌人后，拖出黑焰路径；路径造成火焰伤害，并对经过敌人施加 Cursed",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_holy_holy_flame_absolution",
-			"name": "圣焰赦免",
 			"display_name": "圣焰赦免",
 			"school": "fire",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6043,15 +6159,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Judgment 触发神罚时，若目标带有 Burning，则消耗部分 Burning 持续时间，为玩家生成护盾，并向前释放圣焰光束"
+			"description": "Judgment 触发神罚时，若目标带有 Burning，则消耗部分 Burning 持续时间，为玩家生成护盾，并向前释放圣焰光束",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_holy_burning_light_barrier",
-			"name": "燃光结界",
 			"display_name": "燃光结界",
 			"school": "fire",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6096,7 +6212,7 @@
 							"area_id": "fusion_fire_holy_burning_light_barrier_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -6126,15 +6242,15 @@
 				}
 			],
 			"effects": [],
-			"description": "神圣结界存在时，结界边缘会点燃敌人；Burning 敌人在结界内死亡时，为玩家恢复少量护盾"
+			"description": "神圣结界存在时，结界边缘会点燃敌人；Burning 敌人在结界内死亡时，为玩家恢复少量护盾",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_chaos_ember_echo",
-			"name": "余烬回声",
 			"display_name": "余烬回声",
 			"school": "fire",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6173,7 +6289,7 @@
 							"area_id": "fusion_fire_chaos_ember_echo_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -6195,15 +6311,15 @@
 				}
 			],
 			"effects": [],
-			"description": "火焰路径穿过虚空裂隙时，裂隙记录路径轨迹；短暂延迟后，沿反方向重放一次火焰路径"
+			"description": "火焰路径穿过虚空裂隙时，裂隙记录路径轨迹；短暂延迟后，沿反方向重放一次火焰路径",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_fire_chaos_molten_split",
-			"name": "熔火分裂",
 			"display_name": "熔火分裂",
 			"school": "fire",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6273,15 +6389,15 @@
 				}
 			],
 			"effects": [],
-			"description": "火焰弹体命中带有 Instability 的敌人时，弹体分裂成两个较小火弹，分别飞向附近不同敌人"
+			"description": "火焰弹体命中带有 Instability 的敌人时，弹体分裂成两个较小火弹，分别飞向附近不同敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_fire_crystalized_flame",
-			"name": "凝火成晶",
 			"display_name": "凝火成晶",
 			"school": "frost",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6321,7 +6437,7 @@
 							"area_id": "fusion_frost_fire_crystalized_flame_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 5,
 							"effects_on_tick": [
 								{
@@ -6376,15 +6492,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冰霜区域覆盖火焰路径时，在交界处生成冰晶尖刺；尖刺造成伤害并施加 Chilled，同时保留原本火焰路径"
+			"description": "冰霜区域覆盖火焰路径时，在交界处生成冰晶尖刺；尖刺造成伤害并施加 Chilled，同时保留原本火焰路径",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_fire_frostburn_shards",
-			"name": "霜燃碎片",
 			"display_name": "霜燃碎片",
 			"school": "frost",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6451,15 +6567,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人被 Frozen 后，下一次受到冰系技能伤害时喷出霜燃碎片；碎片施加 Chilled，命中 Burning 敌人时造成额外火焰伤害"
+			"description": "Burning 敌人被 Frozen 后，下一次受到冰系技能伤害时喷出霜燃碎片；碎片施加 Chilled，命中 Burning 敌人时造成额外火焰伤害",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_thunder_lightning_ice_pillar",
-			"name": "雷击冰柱",
 			"display_name": "雷击冰柱",
 			"school": "frost",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6553,15 +6669,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电命中 Frozen 敌人时，在其位置生成短暂冰柱；冰柱阻挡小怪移动，并周期性对周围敌人施加 Chilled"
+			"description": "雷电命中 Frozen 敌人时，在其位置生成短暂冰柱；冰柱阻挡小怪移动，并周期性对周围敌人施加 Chilled",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_thunder_aurora_frost_channel",
-			"name": "极光导霜",
 			"display_name": "极光导霜",
 			"school": "frost",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6606,7 +6722,7 @@
 							"area_id": "fusion_frost_thunder_aurora_frost_channel_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -6640,15 +6756,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Conductive 敌人站在冰霜区域内时，冰霜区域会向另一个 Conductive 敌人释放寒光脉冲，沿途敌人获得 Chilled"
+			"description": "Conductive 敌人站在冰霜区域内时，冰霜区域会向另一个 Conductive 敌人释放寒光脉冲，沿途敌人获得 Chilled",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_curse_ice_coffin_curse_burst",
-			"name": "冰棺咒爆",
 			"display_name": "冰棺咒爆",
 			"school": "frost",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6692,7 +6808,7 @@
 							"area_id": "fusion_frost_curse_ice_coffin_curse_burst_area",
 							"radius_r": 1.6,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -6714,15 +6830,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人被冻结时，Cursed 的结算暂停；冻结结束时，Cursed 立即结算，并在目标位置释放冰霜冲击"
+			"description": "Cursed 敌人被冻结时，Cursed 的结算暂停；冻结结束时，Cursed 立即结算，并在目标位置释放冰霜冲击",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_curse_cold_scythe_harvest",
-			"name": "寒镰收割",
 			"display_name": "寒镰收割",
 			"school": "frost",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6783,15 +6899,15 @@
 				}
 			],
 			"effects": [],
-			"description": "镰刀、黑蛇、诅咒弹体命中 Frozen 敌人时，额外释放一圈冰片；冰片优先飞向 Cursed 敌人"
+			"description": "镰刀、黑蛇、诅咒弹体命中 Frozen 敌人时，额外释放一圈冰片；冰片优先飞向 Cursed 敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_holy_holy_frost_anchor",
-			"name": "圣霜锚点",
 			"display_name": "圣霜锚点",
 			"school": "frost",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6900,15 +7016,15 @@
 				}
 			],
 			"effects": [],
-			"description": "带有 Judgment 的敌人进入冰霜区域后，该区域以它为中心周期性扩散 Chilled；每次扩散命中敌人，玩家获得少量护盾"
+			"description": "带有 Judgment 的敌人进入冰霜区域后，该区域以它为中心周期性扩散 Chilled；每次扩散命中敌人，玩家获得少量护盾",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_holy_judgment_ice_lance",
-			"name": "审判冰矛",
 			"display_name": "审判冰矛",
 			"school": "frost",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -6957,15 +7073,15 @@
 				}
 			],
 			"effects": [],
-			"description": "极寒冰矛优先攻击 Judgment 层数最高的敌人；若目标被 Frozen，冰矛命中后额外降下一道圣光"
+			"description": "极寒冰矛优先攻击 Judgment 层数最高的敌人；若目标被 Frozen，冰矛命中后额外降下一道圣光",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_chaos_rift_avalanche",
-			"name": "裂隙雪崩",
 			"display_name": "裂隙雪崩",
 			"school": "frost",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7011,7 +7127,7 @@
 							"area_id": "fusion_frost_chaos_rift_avalanche_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7074,15 +7190,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 敌人在虚空裂隙附近碎裂时，裂隙喷出一波冰雪，对扇形区域敌人施加 Chilled"
+			"description": "Frozen 敌人在虚空裂隙附近碎裂时，裂隙喷出一波冰雪，对扇形区域敌人施加 Chilled",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_frost_chaos_inverted_ice_shard",
-			"name": "反相冰片",
 			"display_name": "反相冰片",
 			"school": "frost",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7123,7 +7239,7 @@
 							"area_id": "fusion_frost_chaos_inverted_ice_shard_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7177,15 +7293,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冰片进入虚空裂隙后，会从另一个裂隙或远处敌人背后飞出；飞出后的冰片仍施加 Chilled"
+			"description": "冰片进入虚空裂隙后，会从另一个裂隙或远处敌人背后飞出；飞出后的冰片仍施加 Chilled",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_fire_arc_ignition",
-			"name": "轰燃电弧",
 			"display_name": "轰燃电弧",
 			"school": "thunder",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7229,7 +7345,7 @@
 							"area_id": "fusion_thunder_fire_arc_ignition_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7264,15 +7380,15 @@
 				}
 			],
 			"effects": [],
-			"description": "连锁闪电命中 Burning 敌人时，沿最近的火焰路径额外跳转一次；跳转目标优先为 Conductive 敌人"
+			"description": "连锁闪电命中 Burning 敌人时，沿最近的火焰路径额外跳转一次；跳转目标优先为 Conductive 敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_fire_thunderfire_circuit",
-			"name": "雷火回路",
 			"display_name": "雷火回路",
 			"school": "thunder",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7312,7 +7428,7 @@
 							"area_id": "fusion_thunder_fire_thunderfire_circuit_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7346,15 +7462,15 @@
 				}
 			],
 			"effects": [],
-			"description": "燃烧地面被雷电命中后，暂存一次放电；下一批敌人进入该地面时，立即受到雷电伤害并获得 Conductive"
+			"description": "燃烧地面被雷电命中后，暂存一次放电；下一批敌人进入该地面时，立即受到雷电伤害并获得 Conductive",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_frost_shatter_thunder",
-			"name": "破冰雷鸣",
 			"display_name": "破冰雷鸣",
 			"school": "thunder",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7431,15 +7547,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Overload 在 Frozen 敌人身上触发时，直接碎裂目标，并把雷电跳转到附近 Chilled 敌人"
+			"description": "Overload 在 Frozen 敌人身上触发时，直接碎裂目标，并把雷电跳转到附近 Chilled 敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_frost_cryo_capacitor",
-			"name": "极寒电容",
 			"display_name": "极寒电容",
 			"school": "thunder",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7494,15 +7610,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电命中 Chilled 敌人时，把 Conductive 传播给附近另一个 Chilled 敌人；同一目标短时间内只触发一次"
+			"description": "雷电命中 Chilled 敌人时，把 Conductive 传播给附近另一个 Chilled 敌人；同一目标短时间内只触发一次",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_curse_curse_lightning_rebound",
-			"name": "咒雷回跳",
 			"display_name": "咒雷回跳",
 			"school": "thunder",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7557,15 +7673,15 @@
 				}
 			],
 			"effects": [],
-			"description": "连锁闪电命中 Cursed 敌人后，下一跳优先寻找另一个 Cursed 敌人；若没有目标，则缩短当前 Cursed 的结算时间"
+			"description": "连锁闪电命中 Cursed 敌人后，下一跳优先寻找另一个 Cursed 敌人；若没有目标，则缩短当前 Cursed 的结算时间",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_curse_black_thunder_convergence",
-			"name": "黑雷收束",
 			"display_name": "黑雷收束",
 			"school": "thunder",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7621,15 +7737,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷暴云每隔数次落雷，锁定一个 Cursed 敌人连续劈击；最后一次劈击会让 Cursed 立即结算"
+			"description": "雷暴云每隔数次落雷，锁定一个 Cursed 敌人连续劈击；最后一次劈击会让 Cursed 立即结算",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_holy_judgment_wire",
-			"name": "审判导线",
 			"display_name": "审判导线",
 			"school": "thunder",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7673,7 +7789,7 @@
 							"area_id": "fusion_thunder_holy_judgment_wire_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7695,15 +7811,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电命中 Judgment 敌人时，与另一个 Judgment 敌人之间生成短暂雷线；穿过雷线的敌人受到雷电伤害"
+			"description": "雷电命中 Judgment 敌人时，与另一个 Judgment 敌人之间生成短暂雷线；穿过雷线的敌人受到雷电伤害",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_holy_shield_capacitor",
-			"name": "护盾电容",
 			"display_name": "护盾电容",
 			"school": "thunder",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7788,15 +7904,15 @@
 				}
 			],
 			"effects": [],
-			"description": "玩家获得护盾时，下一次雷电技能附带额外一次小落雷；护盾破裂时，立即对最近 Conductive 敌人触发 Overload"
+			"description": "玩家获得护盾时，下一次雷电技能附带额外一次小落雷；护盾破裂时，立即对最近 Conductive 敌人触发 Overload",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_chaos_fractal_arc",
-			"name": "分形电弧",
 			"display_name": "分形电弧",
 			"school": "thunder",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7841,7 +7957,7 @@
 							"area_id": "fusion_thunder_chaos_fractal_arc_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 2,
 							"effects_on_tick": [
 								{
@@ -7877,15 +7993,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电弹射到带有 Instability 的敌人时，下一次弹射会从附近虚空裂隙重新出现，并分裂成两道较弱电弧"
+			"description": "雷电弹射到带有 Instability 的敌人时，下一次弹射会从附近虚空裂隙重新出现，并分裂成两道较弱电弧",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_thunder_chaos_rift_lightning_orb",
-			"name": "裂隙雷球",
 			"display_name": "裂隙雷球",
 			"school": "thunder",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -7924,7 +8040,7 @@
 							"area_id": "fusion_thunder_chaos_rift_lightning_orb_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -7959,15 +8075,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷球进入虚空裂隙后，会在远处怪群中重新出现，并围绕该区域持续放电"
+			"description": "雷球进入虚空裂隙后，会在远处怪群中重新出现，并围绕该区域持续放电",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_fire_ash_soul_pact",
-			"name": "灰烬魂契",
 			"display_name": "灰烬魂契",
 			"school": "curse",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8027,15 +8143,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 每次造成伤害时，提高下一次 Cursed 结算伤害；该提升只作用于当前目标，不额外生成新状态"
+			"description": "Burning 每次造成伤害时，提高下一次 Cursed 结算伤害；该提升只作用于当前目标，不额外生成新状态",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_fire_burning_soul_minion",
-			"name": "燃魂仆从",
 			"display_name": "燃魂仆从",
 			"school": "curse",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8090,15 +8206,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 且 Burning 的敌人死亡时，召唤物优先从该位置出现；亡骸仆从首次攻击附带 Burning"
+			"description": "Cursed 且 Burning 的敌人死亡时，召唤物优先从该位置出现；亡骸仆从首次攻击附带 Burning",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_frost_ice_coffin_contract",
-			"name": "冰棺契约",
 			"display_name": "冰棺契约",
 			"school": "curse",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8156,15 +8272,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人被冻结期间不会结算；若其在 Frozen 中死亡，则 Cursed 转移给附近生命最高的敌人"
+			"description": "Cursed 敌人被冻结期间不会结算；若其在 Frozen 中死亡，则 Cursed 转移给附近生命最高的敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_frost_cold_scythe_soul_chase",
-			"name": "寒镰追魂",
 			"display_name": "寒镰追魂",
 			"school": "curse",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8217,15 +8333,15 @@
 				}
 			],
 			"effects": [],
-			"description": "死镰类技能命中 Frozen 敌人后，额外飞向最近的 Cursed 敌人；若没有 Cursed 目标，则对原目标施加 Cursed"
+			"description": "死镰类技能命中 Frozen 敌人后，额外飞向最近的 Cursed 敌人；若没有 Cursed 目标，则对原目标施加 Cursed",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_thunder_curse_lightning_backlash",
-			"name": "雷咒反噬",
 			"display_name": "雷咒反噬",
 			"school": "curse",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8302,15 +8418,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Overload 在 Cursed 敌人身上触发时，Cursed 立即结算；结算后雷电跳向最近未被 Cursed 的敌人并施加 Conductive"
+			"description": "Overload 在 Cursed 敌人身上触发时，Cursed 立即结算；结算后雷电跳向最近未被 Cursed 的敌人并施加 Conductive",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_thunder_black_serpent_conduction",
-			"name": "黑蛇导电",
 			"display_name": "黑蛇导电",
 			"school": "curse",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8354,7 +8470,7 @@
 							"area_id": "fusion_curse_thunder_black_serpent_conduction_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 2,
 							"effects_on_tick": [
 								{
@@ -8409,15 +8525,15 @@
 				}
 			],
 			"effects": [],
-			"description": "黑蛇优先沿 Conductive 敌人的方向移动；命中 Conductive 敌人时，额外向附近敌人传播 Cursed"
+			"description": "黑蛇优先沿 Conductive 敌人的方向移动；命中 Conductive 敌人时，额外向附近敌人传播 Cursed",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_holy_confession_curse_seal",
-			"name": "告解诅印",
 			"display_name": "告解诅印",
 			"school": "curse",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8475,15 +8591,15 @@
 				}
 			],
 			"effects": [],
-			"description": "同时带有 Judgment 和 Cursed 的敌人准备攻击玩家时，被短暂打断；打断结束时 Cursed 立即结算"
+			"description": "同时带有 Judgment 和 Cursed 的敌人准备攻击玩家时，被短暂打断；打断结束时 Cursed 立即结算",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_holy_absolution_harvest",
-			"name": "赦罪收割",
 			"display_name": "赦罪收割",
 			"school": "curse",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8541,15 +8657,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 且 Judgment 的敌人死亡时，玩家获得护盾；如果死亡来自 Cursed 结算，额外释放一道短距离圣光"
+			"description": "Cursed 且 Judgment 的敌人死亡时，玩家获得护盾；如果死亡来自 Cursed 结算，额外释放一道短距离圣光",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_chaos_paradox_curse_mark",
-			"name": "悖论咒印",
 			"display_name": "悖论咒印",
 			"school": "curse",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8615,15 +8731,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人触发 Instability 裂变时，Cursed 复制到远处一个敌人；复制版本持续时间更短，伤害较低"
+			"description": "Cursed 敌人触发 Instability 裂变时，Cursed 复制到远处一个敌人；复制版本持续时间更短，伤害较低",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_curse_chaos_rift_funeral",
-			"name": "裂隙葬礼",
 			"display_name": "裂隙葬礼",
 			"school": "curse",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8668,7 +8784,7 @@
 							"area_id": "fusion_curse_chaos_rift_funeral_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -8722,15 +8838,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人在虚空裂隙附近死亡时，裂隙向远处敌人发射一枚诅咒弹体，命中后施加 Cursed"
+			"description": "Cursed 敌人在虚空裂隙附近死亡时，裂隙向远处敌人发射一枚诅咒弹体，命中后施加 Cursed",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_fire_holy_flame_purification",
-			"name": "圣焰净化",
 			"display_name": "圣焰净化",
 			"school": "holy",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8792,15 +8908,15 @@
 				}
 			],
 			"effects": [],
-			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸"
+			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_fire_solar_hammer",
-			"name": "太阳圣锤",
 			"display_name": "太阳圣锤",
 			"school": "holy",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8845,7 +8961,7 @@
 							"area_id": "fusion_holy_fire_solar_hammer_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -8891,15 +9007,15 @@
 				}
 			],
 			"effects": [],
-			"description": "审判圣锤命中 Burning 敌人时，在落点生成十字形圣焰路径；路径施加 Burning 和 Judgment"
+			"description": "审判圣锤命中 Burning 敌人时，在落点生成十字形圣焰路径；路径施加 Burning 和 Judgment",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_frost_crystal_shelter",
-			"name": "冰晶庇护",
 			"display_name": "冰晶庇护",
 			"school": "holy",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -8945,7 +9061,7 @@
 							"area_id": "fusion_holy_frost_crystal_shelter_area",
 							"radius_r": 1.5,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -8975,15 +9091,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 且带有 Judgment 的敌人死亡时，玩家获得护盾；若护盾已满，则在死亡位置生成小型冰霜区域"
+			"description": "Frozen 且带有 Judgment 的敌人死亡时，玩家获得护盾；若护盾已满，则在死亡位置生成小型冰霜区域",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_frost_holy_frost_beam",
-			"name": "圣霜光束",
 			"display_name": "圣霜光束",
 			"school": "holy",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9032,7 +9148,7 @@
 							"area_id": "fusion_holy_frost_holy_frost_beam_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9054,15 +9170,15 @@
 				}
 			],
 			"effects": [],
-			"description": "圣光射线命中 Chilled 敌人时，沿射线轨迹留下短暂冰霜路径；命中 Frozen 敌人时，射线持续时间延长"
+			"description": "圣光射线命中 Chilled 敌人时，沿射线轨迹留下短暂冰霜路径；命中 Frozen 敌人时，射线持续时间延长",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer",
-			"name": "雷盾祷告",
 			"display_name": "雷盾祷告",
 			"school": "holy",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9108,7 +9224,7 @@
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9169,7 +9285,7 @@
 							"area_id": "fusion_holy_thunder_thunder_shield_prayer_shield_break_area",
 							"radius_r": 2,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9229,15 +9345,15 @@
 				}
 			],
 			"effects": [],
-			"description": "每次玩家获得护盾时，最近的 Conductive 敌人受到一次小落雷；护盾破裂时，附近敌人获得 Judgment"
+			"description": "每次玩家获得护盾时，最近的 Conductive 敌人受到一次小落雷；护盾破裂时，附近敌人获得 Judgment",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_thunder_holy_thunder_judgment",
-			"name": "圣雷裁决",
 			"display_name": "圣雷裁决",
 			"school": "holy",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9304,15 +9420,15 @@
 				}
 			],
 			"effects": [],
-			"description": "神罚命中 Conductive 敌人时，额外引发一次 Overload；Overload 命中的敌人获得 Judgment"
+			"description": "神罚命中 Conductive 敌人时，额外引发一次 Overload；Overload 命中的敌人获得 Judgment",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_curse_purifying_chain",
-			"name": "净罪锁链",
 			"display_name": "净罪锁链",
 			"school": "holy",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9376,15 +9492,15 @@
 				}
 			],
 			"effects": [],
-			"description": "圣光技能命中 Cursed 敌人后，跳向另一个 Cursed 敌人；每次跳跃为玩家恢复少量护盾"
+			"description": "圣光技能命中 Cursed 敌人后，跳向另一个 Cursed 敌人；每次跳跃为玩家恢复少量护盾",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_curse_penitence_barrier",
-			"name": "忏悔结界",
 			"display_name": "忏悔结界",
 			"school": "holy",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9455,15 +9571,15 @@
 				}
 			],
 			"effects": [],
-			"description": "神圣结界内的 Cursed 敌人移动速度降低；它们死亡时，结界持续时间延长"
+			"description": "神圣结界内的 Cursed 敌人移动速度降低；它们死亡时，结界持续时间延长",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_chaos_divine_domain_rift",
-			"name": "神域裂隙",
 			"display_name": "神域裂隙",
 			"school": "holy",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9537,15 +9653,15 @@
 				}
 			],
 			"effects": [],
-			"description": "神圣结界覆盖虚空裂隙时，裂隙周期性向外释放圣光脉冲，施加 Judgment"
+			"description": "神圣结界覆盖虚空裂隙时，裂隙周期性向外释放圣光脉冲，施加 Judgment",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_holy_chaos_judgment_echo",
-			"name": "裁决回声",
 			"display_name": "裁决回声",
 			"school": "holy",
 			"fusion_school": "chaos",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9594,7 +9710,7 @@
 							"area_id": "fusion_holy_chaos_judgment_echo_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9616,15 +9732,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Judgment 在带有 Instability 的敌人身上触发神罚时，从最近裂隙处额外释放一次较弱神罚"
+			"description": "Judgment 在带有 Instability 的敌人身上触发神罚时，从最近裂隙处额外释放一次较弱神罚",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_fire_riftfire_fork",
-			"name": "裂火分叉",
 			"display_name": "裂火分叉",
 			"school": "chaos",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9664,7 +9780,7 @@
 							"area_id": "fusion_chaos_fire_riftfire_fork_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"count": 2,
 							"effects_on_tick": [
 								{
@@ -9700,15 +9816,15 @@
 				}
 			],
 			"effects": [],
-			"description": "火焰弹体经过虚空裂隙时，分成两枚较小火弹，从裂隙两侧飞出；小火弹仍可施加 Burning"
+			"description": "火焰弹体经过虚空裂隙时，分成两枚较小火弹，从裂隙两侧飞出；小火弹仍可施加 Burning",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_fire_lava_refraction",
-			"name": "熔岩折返",
 			"display_name": "熔岩折返",
 			"school": "chaos",
 			"fusion_school": "fire",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9747,7 +9863,7 @@
 							"area_id": "fusion_chaos_fire_lava_refraction_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9769,15 +9885,15 @@
 				}
 			],
 			"effects": [],
-			"description": "熔岩裂缝触碰虚空裂隙后，从裂隙另一侧反向延伸一段较短裂缝"
+			"description": "熔岩裂缝触碰虚空裂隙后，从裂隙另一侧反向延伸一段较短裂缝",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_frost_zero_rift",
-			"name": "零度裂隙",
 			"display_name": "零度裂隙",
 			"school": "chaos",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9816,7 +9932,7 @@
 							"area_id": "fusion_chaos_frost_zero_rift_area",
 							"radius_r": 1.8,
 							"duration": 2,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9857,15 +9973,15 @@
 				}
 			],
 			"effects": [],
-			"description": "冰霜区域生成在虚空裂隙附近时，裂隙把一部分冰霜区域复制到远处敌人脚下"
+			"description": "冰霜区域生成在虚空裂隙附近时，裂隙把一部分冰霜区域复制到远处敌人脚下",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_frost_shattered_ice_warp",
-			"name": "碎冰折跃",
 			"display_name": "碎冰折跃",
 			"school": "chaos",
 			"fusion_school": "frost",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -9907,7 +10023,7 @@
 							"area_id": "fusion_chaos_frost_shattered_ice_warp_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -9970,15 +10086,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 敌人碎裂产生的冰片优先进入附近裂隙，并从远处敌群旁飞出"
+			"description": "Frozen 敌人碎裂产生的冰片优先进入附近裂隙，并从远处敌群旁飞出",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_thunder_quantum_overload",
-			"name": "量子过载",
 			"display_name": "量子过载",
 			"school": "chaos",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10026,7 +10142,7 @@
 							"area_id": "fusion_chaos_thunder_quantum_overload_area",
 							"radius_r": 1.6,
 							"duration": 0.24,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10065,15 +10181,15 @@
 				}
 			],
 			"effects": [],
-			"description": "带有 Instability 的敌人触发 Overload 时，在当前位置和远处敌群之间各释放一次雷电爆发"
+			"description": "带有 Instability 的敌人触发 Overload 时，在当前位置和远处敌群之间各释放一次雷电爆发",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_thunder_warp_lightning_orb",
-			"name": "跃迁雷球",
 			"display_name": "跃迁雷球",
 			"school": "chaos",
 			"fusion_school": "thunder",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10112,7 +10228,7 @@
 							"area_id": "fusion_chaos_thunder_warp_lightning_orb_area",
 							"radius_r": 1.8,
 							"duration": 3,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10147,15 +10263,15 @@
 				}
 			],
 			"effects": [],
-			"description": "雷球接触虚空裂隙后，传送到远处怪群中心，并继续持续放电"
+			"description": "雷球接触虚空裂隙后，传送到远处怪群中心，并继续持续放电",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_curse_curse_rune_echo",
-			"name": "咒文回声",
 			"display_name": "咒文回声",
 			"school": "chaos",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10204,7 +10320,7 @@
 							"area_id": "fusion_chaos_curse_curse_rune_echo_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10226,15 +10342,15 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 结算时，如果目标带有 Instability，则从最近裂隙处重复一次较弱诅咒冲击"
+			"description": "Cursed 结算时，如果目标带有 Instability，则从最近裂隙处重复一次较弱诅咒冲击",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_curse_rift_curse_exchange",
-			"name": "裂隙换咒",
 			"display_name": "裂隙换咒",
 			"school": "chaos",
 			"fusion_school": "curse",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10278,7 +10394,7 @@
 							"area_id": "fusion_chaos_curse_rift_curse_exchange_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10337,15 +10453,15 @@
 				}
 			],
 			"effects": [],
-			"description": "虚空裂隙每隔一段时间寻找一个 Cursed 敌人，把它身上的 Cursed 复制给远处未被 Cursed 的敌人"
+			"description": "虚空裂隙每隔一段时间寻找一个 Cursed 敌人，把它身上的 Cursed 复制给远处未被 Cursed 的敌人",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_holy_void_holy_shield",
-			"name": "虚空圣盾",
 			"display_name": "虚空圣盾",
 			"school": "chaos",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10386,7 +10502,7 @@
 							"area_id": "fusion_chaos_holy_void_holy_shield_area",
 							"radius_r": 2,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10420,15 +10536,15 @@
 				}
 			],
 			"effects": [],
-			"description": "玩家获得护盾时，最近虚空裂隙向外释放一次冲击，命中敌人施加 Judgment"
+			"description": "玩家获得护盾时，最近虚空裂隙向外释放一次冲击，命中敌人施加 Judgment",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		},
 		{
 			"id": "fusion_chaos_holy_echoing_judgment",
-			"name": "回响裁决",
 			"display_name": "回响裁决",
 			"school": "chaos",
 			"fusion_school": "holy",
-			"type": "fusion",
 			"rarity": "normal",
 			"max_level": 2,
 			"exclusive_group": null,
@@ -10476,7 +10592,7 @@
 							"area_id": "fusion_chaos_holy_echoing_judgment_area",
 							"radius_r": 1.8,
 							"duration": 2.5,
-							"tick_interval": 1.0,
+							"tick_interval": 1,
 							"effects_on_tick": [
 								{
 									"type": "damage",
@@ -10498,7 +10614,9 @@
 				}
 			],
 			"effects": [],
-			"description": "神罚命中带有 Instability 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚"
+			"description": "神罚命中带有 Instability 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚",
+			"skill_type": "fusion",
+			"slot_category": "active"
 		}
 	]
 }

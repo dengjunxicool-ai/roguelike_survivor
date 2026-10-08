@@ -12,7 +12,7 @@ function assert(condition, message) {
 }
 
 function main() {
-  const traceContext = read("scripts/debug/damage_trace_context.gd");
+  const traceContext = read("scripts/runtime/damage_trace_context.gd");
   const skillEventBus = read("scripts/skills/skill_event_bus.gd");
   const packetBuilder = read("scripts/combat/damage_packet_builder.gd");
   const projectile = read("scripts/combat/projectile.gd");

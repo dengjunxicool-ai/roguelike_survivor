@@ -2,6 +2,7 @@ extends RefCounted
 class_name UpgradeOfferPolicy
 
 
+const LearnRepositoryScript: Script = preload("res://scripts/upgrades/skill_learn_definition_repository.gd")
 const DEFAULT_PHASE_WEIGHT: float = 30.0
 const DEFAULT_LATE_RUN_SECONDS: float = 220.0
 const LATE_RUN_GUARANTEE_TAGS: Array[String] = ["boss", "survival", "status"]
@@ -92,7 +93,7 @@ func option_has_any_tag(option: RefCounted, tags: Array[String]) -> bool:
 	if upgrade_id == &"":
 		return false
 
-	var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
+	var upgrade: Dictionary = LearnRepositoryScript.resolve_upgrade(upgrade_id)
 	var upgrade_tags: Array = _array(upgrade.get("tags", []))
 	for tag: String in tags:
 		if upgrade_tags.has(tag):

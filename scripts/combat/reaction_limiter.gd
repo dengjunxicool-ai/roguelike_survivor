@@ -323,7 +323,7 @@ static func _has_special_tag_for_source(packet_source: Variant, tag: String) -> 
 static func _resolve_target(packet_source: Variant, target: Node = null) -> Node:
 	if target != null:
 		return target
-	if packet_source is RefCounted and packet_source.has_method("packet_value"):
+	if packet_source is DamageCalculationContext:
 		return packet_source.get("target") as Node
 	return null
 
@@ -331,22 +331,20 @@ static func _resolve_target(packet_source: Variant, target: Node = null) -> Node
 static func _packet_value(packet_source: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if packet_source is Dictionary:
 		return (packet_source as Dictionary).get(key, fallback)
-	if packet_source is RefCounted:
-		if packet_source.has_method("packet_value"):
-			return packet_source.call("packet_value", key, fallback)
-		if packet_source.has_method("get_value"):
-			return packet_source.call("get_value", key, fallback)
+	if packet_source is DamageCalculationContext:
+		return packet_source.packet_value(key, fallback)
+	if packet_source is DamagePacket:
+		return packet_source.get_value(key, fallback)
 	return fallback
 
 
 static func _packet_dictionary(packet_source: Variant) -> Dictionary:
 	if packet_source is Dictionary:
 		return (packet_source as Dictionary).duplicate(true)
-	if packet_source is RefCounted:
-		if packet_source.has_method("packet_dict"):
-			return packet_source.call("packet_dict")
-		if packet_source.has_method("to_dictionary"):
-			return packet_source.call("to_dictionary")
+	if packet_source is DamageCalculationContext:
+		return packet_source.packet_dict()
+	if packet_source is DamagePacket:
+		return packet_source.to_dictionary()
 	return {}
 
 
@@ -368,7 +366,7 @@ static func _get_limit(reaction_type: String) -> Dictionary:
 
 
 static func _is_boss(node: Node) -> bool:
-	return node != null and (node.is_in_group(&"bosses") or bool(node.get_meta("is_boss", false)) or String(node.get_meta("enemy_rank", "")) == "boss")
+	return node != null and String(node.get_meta("enemy_rank", "normal")) == "boss"
 
 
 static func _now_seconds() -> float:

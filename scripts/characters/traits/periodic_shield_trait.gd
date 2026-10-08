@@ -23,9 +23,9 @@ func process(delta: float) -> void:
 func get_modifiers(_query: RefCounted) -> Dictionary:
 	var modifiers: Dictionary = {}
 	var params: Dictionary = _get_params()
-	SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("base_modifiers", {})))
+	SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("base_modifiers", [])))
 	if _is_shield_active():
-		SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("shield_active_modifiers", {})))
+		SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("shield_active_modifiers", [])))
 	return modifiers
 
 

@@ -4,7 +4,7 @@ class_name OrbitObject
 
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 8
 @export_range(1.0, 1000.0, 1.0, "or_greater") var orbit_radius: float = 72.0
@@ -121,7 +121,7 @@ func _try_damage_body(body: Node) -> void:
 		return
 
 	if body.has_method("take_damage"):
-		body.call("take_damage", _get_damage_payload(body), damage_type)
+		body.call("take_damage", _get_damage_payload(body))
 		_apply_status(body)
 		_hit_cooldowns[enemy_id] = hit_interval
 		_record_unique_hit(enemy_id)
@@ -132,8 +132,8 @@ func _record_unique_hit(enemy_id: int) -> void:
 		_unique_hit_ids.append(enemy_id)
 
 
-func _get_damage_payload(target: Node = null) -> Variant:
-	return DamagePacketBuilderScript.from_combat_object_hit({
+func _get_damage_payload(target: Node = null) -> DamagePacket:
+	return DamagePacketBuilderScript.from_combat_object_hit_object({
 		"template": damage_packet,
 		"target": target,
 		"owner": owner_node if not damage_packet.is_empty() else null,

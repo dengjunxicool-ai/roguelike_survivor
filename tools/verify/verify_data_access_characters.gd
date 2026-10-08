@@ -27,9 +27,7 @@ func _run() -> void:
 
 	_verify_owner_and_facade(manager, source)
 	_verify_manager_source(manager)
-	_verify_empty_owner_fallback(manager, source)
-	_verify_missing_accessor_fallback(manager, source)
-	_verify_full_fallback(manager, source)
+	_verify_empty_owner_authoritative(manager, source)
 	_verify_character_runtime_contract(manager, source)
 	_finish()
 
@@ -77,9 +75,7 @@ func _verify_manager_source(manager: Node) -> void:
 		"trait": {"id": "__phase6_character_trait__"}
 	}
 	manager.set("_character_definitions", {sentinel_id: sentinel.duplicate(true)})
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_character(sentinel_id) == sentinel, "facade prefers manager character sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.CHARACTERS_PATH), "manager path avoids character JSON cache")
 
 	var runtime: Node = CharacterRuntimeScript.new()
 	root.add_child(runtime)
@@ -90,56 +86,15 @@ func _verify_manager_source(manager: Node) -> void:
 	runtime.free()
 
 	manager.set("_character_definitions", original)
-	GameDataScript._document_cache.clear()
 
 
-func _verify_empty_owner_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original: Dictionary = manager.get("_character_definitions").duplicate(true)
+func _verify_empty_owner_authoritative(manager: Node, source: Array[Dictionary]) -> void:
+	var original: Dictionary = (manager.get("_character_definitions") as Dictionary).duplicate(true)
 	var first_id: StringName = StringName(String(source[0].get("id", "")))
 	manager.set("_character_definitions", {})
-	GameDataScript._document_cache.clear()
-	var fallback: Dictionary = GameDataScript.get_character(first_id)
-	_expect(fallback == source[0], "empty owner character lookup falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.CHARACTERS_PATH), "empty owner fallback uses character document cache")
-	_mutate_definition(fallback, "__phase6_character_empty_owner__")
-	_expect(GameDataScript.get_character(first_id) == source[0], "empty owner fallback is isolated")
+	_expect(GameDataScript.get_character(first_id).is_empty(), "empty owner remains authoritative")
+	_expect(GameDataScript.get_character(first_id).is_empty(), "repeat lookup does not reload JSON")
 	manager.set("_character_definitions", original)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_missing_accessor_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6CharacterOwnerWithoutAccessor"
-	var unavailable_manager: Node = Node.new()
-	unavailable_manager.name = &"DataManager"
-	root.add_child(unavailable_manager)
-	GameDataScript._document_cache.clear()
-
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	_expect(GameDataScript.get_character(first_id) == source[0], "missing accessor falls back to character JSON")
-	var runtime: Node = CharacterRuntimeScript.new()
-	root.add_child(runtime)
-	_expect(bool(runtime.call("initialize", String(first_id))), "CharacterRuntime initializes through missing-accessor fallback")
-	_expect(runtime.call("get_character_id") == String(first_id), "missing-accessor fallback preserves character ID")
-	runtime.free()
-
-	unavailable_manager.free()
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6CharacterUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	var fallback: Dictionary = GameDataScript.get_character(first_id)
-	_expect(fallback == source[0], "full character fallback matches source")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.CHARACTERS_PATH), "full fallback loads character document")
-	_mutate_definition(fallback, "__phase6_character_full_fallback__")
-	_expect(GameDataScript.get_character(first_id) == source[0], "full character fallback is isolated")
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
 
 
 func _verify_character_runtime_contract(manager: Node, source: Array[Dictionary]) -> void:

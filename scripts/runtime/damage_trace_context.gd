@@ -2,6 +2,8 @@ extends RefCounted
 class_name DamageTraceContext
 
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
+
 const TRACE_ID_KEY: String = "debug_attack_trace_id"
 const LAST_TRACE_CONTEXT_META: String = "last_damage_trace_context"
 
@@ -113,7 +115,7 @@ static func _trace_id_from_value(value: Variant) -> int:
 		if meta_id > 0:
 			return meta_id
 		return get_last_damage_trace_id(node)
-	if value is RefCounted and value.has_method("get_value"):
+	if value is DamagePacketScript:
 		return int(value.call("get_value", TRACE_ID_KEY, 0))
 	return 0
 
@@ -123,7 +125,7 @@ static func _value_from_source(source: Variant, key: Variant, fallback: Variant 
 		return (source as Dictionary).get(key, fallback)
 	if typeof(source) == TYPE_OBJECT and not is_instance_valid(source):
 		return fallback
-	if source is RefCounted and source.has_method("get_value"):
+	if source is DamagePacketScript:
 		return source.call("get_value", key, fallback)
 	return fallback
 

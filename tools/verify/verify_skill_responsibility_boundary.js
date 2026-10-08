@@ -1,0 +1,15 @@
+const fs = require('fs');
+const assert = require('assert');
+const path = require('path');
+const root = path.resolve(__dirname, '../..');
+const read = p => fs.readFileSync(path.join(root, p), 'utf8');
+assert(fs.existsSync(path.join(root, 'scripts/skills/skill_learning_policy.gd')), 'learning qualification needs its own policy');
+const policy = read('scripts/skills/skill_learning_policy.gd');
+const builder = read('scripts/upgrades/upgrade_option_builder.gd');
+for (const source of [policy, builder]) for (const marker of ['GameData.', 'RandomNumberGenerator', '_rng', 'get_tree(', 'get_parent(']) assert(!source.includes(marker), 'pure contract forbids ' + marker);
+const pool = read('scripts/upgrades/upgrade_pool.gd');
+for (const method of ['build_skill_level_up_data', 'build_upgrade_data', 'build_debug_data']) assert(pool.includes('UpgradeOptionBuilderScript.' + method), 'pool delegates ' + method);
+const manager = read('scripts/skills/skill_manager.gd');
+for (const method of ['can_current_character_learn', 'can_learn_god_school']) assert(manager.includes('SkillLearningPolicyScript.' + method), 'manager delegates ' + method);
+assert(pool.indexOf('pick_rarity_for_max_level(max_level, _rng)') < pool.indexOf('UpgradeOptionBuilderScript.build_skill_level_up_data'), 'level rarity is sampled before pure data construction');
+console.log('[verify_skill_responsibility_boundary] PASS');

@@ -2,15 +2,15 @@ extends RefCounted
 class_name EnemyHealthApplicationStage
 
 
-const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DebugCombatTraceScript: Script = preload("res://scripts/runtime/debug_combat_trace.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 var stage_name: StringName = &"enemy_health_apply"
 
 
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var enemy: Node = context.get("target") as Node
-	var amount_or_packet: Variant = context.get("amount_or_packet")
+	var packet: DamagePacket = context.get("packet")
 	var damage_result: Dictionary = context.get("damage_result")
 	var final_amount: int = int(context.get("final_amount"))
 	var current_health: int = maxi(int(enemy.get("current_health")) - final_amount, 0)
@@ -18,32 +18,32 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	enemy.set_meta("last_damage_was_critical", bool(damage_result.get("is_critical", false)))
 	enemy.set_meta("last_damage_element", String(damage_result.get("element", "")))
 	enemy.set_meta("last_damage_type", String(damage_result.get("damage_type", "")))
-	enemy.set_meta("last_damage_source_key", String(enemy.call("_get_damage_source_key", amount_or_packet, damage_result)))
-	DamageTraceContextScript.persist_last_damage_trace(enemy, amount_or_packet, damage_result)
-	enemy.call("_record_damage_done", final_amount, damage_result, amount_or_packet)
-	DebugCombatTraceScript.record_damage(_get_root_node(), enemy, amount_or_packet, damage_result, final_amount)
+	enemy.set_meta("last_damage_source_key", String(enemy.call("_get_damage_source_key", packet, damage_result)))
+	DamageTraceContextScript.persist_last_damage_trace(enemy, packet, damage_result)
+	enemy.call("_record_damage_done", final_amount, damage_result, packet)
+	DebugCombatTraceScript.record_damage(_get_root_node(), enemy, packet, damage_result, final_amount)
 	enemy.emit_signal("health_changed", current_health, int(enemy.get("max_health")))
 	enemy.call("_show_debug_damage_number", final_amount, damage_result)
 	enemy.call("_update_debug_health_display")
 	if enemy.has_method("_show_hurt_visual"):
 		enemy.call("_show_hurt_visual")
-	_emit_post_damage_hit(enemy, amount_or_packet, damage_result, final_amount, current_health)
+	_emit_post_damage_hit(enemy, packet, damage_result, final_amount, current_health)
 	if current_health == 0:
 		enemy.call("_die")
 	context.call("set_result", host.call("make_result", true, final_amount, damage_result, &"applied"))
 
 
-func _emit_post_damage_hit(enemy: Node, amount_or_packet: Variant, damage_result: Dictionary, final_amount: int, current_health: int) -> void:
+func _emit_post_damage_hit(enemy: Node, packet: Variant, damage_result: Dictionary, final_amount: int, current_health: int) -> void:
 	if enemy == null or final_amount <= 0:
 		return
-	var player: Node = _resolve_player(enemy, amount_or_packet)
+	var player: Node = _resolve_player(enemy, packet)
 	if player == null:
 		return
 	var event_bus: Node = player.get_node_or_null("SkillEventBus")
 	if event_bus == null or not event_bus.has_method("emit_skill_event"):
 		return
 	var skill_manager: Node = player.get_node_or_null("SkillManager")
-	var source_skill_id: StringName = StringName(str(_packet_value(amount_or_packet, "source_skill_id", damage_result.get("source_skill_id", ""))))
+	var source_skill_id: StringName = StringName(str(_packet_value(packet, "source_skill_id", damage_result.get("source_skill_id", ""))))
 	var skill_instance: RefCounted = _resolve_skill_instance(skill_manager, source_skill_id)
 	var event: Dictionary = {
 		"caster": player,
@@ -56,11 +56,11 @@ func _emit_post_damage_hit(enemy: Node, amount_or_packet: Variant, damage_result
 		"target_group": &"enemies",
 		"damage_amount": final_amount,
 		"damage_result": damage_result.duplicate(true),
-		"damage_packet": amount_or_packet,
-		"damage_origin": str(_packet_value(amount_or_packet, "damage_origin", damage_result.get("damage_origin", ""))),
-		"damage_type": StringName(str(_packet_value(amount_or_packet, "damage_type", damage_result.get("damage_type", "")))),
-		"element": StringName(str(_packet_value(amount_or_packet, "element", damage_result.get("element", "")))),
-		"source_id": StringName(str(_packet_value(amount_or_packet, "source_id", damage_result.get("source_id", "")))),
+		"damage_packet": packet.to_dictionary(),
+		"damage_origin": str(_packet_value(packet, "damage_origin", damage_result.get("damage_origin", ""))),
+		"damage_type": StringName(str(_packet_value(packet, "damage_type", damage_result.get("damage_type", "")))),
+		"element": StringName(str(_packet_value(packet, "element", damage_result.get("element", "")))),
+		"source_id": StringName(str(_packet_value(packet, "source_id", damage_result.get("source_id", "")))),
 		"source_skill_id": source_skill_id,
 		"skill_id": source_skill_id,
 		"skill_instance": skill_instance,
@@ -74,8 +74,8 @@ func _emit_post_damage_hit(enemy: Node, amount_or_packet: Variant, damage_result
 	event_bus.call("emit_skill_event", &"post_damage_hit", event)
 
 
-func _resolve_player(enemy: Node, amount_or_packet: Variant) -> Node:
-	var attacker: Node = _packet_value(amount_or_packet, "attacker", null) as Node
+func _resolve_player(enemy: Node, packet: Variant) -> Node:
+	var attacker: Node = _packet_value(packet, "attacker", null) as Node
 	if attacker != null:
 		if attacker.is_in_group(&"player"):
 			return attacker
@@ -95,13 +95,8 @@ func _resolve_skill_instance(skill_manager: Node, source_skill_id: StringName) -
 	return skill_manager.call("get_skill", source_skill_id) as RefCounted
 
 
-func _packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
-	if packet is Dictionary:
-		return (packet as Dictionary).get(key, fallback)
-	if packet is RefCounted and packet.has_method("get_value"):
-		return packet.call("get_value", key, fallback)
-	return fallback
-
+func _packet_value(packet: DamagePacket, key: Variant, fallback: Variant = null) -> Variant:
+	return packet.get_value(key, fallback)
 
 func _get_node_property(node: Node, property: String) -> Node:
 	if node == null:

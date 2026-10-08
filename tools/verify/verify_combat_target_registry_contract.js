@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const fs = require("fs");
 const path = require("path");
 
@@ -58,7 +59,7 @@ const summonAttack = read("scripts/summons/summon_attack_component.gd");
 assert(summonAttack.includes("CombatTargetRegistryScript"), "Summon attack pulse must use CombatTargetRegistry");
 assertNoGroupScan("scripts/summons/summon_attack_component.gd");
 
-const skillActionExecutor = read("scripts/skills/skill_action_executor.gd");
+const skillActionExecutor = readActionSources(root);
 assert(skillActionExecutor.includes("CombatTargetRegistryScript"), "SkillActionExecutor must use CombatTargetRegistry");
 assertNoGroupScan("scripts/skills/skill_action_executor.gd");
 

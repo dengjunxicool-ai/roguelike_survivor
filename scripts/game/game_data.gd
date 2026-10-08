@@ -1,416 +1,149 @@
 extends RefCounted
 class_name GameData
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
-const GameDataAccessScript: Script = preload("res://scripts/core/game_data_access.gd")
 
 
-const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
-const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
-const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
-const STATUS_EFFECTS_PATH: String = DataPathsScript.STATUS_EFFECTS_PATH
-const UPGRADES_PATH: String = DataPathsScript.UPGRADES_PATH
-const WAVES_PATH: String = DataPathsScript.WAVES_PATH
-const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
-const MAPS_PATH: String = DataPathsScript.MAPS_PATH
-const RELICS_PATH: String = DataPathsScript.RELICS_PATH
-const SYNERGIES_PATH: String = DataPathsScript.SYNERGIES_PATH
-const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
-const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
-const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
-const SKILL_LEARN_UPGRADE_PREFIX: String = "learn_skill_"
-const LEGACY_FIRE_SKILL_LEARN_UPGRADE_PREFIX: String = "learn_fire_skill_"
-
-static var _document_cache: Dictionary = {}
+static func _owner() -> Node:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var owner: Node = tree.root.get_node_or_null("DataManager") if tree != null else null
+	assert(owner != null, "[GameData] DataManager must be initialized.")
+	assert(owner.is_loaded, "[GameData] Content must pass validation before use.")
+	return owner
 
 
-static func get_skill(skill_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_skill_definition", skill_id)
-	if not data.is_empty():
-		return data
-	var god_starting_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "starting_skills"), skill_id)
-	if not god_starting_skill.is_empty():
-		return god_starting_skill.duplicate(true)
-	var god_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "skills"), skill_id)
-	if not god_skill.is_empty():
-		return god_skill.duplicate(true)
-	return {}
+static func get_skill(definition_id: StringName) -> Dictionary:
+	return _owner().get_skill_definition(definition_id)
 
 
-static func get_primary_attack(attack_id: StringName) -> Dictionary:
-	return get_skill(attack_id)
+static func get_skill_system_config() -> Dictionary:
+	return _owner().get_skill_system_config()
 
 
-static func get_enemy(enemy_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_enemy_definition", enemy_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(ENEMIES_PATH, "monsters"), enemy_id)
+static func get_enemy(definition_id: StringName) -> Dictionary:
+	return _owner().get_enemy_definition(definition_id)
 
 
-static func get_enemy_skill(skill_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_enemy_skill_definition", skill_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(ENEMY_SKILLS_PATH, "enemy_skills"), skill_id)
+static func get_enemy_skill(definition_id: StringName) -> Dictionary:
+	return _owner().get_enemy_skill_definition(definition_id)
 
 
-static func get_combat_object(object_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_combat_object_definition", object_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(COMBAT_OBJECTS_PATH, "combat_objects"), object_id).duplicate(true)
+static func get_character(definition_id: StringName) -> Dictionary:
+	return _owner().get_character_definition(definition_id)
 
 
-static func get_character(character_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_character_definition", character_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id).duplicate(true)
+static func get_map(definition_id: StringName) -> Dictionary:
+	return _owner().get_map_definition(definition_id)
 
 
-static func get_map(map_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_map_definition", map_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(MAPS_PATH, "maps"), map_id)
+static func get_relic(definition_id: StringName) -> Dictionary:
+	return _owner().get_relic_definition(definition_id)
 
 
-static func get_character_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_character_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(CHARACTERS_PATH, "characters")
+static func get_status(definition_id: StringName) -> Dictionary:
+	return _owner().get_status_definition(definition_id)
 
 
-static func get_map_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_map_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(MAPS_PATH, "maps")
+static func get_combat_object(definition_id: StringName) -> Dictionary:
+	return _owner().get_combat_object_definition(definition_id)
 
 
-static func get_relic(relic_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_relic_definition", relic_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(RELICS_PATH, "relics"), relic_id).duplicate(true)
+static func get_upgrade(definition_id: StringName) -> Dictionary:
+	return _owner().get_upgrade_definition(definition_id)
 
 
-static func get_relic_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_relic_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(RELICS_PATH, "relics").duplicate(true)
+static func get_summon(definition_id: StringName) -> Dictionary:
+	return _owner().get_summon_definition(definition_id)
 
 
-static func get_progression_goals() -> Dictionary:
-	var data_manager: Node = _get_data_manager()
-	if data_manager != null and data_manager.has_method("get_progression_goals"):
-		var data: Variant = data_manager.call("get_progression_goals")
-		if data is Dictionary:
-			var goals_data: Dictionary = data
-			if not goals_data.is_empty():
-				return goals_data
-	return _load_document(PROGRESSION_GOALS_PATH).duplicate(true)
-
-
-static func get_daily_challenge_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_daily_challenge_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(CHALLENGES_PATH, "daily_challenges").duplicate(true)
-
-
-static func get_weekly_challenge_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_weekly_challenge_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(CHALLENGES_PATH, "weekly_challenges").duplicate(true)
-
-
-static func get_skill_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_skill_definitions")
-	if not data.is_empty():
-		return _filter_out_starting_skill_definitions(data)
-	return _filter_out_starting_skill_definitions(_get_dictionary_array(SKILLS_PATH, "skills"))
+static func get_all_skill_pool() -> Array[Dictionary]:
+	return _owner().get_skill_definitions()
 
 
 static func get_starting_skill_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_starting_skill_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(SKILLS_PATH, "starting_skills").duplicate(true)
-
-
-static func get_primary_attack_pool() -> Array[Dictionary]:
-	var skills: Array[Dictionary] = _get_dictionary_array(SKILLS_PATH, "starting_skills")
-	skills.append_array(get_skill_pool())
-	return skills
-
-
-static func _filter_out_starting_skill_definitions(skills: Array[Dictionary]) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for skill: Dictionary in skills:
-		if bool(skill.get("is_starting_skill", false)):
-			continue
-		if StringName(_string_or(skill.get("id", ""), "")) == &"fireball":
-			continue
-		result.append(skill)
-	return result
+	return _owner().get_starting_skill_definitions()
 
 
 static func get_enemy_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_enemy_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(ENEMIES_PATH, "monsters")
+	return _owner().get_enemy_definitions()
 
 
 static func get_enemy_skill_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_enemy_skill_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills").duplicate(true)
+	return _owner().get_enemy_skill_definitions()
 
 
-static func get_synergy_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_synergy_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(SYNERGIES_PATH, "synergies").duplicate(true)
+static func get_character_pool() -> Array[Dictionary]:
+	return _owner().get_character_definitions()
+
+
+static func get_map_pool() -> Array[Dictionary]:
+	return _owner().get_map_definitions()
+
+
+static func get_relic_pool() -> Array[Dictionary]:
+	return _owner().get_relic_definitions()
 
 
 static func get_status_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_status_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(STATUS_EFFECTS_PATH, "statuses")
+	return _owner().get_status_definitions()
 
 
-static func get_status(status_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_status_definition", status_id)
-	if not data.is_empty():
-		return data
-	return _find_by_id(_get_array(STATUS_EFFECTS_PATH, "statuses"), status_id).duplicate(true)
+static func get_synergy_pool() -> Array[Dictionary]:
+	return _owner().get_synergy_definitions()
+
+
+static func get_god_pool() -> Array[Dictionary]:
+	return _owner().get_god_definitions()
+
+
+static func get_summon_pool() -> Array[Dictionary]:
+	return _owner().get_summon_definitions()
 
 
 static func get_curse_choice_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_curse_choice_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(UPGRADES_PATH, "curse_choices").duplicate(true)
+	return _owner().get_curse_choice_definitions()
 
 
 static func get_level_up_upgrade_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_level_up_upgrade_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(UPGRADES_PATH, "level_up_upgrades").duplicate(true)
-
-
-static func get_upgrade(upgrade_id: StringName) -> Dictionary:
-	var data: Dictionary = _get_definition_from_data_manager("get_upgrade_definition", upgrade_id)
-	if not data.is_empty():
-		return data
-
-	var upgrade_id_text: String = String(upgrade_id)
-	if upgrade_id_text.begins_with(SKILL_LEARN_UPGRADE_PREFIX):
-		var skill_id: StringName = StringName(upgrade_id_text.substr(SKILL_LEARN_UPGRADE_PREFIX.length()))
-		return _make_skill_learn_upgrade(upgrade_id_text, skill_id)
-	if upgrade_id_text.begins_with(LEGACY_FIRE_SKILL_LEARN_UPGRADE_PREFIX):
-		var skill_id: StringName = StringName(upgrade_id_text.substr(LEGACY_FIRE_SKILL_LEARN_UPGRADE_PREFIX.length()))
-		return _make_fire_skill_learn_upgrade(upgrade_id_text, skill_id)
-
-	var categories: Array[String] = [
-		"curse_choices",
-		"level_up_upgrades",
-		"permanent_upgrades"
-	]
-
-	for category: String in categories:
-		var upgrade: Dictionary = _find_by_id(_get_array(UPGRADES_PATH, category), upgrade_id)
-		if not upgrade.is_empty():
-			return upgrade
-
-	return {}
-
-
-static func _make_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
-	if skill_id == &"":
-		return {}
-	var skill: Dictionary = get_skill(skill_id)
-	if skill.is_empty():
-		return {}
-	if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary_from_value(skill.get("offer_rule", {})).is_empty():
-		return {}
-
-	var tags: Array = []
-	for tag_variant: Variant in _get_array(SKILLS_PATH, "skills"):
-		if not (tag_variant is Dictionary):
-			continue
-		var candidate: Dictionary = tag_variant
-		if StringName(String(candidate.get("id", ""))) == skill_id:
-			tags = _build_skill_learn_tags(candidate)
-			break
-	if tags.is_empty():
-		tags = _build_skill_learn_tags(skill)
-
-	var description: String = _string_or(skill.get("description", "Learn %s." % _string_or(skill_id, "")), "")
-	return {
-		"id": upgrade_id,
-		"display_name": _string_or(skill.get("display_name", skill_id), _string_or(skill_id, "")),
-		"description": description,
-		"rarity": _string_or(skill.get("rarity", "common"), "common"),
-		"tags": tags,
-		"enabled": true,
-		"max_level": 1,
-		"learn_skill_id": _string_or(skill_id, ""),
-		"god_id": _string_or(_get_skill_god_id(skill), ""),
-		"level_descriptions": [description]
-	}
-
-
-static func _make_fire_skill_learn_upgrade(upgrade_id: String, skill_id: StringName) -> Dictionary:
-	var upgrade: Dictionary = _make_skill_learn_upgrade(upgrade_id, skill_id)
-	if upgrade.is_empty() or not _is_fire_related_skill(get_skill(skill_id)):
-		return {}
-	return upgrade
-
-
-static func _is_fire_related_skill(skill: Dictionary) -> bool:
-	if StringName(_string_or(skill.get("god_id", ""), "")) == &"fire":
-		return true
-	if StringName(_string_or(skill.get("school", ""), "")) == &"fire":
-		return true
-	if StringName(_string_or(skill.get("fusion_school", ""), "")) == &"fire":
-		return true
-	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
-		if _string_or(tag_variant, "") == "fire":
-			return true
-	return false
-
-
-static func _string_or(value: Variant, fallback: String = "") -> String:
-	if value == null:
-		return fallback
-	if value is String:
-		return value
-	if value is StringName:
-		return String(value)
-	return str(value)
-
-
-static func _get_dictionary_from_value(value: Variant) -> Dictionary:
-	return GameDataAccessScript.get_dictionary_from_value(value)
-
-
-static func _build_skill_learn_tags(skill: Dictionary) -> Array:
-	var tags: Array = []
-	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
-		var tag: String = String(tag_variant)
-		if tag != "" and not tags.has(tag):
-			tags.append(tag)
-	var god_id: String = _string_or(_get_skill_god_id(skill), "")
-	if god_id != "" and not tags.has(god_id):
-		tags.push_front(god_id)
-	if not tags.has("skill"):
-		tags.push_front("skill")
-	return tags
-
-
-static func _get_skill_god_id(skill: Dictionary) -> StringName:
-	for key: String in ["god_id", "school", "fusion_school"]:
-		var value: String = _string_or(skill.get(key, ""), "")
-		if value != "":
-			return StringName(value)
-	for tag_variant: Variant in _get_array_from_value(skill.get("tags", [])):
-		var tag: String = _string_or(tag_variant, "")
-		if tag in ["fire", "frost", "thunder", "curse", "holy", "chaos"]:
-			return StringName(tag)
-	return &""
-
-
-static func get_permanent_upgrade(upgrade_id: StringName) -> Dictionary:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_permanent_upgrade_definitions")
-	if not data.is_empty():
-		return _find_by_id(data, upgrade_id)
-	return _find_by_id(_get_array(UPGRADES_PATH, "permanent_upgrades"), upgrade_id).duplicate(true)
+	return _owner().get_level_up_upgrade_definitions()
 
 
 static func get_permanent_upgrade_pool() -> Array[Dictionary]:
-	var data: Array[Dictionary] = _get_pool_from_data_manager("get_permanent_upgrade_definitions")
-	if not data.is_empty():
-		return data
-	return _get_dictionary_array(UPGRADES_PATH, "permanent_upgrades").duplicate(true)
+	return _owner().get_permanent_upgrade_definitions()
+
+
+static func get_daily_challenge_pool() -> Array[Dictionary]:
+	return _owner().get_daily_challenge_definitions()
+
+
+static func get_weekly_challenge_pool() -> Array[Dictionary]:
+	return _owner().get_weekly_challenge_definitions()
 
 
 static func get_rarity_weights() -> Dictionary:
-	var data_manager: Node = _get_data_manager()
-	if data_manager != null and data_manager.has_method("get_rarity_weights"):
-		var data: Variant = data_manager.call("get_rarity_weights")
-		if data is Dictionary:
-			var weight_data: Dictionary = data
-			if not weight_data.is_empty():
-				return weight_data
-	var document: Dictionary = _load_document(UPGRADES_PATH)
-	var weights: Variant = document.get("rarity_weights", {})
-	if weights is Dictionary:
-		var fallback_weights: Dictionary = weights
-		return fallback_weights.duplicate(true)
+	return _owner().get_rarity_weights()
 
+
+static func get_wave_config() -> Dictionary:
+	return _owner().get_wave_config()
+
+
+static func get_progression_goals() -> Dictionary:
+	return _owner().get_progression_goals()
+
+
+static func get_skill_pool() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for skill: Dictionary in get_all_skill_pool():
+		if not bool(skill.get("is_starting_skill", false)):
+			result.append(skill)
+	return result
+
+
+static func get_permanent_upgrade(upgrade_id: StringName) -> Dictionary:
+	for upgrade: Dictionary in get_permanent_upgrade_pool():
+		if StringName(upgrade["id"]) == upgrade_id:
+			return upgrade
 	return {}
 
 
 static func get_run_config() -> Dictionary:
-	var document: Dictionary = get_wave_config()
-	var run_config: Variant = document.get("run", {})
-	if run_config is Dictionary:
-		var run_data: Dictionary = run_config
-		return run_data
-
-	return {}
-
-
-static func get_wave_config() -> Dictionary:
-	var data_manager: Node = _get_data_manager()
-	if data_manager != null and data_manager.has_method("get_wave_config"):
-		var data: Variant = data_manager.call("get_wave_config")
-		if data is Dictionary:
-			var wave_data: Dictionary = data
-			if not wave_data.is_empty():
-				return wave_data
-
-	return _load_document(WAVES_PATH)
-
-
-static func _get_array(path: String, key: String) -> Array:
-	return GameDataAccessScript.get_array(_document_cache, path, key)
-
-
-static func _get_array_from_value(value: Variant) -> Array:
-	return GameDataAccessScript.get_array_from_value(value)
-
-
-static func _get_dictionary_array(path: String, key: String) -> Array[Dictionary]:
-	return GameDataAccessScript.get_dictionary_array(_document_cache, path, key)
-
-
-static func _find_by_id(items: Array, target_id: StringName) -> Dictionary:
-	return GameDataAccessScript.find_by_id(items, target_id)
-
-
-static func _load_document(path: String) -> Dictionary:
-	return GameDataAccessScript.load_document(_document_cache, path)
-
-
-static func _get_data_manager() -> Node:
-	return GameDataAccessScript.get_data_manager()
-
-
-static func _get_definition_from_data_manager(method_name: String, definition_id: Variant) -> Dictionary:
-	return GameDataAccessScript.get_definition_from_data_manager(method_name, definition_id)
-
-
-static func _get_pool_from_data_manager(method_name: String) -> Array[Dictionary]:
-	return GameDataAccessScript.get_pool_from_data_manager(method_name)
+	return get_wave_config().get("run", {}).duplicate(true)

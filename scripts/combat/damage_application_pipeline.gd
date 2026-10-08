@@ -18,6 +18,8 @@ const EnemyHealthApplicationStageScript: Script = preload("res://scripts/combat/
 
 
 static func apply(calculation_context: RefCounted) -> RefCounted:
+	if _invalid_packet(calculation_context):
+		return DamageApplicationResultScript.make(false, 0, {}, &"invalid_packet")
 	var target: Node = calculation_context.get("target") as Node
 	if target == null:
 		return DamageApplicationResultScript.make(false, 0, {}, &"missing_target")
@@ -26,7 +28,7 @@ static func apply(calculation_context: RefCounted) -> RefCounted:
 	if target.has_method("_apply_damage_synergies") or target.has_method("is_dead"):
 		return apply_enemy(calculation_context)
 	if target.has_method("take_damage"):
-		target.call("take_damage", calculation_context.get("amount_or_packet"), calculation_context.get("legacy_damage_type"))
+		target.call("take_damage", calculation_context.get("packet"))
 		return DamageApplicationResultScript.make(true, 0, {}, &"delegated")
 	return DamageApplicationResultScript.make(false, 0, {}, &"unsupported_target")
 
@@ -44,6 +46,8 @@ static func make_result(applied: bool, amount: int, damage_result: Dictionary = 
 
 
 static func _run_stages(application_context: RefCounted, stages: Array) -> RefCounted:
+	if _invalid_packet(application_context):
+		return DamageApplicationResultScript.make(false, 0, {}, &"invalid_packet")
 	for stage: RefCounted in stages:
 		stage.call("apply_with_host", load("res://scripts/combat/damage_application_pipeline.gd"), application_context)
 		if bool(application_context.call("has_result")):
@@ -86,24 +90,21 @@ static func _stage_names(stages: Array[RefCounted]) -> Array[StringName]:
 	return names
 
 
-static func packet_amount(amount_or_packet: Variant) -> int:
-	if amount_or_packet is RefCounted and amount_or_packet.has_method("get_value"):
-		return int(amount_or_packet.call("get_value", "amount", amount_or_packet.call("get_value", "damage", amount_or_packet.call("get_value", "raw_amount", 0))))
-	if amount_or_packet is Dictionary:
-		var packet: Dictionary = amount_or_packet
-		return int(packet.get("amount", packet.get("damage", packet.get("raw_amount", 0))))
-	return int(amount_or_packet)
+static func packet_amount(packet: DamagePacket) -> int:
+	return int(packet.amount)
+
+static func packet_with_amount(packet: DamagePacket, amount: int) -> DamagePacket:
+	var adjusted: DamagePacket = packet.clone()
+	adjusted.amount = amount
+	adjusted.raw_amount = amount
+	return adjusted
 
 
-static func packet_with_amount(amount_or_packet: Variant, amount: int) -> Variant:
-	if amount_or_packet is RefCounted and amount_or_packet.has_method("to_dictionary"):
-		var object_packet: Dictionary = amount_or_packet.call("to_dictionary")
-		object_packet["amount"] = amount
-		object_packet["raw_amount"] = amount
-		return DamagePacketScript.from_dictionary(object_packet)
-	if amount_or_packet is Dictionary:
-		var packet: Dictionary = (amount_or_packet as Dictionary).duplicate(true)
-		packet["amount"] = amount
-		packet["raw_amount"] = amount
-		return packet
-	return amount
+
+static func _invalid_packet(context: RefCounted) -> bool:
+	var packet: DamagePacket = context.get("packet")
+	var errors: Array[String] = packet.validate() if packet != null else ["packet is required"]
+	if errors.is_empty():
+		return false
+	push_warning("Invalid DamagePacket: " + "; ".join(errors))
+	return true

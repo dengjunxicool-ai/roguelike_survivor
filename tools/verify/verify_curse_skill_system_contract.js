@@ -54,8 +54,8 @@ const byId = new Map(curseSkills.map((skill) => [skill.id, skill]));
 for (const [id, name, type, description] of expected) {
   const skill = byId.get(id);
   assert(skill, `missing curse skill ${id}`);
-  assert(skill.name === name, `${id} name mismatch`);
-  assert(skill.type === type, `${id} type mismatch`);
+  assert(skill.display_name === name, `${id} name mismatch`);
+  assert(skill.skill_type === type, `${id} type mismatch`);
   assert(skill.description === description, `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("curse"), `${id} must be tagged curse`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
@@ -68,7 +68,7 @@ assert(Array.isArray(curseGod.tags) && curseGod.tags.includes("implemented"), "c
 
 const attack = byId.get("curse_attack_cursing");
 assert(attack.exclusive_group === "attack_school", "curse attack must replace the starting attack slot");
-assert(hasEffect(attack, (effect) => effect.type === "add_modifier" && effect.modifier === "attack_damage_multiplier" && effect.value === 0.18), "curse attack must add exactly +18% attack damage");
+assert(hasEffect(attack, (effect) => effect.type === "add_modifier" && effect.stat === "primary_attack_damage" && effect.op === "multiplier_add" && effect.value === 0.18), "curse attack must add exactly +18% attack damage");
 assert((attack.trigger_rules || []).some((rule) => rule.trigger === "attack_hit" && (rule.effects || []).some((effect) => effect.type === "apply_status" && effect.status === "cursed")), "curse attack must apply Cursed on hit");
 
 const dash = byId.get("curse_dash_soul_chain");

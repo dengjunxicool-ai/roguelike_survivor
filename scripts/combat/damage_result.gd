@@ -62,9 +62,8 @@ func to_dictionary() -> Dictionary:
 static func _packet_value(packet_source: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if packet_source is Dictionary:
 		return (packet_source as Dictionary).get(key, fallback)
-	if packet_source is RefCounted:
-		if packet_source.has_method("packet_value"):
-			return packet_source.call("packet_value", key, fallback)
-		if packet_source.has_method("get_value"):
-			return packet_source.call("get_value", key, fallback)
+	if packet_source is DamageCalculationContext:
+		return packet_source.packet_value(key, fallback)
+	if packet_source is DamagePacket:
+		return packet_source.get_value(key, fallback)
 	return fallback

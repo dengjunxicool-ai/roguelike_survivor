@@ -1,3 +1,4 @@
+const { readDebugPanelSources, readSpecialRuleSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
 
@@ -33,9 +34,10 @@ function extractGdFunctionBody(text, functionName) {
   return text.slice(start, end);
 }
 
-const panel = read("scripts/debug/dev_debug_panel.gd");
+const panel = readDebugPanelSources(root);
 const pool = read("scripts/upgrades/upgrade_pool.gd");
 const skillManager = read("scripts/skills/skill_manager.gd");
+const skillLearningPolicy = read("scripts/skills/skill_learning_policy.gd");
 const skillExecutor = read("scripts/skills/skill_executor.gd");
 const dataManager = read("scripts/core/data_manager.gd");
 const gameData = read("scripts/game/game_data.gd");
@@ -93,11 +95,11 @@ assert(!godSkillCardRunBody.includes("_prepare_fire_skill_debug_target"), "God s
 const fireCastBody = extractGdFunctionBody(panel, "_cast_fire_skill_once");
 const selectedCastBody = extractGdFunctionBody(panel, "_cast_player_skill_once");
 assert(
-  /var\s+cast_count\s*:\s*int\s*=\s*_cast_player_skill_once\(skill_id,\s*trace_id\)/.test(fireCastBody),
+  /var\s+cast_count\s*:\s*int\s*=\s*host\._cast_player_skill_once\(skill_id,\s*trace_id\)/.test(fireCastBody),
   "DevDebugPanel fire skill chain must invoke selected-skill cast"
 );
 assert(
-  !/var\s+cast_count\s*:\s*int\s*=\s*_cast_player_skills_once\(trace_id\)/.test(fireCastBody),
+  !/var\s+cast_count\s*:\s*int\s*=\s*(?:host\.)?_cast_player_skills_once\(trace_id\)/.test(fireCastBody),
   "DevDebugPanel fire skill chain must not cast all skills for selected-skill debug"
 );
 assert(
@@ -118,8 +120,9 @@ assert(!pool.includes("mars_spark_missile_projectile"), "UpgradePool must not ha
 assert(dataManager.includes('const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH'), "DataManager must use DataPaths for data/skills/skills.json");
 assert(dataManager.includes("STARTING_SKILLS_KEY"), "DataManager must index starting_skills");
 assert(dataManager.includes("SKILLS_KEY"), "DataManager must index skills");
-assert(gameData.includes("const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH"), "GameData must use DataPaths for data/skills/skills.json");
-assert(skillManager.includes("offer_in_upgrade_pool"), "SkillManager must allow skills offered from the upgrade pool");
+assert(!gameData.includes("DataPathsScript") && gameData.includes("get_all_skill_pool"), "GameData must query the sole configuration owner");
+assert(skillManager.includes("SkillLearningPolicyScript.can_current_character_learn"), "SkillManager must delegate character learning eligibility to SkillLearningPolicy");
+assert(skillLearningPolicy.includes("offer_in_upgrade_pool"), "SkillLearningPolicy must allow skills offered from the upgrade pool");
 assert(skillExecutor.includes("func debug_cast_skill(skill_id: Variant, debug_attack_trace_id: int = 0) -> int:"), "SkillExecutor must expose selected skill debug casting");
 
 assert(smoke.includes("debug_run_fire_skill_chain"), "Godot smoke must call debug_run_fire_skill_chain");

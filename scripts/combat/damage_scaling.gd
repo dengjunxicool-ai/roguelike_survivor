@@ -11,7 +11,7 @@ static func from_dictionary(packet: Dictionary) -> RefCounted:
 	var scaling: RefCounted = new()
 	scaling.uses_character_damage_multiplier = bool(packet.get("uses_character_damage_multiplier", scaling.uses_character_damage_multiplier))
 	scaling.uses_skill_level_coefficient = bool(packet.get("uses_skill_level_coefficient", scaling.uses_skill_level_coefficient))
-	scaling.skill_level_coefficient = maxf(float(packet.get("skill_level_coefficient", scaling.skill_level_coefficient)), 0.0)
+	scaling.skill_level_coefficient = float(packet.get("skill_level_coefficient", scaling.skill_level_coefficient))
 	return scaling
 
 

@@ -45,17 +45,11 @@ func _run() -> void:
 	_verify_manager_result_isolation(data_manager)
 	_verify_facade_result_isolation()
 
-	var original_manager_name: StringName = data_manager.name
-	data_manager.name = &"Stage5UnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback_pool: Array[Dictionary] = GameDataScript.get_status_pool()
-	data_manager.name = original_manager_name
-	GameDataScript._document_cache.clear()
-
-	_expect(_ids(fallback_pool) == _ids(source_pool), "fallback preserves source status order", _ids(fallback_pool))
-	_expect(fallback_pool == source_pool, "fallback values match the source document")
-	var restored_pool: Array[Dictionary] = GameDataScript.get_status_pool()
-	_expect(restored_pool == manager_pool, "restored facade returns manager-backed values")
+	var original: Dictionary = (data_manager.get("_status_definitions") as Dictionary).duplicate(true)
+	data_manager.set("_status_definitions", {})
+	_expect(GameDataScript.get_status_pool().is_empty(), "empty owner is authoritative and does not reload JSON")
+	data_manager.set("_status_definitions", original)
+	_expect(GameDataScript.get_status_pool() == manager_pool, "restored owner preserves values")
 
 	_finish()
 

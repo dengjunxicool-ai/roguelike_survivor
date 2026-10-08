@@ -41,33 +41,18 @@ static func for_skill(skill: RefCounted, player: Node = null) -> ModifierQuery:
 	return query
 
 
-static func for_damage(packet: Dictionary, attacker: Node = null) -> ModifierQuery:
+static func for_damage(packet: DamagePacket, attacker: Node = null) -> ModifierQuery:
 	var query: ModifierQuery = ModifierQuery.new()
 	query.scope = SCOPE_DAMAGE
 	query.owner = attacker
-	query.source_origin_id = StringName(String(packet.get("source_origin_id", "")))
-	query.skill_id = StringName(String(packet.get("source_skill_id", packet.get("skill_id", ""))))
-	query.damage_origin = StringName(String(packet.get("damage_origin", "")))
-	query.element = StringName(String(packet.get("element", "")))
-	query.object_type = StringName(String(packet.get("source_type", packet.get("object_type", ""))))
-	query.target_type = StringName(String(packet.get("target_type", "")))
-	query.status_id = StringName(String(packet.get("status_id", "")))
-	query.skill_instance = packet.get("skill_instance") as RefCounted
-	return query
-
-
-static func for_damage_any(packet_source: Variant, attacker: Node = null) -> ModifierQuery:
-	var query: ModifierQuery = ModifierQuery.new()
-	query.scope = SCOPE_DAMAGE
-	query.owner = attacker
-	query.source_origin_id = StringName(String(_packet_value(packet_source, "source_origin_id", "")))
-	query.skill_id = StringName(String(_packet_value(packet_source, "source_skill_id", _packet_value(packet_source, "skill_id", ""))))
-	query.damage_origin = StringName(String(_packet_value(packet_source, "damage_origin", "")))
-	query.element = StringName(String(_packet_value(packet_source, "element", "")))
-	query.object_type = StringName(String(_packet_value(packet_source, "source_type", _packet_value(packet_source, "object_type", ""))))
-	query.target_type = _resolve_target_type(packet_source)
-	query.status_id = StringName(String(_packet_value(packet_source, "status_id", "")))
-	query.skill_instance = _packet_value(packet_source, "skill_instance", null) as RefCounted
+	query.source_origin_id = packet.source_context.source_origin_id
+	query.skill_id = packet.source_context.source_skill_id
+	query.damage_origin = packet.damage_origin
+	query.element = packet.element
+	query.object_type = packet.source_context.source_type
+	query.target_type = StringName(String(packet.get_value("target_type", "")))
+	query.status_id = StringName(String(packet.get_value("status_id", "")))
+	query.skill_instance = packet.get_value("skill_instance") as SkillInstance
 	return query
 
 
@@ -95,27 +80,3 @@ static func _parse_string_name_array(value: Variant) -> Array[StringName]:
 		if id != &"":
 			parsed.append(id)
 	return parsed
-
-
-static func _packet_value(packet_source: Variant, key: Variant, fallback: Variant = null) -> Variant:
-	if packet_source is Dictionary:
-		return (packet_source as Dictionary).get(key, fallback)
-	if packet_source is RefCounted:
-		if packet_source.has_method("packet_value"):
-			return packet_source.call("packet_value", key, fallback)
-		if packet_source.has_method("get_value"):
-			return packet_source.call("get_value", key, fallback)
-		var value: Variant = packet_source.get(String(key))
-		return value if value != null else fallback
-	return fallback
-
-
-static func _resolve_target_type(packet_source: Variant) -> StringName:
-	var configured: Variant = _packet_value(packet_source, "target_type", "")
-	if String(configured) != "":
-		return StringName(String(configured))
-	var profile: RefCounted = _packet_value(packet_source, "target_profile", null) as RefCounted
-	if profile != null:
-		return StringName(String(profile.get("target_type")))
-	return &""
-

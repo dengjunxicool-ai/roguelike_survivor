@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 class_name DamagePacket
 
 
@@ -14,48 +14,60 @@ var damage_type: StringName = &"direct_physical"
 var element: StringName = &"physical"
 var target_id: String = ""
 var reaction_depth: int = 0
-var source_context: RefCounted
-var flags: RefCounted
-var scaling: RefCounted
+var source_context: DamageSourceContext
+var flags: DamageFlags
+var scaling: DamageScaling
 var special_rule_tags: Array = []
 var extras: Dictionary = {}
+var _input_errors: Array[String] = []
 
 
 func _init() -> void:
 	_ensure_parts()
 
 
-static func from_any(value: Variant, legacy_damage_type: Variant = &"", attacker: Node = null, target: Node = null) -> RefCounted:
-	if value is RefCounted and value.has_method("to_dictionary"):
-		return value
-	if value is Dictionary:
-		return from_dictionary(value, attacker, target)
-	var packet: Dictionary = {
-		"raw_amount": float(value),
-		"amount": float(value),
-		"damage_type": legacy_damage_type
-	}
-	return from_dictionary(packet, attacker, target)
+func clone() -> DamagePacket:
+	var copy: DamagePacket = from_dictionary(to_dictionary())
+	copy._input_errors = _input_errors.duplicate()
+	return copy
 
 
-static func from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> RefCounted:
-	var result: RefCounted = new()
+
+
+static func from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> DamagePacket:
+	var result: DamagePacket = new()
 	result.call("sync_from_dictionary", packet, attacker, target)
 	return result
 
 
-func sync_from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> RefCounted:
-	extras = packet.duplicate(true)
-	raw_amount = maxf(float(packet.get("raw_amount", packet.get("amount", packet.get("damage", 0.0)))), 0.0)
-	amount = maxf(float(packet.get("amount", raw_amount)), 0.0)
+func sync_from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> DamagePacket:
+	_input_errors = _validate_input_fields(packet)
+	extras = {}
+	for key: Variant in packet:
+		if not _is_known_field(String(key)):
+			extras[String(key)] = packet[key]
+	raw_amount = float(packet.get("raw_amount", 0.0))
+	amount = float(packet.get("amount", raw_amount))
 	damage_origin = StringName(String(packet.get("damage_origin", damage_origin)))
 	damage_type = StringName(String(packet.get("damage_type", damage_type)))
 	element = StringName(String(packet.get("element", element)))
 	target_id = str(target.get_instance_id()) if target != null else String(packet.get("target_id", ""))
-	reaction_depth = maxi(int(packet.get("reaction_depth", 0)), 0)
+	reaction_depth = int(packet.get("reaction_depth", 0))
 	source_context = DamageSourceContextFactoryScript.from_packet(packet, attacker)
-	flags = DamageFlagsScript.from_dictionary(packet)
-	scaling = DamageScalingScript.from_dictionary(packet)
+	var defaults: Dictionary = packet.duplicate(true)
+	var origin: String = String(damage_origin)
+	var kind: String = String(damage_type)
+	for key: String in ["can_crit", "ignore_defense", "ignore_resistance", "ignore_vulnerability"]:
+		if not defaults.has(key):
+			defaults[key] = DamageRuleRegistry.default_can_crit(origin, kind) if key == "can_crit" else _default_ignore(key, kind)
+	if not defaults.has("can_trigger_reaction"):
+		defaults["can_trigger_reaction"] = origin != "reaction" and reaction_depth == 0
+	if not defaults.has("uses_character_damage_multiplier"):
+		defaults["uses_character_damage_multiplier"] = DamageRuleRegistry.default_uses_character_damage(origin, kind)
+	if not defaults.has("uses_skill_level_coefficient"):
+		defaults["uses_skill_level_coefficient"] = DamageRuleRegistry.default_uses_skill_level(origin)
+	flags = DamageFlagsScript.from_dictionary(defaults)
+	scaling = DamageScalingScript.from_dictionary(defaults)
 	special_rule_tags = _get_array(packet.get("special_rule_tags", []))
 	return self
 
@@ -108,9 +120,9 @@ func set_value(key: Variant, value: Variant) -> void:
 	var field: String = String(key)
 	match field:
 		"raw_amount":
-			raw_amount = maxf(float(value), 0.0)
+			raw_amount = float(value)
 		"amount":
-			amount = maxf(float(value), 0.0)
+			amount = float(value)
 		"damage_origin":
 			damage_origin = StringName(String(value))
 		"damage_type":
@@ -120,7 +132,7 @@ func set_value(key: Variant, value: Variant) -> void:
 		"target_id":
 			target_id = String(value)
 		"reaction_depth":
-			reaction_depth = maxi(int(value), 0)
+			reaction_depth = int(value)
 		"special_rule_tags":
 			special_rule_tags = _get_array(value)
 		"source_tags":
@@ -136,7 +148,7 @@ func set_value(key: Variant, value: Variant) -> void:
 		"uses_character_damage_multiplier", "uses_skill_level_coefficient":
 			scaling.set(field, bool(value))
 		"skill_level_coefficient":
-			scaling.set("skill_level_coefficient", maxf(float(value), 0.0))
+			scaling.skill_level_coefficient = float(value)
 		_:
 			extras[field] = value
 
@@ -160,13 +172,22 @@ func to_dictionary() -> Dictionary:
 
 func validate() -> Array[String]:
 	_ensure_parts()
-	var errors: Array[String] = []
-	if raw_amount < 0.0:
-		errors.append("raw_amount must be non-negative")
-	if String(damage_origin) == "":
-		errors.append("damage_origin is required")
-	if String(damage_type) == "":
-		errors.append("damage_type is required")
+	var errors: Array[String] = _input_errors.duplicate()
+	errors.append_array(DamagePacketExtensionRegistry.validate(extras))
+	if not is_finite(raw_amount) or raw_amount < 0.0:
+		errors.append("raw_amount must be finite and non-negative")
+	if not is_finite(amount) or amount < 0.0:
+		errors.append("amount must be finite and non-negative")
+	if not is_finite(scaling.skill_level_coefficient) or scaling.skill_level_coefficient < 0.0:
+		errors.append("skill_level_coefficient must be finite and non-negative")
+	if reaction_depth < 0:
+		errors.append("reaction_depth must be non-negative")
+	if not DamageRuleRegistry.ALLOWED_ORIGINS.has(String(damage_origin)):
+		errors.append("damage_origin must be registered")
+	if not DamageRuleRegistry.ALLOWED_DAMAGE_TYPES.has(String(damage_type)):
+		errors.append("damage_type must be registered")
+	if not DamageRuleRegistry.is_element(String(element)):
+		errors.append("element must be registered")
 	if source_context == null or source_context.source_instance_id == "":
 		errors.append("source_instance_id is required")
 	return errors
@@ -228,3 +249,33 @@ static func _string_name_array(value: Variant) -> Array[StringName]:
 				result.append(name)
 	return result
 
+
+
+static func _default_ignore(key: String, kind: String) -> bool:
+	match key:
+		"ignore_defense": return DamageRuleRegistry.default_ignore_defense(kind)
+		"ignore_resistance": return DamageRuleRegistry.default_ignore_resistance(kind)
+		"ignore_vulnerability": return DamageRuleRegistry.default_ignore_vulnerability(kind)
+	return false
+
+
+static func _validate_input_fields(packet: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	if not packet.has("raw_amount"):
+		errors.append("raw_amount is required")
+	for key: Variant in packet:
+		var field: String = String(key)
+		var value: Variant = packet[key]
+		if field in ["raw_amount", "amount", "skill_level_coefficient"]:
+			if not (value is int or value is float) or not is_finite(float(value)):
+				errors.append("%s must be a finite number" % field)
+		elif field in ["reaction_depth"]:
+			if not value is int or int(value) < 0:
+				errors.append("reaction_depth must be a non-negative int")
+		elif field in ["can_crit", "can_trigger_reaction", "ignore_defense", "ignore_resistance", "ignore_vulnerability", "ignore_min_damage", "uses_character_damage_multiplier", "uses_skill_level_coefficient"]:
+			if not value is bool:
+				errors.append("%s must be bool" % field)
+		elif field in ["special_rule_tags", "source_tags"]:
+			if not value is Array:
+				errors.append("%s must be an Array" % field)
+	return errors

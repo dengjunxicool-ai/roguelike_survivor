@@ -186,7 +186,7 @@ func _test_special_sources_remain_immediate() -> void:
 	await process_frame
 	_expect(is_equal_approx(float(spawner.get("_spawn_warning_duration")), 1.5), "configured warning reveal lasts 1.5 seconds", spawner.get("_spawn_warning_duration"))
 	for source_type: StringName in [&"boss", &"elite_event", &"map_event"]:
-		var enemy: Node2D = spawner.call("_spawn_enemy", &"small_slime", false, {}, &"normal", source_type) as Node2D
+		var enemy: Node2D = spawner.call("spawn_enemy", EnemySpawnRequest.create(&"small_slime", {"enemy_rank": "normal", "source_type": String(source_type)})) as Node2D
 		_expect(enemy != null and not bool(enemy.get_meta("spawn_reveal_pending", false)), "%s source remains immediate" % String(source_type))
 		if enemy != null:
 			enemy.queue_free()

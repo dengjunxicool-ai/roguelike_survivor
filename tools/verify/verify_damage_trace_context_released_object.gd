@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 
 func _init() -> void:

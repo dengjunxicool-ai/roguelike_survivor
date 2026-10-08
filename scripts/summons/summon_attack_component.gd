@@ -2,6 +2,7 @@ extends RefCounted
 class_name SummonAttackComponent
 
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 var attack_type: String = "melee"
@@ -67,7 +68,7 @@ func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: 
 	var amount: int = maxi(roundi(player_power * damage_scale), 0)
 	if amount > 0 and target.has_method("take_damage"):
 		var skill_id: StringName = _source_skill_id(context)
-		target.call("take_damage", {
+		target.call("take_damage", DamagePacketScript.from_dictionary({
 			"raw_amount": amount,
 			"amount": amount,
 			"damage_origin": &"special",
@@ -77,7 +78,7 @@ func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: 
 			"source_origin_id": _source_origin_id(context),
 			"source_skill_id": skill_id,
 			"source_instance_id": "%s:%s" % [String(skill_id), str(summon.get_instance_id()) if summon != null else "summon"]
-		}, &"summon_damage")
+		}))
 	_apply_on_hit_effects(target)
 
 

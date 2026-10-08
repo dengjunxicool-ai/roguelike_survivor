@@ -27,6 +27,9 @@ const upgradePool = read("scripts/upgrades/upgrade_pool.gd");
 const skillLearnOptionBuilder = read("scripts/upgrades/skill_learn_option_builder.gd");
 const skillManager = read("scripts/skills/skill_manager.gd");
 const gameData = read("scripts/game/game_data.gd");
+const repository = read("scripts/upgrades/skill_learn_definition_repository.gd");
+const learningPolicy = read("scripts/skills/skill_learning_policy.gd");
+const slotPolicy = read("scripts/skills/skill_slot_policy.gd");
 const offerService = read("scripts/skills/skill_offer_service.gd");
 
 const fireSkills = (skillsDocument.skills || []).filter(
@@ -40,7 +43,7 @@ assert(!fireSkills.some((skill) => skill.id === "mars_spark_missile"), "old mars
 
 for (const skill of fireSkills) {
   assert(typeof skill.id === "string" && skill.id.trim() !== "", "fire skill source must have an id");
-  assert(typeof skill.type === "string" && skill.type.trim() !== "", `${skill.id} must use the new type field`);
+  assert(typeof skill.skill_type === "string" && skill.skill_type.trim() !== "", `${skill.id} must use the new type field`);
   assert(skill.offer_rule && typeof skill.offer_rule === "object", `${skill.id} must define offer_rule`);
 }
 
@@ -63,10 +66,10 @@ for (const token of ["required_schools", "required_min_skill_count", "blocked_by
   assert(offerService.includes(token), `SkillOfferService must enforce ${token}`);
 }
 
-assert(gameData.includes("SKILL_LEARN_UPGRADE_PREFIX"), "GameData must synthesize generic god skill learn upgrades");
-assert(gameData.includes("_is_fire_related_skill"), "GameData must keep legacy fire learn upgrade compatibility");
-assert(gameData.includes("offer_rule"), "GameData synthetic learn upgrades must accept offer_rule skills");
+assert(repository.includes('"learn_skill_"'), "Learn repository synthesizes canonical learn upgrades");
+assert(!repository.includes("learn_fire_skill_"), "Learn repository rejects obsolete fire learn IDs");
+assert(repository.includes("offer_rule"), "GameData synthetic learn upgrades must accept offer_rule skills");
 assert(skillManager.includes("_category_from_skill_type"), "SkillManager must map new type values to active/passive buckets");
-assert(skillManager.includes('skill_data.get("offer_rule"'), "SkillManager must treat offer_rule skills as pool-learnable");
+assert(learningPolicy.includes('skill_data.get("offer_rule"'), "SkillManager must treat offer_rule skills as pool-learnable");
 
 console.log("[verify_fire_skill_upgrade_pool] PASS");

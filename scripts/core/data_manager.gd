@@ -2,7 +2,7 @@ extends Node
 
 
 const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
+const ContentValidator := preload("res://scripts/core/content_config_validator.gd")
 const DataDefinitionIndexScript: Script = preload("res://scripts/core/data_definition_index.gd")
 const SKILLS_PATH: String = DataPathsScript.SKILLS_PATH
 const ENEMIES_PATH: String = DataPathsScript.ENEMIES_PATH
@@ -40,6 +40,11 @@ const UPGRADE_KEYS: Array[String] = [
 	PERMANENT_UPGRADES_KEY
 ]
 
+var is_loaded: bool = false
+
+var _summon_definitions: Dictionary = {}
+var _god_definitions: Array[Dictionary] = []
+
 var _skill_definitions: Dictionary = {}
 var _starting_skill_definitions: Array[Dictionary] = []
 var _enemy_definitions: Dictionary = {}
@@ -57,16 +62,41 @@ var _character_definitions: Dictionary = {}
 var _map_definitions: Dictionary = {}
 var _synergy_definitions: Array[Dictionary] = []
 var _wave_config: Dictionary = {}
+var _skill_system_config: Dictionary = {}
 var _progression_goals: Dictionary = {}
 var _daily_challenge_definitions: Array[Dictionary] = []
 var _weekly_challenge_definitions: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	load_all()
+	if not load_all():
+		get_tree().quit(1)
 
 
-func load_all() -> void:
+func load_all() -> bool:
+	var loaded: Dictionary = ContentValidator.load_sources()
+	var errors: Array[String] = loaded.errors
+	errors.append_array(ContentValidator.validate_documents(loaded.documents, loaded.schema))
+	if not errors.is_empty():
+		for error: String in errors:
+			push_error("[DataManager] " + error)
+		return false
+	_publish_documents(loaded.documents)
+	return true
+
+
+func replace_documents(documents: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	var schema: Dictionary = ContentValidator.read_document(ContentValidator.SCHEMA_PATH, errors)
+	errors.append_array(ContentValidator.validate_documents(documents, schema))
+	if errors.is_empty():
+		_publish_documents(documents)
+	return errors
+
+
+func _publish_documents(documents: Dictionary) -> void:
+	_summon_definitions.clear()
+	_god_definitions.clear()
 	_skill_definitions.clear()
 	_starting_skill_definitions.clear()
 	_enemy_definitions.clear()
@@ -88,13 +118,17 @@ func load_all() -> void:
 	_daily_challenge_definitions.clear()
 	_weekly_challenge_definitions.clear()
 
-	var enemies_document: Dictionary = _load_json_document(ENEMIES_PATH)
+	var summon_document: Dictionary = documents[DataPathsScript.SUMMONS_PATH]
+	_index_definitions(summon_document, "summons", "id", _summon_definitions, DataPathsScript.SUMMONS_PATH)
+	_god_definitions = _get_dictionary_array(documents[DataPathsScript.GODS_PATH], "gods", DataPathsScript.GODS_PATH)
+
+	var enemies_document: Dictionary = documents[ENEMIES_PATH]
 	_index_definitions(enemies_document, ENEMIES_KEY, "id", _enemy_definitions, ENEMIES_PATH)
 
-	var enemy_skills_document: Dictionary = _load_json_document(ENEMY_SKILLS_PATH)
+	var enemy_skills_document: Dictionary = documents[ENEMY_SKILLS_PATH]
 	_index_definitions(enemy_skills_document, ENEMY_SKILLS_KEY, "id", _enemy_skill_definitions, ENEMY_SKILLS_PATH)
 
-	var upgrades_document: Dictionary = _load_json_document(UPGRADES_PATH)
+	var upgrades_document: Dictionary = documents[UPGRADES_PATH]
 	_curse_choice_pool = _get_dictionary_array(upgrades_document, CURSE_CHOICES_KEY, UPGRADES_PATH)
 	_level_up_upgrade_pool = _get_dictionary_array(upgrades_document, LEVEL_UP_UPGRADES_KEY, UPGRADES_PATH)
 	_permanent_upgrade_pool = _get_dictionary_array(upgrades_document, PERMANENT_UPGRADES_KEY, UPGRADES_PATH)
@@ -107,36 +141,38 @@ func load_all() -> void:
 	for upgrade_key: String in UPGRADE_KEYS:
 		_index_upgrade_definitions(upgrades_document, upgrade_key, UPGRADES_PATH)
 
-	var status_document: Dictionary = _load_json_document(STATUS_EFFECTS_PATH)
+	var status_document: Dictionary = documents[STATUS_EFFECTS_PATH]
 	_index_definitions(status_document, STATUS_EFFECTS_KEY, "id", _status_definitions, STATUS_EFFECTS_PATH)
 
-	var relics_document: Dictionary = _load_json_document(RELICS_PATH)
+	var relics_document: Dictionary = documents[RELICS_PATH]
 	_index_definitions(relics_document, RELICS_KEY, "id", _relic_definitions, RELICS_PATH)
 
-	var combat_objects_document: Dictionary = _load_json_document(COMBAT_OBJECTS_PATH)
+	var combat_objects_document: Dictionary = documents[COMBAT_OBJECTS_PATH]
 	_index_definitions(combat_objects_document, COMBAT_OBJECTS_KEY, "id", _combat_object_definitions, COMBAT_OBJECTS_PATH)
 
-	var skills_document: Dictionary = _load_json_document(SKILLS_PATH)
+	var skills_document: Dictionary = documents[SKILLS_PATH]
 	_starting_skill_definitions = _get_dictionary_array(skills_document, STARTING_SKILLS_KEY, SKILLS_PATH)
 	_index_definitions(skills_document, STARTING_SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 	_index_definitions(skills_document, SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 
-	var characters_document: Dictionary = _load_json_document(CHARACTERS_PATH)
+	var characters_document: Dictionary = documents[CHARACTERS_PATH]
 	_index_definitions(characters_document, CHARACTERS_KEY, "id", _character_definitions, CHARACTERS_PATH)
 
-	var maps_document: Dictionary = _load_json_document(MAPS_PATH)
+	var maps_document: Dictionary = documents[MAPS_PATH]
 	_index_definitions(maps_document, MAPS_KEY, "id", _map_definitions, MAPS_PATH)
 
-	var synergies_document: Dictionary = _load_json_document(SYNERGIES_PATH)
+	var synergies_document: Dictionary = documents[SYNERGIES_PATH]
 	_synergy_definitions = _get_dictionary_array(synergies_document, SYNERGIES_KEY, SYNERGIES_PATH)
 
-	_wave_config = _load_json_document(WAVES_PATH)
-	_progression_goals = _load_json_document(PROGRESSION_GOALS_PATH)
+	_wave_config = documents[WAVES_PATH].duplicate(true)
+	_skill_system_config = documents[DataPathsScript.SKILL_SYSTEM_CONFIG_PATH].duplicate(true)
+	_progression_goals = documents[PROGRESSION_GOALS_PATH].duplicate(true)
 
-	var challenges_document: Dictionary = _load_json_document(CHALLENGES_PATH)
+	var challenges_document: Dictionary = documents[CHALLENGES_PATH]
 	_daily_challenge_definitions = _get_dictionary_array(challenges_document, DAILY_CHALLENGES_KEY, CHALLENGES_PATH)
 	_weekly_challenge_definitions = _get_dictionary_array(challenges_document, WEEKLY_CHALLENGES_KEY, CHALLENGES_PATH)
 
+	is_loaded = true
 
 func get_skill_definition(skill_id: Variant) -> Dictionary:
 	return _get_definition(_skill_definitions, skill_id)
@@ -234,6 +270,10 @@ func get_wave_config() -> Dictionary:
 	return _wave_config.duplicate(true)
 
 
+func get_skill_system_config() -> Dictionary:
+	return _skill_system_config.duplicate(true)
+
+
 func get_progression_goals() -> Dictionary:
 	return _progression_goals.duplicate(true)
 
@@ -244,10 +284,6 @@ func get_daily_challenge_definitions() -> Array[Dictionary]:
 
 func get_weekly_challenge_definitions() -> Array[Dictionary]:
 	return _weekly_challenge_definitions.duplicate(true)
-
-
-func _load_json_document(path: String) -> Dictionary:
-	return JsonDataLoaderScript.load_dictionary(path, "DataManager")
 
 
 func _index_definitions(document: Dictionary, key: String, id_key: String, target: Dictionary, path: String) -> void:
@@ -268,3 +304,15 @@ func _get_definition(source: Dictionary, definition_id: Variant) -> Dictionary:
 
 func _get_definition_values(source: Dictionary) -> Array[Dictionary]:
 	return DataDefinitionIndexScript.get_definition_values(source)
+
+
+func get_summon_definition(summon_id: Variant) -> Dictionary:
+	return _get_definition(_summon_definitions, summon_id)
+
+
+func get_summon_definitions() -> Array[Dictionary]:
+	return _get_definition_values(_summon_definitions)
+
+
+func get_god_definitions() -> Array[Dictionary]:
+	return _god_definitions.duplicate(true)

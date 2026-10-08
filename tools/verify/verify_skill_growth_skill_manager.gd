@@ -1,6 +1,7 @@
 extends SceneTree
 
 
+const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 const SkillManagerScript: Script = preload("res://scripts/skills/skill_manager.gd")
 
 class TestPlayer:
@@ -50,16 +51,8 @@ func _build_nodes() -> void:
 
 
 func _modifier_value(source_id: String, key: String) -> float:
-	var modifiers_variant: Variant = _player.modifier_sources.get(source_id, [])
-	if modifiers_variant is Array:
-		for modifier_variant: Variant in modifiers_variant:
-			if not (modifier_variant is Dictionary):
-				continue
-			var modifier: Dictionary = modifier_variant
-			var values: Dictionary = modifier.get("values", {})
-			if values.has(key):
-				return float(values[key])
-	return 0.0
+	var effects: Array = _player.modifier_sources.get(source_id, [])
+	return float(ModifierSourceScript.flatten_effects(effects).get(key, 0.0))
 
 
 func _expect_close(actual: float, expected: float, label: String) -> void:

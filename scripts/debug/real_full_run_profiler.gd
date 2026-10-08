@@ -693,7 +693,7 @@ func _boss() -> Node2D:
 
 
 func _is_boss(enemy: Node) -> bool:
-	return enemy != null and (enemy.is_in_group(&"bosses") or bool(enemy.get_meta("is_boss", false)) or String(enemy.get_meta("enemy_rank", "")) == "boss" or String(enemy.get_meta("enemy_type", "")) == "boss")
+	return enemy != null and String(enemy.get_meta("enemy_rank", "")) == "boss"
 
 
 func _boss_snapshot() -> Dictionary:

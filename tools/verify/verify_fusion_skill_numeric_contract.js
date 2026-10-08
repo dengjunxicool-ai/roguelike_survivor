@@ -19,12 +19,12 @@ function assert(condition, message) {
 
 const rows = parseFusionNumericRows();
 const skills = readJson("data/skills/skills.json").skills || [];
-const byName = new Map(skills.map((skill) => [skill.name, skill]));
+const byName = new Map(skills.map((skill) => [skill.display_name, skill]));
 
 for (const row of rows) {
   const skill = byName.get(row.name);
   assert(skill, `missing fusion skill named ${row.name}`);
-  assert(skill.type === "fusion", `${skill.id} must use fusion type`);
+  assert(skill.skill_type === "fusion", `${skill.id} must use fusion type`);
   assert(skill.max_level === 2, `${skill.id} max_level must match docs`);
   assert(Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0, `${skill.id} must have runtime trigger rules`);
 

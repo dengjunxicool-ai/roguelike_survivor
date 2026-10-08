@@ -80,9 +80,10 @@ func _spawn_enemy(is_boss: bool) -> Node2D:
 	enemy.set("max_health", 999)
 	enemy.set("current_health", 999)
 	if is_boss:
-		enemy.set_meta("is_boss", true)
+		enemy.set_meta("enemy_rank", "boss")
 		enemy.set_meta("enemy_rank", "boss")
 		enemy.add_to_group(&"bosses")
+		enemy.set_meta("enemy_rank", "boss")
 	return enemy
 
 

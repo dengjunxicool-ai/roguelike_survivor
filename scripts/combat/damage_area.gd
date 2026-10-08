@@ -3,7 +3,7 @@ class_name DamageArea
 
 
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
@@ -166,9 +166,9 @@ func _is_one_shot_duration() -> bool:
 	return duration <= tick_interval + 0.05
 
 
-func _get_damage_payload(target: Node) -> Dictionary:
+func _get_damage_payload(target: Node) -> DamagePacket:
 	var is_reaction: bool = String(source_type) == "reaction"
-	return DamagePacketBuilderScript.from_combat_object_hit({
+	return DamagePacketBuilderScript.from_combat_object_hit_object({
 		"template": damage_packet,
 		"target": target,
 		"amount": damage,

@@ -7,8 +7,10 @@ const SkillInstanceScript: Script = preload("res://scripts/skills/skill_instance
 const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skill_modifier.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
+const SkillSlotPolicyScript: Script = preload("res://scripts/skills/skill_slot_policy.gd")
+const RuntimeDefinitionResolverScript: Script = preload("res://scripts/skills/skill_runtime_definition_resolver.gd")
+const SkillLearningPolicyScript: Script = preload("res://scripts/skills/skill_learning_policy.gd")
 const MAX_LEARNED_GOD_SCHOOLS: int = 2
-const GOD_SCHOOLS: Array[StringName] = [&"fire", &"frost", &"thunder", &"curse", &"holy", &"chaos"]
 
 signal skill_added(skill_id: StringName)
 signal skill_upgraded(skill_id: StringName, new_level: int)
@@ -137,7 +139,7 @@ func get_learned_god_school_count() -> int:
 func _find_replaced_active_skill_id(new_skill_id: StringName, definition_data: Dictionary) -> StringName:
 	if not _is_active_slot_replacement_definition(definition_data):
 		return &""
-	var explicit_id: StringName = _to_skill_id(definition_data.get("replaces_skill", definition_data.get("replaces_starting_skill", "")))
+	var explicit_id: StringName = _to_skill_id(definition_data.get("replaces_skill", ""))
 	if explicit_id != &"" and explicit_id != new_skill_id and active_skills.has(explicit_id):
 		return explicit_id
 	if _is_attack_replacement_definition(definition_data) and _get_primary_attack_id() != &"":
@@ -158,36 +160,19 @@ func _is_active_slot_replacement_definition(definition_data: Dictionary) -> bool
 
 
 func _is_attack_replacement_definition(definition_data: Dictionary) -> bool:
-	return (
-		bool(definition_data.get("is_starting_skill", false))
-		or String(definition_data.get("category", "")) == "starting_skill"
-		or _string_or(definition_data.get("exclusive_group", ""), "") == "attack_school"
-		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "attack"
-	)
+	return SkillSlotPolicyScript.is_attack(definition_data)
 
 
 func _is_attack_method_definition(definition_data: Dictionary) -> bool:
-	return (
-		definition_data.get("is_starting_skill", false) == true
-		or _string_or(definition_data.get("category", ""), "") == "starting_skill"
-		or _string_or(definition_data.get("exclusive_group", ""), "") == "attack_school"
-		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "attack"
-		or _string_or(definition_data.get("category", ""), "") == "active"
-	)
+	return SkillSlotPolicyScript.is_attack(definition_data)
 
 
 func _is_starting_attack_method_definition(definition_data: Dictionary) -> bool:
-	return (
-		definition_data.get("is_starting_skill", false) == true
-		or _string_or(definition_data.get("category", ""), "") == "starting_skill"
-	)
+	return SkillSlotPolicyScript.is_starting_attack(definition_data)
 
 
 func _is_dash_replacement_definition(definition_data: Dictionary) -> bool:
-	return (
-		_string_or(definition_data.get("exclusive_group", ""), "") == "dash_school"
-		or _string_or(definition_data.get("skill_type", definition_data.get("type", "")), "") == "dash"
-	)
+	return SkillSlotPolicyScript.is_dash(definition_data)
 
 
 func _is_active_attack_slot_skill(skill_id: StringName) -> bool:
@@ -213,51 +198,20 @@ func _is_active_dash_slot_skill(skill_id: StringName) -> bool:
 
 
 func _is_capacity_counted_active_definition(definition_data: Dictionary) -> bool:
-	return not _is_active_slot_replacement_definition(definition_data)
+	return SkillSlotPolicyScript.counts_active_capacity(definition_data)
 
 
 func _with_inherited_attack_runtime(definition_data: Dictionary, replaced_active_skill_id: StringName) -> Dictionary:
-	var inherited: Dictionary = definition_data.duplicate(true)
-	var source_data: Dictionary = {}
-	if replaced_active_skill_id != &"":
-		source_data = _get_skill_definition_data(replaced_active_skill_id)
-	if source_data.is_empty():
-		source_data = _get_primary_starting_skill_data()
-	for key: String in ["base", "components", "events", "damage_scaling", "runtime_family", "particle"]:
-		if not source_data.has(key) or not _definition_value_is_empty(inherited.get(key, null)):
-			continue
-		inherited[key] = _duplicate_definition_value(source_data[key])
-	if _string_or(inherited.get("category", ""), "") == "":
-		inherited["category"] = "active"
-	return inherited
+	var source: Dictionary = _get_skill_definition_data(replaced_active_skill_id) if replaced_active_skill_id != &"" else {}
+	if source.is_empty():
+		source = _get_primary_starting_skill_data()
+	return RuntimeDefinitionResolverScript.inherit_attack(definition_data, source)
 
 
 func _get_primary_starting_skill_data() -> Dictionary:
 	for skill: Dictionary in GameData.get_starting_skill_pool():
 		return skill
 	return {}
-
-
-func _definition_value_is_empty(value: Variant) -> bool:
-	if value == null:
-		return true
-	if value is Dictionary:
-		return (value as Dictionary).is_empty()
-	if value is Array:
-		return (value as Array).is_empty()
-	if value is String:
-		return (value as String) == ""
-	if value is StringName:
-		return StringName(value) == &""
-	return false
-
-
-func _duplicate_definition_value(value: Variant) -> Variant:
-	if value is Dictionary:
-		return (value as Dictionary).duplicate(true)
-	if value is Array:
-		return (value as Array).duplicate(true)
-	return value
 
 
 func _remove_active_skill(skill_id: StringName) -> void:
@@ -409,43 +363,18 @@ func _apply_skill_effect_payload(skill_instance: RefCounted) -> void:
 
 
 func _modifier_effect_to_source(effect: Dictionary, skill_instance: RefCounted) -> Dictionary:
-	var values: Dictionary = {}
-	if effect.has("stat") and effect.has("value"):
-		var stat_key: String = String(effect.get("stat", ""))
-		values[stat_key] = _scale_modifier_value(stat_key, effect.get("value"), skill_instance)
-	else:
-		var modifier_name: String = String(effect.get("modifier", ""))
-		if modifier_name == "" or not effect.has("value"):
-			return {}
-		var value: Variant = effect.get("value")
-		match modifier_name:
-			"attack_damage_multiplier":
-				values["primary_attack_damage_multiplier_add"] = _scale_modifier_value("primary_attack_damage_multiplier_add", value, skill_instance)
-			"burning_damage_multiplier":
-				values["dot_damage_multiplier_add"] = _scale_modifier_value("dot_damage_multiplier_add", value, skill_instance)
-			"burning_duration_multiplier":
-				values["status_duration_multiplier_add"] = _scale_modifier_value("status_duration_multiplier_add", value, skill_instance)
-			_:
-				var key: String = modifier_name
-				if key.ends_with("_multiplier") and not key.ends_with("_multiplier_add"):
-					key = "%s_add" % key
-				values[key] = _scale_modifier_value(key, value, skill_instance)
-	if values.is_empty():
+	var source: Dictionary = effect.duplicate(true)
+	source.erase("type")
+	var stat: String = String(source.get("stat", ""))
+	if stat == "" or not source.has("value"):
 		return {}
-	return {
-		"source": "skill",
-		"values": values
-	}
+	source["value"] = _scale_modifier_value(stat, source["value"], skill_instance)
+	return source
 
 
 func _scale_modifier_source_values(modifier: Dictionary, skill_instance: RefCounted) -> void:
-	var values_variant: Variant = modifier.get("values", {})
-	if not (values_variant is Dictionary):
-		return
-	var values: Dictionary = values_variant
-	for key_variant: Variant in values.keys():
-		var key: String = String(key_variant)
-		values[key_variant] = _scale_modifier_value(key, values[key_variant], skill_instance)
+	if modifier.has("stat") and modifier.has("value"):
+		modifier["value"] = _scale_modifier_value(String(modifier["stat"]), modifier["value"], skill_instance)
 
 
 func _scale_modifier_value(key: String, value: Variant, skill_instance: RefCounted) -> Variant:
@@ -495,63 +424,17 @@ func _get_skill_definition_data(skill_id: StringName) -> Dictionary:
 
 
 func _can_current_character_learn(skill_data: Dictionary) -> bool:
-	if _is_pool_learnable_skill(skill_data):
-		return true
-
 	var owning_node: Node = get_parent()
-	if owning_node == null:
-		return true
-	if bool(skill_data.get("is_starting_skill", false)):
-		return true
-
-	var selected_character_variant: Variant = owning_node.get("selected_character_id")
-	var character_id: StringName = &"" if selected_character_variant == null else StringName(String(selected_character_variant))
-	if character_id == &"":
-		return true
-
-	var character: Dictionary = GameData.get_character(character_id)
-	var starting_skill_id: StringName = StringName(String(character.get("starting_skill_id", "")))
-	if starting_skill_id == StringName(String(skill_data.get("id", ""))):
-		return true
-
-	return false
-
+	var selected: Variant = owning_node.get("selected_character_id") if owning_node != null else null
+	var character_id: StringName = &"" if selected == null else StringName(String(selected))
+	var character: Dictionary = GameData.get_character(character_id) if character_id != &"" else {}
+	return SkillLearningPolicyScript.can_current_character_learn(skill_data, character_id, character)
 
 func _can_learn_god_school_definition(skill_data: Dictionary) -> bool:
-	if _is_fusion_definition(skill_data):
-		return get_learned_god_school_count() >= MAX_LEARNED_GOD_SCHOOLS
-	var school: StringName = _get_definition_primary_god_school(skill_data)
-	if school == &"":
-		return true
-	var learned_schools: Array[StringName] = get_learned_god_schools()
-	return learned_schools.has(school) or learned_schools.size() < MAX_LEARNED_GOD_SCHOOLS
-
-
-func _is_pool_learnable_skill(skill_data: Dictionary) -> bool:
-	return (
-		bool(skill_data.get("learnable_from_pool", false))
-		or bool(skill_data.get("offer_in_upgrade_pool", false))
-		or not _get_dictionary(skill_data.get("offer_rule", {})).is_empty()
-	)
-
+	return SkillLearningPolicyScript.can_learn_god_school(skill_data, get_learned_god_schools(), MAX_LEARNED_GOD_SCHOOLS)
 
 func _category_from_skill_type(skill_data: Dictionary) -> String:
-	var category: String = String(skill_data.get("category", ""))
-	if category == "active" or category == "passive":
-		return category
-
-	var skill_type: String = String(skill_data.get("skill_type", skill_data.get("type", "")))
-	match skill_type:
-		"passive":
-			return "passive"
-		"attack", "dash", "cast", "summon", "power", "core", "fusion":
-			return "active"
-		_:
-			return category
-
-
-func _is_fusion_definition(skill_data: Dictionary) -> bool:
-	return _string_or(skill_data.get("skill_type", skill_data.get("type", "")), "") == "fusion"
+	return SkillSlotPolicyScript.category(skill_data)
 
 
 func _get_primary_attack_id() -> StringName:
@@ -565,28 +448,7 @@ func _clear_primary_attack_method() -> void:
 
 
 func _get_skill_instance_primary_god_school(skill_instance: RefCounted) -> StringName:
-	if skill_instance == null:
-		return &""
-	if _string_or(skill_instance.get("skill_type"), "") == "fusion":
-		return &""
-	var school: StringName = StringName(_string_or(skill_instance.get("school"), ""))
-	if GOD_SCHOOLS.has(school):
-		return school
-	var definition: RefCounted = skill_instance.get("definition") as RefCounted
-	if definition == null:
-		return &""
-	school = StringName(_string_or(definition.get("school"), ""))
-	return school if GOD_SCHOOLS.has(school) else &""
-
-
-func _get_definition_primary_god_school(skill_data: Dictionary) -> StringName:
-	if _is_fusion_definition(skill_data):
-		return &""
-	var school: StringName = StringName(_string_or(skill_data.get("school", skill_data.get("god_id", "")), ""))
-	if GOD_SCHOOLS.has(school):
-		return school
-	return &""
-
+	return SkillLearningPolicyScript.instance_primary_god_school(skill_instance)
 
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:

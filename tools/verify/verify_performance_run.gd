@@ -524,7 +524,7 @@ func _movement_center_push() -> Vector2:
 
 
 func _is_boss(enemy: Node) -> bool:
-	return enemy != null and (enemy.is_in_group(&"bosses") or String(enemy.get_meta("enemy_rank", "")) == "boss" or String(enemy.get_meta("enemy_type", "")) == "boss")
+	return enemy != null and String(enemy.get_meta("enemy_rank", "")) == "boss"
 
 
 func _find_button(root_node: Node, text: String) -> Button:

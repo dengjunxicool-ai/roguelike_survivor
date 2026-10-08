@@ -91,7 +91,7 @@ static func _find_nearest_enemy(caster: Node2D, params: Dictionary) -> Node2D:
 			continue
 
 		var score: float = -distance_squared
-		if enemy.is_in_group(&"boss_cores") or str(enemy.get_meta("enemy_type", "")) == "boss_core":
+		if str(enemy.get_meta("enemy_rank", "")) == "boss_core":
 			score += max_distance_squared * 3.0
 		elif str(enemy.get_meta("enemy_rank", "")) == "boss" or str(enemy.get_meta("enemy_rank", "")) == "elite":
 			score += max_distance_squared * 0.65
@@ -123,7 +123,7 @@ static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
 			continue
 
 		var score: float = float(_get_enemy_health(enemy))
-		if enemy.is_in_group(&"boss_cores") or str(enemy.get_meta("enemy_type", "")) == "boss_core":
+		if str(enemy.get_meta("enemy_rank", "")) == "boss_core":
 			score += 100000.0
 		if score <= best_score:
 			continue
@@ -388,7 +388,7 @@ static func _get_status_stack(enemy: Node, status_id: StringName) -> int:
 
 
 static func _is_strong_enemy(enemy: Node) -> bool:
-	var rank: String = str(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "")))
+	var rank: String = str(enemy.get_meta("enemy_rank", ""))
 	return rank == "elite" or rank == "boss" or rank == "boss_core"
 
 

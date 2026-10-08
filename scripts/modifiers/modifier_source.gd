@@ -9,34 +9,55 @@ const SOURCE_UPGRADE: String = "upgrade"
 const SOURCE_RELIC: String = "relic"
 
 
+# Dictionary values here are already aggregated runtime snapshots.
 static func flatten(value: Variant, default_source: String = SOURCE_UNKNOWN, query: RefCounted = null) -> Dictionary:
-	var flattened: Dictionary = {}
-	for source_block: Dictionary in to_source_blocks(value, default_source, query):
-		merge_flat_values(flattened, _get_dictionary(source_block.get("values", {})))
-	return flattened
-
-
-static func to_source_blocks(value: Variant, default_source: String = SOURCE_UNKNOWN, query: RefCounted = null) -> Array[Dictionary]:
-	var blocks: Array[Dictionary] = []
 	if value is Array:
-		for item: Variant in value:
-			blocks.append_array(to_source_blocks(item, default_source, query))
-		return blocks
+		return flatten_effects(value, default_source, query)
+	if value is Dictionary:
+		return (value as Dictionary).duplicate(true)
+	return {}
 
-	if not (value is Dictionary):
-		return blocks
 
-	var data: Dictionary = value
-	if _is_source_block(data):
-		var parsed: Dictionary = _parse_source_block(data, default_source, query)
-		if not _get_dictionary(parsed.get("values", {})).is_empty():
-			blocks.append(parsed)
-	else:
-		blocks.append({
-			"source": _resolve_source("", default_source),
-			"values": data.duplicate(true)
-		})
-	return blocks
+static func validate_effects(value: Variant) -> Array[String]:
+	var errors: Array[String] = []
+	if not (value is Array):
+		errors.append("Modifier configuration must be an effect list")
+		return errors
+	for index: int in range(value.size()):
+		var effect: Variant = value[index]
+		if not (effect is Dictionary):
+			errors.append("Effect %d must be a Dictionary" % index)
+			continue
+		for key: String in ["stat", "op", "value", "scope", "source"]:
+			if not effect.has(key):
+				errors.append("Effect %d missing %s" % [index, key])
+		if not (effect.get("stat") is String) or String(effect.get("stat", "")) == "":
+			errors.append("Effect %d has invalid stat" % index)
+		if not ["add", "multiply", "multiplier_add", "override", "raw"].has(effect.get("op")):
+			errors.append("Effect %d has unknown operation" % index)
+		if not _is_number(effect.get("value")) or not is_finite(float(effect.get("value", 0))):
+			errors.append("Effect %d has invalid value" % index)
+		if not (effect.get("scope") is Dictionary):
+			errors.append("Effect %d has invalid scope" % index)
+		if not (effect.get("source") is String) or String(effect.get("source", "")) == "":
+			errors.append("Effect %d has invalid source" % index)
+	return errors
+
+
+static func flatten_effects(effects: Array, _default_source: String = SOURCE_UNKNOWN, query: RefCounted = null) -> Dictionary:
+	var errors: Array[String] = validate_effects(effects)
+	if not errors.is_empty():
+		push_error("Invalid Modifier effects: " + "; ".join(errors))
+		return {}
+	var flattened: Dictionary = {}
+	for effect: Dictionary in effects:
+		if not _effect_matches_query(effect, query):
+			continue
+		var values: Dictionary = {}
+		for key: String in _get_effect_keys(effect):
+			values[key] = effect["value"]
+		merge_flat_values(flattened, values)
+	return flattened
 
 
 static func merge_flat_values(target: Dictionary, source: Dictionary) -> Dictionary:
@@ -57,45 +78,12 @@ static func merge_flat_values(target: Dictionary, source: Dictionary) -> Diction
 	return target
 
 
-static func _is_source_block(data: Dictionary) -> bool:
-	if data.has("source") and (data.has("values") or data.has("modifiers") or data.has("stat")):
-		return true
-	if data.has("stat") and data.has("value"):
-		return true
-	return false
-
-
-static func _parse_source_block(data: Dictionary, default_source: String, query: RefCounted = null) -> Dictionary:
-	var source: String = _resolve_source(String(data.get("source", "")), default_source)
-	var values: Dictionary = {}
-
-	if data.has("values"):
-		values = flatten(data.get("values", {}), source, query)
-	elif data.has("modifiers"):
-		values = flatten(data.get("modifiers", {}), source, query)
-	elif data.has("stat") and data.has("value"):
-		if _effect_matches_query(data, query):
-			for key: String in _get_effect_keys(data):
-				values[key] = data.get("value")
-	else:
-		for key_variant: Variant in data.keys():
-			var key: String = String(key_variant)
-			if ["source", "id", "display_name", "description"].has(key):
-				continue
-			values[key] = data[key_variant]
-
-	return {
-		"source": source,
-		"values": values
-	}
-
-
 static func _get_operation_key(stat: String, op: String) -> String:
 	if stat == "":
 		return ""
 	if op == "override" and not stat.ends_with("_override"):
 		return "%s_override" % stat
-	if (op == "multiply" or op == "multiplier") and not stat.ends_with("_multiplier"):
+	if op == "multiply" and not stat.ends_with("_multiplier"):
 		return "%s_multiplier" % stat
 	if op == "multiplier_add" and not stat.ends_with("_multiplier_add"):
 		return "%s_multiplier_add" % stat
@@ -260,14 +248,6 @@ static func _scope_values(scope_value: Variant) -> Array[String]:
 		if text != "":
 			values.append(text)
 	return values
-
-
-static func _resolve_source(source: String, default_source: String) -> String:
-	if source != "":
-		return source
-	if default_source != "":
-		return default_source
-	return SOURCE_UNKNOWN
 
 
 static func _get_dictionary(value: Variant) -> Dictionary:

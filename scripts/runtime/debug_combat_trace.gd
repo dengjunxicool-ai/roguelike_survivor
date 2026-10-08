@@ -1,9 +1,9 @@
-﻿extends RefCounted
+extends RefCounted
 class_name DebugCombatTrace
 
 
-const DebugExplosionSiteOverlayScript: Script = preload("res://scripts/debug/debug_explosion_site_overlay.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DebugExplosionSiteOverlayScript: Script = preload("res://scripts/runtime/debug_explosion_site_overlay.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 const TRACE_ID_META: String = "debug_attack_trace_id"
 const TRACE_RECORDS_META: String = "debug_combat_trace_records"

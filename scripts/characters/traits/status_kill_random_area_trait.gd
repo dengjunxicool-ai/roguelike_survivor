@@ -24,7 +24,7 @@ func handle_event(event: RefCounted) -> void:
 
 
 func get_modifiers(_query: RefCounted) -> Dictionary:
-	return _get_modifier_values(_get_params().get("base_modifiers", {}))
+	return _get_modifier_values(_get_params().get("base_modifiers", []))
 
 
 func get_debug_state() -> Dictionary:
@@ -40,7 +40,7 @@ func _on_enemy_killed(event: Dictionary) -> void:
 
 	var params: Dictionary = _get_params()
 	var chance: float = clampf(float(params.get("kill_chance", 0.0)), 0.0, 1.0)
-	if String(event.get("enemy_type", "")) == "boss_minion":
+	if String(event.get("spawn_source_type", "")) == "boss_minion":
 		chance *= clampf(float(params.get("boss_minion_chance_multiplier", 1.0)), 0.0, 10.0)
 	if not _can_trigger_same_source(event, params):
 		return

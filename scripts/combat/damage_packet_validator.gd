@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 class_name DamagePacketValidator
 
 
@@ -45,22 +45,14 @@ static func validate(packet: Dictionary, target: Node = null) -> void:
 	_warn_missing_source_identity(packet, target)
 
 
-static func validate_any(value: Variant, target: Node = null) -> void:
+static func validate_packet(packet: DamagePacket, target: Node = null) -> void:
 	if validation_mode == MODE_DISABLED:
 		return
-	if value is RefCounted and value.has_method("packet_value"):
-		validate_for_context(value, target)
-		return
-	if value is RefCounted and value.has_method("get_value"):
-		_validate_packet_object(value, target)
-		return
-	if value is Dictionary:
-		validate(value, target)
-		return
-	_report("DamagePacket validator received unsupported value.")
+	for error: String in packet.validate():
+		_report(error)
+	_validate_packet_object(packet, target)
 
-
-static func validate_for_context(calculation_context: RefCounted, target: Node = null) -> void:
+static func validate_for_context(calculation_context: DamageCalculationContext, target: Node = null) -> void:
 	if validation_mode == MODE_DISABLED:
 		return
 	for key: String in REQUIRED_PACKET_FIELDS:
@@ -73,7 +65,7 @@ static func validate_for_context(calculation_context: RefCounted, target: Node =
 	_warn_missing_source_identity_for_context(calculation_context, target)
 
 
-static func _validate_packet_object(packet_object: RefCounted, target: Node = null) -> void:
+static func _validate_packet_object(packet_object: DamagePacket, target: Node = null) -> void:
 	for key: String in REQUIRED_PACKET_FIELDS:
 		if not bool(packet_object.call("has_value", key)):
 			_report("DamagePacket missing required field: %s." % key)
@@ -93,7 +85,7 @@ static func _warn_unstable_fractional_source(packet: Dictionary) -> void:
 		_report("Fractional damage requires a stable source_instance_id.")
 
 
-static func _warn_unstable_fractional_source_for_context(calculation_context: RefCounted) -> void:
+static func _warn_unstable_fractional_source_for_context(calculation_context: DamageCalculationContext) -> void:
 	if not DamageRuleRegistryScript.uses_fractional_buffer_for_context(calculation_context):
 		return
 
@@ -102,7 +94,7 @@ static func _warn_unstable_fractional_source_for_context(calculation_context: Re
 		_report("Fractional damage requires a stable source_instance_id.")
 
 
-static func _warn_unstable_fractional_source_for_packet_object(packet_object: RefCounted) -> void:
+static func _warn_unstable_fractional_source_for_packet_object(packet_object: DamagePacket) -> void:
 	if not DamageRuleRegistryScript.uses_fractional_buffer_for_packet_object(packet_object):
 		return
 
@@ -120,7 +112,7 @@ static func _warn_reaction_recursion_risk(packet: Dictionary) -> void:
 		_report("Nested reaction packet should not trigger another reaction.")
 
 
-static func _warn_reaction_recursion_risk_for_context(calculation_context: RefCounted) -> void:
+static func _warn_reaction_recursion_risk_for_context(calculation_context: DamageCalculationContext) -> void:
 	var origin: String = String(calculation_context.call("packet_value", "damage_origin", ""))
 	var reaction_depth: int = int(calculation_context.call("packet_value", "reaction_depth", 0))
 	var can_trigger_reaction: bool = bool(calculation_context.call("packet_value", "can_trigger_reaction", false))
@@ -130,7 +122,7 @@ static func _warn_reaction_recursion_risk_for_context(calculation_context: RefCo
 		_report("Nested reaction packet should not trigger another reaction.")
 
 
-static func _warn_reaction_recursion_risk_for_packet_object(packet_object: RefCounted) -> void:
+static func _warn_reaction_recursion_risk_for_packet_object(packet_object: DamagePacket) -> void:
 	var origin: String = String(packet_object.call("get_value", "damage_origin", ""))
 	var reaction_depth: int = int(packet_object.call("get_value", "reaction_depth", 0))
 	var can_trigger_reaction: bool = bool(packet_object.call("get_value", "can_trigger_reaction", false))
@@ -150,7 +142,7 @@ static func _warn_enemy_packet_scaling(packet: Dictionary) -> void:
 		_report("Enemy damage packet should not use player character damage multiplier.")
 
 
-static func _warn_enemy_packet_scaling_for_context(calculation_context: RefCounted) -> void:
+static func _warn_enemy_packet_scaling_for_context(calculation_context: DamageCalculationContext) -> void:
 	var attacker: Node = calculation_context.call("packet_value", "attacker", null) as Node
 	if attacker == null:
 		return
@@ -160,7 +152,7 @@ static func _warn_enemy_packet_scaling_for_context(calculation_context: RefCount
 		_report("Enemy damage packet should not use player character damage multiplier.")
 
 
-static func _warn_enemy_packet_scaling_for_packet_object(packet_object: RefCounted) -> void:
+static func _warn_enemy_packet_scaling_for_packet_object(packet_object: DamagePacket) -> void:
 	var attacker: Node = packet_object.call("get_value", "attacker", null) as Node
 	if attacker == null:
 		return
@@ -178,7 +170,7 @@ static func _warn_missing_source_identity(packet: Dictionary, target: Node) -> v
 		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
-static func _warn_missing_source_identity_for_context(calculation_context: RefCounted, target: Node) -> void:
+static func _warn_missing_source_identity_for_context(calculation_context: DamageCalculationContext, target: Node) -> void:
 	var source_skill_id: String = String(calculation_context.call("packet_value", "source_skill_id", ""))
 	var source_origin_id: String = String(calculation_context.call("packet_value", "source_origin_id", ""))
 	if source_skill_id == "" and source_origin_id == "":
@@ -186,7 +178,7 @@ static func _warn_missing_source_identity_for_context(calculation_context: RefCo
 		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
-static func _warn_missing_source_identity_for_packet_object(packet_object: RefCounted, target: Node) -> void:
+static func _warn_missing_source_identity_for_packet_object(packet_object: DamagePacket, target: Node) -> void:
 	var source_skill_id: String = String(packet_object.call("get_value", "source_skill_id", ""))
 	var source_origin_id: String = String(packet_object.call("get_value", "source_origin_id", ""))
 	if source_skill_id == "" and source_origin_id == "":

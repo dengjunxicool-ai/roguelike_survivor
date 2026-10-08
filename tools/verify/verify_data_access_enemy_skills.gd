@@ -5,15 +5,6 @@ const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 const GameDataScript := preload("res://scripts/game/game_data.gd")
 const EnemySkillRepositoryScript := preload("res://scripts/enemies/skills/enemy_skill_repository.gd")
 
-class MissingAccessorManager:
-	extends Node
-
-class WrongTypeManager:
-	extends Node
-
-	func get_enemy_skill_definitions() -> Variant:
-		return "not-an-array"
-
 var _failed: bool = false
 
 
@@ -36,10 +27,7 @@ func _run() -> void:
 
 	_verify_owner_and_facade(manager, source)
 	_verify_manager_source(manager)
-	_verify_empty_owner_fallback(manager, source)
-	_verify_replacement_manager_fallback(manager, source, MissingAccessorManager.new(), "missing accessor")
-	_verify_replacement_manager_fallback(manager, source, WrongTypeManager.new(), "wrong-type accessor")
-	_verify_full_fallback(manager, source)
+	_verify_empty_owner_authoritative(manager, source)
 	_verify_repository_contract(manager, source)
 	_finish()
 
@@ -79,9 +67,7 @@ func _verify_manager_source(manager: Node) -> void:
 		"actions": [{"type": "damage", "amount": 17.0}]
 	}
 	manager.set("_enemy_skill_definitions", {sentinel_id: sentinel.duplicate(true)})
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_enemy_skill_pool() == [sentinel], "facade prefers manager enemy skill sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.ENEMY_SKILLS_PATH), "manager path avoids enemy skill JSON cache")
 
 	var repository: RefCounted = EnemySkillRepositoryScript.new()
 	var definition: RefCounted = repository.call("get_skill", sentinel_id) as RefCounted
@@ -91,50 +77,15 @@ func _verify_manager_source(manager: Node) -> void:
 		_expect(is_equal_approx(float(definition.get("cooldown")), 2.5), "repository preserves manager sentinel cooldown")
 
 	manager.set("_enemy_skill_definitions", original)
-	GameDataScript._document_cache.clear()
 
 
-func _verify_empty_owner_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original: Dictionary = manager.get("_enemy_skill_definitions").duplicate(true)
+func _verify_empty_owner_authoritative(manager: Node, source: Array[Dictionary]) -> void:
+	var original: Dictionary = (manager.get("_enemy_skill_definitions") as Dictionary).duplicate(true)
+	var first_id: StringName = StringName(String(source[0].get("id", "")))
 	manager.set("_enemy_skill_definitions", {})
-	GameDataScript._document_cache.clear()
-	var fallback: Array[Dictionary] = GameDataScript.get_enemy_skill_pool()
-	_expect(fallback == source, "empty owner enemy skill pool falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.ENEMY_SKILLS_PATH), "empty owner fallback uses enemy skill document cache")
-	_mutate_definition(fallback[0], "__phase6_enemy_skill_empty_owner__")
-	_expect(GameDataScript.get_enemy_skill_pool() == source, "empty owner enemy skill fallback is isolated")
+	_expect(GameDataScript.get_enemy_skill_pool().is_empty(), "empty owner remains authoritative")
+	_expect(GameDataScript.get_enemy_skill_pool().is_empty(), "repeat lookup does not reload JSON")
 	manager.set("_enemy_skill_definitions", original)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_replacement_manager_fallback(
-	manager: Node,
-	source: Array[Dictionary],
-	replacement: Node,
-	label: String
-) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6EnemySkillOwnerUnavailable"
-	replacement.name = &"DataManager"
-	root.add_child(replacement)
-	GameDataScript._document_cache.clear()
-	_expect(GameDataScript.get_enemy_skill_pool() == source, "%s falls back to enemy skill JSON" % label)
-	replacement.free()
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6EnemySkillUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback: Array[Dictionary] = GameDataScript.get_enemy_skill_pool()
-	_expect(fallback == source, "full enemy skill fallback matches source")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.ENEMY_SKILLS_PATH), "full fallback loads enemy skill document")
-	_mutate_definition(fallback[0], "__phase6_enemy_skill_full_fallback__")
-	_expect(GameDataScript.get_enemy_skill_pool() == source, "full enemy skill fallback is isolated")
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
 
 
 func _verify_repository_contract(manager: Node, source: Array[Dictionary]) -> void:

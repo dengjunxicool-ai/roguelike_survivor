@@ -7,6 +7,14 @@ const TitleScreenControllerScript: Script = preload("res://scripts/ui/screens/ti
 
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	var owner: Node = root.get_node_or_null("DataManager")
+	if _assert(owner != null and bool(owner.get("is_loaded")), "real DataManager is ready before UI assembly"):
+		_finish(true)
+		return
 	var packed_scene: PackedScene = load(APP_SCENE_PATH) as PackedScene
 	var failed: bool = false
 	failed = _assert(packed_scene != null, "app bootstrap scene loads") or failed

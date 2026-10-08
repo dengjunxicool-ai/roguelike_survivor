@@ -7,12 +7,12 @@ const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_lim
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_source_identity.gd")
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 const SkillEffectAdapterScript: Script = preload("res://scripts/skills/skill_effect_adapter.gd")
 const StatusEffectQueryScript: Script = preload("res://scripts/combat/status_effect_query.gd")
 const StatusEffectTickHelperScript: Script = preload("res://scripts/combat/status_effect_tick_helper.gd")
 const StatusTickSchedulerScript: Script = preload("res://scripts/combat/status_tick_scheduler.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const DOT_STATUS_IDS: Array[StringName] = [&"burning", &"poison", &"bleed"]
 const MOVEMENT_LOCK_STATUS_IDS: Array[StringName] = [&"freeze", &"frozen", &"stun", &"paralyze"]
 const STATUS_VISUAL_NODE_NAME: String = "StatusVisualOverlay"
@@ -501,7 +501,7 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 		"ignore_target_class_origin_modifier": _is_boss() or _is_elite()
 	}
 	if owning_node.has_method("take_damage"):
-		owning_node.call(&"take_damage", DamagePacketBuilderScript.from_status_dot(tick_packet_args))
+		owning_node.call(&"take_damage", DamagePacketBuilderScript.from_status_dot_object(tick_packet_args))
 
 
 func _sync_status_tick_scheduler(status_id: StringName, status: Dictionary) -> void:
@@ -967,12 +967,12 @@ func _apply_poison_slow_synergy() -> void:
 
 func _is_boss() -> bool:
 	var owning_node: Node = get_parent()
-	return owning_node != null and (owning_node.is_in_group(&"bosses") or bool(owning_node.get_meta("is_boss", false)) or String(owning_node.get_meta("enemy_rank", "")) == "boss")
+	return owning_node != null and String(owning_node.get_meta("enemy_rank", "normal")) == "boss"
 
 
 func _is_elite() -> bool:
 	var owning_node: Node = get_parent()
-	return owning_node != null and (owning_node.is_in_group(&"elites") or bool(owning_node.get_meta("is_elite", false)) or String(owning_node.get_meta("enemy_rank", "")) == "elite")
+	return owning_node != null and String(owning_node.get_meta("enemy_rank", "normal")) == "elite"
 
 
 func _get_synergy_manager() -> Node:

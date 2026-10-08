@@ -74,10 +74,10 @@ assert(frostSkills.length === expectedSkills.length, `expected ${expectedSkills.
 for (const [id, name, description, type, exclusiveGroup] of expectedSkills) {
   const skill = findById(skills, id, "skill");
   assert(skill.school === "frost", `${id} must belong to frost school`);
-  assert(skill.name === name, `${id} name must be ${name}`);
+  assert(skill.display_name === name, `${id} name must be ${name}`);
   assert(skill.description === description, `${id} description must match the design table`);
   assert(!Object.prototype.hasOwnProperty.call(skill, "effect_description"), `${id} must not use effect_description`);
-  assert(skill.type === type, `${id} type must be ${type}`);
+  assert(skill.skill_type === type, `${id} type must be ${type}`);
   assert((skill.exclusive_group ?? null) === exclusiveGroup, `${id} exclusive_group must be ${exclusiveGroup}`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("frost"), `${id} tags must include frost`);
   assert(Array.isArray(skill.trigger_rules), `${id} must define trigger_rules`);

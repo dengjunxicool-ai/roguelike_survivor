@@ -1,5 +1,7 @@
 # 项目系统总览与改造导航
 
+更新：2026-10-08，唯一运行时契约重构。
+
 本文档基于当前项目结构重新梳理，用作后续改造任一系统时的第一入口。目标不是替代各专题文档，而是帮助快速判断：入口在哪里，数据从哪里来，运行时谁持有状态，改动会影响哪些链路，以及优先验证什么。
 
 ## 1. 顶层启动与单局主链路
@@ -35,15 +37,15 @@ flowchart TD
 | 系统 | 核心职责 | 主要入口 | 主要数据源 | 改造边界 |
 | --- | --- | --- | --- | --- |
 | 启动与单局编排 | 从 UI 选择进入单局，创建/销毁运行场景，重置运行源 | `scripts/ui/ui_manager.gd`, `scripts/game/run_scene_coordinator.gd` | `RunLoadout`, `maps.json` | 单局初始化统一走 `RunSceneCoordinator.start_run()`；不要从 UI 直接操作 Player/Spawner 内部初始化细节 |
-| 数据配置 | `DataManager` 加载并索引 JSON 定义，`GameData` 提供稳定消费门面和兼容 fallback | `scripts/core/data_manager.gd`, `scripts/game/game_data.gd` | `data/*.json` | 新配置先进入 DataManager 所有权，再由 GameData 委托；运行时不要污染返回的配置字典 |
+| 数据配置 | `DataManager` 校验后原子发布配置，`GameData` 仅查询 owner | `scripts/core/data_manager.gd`, `scripts/game/game_data.gd` | `data/*.json` | 新配置先进入 DataManager 所有权，再由 GameData 委托；运行时不要污染返回的配置字典 |
 | UI 状态与弹窗 | 标题、选角、选图、HUD、升级、奖励、暂停、结算、设置、图鉴 | `scripts/ui/ui_manager.gd`, `ui_state_registry.gd`, `ui_screen_host.gd`, `ui_state_prepare_router.gd` | UI 控制器、ViewModel、SaveManager、RunStatsTracker | 新状态要同步 registry、screen host、prepare router、pause policy 和跳转允许列表 |
 | HUD 与运行状态展示 | 将 Player/Spawner/Tracker 状态转为 HUD 文本、血条、Boss 条、调试信息 | `scripts/ui/run_scene_ui_bridge.gd`, `scripts/ui/hud/*` | Player、EnemySpawner、RunStatsTracker | HUD 不应持有战斗真状态，只读运行源并渲染 |
 | 角色与装配 | 角色定义、起始技能、基础属性、特质初始化 | `scripts/characters/*`, `scripts/player/player_controller.gd` | `characters.json`, `skills.json` | 单局角色入口是 `RunLoadout`；角色运行状态集中在 `CharacterRuntime` |
 | 玩家控制器 | 移动、经验升级、血量、受击、子系统挂载、升级应用 | `scripts/player/player_controller.gd` | 角色、技能、升级、存档永久加成 | Player 是聚合根，但新功能优先拆到已有子系统，避免继续膨胀 |
 | 技能与神系系统 | 起始技能、神系技能、冷却、目标选择、动作执行、事件总线、特殊规则 | `scripts/skills/*` | `skills.json`, `gods.json`, `combat_objects.json` | 能用配置动作就不要写硬编码；新增动作要同步验证脚本和文档 |
 | 战斗对象 | 投射物、区域、环绕物、通用战斗对象工厂 | `scripts/combat/projectile.gd`, `area_effect.gd`, `orbit_object.gd`, `combat_object_factory.gd` | 技能 action 参数、combat object 配置 | 战斗对象只负责命中/tick/表现，伤害仍交给目标 `take_damage()` |
-| 伤害系统 | DamagePacket 归一、出伤公式、受击应用、状态反应、取整、统计 | `scripts/combat/damage_system.gd`, `damage_application_service.gd`, `status_effect_manager.gd` | DamagePacket、状态、目标属性、modifier | 不直接扣血；玩家/怪物受击必须走 `take_damage()` 和 application pipeline |
-| Modifier 系统 | 聚合角色、升级、遗物、技能、动态范围的数值修正 | `scripts/modifiers/*` | Player ModifierStore、来源字典 | 新 modifier key 要确认 scope、flatten、聚合、消费端都接好 |
+| 伤害系统 | DamagePacket 校验与反应准备、出伤公式、受击应用、状态反应、取整、统计 | `scripts/combat/damage_system.gd`, `damage_application_service.gd`, `status_effect_manager.gd` | DamagePacket、状态、目标属性、modifier | 不直接扣血；玩家/怪物受击必须走 `take_damage()` 和 application pipeline |
+| Modifier 系统 | 聚合角色、升级、遗物、技能、动态范围的数值修正 | `scripts/modifiers/*` | 结构化效果列表、ModifierStore、聚合快照 | 新效果显式声明 stat/op/value/scope/source，确认聚合与消费端一致 |
 | 怪物系统 | 怪物生成、波次、Boss、行为、敌方技能、死亡奖励 | `scripts/enemies/*` | `enemies.json`, `enemy_skills.json`, `waves.json` | 新怪物优先配置化；新行为放 `behaviors/` 并在 registry 注册，不扩大 `EnemyBase` |
 | 地图系统 | 地图选择、背景、玩家边界、地图变量、环境危害、地图刷怪压力 | `scripts/maps/*`, `scripts/game/run_scene_coordinator.gd` | `maps.json` | 地图刷怪通过 `EnemySpawner.spawn_map_enemy()`，复用生成服务 |
 | 奖励与升级 | 技能升级、局中奖励、永久升级、诅咒/奖励选项 | `scripts/upgrades/*`, UI choice modal, `SaveManager` | `upgrades.json`, `skills.json` | 选项生成和应用分离；应用最终回到 `Player.apply_upgrade()` |
@@ -59,14 +61,16 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A["data/*.json"] --> B["DataManager.load_all"]
-    B --> C["按 id 索引并返回 duplicate"]
-    C --> D["GameData 稳定消费门面"]
-    D --> E["角色/技能/神系/怪物/地图/UI"]
-    A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
+    A[16 份玩法 JSON] --> B[ContentConfigValidator]
+    S[content_schema.json] --> B
+    B --> C{整批有效?}
+    C -->|是| D[DataManager 原子发布与深拷贝查询]
+    C -->|否| E[拒绝发布并诊断]
+    D --> F[GameData]
+    F --> G[角色 / 技能 / 状态 / 召唤 / 神系 / 范围单位 / UI]
 ```
 
-`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 总体验收已完成：状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义以及有序起始技能池等独立批次均已通过对应契约验证；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 和 `UpgradePool` 的对应数据读取仅通过 `GameData`，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，状态、角色、敌人技能、融合技能、战斗对象与技能 fallback 返回深拷贝。`UpgradePool` 的正常学习资格判断和调试神系技能列表不再自行扫描 `skills.json`。状态定义缓存、tick、叠层、反应和伤害行为，以及遗物局内状态、角色初始化、属性、起始技能 ID/顺序、技能学习/成长/槽位/替换规则、敌人技能定义顺序与仓库缓存、融合技能 ID/顺序/触发行为、技能卡说明文本、升级选择、UI 和存档行为保持不变。召唤物仍使用原有独立 JSON 路径；`LocalizationService`、`UIThemeService` 和 `SkillRangeUnit` 继续管理各自独立配置。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
+首次配置加载失败停止启动；替换失败保留旧快照；合法空池和可选 ID 缺失返回空值。GameData 没有文件读取或第二套缓存。召唤与技能范围配置纳入 owner；SkillRangeUnit 只换算范围。LocalizationService 与 UIThemeService 管理展示域配置。有序池与查询保持深拷贝，发布输入也隔离。动态学习卡由 SkillLearnDefinitionRepository 构造，get_upgrade 只查真实定义。
 
 ### 3.2 开局流
 
@@ -132,7 +136,7 @@ flowchart TD
     N --> O["UIManager victory/result"]
 ```
 
-`EnemySpawner` 仍保留大量兼容门面和信号，但波次、Boss、小怪清理、奖励事件已经拆到 `timeline/` 服务。新增波次能力时优先扩展 timeline 服务与验证脚本。阶段 7 已用敌人配置校验、可见区域批量生成运行时验证和敌人更新热点契约复核现状；没有明确缺陷、可重复性能数据或已批准扩展需求时，生成时间线保持冻结。
+`EnemySpawner` 保留必要的编排门面和信号，但波次、Boss、小怪清理、奖励事件已经拆到 `timeline/` 服务。新增波次能力时优先扩展 timeline 服务与验证脚本。阶段 7 已用敌人配置校验、可见区域批量生成运行时验证和敌人更新热点契约复核现状；没有明确缺陷、可重复性能数据或已批准扩展需求时，生成时间线保持冻结。
 
 ### 3.5 玩家受击流
 
@@ -166,7 +170,7 @@ flowchart TD
     I --> J["refresh_skill_configs + refresh_synergies + HUD"]
 ```
 
-当前技能成长由 `UpgradePool` 基于 `data/skills/skills.json`、玩家当前技能状态和 `upgrades.json` 生成选项。修改相关规则时要一起看 `UpgradePool`、`SkillManager`、`SkillOfferService`、`Player.apply_upgrade()` 和 `data/skills/skills.json`。
+学习资格由 SkillLearningPolicy/SkillSlotPolicy 判断，运行继承由 SkillRuntimeDefinitionResolver 解析，纯卡片构建由 UpgradeOptionBuilder 完成，构建器不消费 RNG。当前技能成长由 `UpgradePool` 基于 `data/skills/skills.json`、玩家当前技能状态和 `upgrades.json` 生成选项。修改相关规则时要一起看 `UpgradePool`、`SkillManager`、`SkillOfferService`、`Player.apply_upgrade()` 和 `data/skills/skills.json`。
 
 ### 3.7 结算与局外成长流
 
@@ -198,7 +202,7 @@ flowchart TD
 
 ### 4.3 改技能执行
 
-技能由组件和动作驱动：`SkillComponentRunner` 处理冷却、目标、持续环绕；`SkillActionExecutor` 执行动作；`SkillEventBus` 处理 on_cast/on_projectile_hit/on_orbit_hit 等事件；`SkillSpecialRuleExecutor` 承载少数复杂硬规则。
+技能由组件和动作驱动：`SkillComponentRunner` 处理冷却、目标、持续环绕；`SkillActionExecutor` 分派到五个动作族执行；`SkillEventBus` 处理 on_cast/on_projectile_hit/on_orbit_hit 等事件；`SkillSpecialRuleExecutor` 编排十个规则族。
 
 新增普通效果优先使用配置 action。新增特殊规则前先判断是否可以表达为 `deal_damage`、`spawn_projectile`、`spawn_area`、`apply_status`、`chain_to_targets` 等现有动作。
 
@@ -240,20 +244,20 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 
 局外数据集中在 `SaveManager`，结果页通过 result/progression/unlock 服务读取和写入。新增挑战或解锁条件时，先明确记录来源在 `RunStatsTracker` 还是 SaveManager 历史，再补 UI 展示。
 
-## 5. 风险点与兼容代码
+## 5. 当前跨系统契约
 
-项目仍存在一些兼容层和历史门面，这是后续改造时最容易误判的地方：
-
-| 风险点 | 说明 | 建议 |
+| 边界 | 当前事实 | 修改时验证 |
 | --- | --- | --- |
-| `GameData` 与 `DataManager` 并存 | DataManager 是运行时所有者，GameData 是消费门面，但部分数据域仍把 JSON fallback 当作正常读取路径 | 新字段先进入 DataManager；按数据域验证 manager、facade 与 fallback 一致后再逐步减少正常运行 fallback |
-| Damage 输入兼容数字、Dictionary、RefCounted packet | 老接口仍能工作，但 typed DamagePacket 更稳定 | 新伤害只写完整 DamagePacket |
-| `EnemySpawner` 保留旧包装方法 | 实际波次逻辑已拆到 timeline 服务 | 改波次优先看 `timeline/`，不要只改包装函数 |
-| `enemy_type` 与 `enemy_rank` 判断并存 | Boss/Elite/Minion 分类在多个系统读取 | 新怪物分类要实际验证伤害、目标选择、统计和奖励 |
-| Player 是聚合根 | 角色、技能、状态、modifier、升级都挂在 Player 下 | 新逻辑尽量落到子系统，通过 Player 公开入口接入 |
-| UI 状态较多 | 运行中 modal、暂停、结算都依赖状态机 | 新弹窗必须明确是否 running child、是否暂停、返回到哪里 |
-| 文档存在编码风险 | 部分旧中文文档在当前终端读取为乱码 | 新文档使用 UTF-8，修改旧文档前先确认编码 |
-| 工具分 JS 与 Godot 两类 | JS 可校验 JSON，Godot 可校验运行脚本 | 改配置先跑 JS；改运行公式/场景再跑 Godot headless |
+| owner/facade | DataManager 持有验证后的配置，GameData 只查询；无 JSON fallback | 合法空池、加载失败、深拷贝与原始顺序 |
+| 技能字段 | display_name/school/skill_type/slot_category/replaces_skill，runtime_rules 为对象 | 起始、替换、角色限制、两神系上限与融合 |
+| 伤害 | typed DamagePacket → DamageResult，事件/trace 为显式视图 | 校验失败无副作用、来源 identity、DOT、反应及取整 |
+| 怪物 | enemy_rank 唯一分类，groups 派生；spawn_source_type 独立 | 普通/精英/Boss/核心/仆从、奖励与统计 |
+| Modifier | 结构化配置效果与平铺运行快照分开 | 加法、乘法、覆盖、scope 与应用顺序 |
+| 升级 | 纯构建器不消费 RNG | 固定种子抽样、RNG state 与池顺序 |
+| Debug | 六页独立模块，通用 profiler 位于 runtime | 按钮操作、重开延后刷新、生产不依赖 debug |
+| 终局 | 第一份终局结果生效，重复刷新幂等 | 胜负、记录计数、重开、正式存档隔离 |
+
+原有历史兼容已删除，详见 [重构文档](PROJECT_CANONICAL_RUNTIME_REFACTOR.md) 与 [删除台账](PROJECT_REFACTOR_LEDGER.md)。活跃的 freeze/frozen 等不同状态定义、amount/raw_amount 阶段语义及显式扩展字段仍有消费者，按真实行为保留。
 
 ## 6. 后续改造时的定位表
 
@@ -282,6 +286,7 @@ HUD 和 modal 要保持只读或通过命令回调调用业务入口，不要直
 配置类改动优先跑：
 
 ```powershell
+node tools\validate\validate_content_configs.js
 node tools\validate\validate_enemy_configs.js
 node tools\verify\verify_gods_and_skills_contract.js
 node tools\verify\verify_skill_definition_schema.js
@@ -325,4 +330,4 @@ godot --headless --path . --script res://tools/verify/verify_run_terminal_progre
 4. 检查事件、统计、UI 和存档是否需要同步。
 5. 跑对应验证命令。
 
-当前最值得持续收口的方向是：减少老兼容输入，守护 DataManager 读取边界；把怪物分类、UI 状态、modifier key 这些跨系统概念继续显式化。阶段 7 已验收的伤害、状态、死亡奖励、生成时间线和终局持久化链路保持冻结，只有明确缺陷、可重复性能数据或已批准扩展需求才重新开启。
+当前唯一契约与验收结果见重构文档和稳定性报告。新增内容通过 schema、策略、family、registry 和既有公开入口接入，避免重新引入字段推断和第二条读盘路径。

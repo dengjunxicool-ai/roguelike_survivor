@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
 
@@ -55,7 +56,7 @@ assert(
 const adapter = read("scripts/skills/skill_effect_adapter.gd");
 assert(adapter.includes('"instant_area_hit"'), "SkillEffectAdapter must adapt instant_area_hit effects.");
 
-const executor = read("scripts/skills/skill_action_executor.gd");
+const executor = readActionSources(root);
 assert(executor.includes('"instant_area_hit"'), "SkillActionExecutor must dispatch instant_area_hit.");
 assert(
   executor.includes("_spawn_projectile_burst_with_budget") &&

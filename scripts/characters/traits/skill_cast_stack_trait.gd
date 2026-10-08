@@ -26,12 +26,12 @@ func handle_event(event: RefCounted) -> void:
 func get_modifiers(_query: RefCounted) -> Dictionary:
 	var modifiers: Dictionary = {}
 	var params: Dictionary = _get_params()
-	var per_stack: Dictionary = _get_modifier_values(params.get("modifiers_per_stack", {}))
+	var per_stack: Dictionary = _get_modifier_values(params.get("modifiers_per_stack", []))
 	for _stack_index in range(_stack_count):
 		SkillModifierCalculatorScript.merge_modifiers(modifiers, per_stack)
 	var max_stack: int = int(params.get("max_stacks", 0))
 	if max_stack > 0 and _stack_count >= max_stack:
-		SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("full_stack_modifiers", {})))
+		SkillModifierCalculatorScript.merge_modifiers(modifiers, _get_modifier_values(params.get("full_stack_modifiers", [])))
 	return modifiers
 
 

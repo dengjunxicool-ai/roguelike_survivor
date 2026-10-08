@@ -26,7 +26,8 @@
 						"element": [
 							"fire"
 						]
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -55,7 +56,8 @@
 					"value": 0.06,
 					"scope": {
 						"domain": "skill"
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -84,7 +86,8 @@
 					"value": 0.15,
 					"scope": {
 						"domain": "skill"
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -116,7 +119,8 @@
 						"tag": [
 							"trap"
 						]
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -141,7 +145,8 @@
 					"value": 0.08,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"id": "shieldbreaker_covenant",
@@ -157,7 +162,8 @@
 						"target_type": [
 							"boss"
 						]
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -190,7 +196,8 @@
 						"element": [
 							"poison"
 						]
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {
@@ -204,7 +211,7 @@
 			],
 			"trigger_condition": {
 				"event": "apply_status",
-				"status_id": "corrosion"
+				"status_id": "acid_mark"
 			},
 			"cooldown": 0,
 			"limit_rule": {},
@@ -222,7 +229,8 @@
 						"element": [
 							"acid"
 						]
-					}
+					},
+					"source": "relic"
 				}
 			],
 			"unlock": {

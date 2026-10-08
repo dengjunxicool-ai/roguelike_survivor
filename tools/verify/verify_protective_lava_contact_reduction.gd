@@ -1,5 +1,7 @@
 extends SceneTree
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
+
 
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
@@ -67,21 +69,21 @@ func _run() -> void:
 	_expect(_approx(float(player.get_meta("protective_lava_reduction_until", 0.0)) - _now_seconds(), 3.0, 0.25), "Protective lava stores 3s duration")
 	_expect(float(player.get_meta("protective_lava_damage_taken_multiplier_add", 0.0)) == -0.5, "Protective lava stores damage reduction")
 
-	var contact_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, _enemy_packet(10, "contact"))
+	var contact_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, DamagePacketScript.from_dictionary(_enemy_packet(10, "contact")))
 	_expect(int(contact_result.get("amount")) == 5, "Contact damage inside protective lava is reduced by 50%")
 	_expect(player.current_health == 95, "Reduced contact damage is applied to player health")
 	_expect(_approx(float(player.last_damage_result.get("trace", {}).get("protective_lava_damage_taken_multiplier", 1.0)), 0.5), "Damage trace records protective lava multiplier")
 
 	player.current_health = 100
 	player.last_damage_taken = -1
-	var ranged_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, _enemy_packet(10, "ranged"))
+	var ranged_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, DamagePacketScript.from_dictionary(_enemy_packet(10, "ranged")))
 	_expect(int(ranged_result.get("amount")) == 5, "Ranged damage inside protective lava is reduced by 50%")
 	_expect(player.current_health == 95, "Reduced ranged damage is applied to player health")
 
 	player.current_health = 100
 	player.last_damage_taken = -1
 	player.global_position = Vector2(320, 64)
-	var outside_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, _enemy_packet(10, "contact"))
+	var outside_result: RefCounted = DamageApplicationServiceScript.apply_player_damage(player, DamagePacketScript.from_dictionary(_enemy_packet(10, "contact")))
 	_expect(int(outside_result.get("amount")) == 10, "Damage outside protective lava keeps full amount")
 	_expect(player.current_health == 90, "Outside damage is applied without protective lava reduction")
 

@@ -7,13 +7,13 @@ var stage_name: StringName = &"player_health_apply"
 
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var player: Node = context.get("target") as Node
-	var amount_or_packet: Variant = context.get("amount_or_packet")
-	var damage_type: Variant = context.get("legacy_damage_type")
+	var packet: DamagePacket = context.get("packet")
+	var damage_type: Variant = context.get("packet").get_value("element")
 	var damage_result: Dictionary = context.get("damage_result")
 	var final_damage: int = int(context.get("final_amount"))
 	var current_health: int = maxi(int(player.get("current_health")) - final_damage, 0)
 	player.set("current_health", current_health)
-	player.call("_record_damage_taken", final_damage, damage_result, amount_or_packet)
+	player.call("_record_damage_taken", final_damage, damage_result, packet)
 	var final_health: int = maxi(int(player.get("current_health")), 0)
 	player.set("current_health", final_health)
 	damage_result["target_current_health"] = final_health

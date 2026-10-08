@@ -136,6 +136,24 @@
     "verify:no-cpu-particles": "node tools\\verify\\verify_no_cpu_particles_project_wide.js",
     "verify:no-numeric-damage-inputs": "node tools\\verify\\verify_no_numeric_damage_inputs.js",
     "verify:safe-meta-keys": "node tools\\verify\\verify_safe_meta_keys.js",
-    "verify:coverage-report": "node tools\\verify\\verify_coverage_report.js"
+    "verify:coverage-report": "node tools\\verify\\verify_coverage_report.js",
+    "verify:canonical-content": "node tools\\verify\\verify_canonical_content_contract.js",
+    "verify:content-validation": "node tools\\verify\\verify_content_validation.js",
+    "verify:content-owner": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_content_owner_contract.gd",
+    "verify:enemy-canonical-static": "node tools\\verify\\verify_enemy_canonical_contract.js",
+    "verify:enemy-canonical-runtime": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_enemy_canonical_contract.gd",
+    "verify:damage-strict-interfaces": "node tools\\verify\\verify_damage_strict_interfaces.js",
+    "verify:damage-packet-contract": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_damage_packet_contract.gd",
+    "verify:modifier-effect-contract": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_modifier_effect_contract.gd",
+    "verify:rule-family-behavior": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_rule_family_behavior.gd",
+    "verify:modifier-debug-rule-boundaries": "node tools\\verify\\verify_modifier_debug_rule_boundaries.js",
+    "verify:relic-acid-status-trigger": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_relic_acid_status_trigger.gd",
+    "verify:skill-responsibility-boundary": "node tools\\verify\\verify_skill_responsibility_boundary.js",
+    "verify:learning-option-policies": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_learning_option_policies.gd",
+    "validate:content": "node tools\\validate\\validate_content_configs.js",
+    "validate:modifiers": "node tools\\validate\\validate_modifier_effects.js",
+    "verify:debug-run-restart": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_debug_run_restart.gd",
+    "verify:runtime-dependency-boundary": "node tools\\verify\\verify_runtime_dependency_boundary.js",
+    "verify:run-restart-contract": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_run_restart_contract.gd"
   }
 }
