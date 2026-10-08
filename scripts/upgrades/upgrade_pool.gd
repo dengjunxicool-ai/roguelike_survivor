@@ -1,7 +1,5 @@
 extends RefCounted
 class_name UpgradePool
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_option.gd")
@@ -11,7 +9,6 @@ const SkillLearnDefinitionRepositoryScript: Script = preload("res://scripts/upgr
 const SkillLearnOptionBuilderScript: Script = preload("res://scripts/upgrades/skill_learn_option_builder.gd")
 const SkillOfferServiceScript: Script = preload("res://scripts/skills/skill_offer_service.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
-const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 const SKILL_LEARN_UPGRADE_PREFIX: String = "learn_skill_"
 
 var rarity_weights: Dictionary = {
@@ -239,10 +236,7 @@ func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: Str
 
 
 func _is_debug_god_skill(skill_id: StringName, god_id: StringName) -> bool:
-	var skill: Dictionary = GameData.get_skill(skill_id)
-	if skill.is_empty():
-		skill = _get_debug_skill_definition_from_file(skill_id)
-	return _is_debug_god_skill_definition(skill, god_id)
+	return _is_debug_god_skill_definition(GameData.get_skill(skill_id), god_id)
 
 
 func _is_debug_god_skill_definition(skill: Dictionary, god_id: StringName) -> bool:
@@ -251,11 +245,8 @@ func _is_debug_god_skill_definition(skill: Dictionary, god_id: StringName) -> bo
 
 func _get_debug_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
 	var skills: Array[Dictionary] = []
-	var document: Dictionary = _load_debug_skills_document()
-	for skill_variant: Variant in _get_array(document.get("skills", [])):
-		if not (skill_variant is Dictionary):
-			continue
-		var skill: Dictionary = (skill_variant as Dictionary).duplicate(true)
+	for skill_data: Dictionary in GameData.get_skill_pool():
+		var skill: Dictionary = skill_data.duplicate(true)
 		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get("offer_rule", {})).is_empty():
 			continue
 		if not _is_debug_god_skill_definition(skill, god_id):
@@ -264,24 +255,8 @@ func _get_debug_god_skill_definitions(god_id: StringName) -> Array[Dictionary]:
 	return skills
 
 
-func _get_debug_skill_definition_from_file(skill_id: StringName) -> Dictionary:
-	var document: Dictionary = _load_debug_skills_document()
-	for section_name: String in ["skills", "starting_skills"]:
-		for skill_variant: Variant in _get_array(document.get(section_name, [])):
-			if not (skill_variant is Dictionary):
-				continue
-			var skill: Dictionary = skill_variant
-			if StringName(_string_or(skill.get("id", ""), "")) == skill_id:
-				return skill.duplicate(true)
-	return {}
-
-
 func _make_god_skill_learn_upgrade(skill: Dictionary, god_id: StringName) -> Dictionary:
 	return SkillLearnDefinitionRepositoryScript.make_god_skill_learn_upgrade(skill, god_id, SKILL_LEARN_UPGRADE_PREFIX)
-
-
-func _load_debug_skills_document() -> Dictionary:
-	return JsonDataLoaderScript.load_dictionary(SKILLS_DATA_PATH, "UpgradePool", JsonDataLoaderScript.REPORT_SILENT)
 
 
 func _get_owned_skill_instances(player: Node) -> Array:
@@ -348,9 +323,7 @@ func _is_learn_skill_upgrade_available(player: Node, skill_id: StringName) -> bo
 		return false
 	if skill_manager.has_method("has_learned_skill") and bool(skill_manager.call("has_learned_skill", skill_id)):
 		return false
-	if not GameData.get_skill(skill_id).is_empty():
-		return true
-	return not _get_debug_skill_definition_from_file(skill_id).is_empty()
+	return not GameData.get_skill(skill_id).is_empty()
 
 
 func _is_hidden_skill_level_up(skill_instance: RefCounted, skill_id: StringName) -> bool:

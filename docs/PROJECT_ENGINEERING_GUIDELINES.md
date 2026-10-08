@@ -263,6 +263,6 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 2. Debug 面板页面拆分：降低 2882 行开发工具文件的维护成本。
 3. SkillActionExecutor action family 拆分：先拆 projectile/area/status/summon 的构建和执行辅助。
 4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
-5. 阶段 6 的 DataManager/GameData 读取路径收口：已完成状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、升级分类池与稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义和有序起始技能池等独立批次，并保持现有 `GameData` 公共入口兼容；`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager` 与 `CharacterRunInitializer` 的对应数据读取不再自建 DataManager/JSON 双路径，状态、角色、敌人技能、融合技能、战斗对象及技能 JSON fallback 保持深拷贝隔离。召唤物读取仍保留原路径。其他消费端重复 fallback 与其余数据域继续按证据和契约测试逐项处理。阶段 6 内部批次不得改写为新的阶段编号。
+5. 阶段 6 的 DataManager/GameData 读取路径收口：已完成状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、升级分类池与稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义和有序起始技能池等独立批次，并保持现有 `GameData` 公共入口兼容；`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `UpgradePool` 的对应数据读取不再自建 DataManager/JSON 双路径，状态、角色、敌人技能、融合技能、战斗对象及技能 JSON fallback 保持深拷贝隔离。`UpgradePool` 的正常学习资格和调试神系技能列表统一消费 `GameData`。召唤物读取仍保留原路径；本地化、UI 主题和技能范围配置仍由各自独立服务读取。阶段 6 内部批次不得改写为新的阶段编号。
 6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
 7. 最后才处理 DamageSystem、EnemyBase、EnemySpawner 的深层行为重构。
