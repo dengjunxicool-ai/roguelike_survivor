@@ -941,6 +941,8 @@ func _on_wave_cleared(wave_id: String, cleared_early: bool) -> void:
 
 
 func _on_boss_defeated(_elapsed_time: float) -> void:
+	if current_state == STATE_RESULT_DEFEAT or current_state == STATE_RESULT_VICTORY:
+		return
 	transition_to(STATE_RESULT_VICTORY)
 
 
