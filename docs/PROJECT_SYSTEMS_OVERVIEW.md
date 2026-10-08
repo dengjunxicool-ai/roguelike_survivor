@@ -110,7 +110,7 @@ flowchart TD
     M --> N["UIManager/Spawner/HUD/结算读取"]
 ```
 
-重点边界：技能和投射物不直接改 `current_health`；怪物死亡不要直接 `queue_free()`，否则会丢经验、魂石、协同、击杀事件、Boss 胜利或统计。
+重点边界：技能和投射物不直接改 `current_health`；怪物死亡不要直接 `queue_free()`，否则会丢经验、魂石、协同、击杀事件、Boss 胜利或统计。阶段 7 将 `verify:enemy-death-reward-pipeline` 设为长期门禁，固定正常死亡副作用顺序、`_is_dead` 先于副作用、重复死亡幂等、`self_explosion` 默认奖励抑制和 `reward_policy` 局部覆盖。修改 `EnemyDeathPipeline`、`EnemyRewardController` 或死亡策略时必须复跑该契约。
 
 ### 3.4 怪物波次与 Boss 流
 
@@ -132,7 +132,7 @@ flowchart TD
     N --> O["UIManager victory/result"]
 ```
 
-`EnemySpawner` 仍保留大量兼容门面和信号，但波次、Boss、小怪清理、奖励事件已经拆到 `timeline/` 服务。新增波次能力时优先扩展 timeline 服务与验证脚本。
+`EnemySpawner` 仍保留大量兼容门面和信号，但波次、Boss、小怪清理、奖励事件已经拆到 `timeline/` 服务。新增波次能力时优先扩展 timeline 服务与验证脚本。阶段 7 已用敌人配置校验、可见区域批量生成运行时验证和敌人更新热点契约复核现状；没有明确缺陷、可重复性能数据或已批准扩展需求时，生成时间线保持冻结。
 
 ### 3.5 玩家受击流
 
@@ -180,7 +180,7 @@ flowchart TD
     F --> G["SaveManager unlock/progression/history"]
 ```
 
-结果页既读单局统计，也可能触发解锁和局外记录。改胜负条件、挑战、解锁时，必须检查 UI result、progression service 和 SaveManager 三处。
+结果页既读单局统计，也可能触发解锁和局外记录。改胜负条件、挑战、解锁时，必须检查 UI result、progression service 和 SaveManager 三处。胜利与失败信号遵循“第一个终局结果生效”：`UIManager` 已进入任一结果状态后，迟到的玩家死亡或 Boss 击败信号都不能覆盖结果。阶段 7 将 `verify:run-terminal-progression` 设为长期门禁，覆盖胜负摘要与计数、返回数据深拷贝、终局锁、重复结果页刷新幂等和调试死亡不落盘。
 
 ## 4. 重点系统改造指南
 
@@ -306,6 +306,15 @@ godot --headless --path . --script res://tools/verify/verify_title_screen_runtim
 godot --headless --path . --script res://tools/verify/verify_character_select_ui.gd
 ```
 
+死亡奖励或终局结算相关还必须运行：
+
+```powershell
+godot --headless --path . --script res://tools/verify/verify_enemy_death_reward_pipeline.gd
+godot --headless --path . --script res://tools/verify/verify_run_terminal_progression.gd
+```
+
+第二条验证会写入 `user://`。运行前必须把 `APPDATA` 和 `LOCALAPPDATA` 指向 `E:\codex` 下的独立测试目录，禁止读取、复制或覆盖正式 `save.cfg`；Windows 受控沙箱内直接启动 Godot，不经 npm 间接启动。
+
 ## 8. 文档使用方式
 
 后续接到任何功能改造，先从本文件定位系统边界，再进入对应专题文档和代码。建议遵循这个顺序：
@@ -316,4 +325,4 @@ godot --headless --path . --script res://tools/verify/verify_character_select_ui
 4. 检查事件、统计、UI 和存档是否需要同步。
 5. 跑对应验证命令。
 
-当前最值得持续收口的方向是：减少老兼容输入，统一 DamagePacket 和 DataManager 读取路径；把怪物分类、UI 状态、modifier key 这些跨系统概念继续显式化。
+当前最值得持续收口的方向是：减少老兼容输入，守护 DataManager 读取边界；把怪物分类、UI 状态、modifier key 这些跨系统概念继续显式化。阶段 7 已验收的伤害、状态、死亡奖励、生成时间线和终局持久化链路保持冻结，只有明确缺陷、可重复性能数据或已批准扩展需求才重新开启。

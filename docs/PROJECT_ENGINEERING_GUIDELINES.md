@@ -257,6 +257,17 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 
 普通本地终端和 CI 不受此规则影响，仍以 `package.json` 中的 `npm run verify:*` 作为标准入口。
 
+### 阶段 7 高风险核心链路门禁
+
+阶段 7 已完成伤害、状态、死亡奖励、生成时间线和终局结算五条高风险链路的证据复核。没有明确缺陷、可重复性能数据或已批准扩展需求时，这些生产链路保持冻结，不因文件长度或复杂度单独启动重构。
+
+- `verify:enemy-death-reward-pipeline` 是死亡与奖励链路的长期门禁，覆盖死亡副作用顺序、死亡标记先于副作用、重复死亡幂等、`self_explosion` 默认奖励抑制和 `reward_policy` 局部覆盖。
+- `verify:run-terminal-progression` 是终局结算与持久化链路的长期门禁，覆盖胜负摘要、全局计数、深拷贝隔离、首个终局结果锁定、重复结果页刷新幂等和调试死亡不落盘。
+- 修改伤害、状态、生成、死亡奖励、结算或存档链路时，除目标系统验证外，必须复跑上述受影响的长期门禁；不得删除断言或放宽行为契约来换取通过。
+- 所有可能写入 `user://` 的自动化验证必须把 `APPDATA` 和 `LOCALAPPDATA` 指向 `E:\codex` 下该批次独立目录，不读取、复制或覆盖玩家正式 `save.cfg`，结束后确认测试存档已清理。
+- 在 Windows 受控沙箱内直接调用 Godot；`package.json` 只登记标准入口，不通过 npm、Node.js、Python、`cmd /c` 或二级 PowerShell 间接启动 Godot。
+- 终局信号只接受第一个胜负结果。失败与胜利处理入口都必须在已进入任一终局状态后立即返回，避免迟到的 Boss 或玩家信号覆盖已记录结果。
+
 ## 后续工程化优先级
 
 1. 统一内容校验工具：检查重复 ID、引用存在、路径存在、非法数值、空字段。
@@ -265,4 +276,4 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
 5. 阶段 6 的 DataManager/GameData 读取路径收口已完成总体验收：状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、升级分类池与稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义和有序起始技能池等独立批次均保持现有 `GameData` 公共入口兼容；`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `UpgradePool` 的对应数据读取不再自建 DataManager/JSON 双路径，状态、角色、敌人技能、融合技能、战斗对象及技能 JSON fallback 保持深拷贝隔离。`UpgradePool` 的正常学习资格和调试神系技能列表统一消费 `GameData`。召唤物读取仍保留原路径；本地化、UI 主题和技能范围配置仍由各自独立服务读取。阶段 6 内部批次不得改写为新的阶段编号。
 6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
-7. 最后才处理 DamageSystem、EnemyBase、EnemySpawner 的深层行为重构。
+7. `DamageSystem`、状态结算、`EnemyDeathPipeline`、`EnemySpawner` 时间线和终局持久化在阶段 7 验收后保持冻结；只有明确缺陷、可重复性能数据或已批准扩展需求才能重新开启对应链路。
