@@ -11,7 +11,7 @@
 已确认的关键现状：
 
 - `project.godot` 主场景为 `res://scenes/app/app_bootstrap.tscn`。
-- `DataManager` 是唯一 autoload 和运行时配置所有者，负责加载并索引主要 JSON 配置、持有完整配置文档或有序配置池；阶段 6 已通过独立批次接入正常运行的进度目标文档、每日/每周挑战池、三个有序升级分类池、稀有度权重和有序起始技能池，对应 `GameData` 方法保持稳定的 manager-first 门面和独立 JSON fallback。遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、技能访问和状态定义单项查询批次已分别收口 `RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `StatusEffectManager` 对应读取的直接 DataManager/JSON 双路径；`UpgradePool` 的正常学习资格和调试神系技能列表也已统一消费 `GameData`。相关 JSON fallback 返回深拷贝，不改变状态定义缓存、tick、叠层、反应、伤害、角色初始化、技能顺序、技能规则、敌人技能仓库缓存、融合触发、升级选择或技能说明职责。召唤物仍使用原有独立 JSON 路径。
+- `DataManager` 是唯一 autoload 和运行时配置所有者，负责加载并索引主要 JSON 配置、持有完整配置文档或有序配置池；阶段 6 总体验收已完成。进度目标文档、每日/每周挑战池、三个有序升级分类池、稀有度权重和有序起始技能池均已接入正常运行所有者，对应 `GameData` 方法保持稳定的 manager-first 门面和独立 JSON fallback。遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、技能访问和状态定义单项查询批次已分别收口 `RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `StatusEffectManager` 对应读取的直接 DataManager/JSON 双路径；`UpgradePool` 的正常学习资格和调试神系技能列表也已统一消费 `GameData`。相关 JSON fallback 返回深拷贝，不改变状态定义缓存、tick、叠层、反应、伤害、角色初始化、技能顺序、技能规则、敌人技能仓库缓存、融合触发、升级选择或技能说明职责。召唤物仍使用原有独立 JSON 路径。
 - 当前主流程已不再存在 `scripts/weapons/` 和 `data/weapons/` 运行时目录；角色通过 `characters.json.starting_skill_id` 进入起始技能链路。
 - 技能、投射物、区域、伤害、状态、怪物、掉落、升级、UI 都有现有验证覆盖，但几个大文件仍是后续职责拆分风险点。
 
@@ -106,7 +106,8 @@ flowchart TD
 | 问题 | 证据 | 影响 | 建议 |
 | --- | --- | --- | --- |
 | 大文件职责仍重 | `special_damage_rule_handler.gd` 2896 行、`dev_debug_panel.gd` 2882 行、`skill_special_rule_executor.gd` 2850 行、`skill_action_executor.gd` 2444 行 | 后续新增神系/技能/调试入口会继续堆叠 | Stage 3 已抽离 SkillActionExecutor 的部分纯数据构建职责；后续仅在具备独立行为覆盖时继续拆 action-family |
-| `DataManager` 与 `GameData` 仍有双读取路径 | 阶段 6 已通过独立批次依次收口状态池、状态定义单项查询、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义及有序起始技能池；相关消费者及 `UpgradePool` 的正常/调试技能读取已删除双路径，并保持状态定义缓存、tick、叠层、反应、伤害、遗物行为、角色初始化、属性、起始技能 ID/顺序、技能学习/成长/槽位/替换规则、敌人技能定义顺序和仓库缓存、融合技能 ID/顺序/触发行为及技能卡说明文本不变。召唤物因尚未纳入 DataManager 所有权继续使用原路径，本地化、UI 主题和技能范围配置属于独立服务 | 新配置字段可能只验证其中一路 | 保持 GameData 门面兼容，按数据域补 DataManager accessor 和三路径一致性测试后再减少 fallback |
+| `GameData` 兼容 fallback 仍需持续守护 | 阶段 6 已通过独立批次收口正式消费者的重复读取，并保持状态、遗物、角色、技能、敌人技能、融合技能和升级选择行为不变；召唤物因尚未纳入 DataManager 所有权继续使用原路径，本地化、UI 主题和技能范围配置属于独立服务 | 新配置字段可能只验证 manager 或 fallback 其中一路 | 保持 GameData 门面兼容；新增字段时同步验证 owner、facade 与 fallback，禁止消费者重建第二条读取链 |
+| 混沌技能 runtime smoke 夹具超过技能槽容量 | `verify_chaos_skill_runtime_smoke.gd` 尝试加入 14 个技能，当前规则只接受 10 个，随后产生连锁断言和空引用；相同失败已在阶段 6 对应改动前复现 | 该脚本当前不能作为可靠的混沌技能全量运行回归，但不代表生产玩法缺陷 | 单独修复测试隔离：绕开学习槽位构造夹具或拆成多个独立场景，不修改技能槽规则或放宽断言 |
 | “武器”概念已从运行时移除但需求仍常出现 | 当前无 `scripts/weapons/`、无 `data/weapons/` | 未来新增武器可能误恢复旧绑定 | 先定义 Equipment/Skill 数据模型，不直接复活旧 runtime |
 | 死亡/重启完整端到端验证仍可加强 | 已有结算诊断和运行时 smoke，但没有完整自动游玩死亡到重启覆盖 | 变更 UI/结算时风险较高 | 后续补 `full_flow_autoplay` 或专门结果页端到端验证 |
 | 缺少统一跨配置引用验证器 | 现有 validator 覆盖敌人、词条、技能 contract，但未统一检查所有引用 | 新内容增加时可能漏路径/ID/图标 | 后续实现 dev-only content validator |
@@ -117,7 +118,7 @@ flowchart TD
 2. 拆 `DevDebugPanel` 页面职责：先拆技能卡、敌人生成、特效页，风险低且可由现有 devtools 验证覆盖。
 3. 拆 `SkillActionExecutor` 构建职责：先抽 projectile/area 参数构建与 visual/runtime data，保留 `execute_action()` API。
 4. Stage 4 已拆出 `UpgradePool` 的纯 learn skill option-data builder；权重策略和更广泛的卡片构建收口延后，需另行设计和验证。
-5. 完成阶段 6 的 `DataManager`/`GameData` 配置入口总体验收：已完成状态池、状态定义单项查询、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、有序起始技能池及 `UpgradePool` 正常/调试技能读取等独立批次；召唤物仍因不属于 DataManager 既有所有权而保留原路径。总门禁通过前不得宣告阶段完成，也不得为内部批次另造阶段编号。
+5. 阶段 6 的 `DataManager`/`GameData` 配置入口收口已经完成总体验收：状态池、状态定义单项查询、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、有序起始技能池及 `UpgradePool` 正常/调试技能读取均通过对应边界和运行时契约。召唤物仍因不属于 DataManager 既有所有权而保留原路径。混沌 smoke 的既有夹具容量失败单独记录，不通过修改玩法规则或放宽断言处理。
 6. 小步拆 `StatusEffectManager` 查询、tick、事件发射辅助。
 7. 最后再动 `DamageSystem`、`EnemyBase`、`EnemySpawner` 等高风险核心链路。
 
