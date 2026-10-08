@@ -66,7 +66,7 @@ flowchart LR
     A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
 ```
 
-`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义以及有序起始技能池等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager` 和 `CharacterRunInitializer` 的对应数据读取仅通过 `GameData`，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，角色、敌人技能、融合技能、战斗对象与技能 fallback 返回深拷贝。遗物局内状态、角色初始化、属性、起始技能 ID/顺序、技能学习/成长/槽位/替换规则、敌人技能定义顺序与仓库缓存、融合技能 ID/顺序/触发行为、技能卡说明文本、升级选择、UI 和存档行为保持不变。召唤物仍使用原有独立 JSON 路径。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
+`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义以及有序起始技能池等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager` 和 `CharacterRunInitializer` 的对应数据读取仅通过 `GameData`，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，状态、角色、敌人技能、融合技能、战斗对象与技能 fallback 返回深拷贝。状态定义缓存、tick、叠层、反应和伤害行为，以及遗物局内状态、角色初始化、属性、起始技能 ID/顺序、技能学习/成长/槽位/替换规则、敌人技能定义顺序与仓库缓存、融合技能 ID/顺序/触发行为、技能卡说明文本、升级选择、UI 和存档行为保持不变。召唤物仍使用原有独立 JSON 路径。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
 
 ### 3.2 开局流
 

@@ -188,6 +188,13 @@ static func get_status_pool() -> Array[Dictionary]:
 	return _get_dictionary_array(STATUS_EFFECTS_PATH, "statuses")
 
 
+static func get_status(status_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_status_definition", status_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(STATUS_EFFECTS_PATH, "statuses"), status_id).duplicate(true)
+
+
 static func get_curse_choice_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_curse_choice_definitions")
 	if not data.is_empty():

@@ -1,6 +1,5 @@
 extends Node
 class_name StatusEffectManager
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 
 
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
@@ -885,32 +884,10 @@ func _get_status_definition(status_id: StringName) -> Dictionary:
 	if _status_definition_cache.has(cache_key):
 		var cached_definition: Dictionary = _get_dictionary(_status_definition_cache.get(cache_key, {}))
 		return cached_definition.duplicate(true)
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_status_definition"):
-		var data: Variant = data_manager.call("get_status_definition", status_id)
-		if data is Dictionary:
-			var definition: Dictionary = (data as Dictionary).duplicate(true)
-			_status_definition_cache[cache_key] = definition
-			return definition.duplicate(true)
-	var status_data: Dictionary = _get_status_definition_from_game_data(status_id)
+	var status_data: Dictionary = GameData.get_status(status_id)
 	if not status_data.is_empty():
 		_status_definition_cache[cache_key] = status_data.duplicate(true)
 		return status_data
-	return {}
-
-
-func _get_status_definition_from_game_data(status_id: StringName) -> Dictionary:
-	var document: Dictionary = GameData._load_document(DataPathsScript.STATUS_EFFECTS_PATH)
-	var status_items: Variant = document.get("statuses", [])
-	if not (status_items is Array):
-		return {}
-
-	for status_variant: Variant in status_items:
-		if not (status_variant is Dictionary):
-			continue
-		var status: Dictionary = status_variant
-		if StringName(String(status.get("id", ""))) == status_id:
-			return status.duplicate(true)
 	return {}
 
 
