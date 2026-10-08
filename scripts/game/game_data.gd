@@ -81,11 +81,18 @@ static func get_map_pool() -> Array[Dictionary]:
 	return _get_dictionary_array(MAPS_PATH, "maps")
 
 
+static func get_relic(relic_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_relic_definition", relic_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(RELICS_PATH, "relics"), relic_id).duplicate(true)
+
+
 static func get_relic_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_relic_definitions")
 	if not data.is_empty():
 		return data
-	return _get_dictionary_array(RELICS_PATH, "relics")
+	return _get_dictionary_array(RELICS_PATH, "relics").duplicate(true)
 
 
 static func get_progression_goals() -> Dictionary:
