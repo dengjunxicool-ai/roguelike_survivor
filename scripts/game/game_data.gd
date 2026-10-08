@@ -14,6 +14,8 @@ const WAVES_PATH: String = DataPathsScript.WAVES_PATH
 const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
 const MAPS_PATH: String = DataPathsScript.MAPS_PATH
 const RELICS_PATH: String = DataPathsScript.RELICS_PATH
+const SYNERGIES_PATH: String = DataPathsScript.SYNERGIES_PATH
+const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
 const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
 const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
 const SKILL_LEARN_UPGRADE_PREFIX: String = "learn_skill_"
@@ -28,10 +30,10 @@ static func get_skill(skill_id: StringName) -> Dictionary:
 		return data
 	var god_starting_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "starting_skills"), skill_id)
 	if not god_starting_skill.is_empty():
-		return god_starting_skill
+		return god_starting_skill.duplicate(true)
 	var god_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "skills"), skill_id)
 	if not god_skill.is_empty():
-		return god_skill
+		return god_skill.duplicate(true)
 	return {}
 
 
@@ -53,11 +55,18 @@ static func get_enemy_skill(skill_id: StringName) -> Dictionary:
 	return _find_by_id(_get_array(ENEMY_SKILLS_PATH, "enemy_skills"), skill_id)
 
 
+static func get_combat_object(object_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_combat_object_definition", object_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(COMBAT_OBJECTS_PATH, "combat_objects"), object_id).duplicate(true)
+
+
 static func get_character(character_id: StringName) -> Dictionary:
 	var data: Dictionary = _get_definition_from_data_manager("get_character_definition", character_id)
 	if not data.is_empty():
 		return data
-	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id)
+	return _find_by_id(_get_array(CHARACTERS_PATH, "characters"), character_id).duplicate(true)
 
 
 static func get_map(map_id: StringName) -> Dictionary:
@@ -81,11 +90,18 @@ static func get_map_pool() -> Array[Dictionary]:
 	return _get_dictionary_array(MAPS_PATH, "maps")
 
 
+static func get_relic(relic_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_relic_definition", relic_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(RELICS_PATH, "relics"), relic_id).duplicate(true)
+
+
 static func get_relic_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_relic_definitions")
 	if not data.is_empty():
 		return data
-	return _get_dictionary_array(RELICS_PATH, "relics")
+	return _get_dictionary_array(RELICS_PATH, "relics").duplicate(true)
 
 
 static func get_progression_goals() -> Dictionary:
@@ -120,6 +136,13 @@ static func get_skill_pool() -> Array[Dictionary]:
 	return _filter_out_starting_skill_definitions(_get_dictionary_array(SKILLS_PATH, "skills"))
 
 
+static func get_starting_skill_pool() -> Array[Dictionary]:
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_starting_skill_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(SKILLS_PATH, "starting_skills").duplicate(true)
+
+
 static func get_primary_attack_pool() -> Array[Dictionary]:
 	var skills: Array[Dictionary] = _get_dictionary_array(SKILLS_PATH, "starting_skills")
 	skills.append_array(get_skill_pool())
@@ -148,7 +171,14 @@ static func get_enemy_skill_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_enemy_skill_definitions")
 	if not data.is_empty():
 		return data
-	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills")
+	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills").duplicate(true)
+
+
+static func get_synergy_pool() -> Array[Dictionary]:
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_synergy_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(SYNERGIES_PATH, "synergies").duplicate(true)
 
 
 static func get_status_pool() -> Array[Dictionary]:
@@ -156,6 +186,13 @@ static func get_status_pool() -> Array[Dictionary]:
 	if not data.is_empty():
 		return data
 	return _get_dictionary_array(STATUS_EFFECTS_PATH, "statuses")
+
+
+static func get_status(status_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_status_definition", status_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(STATUS_EFFECTS_PATH, "statuses"), status_id).duplicate(true)
 
 
 static func get_curse_choice_pool() -> Array[Dictionary]:

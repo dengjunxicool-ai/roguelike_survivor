@@ -109,7 +109,9 @@ assert(panel.includes("particle_count"), "DevDebugPanel result must include part
 assert(panel.includes("damage_popup_count"), "DevDebugPanel result must include damage_popup_count");
 
 assert(pool.includes("func generate_debug_fire_skill_options(player: Node, god_id: StringName = &\"fire\") -> Array:"), "UpgradePool must expose fire debug options");
-assert(pool.includes("SKILLS_DATA_PATH"), "UpgradePool must read skills.json for debug fire skills");
+assert(pool.includes("GameData.get_skill_pool()"), "UpgradePool must read debug fire skills through GameData");
+assert(!pool.includes("SKILLS_DATA_PATH"), "UpgradePool must not own a direct skills.json path");
+assert(!pool.includes("JsonDataLoaderScript"), "UpgradePool must not load skills.json directly");
 assert(pool.includes("_make_god_skill_learn_upgrade"), "UpgradePool must synthesize learn-skill cards from skills.json");
 assert(!pool.includes("mars_spark_missile_projectile"), "UpgradePool must not hardcode a single skill implementation");
 

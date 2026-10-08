@@ -1,10 +1,8 @@
 extends Node
 class_name RelicManager
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
+const GameDataScript: Script = preload("res://scripts/game/game_data.gd")
 
 
-const RELIC_DATA_PATH: String = DataPathsScript.RELICS_PATH
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
 
 signal relic_added(relic_id: StringName)
@@ -97,32 +95,10 @@ func handle_combat_event(event_name: Variant, payload: Dictionary = {}) -> void:
 
 func _load_relic_definitions() -> void:
 	_relic_definitions.clear()
-
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_relic_definitions"):
-		for relic: Dictionary in data_manager.call("get_relic_definitions"):
-			var relic_id: StringName = _to_relic_id(relic.get("id", ""))
-			if relic_id != &"":
-				_relic_definitions[relic_id] = relic
-		if not _relic_definitions.is_empty():
-			return
-
-	for relic: Dictionary in _load_relics_from_file():
+	for relic: Dictionary in GameDataScript.get_relic_pool():
 		var relic_id: StringName = _to_relic_id(relic.get("id", ""))
 		if relic_id != &"":
 			_relic_definitions[relic_id] = relic
-
-
-func _load_relics_from_file() -> Array[Dictionary]:
-	var relics: Array[Dictionary] = []
-	for relic_variant: Variant in JsonDataLoaderScript.load_array(RELIC_DATA_PATH, "relics", "RelicManager"):
-		if relic_variant is Dictionary:
-			var relic: Dictionary = relic_variant
-			relics.append(relic.duplicate(true))
-		else:
-			push_error("[RelicManager] Expected every relic definition to be a Dictionary.")
-
-	return relics
 
 
 func _get_relic_definition(relic_id: StringName) -> Dictionary:
@@ -130,13 +106,9 @@ func _get_relic_definition(relic_id: StringName) -> Dictionary:
 		_load_relic_definitions()
 
 	if not _relic_definitions.has(relic_id):
-		var data_manager: Node = get_node_or_null("/root/DataManager")
-		if data_manager != null and data_manager.has_method("get_relic_definition"):
-			var relic_variant: Variant = data_manager.call("get_relic_definition", relic_id)
-			if relic_variant is Dictionary:
-				var relic: Dictionary = relic_variant
-				if not relic.is_empty():
-					_relic_definitions[relic_id] = relic.duplicate(true)
+		var relic: Dictionary = GameDataScript.get_relic(relic_id)
+		if not relic.is_empty():
+			_relic_definitions[relic_id] = relic.duplicate(true)
 
 	if not _relic_definitions.has(relic_id):
 		return {}

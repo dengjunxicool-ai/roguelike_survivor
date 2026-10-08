@@ -41,6 +41,7 @@ const UPGRADE_KEYS: Array[String] = [
 ]
 
 var _skill_definitions: Dictionary = {}
+var _starting_skill_definitions: Array[Dictionary] = []
 var _enemy_definitions: Dictionary = {}
 var _enemy_skill_definitions: Dictionary = {}
 var _upgrade_definitions: Dictionary = {}
@@ -67,6 +68,7 @@ func _ready() -> void:
 
 func load_all() -> void:
 	_skill_definitions.clear()
+	_starting_skill_definitions.clear()
 	_enemy_definitions.clear()
 	_enemy_skill_definitions.clear()
 	_upgrade_definitions.clear()
@@ -115,6 +117,7 @@ func load_all() -> void:
 	_index_definitions(combat_objects_document, COMBAT_OBJECTS_KEY, "id", _combat_object_definitions, COMBAT_OBJECTS_PATH)
 
 	var skills_document: Dictionary = _load_json_document(SKILLS_PATH)
+	_starting_skill_definitions = _get_dictionary_array(skills_document, STARTING_SKILLS_KEY, SKILLS_PATH)
 	_index_definitions(skills_document, STARTING_SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 	_index_definitions(skills_document, SKILLS_KEY, "id", _skill_definitions, SKILLS_PATH)
 
@@ -177,6 +180,10 @@ func get_map_definitions() -> Array[Dictionary]:
 
 func get_skill_definitions() -> Array[Dictionary]:
 	return _get_definition_values(_skill_definitions)
+
+
+func get_starting_skill_definitions() -> Array[Dictionary]:
+	return _starting_skill_definitions.duplicate(true)
 
 
 func get_relic_definitions() -> Array[Dictionary]:

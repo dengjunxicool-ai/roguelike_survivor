@@ -80,9 +80,4 @@ func _clear_runtime_modifier_source() -> void:
 
 
 func _get_character_data(character_id: StringName) -> Dictionary:
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_character_definition"):
-		var data: Variant = data_manager.call("get_character_definition", character_id)
-		if data is Dictionary:
-			return data
 	return GameData.get_character(character_id)

@@ -1,7 +1,5 @@
 extends Node
 class_name SkillManager
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SkillDefinitionScript: Script = preload("res://scripts/skills/skill_definition.gd")
@@ -9,7 +7,6 @@ const SkillInstanceScript: Script = preload("res://scripts/skills/skill_instance
 const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skill_modifier.gd")
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 const ModifierSourceScript: Script = preload("res://scripts/modifiers/modifier_source.gd")
-const SKILLS_DATA_PATH: String = DataPathsScript.SKILLS_PATH
 const MAX_LEARNED_GOD_SCHOOLS: int = 2
 const GOD_SCHOOLS: Array[StringName] = [&"fire", &"frost", &"thunder", &"curse", &"holy", &"chaos"]
 
@@ -236,13 +233,8 @@ func _with_inherited_attack_runtime(definition_data: Dictionary, replaced_active
 
 
 func _get_primary_starting_skill_data() -> Dictionary:
-	var skills_document: Dictionary = _load_skills_document()
-	var section_variant: Variant = skills_document.get("starting_skills", [])
-	if not (section_variant is Array):
-		return {}
-	for skill_variant: Variant in section_variant:
-		if skill_variant is Dictionary:
-			return (skill_variant as Dictionary).duplicate(true)
+	for skill: Dictionary in GameData.get_starting_skill_pool():
+		return skill
 	return {}
 
 
@@ -499,34 +491,7 @@ func _clear_skill_effect_modifier_sources() -> void:
 
 
 func _get_skill_definition_data(skill_id: StringName) -> Dictionary:
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_skill_definition"):
-		var definition_variant: Variant = data_manager.call("get_skill_definition", skill_id)
-		if definition_variant is Dictionary:
-			var definition: Dictionary = definition_variant
-			if not definition.is_empty():
-				return definition
-
-	var game_data_definition: Dictionary = GameData.get_skill(skill_id)
-	if not game_data_definition.is_empty():
-		return game_data_definition
-
-	var skills_document: Dictionary = _load_skills_document()
-	for section_name: String in ["starting_skills", "skills"]:
-		var section_variant: Variant = skills_document.get(section_name, [])
-		if not (section_variant is Array):
-			continue
-		for skill_variant: Variant in section_variant:
-			if not (skill_variant is Dictionary):
-				continue
-			var skill: Dictionary = skill_variant
-			if StringName(String(skill.get("id", ""))) == skill_id:
-				return skill.duplicate(true)
-	return {}
-
-
-func _load_skills_document() -> Dictionary:
-	return JsonDataLoaderScript.load_dictionary(SKILLS_DATA_PATH, "SkillManager", JsonDataLoaderScript.REPORT_SILENT)
+	return GameData.get_skill(skill_id)
 
 
 func _can_current_character_learn(skill_data: Dictionary) -> bool:

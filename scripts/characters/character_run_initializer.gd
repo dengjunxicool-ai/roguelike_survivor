@@ -1,6 +1,5 @@
 extends RefCounted
 class_name CharacterRunInitializer
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
 const DEFAULT_STARTING_DASH_SKILL_ID: StringName = &"fire_dash_blazing_run"
 
 func initialize_loadout(player: Node, loadout: RefCounted) -> bool:
@@ -95,14 +94,7 @@ func _resolve_starting_dash_skill_id(player: Node) -> StringName:
 
 
 func _first_configured_starting_skill_id() -> StringName:
-	var document: Dictionary = GameData._load_document(DataPathsScript.SKILLS_PATH)
-	var starting_skills: Variant = document.get("starting_skills", [])
-	if not (starting_skills is Array):
-		return &""
-	for skill_variant: Variant in starting_skills:
-		if not (skill_variant is Dictionary):
-			continue
-		var skill: Dictionary = skill_variant
+	for skill: Dictionary in GameData.get_starting_skill_pool():
 		var skill_id: StringName = StringName(String(skill.get("id", "")))
 		if skill_id != &"":
 			return skill_id
