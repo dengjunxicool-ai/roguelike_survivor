@@ -1,11 +1,9 @@
 extends RefCounted
 class_name EnemySkillRepository
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const EnemySkillDefinitionScript: Script = preload("res://scripts/enemies/skills/enemy_skill_definition.gd")
-const ENEMY_SKILLS_PATH: String = DataPathsScript.ENEMY_SKILLS_PATH
+const GameDataScript: Script = preload("res://scripts/game/game_data.gd")
 
 var _definitions: Dictionary = {}
 var _loaded: bool = false
@@ -41,29 +39,4 @@ func _ensure_loaded() -> void:
 
 
 func _load_skill_data() -> Array[Dictionary]:
-	var data_manager: Node = _get_data_manager()
-	if data_manager != null and data_manager.has_method("get_enemy_skill_definitions"):
-		var managed: Variant = data_manager.call("get_enemy_skill_definitions")
-		if managed is Array:
-			return _to_dictionary_array(managed)
-
-	var enemy_skills: Array = JsonDataLoaderScript.load_array(ENEMY_SKILLS_PATH, "enemy_skills", "EnemySkillRepository", JsonDataLoaderScript.REPORT_WARNING)
-	return _to_dictionary_array(enemy_skills)
-
-
-func _get_data_manager() -> Node:
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	if tree == null or tree.root == null:
-		return null
-	return tree.root.get_node_or_null("DataManager")
-
-
-func _to_dictionary_array(value: Variant) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	if not (value is Array):
-		return result
-	for item_variant: Variant in value:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			result.append(item.duplicate(true))
-	return result
+	return GameDataScript.get_enemy_skill_pool()

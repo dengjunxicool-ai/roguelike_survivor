@@ -155,7 +155,7 @@ static func get_enemy_skill_pool() -> Array[Dictionary]:
 	var data: Array[Dictionary] = _get_pool_from_data_manager("get_enemy_skill_definitions")
 	if not data.is_empty():
 		return data
-	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills")
+	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills").duplicate(true)
 
 
 static func get_status_pool() -> Array[Dictionary]:
