@@ -66,7 +66,7 @@ flowchart LR
     A -. "无 autoload / 缺少 accessor 时的兼容 fallback" .-> D
 ```
 
-`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物、角色定义以及敌人技能仓库等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`RelicManager`、`CharacterRuntime` 和 `EnemySkillRepository` 仅通过 `GameData` 读取定义，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，角色与敌人技能 fallback 返回深拷贝。遗物局内状态、角色初始化、属性、起始技能、敌人技能定义顺序与仓库缓存、升级选择、UI 和存档行为保持不变。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
+`DataManager` 是运行时配置所有者，负责启动加载、索引或持有有序配置池，并通过深拷贝 accessor 输出；`GameData` 是稳定消费门面。阶段 6 已完成状态池、进度目标文档、每日/每周挑战池、`upgrades.json` 三个有序分类池和稀有度权重、遗物、角色定义、敌人技能仓库以及融合技能池等独立批次；相关 `GameData` 入口保留稳定门面与各自独立的 JSON fallback。`RelicManager`、`CharacterRuntime`、`EnemySkillRepository` 和 `SynergyManager` 仅通过 `GameData` 读取定义，`DataManager` 仍是正常运行所有者，JSON 仍是兼容 fallback，角色、敌人技能与融合技能 fallback 返回深拷贝。遗物局内状态、角色初始化、属性、起始技能、敌人技能定义顺序与仓库缓存、融合技能 ID/顺序/触发行为、升级选择、UI 和存档行为保持不变。其他消费端 fallback 和未声明数据域继续按独立批次处理。阶段 6 内部批次不是新的阶段编号。改数据结构时要同时检查 DataManager、GameData、验证脚本和对应消费端。
 
 ### 3.2 开局流
 

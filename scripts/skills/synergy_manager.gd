@@ -1,10 +1,6 @@
 extends Node
 class_name SynergyManager
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
-
-
-const SYNERGY_DATA_PATH: String = DataPathsScript.SYNERGIES_PATH
+const GameDataScript: Script = preload("res://scripts/game/game_data.gd")
 
 signal synergies_changed(active_synergy_ids: Array[StringName])
 
@@ -93,27 +89,7 @@ func _load_synergy_definitions() -> void:
 	if not _synergy_definitions.is_empty():
 		return
 
-	var data_manager: Node = get_node_or_null("/root/DataManager")
-	if data_manager != null and data_manager.has_method("get_synergy_definitions"):
-		var definitions_variant: Variant = data_manager.call("get_synergy_definitions")
-		if definitions_variant is Array:
-			_index_synergy_definitions(definitions_variant)
-			if not _synergy_definitions.is_empty():
-				return
-
-	_index_synergy_definitions(_load_synergies_from_file())
-
-
-func _load_synergies_from_file() -> Array[Dictionary]:
-	var synergies: Array[Dictionary] = []
-	for synergy_variant: Variant in JsonDataLoaderScript.load_array(SYNERGY_DATA_PATH, "synergies", "SynergyManager"):
-		if synergy_variant is Dictionary:
-			var synergy: Dictionary = synergy_variant
-			synergies.append(synergy.duplicate(true))
-		else:
-			push_error("[SynergyManager] Expected every synergy definition to be a Dictionary.")
-
-	return synergies
+	_index_synergy_definitions(GameDataScript.get_synergy_pool())
 
 
 func _index_synergy_definitions(synergies: Array) -> void:

@@ -14,6 +14,7 @@ const WAVES_PATH: String = DataPathsScript.WAVES_PATH
 const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
 const MAPS_PATH: String = DataPathsScript.MAPS_PATH
 const RELICS_PATH: String = DataPathsScript.RELICS_PATH
+const SYNERGIES_PATH: String = DataPathsScript.SYNERGIES_PATH
 const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
 const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
 const SKILL_LEARN_UPGRADE_PREFIX: String = "learn_skill_"
@@ -156,6 +157,13 @@ static func get_enemy_skill_pool() -> Array[Dictionary]:
 	if not data.is_empty():
 		return data
 	return _get_dictionary_array(ENEMY_SKILLS_PATH, "enemy_skills").duplicate(true)
+
+
+static func get_synergy_pool() -> Array[Dictionary]:
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_synergy_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(SYNERGIES_PATH, "synergies").duplicate(true)
 
 
 static func get_status_pool() -> Array[Dictionary]:
