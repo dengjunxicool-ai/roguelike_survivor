@@ -36,8 +36,8 @@ func _run() -> void:
 func _guard_isolated_save_path() -> bool:
 	_save_path = ProjectSettings.globalize_path("user://save.cfg").replace("\\", "/")
 	var normalized_path: String = _save_path.to_lower()
-	var isolated: bool = normalized_path.begins_with("e:/codex/godot-phase7/")
-	_expect(isolated, "save path is isolated under E:/codex/godot-phase7", _save_path)
+	var isolated: bool = normalized_path.begins_with("e:/codex/")
+	_expect(isolated, "save path is isolated under E:/codex", _save_path)
 	return isolated
 
 

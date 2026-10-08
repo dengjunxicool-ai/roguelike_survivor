@@ -47,7 +47,6 @@ func _is_capacity_counted_active_skill(skill: Dictionary) -> bool:
 	var skill_type: String = _get_skill_type(skill)
 	return (
 		not bool(skill.get("is_starting_skill", false))
-		and _string_or(skill.get("category", ""), "") != "starting_skill"
 		and _string_or(skill.get("exclusive_group", ""), "") != "attack_school"
 		and _string_or(skill.get("exclusive_group", ""), "") != "dash_school"
 		and skill_type != "attack"
@@ -190,7 +189,7 @@ func _skill_instance_primary_god_school(skill_instance: RefCounted) -> StringNam
 
 
 func _get_skill_primary_god_school(skill: Dictionary) -> StringName:
-	var school: StringName = StringName(_string_or(skill.get("school", skill.get("god_id", "")), ""))
+	var school: StringName = StringName(_string_or(skill.get("school", ""), ""))
 	return school if GOD_SCHOOLS.has(school) else &""
 
 
@@ -224,21 +223,11 @@ func _get_skill_manager(player: Node) -> Node:
 
 
 func _get_skill_type(skill: Dictionary) -> String:
-	return _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	return _string_or(skill.get("skill_type", ""), "")
 
 
 func _get_skill_category(skill: Dictionary) -> String:
-	var category: String = _string_or(skill.get("category", ""), "")
-	if category == "active" or category == "passive":
-		return category
-
-	match _get_skill_type(skill):
-		"passive":
-			return "passive"
-		"attack", "dash", "cast", "summon", "power", "core", "fusion":
-			return "active"
-		_:
-			return category
+	return _string_or(skill.get("slot_category", ""), "")
 
 
 func _get_array(value: Variant) -> Array:

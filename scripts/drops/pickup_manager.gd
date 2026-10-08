@@ -2,7 +2,7 @@ extends Node
 class_name PickupManager
 
 
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const MANAGER_NAME: StringName = &"PickupManager"
 const IDLE_SCAN_INTERVAL: float = 0.1
 const IDLE_BUCKET_COUNT: int = 10

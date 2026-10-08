@@ -2,6 +2,7 @@ extends RefCounted
 class_name UpgradePool
 
 
+const UpgradeOptionBuilderScript: Script = preload("res://scripts/upgrades/upgrade_option_builder.gd")
 const UpgradeOptionScript: Script = preload("res://scripts/upgrades/upgrade_option.gd")
 const UpgradeOfferPolicyScript: Script = preload("res://scripts/upgrades/upgrade_offer_policy.gd")
 const UpgradeSelectionHelperScript: Script = preload("res://scripts/upgrades/upgrade_selection_helper.gd")
@@ -112,24 +113,7 @@ func _build_skill_level_up_options(player: Node) -> Array:
 			max_level = int(definition.get("max_level"))
 			rarity = SkillGrowthScalingScript.pick_rarity_for_max_level(max_level, _rng)
 
-		options.append(_make_option({
-			"id": "skill_level_up:%s:%d:%s" % [_string_or(skill_id, ""), next_level, rarity],
-			"type": "skill_level_up",
-			"display_name": "%s Lv%d" % [skill_name, next_level],
-			"description": _build_skill_level_up_description(skill_name, next_level),
-			"rarity": rarity,
-			"tags": ["skill", "level_up"],
-			"affected_origin": "当前技能",
-			"does_not_affect": "不学习新的技能。",
-			"recommended_reason": "提高已拥有技能的等级。",
-			"level_text": "Lv%d / %d" % [next_level, maxi(max_level, next_level)],
-			"payload": {
-				"skill_id": skill_id,
-				"level": next_level,
-				"current_rarity": current_rarity,
-				"target_rarity": rarity
-			}
-		}))
+		options.append(_make_option(UpgradeOptionBuilderScript.build_skill_level_up_data(skill_id, next_level, skill_name, rarity, current_rarity, max_level)))
 
 	return options
 
@@ -145,27 +129,7 @@ func _build_level_up_upgrade_options(player: Node) -> Array:
 		if weight <= 0.0:
 			continue
 
-		var payload: Dictionary = {
-			"upgrade_id": StringName(_string_or(upgrade.get("id", ""), "")),
-			"weight": weight
-		}
-		if upgrade.has("learn_skill_id"):
-			payload["learn_skill_id"] = StringName(_string_or(upgrade.get("learn_skill_id", ""), ""))
-
-		options.append(_make_option({
-			"id": "level_up_upgrade:%s" % _string_or(upgrade.get("id", ""), ""),
-			"type": "level_up_upgrade",
-			"display_name": _string_or(upgrade.get("display_name", upgrade.get("id", "")), _string_or(upgrade.get("id", ""), "")),
-			"description": _get_level_up_upgrade_description(upgrade),
-			"rarity": _string_or(upgrade.get("rarity", "common"), "common"),
-			"background_texture": _get_option_background_texture(upgrade),
-			"tags": _get_array(upgrade.get("tags", [])),
-			"affected_origin": _infer_affected_origin(upgrade),
-			"does_not_affect": _infer_does_not_affect(upgrade),
-			"recommended_reason": _string_or(_offer_policy.call("build_recommended_reason", player, upgrade), ""),
-			"level_text": "Lv%d / %d" % [_get_upgrade_level(player, _string_or(upgrade.get("id", ""), "")) + 1, maxi(int(upgrade.get("max_level", 1)), 1)],
-			"payload": payload
-		}))
+		options.append(_make_option(UpgradeOptionBuilderScript.build_upgrade_data(upgrade, _get_upgrade_level(player, _string_or(upgrade.get("id", ""), "")), weight, _string_or(_offer_policy.call("build_recommended_reason", player, upgrade), ""))))
 
 	return options
 
@@ -214,24 +178,7 @@ func _get_skill_learn_definitions() -> Array[Dictionary]:
 func _make_debug_god_skill_option(player: Node, upgrade: Dictionary, god_id: StringName) -> RefCounted:
 	var upgrade_id: StringName = StringName(_string_or(upgrade.get("id", ""), ""))
 	var current_level: int = _get_upgrade_level(player, _string_or(upgrade_id, ""))
-	var option: RefCounted = _make_option({
-		"id": "level_up_upgrade:%s" % _string_or(upgrade_id, ""),
-		"type": "level_up_upgrade",
-		"display_name": _string_or(upgrade.get("display_name", upgrade_id), _string_or(upgrade_id, "")),
-		"description": _get_debug_upgrade_description(upgrade, current_level),
-		"rarity": _string_or(upgrade.get("rarity", "common"), "common"),
-		"background_texture": _get_option_background_texture(upgrade),
-		"tags": _get_array(upgrade.get("tags", [])),
-		"affected_origin": "Dev / God skill pool",
-		"does_not_affect": "Dev list ignores normal offer count.",
-		"recommended_reason": "Dev card for inspecting god skill runtime behavior.",
-		"level_text": "Lv%d / %d" % [current_level + 1, maxi(int(upgrade.get("max_level", 1)), 1)],
-		"payload": {
-			"upgrade_id": upgrade_id,
-			"learn_skill_id": StringName(_string_or(upgrade.get("learn_skill_id", ""), "")),
-			"debug_god_id": god_id
-		}
-	})
+	var option: RefCounted = _make_option(UpgradeOptionBuilderScript.build_debug_data(upgrade, current_level, god_id))
 	return option
 
 
@@ -327,8 +274,6 @@ func _is_learn_skill_upgrade_available(player: Node, skill_id: StringName) -> bo
 
 
 func _is_hidden_skill_level_up(skill_instance: RefCounted, skill_id: StringName) -> bool:
-	if skill_id == &"fireball":
-		return true
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition != null and definition.get("is_starting_skill") == true:
 		return true
@@ -438,10 +383,10 @@ func _count_owned_direct_active_skills(player: Node) -> int:
 		if skill_instance == null:
 			continue
 		var skill_id: StringName = StringName(String(skill_instance.get("skill_id")))
-		if skill_id == &"fireball":
-			continue
 		var skill: Dictionary = GameData.get_skill(skill_id)
-		var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+		if bool(skill.get("is_starting_skill", false)):
+			continue
+		var skill_type: String = _string_or(skill.get("skill_type", ""), "")
 		if skill_type == "cast" or skill_type == "summon":
 			count += 1
 	return count
@@ -483,7 +428,7 @@ func _is_direct_active_learn_option(option: RefCounted) -> bool:
 	if learn_skill_id == &"":
 		return false
 	var skill: Dictionary = GameData.get_skill(learn_skill_id)
-	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	var skill_type: String = _string_or(skill.get("skill_type", ""), "")
 	return skill_type == "cast" or skill_type == "summon"
 
 
@@ -492,7 +437,7 @@ func _is_cast_active_learn_option(option: RefCounted) -> bool:
 	if learn_skill_id == &"":
 		return false
 	var skill: Dictionary = GameData.get_skill(learn_skill_id)
-	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	var skill_type: String = _string_or(skill.get("skill_type", ""), "")
 	return skill_type == "cast"
 
 
@@ -505,7 +450,7 @@ func _is_ordinary_active_skill(skill: Dictionary) -> bool:
 		return false
 	if _string_or(skill.get("exclusive_group", ""), "") == "dash_school":
 		return false
-	var skill_type: String = _string_or(skill.get("skill_type", skill.get("type", skill.get("category", ""))), "")
+	var skill_type: String = _string_or(skill.get("skill_type", ""), "")
 	return skill_type != "attack" and skill_type != "dash" and skill_type != "passive"
 
 
@@ -523,10 +468,6 @@ func _replace_with_tagged_option(player: Node, selected_options: Array, _request
 		return
 
 
-func _build_skill_level_up_description(skill_name: String, next_level: int) -> String:
-	return "提升 %s 至 Lv%d。" % [skill_name, next_level]
-
-
 func _get_definition_string(definition: RefCounted, property_name: String, fallback: String) -> String:
 	if definition == null:
 		return fallback
@@ -537,56 +478,6 @@ func _get_definition_string(definition: RefCounted, property_name: String, fallb
 	if text == "" or text == "<null>":
 		return fallback
 	return text
-
-
-func _get_level_up_upgrade_description(upgrade: Dictionary) -> String:
-	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
-	if not descriptions.is_empty():
-		return _string_or(descriptions[0], "")
-	return _string_or(upgrade.get("description", ""), "")
-
-
-func _infer_affected_origin(upgrade: Dictionary) -> String:
-	var tags: Array = _get_array(upgrade.get("tags", []))
-	if tags.has("dot"):
-		return "DOT"
-	if tags.has("reaction"):
-		return "反应"
-	if tags.has("trap"):
-		return "陷阱"
-	if tags.has("field") or tags.has("area"):
-		return "领域 / 范围"
-	if tags.has("boss"):
-		return "精英 / Boss"
-	if tags.has("survival"):
-		return "生存"
-	if tags.has("mobility"):
-		return "移动"
-	return "通用属性"
-
-
-func _infer_does_not_affect(upgrade: Dictionary) -> String:
-	var tags: Array = _get_array(upgrade.get("tags", []))
-	if tags.has("dot"):
-		return "不直接提高命中伤害、陷阱伤害或反应触发次数。"
-	if tags.has("reaction"):
-		return "不直接提高 DOT tick、普通命中伤害或状态施加频率。"
-	if tags.has("boss"):
-		return "不影响普通怪清场效率，除非描述中另有说明。"
-	if tags.has("survival"):
-		return "不直接提高伤害输出或资源收益。"
-	if tags.has("trap"):
-		return "不直接提高非陷阱类技能、DOT 或反应伤害。"
-	return "不影响未在标签和效果中列出的伤害来源。"
-
-
-func _get_debug_upgrade_description(upgrade: Dictionary, current_level: int) -> String:
-	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
-	if current_level >= 0 and current_level < descriptions.size():
-		return _string_or(descriptions[current_level], "")
-	if not descriptions.is_empty():
-		return _string_or(descriptions[0], "")
-	return _string_or(upgrade.get("description", ""), "")
 
 
 func _get_upgrade_level(player: Node, upgrade_id: String) -> int:
@@ -603,31 +494,8 @@ func _make_option(data: Dictionary) -> RefCounted:
 	return UpgradeOptionScript.new(data)
 
 
-func _get_option_background_texture(primary: Dictionary, fallback: Dictionary = {}) -> String:
-	for key: String in ["background_texture", "card_background_texture"]:
-		var value: String = _string_or(primary.get(key, ""), "")
-		if value != "":
-			return value
-
-	for key: String in ["background_texture", "card_background_texture"]:
-		var value: String = _string_or(fallback.get(key, ""), "")
-		if value != "":
-			return value
-
-	return ""
-
-
 func _get_skill_god_id(skill: Dictionary) -> StringName:
-	for key: String in ["god_id", "school", "fusion_school"]:
-		var value: String = _string_or(skill.get(key, ""), "")
-		if value != "":
-			return StringName(value)
-	for tag_variant: Variant in _get_array(skill.get("tags", [])):
-		var tag: String = _string_or(tag_variant, "")
-		if tag in ["fire", "frost", "thunder", "curse", "holy", "chaos"]:
-			return StringName(tag)
-	return &""
-
+	return StringName(_string_or(skill.get("school", ""), ""))
 
 func _get_array(value: Variant) -> Array:
 	if value is Array:

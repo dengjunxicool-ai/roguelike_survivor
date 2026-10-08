@@ -41,14 +41,14 @@ for (const skill of frostSkills) {
 }
 
 const attack = findSkill(skills, "frost_attack_frostbite");
-assert(attack.type === "attack", "frost attack must be an attack skill");
+assert(attack.skill_type === "attack", "frost attack must be an attack skill");
 assert(attack.exclusive_group === "attack_school", "frost attack must replace the starting attack school");
-const attackModifierCount = flatEffects(attack).filter((effect) => effect && effect.type === "add_modifier" && String(effect.modifier || "").includes("attack_damage")).length;
+const attackModifierCount = flatEffects(attack).filter((effect) => effect && effect.type === "add_modifier" && effect.stat === "primary_attack_damage").length;
 assert(attackModifierCount === 1, "frost attack must not stack multiple attack damage modifiers");
 assert(JSON.stringify(attack).includes("chilled"), "frost attack must apply chilled");
 
 const dash = findSkill(skills, "frost_dash_ice_shard_assault");
-assert(dash.type === "dash", "frost dash must be a dash skill");
+assert(dash.skill_type === "dash", "frost dash must be a dash skill");
 assert(dash.exclusive_group === "dash_school", "frost dash must replace the dash school");
 assert((dash.trigger_rules || []).some((rule) => rule.trigger === "dash_start" || rule.trigger === "dash_tick" || rule.trigger === "dash_end"), "frost dash must use dash trigger rules");
 assert(!JSON.stringify(dash).includes("collision_mask") && !JSON.stringify(dash).includes("collision_layer"), "frost dash data must not alter collision settings");

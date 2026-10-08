@@ -22,9 +22,8 @@ static func build_any(packet_source: Variant, reaction_type: String, amount: flo
 static func _packet_dictionary(packet_source: Variant) -> Dictionary:
 	if packet_source is Dictionary:
 		return (packet_source as Dictionary).duplicate(true)
-	if packet_source is RefCounted:
-		if packet_source.has_method("packet_dict"):
-			return packet_source.call("packet_dict")
-		if packet_source.has_method("to_dictionary"):
-			return packet_source.call("to_dictionary")
+	if packet_source is DamageCalculationContext:
+		return packet_source.packet_dict()
+	if packet_source is DamagePacket:
+		return packet_source.to_dictionary()
 	return {}

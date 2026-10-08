@@ -1,10 +1,11 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
 const root = path.resolve(__dirname, "../..");
 const projectileBuilder = readTextFile(path.join(root, "scripts", "skills", "skill_action_projectile_builder.gd"));
 const areaBuilder = readTextFile(path.join(root, "scripts", "skills", "skill_action_area_builder.gd"));
-const executor = readTextFile(path.join(root, "scripts", "skills", "skill_action_executor.gd"));
+const executor = readActionSources(root);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

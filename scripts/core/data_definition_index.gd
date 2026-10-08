@@ -37,7 +37,7 @@ static func get_dictionary_array(document: Dictionary, key: String, path: String
 	for item_variant: Variant in value:
 		if item_variant is Dictionary:
 			var item: Dictionary = item_variant
-			items.append(item)
+			items.append(item.duplicate(true))
 		else:
 			push_error("[%s] Expected every item in %s.%s to be an object." % [report_name, path, key])
 	return items

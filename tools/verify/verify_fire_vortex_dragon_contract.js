@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const fs = require("fs");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
@@ -58,7 +59,7 @@ assert(dragonDefinition.visual.texture === "res://assets/effect/crimson_dragon.p
 assert(!String(dragonDefinition.visual.texture || "").includes("codex-clipboard"), "crimson dragon must not reference the pasted source image");
 assert(fs.existsSync(path.join(root, "assets", "effect", "crimson_dragon.png")), "generated crimson dragon effect asset must exist");
 
-const executor = read("scripts/skills/skill_action_executor.gd");
+const executor = readActionSources(root);
 assert(executor.includes("SummonManager"), "SkillActionExecutor must route configured summons through SummonManager");
 assert(executor.includes("summon_definition_id"), "SkillActionExecutor must read summon_definition_id");
 

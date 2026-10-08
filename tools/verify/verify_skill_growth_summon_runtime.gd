@@ -18,7 +18,7 @@ func _run() -> void:
 	root.add_child(owner)
 	var skill_definition: RefCounted = SkillDefinitionScript.new({
 		"id": "test_summon_growth",
-		"type": "summon",
+		"skill_type": "summon",
 		"max_level": 5,
 		"rarity": "normal"
 	})

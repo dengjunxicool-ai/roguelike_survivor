@@ -42,7 +42,7 @@ const UIScreenFactoryScript: Script = preload("res://scripts/ui/ui_screen_factor
 const UIResponsiveLayoutScript: Script = preload("res://scripts/ui/ui_responsive_layout.gd")
 const UISettingsServiceScript: Script = preload("res://scripts/ui/ui_settings_service.gd")
 const LocalizationServiceScript: Script = preload("res://scripts/ui/localization_service.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const UIScreenHostScript: Script = preload("res://scripts/ui/ui_screen_host.gd")
 const UIScreenRegistryScript: Script = preload("res://scripts/ui/ui_screen_registry.gd")
 const UIPausePolicyScript: Script = preload("res://scripts/ui/ui_pause_policy.gd")
@@ -980,9 +980,9 @@ func _update_run_stats_snapshots() -> void:
 		return
 	var alive_normal: int = 0
 	for enemy: Node in get_tree().get_nodes_in_group(&"enemy"):
-		if String(enemy.get_meta("enemy_type", "normal")) == "normal":
+		if String(enemy.get_meta("enemy_rank", "normal")) == "normal" and String(enemy.get_meta("spawn_source_type", "")) != "boss_minion":
 			alive_normal += 1
-		if String(enemy.get_meta("enemy_type", "")) == "boss" and _run_stats_tracker.has_method("update_boss_snapshot"):
+		if String(enemy.get_meta("enemy_rank", "")) == "boss" and _run_stats_tracker.has_method("update_boss_snapshot"):
 			_run_stats_tracker.call("update_boss_snapshot", enemy)
 	if _run_stats_tracker.has_method("update_wave_pressure"):
 		_run_stats_tracker.call("update_wave_pressure", alive_normal, _wave_total_count, 0.25)

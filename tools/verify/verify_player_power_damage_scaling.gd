@@ -1,5 +1,7 @@
 extends SceneTree
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
+
 
 const PlayerControllerScript: Script = preload("res://scripts/player/player_controller.gd")
 const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_action_executor.gd")
@@ -33,7 +35,7 @@ func _init() -> void:
 	_expect_close(raw_damage, 52.8, "2.2P resolves from player attack_power")
 
 	var slime: TestSlime = TestSlime.new()
-	var result: Dictionary = DamageSystemScript.calculate({
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary({
 		"raw_amount": raw_damage,
 		"amount": raw_damage,
 		"attacker": player,
@@ -43,8 +45,10 @@ func _init() -> void:
 		"source_type": "cast",
 		"source_id": &"meteor_rain_meteor",
 		"source_skill_id": &"fire_cast_meteor_rain",
+		"source_origin_id": &"fire_cast_meteor_rain",
+		"source_instance_id": "player_power:meteor",
 		"uses_character_damage_multiplier": true
-	}, slime)
+	}), slime).to_dictionary()
 	_expect(int(result.get("amount", 0)) == 57, "2.2P meteor impact uses player damage multiplier against small slime", result)
 
 	player.free()

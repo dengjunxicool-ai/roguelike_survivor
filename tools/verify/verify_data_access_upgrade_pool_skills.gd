@@ -25,13 +25,14 @@ func _run() -> void:
 		"description": "Facade-owned debug skill fixture.",
 		"rarity": "common",
 		"tags": ["fire", "skill"],
-		"god_id": "fire",
+		"school": "fire",
+		"skill_type": "cast",
+		"slot_category": "active",
 		"offer_in_upgrade_pool": true,
 		"max_level": 1,
 		"base": {"damage": 17}
 	}
 	manager.set("_skill_definitions", {sentinel_id: sentinel.duplicate(true)})
-	GameDataScript._document_cache.clear()
 
 	var pool: RefCounted = UpgradePoolScript.new()
 	var debug_definitions: Array[Dictionary] = _to_dictionary_array(
@@ -58,7 +59,6 @@ func _run() -> void:
 	player.free()
 
 	manager.set("_skill_definitions", original_definitions)
-	GameDataScript._document_cache.clear()
 	_finish()
 
 

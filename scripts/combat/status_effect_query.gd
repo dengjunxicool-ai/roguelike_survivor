@@ -116,11 +116,10 @@ static func is_full_stack_explosion_vulnerability_active(status: Dictionary, pac
 static func damage_packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if packet is Dictionary:
 		return (packet as Dictionary).get(key, fallback)
-	if packet is RefCounted:
-		if packet.has_method("packet_value"):
-			return packet.call("packet_value", key, fallback)
-		if packet.has_method("get_value"):
-			return packet.call("get_value", key, fallback)
+	if packet is DamageCalculationContext:
+		return packet.packet_value(key, fallback)
+	if packet is DamagePacket:
+		return packet.get_value(key, fallback)
 	return fallback
 
 

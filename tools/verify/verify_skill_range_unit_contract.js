@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const fs = require("fs");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
@@ -27,7 +28,7 @@ for (const token of ["range_unit_px", "resolve_action_params", "radius_r", "leng
   assert(rangeUnitSource.includes(token), `SkillRangeUnit must support ${token}`);
 }
 
-const executor = read("scripts/skills/skill_action_executor.gd");
+const executor = readActionSources(root);
 assert(executor.includes("SkillRangeUnitScript"), "SkillActionExecutor must preload SkillRangeUnit");
 assert(executor.includes("resolve_action_params"), "SkillActionExecutor must resolve *_r fields before execution");
 

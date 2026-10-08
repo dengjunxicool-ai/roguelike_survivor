@@ -1,24 +1,9 @@
 extends RefCounted
 class_name SkillRangeUnit
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
-
-
-const CONFIG_PATH: String = DataPathsScript.SKILL_SYSTEM_CONFIG_PATH
-const DEFAULT_RANGE_UNIT_PX: float = 84.0
-
-static var _cached_range_unit_px: float = -1.0
 
 
 static func get_range_unit_px() -> float:
-	if _cached_range_unit_px > 0.0:
-		return _cached_range_unit_px
-	_cached_range_unit_px = _load_range_unit_px()
-	return _cached_range_unit_px
-
-
-static func clear_cache() -> void:
-	_cached_range_unit_px = -1.0
+	return float(GameData.get_skill_system_config()["range_unit_px"])
 
 
 static func resolve_pixels(value: Variant) -> float:
@@ -60,11 +45,3 @@ static func _resolve_unit_field(params: Dictionary, source_key: String, target_k
 	if params.has(target_key):
 		return
 	params[target_key] = resolve_pixels(params[source_key])
-
-
-static func _load_range_unit_px() -> float:
-	var config: Dictionary = JsonDataLoaderScript.load_dictionary(CONFIG_PATH, "SkillRangeUnit", JsonDataLoaderScript.REPORT_SILENT)
-	var configured: float = float(config.get("range_unit_px", DEFAULT_RANGE_UNIT_PX))
-	if configured > 0.0:
-		return configured
-	return DEFAULT_RANGE_UNIT_PX

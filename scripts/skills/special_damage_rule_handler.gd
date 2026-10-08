@@ -1,14 +1,15 @@
-﻿extends RefCounted
+extends RefCounted
 class_name SpecialDamageRuleHandler
 
 
+const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
 const DamageIntentScript: Script = preload("res://scripts/combat/damage_intent.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
-const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
+const DebugCombatTraceScript: Script = preload("res://scripts/runtime/debug_combat_trace.gd")
 const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 const SpecialRuleCommonScript: Script = preload("res://scripts/skills/special_rules/special_rule_common.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
@@ -41,7 +42,7 @@ static func direct_hit_extra_explosion_intents(rules: Dictionary, context: Dicti
 	if amount <= 0:
 		return intents
 	var packet: Dictionary = _build_traced_special_packet("fireball_direct_explosion_bonus", amount, "primary_attack", true, context)
-	intents.append(DamageIntentScript.create(target, packet, &"area_direct"))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -51,7 +52,7 @@ static func soulburn_burst_intents(rules: Dictionary, context: Dictionary, amoun
 	if target == null or amount <= 0:
 		return intents
 	var packet: Dictionary = _build_traced_special_packet("soulburn_burst", amount, "special", false, context)
-	intents.append(DamageIntentScript.create(target, packet, &"true_percent_damage"))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -71,7 +72,7 @@ static func flame_core_burst_intents(rules: Dictionary, context: Dictionary, amo
 		"special_rule_tags": ["fireball_special_rule", "flame_core_burst"]
 	})
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -82,7 +83,7 @@ static func frost_bonus_hit_intents(rules: Dictionary, context: Dictionary, amou
 		return intents
 	var rule: Dictionary = _get_dictionary(rules.get(rule_key, {}))
 	var packet: Dictionary = _build_traced_special_packet("frost_lock_bonus_hit", amount, String(rule.get("damage_origin", "primary_attack")), true, context, String(rule.get("element", "ice")), String(rule.get("damage_type", "direct_magical")))
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -96,7 +97,7 @@ static func frost_core_crack_intents(rules: Dictionary, context: Dictionary, amo
 	packet["reaction_type"] = "shatter"
 	packet["reaction_tier"] = "major"
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -156,7 +157,7 @@ static func execute_burning_target_death_explosion(rules: Dictionary, context: D
 			break
 		if target == null or not target.has_method("take_damage"):
 			continue
-		DamageIntentScript.create(target, packet, &"area_direct").call("apply")
+		DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)).call("apply")
 		hit_count += 1
 
 
@@ -523,7 +524,7 @@ static func _apply_holy_mark_pulse_focus(rules: Dictionary, context: Dictionary,
 		if not _has_status(target, &"holy_mark"):
 			continue
 		var packet: Dictionary = _build_traced_special_packet("holy_mark_pulse_focus", bonus_amount, "primary_attack", false, context, "holy", "area_direct")
-		intents.append(DamageIntentScript.create(target, packet, &"area_direct"))
+		intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	apply_intents(intents)
 
 
@@ -594,7 +595,7 @@ static func _apply_judgement_beam_on_boss_mark_pulses(rules: Dictionary, context
 			String(rule.get("element", "holy")),
 			String(rule.get("damage_type", "direct_magical"))
 		)
-		intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
+		intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	apply_intents(intents)
 
 
@@ -622,7 +623,7 @@ static func _execute_holy_counter_on_marked_break_hit(rules: Dictionary, context
 			String(rule.get("element", "holy")),
 			String(rule.get("damage_type", "reaction_damage"))
 		)
-		intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+		intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	apply_intents(intents)
 
 
@@ -766,7 +767,7 @@ static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictio
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
 	)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -849,7 +850,7 @@ static func fire_oil_flammable_burst_intents(rules: Dictionary, context: Diction
 	)
 	if _is_boss(target):
 		packet["boss_damage_multiplier_add"] = float(boss_tuning.get("burst_boss_damage_multiplier_add", 0.0))
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -928,7 +929,7 @@ static func acid_burst_intents(rules: Dictionary, context: Dictionary, amount: i
 	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet["can_trigger_reaction"] = false
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1251,7 +1252,7 @@ static func execute_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary
 		String(rule.get("damage_type", "reaction_damage"))
 	)
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 1.0)) - 1.0
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1317,7 +1318,7 @@ static func cross_relic_echo_intents(rules: Dictionary, context: Dictionary) -> 
 	if rules.has("cross_relic_faith_judgement") and _is_boss_core(target):
 		var faith_rule: Dictionary = _get_dictionary(rules.get("cross_relic_faith_judgement", {}))
 		packet["boss_damage_multiplier_add"] = float(packet.get("boss_damage_multiplier_add", 0.0)) + float(faith_rule.get("boss_core_damage_multiplier_add", 0.35))
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	if rules.has("cross_relic_faith_judgement") and _is_boss(target):
 		intents.append_array(_cross_relic_faith_judgement_intents(rules, context, target))
 	return intents
@@ -1358,7 +1359,7 @@ static func execute_cross_relic_purify_dot(rules: Dictionary, context: Dictionar
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
 	)
-	apply_intents([DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage"))))])
+	apply_intents([DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet))])
 
 
 static func execute_cross_relic_purify_impurity(rules: Dictionary, context: Dictionary) -> void:
@@ -1391,7 +1392,7 @@ static func execute_cross_relic_purify_impurity(rules: Dictionary, context: Dict
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "reaction_damage"))
 	)
-	var intent: RefCounted = DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage"))))
+	var intent: RefCounted = DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet))
 	apply_intents([intent])
 	if not _is_boss(target) and int(target.get("current_health")) <= 0:
 		execute_cross_relic_purify_small_pulse(rules, context, target)
@@ -1481,7 +1482,7 @@ static func _cross_relic_faith_judgement_intents(rules: Dictionary, context: Dic
 		String(rule.get("element", "holy")),
 		String(rule.get("damage_type", "direct_magical"))
 	)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "direct_magical")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1611,7 +1612,7 @@ static func execute_lightning_chain_bounce(rules: Dictionary, context: Dictionar
 		_apply_context_source_identity(packet, context, projectile)
 		packet = DamageTraceContextScript.apply_to_packet(packet, context)
 		_spawn_lightning_chain_path_visual(parent, current_origin.global_position, next_target.global_position)
-		DamageIntentScript.create(next_target, packet, &"direct_magical").call("apply")
+		DamageIntentScript.create(next_target, DamagePacketScript.from_dictionary(packet)).call("apply")
 		if next_target.has_method("apply_status"):
 			next_target.call("apply_status", &"charge", {"stacks": 1, "max_stacks": 4, "duration": 4.0})
 		current_origin = next_target
@@ -1726,7 +1727,7 @@ static func lightning_overload_intents(rules: Dictionary, context: Dictionary, a
 	packet["reaction_type"] = "overload"
 	packet["reaction_tier"] = "major"
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1741,7 +1742,7 @@ static func overload_shock_lightning_intents(rules: Dictionary, context: Diction
 	packet["reaction_tier"] = "major"
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 1.0)) - 1.0
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1755,7 +1756,7 @@ static func shock_consume_reaction_intents(rules: Dictionary, context: Dictionar
 	packet["reaction_type"] = "overload"
 	packet["reaction_tier"] = "minor"
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1949,7 +1950,7 @@ static func arcane_seal_burst_intents(rules: Dictionary, context: Dictionary, am
 	packet["reaction_tier"] = "major"
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -1961,7 +1962,7 @@ static func apply_forbidden_page_self_damage(caster: Node, context: Dictionary, 
 	packet["ignore_resistance"] = true
 	packet["ignore_vulnerability"] = true
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	caster.call("take_damage", packet, &"true_damage")
+	caster.call("take_damage", DamagePacketScript.from_dictionary(packet))
 
 
 static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> void:
@@ -2000,7 +2001,7 @@ static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> 
 	var packet: Dictionary = build_special_packet("page_spirit_attack", amount, String(attack_rule.get("damage_origin", "special")), false, String(attack_rule.get("element", "arcane")), String(attack_rule.get("damage_type", "summon_damage")))
 	packet["boss_damage_multiplier_add"] = float(attack_rule.get("boss_damage_multiplier", 0.8)) - 1.0
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	DamageIntentScript.create(target, packet, StringName(String(attack_rule.get("damage_type", "summon_damage")))).call("apply")
+	DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)).call("apply")
 
 
 static func page_spirit_intercept(rules: Dictionary, context: Dictionary) -> bool:
@@ -2042,7 +2043,7 @@ static func execution_burst_intents(rules: Dictionary, context: Dictionary, amou
 	packet["reaction_type"] = "execution"
 	packet["reaction_tier"] = "major"
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -2057,7 +2058,7 @@ static func rupture_on_full_wound_crit_intents(rules: Dictionary, context: Dicti
 	packet["reaction_tier"] = "major"
 	packet["boss_damage_multiplier_add"] = float(rule.get("boss_damage_multiplier", 0.75)) - 1.0
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -2157,7 +2158,7 @@ static func eagle_shot_intents(rules: Dictionary, context: Dictionary, amount: i
 	var rule: Dictionary = _get_dictionary(rules.get("eagle_shot_on_boss_mark_hits", {}))
 	var packet: Dictionary = build_special_packet("hunter_bow_eagle_shot", amount, String(rule.get("damage_origin", "primary_attack")), bool(rule.get("can_crit", true)), String(rule.get("element", "physical")), String(rule.get("damage_type", "projectile_heavy")))
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "projectile_heavy")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -2318,7 +2319,7 @@ static func pincer_reaction_intents(rules: Dictionary, context: Dictionary, amou
 	packet["reaction_type"] = "trap_pincer"
 	packet["reaction_tier"] = "normal"
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "reaction_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 
@@ -2330,7 +2331,7 @@ static func boss_core_trap_bonus_intents(rules: Dictionary, context: Dictionary,
 	var rule: Dictionary = _get_dictionary(rules.get("boss_core_trap_bonus_damage", {}))
 	var packet: Dictionary = build_special_packet("trap_boss_core_bonus", amount, String(rule.get("damage_origin", "trap")), false, String(rule.get("element", "physical")), String(rule.get("damage_type", "trap_damage")))
 	packet = DamageTraceContextScript.apply_to_packet(packet, context)
-	intents.append(DamageIntentScript.create(target, packet, StringName(String(rule.get("damage_type", "trap_damage")))))
+	intents.append(DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)))
 	return intents
 
 

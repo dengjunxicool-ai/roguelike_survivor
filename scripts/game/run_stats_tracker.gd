@@ -140,7 +140,7 @@ func record_enemy_killed(enemy: Node) -> void:
 	if enemy != null and enemy.has_method("has_status"):
 		if bool(enemy.call("has_status", &"armor_break")) or bool(enemy.call("has_status", &"holy_mark")) or bool(enemy.call("has_status", &"judgment")):
 			shield_break_kills += 1
-	event_recorded.emit(&"enemy_killed", {"enemy": enemy, "rank": rank})
+	event_recorded.emit(&"enemy_killed", {"enemy": enemy, "enemy_rank": rank})
 
 
 func record_hunter_rhythm(delta: float) -> void:
@@ -306,13 +306,13 @@ func _extract_taken_source(packet: Variant, result: Dictionary) -> String:
 
 
 func _is_boss(node: Node) -> bool:
-	return node != null and (node.is_in_group(&"bosses") or bool(node.get_meta("is_boss", false)) or String(node.get_meta("enemy_rank", "")) == "boss")
+	return node != null and String(node.get_meta("enemy_rank", "")) == "boss"
 
 
 func _get_enemy_rank(enemy: Node) -> String:
 	if enemy == null:
 		return "unknown"
-	return String(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "normal")))
+	return String(enemy.get_meta("enemy_rank", "normal"))
 
 
 func _add_number(dictionary: Dictionary, key: String, value: int) -> void:

@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const DebugCombatTraceScript: Script = preload("res://scripts/debug/debug_combat_trace.gd")
+const DebugCombatTraceScript: Script = preload("res://scripts/runtime/debug_combat_trace.gd")
 const SkillEventBusScript: Script = preload("res://scripts/skills/skill_event_bus.gd")
 
 var _failed: bool = false
@@ -53,9 +53,10 @@ func _spawn_enemy(is_boss: bool) -> Node2D:
 	var event_bus: Node = SkillEventBusScript.new()
 	event_bus.name = "SkillEventBus"
 	enemy.add_child(event_bus)
-	enemy.set_meta("is_boss", is_boss)
+	enemy.set_meta("enemy_rank", "boss" if is_boss else "normal")
 	if is_boss:
 		enemy.add_to_group(&"bosses")
+		enemy.set_meta("enemy_rank", "boss")
 	enemy.set("max_health", 999)
 	enemy.set("current_health", 999)
 	return enemy

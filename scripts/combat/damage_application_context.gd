@@ -3,24 +3,22 @@ class_name DamageApplicationContext
 
 
 var target: Node = null
-var amount_or_packet: Variant = null
-var legacy_damage_type: Variant = &""
+var packet: DamagePacket = null
 var damage_result: Dictionary = {}
 var final_amount: int = 0
 var reason: StringName = &""
 var incoming_amount: int = 0
 var absorbed_amount: int = 0
-var damage_payload: Variant = null
+var damage_payload: DamagePacket = null
 var trait_system: Node = null
 var display_damage_type: StringName = &""
 var result_object: RefCounted = null
 
 
-static func create(target_node: Node, damage_source: Variant, damage_type: Variant = &"") -> RefCounted:
+static func create(target_node: Node, damage_source: DamagePacket) -> RefCounted:
 	var context: RefCounted = new()
 	context.target = target_node
-	context.amount_or_packet = damage_source
-	context.legacy_damage_type = damage_type
+	context.packet = damage_source
 	context.damage_payload = damage_source
 	return context
 

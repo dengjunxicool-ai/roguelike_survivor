@@ -1,163 +1,74 @@
-# 项目稳定化与核心边界报告
+# 项目稳定性与边界报告
 
-初始日期：2026-06-27
+日期：2026-10-08；对应唯一运行时契约重构。
 
-最后更新：2026-10-08（阶段 7 总体验收）
+## 结论与证据范围
 
-本报告用于记录“工程稳定化 + 可扩展化阶段”的核心边界、验证证据和后续限制。阶段 7 以契约测试复核高风险链路；新增终局契约暴露了一个既有的迟到 Boss 信号可覆盖失败结果的问题，已在单独批准的小批次中为 `UIManager._on_boss_defeated()` 增加与失败入口对称的终局状态守卫。该修复不改变胜负条件、进度规则、存档 schema 或 UI 表现。
+配置所有权、技能与怪物字段、严格伤害输入、Modifier 配置以及动作/规则/调试/选项构建职责已完成迁移。最终完整矩阵为 153 项通过、零失败、零脚本错误；包含真实开局、两局结算与重开装配，以及运行时诊断依赖收口检查。隔离测试存档残留为零，独立启动检查通过。
 
-## 结论
+本文替代此前将 JSON fallback、numeric damage、enemy_type 等描述为当前接口的报告。历史阶段报告和日志保留作审计资料；本次证据均重新运行，不沿用历史通过结论。未执行画面人工体验或性能收益基准，不宣称性能提升。
 
-当前整理后的项目可以正常完成现有自动化验证矩阵。未发现因目录整理导致的断裂 `preload/load/resource` 字面路径、启动阻塞、核心验证失败或技能/状态/伤害主链路回归。
+## 运行时边界
 
-已确认的关键现状：
+| 系统 | 当前边界 | 长期守卫 |
+| --- | --- | --- |
+| 配置 | 16 份玩法文档按唯一 schema 校验后原子发布；GameData 只查询 | 字段/嵌套类型、必需值、重复 ID、引用列表、资源路径、输入污染、合法空池 |
+| 技能 | display_name/school/skill_type/slot_category/replaces_skill | 起始攻击、替换继承、槽位容量、角色限制、两神系上限及融合 |
+| 升级 | 构建器纯数据；随机抽样仍在编排器原位置 | 列表顺序、稀有度与固定种子 RNG state |
+| 伤害 | typed DamagePacket 输入，DamageResult 输出；事件记录为显式视图 | 公式/取整、来源 identity、DOT、反应、非法输入无副作用 |
+| Modifier | 配置结构化效果列表，平铺字典仅为聚合快照 | 加法/乘法/覆盖、scope、遗物负面数值 |
+| 怪物 | enemy_rank 唯一分类；来源与奖励独立；属性集中 base_stats | 真实生成、Boss 核心覆盖、仆从计数、统计、血条和死亡奖励 |
+| 调试 | 页面模块持有弱宿主引用；通用诊断在 runtime | 清技能、技能卡、刷新、重开宿主 deferred |
+| 终局 | 首个结果锁定，结算记录幂等 | 胜负摘要、重复刷新、重开与存档隔离 |
 
-- `project.godot` 主场景为 `res://scenes/app/app_bootstrap.tscn`。
-- `DataManager` 是唯一 autoload 和运行时配置所有者，负责加载并索引主要 JSON 配置、持有完整配置文档或有序配置池；阶段 6 总体验收已完成。进度目标文档、每日/每周挑战池、三个有序升级分类池、稀有度权重和有序起始技能池均已接入正常运行所有者，对应 `GameData` 方法保持稳定的 manager-first 门面和独立 JSON fallback。遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、技能访问和状态定义单项查询批次已分别收口 `RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `StatusEffectManager` 对应读取的直接 DataManager/JSON 双路径；`UpgradePool` 的正常学习资格和调试神系技能列表也已统一消费 `GameData`。相关 JSON fallback 返回深拷贝，不改变状态定义缓存、tick、叠层、反应、伤害、角色初始化、技能顺序、技能规则、敌人技能仓库缓存、融合触发、升级选择或技能说明职责。召唤物仍使用原有独立 JSON 路径。
-- 当前主流程已不再存在 `scripts/weapons/` 和 `data/weapons/` 运行时目录；角色通过 `characters.json.starting_skill_id` 进入起始技能链路。
-- 技能、投射物、区域、伤害、状态、怪物、掉落、升级、UI 都有现有验证覆盖，但几个大文件仍是后续职责拆分风险点。
-- 阶段 7 已补齐 `verify:enemy-death-reward-pipeline` 与 `verify:run-terminal-progression` 两个长期运行时契约。伤害应用、状态结算、死亡奖励、敌人生成时间线和终局持久化五条高风险链路完成总体验收；除已修复的终局信号竞态外，未发现需要启动架构重构的生产缺陷或已测量性能瓶颈。
+## 实际行为修正
 
-## 回归验证结果
+- 遗物 negative_modifier 原为 Array，旧消费端只读取 Dictionary，负面效果被丢弃。现在按结构化效果消费，负面属性实际生效。
+- 遗物 corrosion_nameplate 的条件改用现有 acid_mark 状态；遗物稳定 ID 保持，酸系事件可触发，无关状态不能触发。
+- 非法伤害包在护盾/命中保护前拒绝，Intent 与反应准备克隆保留解析错误；修改后的 scaling 和反应深度也重新校验。
+- 配置发布隔离输入文档及有序池，调用方改变原字典不会污染 owner。
+- 调试重开页 deferred 调用改为宿主方法，避免不存在方法错误。
 
-| 检查项 | 结果 | 问题 | 修复方式 | 风险 |
-| --- | --- | --- | --- | --- |
-| 项目是否可以正常启动 | 通过 | 无 | `Godot --headless --path . --quit` 正常退出 | 低 |
-| 主菜单是否正常 | 通过 | 无 | `verify:title-screen-runtime` 和 `verify:title-screen-font` 通过 | 低 |
-| 进入游戏流程是否正常 | 通过 | 无 | `verify:title-screen-runtime` 覆盖 UIManager 启动，多个运行时 smoke 覆盖进局依赖 | 中 |
-| 角色选择是否正常 | 通过 | 无 | `verify:character-select-ui` 通过 | 低 |
-| 武器加载是否正常 | 不适用 | 当前主流程已无运行时武器目录，角色起始技能替代旧武器绑定入口 | 未修改；报告标记为架构现状 | 中 |
-| 怪物生成是否正常 | 通过 | 无 | `validate_enemy_configs`、`verify:enemy-visible-batch-spawn`、`verify:enemy-update-hot-path-contract` 通过 | 中 |
-| 伤害计算是否正常 | 通过 | 无 | `verify:damage-formula` 通过；警告为边界测试故意触发 | 高 |
-| 状态效果是否正常 | 通过 | 无 | `verify:burn-status-runtime`、`verify:fire-status-runtime`、`verify:frost-frozen-vulnerability-runtime` 等通过 | 高 |
-| 掉落、经验、升级是否正常 | 通过 | 无 | `verify:enemy-death-reward-pipeline` 覆盖正常死亡顺序、幂等、`self_explosion` 和 `reward_policy`；升级与奖励既有验证继续通过 | 中 |
-| UI 显示是否正常 | 通过 | 无 | 标题、选角、选图、HUD、调试技能卡、结算诊断验证通过 | 中 |
-| 死亡、结算、重新开始是否正常 | 通过 | 契约首次运行证实迟到 Boss 信号可覆盖失败结果 | 已为胜利入口增加对称终局状态守卫；`verify:run-terminal-progression` 覆盖胜负持久化、首个结果锁定、重复刷新幂等和调试死亡隔离 | 高 |
-| 场景切换是否正常 | 通过 | 无 | UIManager、RunSceneCoordinator 间接由标题/选角/选图/运行时验证覆盖 | 中 |
-| 断开的 `preload/load/resource` 路径 | 通过 | 首次扫描误扫 `.codegraph` 缓存，排除缓存后无断链 | 未修改代码；重新扫描 `scripts/scenes/resources/data/tools/project.godot` | 低 |
-| 无效 signal 连接 | 通过 | 无自动化报错 | Godot headless 启动和运行时验证未报告连接错误 | 中 |
-| 节点路径失效 | 通过 | 无自动化报错 | 标题、选角、选图、HUD、调试面板等运行时验证未报告节点缺失 | 中 |
-| 配置引用未使用资源 | 未发现明确问题 | 目前仅做字面 `res://` 路径存在性和现有配置验证；未实现完整跨配置未注册检测 | 本阶段不修复，列入后续开发期检查工具 | 中 |
+这些修正经过独立 RED/GREEN 或审查 probe 复验，不归为纯数值等价搬迁。
 
-本次使用的验证命令：
+## 验证记录
+
+| 批次 | 结果 | 证据 |
+| --- | --- | --- |
+| 原始基线 | 137 项，4 项失败 | E:/codex/canonical-refactor/baseline/results.json |
+| 首轮整合 | 151 项，6 项失败，定位为旧字段/来源/生命周期夹具及静态读取 | E:/codex/canonical-refactor/acceptance/results.json |
+| 完整复跑 | 151 项，0 失败，0 脚本错误 | E:/codex/canonical-refactor/final/results.json |
+| 最终交付矩阵 | 153 项，0 失败，0 脚本错误，0 隔离 save.cfg 残留 | E:/codex/canonical-refactor/final-delivery/results.json |
+| 提交前完整复跑 | 153 项，0 失败，0 脚本错误，0 隔离 save.cfg 残留；暂存区差异检查与 UTF-8 校验通过 | E:/codex/canonical-refactor/pre-pr/results.json |
+| 配置校验 | content、enemy、modifier 校验通过；16 怪物、15 敌方技能、8 波次 | tools/validate 与 E:/codex/canonical-refactor/schema-final |
+| 独立审查 | 配置嵌套/引用/路径/隔离和伤害克隆/当前值校验缺陷均修复 | E:/codex/canonical-refactor/independent-review、damage-query-final、debug-review-green |
+| 额外 Power 场景 | 2.2P=52.8，最终伤害 57，通过 | E:/codex/damage-contract/source-fixture-power/output.log |
+| Timeline 检查 | 实际场景通过，包括 Boss 仆从来源计数 | E:/codex/canonical-refactor/title-systemcheck/timeline/check.log |
+| 真实重开装配 | 45 项断言通过，0 脚本错误；真实开局、死亡奖励幂等、重复结算、重开清理与第二局结算 | E:/codex/canonical-refactor/run-restart-contract/green.log |
+| 诊断依赖收口 | Godot 导入及 9 项相关检查通过，保留四个迁移 UID | E:/codex/canonical-refactor/diagnostic-boundary |
+| 独立启动 | Godot 主项目 headless 启动 exit 0，0 脚本错误 | E:/codex/canonical-refactor/startup-final/result.log |
+| 静态收尾 | 1302 个文本文件 UTF-8 合法；879 处生产资源路径无悬空引用；git diff --check 通过 | 编码校验、资源字面量扫描与 Git 工作区检查 |
+
+基线的四项问题分别为：终局测试限定旧目录、血条夹具未开启开发模式、混沌夹具超过生产槽位并缺失目标 registry 装配、Soulburn 将两层总伤害与每层期望混比。保留生产槽位和全部行为断言；修正夹具容量、注册与明确每层/总量断言。
+
+独立审查对照 HEAD 与 worktree，核查动作/规则方法、动态信号、计时器与资源工厂副作用顺序，未留下未处理的实质 P1/P2。
+
+## 已知限制
+
+额外运行未登记于 package.json 的 scripts/debug/wave_system_check.gd：波次启动、上限、经验收集、timeout 等相关断言通过，整体 exit 1 来自 camera is close enough for run exploration。该相机距离断言此前已记录在 docs/perf/REAL_FULL_RUN_PERFORMANCE_ANALYSIS.md，未修改断言或生产相机规则。它不包含在完整 package 门禁的通过计数中。
+
+内容 schema 校验当前已登记的定义字段、基础属性、Modifier 和引用规则，不是所有特殊规则参数的完整形式化证明；规则族仍依赖各神系行为门禁。Headless 自动化不替代人工视觉验收。
+
+## 复跑与隔离
 
 ```powershell
 node tools/validate/check_text_encoding.js
+node tools/validate/validate_content_configs.js
 node tools/validate/validate_enemy_configs.js
 node tools/validate/validate_modifier_effects.js
-D:\Godot\Godot_v4.6.3-stable_win64_console.exe --headless --path . --quit
-npm run verify:*
+& tools/verify/run_verification_matrix.ps1 -Batch final-delivery
 ```
 
-其中 `npm run verify:*` 指按 `package.json` 中所有 `verify:*` 脚本逐一执行，最终输出 `ALL_PACKAGE_VERIFICATIONS_PASSED`。
+Godot 由 PowerShell 直接启动，不经 npm/Node 子进程。矩阵将 APPDATA、LOCALAPPDATA、TEMP、TMP 指向 E:/codex 下独立目录，保存逐项日志与退出码；非零退出或 SCRIPT/Parse/Compile ERROR 均判失败。测试不读取、复制、覆盖正式 save.cfg；终局和重开测试先检查隔离路径，结束清理自己的测试存档。
 
-新建工作树在首次 headless 验证前，需要运行一次 `Godot --headless --editor --path . --quit`，生成被忽略的全局类缓存；随后只清理由这次扫描新生成且未跟踪的精确 `.gd.uid` 文件。缺少该元数据会造成与生产代码无关的全局类解析失败。
-
-### 阶段 7 高风险核心链路验收
-
-2026-10-08 使用全新的 `E:\codex\godot-phase7\acceptance` 用户目录执行验收，`APPDATA` 与 `LOCALAPPDATA` 均指向 E 盘隔离目录；测试结束后隔离 `save.cfg` 不存在，未读取或覆盖玩家正式存档。受控沙箱内的 Godot 命令均直接调用可执行文件，没有经 npm 间接启动。
-
-| 核心链路 | 实际证据 | 结论 |
-| --- | --- | --- |
-| 伤害应用 | `verify_no_numeric_damage_inputs.js`、`verify_damage_formula.gd` | 公式与 typed packet 门禁通过；保持冻结 |
-| 状态、DOT 与元素反应 | `verify_fire_status_contract.js`、`verify_status_scheduler_contract.js`、`verify_tick_damage_interval_contract.js`、`verify_burn_status_runtime_scene.gd`、`verify_frost_frozen_vulnerability_runtime.gd` | scheduler、tick、燃烧与冰冻易伤契约通过；保持冻结 |
-| 怪物死亡与奖励 | `verify_enemy_death_reward_pipeline.gd` | 正常顺序、死亡标记时机、幂等、自爆默认抑制和奖励策略局部覆盖通过；保持冻结 |
-| 敌人生成时间线 | `validate_enemy_configs.js`、`verify_enemy_update_hot_path_contract.js`、`verify_enemy_visible_batch_spawn.gd` | 配置、可见区域批量生成和更新热点守卫通过；保持冻结 |
-| 终局结算与持久化 | `verify_result_unlock_cache_lifetime.gd`、`verify_result_screen_diagnostic_call.js`、`verify_run_terminal_progression.gd` | 发现并最小修复迟到 Boss 信号覆盖失败结果；胜负摘要、计数、深拷贝、首个终局结果、重复刷新和调试死亡契约通过；修复后保持冻结 |
-
-同轮验收还通过了文本编码、敌人配置、结果诊断、爆裂火球死亡爆炸 trace 和 Godot headless 启动检查。`verify_damage_formula.gd` 中的 `RuntimePoolRegistry` 空场景树诊断、`verify_burn_status_runtime_scene.gd` 中的敌人 packet scaling 警告均为本轮开始前已存在且不影响断言的诊断信息，不作为新增回归，也不能在未来未经调查直接忽略。
-
-五条链路未来只在以下至少一个条件成立时重新开启：有可重复的生产缺陷；有同场景、同规模基准支持的性能瓶颈；有无法通过现有公开接口和配置表达的已批准扩展需求。文件较长、函数较多或主观架构偏好不构成重新开启依据。
-
-## 当前核心依赖关系
-
-```mermaid
-flowchart TD
-    A["project.godot"] --> B["scenes/app/app_bootstrap.tscn"]
-    B --> C["UIManager"]
-    D["DataManager autoload"] --> C
-    D --> E["GameData facade"]
-    C --> F["CharacterLoadoutService / RunLoadout"]
-    F --> G["RunSceneCoordinator"]
-    G --> H["scenes/app/main.tscn"]
-    H --> I["Player"]
-    H --> J["EnemySpawner"]
-    I --> K["CharacterRuntime"]
-    I --> L["SkillManager"]
-    L --> M["SkillExecutor"]
-    M --> N["SkillComponentRunner"]
-    M --> O["SkillEventBus"]
-    O --> P["SkillActionExecutor"]
-    P --> Q["Projectile / Area / Orbit / Summon"]
-    P --> R["DamagePacket"]
-    Q --> R
-    R --> S["DamageApplicationService / DamageSystem"]
-    S --> T["EnemyBase / Player"]
-    T --> U["StatusEffectManager"]
-    J --> V["WaveDirector / BossEncounterController / Spawn services"]
-    T --> W["EnemyDeathPipeline / EnemyRewardController"]
-    W --> X["Experience / Rewards / RunStatsTracker"]
-    X --> Y["UpgradePool / RunRewardPool / UI choices"]
-```
-
-## 核心系统边界表
-
-| 系统 | 当前职责 | 存在问题 | 推荐边界 | 是否需要重构 | 优先级 | 风险 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 数据配置 | `DataManager` autoload 持有运行时索引、完整文档或有序配置池，`GameData` 提供稳定读取门面和兼容 fallback；阶段 6 已完成状态池、状态定义单项查询、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义及有序起始技能池等独立批次，`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `UpgradePool` 的对应读取不再自建重复 fallback | 兼容门面仍保留 JSON fallback，新字段容易只接一边 | 新配置先登记到 `DataPaths` 并进入 DataManager 所有权，再验证 manager、facade 与 fallback 一致 | 持续守护 | 高 | 中 |
-| 角色系统 | `CharacterLoadoutService` 校验角色，`CharacterRuntime` 保存角色运行数据和动态 modifier，`CharacterRunInitializer` 应用起始技能 | 当前边界清晰；后续复杂特质可能膨胀到 Player 或技能层 | 角色只定义基础属性、起始技能、trait；战斗触发通过 trait/event 接入 | 暂缓大改 | 中 | 中 |
-| 旧武器/新起始技能 | 旧武器运行时目录已不存在；当前等价入口是角色起始技能和技能池 | 文档和需求口径仍可能说“武器”，容易误导新增内容 | 短期把“武器”视为未来 Equipment/Skill 配置模型，不恢复旧 runtime 绑定 | 需要文档规范 | 高 | 中 |
-| 技能管理 | `SkillManager` 持有技能实例、学习、升级、被替换攻击技能、passive modifier | 学习规则、旧 fire learn 合成、modifier 应用集中在一个类 | 管理持有和生命周期；offer/构造/效果适配继续外移 | 需要 | 高 | 中 |
-| 技能执行 | `SkillExecutor` tick 技能，`SkillComponentRunner` 处理 cooldown/target/orbit，`SkillActionExecutor` 执行动作 | `SkillActionExecutor` 2444 行，承担伤害、状态、投射物、区域、召唤、临时 modifier、特殊规则桥接 | 按 action family 拆成 projectile/area/status/summon/modifier executor，先保留门面 API | 需要 | 高 | 高 |
-| 技能特殊规则 | `SkillSpecialRuleExecutor` 承载大量神系和特殊触发 | 2850 行，具体技能规则和通用事件混在一起 | 按 school 或 trigger family 分文件，保留统一 `execute_event` 门面 | 需要 | 高 | 高 |
-| 伤害系统 | `DamageSystem` 和 pipeline/stages 处理公式、typed packet、玩家受击、true percent、取整 | 已明显模块化；仍保留 numeric/dictionary 兼容输入 | 新伤害只用完整 DamagePacket；兼容入口只保留到验证覆盖充分后再移除 | 暂时不动核心 | 中 | 高 |
-| 状态系统 | `StatusEffectManager` 管理叠层、持续、DOT、max stack、事件发射和显示快照 | 770 行，配置解析、tick、事件和伤害都集中 | 先拆只读查询/运行 tick/事件发射辅助，不改外部 API | 需要 | 中 | 高 |
-| 投射物/区域对象 | `Projectile`、`AreaEffect`、`OrbitObject` 承载命中、tick、表现和伤害触发 | 部分视觉/命中/生命周期仍在同类内交织 | 运行对象只负责生命周期和命中，构建参数由工厂/技能 executor 提供 | 需要 | 中 | 高 |
-| 怪物系统 | `EnemyBase` 作为聚合根，行为、技能、视觉、状态、死亡和奖励已拆出若干 controller/pipeline | `EnemyBase` 仍有 814 行兼容入口和私有状态，新增行为容易回写进去 | 新行为走 `behaviors/`，新 action 走 `EnemyActionRegistry`，死亡统一走 pipeline | 需要小步 | 中 | 高 |
-| 怪物生成/波次 | `EnemySpawner` 保留门面，timeline、wave、Boss、spawn service 已拆分 | Spawner 仍有 485 行并持有较多信号和兼容流程 | 新波次和 Boss 逻辑优先扩 timeline 子服务，不扩大 Spawner | 需要 | 中 | 中 |
-| 掉落/经验/升级 | `RunRewardPool` 生成奖励，`UpgradePool` 生成升级选项，Player 应用升级；Stage 4 已将纯 learn-skill 卡片数据构建移入 `SkillLearnOptionBuilder` | `UpgradePool` 仍负责定义、资格、RNG/稀有度、最终选项实例化、权重、去重和保底 | 后续只在独立设计与验证下拆权重策略或扩展其他卡片构建边界 | 需要小步 | 高 | 中 |
-| UI 系统 | `UIManager` 状态机、screen 构建、HUD、modal、运行场景桥接 | `UIManager` 818 行，但已有 registry/host/router/pause policy | 新页面必须走 state registry + controller + prepare router；UI 不直接改战斗状态 | 需要小步 | 中 | 中 |
-| 调试系统 | `DevDebugPanel` 提供开发者入口、技能卡、敌人生成、状态、特效、工具按钮 | 2882 行，是最大非核心风险；调试 UI 与业务调用混在一个文件 | 按页面拆成独立 debug page/controller，保留 F12 面板门面 | 需要 | 高 | 中 |
-| 存档/结算/进度 | `SaveManager`、`RunProgressionService`、result view model 处理局外成长和结算 | 结果页和进度依赖 RunStatsTracker 字段，新增统计易漏 | 新统计先定义记录点，再定义结算读取点和 UI 展示 | 暂缓大改 | 中 | 高 |
-
-## 当前仍存在的问题
-
-| 问题 | 证据 | 影响 | 建议 |
-| --- | --- | --- | --- |
-| 大文件职责仍重 | `special_damage_rule_handler.gd` 2896 行、`dev_debug_panel.gd` 2882 行、`skill_special_rule_executor.gd` 2850 行、`skill_action_executor.gd` 2444 行 | 后续新增神系/技能/调试入口会继续堆叠 | Stage 3 已抽离 SkillActionExecutor 的部分纯数据构建职责；后续仅在具备独立行为覆盖时继续拆 action-family |
-| `GameData` 兼容 fallback 仍需持续守护 | 阶段 6 已通过独立批次收口正式消费者的重复读取，并保持状态、遗物、角色、技能、敌人技能、融合技能和升级选择行为不变；召唤物因尚未纳入 DataManager 所有权继续使用原路径，本地化、UI 主题和技能范围配置属于独立服务 | 新配置字段可能只验证 manager 或 fallback 其中一路 | 保持 GameData 门面兼容；新增字段时同步验证 owner、facade 与 fallback，禁止消费者重建第二条读取链 |
-| 混沌技能 runtime smoke 夹具超过技能槽容量 | `verify_chaos_skill_runtime_smoke.gd` 尝试加入 14 个技能，当前规则只接受 10 个，随后产生连锁断言和空引用；相同失败已在阶段 6 对应改动前复现 | 该脚本当前不能作为可靠的混沌技能全量运行回归，但不代表生产玩法缺陷 | 单独修复测试隔离：绕开学习槽位构造夹具或拆成多个独立场景，不修改技能槽规则或放宽断言 |
-| “武器”概念已从运行时移除但需求仍常出现 | 当前无 `scripts/weapons/`、无 `data/weapons/` | 未来新增武器可能误恢复旧绑定 | 先定义 Equipment/Skill 数据模型，不直接复活旧 runtime |
-| 完整自动游玩死亡到重新开局仍未覆盖 | 阶段 7 已有确定性的终局信号到持久化契约，但未驱动完整人工等价游玩流程 | 场景装配、动画或输入层问题仍可能不在契约内 | 只有结算场景发生实质改动或出现真实断链时，再补专门 autoplay；不得以此缺口为由重写结算链路 |
-| 缺少统一跨配置引用验证器 | 现有 validator 覆盖敌人、词条、技能 contract，但未统一检查所有引用 | 新内容增加时可能漏路径/ID/图标 | 后续实现 dev-only content validator |
-
-## 推荐后续重构顺序
-
-1. 补开发期统一内容校验工具：重复 ID、引用存在、路径存在、空字段、非法数值、未注册内容。
-2. 拆 `DevDebugPanel` 页面职责：先拆技能卡、敌人生成、特效页，风险低且可由现有 devtools 验证覆盖。
-3. 拆 `SkillActionExecutor` 构建职责：先抽 projectile/area 参数构建与 visual/runtime data，保留 `execute_action()` API。
-4. Stage 4 已拆出 `UpgradePool` 的纯 learn skill option-data builder；权重策略和更广泛的卡片构建收口延后，需另行设计和验证。
-5. 阶段 6 的 `DataManager`/`GameData` 配置入口收口已经完成总体验收：状态池、状态定义单项查询、进度目标、每日/每周挑战池、三个有序升级分类池和稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义、有序起始技能池及 `UpgradePool` 正常/调试技能读取均通过对应边界和运行时契约。召唤物仍因不属于 DataManager 既有所有权而保留原路径。混沌 smoke 的既有夹具容量失败单独记录，不通过修改玩法规则或放宽断言处理。
-6. 小步拆 `StatusEffectManager` 查询、tick、事件发射辅助。
-7. 阶段 7 已完成五条高风险链路评估：伤害、状态、死亡奖励、生成时间线和终局持久化保持冻结；只有明确缺陷、可重复性能数据或已批准扩展需求才重新开启。
-
-## 可以安全改的区域
-
-- `docs/` 工程规范、系统说明、模板。
-- `tools/validate/` 和 `tools/verify/` 中的开发期检查工具。
-- `scripts/debug/dev_debug_panel.gd` 的页面级拆分，前提是 devtools 验证补齐。
-- Stage 3 已将确定性的重复投射物参数、已解析运行时数据、状态 ID 归一化和瞬时区域视觉参数变换移入现有 projectile/area Builders。
-- `SkillActionExecutor` 仍负责 action 分发、modifier 解析、特殊规则、damage packet、运行时标识、factory 调用和副作用。
-- 后续 action-family 拆分继续延后，必须先具备独立行为覆盖。
-- `scripts/upgrades/upgrade_pool.gd` 的选项构建辅助拆分，前提是选项 ID 和权重输出不变。
-- Stage 4 已将确定性的 learn-skill option-data 构建移入 `SkillLearnOptionBuilder`；`UpgradePool` 继续负责定义、资格、RNG/稀有度、`UpgradeOption` 实例化、权重、去重和保底。
-- Stage 4 属于架构批次，性能对比不适用，也不声明性能提升。
-
-## 暂时不要动的区域
-
-- `DamageSystem` 公式顺序、取整、DOT 小数池、true percent、Boss/Elite 压制。
-- `DamageApplicationService` 对玩家/怪物扣血和死亡事件的应用顺序。
-- `EnemyDeathPipeline` 与奖励、统计、Boss 胜利信号。
-- `UIManager` 的胜负终局锁、`RunProgressionService` 记录幂等和 `SaveManager` 结果持久化。
-- `Player.take_damage()`、`Player.apply_upgrade()`、`SkillManager.add_skill()` 的外部行为。
-- 旧 numeric damage 兼容入口，除非已有完整迁移和红绿验证。
+删除与回滚细节见 [执行台账](PROJECT_REFACTOR_LEDGER.md)，维护入口见 [工程规范](PROJECT_ENGINEERING_GUIDELINES.md)、[系统概览](PROJECT_SYSTEMS_OVERVIEW.md) 和 [重构文档](PROJECT_CANONICAL_RUNTIME_REFACTOR.md)。

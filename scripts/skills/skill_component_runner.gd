@@ -4,7 +4,7 @@ class_name SkillComponentRunner
 
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
 const ModifierResolverScript: Script = preload("res://scripts/skills/modifier_resolver.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 
 
 func tick(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool:

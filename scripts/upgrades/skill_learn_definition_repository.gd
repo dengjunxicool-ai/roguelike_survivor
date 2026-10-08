@@ -8,7 +8,7 @@ static func get_skill_learn_definitions(skill_pool: Array, offer_rule_key: Strin
 		var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 		if skill_id == &"":
 			continue
-		if skill_id == &"fireball" or bool(skill.get("is_starting_skill", false)):
+		if bool(skill.get("is_starting_skill", false)):
 			continue
 		if not bool(skill.get("offer_in_upgrade_pool", false)) and _get_dictionary(skill.get(offer_rule_key, {})).is_empty():
 			continue
@@ -36,7 +36,7 @@ static func make_god_skill_learn_upgrade(skill: Dictionary, god_id: StringName, 
 		"enabled": true,
 		"max_level": 1,
 		"learn_skill_id": StringName(skill_id),
-		"god_id": god_id,
+		"school": god_id,
 		"level_descriptions": [description]
 	}
 
@@ -46,13 +46,9 @@ static func is_debug_god_skill_definition(skill: Dictionary, god_id: StringName)
 		return false
 	if StringName(_string_or(skill.get("id", ""), "")) == &"":
 		return false
-	if StringName(_string_or(skill.get("god_id", ""), "")) == god_id:
-		return true
 	if StringName(_string_or(skill.get("school", ""), "")) == god_id:
 		return true
 	if StringName(_string_or(skill.get("fusion_school", ""), "")) == god_id:
-		return true
-	if god_id == &"fire" and to_string_array(_get_array(skill.get("tags", []))).has("fire"):
 		return true
 	return false
 
@@ -78,3 +74,13 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 
 static func _string_or(value: Variant, default_value: String = "") -> String:
 	return default_value if value == null else str(value)
+
+
+static func resolve_upgrade(upgrade_id: StringName) -> Dictionary:
+	var text: String = String(upgrade_id)
+	if not text.begins_with("learn_skill_"):
+		return GameData.get_upgrade(upgrade_id)
+	var skill: Dictionary = GameData.get_skill(StringName(text.substr("learn_skill_".length())))
+	if skill.is_empty() or bool(skill.get("is_starting_skill", false)) or _get_dictionary(skill.get("offer_rule", {})).is_empty():
+		return {}
+	return make_god_skill_learn_upgrade(skill, StringName(skill.get("school", "")), "learn_skill_")

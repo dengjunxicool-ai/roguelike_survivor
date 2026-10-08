@@ -1,11 +1,11 @@
-﻿extends Area2D
+extends Area2D
 class_name AreaEffect
 
 
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const AreaEffectManagerScript: Script = preload("res://scripts/combat/area_effect_manager.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const PROGRAMMATIC_VISUAL_REDRAW_INTERVAL: float = 0.08
@@ -642,7 +642,7 @@ func _damage_body(body: Node) -> bool:
 	var body_id: int = body.get_instance_id()
 
 	if damage > 0 and body.has_method("take_damage"):
-		body.call(&"take_damage", _get_damage_payload(body), damage_type)
+		body.call(&"take_damage", _get_damage_payload(body))
 	_increment_current_tick_status_apply(_apply_status(body))
 	_emit_area_event(&"area_tick", body)
 	_emit_area_event(event_on_hit, body)
@@ -658,13 +658,13 @@ func _damage_body(body: Node) -> bool:
 	return true
 
 
-func _get_damage_payload(target: Node = null) -> Variant:
+func _get_damage_payload(target: Node = null) -> DamagePacket:
 	var adjusted_damage: int = _get_adjusted_damage_for_target(target)
 	var packet_template: Dictionary = damage_packet.duplicate(true)
 	if adjusted_damage != damage:
 		packet_template["raw_amount"] = adjusted_damage
 		packet_template["amount"] = adjusted_damage
-	return DamagePacketBuilderScript.from_combat_object_hit({
+	return DamagePacketBuilderScript.from_combat_object_hit_object({
 		"template": packet_template,
 		"target": target,
 		"amount": adjusted_damage,
@@ -748,7 +748,7 @@ func _should_coalesce_status_apply(body: Node, status_id: StringName) -> bool:
 
 
 func _is_strong_target(body: Node) -> bool:
-	return body != null and (body.is_in_group(&"elites") or body.is_in_group(&"bosses") or bool(body.get_meta("is_elite", false)) or bool(body.get_meta("is_boss", false)) or String(body.get_meta("enemy_rank", "")) == "elite" or String(body.get_meta("enemy_rank", "")) == "boss")
+	return body != null and String(body.get_meta("enemy_rank", "normal")) in ["elite", "boss"]
 
 
 func _apply_radius(new_radius: float) -> void:

@@ -5,15 +5,6 @@ const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 const GameDataScript := preload("res://scripts/game/game_data.gd")
 const SynergyManagerScript := preload("res://scripts/skills/synergy_manager.gd")
 
-class MissingAccessorManager:
-	extends Node
-
-class WrongTypeManager:
-	extends Node
-
-	func get_synergy_definitions() -> Variant:
-		return "not-an-array"
-
 var _failed: bool = false
 
 
@@ -36,10 +27,7 @@ func _run() -> void:
 
 	_verify_owner_and_facade(manager, source)
 	_verify_manager_source(manager)
-	_verify_empty_owner_fallback(manager, source)
-	_verify_replacement_manager_fallback(manager, source, MissingAccessorManager.new(), "missing accessor")
-	_verify_replacement_manager_fallback(manager, source, WrongTypeManager.new(), "wrong-type accessor")
-	_verify_full_fallback(manager, source)
+	_verify_empty_owner_authoritative(manager, source)
 	_verify_synergy_manager_contract(source)
 	_finish()
 
@@ -79,9 +67,7 @@ func _verify_manager_source(manager: Node) -> void:
 	}
 	var sentinel_pool: Array[Dictionary] = [sentinel.duplicate(true)]
 	manager.set("_synergy_definitions", sentinel_pool)
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_synergy_pool() == [sentinel], "facade prefers manager synergy sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.SYNERGIES_PATH), "manager path avoids synergy JSON cache")
 
 	var synergy_manager: Node = SynergyManagerScript.new()
 	synergy_manager.name = "Phase6SynergyManagerSentinel"
@@ -94,52 +80,16 @@ func _verify_manager_source(manager: Node) -> void:
 	synergy_manager.free()
 
 	manager.set("_synergy_definitions", original)
-	GameDataScript._document_cache.clear()
 
 
-func _verify_empty_owner_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original: Array[Dictionary] = _to_dictionary_array(manager.get("_synergy_definitions")).duplicate(true)
-	var empty_pool: Array[Dictionary] = []
-	manager.set("_synergy_definitions", empty_pool)
-	GameDataScript._document_cache.clear()
-	var fallback: Array[Dictionary] = GameDataScript.get_synergy_pool()
-	_expect(fallback == source, "empty owner synergy pool falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.SYNERGIES_PATH), "empty owner fallback uses synergy document cache")
-	_mutate_definition(fallback[0], "__phase6_synergy_empty_owner__")
-	_expect(GameDataScript.get_synergy_pool() == source, "empty owner synergy fallback is isolated")
+func _verify_empty_owner_authoritative(manager: Node, source: Array[Dictionary]) -> void:
+	var original: Array[Dictionary] = (manager.get("_synergy_definitions") as Array[Dictionary]).duplicate(true)
+	var first_id: StringName = StringName(String(source[0].get("id", "")))
+	var empty: Array[Dictionary] = []
+	manager.set("_synergy_definitions", empty)
+	_expect(GameDataScript.get_synergy_pool().is_empty(), "empty owner remains authoritative")
+	_expect(GameDataScript.get_synergy_pool().is_empty(), "repeat lookup does not reload JSON")
 	manager.set("_synergy_definitions", original)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_replacement_manager_fallback(
-	manager: Node,
-	source: Array[Dictionary],
-	replacement: Node,
-	label: String
-) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6SynergyOwnerUnavailable"
-	replacement.name = &"DataManager"
-	root.add_child(replacement)
-	GameDataScript._document_cache.clear()
-	_expect(GameDataScript.get_synergy_pool() == source, "%s falls back to synergy JSON" % label)
-	replacement.free()
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6SynergyUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback: Array[Dictionary] = GameDataScript.get_synergy_pool()
-	_expect(_ids(fallback) == _ids(source), "full synergy fallback preserves IDs and order")
-	_expect(fallback == source, "full synergy fallback matches source")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.SYNERGIES_PATH), "full fallback loads synergy document")
-	_mutate_definition(fallback[0], "__phase6_synergy_full_fallback__")
-	_expect(GameDataScript.get_synergy_pool() == source, "full synergy fallback is isolated")
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
 
 
 func _verify_synergy_manager_contract(source: Array[Dictionary]) -> void:

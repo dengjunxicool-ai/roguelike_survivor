@@ -35,7 +35,6 @@ func _run() -> void:
 	for case: Dictionary in POOL_CASES:
 		sources[case["key"]] = _to_dictionary_array(document.get(case["key"], []))
 	var source_weights: Dictionary = _dictionary(document.get("rarity_weights", {})).duplicate(true)
-	GameDataScript._document_cache.clear()
 
 	for case: Dictionary in POOL_CASES:
 		var source: Array[Dictionary] = _to_dictionary_array(sources[case["key"]])
@@ -47,7 +46,6 @@ func _run() -> void:
 		_expect(facade_pool == source, "%s facade matches source" % case["key"])
 	_expect(_owner_weights(manager) == source_weights, "owner rarity weights match source")
 	_expect(GameDataScript.get_rarity_weights() == source_weights, "rarity facade matches source")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "normal facades avoid JSON cache")
 
 	var permanent_source: Array[Dictionary] = _to_dictionary_array(sources["permanent_upgrades"])
 	for item: Dictionary in permanent_source:
@@ -56,7 +54,6 @@ func _run() -> void:
 	var level_up_source: Array[Dictionary] = _to_dictionary_array(sources["level_up_upgrades"])
 	_expect(GameDataScript.get_permanent_upgrade(StringName(String(curse_source[0].get("id", "")))).is_empty(), "manager permanent lookup rejects curse IDs")
 	_expect(GameDataScript.get_permanent_upgrade(StringName(String(level_up_source[0].get("id", "")))).is_empty(), "manager permanent lookup rejects level-up IDs")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "normal permanent lookup avoids JSON cache")
 	var permanent_probe: Dictionary = GameDataScript.get_permanent_upgrade(StringName(String(permanent_source[0].get("id", ""))))
 	var permanent_probe_pool: Array[Dictionary] = [permanent_probe]
 	_expect(_mutate_first_nested_scope(permanent_probe_pool, "modifiers", "__stage5d_permanent_manager__"), "permanent manager lookup has nested modifier scope")
@@ -64,8 +61,7 @@ func _run() -> void:
 	_expect(GameDataScript.get_permanent_upgrade(&"__missing_stage5d__").is_empty(), "missing permanent lookup stays empty")
 
 	_verify_manager_and_facade_isolation(manager, sources, source_weights)
-	_verify_manager_source_and_independent_fallback(manager, sources, source_weights)
-	_verify_full_fallback(manager, sources, source_weights)
+	_verify_independent_owner_pools(manager, sources, source_weights)
 	_finish()
 
 
@@ -89,7 +85,7 @@ func _verify_manager_and_facade_isolation(manager: Node, sources: Dictionary, so
 	_expect(GameDataScript.get_rarity_weights() == source_weights, "facade weights are isolated")
 
 
-func _verify_manager_source_and_independent_fallback(manager: Node, sources: Dictionary, source_weights: Dictionary) -> void:
+func _verify_independent_owner_pools(manager: Node, sources: Dictionary, source_weights: Dictionary) -> void:
 	var originals: Dictionary = {}
 	for case: Dictionary in POOL_CASES:
 		originals[case["field"]] = _owner_pool(manager, String(case["owner"]))
@@ -98,9 +94,7 @@ func _verify_manager_source_and_independent_fallback(manager: Node, sources: Dic
 	for target: Dictionary in POOL_CASES:
 		var sentinel: Array[Dictionary] = [{"id": "__stage5d_%s__" % target["key"], "modifiers": [{"scope": {"domain": "stage5d"}}]}]
 		manager.set(String(target["field"]), sentinel.duplicate(true))
-		GameDataScript._document_cache.clear()
 		_expect(_facade_pool(String(target["facade"])) == sentinel, "%s facade returns manager sentinel" % target["key"])
-		_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "%s manager path avoids cache" % target["key"])
 		if target["key"] == "permanent_upgrades":
 			var sentinel_id: StringName = StringName(String(sentinel[0].get("id", "")))
 			_expect(GameDataScript.get_permanent_upgrade(sentinel_id) == sentinel[0], "permanent lookup returns manager sentinel")
@@ -109,75 +103,20 @@ func _verify_manager_source_and_independent_fallback(manager: Node, sources: Dic
 	for target: Dictionary in POOL_CASES:
 		var empty_pool: Array[Dictionary] = []
 		manager.set(String(target["field"]), empty_pool)
-		GameDataScript._document_cache.clear()
-		_expect(_facade_pool(String(target["facade"])) == sources[target["key"]], "%s empty owner falls back" % target["key"])
-		_expect(GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "%s fallback uses cache" % target["key"])
+		_expect(_facade_pool(String(target["facade"])).is_empty(), "%s empty owner remains authoritative" % target["key"])
 		for other: Dictionary in POOL_CASES:
 			if other["key"] == target["key"]:
 				continue
-			GameDataScript._document_cache.clear()
 			_expect(_facade_pool(String(other["facade"])) == sources[other["key"]], "%s remains manager-backed" % other["key"])
-			_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "%s avoids unrelated fallback" % other["key"])
 		manager.set(String(target["field"]), (originals[target["field"]] as Array).duplicate(true))
 
 	manager.set("_rarity_weights", {"__stage5d_weight__": 7})
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_rarity_weights() == {"__stage5d_weight__": 7}, "rarity facade returns manager sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "rarity manager path avoids cache")
 	manager.set("_rarity_weights", {})
-	GameDataScript._document_cache.clear()
-	_expect(GameDataScript.get_rarity_weights() == source_weights, "empty owner weights fall back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "rarity fallback uses cache")
+	_expect(GameDataScript.get_rarity_weights().is_empty(), "empty owner weights stay authoritative")
 	for case: Dictionary in POOL_CASES:
-		GameDataScript._document_cache.clear()
 		_expect(_facade_pool(String(case["facade"])) == sources[case["key"]], "%s remains manager-backed while rarity is empty" % case["key"])
-		_expect(not GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH), "%s avoids rarity fallback" % case["key"])
 	manager.set("_rarity_weights", original_weights.duplicate(true))
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, sources: Dictionary, source_weights: Dictionary) -> void:
-	var original_name: StringName = manager.name
-	var original_cache: Dictionary = GameDataScript._document_cache.duplicate(true)
-	manager.name = &"Stage5DUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var fallback_pools: Dictionary = {}
-	for case: Dictionary in POOL_CASES:
-		fallback_pools[case["key"]] = _facade_pool(String(case["facade"]))
-	var fallback_weights: Dictionary = GameDataScript.get_rarity_weights()
-	var loaded: bool = GameDataScript._document_cache.has(DataPathsScript.UPGRADES_PATH)
-	var curse_source: Array[Dictionary] = _to_dictionary_array(sources["curse_choices"])
-	var level_up_source: Array[Dictionary] = _to_dictionary_array(sources["level_up_upgrades"])
-	var permanent_source: Array[Dictionary] = _to_dictionary_array(sources["permanent_upgrades"])
-	var curse_id: StringName = StringName(String(curse_source[0].get("id", "")))
-	var level_up_id: StringName = StringName(String(level_up_source[0].get("id", "")))
-	var rejected_curse: bool = GameDataScript.get_permanent_upgrade(curse_id).is_empty()
-	var rejected_level_up: bool = GameDataScript.get_permanent_upgrade(level_up_id).is_empty()
-	var permanent_id: StringName = StringName(String(permanent_source[0].get("id", "")))
-	var fallback_permanent: Dictionary = GameDataScript.get_permanent_upgrade(permanent_id)
-	var fallback_permanent_pool: Array[Dictionary] = [fallback_permanent]
-	var permanent_mutated: bool = _mutate_first_nested_scope(fallback_permanent_pool, "modifiers", "__stage5d_permanent_fallback__")
-	for case: Dictionary in POOL_CASES:
-		_mutate_first_nested_scope(_to_dictionary_array(fallback_pools[case["key"]]), "modifiers", "__stage5d_fallback_modifier__")
-		_mutate_first_nested_scope(_to_dictionary_array(fallback_pools[case["key"]]), "level_modifiers", "__stage5d_fallback_level__")
-	_mutate_first_weight(fallback_weights)
-	var fresh_pools: Dictionary = {}
-	for case: Dictionary in POOL_CASES:
-		fresh_pools[case["key"]] = _facade_pool(String(case["facade"]))
-	var fresh_weights: Dictionary = GameDataScript.get_rarity_weights()
-	var fresh_permanent: Dictionary = GameDataScript.get_permanent_upgrade(permanent_id)
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-	GameDataScript._document_cache.merge(original_cache, true)
-
-	_expect(loaded, "full fallback loads upgrade document")
-	_expect(rejected_curse, "permanent fallback rejects curse IDs")
-	_expect(rejected_level_up, "permanent fallback rejects level-up IDs")
-	_expect(permanent_mutated, "permanent fallback exposes nested scope probe")
-	_expect(fresh_permanent == permanent_source[0], "permanent lookup fallback is isolated")
-	for case: Dictionary in POOL_CASES:
-		_expect(fresh_pools[case["key"]] == sources[case["key"]], "%s fallback is isolated" % case["key"])
-	_expect(fresh_weights == source_weights, "rarity fallback is isolated")
 
 
 func _facade_pool(method_name: String) -> Array[Dictionary]:

@@ -1,10 +1,7 @@
 extends RefCounted
 class_name SkillEffectSummaryBuilder
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
-const SUMMONS_PATH: String = DataPathsScript.SUMMONS_PATH
 const SkillRangeUnitScript: Script = preload("res://scripts/skills/skill_range_unit.gd")
 const SkillDefinitionScript: Script = preload("res://scripts/skills/skill_definition.gd")
 const SkillInstanceScript: Script = preload("res://scripts/skills/skill_instance.gd")
@@ -216,7 +213,7 @@ static func _modifier_stat_kind(modifier: String) -> String:
 
 
 static func _get_summon(summon_id: StringName) -> Dictionary:
-	return _find_by_id(_load_array(SUMMONS_PATH, "summons"), summon_id)
+	return GameData.get_summon(summon_id)
 
 
 static func _get_combat_object(object_id: StringName) -> Dictionary:
@@ -292,19 +289,6 @@ static func _unique_lines(lines: Array[String]) -> Array[String]:
 		seen[line] = true
 		result.append(line)
 	return result
-
-
-static func _find_by_id(items: Array, id: StringName) -> Dictionary:
-	for item_variant: Variant in items:
-		if item_variant is Dictionary:
-			var item: Dictionary = item_variant
-			if StringName(_string_or(item.get("id", ""), "")) == id:
-				return item.duplicate(true)
-	return {}
-
-
-static func _load_array(path: String, key: String) -> Array:
-	return JsonDataLoaderScript.load_array(path, key, "SkillEffectSummaryBuilder", JsonDataLoaderScript.REPORT_SILENT)
 
 
 static func _dict(value: Variant) -> Dictionary:

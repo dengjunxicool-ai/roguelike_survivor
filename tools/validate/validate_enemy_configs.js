@@ -213,7 +213,7 @@ function checkEnemyDefinitions(enemies, enemySkillById) {
       enemyById.set(id, enemy);
     }
 
-    const type = String(enemy.type || "");
+    const type = String(enemy.enemy_rank || "");
     if (!VALID_ENEMY_TYPES.has(type)) {
       error(enemyWhere, `invalid type '${type}', expected one of ${[...VALID_ENEMY_TYPES].join(", ")}`);
     }
@@ -567,7 +567,7 @@ function checkWaveDefinitions(waveConfig, enemyById) {
     error("waves.boss_event", "missing boss_id");
   } else if (!enemyById.has(bossId)) {
     error("waves.boss_event", `boss_id '${bossId}' does not exist`);
-  } else if (String(enemyById.get(bossId).type || "") !== "boss") {
+  } else if (String(enemyById.get(bossId).enemy_rank || "") !== "boss") {
     error("waves.boss_event", `boss_id '${bossId}' must reference type=boss`);
   }
   checkNumber("waves.boss_event", bossEvent, "spawn_time");
@@ -758,8 +758,8 @@ function checkEvents(where, eventsValue, enemyById) {
       const enemyId = String(event.enemy_id || "");
       if (!enemyById.has(enemyId)) {
         error(eventWhere, `enemy_id '${enemyId}' does not exist`);
-      } else if (type === "spawn_elite" && String(enemyById.get(enemyId).type || "") !== "elite") {
-        warn(eventWhere, `spawn_elite references '${enemyId}' whose type is '${enemyById.get(enemyId).type}'`);
+      } else if (type === "spawn_elite" && String(enemyById.get(enemyId).enemy_rank || "") !== "elite") {
+        warn(eventWhere, `spawn_elite references '${enemyId}' whose type is '${enemyById.get(enemyId).enemy_rank}'`);
       }
     }
     checkMultipliers(`${eventWhere}.enemy_multipliers`, event.enemy_multipliers);

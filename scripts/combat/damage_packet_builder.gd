@@ -1,11 +1,11 @@
-﻿extends RefCounted
+extends RefCounted
 class_name DamagePacketBuilder
 
 
 const DamageSourceIdentityScript: Script = preload("res://scripts/combat/damage_source_identity.gd")
 const DamageRuleRegistryScript: Script = preload("res://scripts/combat/damage_rule_registry.gd")
 const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 const TYPE_TRUE_DAMAGE: String = "true_damage"
 const TYPE_TRUE_PERCENT_DAMAGE: String = "true_percent_damage"
@@ -63,7 +63,7 @@ static func from_skill_action(args: Dictionary) -> Dictionary:
 	return _finalize_packet(packet)
 
 
-static func from_skill_action_object(args: Dictionary) -> RefCounted:
+static func from_skill_action_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_skill_action(args))
 
 
@@ -108,7 +108,7 @@ static func from_status_dot(args: Dictionary) -> Dictionary:
 	return _finalize_packet(packet)
 
 
-static func from_status_dot_object(args: Dictionary) -> RefCounted:
+static func from_status_dot_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_status_dot(args))
 
 
@@ -144,7 +144,7 @@ static func from_reaction(args: Dictionary) -> Dictionary:
 	return _finalize_packet(base_packet)
 
 
-static func from_reaction_object(args: Dictionary) -> RefCounted:
+static func from_reaction_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_reaction(args))
 
 
@@ -188,7 +188,7 @@ static func from_enemy_action(args: Dictionary) -> Dictionary:
 	})
 
 
-static func from_enemy_action_object(args: Dictionary) -> RefCounted:
+static func from_enemy_action_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_enemy_action(args))
 
 
@@ -225,7 +225,7 @@ static func from_special_rule(args: Dictionary) -> Dictionary:
 	return _finalize_packet(packet)
 
 
-static func from_special_rule_object(args: Dictionary) -> RefCounted:
+static func from_special_rule_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_special_rule(args))
 
 
@@ -295,7 +295,7 @@ static func from_combat_object_hit(args: Dictionary) -> Dictionary:
 	return _finalize_packet(template)
 
 
-static func from_combat_object_hit_object(args: Dictionary) -> RefCounted:
+static func from_combat_object_hit_object(args: Dictionary) -> DamagePacket:
 	return DamagePacketScript.from_dictionary(from_combat_object_hit(args))
 
 
@@ -347,7 +347,7 @@ static func _merge_tags(value: Variant, extra_tags: Array[String]) -> Array:
 static func _get_enemy_source_id(owner: Node) -> String:
 	if owner == null:
 		return "enemy"
-	var rank: String = String(owner.get_meta("enemy_rank", owner.get_meta("enemy_type", "normal")))
+	var rank: String = String(owner.get_meta("enemy_rank", "normal"))
 	return "boss" if rank == "boss" else "enemy"
 
 

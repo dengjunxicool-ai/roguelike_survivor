@@ -19,7 +19,7 @@ func set_source(source_id: Variant, modifiers: Variant, scopes: Array = [], life
 		_sources.erase(id)
 		return
 	_sources[id] = {
-		"modifiers": _duplicate_modifier_value(modifiers),
+		"entries": [_make_entry(modifiers)],
 		"scopes": _normalize_scopes(scopes),
 		"lifetime": lifetime
 	}
@@ -29,19 +29,15 @@ func merge_source(source_id: Variant, modifiers: Variant, scopes: Array = [], li
 	var id: String = String(source_id)
 	if id == "":
 		return
-	var merged: Array = []
+	var entries: Array = []
 	if _sources.has(id):
-		var source: Dictionary = _get_dictionary(_sources[id])
-		var existing: Variant = source.get("modifiers", [])
-		if existing is Array:
-			merged.append_array((existing as Array).duplicate(true))
-		elif existing is Dictionary:
-			merged.append((existing as Dictionary).duplicate(true))
-	if modifiers is Array:
-		merged.append_array((modifiers as Array).duplicate(true))
-	elif modifiers is Dictionary:
-		merged.append((modifiers as Dictionary).duplicate(true))
-	set_source(id, merged, scopes, lifetime)
+		entries = _get_dictionary(_sources[id]).get("entries", []).duplicate(true)
+	if not _is_empty_modifier_value(modifiers):
+		entries.append(_make_entry(modifiers))
+	if entries.is_empty():
+		_sources.erase(id)
+		return
+	_sources[id] = {"entries": entries, "scopes": _normalize_scopes(scopes), "lifetime": lifetime}
 
 
 func clear_source(source_id: Variant) -> void:
@@ -69,7 +65,11 @@ func collect(query: RefCounted) -> Dictionary:
 		var source: Dictionary = _get_dictionary(_sources[source_id])
 		if not _source_matches_scope(source, scope):
 			continue
-		SkillModifierCalculatorScript.merge_modifiers(modifiers, ModifierSourceScript.flatten(source.get("modifiers", {}), ModifierSourceScript.SOURCE_UNKNOWN, query))
+		for entry: Dictionary in source.get("entries", []):
+			var values: Dictionary = entry.get("snapshot", {})
+			if entry.has("effects"):
+				values = ModifierSourceScript.flatten_effects(entry["effects"], ModifierSourceScript.SOURCE_UNKNOWN, query)
+			SkillModifierCalculatorScript.merge_modifiers(modifiers, values)
 	return modifiers
 
 
@@ -113,9 +113,8 @@ func _is_empty_modifier_value(value: Variant) -> bool:
 	return true
 
 
-func _duplicate_modifier_value(value: Variant) -> Variant:
+# Store inputs have two explicit internal forms: config effects and runtime snapshots.
+func _make_entry(value: Variant) -> Dictionary:
 	if value is Array:
-		return (value as Array).duplicate(true)
-	if value is Dictionary:
-		return (value as Dictionary).duplicate(true)
-	return value
+		return {"effects": (value as Array).duplicate(true)}
+	return {"snapshot": (value as Dictionary).duplicate(true)}

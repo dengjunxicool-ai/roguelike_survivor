@@ -184,9 +184,6 @@ func _resolve_skill_display_name(skill_id: String, definition: RefCounted) -> St
 		var display_name: String = _string_from_value(definition.get("display_name"))
 		if display_name != "":
 			return display_name
-		var name: String = _string_from_value(definition.get("name"))
-		if name != "":
-			return name
 	var skill_data: Dictionary = GameData.get_skill(StringName(skill_id))
 	return String(skill_data.get("display_name", skill_id))
 
@@ -274,9 +271,7 @@ func _find_boss_enemy(tree: SceneTree) -> Node:
 	for enemy: Node in tree.get_nodes_in_group("enemy"):
 		if not is_instance_valid(enemy):
 			continue
-		var enemy_data := _get_dictionary(enemy, ["enemy_data"])
-		var enemy_id := str(enemy_data.get("id", enemy_data.get("type", ""))).to_lower()
-		if enemy_id.contains("boss") or bool(enemy_data.get("is_boss", false)):
+		if String(enemy.get_meta("enemy_rank", "")) == "boss":
 			return enemy
 	return null
 

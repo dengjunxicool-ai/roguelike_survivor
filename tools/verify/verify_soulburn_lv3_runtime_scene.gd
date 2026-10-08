@@ -46,9 +46,11 @@ func _run() -> void:
 
 	_expect(int(target.call("get_status_stack", &"soul_ember")) == 0, "4 soul_ember consumes both pairs")
 	_expect(int(target.call("get_status_stack", &"burning")) == 2, "4 soul_ember converts into 2 burning")
-	var burning_tick_damage: float = _burning_tick_damage(target)
+	var burning_tick_total: float = _burning_tick_damage(target)
+	var burning_tick_damage: float = burning_tick_total / float(target.call("get_status_stack", &"burning"))
 	_lines.append("burning_tick_damage=%.4f" % burning_tick_damage)
-	_expect(burning_tick_damage > 2.07 and burning_tick_damage < 2.09, "Soulburn Lv3 converted burning gets +30% damage")
+	_expect(burning_tick_damage > 2.07 and burning_tick_damage < 2.09, "Soulburn Lv3 converted burning gets +30% damage per stack")
+	_expect(is_equal_approx(burning_tick_total, 4.16), "two converted burning stacks total 4.16 damage")
 
 	for _index: int in range(10):
 		target.call("apply_status", &"soul_ember", {"stacks": 2, "max_stacks": 4, "duration": 4.0})
@@ -86,6 +88,7 @@ func _burning_tick_damage(target: Node) -> float:
 func _expect(condition: bool, message: String) -> void:
 	var line: String = "[PASS] %s" % message if condition else "[FAIL] %s" % message
 	_lines.append(line)
+	print(line)
 	if condition:
 		return
 	_failed = true

@@ -1,3 +1,4 @@
+const { readDebugPanelSources, readSpecialRuleSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -12,11 +13,11 @@ function assert(condition, message) {
 }
 
 function main() {
-  const panel = read("scripts/debug/dev_debug_panel.gd");
+  const panel = readDebugPanelSources(root);
   assert(panel.includes("func _get_attack_damage_records() -> Array[Dictionary]:"), "DevDebugPanel must expose a damage-record-only helper");
   assert(panel.includes('String(record.get("type", "")) != "damage"'), "damage record helper must filter out non-damage trace records");
-  assert(panel.includes("return _get_attack_damage_records().size()"), "damage card count must use damage records only");
-  assert(panel.includes("var display_records: Array[Dictionary] = _get_attack_damage_records()"), "damage cards must display damage records only");
+  assert(panel.includes("return host._get_attack_damage_records().size()"), "damage card count must use damage records only");
+  assert(panel.includes("var display_records: Array[Dictionary] = host._get_attack_damage_records()"), "damage cards must display damage records only");
   assert(!panel.includes("display_records.append(record)"), "damage cards must not append every trace record to display records");
   console.log("Debug attack damage cards verified.");
 }

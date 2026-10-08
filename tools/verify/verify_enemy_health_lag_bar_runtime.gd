@@ -12,6 +12,8 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var previous_mode: Variant = root.get_meta("developer_mode_enabled", false)
+	root.set_meta("developer_mode_enabled", true)
 	var enemy: Node2D = Node2D.new()
 	root.add_child(enemy)
 	var controller: RefCounted = EnemyDebugDisplayControllerScript.new()
@@ -30,6 +32,8 @@ func _run() -> void:
 		await create_timer(2.15).timeout
 		_expect(absf(float(lag_bar.value) - 60.0) <= 1.0, "delayed HP bar eases down to the new health")
 
+	enemy.free()
+	root.set_meta("developer_mode_enabled", previous_mode)
 	quit(1 if _failed else 0)
 
 

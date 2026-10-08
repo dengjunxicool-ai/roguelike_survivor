@@ -1,4 +1,5 @@
-﻿const path = require("path");
+const { readActionSources } = require("../lib/runtime_family_sources");
+const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
 const root = path.resolve(__dirname, "../..");
@@ -33,7 +34,7 @@ assert(
   "SummonController must not pass the raw cached target directly into targeting update."
 );
 
-const executor = read("scripts/skills/skill_action_executor.gd");
+const executor = readActionSources(root);
 assert(
   executor.includes("_restart_summon_particles"),
   "SkillActionExecutor must reuse the legacy summon spawn VFX node instead of creating SummonParticles every trigger."

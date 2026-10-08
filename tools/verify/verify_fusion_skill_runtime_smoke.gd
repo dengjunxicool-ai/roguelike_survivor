@@ -32,9 +32,10 @@ class SmokeEnemy:
 	func _init() -> void:
 		add_to_group(&"enemies")
 
-	func take_damage(packet: Variant, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		damage_packets.append(packet)
-		var amount: int = int(packet.get("amount", packet.get("raw_amount", 0))) if packet is Dictionary else int(packet)
+		var amount: int = int(packet.get("amount", packet.get("raw_amount", 0)))
 		current_health = maxi(current_health - amount, 0)
 
 	func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -182,7 +183,7 @@ func _load_fusion_skill_ids() -> Array[StringName]:
 		if not (skill_variant is Dictionary):
 			continue
 		var skill: Dictionary = skill_variant as Dictionary
-		if str(skill.get("type", "")) != "fusion":
+		if str(skill.get("skill_type", "")) != "fusion":
 			continue
 		var id: StringName = StringName(str(skill.get("id", "")))
 		if id != &"":

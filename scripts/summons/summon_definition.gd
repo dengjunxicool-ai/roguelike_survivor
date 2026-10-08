@@ -1,7 +1,5 @@
 extends RefCounted
 class_name SummonDefinition
-const DataPathsScript := preload("res://scripts/core/data_paths.gd")
-const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const DEFAULT_MOVEMENT: Dictionary = {
@@ -55,11 +53,8 @@ static func from_id(definition_id: Variant) -> RefCounted:
 	var id_string: String = String(definition_id)
 	if id_string == "":
 		return null
-	var document: Dictionary = JsonDataLoaderScript.load_dictionary(DataPathsScript.SUMMONS_PATH, "SummonDefinition", JsonDataLoaderScript.REPORT_SILENT)
-	for summon_variant: Variant in document.get("summons", []):
-		if summon_variant is Dictionary and String((summon_variant as Dictionary).get("id", "")) == id_string:
-			return from_dictionary(summon_variant as Dictionary)
-	return null
+	var data: Dictionary = GameData.get_summon(StringName(id_string))
+	return from_dictionary(data) if not data.is_empty() else null
 
 
 func to_dictionary() -> Dictionary:

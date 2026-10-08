@@ -22,8 +22,8 @@ class TestEnemy:
 	var _reward_controller: Node = null
 	var last_damage_amount: int = 0
 
-	func take_damage(amount_or_packet: Variant, damage_type: Variant = &"") -> void:
-		DamageApplicationServiceScript.apply_enemy_damage(self, amount_or_packet, damage_type)
+	func take_damage(damage_packet: DamagePacket) -> void:
+		DamageApplicationServiceScript.apply_enemy_damage(self, damage_packet)
 
 	func _apply_damage_synergies(amount: int, _damage_type: Variant) -> int:
 		return amount

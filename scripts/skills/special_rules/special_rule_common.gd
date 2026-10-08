@@ -6,15 +6,15 @@ const MetadataKeyScript: Script = preload("res://scripts/core/metadata_key.gd")
 
 
 static func is_boss(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"bosses") or bool(target.get_meta("is_boss", false)) or String(target.get_meta("enemy_rank", "")) == "boss")
+	return target != null and String(target.get_meta("enemy_rank", "")) == "boss"
 
 
 static func is_elite(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"elites") or bool(target.get_meta("is_elite", false)) or String(target.get_meta("enemy_rank", "")) == "elite")
+	return target != null and String(target.get_meta("enemy_rank", "")) == "elite"
 
 
 static func is_boss_core(target: Node) -> bool:
-	return target != null and (target.is_in_group(&"boss_cores") or bool(target.get_meta("is_boss_core", false)) or String(target.get_meta("enemy_type", "")) == "boss_core")
+	return target != null and String(target.get_meta("enemy_rank", "")) == "boss_core"
 
 
 static func target_key(target: Node) -> String:

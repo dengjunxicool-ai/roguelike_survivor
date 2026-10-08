@@ -34,7 +34,7 @@ static func _collect_store_modifiers(query: RefCounted, owner: Node) -> Dictiona
 		return {}
 	var store_modifiers_variant: Variant = store.call("collect", query)
 	if store_modifiers_variant is Dictionary:
-		return ModifierSourceScript.flatten(store_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return (store_modifiers_variant as Dictionary).duplicate(true)
 	return {}
 
 
@@ -50,9 +50,9 @@ static func _collect_skill_runtime_modifiers(query: RefCounted) -> Dictionary:
 		return {}
 	var runtime_modifiers_variant: Variant = skill.get("runtime_modifiers")
 	if runtime_modifiers_variant is Dictionary:
-		return ModifierSourceScript.flatten(runtime_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return (runtime_modifiers_variant as Dictionary).duplicate(true)
 	if runtime_modifiers_variant is Array:
-		return ModifierSourceScript.flatten(runtime_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return ModifierSourceScript.flatten_effects(runtime_modifiers_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
 	return {}
 
 
@@ -61,9 +61,9 @@ static func _collect_skill_passive_modifiers(skill_manager: Node, query: RefCoun
 		return {}
 	var passive_variant: Variant = skill_manager.get("passive_modifiers")
 	if passive_variant is Dictionary:
-		return ModifierSourceScript.flatten(passive_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return (passive_variant as Dictionary).duplicate(true)
 	if passive_variant is Array:
-		return ModifierSourceScript.flatten(passive_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return ModifierSourceScript.flatten_effects(passive_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
 	return {}
 
 
@@ -75,9 +75,9 @@ static func _collect_character_trait_modifiers(query: RefCounted, owner: Node) -
 		return {}
 	var trait_modifiers_variant: Variant = trait_system.call("get_modifiers", query)
 	if trait_modifiers_variant is Dictionary:
-		return ModifierSourceScript.flatten(trait_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return (trait_modifiers_variant as Dictionary).duplicate(true)
 	if trait_modifiers_variant is Array:
-		return ModifierSourceScript.flatten(trait_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return ModifierSourceScript.flatten_effects(trait_modifiers_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
 	return {}
 
 
@@ -89,9 +89,9 @@ static func _collect_relic_skill_modifiers(query: RefCounted, relic_manager: Nod
 		return {}
 	var relic_modifiers_variant: Variant = relic_manager.call("get_relic_modifiers_for_skill", skill)
 	if relic_modifiers_variant is Dictionary:
-		return ModifierSourceScript.flatten(relic_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return (relic_modifiers_variant as Dictionary).duplicate(true)
 	if relic_modifiers_variant is Array:
-		return ModifierSourceScript.flatten(relic_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		return ModifierSourceScript.flatten_effects(relic_modifiers_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
 	return {}
 
 
@@ -109,7 +109,7 @@ static func _collect_relic_damage_modifiers(query: RefCounted, owner: Node, skil
 	if skill == null:
 		return {}
 	var relic_modifiers_variant: Variant = resolved_relic_manager.call("get_relic_modifiers_for_skill", skill)
-	return ModifierSourceScript.flatten(relic_modifiers_variant, ModifierSourceScript.SOURCE_UNKNOWN, query)
+	return ModifierSourceScript.flatten_effects(relic_modifiers_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
 
 
 static func _resolve_skill_manager(owner: Node, fallback: Node) -> Node:

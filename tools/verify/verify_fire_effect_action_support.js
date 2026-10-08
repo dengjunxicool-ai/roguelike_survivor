@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -13,7 +14,7 @@ function assert(condition, message) {
   }
 }
 
-const executor = read("scripts/skills/skill_action_executor.gd");
+const executor = readActionSources(root);
 for (const action of [
   "grant_shield",
   "pull",

@@ -38,7 +38,7 @@ const sections = [
 ];
 
 const profiler = read("scripts/debug/real_full_run_profiler.gd");
-const helper = read("scripts/debug/hot_path_profiler.gd");
+const helper = read("scripts/runtime/hot_path_profiler.gd");
 
 assert(
   profiler.includes("HOT_PATH_PATH") &&

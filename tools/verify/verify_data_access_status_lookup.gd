@@ -5,15 +5,6 @@ const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 const GameDataScript := preload("res://scripts/game/game_data.gd")
 const StatusEffectManagerScript := preload("res://scripts/combat/status_effect_manager.gd")
 
-class MissingAccessorManager:
-	extends Node
-
-class WrongTypeManager:
-	extends Node
-
-	func get_status_definition(_status_id: Variant) -> Variant:
-		return "not-a-dictionary"
-
 var _failed: bool = false
 
 
@@ -36,10 +27,7 @@ func _run() -> void:
 
 	_verify_owner_and_facade(manager, source)
 	_verify_manager_source_and_cache(manager)
-	_verify_empty_owner_fallback(manager, source)
-	_verify_replacement_manager_fallback(manager, source, MissingAccessorManager.new(), "missing accessor")
-	_verify_replacement_manager_fallback(manager, source, WrongTypeManager.new(), "wrong-type accessor")
-	_verify_full_fallback(manager, source)
+	_verify_empty_owner_authoritative(manager, source)
 	_finish()
 
 
@@ -82,9 +70,7 @@ func _verify_manager_source_and_cache(manager: Node) -> void:
 		"effect": {"move_slow_per_stack": 0.17}
 	}
 	manager.set("_status_definitions", {sentinel_id: sentinel.duplicate(true)})
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_status(sentinel_id) == sentinel, "facade prefers manager status sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.STATUS_EFFECTS_PATH), "manager path avoids status JSON cache")
 
 	var status_manager: Node = StatusEffectManagerScript.new()
 	root.add_child(status_manager)
@@ -103,54 +89,15 @@ func _verify_manager_source_and_cache(manager: Node) -> void:
 	status_manager.free()
 
 	manager.set("_status_definitions", original)
-	GameDataScript._document_cache.clear()
 
 
-func _verify_empty_owner_fallback(manager: Node, source: Array[Dictionary]) -> void:
+func _verify_empty_owner_authoritative(manager: Node, source: Array[Dictionary]) -> void:
 	var original: Dictionary = (manager.get("_status_definitions") as Dictionary).duplicate(true)
+	var first_id: StringName = StringName(String(source[0].get("id", "")))
 	manager.set("_status_definitions", {})
-	GameDataScript._document_cache.clear()
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	var fallback: Dictionary = GameDataScript.get_status(first_id)
-	_expect(fallback == source[0], "empty owner status lookup falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.STATUS_EFFECTS_PATH), "empty owner fallback uses status document cache")
-	_mutate_definition(fallback, "__phase6_status_empty_owner__")
-	_expect(GameDataScript.get_status(first_id) == source[0], "empty owner status fallback is isolated")
+	_expect(GameDataScript.get_status(first_id).is_empty(), "empty owner remains authoritative")
+	_expect(GameDataScript.get_status(first_id).is_empty(), "repeat lookup does not reload JSON")
 	manager.set("_status_definitions", original)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_replacement_manager_fallback(
-	manager: Node,
-	source: Array[Dictionary],
-	replacement: Node,
-	label: String
-) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6StatusOwnerUnavailable"
-	replacement.name = &"DataManager"
-	root.add_child(replacement)
-	GameDataScript._document_cache.clear()
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	_expect(GameDataScript.get_status(first_id) == source[0], "%s falls back to status JSON" % label)
-	replacement.free()
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(manager: Node, source: Array[Dictionary]) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6StatusUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var first_id: StringName = StringName(String(source[0].get("id", "")))
-	var fallback: Dictionary = GameDataScript.get_status(first_id)
-	_expect(fallback == source[0], "full status fallback matches source")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.STATUS_EFFECTS_PATH), "full fallback loads status document")
-	_mutate_definition(fallback, "__phase6_status_full_fallback__")
-	_expect(GameDataScript.get_status(first_id) == source[0], "full status fallback is isolated")
-	_expect(GameDataScript.get_status(&"__missing_phase6_status_lookup__").is_empty(), "full fallback keeps missing status empty")
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
 
 
 func _mutate_definition(definition: Dictionary, marker: String) -> void:

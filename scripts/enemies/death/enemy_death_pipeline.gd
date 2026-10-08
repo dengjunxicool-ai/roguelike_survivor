@@ -46,7 +46,7 @@ func _merge_policy(target: Dictionary, override: Dictionary) -> void:
 
 
 func _uses_full_death_animation(enemy: Node) -> bool:
-	return String(enemy.get_meta("enemy_rank", enemy.get_meta("enemy_type", "normal"))) != "normal"
+	return String(enemy.get_meta("enemy_rank", "normal")) != "normal" or String(enemy.get_meta("spawn_source_type", "")) == "boss_minion"
 
 
 func _finish_node(enemy: Node, play_death_visual: bool) -> void:

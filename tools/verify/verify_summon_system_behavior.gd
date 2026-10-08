@@ -23,7 +23,8 @@ class SmokeEnemy:
 	func _init() -> void:
 		add_to_group(&"enemies")
 
-	func take_damage(packet: Variant, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		damage_packets.append(packet)
 
 	func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:

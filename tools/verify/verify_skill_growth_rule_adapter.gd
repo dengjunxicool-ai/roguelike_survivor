@@ -15,8 +15,8 @@ func _init() -> void:
 func _run() -> void:
 	var definition: RefCounted = SkillDefinitionScript.new({
 		"id": "test_cast_growth",
-		"name": "test_cast_growth",
-		"type": "cast",
+		"display_name": "test_cast_growth",
+		"skill_type": "cast",
 		"rarity": "normal",
 		"max_level": 5,
 		"trigger_rules": [
@@ -71,8 +71,8 @@ func _run() -> void:
 func _verify_random_chance_per_level() -> void:
 	var definition: RefCounted = SkillDefinitionScript.new({
 		"id": "test_chance_growth",
-		"name": "test_chance_growth",
-		"type": "attack",
+		"display_name": "test_chance_growth",
+		"skill_type": "attack",
 		"rarity": "normal",
 		"max_level": 5,
 		"trigger_rules": [

@@ -1,7 +1,7 @@
 extends Area2D
 class_name ExpGem
 
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const PickupManagerScript: Script = preload("res://scripts/drops/pickup_manager.gd")
 const PICKUP_STATE_IDLE: StringName = &"idle"
 const PICKUP_STATE_MAGNETIZED: StringName = &"magnetized"

@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -18,7 +19,7 @@ assert(areaEffect.includes("var max_targets: int"), "AreaEffect must store a max
 assert(areaEffect.includes('params.get("max_targets"'), "AreaEffect.setup must read max_targets from params.");
 assert(areaEffect.includes("damaged_count >= max_targets"), "AreaEffect tick damage must stop when max_targets is reached.");
 
-const actionExecutor = readProjectFile("scripts/skills/skill_action_executor.gd");
+const actionExecutor = readActionSources(root);
 assert(actionExecutor.includes('"max_targets": max_targets'), "SkillActionExecutor must pass max_targets to AreaEffect.");
 assert(actionExecutor.includes('"%s_max_targets" % source_type'), "SkillActionExecutor must resolve source-specific max target modifiers.");
 

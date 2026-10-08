@@ -7,8 +7,8 @@ var stage_name: StringName = &"player_absorb"
 
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var player: Node = context.get("target") as Node
-	var amount_or_packet: Variant = context.get("amount_or_packet")
-	var damage_type: Variant = context.get("legacy_damage_type")
+	var packet: DamagePacket = context.get("packet")
+	var damage_type: Variant = context.get("packet").get_value("element")
 	var trait_system: Node = player.get_node_or_null("CharacterTraitSystem")
 	context.set("trait_system", trait_system)
 	var incoming_amount: int = int(context.get("incoming_amount"))
@@ -16,8 +16,8 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	if trait_system != null and trait_system.has_method("request_damage_absorb"):
 		var absorb_result: RefCounted = trait_system.call("request_damage_absorb", incoming_amount, {
 			"raw_amount": incoming_amount,
-			"source": amount_or_packet,
-			"legacy_damage_type": damage_type
+			"source": packet,
+			"damage_type": damage_type
 		}) as RefCounted
 		if absorb_result != null:
 			absorbed_amount = int(absorb_result.get("amount"))
@@ -43,7 +43,7 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	if absorbed_amount <= 0:
 		context.call("set_result", host.call("make_result", false, 0, {}, &"absorbed"))
 		return
-	context.set("damage_payload", host.call("packet_with_amount", amount_or_packet, absorbed_amount))
+	context.set("damage_payload", host.call("packet_with_amount", packet, absorbed_amount))
 
 
 func _get_live_fire_passive_shield(player: Node) -> int:

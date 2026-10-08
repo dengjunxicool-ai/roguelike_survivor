@@ -3,7 +3,7 @@ class_name EnemyRewardController
 
 
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
-const DamageTraceContextScript: Script = preload("res://scripts/debug/damage_trace_context.gd")
+const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 var _owner: Node2D
 
@@ -69,7 +69,7 @@ func apply_damage_synergies(amount: int, damage_type: Variant) -> int:
 ## Returns:
 ## - Damage after boss-core protection reduction.
 func apply_boss_core_damage_reduction(amount: int) -> int:
-	if _owner == null or amount <= 0 or String(_owner.get_meta("enemy_rank", _owner.get_meta("enemy_type", ""))) != "boss":
+	if _owner == null or amount <= 0 or String(_owner.get_meta("enemy_rank", "")) != "boss":
 		return amount
 	var tree: SceneTree = _owner.get_tree()
 	if tree == null:
@@ -87,7 +87,7 @@ func apply_boss_core_damage_reduction(amount: int) -> int:
 ## - source_packet: Original damage packet or amount.
 ## Returns:
 ## - Nothing.
-func record_damage_done(amount: int, damage_result: Dictionary, source_packet: Variant) -> void:
+func record_damage_done(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	if _owner == null:
 		return
 	var tracker: Node = RunStatsTrackerScript.get_active(_owner.get_tree())
@@ -100,7 +100,7 @@ func record_damage_done(amount: int, damage_result: Dictionary, source_packet: V
 ## Returns:
 ## - Nothing.
 func record_boss_core_destroyed() -> void:
-	if _owner == null or String(_owner.get_meta("enemy_rank", _owner.get_meta("enemy_type", ""))) != "boss_core":
+	if _owner == null or String(_owner.get_meta("enemy_rank", "")) != "boss_core":
 		return
 	var tracker: Node = RunStatsTrackerScript.get_active(_owner.get_tree())
 	if tracker != null and tracker.has_method("record_boss_core_destroyed"):
@@ -120,8 +120,8 @@ func notify_enemy_killed_synergies() -> void:
 		"position": _owner.global_position,
 		"parent": _owner.get_parent(),
 		"target_group": &"enemies",
-		"enemy_rank": String(_owner.get_meta("enemy_rank", _owner.get_meta("enemy_type", "normal"))),
-		"enemy_type": String(_owner.get_meta("enemy_type", "normal")),
+		"enemy_rank": String(_owner.get_meta("enemy_rank", "normal")),
+		"spawn_source_type": String(_owner.get_meta("spawn_source_type", "unknown")),
 		"source_key": String(_owner.get_meta("last_damage_source_key", "unknown")),
 		"debug_attack_trace_id": DamageTraceContextScript.get_last_damage_trace_id(_owner)
 	}

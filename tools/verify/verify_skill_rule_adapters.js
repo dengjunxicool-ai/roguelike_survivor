@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readTextFile } = require("../lib/json_file");
 
@@ -16,7 +17,7 @@ function assert(condition, message) {
 const effectAdapter = read("scripts/skills/skill_effect_adapter.gd");
 const triggerAdapter = read("scripts/skills/skill_trigger_rule_adapter.gd");
 const eventBus = read("scripts/skills/skill_event_bus.gd");
-const actionExecutor = read("scripts/skills/skill_action_executor.gd");
+const actionExecutor = readActionSources(root);
 const areaEffect = read("scripts/combat/area_effect.gd");
 const projectile = read("scripts/combat/projectile.gd");
 const playerController = read("scripts/player/player_controller.gd");

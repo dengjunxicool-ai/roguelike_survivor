@@ -155,7 +155,7 @@ func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
 	var enemy: Node2D = enemy_scene.instantiate() as Node2D
 	main.add_child(enemy)
-	enemy.set_meta("enemy_type", "normal")
+	enemy.set_meta("enemy_rank", "normal")
 	enemy.global_position = Vector2(768, 512)
 	await process_frame
 
@@ -165,7 +165,7 @@ func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 
 	var normal_count: int = 0
 	for node: Node in get_nodes_in_group("enemy"):
-		if String(node.get_meta("enemy_type", "normal")) == "normal":
+		if String(node.get_meta("enemy_rank", "normal")) == "normal":
 			normal_count += 1
 	_expect(normal_count > 0, "wave timeout keeps normal enemies")
 

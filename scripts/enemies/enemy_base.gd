@@ -18,7 +18,7 @@ const EnemySkillControllerScript: Script = preload("res://scripts/enemies/skills
 const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/combat/enemy_damage_packet_builder.gd")
 const EnemyStateControllerScript: Script = preload("res://scripts/enemies/enemy_state_controller.gd")
 const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_config_helper.gd")
-const HotPathProfilerScript: Script = preload("res://scripts/debug/hot_path_profiler.gd")
+const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 const NEARBY_ENEMY_CELL_SIZE: float = 128.0
@@ -422,8 +422,8 @@ func _apply_range_attack_damage() -> void:
 		_damage_cooldown = damage_interval
 
 
-func take_damage(amount_or_packet: Variant, damage_type: Variant = &"") -> void:
-	DamageApplicationServiceScript.apply_enemy_damage(self, amount_or_packet, damage_type)
+func take_damage(packet: DamagePacket) -> void:
+	DamageApplicationServiceScript.apply_enemy_damage(self, packet)
 
 
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
@@ -455,13 +455,13 @@ func _die() -> void:
 	_finish_death("damage")
 
 
-func _record_damage_done(amount: int, damage_result: Dictionary, source_packet: Variant) -> void:
+func _record_damage_done(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	_reward_controller.call("record_damage_done", amount, damage_result, source_packet)
 
 
-func _get_damage_source_key(source_packet: Variant, damage_result: Dictionary) -> String:
+func _get_damage_source_key(source_packet: DamagePacket, damage_result: Dictionary) -> String:
 	for key: String in ["source_instance_id", "source_id", "source_skill_id", "attacker_id"]:
-		var packet_value: String = String(_damage_source_value(source_packet, key, ""))
+		var packet_value: String = String(source_packet.get_value(key, ""))
 		if packet_value != "":
 			return packet_value
 	for key: String in ["source_instance_id", "source_id", "source_skill_id", "attacker_id"]:
@@ -471,15 +471,7 @@ func _get_damage_source_key(source_packet: Variant, damage_result: Dictionary) -
 	return "unknown"
 
 
-func _damage_source_value(source_packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
-	if source_packet is Dictionary:
-		return (source_packet as Dictionary).get(key, fallback)
-	if source_packet is RefCounted and source_packet.has_method("get_value"):
-		return source_packet.call("get_value", key, fallback)
-	return fallback
-
-
-func _get_enemy_damage_packet(amount: int, source_kind: String) -> Dictionary:
+func _get_enemy_damage_packet(amount: int, source_kind: String) -> DamagePacket:
 	return EnemyDamagePacketBuilderScript.build(self, amount, source_kind, StringName(source_kind), {
 		"target": target,
 		"source_id": source_kind,
@@ -505,8 +497,8 @@ func _finish_death(cause: String = "damage") -> void:
 	_unregister_combat_target()
 	var context: Dictionary = EnemyDeathContextScript.create(cause, _get_death_policy(cause), {
 		"enemy_id": String(enemy_id),
-		"enemy_type": String(get_meta("enemy_type", "normal")),
-		"enemy_rank": String(get_meta("enemy_rank", get_meta("enemy_type", "normal"))),
+		"spawn_source_type": String(get_meta("spawn_source_type", "unknown")),
+		"enemy_rank": String(get_meta("enemy_rank", "normal")),
 		"source_key": String(get_meta("last_damage_source_key", "unknown"))
 	})
 	_death_pipeline.call("execute", self, context)
@@ -704,11 +696,7 @@ func _apply_enemy_config() -> void:
 	max_health = int(stats.get("max_hp", max_health))
 	move_speed = float(stats.get("move_speed", move_speed))
 	contact_damage = int(stats.get("contact_damage", contact_damage))
-	var configured_damage_interval: Variant = stats.get(
-		"contact_interval",
-		enemy_config.get("contact_interval", stats.get("damage_interval", enemy_config.get("damage_interval", damage_interval)))
-	)
-	damage_interval = maxf(float(configured_damage_interval), 0.05)
+	damage_interval = maxf(float(stats["contact_interval"]), 0.05)
 	armor = int(stats.get("armor", armor))
 	armor += int(get_meta("defense_add", 0))
 	resistances = _get_dictionary(stats.get("resistances", resistances))
@@ -1093,14 +1081,14 @@ func _get_debug_enemy_forced_state() -> String:
 
 
 func _can_debug_force_elite_visual_state() -> bool:
-	var rank: String = String(get_meta("enemy_rank", get_meta("enemy_type", "normal")))
+	var rank: String = String(get_meta("enemy_rank", "normal"))
 	return rank == "elite" or rank == "boss"
 
 
 func _is_normal_enemy() -> bool:
-	return String(get_meta("enemy_rank", get_meta("enemy_type", "normal"))) == "normal"
+	return String(get_meta("enemy_rank", "normal")) == "normal" and String(get_meta("spawn_source_type", "")) != "boss_minion"
 
 
 func _is_strong_enemy() -> bool:
-	var rank: String = String(get_meta("enemy_rank", get_meta("enemy_type", "normal")))
+	var rank: String = String(get_meta("enemy_rank", "normal"))
 	return rank == "elite" or rank == "boss"

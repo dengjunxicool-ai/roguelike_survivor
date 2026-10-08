@@ -30,11 +30,7 @@ static func _target_class(target: Node) -> String:
 		return "normal"
 	if target.is_in_group(&"player"):
 		return "player"
-	if target.is_in_group(&"bosses") or bool(target.get_meta("is_boss", false)) or String(target.get_meta("enemy_rank", "")) == "boss":
-		return "boss"
-	if target.is_in_group(&"elites") or bool(target.get_meta("is_elite", false)) or String(target.get_meta("enemy_rank", "")) == "elite":
-		return "elite"
-	return String(target.get_meta("enemy_rank", target.get_meta("enemy_type", "normal")))
+	return String(target.get_meta("enemy_rank", "normal"))
 
 
 static func _get_float_property(object: Object, property: String, fallback: float) -> float:

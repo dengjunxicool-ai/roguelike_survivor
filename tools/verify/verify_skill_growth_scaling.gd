@@ -93,8 +93,8 @@ func _verify_rarity_pools() -> void:
 func _make_skill(skill_id: String, skill_type: String, max_level: int) -> RefCounted:
 	var definition: RefCounted = SkillDefinitionScript.new({
 		"id": skill_id,
-		"name": skill_id,
-		"type": skill_type,
+		"display_name": skill_id,
+		"skill_type": skill_type,
 		"rarity": "normal",
 		"max_level": max_level
 	})

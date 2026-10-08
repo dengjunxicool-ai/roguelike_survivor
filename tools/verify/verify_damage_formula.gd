@@ -75,7 +75,8 @@ class IntentTargetNode:
 	extends FormulaNode
 	var last_damage_packet: Variant = null
 
-	func take_damage(packet: Variant, _damage_type: Variant = &"") -> void:
+	func take_damage(damage_packet: DamagePacket) -> void:
+		var packet: Dictionary = damage_packet.to_dictionary()
 		last_damage_packet = packet
 
 
@@ -90,6 +91,10 @@ class TestStatusEffectManager:
 
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	var failed: bool = false
 	failed = not _verify_player_primary_attack_hits_enemy() or failed
 	failed = not _verify_enemy_hits_player() or failed
@@ -177,7 +182,7 @@ func _verify_player_primary_attack_hits_enemy() -> bool:
 		"special_rule_tags": []
 	}
 
-	var result: Dictionary = DamageSystemScript.calculate(packet, enemy)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), enemy).to_dictionary()
 	var expected_float: float = 100.0
 	expected_float *= 1.25
 	expected_float *= 1.2
@@ -217,7 +222,7 @@ func _verify_enemy_hits_player() -> bool:
 		"player_damage_reduction_total": 0.15
 	}
 
-	var result: Dictionary = DamageSystemScript.calculate(packet, player)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), player).to_dictionary()
 	var incoming: float = 50.0 * 1.1 * 1.2
 	var after_defense: float = incoming - minf(8.0, incoming * 0.40)
 	var after_reduction: float = after_defense * (1.0 - 0.15) * 0.9
@@ -263,9 +268,9 @@ func _verify_dot_fractional_damage() -> bool:
 		"special_rule_tags": []
 	}
 
-	var tick_1: Dictionary = DamageSystemScript.calculate(packet, boss)
-	var tick_2: Dictionary = DamageSystemScript.calculate(packet, boss)
-	var tick_3: Dictionary = DamageSystemScript.calculate(packet, boss)
+	var tick_1: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), boss).to_dictionary()
+	var tick_2: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), boss).to_dictionary()
+	var tick_3: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), boss).to_dictionary()
 	var expected_float_per_tick: float = 0.8 * 0.65 * (1.0 - 0.10)
 	var expected_total: int = floori(expected_float_per_tick * 3.0)
 	return _expect_equal("dot fractional three ticks", int(tick_1.get("amount", 0)) + int(tick_2.get("amount", 0)) + int(tick_3.get("amount", 0)), expected_total)
@@ -307,7 +312,7 @@ func _verify_reaction_damage() -> bool:
 		"special_rule_tags": []
 	}
 
-	var result: Dictionary = DamageSystemScript.calculate(packet, boss)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), boss).to_dictionary()
 	var expected_float: float = 80.0 * 1.1 * 0.75
 	expected_float -= minf(20.0 * 0.5, expected_float * 0.45)
 	expected_float *= 1.0 - 0.25
@@ -343,8 +348,8 @@ func _verify_field_direct_uses_min_damage() -> bool:
 		"field_damage_model": "direct_tick"
 	}
 
-	var hit_1: Dictionary = DamageSystemScript.calculate(packet, target)
-	var hit_2: Dictionary = DamageSystemScript.calculate(packet, target)
+	var hit_1: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
+	var hit_2: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	return _expect_equal("field direct min damage twice", int(hit_1.get("amount", 0)) + int(hit_2.get("amount", 0)), 2)
 
 
@@ -374,7 +379,7 @@ func _verify_true_percent_stage_order() -> bool:
 		"ignore_min_damage": false,
 		"special_rule_tags": []
 	}
-	var result: Dictionary = DamageSystemScript.calculate(packet, target)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	var trace: Dictionary = result.get("trace", {})
 	var stage_order: Array = trace.get("stage_order", [])
 	var ok: bool = int(result.get("amount", -1)) == 100
@@ -437,9 +442,9 @@ func _verify_special_rule_boundaries() -> bool:
 		"special_final_modifier": 0.1
 	}
 
-	var ignored: Dictionary = DamageSystemScript.calculate(packet, target)
+	var ignored: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	packet["special_final_modifier_source"] = "system_rule"
-	var applied: Dictionary = DamageSystemScript.calculate(packet, target)
+	var applied: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	var ok: bool = int(ignored.get("amount", -1)) == 100 and int(applied.get("amount", -1)) == 10
 	return _expect_equal("special modifier boundary", 1 if ok else 0, 1)
 
@@ -474,7 +479,7 @@ func _verify_lightning_backflow_defense_cap() -> bool:
 		"special_rule_tags": ["lightning_orb_backflow"]
 	}
 
-	var result: Dictionary = DamageSystemScript.calculate(packet, target)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	return _expect_equal("lightning backflow boss defense cap", int(result.get("amount", -1)), 70)
 
 
@@ -533,7 +538,7 @@ func _verify_shared_primary_attack_noncrit_uses_neutral_multiplier() -> bool:
 		"can_crit": true,
 		"uses_skill_level_coefficient": false
 	}, context, 10, "skill")
-	var result: Dictionary = DamageSystemScript.calculate(packet, target)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	var ok: bool = bool(packet.get("critical_resolved", false))
 	ok = ok and not bool(packet.get("is_critical", true))
 	ok = ok and is_equal_approx(float(packet.get("crit_multiplier", -1.0)), 1.0)
@@ -567,7 +572,7 @@ func _verify_damage_trace_contract() -> bool:
 		"ignore_min_damage": false,
 		"special_rule_tags": []
 	}
-	var result: Dictionary = DamageSystemScript.calculate(packet, target)
+	var result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	var trace: Dictionary = result.get("trace", {})
 	var ok: bool = trace.has("raw_amount")
 	ok = ok and trace.has("character_damage_multiplier")
@@ -626,9 +631,9 @@ func _verify_damage_system_typed_result_contract() -> bool:
 		"ignore_min_damage": false,
 		"special_rule_tags": []
 	}
-	var result_object: RefCounted = DamageSystemScript.calculate_result(packet, target)
+	var result_object: RefCounted = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target)
 	var result: Dictionary = result_object.call("to_dictionary")
-	var legacy_result: Dictionary = DamageSystemScript.calculate(packet, target)
+	var legacy_result: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(packet), target).to_dictionary()
 	var ok: bool = result_object != null and result_object.has_method("to_dictionary")
 	ok = ok and int(result_object.get("amount")) == 13
 	ok = ok and int(result.get("amount", -1)) == int(legacy_result.get("amount", -2))
@@ -658,7 +663,7 @@ func _verify_damage_pipeline_contract() -> bool:
 		"ignore_resistance": true,
 		"ignore_vulnerability": true
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", null, target)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, null), target)
 	var pipeline: RefCounted = DamagePipelineScript.create([
 		DamageStageScript.create("outgoing", "_standard_outgoing_pipeline_stage"),
 		DamageStageScript.create("rounding", "_standard_rounding_pipeline_stage")
@@ -751,7 +756,7 @@ func _verify_damage_packet_object_contract() -> bool:
 	ok = ok and String(packet_object.call("get_value", "source_instance_id", "")) == "spark:1"
 	ok = ok and String(updated.get("element", "")) == "fire"
 	ok = ok and String(updated.get("custom_marker", "")) == "kept"
-	ok = ok and packet_object.call("validate").is_empty()
+	ok = ok and not packet_object.call("validate").is_empty()
 	return _expect_equal("damage packet object contract", 1 if ok else 0, 1)
 
 
@@ -827,7 +832,7 @@ func _verify_damage_validator_typed_contract() -> bool:
 	}
 	var packet_object: RefCounted = DamagePacketScript.from_dictionary(packet, null, target)
 	var context: RefCounted = DamageCalculationContextScript.create(packet_object, target)
-	DamagePacketValidatorScript.validate_any(packet_object, target)
+	DamagePacketValidatorScript.validate_packet(packet_object, target)
 	DamagePacketValidatorScript.validate_for_context(context, target)
 	var ok: bool = DamageRuleRegistryScript.uses_fractional_buffer(packet)
 	ok = ok and DamageRuleRegistryScript.uses_fractional_buffer_for_packet_object(packet_object)
@@ -863,7 +868,7 @@ func _verify_damage_context_stage_helpers_contract() -> bool:
 		"enemy_type_bonus_total": 0.05,
 		"boss_damage_multiplier_add": 0.20
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", null, target)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, null), target)
 	var defended: float = DamageSystemScript.call("_apply_defense_stage", context, 100.0)
 	var resisted: float = DamageSystemScript.call("_apply_resistance_stage", context, 100.0)
 	var vulnerability_total: float = DamageSystemScript.call("_get_vulnerability_total_for_context", context)
@@ -908,7 +913,7 @@ func _verify_damage_context_outgoing_helpers_contract() -> bool:
 		"is_critical": true,
 		"crit_multiplier": 1.75
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", attacker, target)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, attacker), target)
 	var character_multiplier: float = DamageSystemScript.call("_get_character_damage_multiplier_for_context", context)
 	var skill_level_coefficient: float = DamageSystemScript.call("_get_skill_level_coefficient_for_context", context)
 	var origin_bonus_total: float = DamageSystemScript.call("_get_origin_bonus_total_for_context", context)
@@ -946,7 +951,7 @@ func _verify_damage_context_result_helpers_contract() -> bool:
 		"special_final_modifier": 0.5,
 		"special_final_modifier_source": "system_rule"
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", null, target)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, null), target)
 	var special_modifier: float = DamageSystemScript.call("_get_special_final_modifier_for_context", context)
 	var rounded: int = DamageSystemScript.call("_apply_rounding_stage", context, 12.2)
 	var stages: Dictionary = context.get("stages")
@@ -981,14 +986,14 @@ func _verify_damage_rounding_context_contract() -> bool:
 		"uses_character_damage_multiplier": false,
 		"uses_skill_level_coefficient": false
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", null, target)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, null), target)
 	var old_key: String = DamageRoundingServiceScript.call("_buffer_key", context.get("packet_dictionary"), target)
 	var context_key: String = DamageRoundingServiceScript.call("_buffer_key_for_context", context)
 	var first: int = DamageRoundingServiceScript.resolve_for_context(0.6, context)
 	var second: int = DamageRoundingServiceScript.resolve_for_context(0.6, context)
 	packet["ignore_fractional_buffer"] = true
 	packet["ignore_min_damage"] = true
-	var no_buffer_context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", null, target)
+	var no_buffer_context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, null), target)
 	var ignored_min: int = DamageRoundingServiceScript.resolve_for_context(0.2, no_buffer_context)
 	DamageRoundingServiceScript.clear_target(target)
 	var ok: bool = old_key == context_key
@@ -1083,7 +1088,7 @@ func _verify_reaction_typed_contract() -> bool:
 		"special_rule_tags": ["lightning_orb_backflow"],
 		"reaction_type": "overload"
 	}
-	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", packet, &"", source, boss)
+	var context: RefCounted = DamageSystemScript.call("_create_calculation_context", DamagePacketScript.from_dictionary(packet, source), boss)
 	var cap: float = ReactionLimiterScript.get_defense_reduction_cap_for_context(context, 0.45, boss)
 	var special_modifier: float = ReactionLimiterScript.get_special_final_modifier_for_context(context, boss)
 	var first: bool = ReactionLimiterScript.can_trigger_for_context(context, "lightning_bounce", boss)
@@ -1136,7 +1141,7 @@ func _verify_damage_application_service_enemy_contract() -> bool:
 		"ignore_min_damage": false,
 		"special_rule_tags": []
 	}
-	var result: RefCounted = DamageApplicationServiceScript.apply_enemy_damage(enemy, packet)
+	var result: RefCounted = DamageApplicationServiceScript.apply_enemy_damage(enemy, DamagePacketScript.from_dictionary(packet))
 	var ok: bool = bool(result.get("applied"))
 	ok = ok and int(result.get("amount")) == 10
 	ok = ok and enemy.current_health == 40
@@ -1208,12 +1213,12 @@ func _verify_damage_application_pipeline_contract() -> bool:
 		"ignore_min_damage": false,
 		"special_rule_tags": []
 	}
-	var context: RefCounted = DamageApplicationContextScript.create(enemy, packet)
+	var context: RefCounted = DamageApplicationContextScript.create(enemy, DamagePacketScript.from_dictionary(packet))
 	var result: RefCounted = DamageApplicationPipelineScript.apply(context)
 	var ok: bool = bool(result.get("applied"))
 	ok = ok and int(result.get("amount")) == 6
 	ok = ok and enemy.current_health == 24
-	ok = ok and DamageApplicationPipelineScript.packet_amount(packet) == 6
+	ok = ok and DamageApplicationPipelineScript.packet_amount(DamagePacketScript.from_dictionary(packet)) == 6
 	ok = ok and DamageApplicationPipelineScript.enemy_stage_names() == [&"enemy_precheck", &"enemy_calculation", &"enemy_synergy", &"enemy_boss_core", &"enemy_health_apply"]
 	ok = ok and DamageApplicationPipelineScript.player_stage_names().has(&"player_absorb")
 	return _expect_equal("damage application pipeline contract", 1 if ok else 0, 1)
@@ -1223,6 +1228,7 @@ func _verify_damage_modifier_query_contract() -> bool:
 	var attacker: FormulaNode = FormulaNode.new()
 	root.add_child(attacker)
 	var packet_object: RefCounted = DamagePacketScript.from_dictionary({
+		"raw_amount": 1,
 		"damage_origin": "primary_attack",
 		"damage_type": &"direct_magical",
 		"element": &"fire",
@@ -1344,7 +1350,7 @@ func _verify_enemy_packet_builder_contract() -> bool:
 	root.add_child(enemy)
 	var target: FormulaNode = FormulaNode.new()
 	root.add_child(target)
-	var packet: Dictionary = EnemyDamagePacketBuilderScript.build(enemy, 12, "projectile", &"enemy_projectile", {"target": target})
+	var packet: Dictionary = EnemyDamagePacketBuilderScript.build(enemy, 12, "projectile", &"enemy_projectile", {"target": target}).to_dictionary()
 	var ok: bool = int(packet.get("raw_amount", 0)) == 12
 	ok = ok and String(packet.get("damage_origin", "")) == "primary_attack"
 	ok = ok and String(packet.get("damage_type", "")) == "direct_physical"
@@ -1395,8 +1401,8 @@ func _verify_special_damage_rule_handler_contract() -> bool:
 		"target_group": &"enemies"
 	}, 20)
 	var ok: bool = intents.size() == 1
-	ok = ok and int(intents[0].get("packet").get("raw_amount", 0)) == 10
-	ok = ok and str(intents[0].get("damage_type")) == "area_direct"
+	ok = ok and int(intents[0].get("packet").get_value("raw_amount", 0)) == 10
+	ok = ok and str(intents[0].get("packet").get_value("damage_type")) == "area_direct"
 	ok = ok and str(special_packet.get("damage_origin", "")) == "special"
 	ok = ok and str(special_packet.get("damage_type", "")) == "true_damage"
 	ok = ok and area != null
@@ -1533,9 +1539,9 @@ func _verify_fractional_pool_identity_includes_element() -> bool:
 	}
 	var fire_packet: Dictionary = poison_packet.duplicate(true)
 	fire_packet["element"] = &"fire"
-	var first_poison: Dictionary = DamageSystemScript.calculate(poison_packet, target)
-	var first_fire: Dictionary = DamageSystemScript.calculate(fire_packet, target)
-	var second_poison: Dictionary = DamageSystemScript.calculate(poison_packet, target)
+	var first_poison: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(poison_packet), target).to_dictionary()
+	var first_fire: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(fire_packet), target).to_dictionary()
+	var second_poison: Dictionary = DamageSystemScript.calculate(DamagePacketScript.from_dictionary(poison_packet), target).to_dictionary()
 	DamageRoundingServiceScript.clear_target(target)
 	var ok: bool = int(first_poison.get("amount", -1)) == 0
 	ok = ok and int(first_fire.get("amount", -1)) == 0

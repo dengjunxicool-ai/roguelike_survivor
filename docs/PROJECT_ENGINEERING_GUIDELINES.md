@@ -1,6 +1,6 @@
 # 项目工程规范
 
-日期：2026-06-27
+日期：2026-10-08
 
 本文档用于约束后续新增角色、技能、怪物、状态、装备、UI 和配置时的工程边界。目标不是为了形式化架构，而是让当前能运行的系统长期保持可维护。
 
@@ -16,6 +16,7 @@
 | `scenes/drops/` | 掉落物场景 | 掉落规则不要写在场景脚本中 |
 | `scenes/ui/` | UI 原型或复用场景 | 主 UI 当前多由脚本构建，新增页面优先走 UI 状态系统 |
 | `scripts/core/` | 数据路径、JSON 加载、autoload 基础设施、元数据 key | 不依赖战斗、UI、怪物等上层系统 |
+| `scripts/runtime/` | 通用性能采样、伤害 trace 与可选运行诊断 | 业务依赖本目录；不反向加载 debug 页面和工具 |
 | `scripts/game/` | 单局编排、存档、结算、统计、进度服务 | 可以协调系统，但不要承载具体技能或怪物规则 |
 | `scripts/characters/` | 角色定义、loadout、runtime、trait | 不直接操作 UI，不直接生成怪物或掉落 |
 | `scripts/player/` | 玩家节点聚合根、移动、受击、升级入口 | 新功能优先拆到子系统，避免继续扩大 Player |
@@ -28,7 +29,7 @@
 | `scripts/debug/` | 开发者面板、调试 overlay、系统检查 | 只用于开发期，不进入正式玩法依赖 |
 | `scripts/visual/` | 视觉配置应用、通用视觉辅助 | 不写伤害、掉落、成长逻辑 |
 | `data/characters/` | 角色和角色文本配置 | 角色 ID、起始技能、trait、基础属性 |
-| `data/skills/` | 神系、起始技能、可学习技能 | 技能 ID、school、type、components、actions、offer_rule |
+| `data/skills/` | 神系、起始技能、可学习技能 | 技能 ID、school、skill_type、slot_category、components、actions、offer_rule |
 | `data/combat/` | 状态和通用战斗对象配置 | status/combat object 不直接引用 UI |
 | `data/enemies/` | 怪物和敌方技能配置 | 新怪物优先配置化，必要时再扩 behavior/action |
 | `data/waves/` | 波次、Boss 事件、奖励事件 | 不写具体技能公式 |
@@ -75,6 +76,16 @@
 | Debug -> Runtime | Debug 面板可调用公开开发入口，不应让正式 runtime 反向依赖 debug 脚本。 |
 | 资源路径 | 新路径优先集中到配置或 DataPaths，避免到处 `load("res://...")`。 |
 
+## 唯一运行时契约
+
+- 玩法配置统一由 DataManager 校验后原子发布；GameData 是查询门面。召唤、神系、范围单位配置也从 owner 查询。展示域本地化与主题服务保留独立所有权。
+- 技能只使用 display_name/school/skill_type/slot_category/replaces_skill；runtime_rules 为 Dictionary。获取方式由 is_starting_skill 表达，不用具体 ID 推断。
+- 怪物只使用 enemy_rank 分类，groups 为派生索引；基础属性集中 base_stats，防御数值使用 armor，来源使用 spawn_source_type。
+- take_damage 只接收 DamagePacket；DamageSystem.calculate 返回 DamageResult。Dictionary 仅作显式事件/trace 视图。克隆须保留原始校验错误；非法包必须在吸收和命中保护等副作用前拒绝。
+- Modifier 配置为包含 stat/op/value/scope/source 的效果列表；平铺 Dictionary 只代表已聚合快照。配置不接受 source/values 包装或后缀推断。
+- SkillActionExecutor/SkillSpecialRuleExecutor 只编排 family；新规则放对应 family。UpgradeOptionBuilder 不消费 RNG。DevDebugPanel 页面行为放 pages，通用 profiler 放 runtime。
+- stable ID 与正式存档保持；确需迁移历史数据时只用离线转换，生产读取器不增加旧字段兼容。
+
 ## 新增内容流程
 
 ### 新增角色
@@ -106,7 +117,7 @@
 
 检查点：
 
-- `id` 唯一，`school/type/tags/offer_rule` 清晰。
+- `id` 唯一，`school/skill_type/slot_category/tags/offer_rule` 清晰。
 - 普通效果优先用已有 action 表达。
 - 伤害使用 DamagePacket 语义，不写裸数值扣血。
 - 状态引用必须存在于 `data/combat/status_effects.json`。
@@ -226,18 +237,19 @@
 1. 修改前确认由哪个系统消费。
 2. 新配置路径先登记到 `DataPaths`。
 3. 正常运行数据由 `DataManager` 加载、索引并通过深拷贝 accessor 输出。
-4. `GameData` 作为稳定门面优先委托给 `DataManager`；兼容 fallback 在迁移证据充分前保留。
-5. 每个数据域必须验证 manager、facade 与 fallback 的 ID、顺序、字段和值一致。
-6. validator 和文档必须与真实读取路径同步。
+4. `GameData` 只查询已加载的 `DataManager`，不得读盘、维护第二套缓存或增加兼容 fallback。
+5. 每个数据域验证 owner/facade 的 ID、顺序、值、深拷贝隔离和合法空池语义；加载失败拒绝发布。
+6. `data/config/content_schema.json`、JS/Godot 校验器与文档必须同步更新；必需引用、数组成员、资源格式和嵌套字段一起验证。
 7. 数值或 schema 变化不得混入读取路径重构；schema 变更必须另附迁移说明。
 
 ### 上线前检查
 
 ```powershell
 node tools/validate/check_text_encoding.js
+node tools/validate/validate_content_configs.js
 node tools/validate/validate_enemy_configs.js
 node tools/validate/validate_modifier_effects.js
-npm run verify:coverage-report
+& tools/verify/run_verification_matrix.ps1 -Batch acceptance
 ```
 
 涉及核心系统时还要跑对应 `package.json` 中的 `verify:*` 脚本。合并前至少保证本次影响范围内的 Godot headless 验证通过。
@@ -268,12 +280,6 @@ Godot 4.6.3 在当前 Windows 受控沙箱中存在已复现的子进程兼容�
 - 在 Windows 受控沙箱内直接调用 Godot；`package.json` 只登记标准入口，不通过 npm、Node.js、Python、`cmd /c` 或二级 PowerShell 间接启动 Godot。
 - 终局信号只接受第一个胜负结果。失败与胜利处理入口都必须在已进入任一终局状态后立即返回，避免迟到的 Boss 或玩家信号覆盖已记录结果。
 
-## 后续工程化优先级
+## 当前维护重点
 
-1. 统一内容校验工具：检查重复 ID、引用存在、路径存在、非法数值、空字段。
-2. Debug 面板页面拆分：降低 2882 行开发工具文件的维护成本。
-3. SkillActionExecutor action family 拆分：先拆 projectile/area/status/summon 的构建和执行辅助。
-4. UpgradePool learn skill builder 拆分：降低新增神系和技能时的耦合。
-5. 阶段 6 的 DataManager/GameData 读取路径收口已完成总体验收：状态池、状态定义单项查询、进度目标文档、每日/每周挑战池、升级分类池与稀有度权重、遗物、角色定义、敌人技能仓库、融合技能池、战斗对象定义和有序起始技能池等独立批次均保持现有 `GameData` 公共入口兼容；`StatusEffectManager`、`RelicManager`、`CharacterRuntime`、`EnemySkillRepository`、`SynergyManager`、`SkillEffectSummaryBuilder`、`SkillManager`、`CharacterRunInitializer` 与 `UpgradePool` 的对应数据读取不再自建 DataManager/JSON 双路径，状态、角色、敌人技能、融合技能、战斗对象及技能 JSON fallback 保持深拷贝隔离。`UpgradePool` 的正常学习资格和调试神系技能列表统一消费 `GameData`。召唤物读取仍保留原路径；本地化、UI 主题和技能范围配置仍由各自独立服务读取。阶段 6 内部批次不得改写为新的阶段编号。
-6. StatusEffectManager 小步拆分：把 tick、查询、事件发射分离。
-7. `DamageSystem`、状态结算、`EnemyDeathPipeline`、`EnemySpawner` 时间线和终局持久化在阶段 7 验收后保持冻结；只有明确缺陷、可重复性能数据或已批准扩展需求才能重新开启对应链路。
+唯一契约重构已完成配置所有权、技能/怪物字段、严格伤害接口、Modifier 输入、动作/规则族、调试页面与选项构建拆分，详见 [重构文档](PROJECT_CANONICAL_RUNTIME_REFACTOR.md)。后续新增内容优先扩展现有策略、registry、family 或页面，保持已有状态调度与数值顺序。旧阶段验收记录属于历史证据，本次最终结果以 [稳定性报告](PROJECT_STABILITY_AND_BOUNDARY_REPORT.md) 为准。

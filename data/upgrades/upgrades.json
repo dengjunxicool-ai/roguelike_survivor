@@ -27,7 +27,8 @@
 					"value": 0.2,
 					"scope": {
 						"domain": "enemy_spawn"
-					}
+					},
+					"source": "upgrade"
 				},
 				{
 					"stat": "coin_gain",
@@ -35,7 +36,8 @@
 					"value": 0.25,
 					"scope": {
 						"domain": "economy"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -46,7 +48,8 @@
 						"value": 0.2,
 						"scope": {
 							"domain": "enemy_spawn"
-						}
+						},
+						"source": "upgrade"
 					},
 					{
 						"stat": "coin_gain",
@@ -54,7 +57,8 @@
 						"value": 0.25,
 						"scope": {
 							"domain": "economy"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -84,7 +88,8 @@
 					"value": 0.2,
 					"scope": {
 						"domain": "enemy_spawn"
-					}
+					},
+					"source": "upgrade"
 				},
 				{
 					"stat": "soul_gain",
@@ -92,7 +97,8 @@
 					"value": 0.25,
 					"scope": {
 						"domain": "economy"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -103,7 +109,8 @@
 						"value": 0.2,
 						"scope": {
 							"domain": "enemy_spawn"
-						}
+						},
+						"source": "upgrade"
 					},
 					{
 						"stat": "soul_gain",
@@ -111,7 +118,8 @@
 						"value": 0.25,
 						"scope": {
 							"domain": "economy"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -143,7 +151,8 @@
 					"value": 20,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -154,7 +163,8 @@
 						"value": 20,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -184,7 +194,8 @@
 					"value": 0.04,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -195,7 +206,8 @@
 						"value": 0.04,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -225,7 +237,8 @@
 					"value": 0.01,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -236,7 +249,8 @@
 						"value": 0.01,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -266,7 +280,8 @@
 					"value": 1,
 					"scope": {
 						"domain": "progression"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -277,7 +292,8 @@
 						"value": 1,
 						"scope": {
 							"domain": "progression"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -308,7 +324,8 @@
 					"value": 18,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -319,7 +336,8 @@
 						"value": 18,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -348,7 +366,8 @@
 					"value": 2,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -359,7 +378,8 @@
 						"value": 2,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -389,7 +409,8 @@
 					"value": 18,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -400,7 +421,8 @@
 						"value": 18,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],
@@ -430,7 +452,8 @@
 					"value": 30,
 					"scope": {
 						"domain": "player"
-					}
+					},
+					"source": "upgrade"
 				}
 			],
 			"level_modifiers": [
@@ -441,7 +464,8 @@
 						"value": 30,
 						"scope": {
 							"domain": "player"
-						}
+						},
+						"source": "upgrade"
 					}
 				]
 			],

@@ -1,3 +1,4 @@
+const { readDebugPanelSources, readSpecialRuleSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
 
@@ -29,7 +30,7 @@ function extractGdFunctionBody(text, functionName) {
   return text.slice(start, end);
 }
 
-const panel = read("scripts/debug/dev_debug_panel.gd");
+const panel = readDebugPanelSources(root) + "\n" + read("scripts/debug/dev_debug_data_source.gd");
 const godsData = readJson("data/skills/gods.json");
 const skillsData = readJson("data/skills/skills.json");
 
@@ -80,7 +81,7 @@ const godDrivenBehaviorMarkers = [
   /(?:var\s+)?_selected_god_id\b/,
   /\.name\s*=\s*"GodSkillButtons"/,
   /\.name\s*=\s*"GodSkillCardsScroll"/,
-  /skill\.get\("god_id"/,
+  /skill\.get\("school"/,
   /"No skill cards for this god yet\."/,
   /"vfx_description"/,
   /"effect_description"/,
@@ -108,7 +109,7 @@ assert(
   "old mars_spark_missile fire card must be removed"
 );
 const searing = fireSkills.find((skill) => skill.id === "fire_attack_searing");
-assert(searing.type === "attack", "fire_attack_searing must be an attack skill");
+assert(searing.skill_type === "attack", "fire_attack_searing must be an attack skill");
 assert(searing.exclusive_group === "attack_school", "fire_attack_searing must claim attack_school");
 assert(
   (searing.trigger_rules || []).some((rule) => rule.trigger === "attack_hit"),
@@ -119,7 +120,7 @@ assert(
   "fire_attack_searing must carry its attack modifier effect"
 );
 assert(
-  fireSkills.some((skill) => skill.id === "fusion_fire_frost_steam_mist" && skill.type === "fusion"),
+  fireSkills.some((skill) => skill.id === "fusion_fire_frost_steam_mist" && skill.skill_type === "fusion"),
   "fire skill cards must include fire-related fusion skills"
 );
 

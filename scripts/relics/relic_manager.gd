@@ -30,7 +30,7 @@ func add_relic(relic_id: Variant) -> bool:
 		return false
 
 	owned_relics.append(id)
-	_register_modifier_block("relic:%s:negative" % String(id), _get_dictionary(definition.get("negative_modifier", {})))
+	_register_modifier_block("relic:%s:negative" % String(id), _get_array(definition.get("negative_modifier", [])))
 	relic_added.emit(id)
 	relics_changed.emit()
 	_notify_skill_manager_changed()
@@ -54,8 +54,6 @@ func get_relic_modifiers_for_skill(skill_instance: RefCounted) -> Array:
 		var relic_modifiers: Variant = relic.get("modifiers", [])
 		if relic_modifiers is Array:
 			modifiers.append_array((relic_modifiers as Array).duplicate(true))
-		elif relic_modifiers is Dictionary:
-			modifiers.append((relic_modifiers as Dictionary).duplicate(true))
 
 	return modifiers
 
@@ -170,58 +168,20 @@ func _trigger_relic(relic_id: StringName, relic: Dictionary, _payload: Dictionar
 	_notify_skill_manager_changed()
 
 
-func _register_modifier_block(source_id: String, block: Variant, merge_existing: bool = false) -> void:
-	if _is_empty_modifier_value(block):
+func _register_modifier_block(source_id: String, effects: Array, merge_existing: bool = false) -> void:
+	if effects.is_empty():
+		return
+	var errors: Array[String] = ModifierSourceScript.validate_effects(effects)
+	if not errors.is_empty():
+		push_error("Invalid relic Modifier effects: " + "; ".join(errors))
 		return
 	var owning_node: Node = get_parent()
 	if owning_node == null:
 		return
-	if block is Array:
-		if merge_existing and owning_node.has_method("merge_run_modifier_source"):
-			owning_node.call("merge_run_modifier_source", source_id, block)
-			return
-		if owning_node.has_method("set_run_modifier_source"):
-			owning_node.call("set_run_modifier_source", source_id, block)
-			return
-	if not (block is Dictionary):
-		return
-	var block_data: Dictionary = block
-	var stat: String = String(block_data.get("stat", ""))
-	if stat == "":
-		return
-	var value: float = float(block_data.get("value", 0.0))
 	if merge_existing and owning_node.has_method("merge_run_modifier_source"):
-		owning_node.call("merge_run_modifier_source", source_id, block_data)
-		return
-	if owning_node.has_method("set_run_modifier_source"):
-		owning_node.call("set_run_modifier_source", source_id, block_data)
-		return
-	var property_name: String = _normalize_stat_name(stat)
-	if property_name == "":
-		return
-	var current_value: float = float(owning_node.get(property_name)) if _has_property(owning_node, property_name) else 0.0
-	match String(block_data.get("op", "add")):
-		"set":
-			owning_node.set(property_name, value)
-		"multiply":
-			owning_node.set(property_name, current_value * value)
-		_:
-			owning_node.set(property_name, current_value + value)
-
-
-func _normalize_stat_name(stat: String) -> String:
-	match stat:
-		"damage_taken_multiplier_add":
-			return "damage_taken_multiplier"
-		_:
-			return stat
-
-
-func _has_property(object: Object, property_name: String) -> bool:
-	for property_info: Dictionary in object.get_property_list():
-		if String(property_info.get("name", "")) == property_name:
-			return true
-	return false
+		owning_node.call("merge_run_modifier_source", source_id, effects)
+	elif owning_node.has_method("set_run_modifier_source"):
+		owning_node.call("set_run_modifier_source", source_id, effects)
 
 
 func _to_relic_id(relic_id: Variant) -> StringName:
@@ -240,14 +200,6 @@ func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
-
-
-func _is_empty_modifier_value(value: Variant) -> bool:
-	if value is Array:
-		return (value as Array).is_empty()
-	if value is Dictionary:
-		return (value as Dictionary).is_empty()
-	return true
 
 
 func _get_string_array(value: Variant) -> Array[String]:

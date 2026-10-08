@@ -12,22 +12,21 @@ func setup(owner: Node, target_group: StringName = &"player") -> void:
 
 
 func get_alive_normal_enemy_count() -> int:
-	return get_alive_enemy_count("normal")
+	return _get_alive_enemy_count(false)
 
 
 func get_alive_boss_minion_count() -> int:
-	return get_alive_enemy_count("boss_minion")
+	return _get_alive_enemy_count(true)
 
 
-func get_alive_enemy_count(enemy_type_filter: String) -> int:
+func _get_alive_enemy_count(boss_minions: bool) -> int:
 	var tree: SceneTree = _get_tree()
 	if tree == null:
 		return 0
-
 	var count: int = 0
 	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
-		var enemy_type: String = String(enemy.get_meta("enemy_type", "normal"))
-		if enemy_type == enemy_type_filter:
+		var is_minion: bool = String(enemy.get_meta("spawn_source_type", "")) == "boss_minion"
+		if (is_minion if boss_minions else String(enemy.get_meta("enemy_rank", "normal")) == "normal" and not is_minion):
 			count += 1
 	return count
 
@@ -47,8 +46,7 @@ func despawn_far_enemies(despawn_radius: float) -> void:
 		if enemy_node == null:
 			continue
 
-		var enemy_type: String = String(enemy_node.get_meta("enemy_type", "normal"))
-		if enemy_type != "normal" and enemy_type != "boss_minion":
+		if String(enemy_node.get_meta("enemy_rank", "normal")) != "normal":
 			continue
 
 		if enemy_node.global_position.distance_squared_to(target.global_position) > despawn_radius_squared:
@@ -65,8 +63,7 @@ func clear_normal_enemies() -> void:
 		if enemy_node == null:
 			continue
 
-		var enemy_type: String = String(enemy_node.get_meta("enemy_type", "normal"))
-		if enemy_type == "normal" or enemy_type == "boss_minion":
+		if String(enemy_node.get_meta("enemy_rank", "normal")) == "normal":
 			enemy_node.queue_free()
 
 

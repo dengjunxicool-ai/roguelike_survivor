@@ -84,7 +84,9 @@ func _make_enemy(enemy_scene: PackedScene, enemy_id: StringName, enemy_type: Str
 	enemy.set("enemy_id", enemy_id)
 	enemy.set("load_config_from_data", false)
 	enemy.set("_behavior", {"type": "chase_player"})
-	enemy.set_meta("enemy_type", enemy_type)
+	enemy.set_meta("enemy_rank", "normal" if enemy_type == "boss_minion" else enemy_type)
+	if enemy_type == "boss_minion":
+		enemy.set_meta("spawn_source_type", "boss_minion")
 	enemy.global_position = position
 	return enemy
 
@@ -92,7 +94,11 @@ func _make_enemy(enemy_scene: PackedScene, enemy_id: StringName, enemy_type: Str
 func _count_enemy_type(enemy_type: String) -> int:
 	var count: int = 0
 	for node: Node in get_nodes_in_group(&"enemy"):
-		if String(node.get_meta("enemy_type", "normal")) == enemy_type:
+		if enemy_type == "boss_minion":
+			if String(node.get_meta("spawn_source_type", "")) == "boss_minion":
+				count += 1
+			continue
+		if String(node.get_meta("enemy_rank", "normal")) == enemy_type:
 			count += 1
 	return count
 

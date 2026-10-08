@@ -79,7 +79,7 @@ const expected = [
 const skillsData = readJson("data/skills/skills.json");
 const combatObjects = new Set((readJson("data/combat/combat_objects.json").combat_objects || []).map((object) => object.id));
 const summons = new Set((readJson("data/summons/summons.json").summons || []).map((summon) => summon.id));
-const fusionSkills = (skillsData.skills || []).filter((skill) => skill.type === "fusion" || skill.fusion_school);
+const fusionSkills = (skillsData.skills || []).filter((skill) => skill.skill_type === "fusion" || skill.fusion_school);
 
 assert(expected.length === 60, `contract must define 60 expected fusions, got ${expected.length}`);
 assert(fusionSkills.length === 60, `expected 60 fusion skills, got ${fusionSkills.length}`);
@@ -88,10 +88,10 @@ const byId = new Map(fusionSkills.map((skill) => [skill.id, skill]));
 for (const [id, name, school, fusionSchool, description] of expected) {
   const skill = byId.get(id);
   assert(skill, `missing fusion skill ${id}`);
-  assert(skill.name === name, `${id} name mismatch`);
+  assert(skill.display_name === name, `${id} name mismatch`);
   assert(skill.school === school, `${id} school mismatch`);
   assert(skill.fusion_school === fusionSchool, `${id} fusion_school mismatch`);
-  assert(skill.type === "fusion", `${id} type must be fusion`);
+  assert(skill.skill_type === "fusion", `${id} type must be fusion`);
   assert(skill.max_level === 2, `${id} max_level must be 2`);
   assert(skill.description === description, `${id} description mismatch`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("fusion"), `${id} tags must include fusion`);

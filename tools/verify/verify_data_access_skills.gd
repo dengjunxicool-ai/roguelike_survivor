@@ -6,18 +6,6 @@ const GameDataScript := preload("res://scripts/game/game_data.gd")
 const SkillManagerScript := preload("res://scripts/skills/skill_manager.gd")
 const CharacterRunInitializerScript := preload("res://scripts/characters/character_run_initializer.gd")
 
-class MissingAccessorManager:
-	extends Node
-
-class WrongTypeManager:
-	extends Node
-
-	func get_starting_skill_definitions() -> Variant:
-		return "not-an-array"
-
-	func get_skill_definition(_skill_id: Variant) -> Variant:
-		return "not-a-dictionary"
-
 var _failed: bool = false
 
 
@@ -42,10 +30,7 @@ func _run() -> void:
 
 	_verify_owner_facade_and_lookup(manager, starting_source, normal_source)
 	_verify_manager_source(manager)
-	_verify_empty_owner_fallback(manager, starting_source, normal_source)
-	_verify_replacement_manager_fallback(manager, starting_source, normal_source, MissingAccessorManager.new(), "missing accessor")
-	_verify_replacement_manager_fallback(manager, starting_source, normal_source, WrongTypeManager.new(), "wrong-type accessor")
-	_verify_full_fallback(manager, starting_source, normal_source)
+	_verify_empty_owner_authoritative(manager, starting_source, normal_source)
 	_finish()
 
 
@@ -109,10 +94,8 @@ func _verify_manager_source(manager: Node) -> void:
 	var sentinel_pool: Array[Dictionary] = [sentinel.duplicate(true)]
 	manager.set("_starting_skill_definitions", sentinel_pool)
 	manager.set("_skill_definitions", {sentinel_id: sentinel.duplicate(true)})
-	GameDataScript._document_cache.clear()
 	_expect(GameDataScript.get_starting_skill_pool() == [sentinel], "facade prefers manager starting-skill sentinel")
 	_expect(GameDataScript.get_skill(sentinel_id) == sentinel, "facade lookup prefers manager skill sentinel")
-	_expect(not GameDataScript._document_cache.has(DataPathsScript.SKILLS_PATH), "manager paths avoid skill JSON cache")
 
 	var skill_manager: Node = SkillManagerScript.new()
 	root.add_child(skill_manager)
@@ -128,78 +111,19 @@ func _verify_manager_source(manager: Node) -> void:
 
 	manager.set("_starting_skill_definitions", original_pool)
 	manager.set("_skill_definitions", original_definitions)
-	GameDataScript._document_cache.clear()
 
 
-func _verify_empty_owner_fallback(
-	manager: Node,
-	starting_source: Array[Dictionary],
-	normal_source: Array[Dictionary]
-) -> void:
+func _verify_empty_owner_authoritative(manager: Node, starting_source: Array[Dictionary], normal_source: Array[Dictionary]) -> void:
 	var original_pool: Array[Dictionary] = _to_dictionary_array(manager.get("_starting_skill_definitions")).duplicate(true)
 	var original_definitions: Dictionary = (manager.get("_skill_definitions") as Dictionary).duplicate(true)
 	var empty_pool: Array[Dictionary] = []
 	manager.set("_starting_skill_definitions", empty_pool)
 	manager.set("_skill_definitions", {})
-	GameDataScript._document_cache.clear()
-	var fallback: Array[Dictionary] = GameDataScript.get_starting_skill_pool()
-	_expect(fallback == starting_source, "empty owner starting-skill pool falls back")
-	_expect(GameDataScript.get_skill(_first_valid_id(starting_source)) == starting_source[0], "empty owner starting lookup falls back")
-	_expect(GameDataScript.get_skill(_first_valid_id(normal_source)) == normal_source[0], "empty owner normal lookup falls back")
-	_expect(GameDataScript._document_cache.has(DataPathsScript.SKILLS_PATH), "empty owner fallback uses skill document cache")
-	_mutate_definition(fallback[0], "__phase6_skill_empty_owner_pool__")
-	var lookup_probe: Dictionary = GameDataScript.get_skill(_first_valid_id(normal_source))
-	_mutate_definition(lookup_probe, "__phase6_skill_empty_owner_lookup__")
-	_expect(GameDataScript.get_starting_skill_pool() == starting_source, "empty owner starting-skill fallback is isolated")
-	_expect(GameDataScript.get_skill(_first_valid_id(normal_source)) == normal_source[0], "empty owner skill fallback is isolated")
+	_expect(GameDataScript.get_starting_skill_pool().is_empty(), "empty starting owner pool stays authoritative")
+	_expect(GameDataScript.get_skill(_first_valid_id(starting_source)).is_empty(), "empty starting lookup does not reload JSON")
+	_expect(GameDataScript.get_skill(_first_valid_id(normal_source)).is_empty(), "empty normal lookup does not reload JSON")
 	manager.set("_starting_skill_definitions", original_pool)
 	manager.set("_skill_definitions", original_definitions)
-	GameDataScript._document_cache.clear()
-
-
-func _verify_replacement_manager_fallback(
-	manager: Node,
-	starting_source: Array[Dictionary],
-	normal_source: Array[Dictionary],
-	replacement: Node,
-	label: String
-) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6SkillOwnerUnavailable"
-	replacement.name = &"DataManager"
-	root.add_child(replacement)
-	GameDataScript._document_cache.clear()
-	_expect(GameDataScript.get_starting_skill_pool() == starting_source, "%s falls back to starting-skill JSON" % label)
-	_expect(GameDataScript.get_skill(_first_valid_id(starting_source)) == starting_source[0], "%s finds starting skill" % label)
-	_expect(GameDataScript.get_skill(_first_valid_id(normal_source)) == normal_source[0], "%s finds normal skill" % label)
-	replacement.free()
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
-
-
-func _verify_full_fallback(
-	manager: Node,
-	starting_source: Array[Dictionary],
-	normal_source: Array[Dictionary]
-) -> void:
-	var original_name: StringName = manager.name
-	manager.name = &"Phase6SkillUnavailableDataManager"
-	GameDataScript._document_cache.clear()
-	var pool_fallback: Array[Dictionary] = GameDataScript.get_starting_skill_pool()
-	var starting_lookup: Dictionary = GameDataScript.get_skill(_first_valid_id(starting_source))
-	var normal_lookup: Dictionary = GameDataScript.get_skill(_first_valid_id(normal_source))
-	_expect(_ids(pool_fallback) == _ids(starting_source), "full starting-skill fallback preserves IDs and order")
-	_expect(pool_fallback == starting_source, "full starting-skill fallback matches source")
-	_expect(starting_lookup == starting_source[0], "full fallback finds starting skill")
-	_expect(normal_lookup == normal_source[0], "full fallback finds normal skill")
-	_mutate_definition(pool_fallback[0], "__phase6_skill_full_pool__")
-	_mutate_definition(starting_lookup, "__phase6_skill_full_starting_lookup__")
-	_mutate_definition(normal_lookup, "__phase6_skill_full_normal_lookup__")
-	_expect(GameDataScript.get_starting_skill_pool() == starting_source, "full starting-skill fallback is isolated")
-	_expect(GameDataScript.get_skill(_first_valid_id(starting_source)) == starting_source[0], "full starting lookup fallback is isolated")
-	_expect(GameDataScript.get_skill(_first_valid_id(normal_source)) == normal_source[0], "full normal lookup fallback is isolated")
-	manager.name = original_name
-	GameDataScript._document_cache.clear()
 
 
 func _first_valid_id(pool: Array[Dictionary]) -> StringName:

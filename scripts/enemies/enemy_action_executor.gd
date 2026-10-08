@@ -198,7 +198,7 @@ func _get_int(property: StringName) -> int:
 func _get_damage_source_id() -> String:
 	if _owner == null:
 		return "enemy"
-	var rank: String = String(_owner.get_meta("enemy_rank", _owner.get_meta("enemy_type", "normal")))
+	var rank: String = String(_owner.get_meta("enemy_rank", "normal"))
 	return "boss" if rank == "boss" else "enemy"
 
 
@@ -209,7 +209,7 @@ func _sync_spawn_service() -> void:
 	_spawn_service.call("setup", _owner, enemy_scene, null, StringName(String(_owner.get("target_group"))) if _owner != null else &"player")
 
 
-func _build_enemy_damage_packet(amount: int, source_type: String, source_skill_id: String) -> Dictionary:
+func _build_enemy_damage_packet(amount: int, source_type: String, source_skill_id: String) -> DamagePacket:
 	return EnemyDamagePacketBuilderScript.build(_owner, amount, source_type, StringName(source_skill_id), {
 		"damage_origin": "field" if source_type == "area" else "primary_attack",
 		"damage_type": "area_direct" if source_type == "area" else "direct_physical",

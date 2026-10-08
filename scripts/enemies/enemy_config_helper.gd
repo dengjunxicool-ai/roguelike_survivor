@@ -23,18 +23,17 @@ static func duplicate_dictionary_array(value: Variant) -> Array[Dictionary]:
 static func apply_classification_metadata(enemy: Node, enemy_config: Dictionary) -> void:
 	if enemy == null:
 		return
-	var enemy_type: String = String(enemy.get_meta("enemy_type_override", enemy_config.get("type", "normal")))
-	var enemy_rank: String = String(enemy.get_meta("enemy_rank_override", enemy.get_meta("enemy_rank", enemy_config.get("rank", enemy_type))))
-	if enemy_rank == "":
-		enemy_rank = enemy_type
-	enemy.set_meta("enemy_type", enemy_type)
+	var enemy_rank: String = String(enemy.get_meta("enemy_rank", enemy_config["enemy_rank"]))
 	enemy.set_meta("enemy_rank", enemy_rank)
-	enemy.set_meta("is_boss", enemy_rank == "boss")
-	enemy.set_meta("is_elite", enemy_rank == "elite")
+	for group: StringName in [&"bosses", &"elites", &"boss_cores"]:
+		if enemy.is_in_group(group):
+			enemy.remove_from_group(group)
 	if enemy_rank == "boss":
 		enemy.add_to_group(&"bosses")
 	elif enemy_rank == "elite":
 		enemy.add_to_group(&"elites")
+	elif enemy_rank == "boss_core":
+		enemy.add_to_group(&"boss_cores")
 
 
 static func behavior_attack_range_fallback(behavior: Dictionary, attack_range: float) -> float:

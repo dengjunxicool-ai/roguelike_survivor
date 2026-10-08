@@ -318,8 +318,8 @@ static func get_permanent_upgrade_total_modifiers() -> Dictionary:
 		if upgrade_level <= 0:
 			continue
 
-		var modifiers: Variant = upgrade.get("modifiers_per_level", upgrade.get("modifiers", {}))
-		var modifier_data: Dictionary = ModifierSourceScript.flatten(modifiers, ModifierSourceScript.SOURCE_UPGRADE)
+		var modifiers: Variant = upgrade.get("modifiers_per_level", upgrade.get("modifiers", []))
+		var modifier_data: Dictionary = ModifierSourceScript.flatten_effects(modifiers as Array, ModifierSourceScript.SOURCE_UPGRADE)
 		for modifier_key_variant: Variant in modifier_data.keys():
 			var modifier_key: String = String(modifier_key_variant)
 			var current_value: float = float(total_modifiers.get(modifier_key, 0.0))

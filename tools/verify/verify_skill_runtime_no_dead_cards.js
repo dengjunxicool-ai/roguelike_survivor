@@ -1,3 +1,4 @@
+const { readActionSources } = require("../lib/runtime_family_sources");
 const path = require("path");
 const { readJsonFile, readTextFile } = require("../lib/json_file");
 
@@ -212,7 +213,7 @@ function collectSkills(document) {
 
 function validateDocument(document, markdown) {
   const errors = [];
-  const executor = readText(actionExecutorPath);
+  const executor = readActionSources(root);
   const fireRuntime = readText(fireRuntimePath);
   const playerHealthStage = readText(playerHealthStagePath);
 
@@ -259,8 +260,8 @@ function collectActionTypesFromActions(actions, result) {
 function collectFireActionTypes(document) {
   const result = new Set();
   const allFireSkills = [
-    ...asArray(document.starting_skills).filter((skill) => skill && skill.god_id === "fire"),
-    ...asArray(document.skills).filter((skill) => skill && skill.god_id === "fire"),
+    ...asArray(document.starting_skills).filter((skill) => skill && skill.school === "fire"),
+    ...asArray(document.skills).filter((skill) => skill && skill.school === "fire"),
   ];
   for (const skill of allFireSkills) {
     for (const event of asArray(skill.events)) {

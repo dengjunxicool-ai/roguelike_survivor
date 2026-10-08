@@ -175,7 +175,7 @@ function validateSkill(skill, index, godIds, errors) {
   }
 
   const label = skill.id || `skills[${index}]`;
-  for (const field of ["id", "name", "school", "type", "rarity", "mechanic_family"]) {
+  for (const field of ["id", "display_name", "school", "skill_type", "rarity", "mechanic_family"]) {
     if (!isNonEmptyString(skill[field])) errors.push(`${label} missing ${field}`);
   }
   if (!Number.isInteger(skill.max_level) || skill.max_level <= 0) {
@@ -188,8 +188,8 @@ function validateSkill(skill, index, godIds, errors) {
     if (!godIds.has(skill.fusion_school)) errors.push(`${label} fusion_school must reference a god id: ${skill.fusion_school}`);
     if (skill.fusion_school === skill.school) errors.push(`${label} fusion_school must differ from school`);
   }
-  if (!ALLOWED_SKILL_TYPES.has(skill.type)) {
-    errors.push(`${label} type is not recognized: ${skill.type}`);
+  if (!ALLOWED_SKILL_TYPES.has(skill.skill_type)) {
+    errors.push(`${label} type is not recognized: ${skill.skill_type}`);
   }
   if (!ALLOWED_RARITIES.has(skill.rarity)) {
     errors.push(`${label} rarity is not recognized: ${skill.rarity}`);
@@ -200,7 +200,7 @@ function validateSkill(skill, index, godIds, errors) {
     errors.push(`${label} tags must include its primary school: ${skill.school}`);
   }
 
-  const expectedExclusiveGroup = EXCLUSIVE_GROUP_BY_TYPE[skill.type];
+  const expectedExclusiveGroup = EXCLUSIVE_GROUP_BY_TYPE[skill.skill_type];
   if (expectedExclusiveGroup && skill.exclusive_group !== expectedExclusiveGroup) {
     errors.push(`${label} exclusive_group must be ${expectedExclusiveGroup}`);
   }

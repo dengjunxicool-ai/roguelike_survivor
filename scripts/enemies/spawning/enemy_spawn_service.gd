@@ -110,12 +110,8 @@ func _apply_pre_ready_values(enemy: Node2D, enemy_id: StringName, request: Dicti
 	if int(multipliers.get("defense_add", 0)) != 0:
 		enemy.set_meta("defense_add", int(multipliers["defense_add"]))
 
-	var enemy_type_override: String = String(request.get("enemy_type_override", ""))
-	if enemy_type_override != "":
-		enemy.set_meta("enemy_type_override", enemy_type_override)
-	var enemy_rank_override: String = String(request.get("enemy_rank_override", ""))
-	if enemy_rank_override != "":
-		enemy.set_meta("enemy_rank_override", enemy_rank_override)
+	if request.has("enemy_rank"):
+		enemy.set_meta("enemy_rank", String(request["enemy_rank"]))
 
 	enemy.set_meta("spawn_source_type", String(request.get("source_type", "unknown")))
 	enemy.set_meta("spawn_source_id", String(request.get("source_id", "")))
@@ -125,12 +121,6 @@ func _apply_pre_ready_values(enemy: Node2D, enemy_id: StringName, request: Dicti
 
 
 func _apply_post_ready_values(enemy: Node2D, request: Dictionary) -> void:
-	var groups: Array = _get_array(request.get("groups", []))
-	for group_name: Variant in groups:
-		var group_id: StringName = StringName(String(group_name))
-		if group_id != &"":
-			enemy.add_to_group(group_id)
-
 	var post_ready_properties: Dictionary = _get_dictionary(request.get("post_ready_properties", {}))
 	for key: Variant in post_ready_properties.keys():
 		enemy.set(String(key), post_ready_properties[key])
@@ -279,9 +269,3 @@ func _get_dictionary(value: Variant) -> Dictionary:
 		var dictionary: Dictionary = value
 		return dictionary.duplicate(true)
 	return {}
-
-
-func _get_array(value: Variant) -> Array:
-	if value is Array:
-		return value
-	return []

@@ -49,8 +49,8 @@ const byId = new Map(thunderSkills.map((skill) => [skill.id, skill]));
 for (const [id, name, type, description] of expected) {
   const skill = byId.get(id);
   assert(skill, `missing thunder skill ${id}`);
-  assert(skill.name === name, `${id} name mismatch`);
-  assert(skill.type === type, `${id} type mismatch`);
+  assert(skill.display_name === name, `${id} name mismatch`);
+  assert(skill.skill_type === type, `${id} type mismatch`);
   assert(skill.description === description, `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("thunder"), `${id} must be tagged thunder`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
@@ -63,7 +63,7 @@ assert(Array.isArray(thunderGod.tags) && thunderGod.tags.includes("implemented")
 
 const attack = byId.get("thunder_attack_thundering");
 assert(attack.exclusive_group === "attack_school", "thunder attack must replace the starting attack slot");
-assert((attack.effects || []).some((effect) => effect.type === "add_modifier" && effect.modifier === "attack_damage_multiplier" && effect.value === 0.15), "thunder attack must add exactly +15% attack damage");
+assert((attack.effects || []).some((effect) => effect.type === "add_modifier" && effect.stat === "primary_attack_damage" && effect.op === "multiplier_add" && effect.value === 0.15), "thunder attack must add exactly +15% attack damage");
 assert((attack.trigger_rules || []).some((rule) => rule.trigger === "attack_hit" && (rule.effects || []).some((effect) => effect.type === "apply_status" && effect.status === "conductive")), "thunder attack must apply Conductive on hit");
 assert((attack.trigger_rules || []).some((rule) => rule.trigger === "attack_hit" && rule.threshold === 4 && (rule.effects || []).some((effect) => effect.type === "chain_to_targets")), "thunder attack must release an arc every fourth hit");
 
@@ -100,7 +100,7 @@ assert((magnetic.trigger_rules || []).some((rule) => rule.trigger === "post_dama
 const core = byId.get("thunder_core_storm_center");
 assert(core.exclusive_group === "core_school", "storm center must occupy the core exclusive group");
 assert((core.trigger_rules || []).some((rule) => rule.trigger === "post_damage_hit" && rule.threshold === 60), "storm center must count 60 lightning hits through post_damage_hit");
-assert((core.effects || []).some((effect) => effect.type === "add_modifier" && effect.modifier === "overload_conductive_stacks_retained" && effect.value === 2), "storm center must retain 2 Conductive stacks after Overload");
+assert((core.effects || []).some((effect) => effect.type === "add_modifier" && effect.stat === "overload_conductive_stacks_retained" && effect.value === 2), "storm center must retain 2 Conductive stacks after Overload");
 
 for (const objectId of [
   "chain_lightning_bolt",

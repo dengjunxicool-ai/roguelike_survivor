@@ -16,6 +16,10 @@ class FakeSkillManager:
 
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	var player: Node = Node.new()
 	var skill_manager: FakeSkillManager = FakeSkillManager.new()
 	skill_manager.name = "SkillManager"
@@ -25,7 +29,8 @@ func _init() -> void:
 	var definition: RefCounted = SkillDefinitionScript.new({
 		"id": "test_fireball_no_rarity",
 		"display_name": "Test Fireball",
-		"category": "active",
+		"slot_category": "active",
+		"skill_type": "cast",
 		"max_level": 2,
 		"level_descriptions": ["Lv1", "Lv2"]
 	})

@@ -10,21 +10,21 @@ const DamagePacketScript: Script = preload("res://scripts/combat/damage_packet.g
 const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_tracker.gd")
 
 
-static func apply_damage(target: Node, amount_or_packet: Variant, damage_type: Variant = &"") -> RefCounted:
-	return DamageApplicationPipelineScript.apply(DamageApplicationContextScript.create(target, amount_or_packet, damage_type))
+static func apply_damage(target: Node, packet: DamagePacket) -> RefCounted:
+	return DamageApplicationPipelineScript.apply(DamageApplicationContextScript.create(target, packet))
 
 
-static func apply_player_damage(player: Node, amount_or_packet: Variant, damage_type: Variant = &"") -> RefCounted:
-	return DamageApplicationPipelineScript.apply_player(DamageApplicationContextScript.create(player, amount_or_packet, damage_type))
+static func apply_player_damage(player: Node, packet: DamagePacket) -> RefCounted:
+	return DamageApplicationPipelineScript.apply_player(DamageApplicationContextScript.create(player, packet))
 
 
-static func apply_enemy_damage(enemy: Node, amount_or_packet: Variant, damage_type: Variant = &"") -> RefCounted:
-	return DamageApplicationPipelineScript.apply_enemy(DamageApplicationContextScript.create(enemy, amount_or_packet, damage_type))
+static func apply_enemy_damage(enemy: Node, packet: DamagePacket) -> RefCounted:
+	return DamageApplicationPipelineScript.apply_enemy(DamageApplicationContextScript.create(enemy, packet))
 
 
-static func _packet_amount(amount_or_packet: Variant) -> int:
-	return DamageApplicationPipelineScript.packet_amount(amount_or_packet)
+static func _packet_amount(packet: DamagePacket) -> int:
+	return DamageApplicationPipelineScript.packet_amount(packet)
 
 
-static func _packet_with_amount(amount_or_packet: Variant, amount: int) -> Variant:
-	return DamageApplicationPipelineScript.packet_with_amount(amount_or_packet, amount)
+static func _packet_with_amount(packet: DamagePacket, amount: int) -> DamagePacket:
+	return DamageApplicationPipelineScript.packet_with_amount(packet, amount)

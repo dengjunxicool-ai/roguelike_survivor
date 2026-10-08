@@ -168,7 +168,7 @@ static func _get_fire_runtime_rules(skill_instance: RefCounted) -> Dictionary:
 
 static func _is_passive_skill(skill_instance: RefCounted) -> bool:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
-	return definition != null and String(definition.get("category")) == "passive"
+	return definition != null and String(definition.get("slot_category")) == "passive"
 
 
 static func _is_fire_context(rules: Dictionary, context: Dictionary, event_name: StringName = &"") -> bool:
@@ -605,7 +605,7 @@ static func _target_has_status(target: Node, status_id: StringName) -> bool:
 static func _is_target_boss(target: Node) -> bool:
 	if target == null:
 		return false
-	return target.is_in_group(&"bosses") or bool(target.get_meta("is_boss", false)) or String(target.get_meta("enemy_rank", "")) == "boss"
+	return String(target.get_meta("enemy_rank", "")) == "boss"
 
 
 static func _packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:

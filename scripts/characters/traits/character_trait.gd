@@ -45,8 +45,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
-func _get_modifier_values(value: Variant) -> Dictionary:
-	return ModifierSourceScript.flatten(value, ModifierSourceScript.SOURCE_CHARACTER_TRAIT)
+func _get_modifier_values(value: Array) -> Dictionary:
+	return ModifierSourceScript.flatten_effects(value, ModifierSourceScript.SOURCE_CHARACTER_TRAIT)
 
 
 func _is_starting_skill(skill_id: Variant) -> bool:

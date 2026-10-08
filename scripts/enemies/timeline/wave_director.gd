@@ -81,7 +81,7 @@ func process_wave_spawn(delta: float, wave: Dictionary) -> void:
 		"_spawn_batch_from_source",
 		wave,
 		_owner.call("_get_wave_enemy_multipliers", wave),
-		&"normal",
+		&"wave",
 		batch_limit
 	))
 	_owner.set("_wave_spawned_count", int(_owner.get("_wave_spawned_count")) + spawned)

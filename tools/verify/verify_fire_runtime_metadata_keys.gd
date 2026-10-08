@@ -12,7 +12,7 @@ class SkillStub:
 
 class DefinitionStub:
 	extends RefCounted
-	var category: String = "active"
+	var slot_category: String = "active"
 	var tags: Array[String] = ["fire"]
 
 

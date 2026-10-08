@@ -12,19 +12,11 @@ static func create(enemy_id: Variant, params: Dictionary = {}) -> Dictionary:
 	return request
 
 
-static func wave(enemy_id: Variant, multipliers: Dictionary = {}, enemy_type_override: Variant = &"") -> Dictionary:
-	return create(enemy_id, {
-		"source_type": "wave",
-		"multipliers": multipliers,
-		"enemy_type_override": String(enemy_type_override)
-	})
-
-
 static func map_event(enemy_id: Variant, multipliers: Dictionary = {}) -> Dictionary:
 	return create(enemy_id, {
 		"source_type": "map_event",
 		"multipliers": multipliers,
-		"enemy_type_override": "normal"
+		"enemy_rank": "normal"
 	})
 
 
@@ -46,9 +38,7 @@ static func boss_core(enemy_id: Variant, position: Vector2, hp: int, armor: int,
 		"position": position,
 		"spawn_clearance": 0.0,
 		"multipliers": {"hp": 1.0, "damage": 0.01, "exp": 0.0},
-		"enemy_type_override": "boss_core",
-		"enemy_rank_override": "boss_core",
-		"groups": [&"boss_cores"],
+		"enemy_rank": "boss_core",
 		"reward_policy": {
 			"award_soul": false,
 			"drop_experience": false
