@@ -5,7 +5,6 @@ const JsonDataLoaderScript := preload("res://scripts/core/json_data_loader.gd")
 
 
 const SUMMONS_PATH: String = DataPathsScript.SUMMONS_PATH
-const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
 const SkillRangeUnitScript: Script = preload("res://scripts/skills/skill_range_unit.gd")
 const SkillDefinitionScript: Script = preload("res://scripts/skills/skill_definition.gd")
 const SkillInstanceScript: Script = preload("res://scripts/skills/skill_instance.gd")
@@ -221,7 +220,7 @@ static func _get_summon(summon_id: StringName) -> Dictionary:
 
 
 static func _get_combat_object(object_id: StringName) -> Dictionary:
-	return _find_by_id(_load_array(COMBAT_OBJECTS_PATH, "combat_objects"), object_id)
+	return GameData.get_combat_object(object_id)
 
 
 static func _combat_object_name(object_id: StringName) -> String:

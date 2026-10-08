@@ -15,6 +15,7 @@ const CHARACTERS_PATH: String = DataPathsScript.CHARACTERS_PATH
 const MAPS_PATH: String = DataPathsScript.MAPS_PATH
 const RELICS_PATH: String = DataPathsScript.RELICS_PATH
 const SYNERGIES_PATH: String = DataPathsScript.SYNERGIES_PATH
+const COMBAT_OBJECTS_PATH: String = DataPathsScript.COMBAT_OBJECTS_PATH
 const PROGRESSION_GOALS_PATH: String = DataPathsScript.PROGRESSION_GOALS_PATH
 const CHALLENGES_PATH: String = DataPathsScript.CHALLENGES_PATH
 const SKILL_LEARN_UPGRADE_PREFIX: String = "learn_skill_"
@@ -52,6 +53,13 @@ static func get_enemy_skill(skill_id: StringName) -> Dictionary:
 	if not data.is_empty():
 		return data
 	return _find_by_id(_get_array(ENEMY_SKILLS_PATH, "enemy_skills"), skill_id)
+
+
+static func get_combat_object(object_id: StringName) -> Dictionary:
+	var data: Dictionary = _get_definition_from_data_manager("get_combat_object_definition", object_id)
+	if not data.is_empty():
+		return data
+	return _find_by_id(_get_array(COMBAT_OBJECTS_PATH, "combat_objects"), object_id).duplicate(true)
 
 
 static func get_character(character_id: StringName) -> Dictionary:
