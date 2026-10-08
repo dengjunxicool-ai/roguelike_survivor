@@ -30,10 +30,10 @@ static func get_skill(skill_id: StringName) -> Dictionary:
 		return data
 	var god_starting_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "starting_skills"), skill_id)
 	if not god_starting_skill.is_empty():
-		return god_starting_skill
+		return god_starting_skill.duplicate(true)
 	var god_skill: Dictionary = _find_by_id(_get_array(SKILLS_PATH, "skills"), skill_id)
 	if not god_skill.is_empty():
-		return god_skill
+		return god_skill.duplicate(true)
 	return {}
 
 
@@ -134,6 +134,13 @@ static func get_skill_pool() -> Array[Dictionary]:
 	if not data.is_empty():
 		return _filter_out_starting_skill_definitions(data)
 	return _filter_out_starting_skill_definitions(_get_dictionary_array(SKILLS_PATH, "skills"))
+
+
+static func get_starting_skill_pool() -> Array[Dictionary]:
+	var data: Array[Dictionary] = _get_pool_from_data_manager("get_starting_skill_definitions")
+	if not data.is_empty():
+		return data
+	return _get_dictionary_array(SKILLS_PATH, "starting_skills").duplicate(true)
 
 
 static func get_primary_attack_pool() -> Array[Dictionary]:
