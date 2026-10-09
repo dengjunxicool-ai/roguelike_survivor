@@ -1288,3 +1288,8 @@ func _get_array(value: Variant) -> Array:
 		var array: Array = value
 		return array.duplicate(true)
 	return []
+
+func clear_origin(skill_id: StringName) -> void:
+	for id: Variant in _statuses.keys():
+		if StringName(String(_statuses[id].get("source_skill_id", ""))) == skill_id:
+			consume_status_stack(id, get_status_stack(id))

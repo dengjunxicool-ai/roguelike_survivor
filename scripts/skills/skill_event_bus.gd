@@ -267,3 +267,7 @@ func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
+
+func clear_origin(skill_id: StringName) -> void:
+	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
+		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)

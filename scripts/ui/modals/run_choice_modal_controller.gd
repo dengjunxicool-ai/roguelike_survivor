@@ -844,6 +844,17 @@ func _select_upgrade_option(option: Dictionary, return_state: String, consumes_p
 		"tree": _tree
 	})
 	var command_result: Dictionary = _get_dictionary(command_result_variant)
+	if not bool(command_result.get("handled", false)): return
+	if bool(command_result.get("replacement_pending", false)):
+		var view: CanvasLayer = preload("res://scripts/ui/skill_replacement_view.gd").new()
+		_tree.root.add_child(view)
+		view.open(player, command_result.service, command_result.transaction, func() -> void:
+			player.complete_skill_replacement(command_result.applied_upgrade_id)
+			_finish_upgrade_choice(command_result, return_state, consumes_pending_level))
+		return
+	_finish_upgrade_choice(command_result, return_state, consumes_pending_level)
+
+func _finish_upgrade_choice(command_result: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	if bool(command_result.get("consumed_reward", false)) and pending_reward_kinds.size() > 0:
 		pending_reward_kinds.remove_at(0)
 

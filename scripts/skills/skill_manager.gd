@@ -48,6 +48,10 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 		return false
 	if not _can_learn_god_school_definition(definition_data):
 		return false
+	var capacity: StringName = SkillSlotPolicyScript.capacity_group(definition_data)
+	if capacity in [&"core", &"fusion"]:
+		for owned: RefCounted in get_all_skills():
+			if StringName(String(owned.skill_type)) == capacity: return false
 	var replaced_active_skill_id: StringName = &""
 	if category == "active":
 		replaced_active_skill_id = _find_replaced_active_skill_id(id, definition_data)
@@ -352,6 +356,8 @@ func clear_skills() -> void:
 	var bus: Node = owner.get_node_or_null("SkillEventBus") if owner != null else null
 	if bus != null and bus.has_method("reset_run_state"):
 		bus.call("reset_run_state")
+	if owner != null:
+		owner.set_meta("ordinary_replacement_used", false)
 	active_skills.clear()
 	passive_skills.clear()
 	learned_skill_ids.clear()
@@ -589,3 +595,39 @@ func _is_number(value: Variant) -> bool:
 ## 使用：skill_id 为标准技能 ID。
 func _to_skill_id(skill_id: Variant) -> StringName:
 	return StringName(String(skill_id))
+
+# Only commit removal after add_skill has accepted the replacement. Signals are
+# blocked until both collections and source cleanup represent the new build.
+func replace_ordinary_skill(old_id: StringName, new_id: StringName, rarity: String) -> bool:
+	var old: RefCounted = get_skill(old_id)
+	if old == null or not SkillSlotPolicyScript.counts_active_capacity(_get_skill_definition_data(old_id)):
+		return false
+	var data: Dictionary = _get_skill_definition_data(new_id)
+	if data.is_empty() or not SkillSlotPolicyScript.counts_active_capacity(data) or has_learned_skill(new_id): return false
+	var was_blocked: bool = is_blocking_signals()
+	set_block_signals(true)
+	active_skills.erase(old_id)
+	var accepted: bool = add_skill(new_id, rarity)
+	if not accepted:
+		active_skills[old_id] = old
+		set_block_signals(was_blocked)
+		return false
+	_clear_temporary_skill_sources(old_id)
+	_remove_skill_effect_modifier_source(old_id)
+	_remove_passive_modifiers_for_skill(old_id)
+	_clear_origin_runtime(get_tree().root, old_id)
+	set_block_signals(was_blocked)
+	skill_added.emit(new_id)
+	skill_changed.emit()
+	return true
+
+func _clear_origin_runtime(node: Node, id: StringName) -> void:
+	if node.has_method("clear_origin"): node.call("clear_origin", id)
+	for property: Dictionary in node.get_property_list():
+		if String(property.name) not in ["_context", "damage_packet"]: continue
+		var value: Variant = node.get(property.name)
+		if value is Dictionary and StringName(String(value.get("source_skill_id", value.get("origin_skill_id", value.get("skill_id", ""))))) == id:
+			node.get_parent().remove_child(node)
+			node.queue_free()
+			return
+	for child: Node in node.get_children(): _clear_origin_runtime(child, id)

@@ -62,6 +62,8 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	state["dash_skill"] = skill_slots.get("dash_skill", {})
 	state["active_skills"] = skill_slots.get("active_skills", [])
 	state["passive_skills"] = skill_slots.get("passive_skills", [])
+	state["core_skill"] = skill_slots.get("core_skill", {})
+	state["fusion_skill"] = skill_slots.get("fusion_skill", {})
 	state["skills"] = state["active_skills"]
 
 
@@ -149,9 +151,16 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 		elif String(slot.get("skill_type", "")) == "passive":
 			if passive_slots.size() < MAX_HUD_PASSIVE_SKILLS:
 				passive_slots.append(slot)
+		elif String(slot.get("skill_type", "")) in ["core", "fusion"]:
+			continue
 		elif active_slots.size() < MAX_HUD_ACTIVE_SKILLS:
 			active_slots.append(slot)
-	return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+	var result: Dictionary = _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+	for instance: RefCounted in skill_manager.get_all_skills():
+		var slot: Dictionary = _build_skill_slot(player, instance)
+		var type: String = String(slot.get("skill_type", ""))
+		if type in ["core", "fusion"]: result[type + "_skill"] = slot
+	return result
 
 
 ## 作用：技能槽位结果。

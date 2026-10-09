@@ -15,7 +15,7 @@ const GOD_SCHOOLS: Array[StringName] = [&"fire", &"frost", &"thunder", &"curse",
 
 ## 作用：依次校验 ID、学习历史、容量、互斥组、融合和神系限制，再检查 offer_rule。
 ## 使用：player 为玩家节点；skill 为技能实例或定义；返回布尔判断或执行是否成功。
-func is_skill_available(player: Node, skill: Dictionary) -> bool:
+func is_skill_available(player: Node, skill: Dictionary, allow_replacement: bool = true) -> bool:
 	var skill_id: StringName = StringName(_string_or(skill.get("id", ""), ""))
 	if skill_id == &"":
 		return false
@@ -25,7 +25,12 @@ func is_skill_available(player: Node, skill: Dictionary) -> bool:
 	if _has_learned(skill_manager, skill_id):
 		return false
 	if _is_blocked_by_capacity(skill_manager, skill):
-		return false
+		if not allow_replacement or not preload("res://scripts/skills/skill_slot_policy.gd").counts_active_capacity(skill) or bool(player.get_meta("ordinary_replacement_used", false)): return false
+		var limit: int = int(skill_manager.get("max_active_skills"))
+		skill_manager.set("max_active_skills", limit + 1)
+		var eligible: bool = is_skill_available(player, skill, false)
+		skill_manager.set("max_active_skills", limit)
+		return eligible
 	if _is_blocked_by_exclusive_group(skill_manager, skill):
 		return false
 	if _get_skill_type(skill) == "fusion":
@@ -44,7 +49,7 @@ func _is_blocked_by_capacity(skill_manager: Node, skill: Dictionary) -> bool:
 	var category: String = _get_skill_category(skill)
 	if category == "passive":
 		return skill_manager.has_method("is_passive_skill_full") and bool(skill_manager.call("is_passive_skill_full"))
-	if category == "active" and _is_capacity_counted_active_skill(skill):
+	if category == "active" and preload("res://scripts/skills/skill_slot_policy.gd").counts_active_capacity(skill):
 		return skill_manager.has_method("is_active_skill_full") and bool(skill_manager.call("is_active_skill_full"))
 	return false
 

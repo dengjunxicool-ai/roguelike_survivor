@@ -1,4 +1,4 @@
-﻿## 文件用途：构建并刷新玩家、Boss、波次、经验和技能槽 HUD。
+## 文件用途：构建并刷新玩家、Boss、波次、经验和技能槽 HUD。
 ## 使用方式：先 build(tree)，再 update(tree,state)；展示数据由 RunHudStateProvider 提供。
 
 extends RefCounted
@@ -673,6 +673,8 @@ func _update_skill_slots(run_state: Dictionary) -> void:
 	if active_skills.is_empty() and run_state.has("skills"):
 		active_skills = _get_array(run_state.get("skills", []))
 	var passive_skills: Array = _get_array(run_state.get("passive_skills", []))
+	var core_skill: Dictionary = _variant_to_dictionary(run_state.get("core_skill", {}))
+	var fusion_skill: Dictionary = _variant_to_dictionary(run_state.get("fusion_skill", {}))
 	var primary_skill: Dictionary = _variant_to_dictionary(run_state.get("primary_skill", {}))
 	var dash_skill: Dictionary = _variant_to_dictionary(run_state.get("dash_skill", {}))
 	_layout_skill_slots()
@@ -682,6 +684,8 @@ func _update_skill_slots(run_state: Dictionary) -> void:
 		var slot_index: int = int(nodes.get("slot_index", 0))
 		var skill: Dictionary = {}
 		match slot_kind:
+			"core": skill = core_skill
+			"fusion": skill = fusion_skill
 			"primary":
 				skill = primary_skill
 			"dash":
@@ -770,6 +774,8 @@ func _ensure_fixed_skill_slots() -> void:
 	_skill_slot_nodes.append(_create_dynamic_skill_slot(1, "SkillSlotDash", "D", "dash", 0, true))
 	for index: int in range(HUD_ACTIVE_SKILL_SLOT_COUNT):
 		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotActive%d" % index, "%d" % (index + 1), "active", index))
+	_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotCore", "核心", "core", 0, true))
+	_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotFusion", "融合", "fusion", 0, true))
 	for index: int in range(HUD_PASSIVE_SKILL_SLOT_COUNT):
 		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotPassive%d" % index, "P%d" % (index + 1), "passive", index))
 
