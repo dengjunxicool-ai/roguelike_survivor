@@ -1,3 +1,5 @@
+## 文件用途：将配置中的静态贴图或动画帧/精灵图应用到宿主Sprite2D/AnimatedSprite2D，并缓存帧资源。
+## 使用方式：角色、状态overlay及战斗对象静态调用play_state/apply_visual_config；自动创建所需sprite子节点。
 extends RefCounted
 class_name VisualConfigApplier
 
@@ -8,6 +10,8 @@ const ANIMATED_NODE_NAME: String = "AnimatedSprite2D"
 static var _sprite_frames_cache: Dictionary = {}
 
 
+## 作用：合并状态专属覆盖与基础视觉，再按是否配置动画帧选择静态或动画sprite。
+## 使用：owner为宿主节点，visual非空才应用，state默认idle。
 static func apply_visual_config(owner: Node, visual: Dictionary, state: String = "idle") -> void:
 	if owner == null or visual.is_empty():
 		return
@@ -23,6 +27,8 @@ static func apply_visual_config(owner: Node, visual: Dictionary, state: String =
 		_apply_sprite(owner, merged_visual)
 
 
+## 作用：请求状态不存在且有fallback时选择fallback，再应用视觉。
+## 使用：用于状态切换，默认回退idle。
 static func play_state(owner: Node, visual: Dictionary, state: String, fallback_state: String = "idle") -> void:
 	if owner == null or visual.is_empty():
 		return
@@ -33,6 +39,8 @@ static func play_state(owner: Node, visual: Dictionary, state: String, fallback_
 	apply_visual_config(owner, visual, target_state)
 
 
+## 作用：显示选用的sprite并隐藏另一种；静态模式同时停止动画。
+## 使用：prefer_animated控制二选一，缺节点无操作。
 static func hide_unused_visual_node(owner: Node, prefer_animated: bool) -> void:
 	if owner == null:
 		return
@@ -47,6 +55,8 @@ static func hide_unused_visual_node(owner: Node, prefer_animated: bool) -> void:
 			animated_sprite.stop()
 
 
+## 作用：取得或创建静态sprite，应用通用样式并按配置路径加载贴图。
+## 使用：无有效贴图时不覆盖已有texture。
 static func _apply_sprite(owner: Node, visual: Dictionary) -> void:
 	var sprite: Sprite2D = owner.get_node_or_null(SPRITE_NODE_NAME) as Sprite2D
 	if sprite == null:
@@ -64,6 +74,8 @@ static func _apply_sprite(owner: Node, visual: Dictionary) -> void:
 			sprite.texture = texture
 
 
+## 作用：加载帧资源并配置动画节点，找不到帧时警告并回退静态。
+## 使用：动画名按指定/fallback/首项回退，切换动画时重置帧与进度。
 static func _apply_animated_sprite(owner: Node, visual: Dictionary, state: String) -> void:
 	var sprite_frames: SpriteFrames = _load_sprite_frames(visual)
 	if sprite_frames == null:
@@ -98,6 +110,8 @@ static func _apply_animated_sprite(owner: Node, visual: Dictionary, state: Strin
 		animated_sprite.play()
 
 
+## 作用：应用颜色、缩放、偏移、旋转、层级、可选材质与翻转。
+## 使用：item为sprite节点；缺配置值使用对应默认或现有值。
 static func _apply_common_canvas_item(item: Node2D, visual: Dictionary) -> void:
 	item.modulate = _get_color(visual.get("modulate", []), item.modulate)
 	item.scale = _get_vector2(visual.get("scale", []), item.scale)
@@ -117,6 +131,8 @@ static func _apply_common_canvas_item(item: Node2D, visual: Dictionary) -> void:
 		(item as AnimatedSprite2D).flip_v = bool(visual.get("flip_v", false))
 
 
+## 作用：优先从animations状态字典取覆盖，否则从states取。
+## 使用：返回深复制，找不到返回空字典。
 static func _get_state_visual(visual: Dictionary, state: String) -> Dictionary:
 	var animations: Dictionary = _get_dictionary(visual.get("animations", {}))
 	if animations.has(state) and animations[state] is Dictionary:
@@ -129,10 +145,14 @@ static func _get_state_visual(visual: Dictionary, state: String) -> Dictionary:
 	return {}
 
 
+## 作用：查询状态配置或帧资源是否存在对应动画。
+## 使用：返回布尔值，可能从缓存/资源加载帧。
 static func has_state_visual(visual: Dictionary, state: String) -> bool:
 	return _has_state_visual(visual, state)
 
 
+## 作用：先查状态覆盖，再查外部sprite_frames是否含动画。
+## 使用：只有sprite_sheet且未显式状态覆盖时不会加载查询动画。
 static func _has_state_visual(visual: Dictionary, state: String) -> bool:
 	if not _get_state_visual(visual, state).is_empty():
 		return true
@@ -144,10 +164,14 @@ static func _has_state_visual(visual: Dictionary, state: String) -> bool:
 	return false
 
 
+## 作用：检查外部帧资源路径或sprite_sheet字段。
+## 使用：只看配置，不验证资源加载成功。
 static func _has_sprite_frames(visual: Dictionary) -> bool:
 	return String(visual.get("sprite_frames", "")) != "" or visual.has("sprite_sheet")
 
 
+## 作用：优先读缓存，再加载外部帧或由sprite_sheet构建并缓存。
+## 使用：失败返回null，无缓存键时不缓存。
 static func _load_sprite_frames(visual: Dictionary) -> SpriteFrames:
 	var cache_key: String = _get_sprite_frames_cache_key(visual)
 	if cache_key != "" and _sprite_frames_cache.has(cache_key):
@@ -167,6 +191,8 @@ static func _load_sprite_frames(visual: Dictionary) -> SpriteFrames:
 	return frames
 
 
+## 作用：外部帧使用路径，精灵图使用贴图、sheet与animations序列化组合键。
+## 使用：无帧配置返回空键。
 static func _get_sprite_frames_cache_key(visual: Dictionary) -> String:
 	var sprite_frames_path: String = String(visual.get("sprite_frames", ""))
 	if sprite_frames_path != "":
@@ -176,6 +202,8 @@ static func _get_sprite_frames_cache_key(visual: Dictionary) -> String:
 	return ""
 
 
+## 作用：加载贴图，按单帧大小/网格/间距生成各动画AtlasTexture并设置fps/loop。
+## 使用：animations须非空，无法加载贴图返回null。
 static func _build_sprite_frames_from_sheet(visual: Dictionary, sprite_sheet: Dictionary) -> SpriteFrames:
 	var texture_path: String = String(visual.get("texture", sprite_sheet.get("texture", "")))
 	if texture_path == "":
@@ -233,6 +261,8 @@ static func _build_sprite_frames_from_sheet(visual: Dictionary, sprite_sheet: Di
 	return frames
 
 
+## 作用：从行号、起始列和帧数生成连续二维cell列表。
+## 使用：count负值生成空数组，列顺序保持。
 static func _build_row_frame_specs(row: int, start_column: int, count: int) -> Array:
 	var specs: Array = []
 	for column_offset in range(maxi(count, 0)):
@@ -240,6 +270,8 @@ static func _build_row_frame_specs(row: int, start_column: int, count: int) -> A
 	return specs
 
 
+## 作用：解析显式rect、列行字典、四数矩形或双数cell并换算贴图区域。
+## 使用：origin/spacing/frame_size决定网格坐标，非法spec返回空Rect2。
 static func _get_frame_region(frame_spec: Variant, frame_size: Vector2, origin: Vector2, spacing: Vector2) -> Rect2:
 	if frame_spec is Dictionary:
 		var frame_data: Dictionary = frame_spec
@@ -260,18 +292,24 @@ static func _get_frame_region(frame_spec: Variant, frame_size: Vector2, origin: 
 	return Rect2()
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回深复制，嵌套修改不会污染输入。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
 
 
+## 作用：读取数组配置，非数组输入返回空数组。
+## 使用：value为待检查配置；返回输入数组本身。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value as Array
 	return []
 
 
+## 作用：读取Rect2或至少四个成员的[x,y,w,h]数组。
+## 使用：无法解析返回fallback。
 static func _get_rect2(value: Variant, fallback: Rect2) -> Rect2:
 	if value is Rect2:
 		return value
@@ -282,6 +320,8 @@ static func _get_rect2(value: Variant, fallback: Rect2) -> Rect2:
 	return fallback
 
 
+## 作用：解析Color、RGB/RGBA数组或HTML颜色字符串。
+## 使用：无法解析时返回fallback；三成员RGB数组沿用fallback透明度。
 static func _get_color(value: Variant, fallback: Color) -> Color:
 	if value is Color:
 		return value
@@ -295,6 +335,8 @@ static func _get_color(value: Variant, fallback: Color) -> Color:
 	return fallback
 
 
+## 作用：将Vector2或至少两个成员的[x,y]数组，数值则扩为同值双轴解析为二维值。
+## 使用：无法解析时返回fallback；不修改输入。
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value

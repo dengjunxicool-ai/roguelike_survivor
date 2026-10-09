@@ -1,3 +1,6 @@
+## 文件用途：管理离散波次的启动、预算投放、结束与过渡经验收集。
+## 使用方式：setup 绑定 spawner；每帧 process_discrete_wave，批次间隔适配预算而不裁剪总数量。
+
 extends RefCounted
 class_name WaveDirector
 
@@ -5,10 +8,14 @@ class_name WaveDirector
 var _owner: Node
 
 
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node) -> void:
 	_owner = owner
 
 
+## 作用：推进波次计时、事件、生成和过渡，并判断提前清场或超时结束。
+## 使用：spawner 每物理帧调用，delta 为秒；过渡期间持续收集经验，避免漏掉延迟生成晶体。
 func process_discrete_wave(delta: float) -> void:
 	if _owner == null:
 		return
@@ -57,6 +64,8 @@ func process_discrete_wave(delta: float) -> void:
 		finish_wave(true)
 
 
+## 作用：按波次剩余预算投放一个批次并更新冷却。
+## 使用：警示中的敌人也计入占场；实际生成数回写预算进度，不裁剪总预算。
 func process_wave_spawn(delta: float, wave: Dictionary) -> void:
 	if _owner == null:
 		return
@@ -82,6 +91,8 @@ func process_wave_spawn(delta: float, wave: Dictionary) -> void:
 	_owner.set("_normal_spawn_cooldown", _get_batch_interval(wave))
 
 
+## 作用：计算能在波次期限内投完预算的批次间隔。
+## 使用：使用波次时长、警示时长和批次数；间隔至少 0.05 秒；返回计算或读取的数值。
 func _get_batch_interval(wave: Dictionary) -> float:
 	var interval: float = maxf(float(wave.get("spawn_batch_interval_seconds", _owner.get("_spawn_batch_interval"))), 0.05)
 	var batches: int = ceili(float(_owner.get("_wave_total_count")) / float(_owner.get("_max_spawn_batch_size")))
@@ -93,6 +104,8 @@ func _get_batch_interval(wave: Dictionary) -> float:
 	return maxf(interval, 0.05)
 
 
+## 作用：载入指定波次、重置计时和生成计数并发出波次信号。
+## 使用：wave_index 从 0 开始；无对应波次则进入普通阶段结束流程。
 func start_wave(wave_index: int) -> void:
 	if _owner == null:
 		return
@@ -121,6 +134,8 @@ func start_wave(wave_index: int) -> void:
 	)
 
 
+## 作用：发布波次结束、收集经验并开始下一波的过渡计时。
+## 使用：cleared_early 区分提前清场与超时；超时不等同于杀死遗留敌人。
 func finish_wave(cleared_early: bool) -> void:
 	if _owner == null:
 		return
@@ -140,6 +155,8 @@ func finish_wave(cleared_early: bool) -> void:
 		start_wave(int(_owner.get("_current_wave_index")) + 1)
 
 
+## 作用：收集波次经验晶体组；具体处理委托给 _owner._collect_all_experience_crystals。
+## 使用：本文件由 process_discrete_wave、finish_wave 调用。
 func _collect_wave_experience_crystals() -> void:
 	if _owner == null:
 		return

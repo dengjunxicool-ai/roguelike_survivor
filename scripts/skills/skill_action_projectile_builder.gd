@@ -1,7 +1,11 @@
+## 文件用途：纯数据构建投射物发射方向、目标序列、视觉偏移、同目标衰减与运行参数。
+## 使用方式：投射物执行族传动作参数和上下文；返回生成字典或目标序列，创建节点由执行族负责。
 extends RefCounted
 class_name SkillActionProjectileBuilder
 
 
+## 作用：根据发射者和目标位置计算瞄准方向、视觉偏移及弹体参数。
+## 使用：params 为动作或状态参数。
 static func build_targeted_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
 	var visual_start_position: Vector2 = _resolve_visual_start_position(caster_position, target_position, same_target_hit_index, params)
 	var visual_target_position: Vector2 = _resolve_visual_target_position(target_position, same_target_hit_index, params)
@@ -16,6 +20,8 @@ static func build_targeted_launch_data(params: Dictionary, caster_position: Vect
 	}
 
 
+## 作用：根据显式方向与起点构建直线弹体发射数据。
+## 使用：params 读取 spawn_offset/visual_start_offset；caster 为施法者节点；target 为本次命中目标。
 static func build_direct_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
 	var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
 	var target_position: Vector2 = target.global_position
@@ -32,6 +38,8 @@ static func build_direct_launch_data(params: Dictionary, caster: Node2D, target:
 	}
 
 
+## 作用：将配置视觉偏移应用到发射数据。
+## 使用：params 读取 visual_start_offset/visual_start_relative_to。
 static func apply_visual_start_offset(start_position: Vector2, target_position: Vector2, params: Dictionary) -> Vector2:
 	if not params.has("visual_start_offset"):
 		return start_position
@@ -41,14 +49,20 @@ static func apply_visual_start_offset(start_position: Vector2, target_position: 
 	return start_position + visual_start_offset
 
 
+## 作用：计算配置指定的投射物视觉起点。
+## 使用：params 为动作或状态参数。
 static func resolve_visual_start_position(start_position: Vector2, target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	return _resolve_visual_start_position(start_position, target_position, same_target_hit_index, params)
 
 
+## 作用：计算投射物目标视觉终点。
+## 使用：params 为动作或状态参数。
 static func resolve_visual_target_position(target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	return _resolve_visual_target_position(target_position, same_target_hit_index, params)
 
 
+## 作用：汇总已解析弹体数值、运行载荷和上下文为工厂参数。
+## 使用：投射物执行族传动作参数和上下文；返回生成字典或目标序列，创建节点由执行族负责。
 static func build_spawn_params(input: Dictionary) -> Dictionary:
 	var params: Dictionary = _get_dictionary(input.get("params", {}))
 	var projectile_params: Dictionary = _get_dictionary(input.get("projectile_params", {}))
@@ -92,6 +106,8 @@ static func build_spawn_params(input: Dictionary) -> Dictionary:
 	return spawn_params
 
 
+## 作用：按照动作选择策略及数量形成投射物目标列表。
+## 使用：count 为所需数量；无匹配项时返回空数组。
 static func build_target_sequence(targets: Array, count: int) -> Array:
 	var valid_targets: Array = []
 	for target_variant: Variant in targets:
@@ -114,12 +130,16 @@ static func build_target_sequence(targets: Array, count: int) -> Array:
 	return result
 
 
+## 作用：读取并规范同目标重复弹体发射延时。
+## 使用：params 读取 same_target_spawn_delay。
 static func resolve_same_target_spawn_delay(params: Dictionary, same_target_hit_index: int) -> float:
 	if same_target_hit_index <= 0:
 		return 0.0
 	return maxf(float(params.get("same_target_spawn_delay", 0.0)), 0.0) * float(same_target_hit_index)
 
 
+## 作用：深拷贝原参数并标注同目标命中序号与对应数值调整。
+## 使用：params 读取 same_target_repeat_damage_only/actions_on_hit。
 static func build_same_target_hit_params(params: Dictionary, same_target_hit_index: int) -> Dictionary:
 	if same_target_hit_index <= 0 or not bool(params.get("same_target_repeat_damage_only", false)):
 		return params
@@ -128,6 +148,8 @@ static func build_same_target_hit_params(params: Dictionary, same_target_hit_ind
 	return adjusted
 
 
+## 作用：只保留字典型伤害动作，供附加弹体避免重复施加其他效果。
+## 使用：actions 为依次执行的动作列表。
 static func filter_damage_actions(actions: Array) -> Array:
 	var adjusted: Array = []
 	for action_variant: Variant in actions:
@@ -139,6 +161,8 @@ static func filter_damage_actions(actions: Array) -> Array:
 	return adjusted
 
 
+## 作用：把命中状态配置转为规范非空 ID 列表。
+## 使用：由本文件 build_runtime_data 调用。
 static func normalize_status_ids(values: Array) -> Array[StringName]:
 	var statuses: Array[StringName] = []
 	for value: Variant in values:
@@ -146,6 +170,8 @@ static func normalize_status_ids(values: Array) -> Array[StringName]:
 	return statuses
 
 
+## 作用：构建弹体命中事件与伤害传递使用的运行数据。
+## 使用：投射物执行族传动作参数和上下文；返回生成字典或目标序列，创建节点由执行族负责。
 static func build_runtime_data(input: Dictionary) -> Dictionary:
 	return {
 		"speed": float(input.get("speed", 420.0)),
@@ -160,6 +186,8 @@ static func build_runtime_data(input: Dictionary) -> Dictionary:
 	}
 
 
+## 作用：解析内部视觉起点字段与默认位置。
+## 使用：params 读取 same_target_curve_start_spread_radius。
 static func _resolve_visual_start_position(start_position: Vector2, target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	if same_target_hit_index <= 0:
 		return start_position
@@ -175,6 +203,8 @@ static func _resolve_visual_start_position(start_position: Vector2, target_posit
 	return start_position + side * side_sign * spread_radius * ring
 
 
+## 作用：解析内部视觉目标位置字段与默认位置。
+## 使用：params 读取 same_target_curve_spread_radius。
 static func _resolve_visual_target_position(target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	if same_target_hit_index <= 0:
 		return target_position
@@ -185,6 +215,8 @@ static func _resolve_visual_target_position(target_position: Vector2, same_targe
 	return target_position + Vector2(cos(angle), sin(angle)) * spread_radius
 
 
+## 作用：把向量或配置坐标转换为 Vector2，无法解析时使用备用向量。
+## 使用：fallback 为缺值备用结果。
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value
@@ -195,12 +227,16 @@ static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	return fallback
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 build_spawn_params 调用；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value
 	return {}
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 build_spawn_params/build_same_target_hit_params 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

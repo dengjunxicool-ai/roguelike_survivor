@@ -1,6 +1,10 @@
+## 文件用途：纯数据构建技能升级、普通属性升级和调试卡片的展示与应用载荷。
+## 使用方式：由 UpgradePool 传入等级、稀有度、权重及推荐理由；本构建器不抽随机数也不应用升级效果。
 extends RefCounted
 class_name UpgradeOptionBuilder
 
+## 作用：构建已拥有技能升至指定下一等级的卡片，不直接改技能等级。
+## 使用：skill_id 为标准技能 ID；rarity 为目标稀有度。
 static func build_skill_level_up_data(skill_id: StringName, next_level: int, skill_name: String, rarity: String, current_rarity: String, max_level: int) -> Dictionary:
 	return {
 			"id": "skill_level_up:%s:%d:%s" % [_string_or(skill_id, ""), next_level, rarity],
@@ -22,6 +26,8 @@ static func build_skill_level_up_data(skill_id: StringName, next_level: int, ski
 		}
 
 
+## 作用：构建普通升级卡，携带升级 ID、学习技能引用、抽取权重和当前等级展示。
+## 使用：由 UpgradePool 传入等级、稀有度、权重及推荐理由；本构建器不抽随机数也不应用升级效果。
 static func build_upgrade_data(upgrade: Dictionary, upgrade_level: int, weight: float, recommended_reason: String) -> Dictionary:
 	var payload: Dictionary = {"upgrade_id": StringName(_string_or(upgrade.get("id", ""), "")), "weight": weight}
 	if upgrade.has("learn_skill_id"):
@@ -42,6 +48,8 @@ static func build_upgrade_data(upgrade: Dictionary, upgrade_level: int, weight: 
 		}
 
 
+## 作用：构建神系调试卡，并把当前已选次数用于等级说明。
+## 使用：god_id 为筛选神系 ID。
 static func build_debug_data(upgrade: Dictionary, current_level: int, god_id: StringName) -> Dictionary:
 	var upgrade_id: StringName = StringName(_string_or(upgrade.get("id", ""), ""))
 	return {
@@ -64,10 +72,14 @@ static func build_debug_data(upgrade: Dictionary, current_level: int, god_id: St
 	}
 
 
+## 作用：生成指定技能提升到下一等级的卡片说明。
+## 使用：由本文件 build_skill_level_up_data 调用。
 static func _build_skill_level_up_description(skill_name: String, next_level: int) -> String:
 	return "提升 %s 至 Lv%d。" % [skill_name, next_level]
 
 
+## 作用：优先取升级首条等级说明，否则使用通用 description。
+## 使用：由本文件 build_upgrade_data 调用。
 static func _get_level_up_upgrade_description(upgrade: Dictionary) -> String:
 	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
 	if not descriptions.is_empty():
@@ -75,6 +87,8 @@ static func _get_level_up_upgrade_description(upgrade: Dictionary) -> String:
 	return _string_or(upgrade.get("description", ""), "")
 
 
+## 作用：按升级标签优先顺序生成影响伤害来源或生存移动的展示文字。
+## 使用：由本文件 build_upgrade_data 调用。
 static func _infer_affected_origin(upgrade: Dictionary) -> String:
 	var tags: Array = _get_array(upgrade.get("tags", []))
 	if tags.has("dot"):
@@ -94,6 +108,8 @@ static func _infer_affected_origin(upgrade: Dictionary) -> String:
 	return "通用属性"
 
 
+## 作用：按升级标签生成未覆盖的伤害来源说明，供卡片解释效果边界。
+## 使用：由本文件 build_upgrade_data 调用。
 static func _infer_does_not_affect(upgrade: Dictionary) -> String:
 	var tags: Array = _get_array(upgrade.get("tags", []))
 	if tags.has("dot"):
@@ -109,6 +125,8 @@ static func _infer_does_not_affect(upgrade: Dictionary) -> String:
 	return "不影响未在标签和效果中列出的伤害来源。"
 
 
+## 作用：优先取当前升级等级对应说明，越界时回退首条或通用说明。
+## 使用：由本文件 build_debug_data 调用。
 static func _get_debug_upgrade_description(upgrade: Dictionary, current_level: int) -> String:
 	var descriptions: Array = _get_array(upgrade.get("level_descriptions", []))
 	if current_level >= 0 and current_level < descriptions.size():
@@ -118,6 +136,8 @@ static func _get_debug_upgrade_description(upgrade: Dictionary, current_level: i
 	return _string_or(upgrade.get("description", ""), "")
 
 
+## 作用：先查主配置两种卡面字段，再查备用配置，均缺失返回空路径。
+## 使用：fallback 为缺值备用结果。
 static func _get_option_background_texture(primary: Dictionary, fallback: Dictionary = {}) -> String:
 	for key: String in ["background_texture", "card_background_texture"]:
 		var value: String = _string_or(primary.get(key, ""), "")
@@ -132,11 +152,15 @@ static func _get_option_background_texture(primary: Dictionary, fallback: Dictio
 	return ""
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 build_upgrade_data/build_debug_data 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：把 Variant 转为字符串，null时使用默认文字。
+## 使用：default_value 为缺值备用结果。
 static func _string_or(value: Variant, default_value: String = "") -> String:
 	return default_value if value == null else str(value)

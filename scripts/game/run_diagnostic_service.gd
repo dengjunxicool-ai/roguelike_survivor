@@ -1,3 +1,6 @@
+## 文件用途：从实际局内统计生成结算诊断、技能构筑和下局建议。
+## 使用方式：结果页构建 view model 时静态调用 build_diagnostic；不修改战斗或存档。
+
 extends RefCounted
 class_name RunDiagnosticService
 
@@ -5,6 +8,8 @@ class_name RunDiagnosticService
 const SkillLearnDefinitionRepositoryScript: Script = preload("res://scripts/upgrades/skill_learn_definition_repository.gd")
 
 
+## 作用：根据真实输出、承伤、时间和击杀统计生成诊断与下局建议。
+## 使用：run_state 为结算快照；返回推荐、构筑、升级计数与伤害占比，不写入存档。
 static func build_diagnostic(run_state: Dictionary) -> Dictionary:
 	var map_id: StringName = StringName(String(run_state.get("selected_map_id", "abandoned_dungeon")))
 	var character_id: StringName = StringName(String(run_state.get("selected_character_id", "mage")))
@@ -40,6 +45,8 @@ static func build_diagnostic(run_state: Dictionary) -> Dictionary:
 	return recommendation
 
 
+## 作用：把各来源正伤害量换算为占比。
+## 使用：amounts 为来源到数值的字典；无正伤害返回空字典。
 static func _damage_shares(amounts: Dictionary) -> Dictionary:
 	var total: float = 0.0
 	for amount: Variant in amounts.values():
@@ -54,6 +61,8 @@ static func _damage_shares(amounts: Dictionary) -> Dictionary:
 	return shares
 
 
+## 作用：构建摘要。
+## 使用：本文件由 build_diagnostic 调用；输入 run_state（单局状态）；返回 String 文本/标识。
 static func _build_summary(run_state: Dictionary) -> String:
 	var parts: Array[String] = []
 	var snapshot: Variant = run_state.get("skills_snapshot", [])
@@ -68,6 +77,8 @@ static func _build_summary(run_state: Dictionary) -> String:
 	return "、".join(parts) if not parts.is_empty() else "未记录技能构筑"
 
 
+## 作用：将升级选取次数按展示名称聚合并排序为文本。
+## 使用：upgrade_counts 使用实际选项 ID；名称通过动态学习定义仓库解析；返回 String 文本/标识。
 static func _upgrade_summary(upgrade_counts: Dictionary) -> String:
 	var counts_by_name: Dictionary = {}
 	for key: Variant in upgrade_counts.keys():
@@ -77,6 +88,8 @@ static func _upgrade_summary(upgrade_counts: Dictionary) -> String:
 		var name: String = _upgrade_name(String(key))
 		counts_by_name[name] = int(counts_by_name.get(name, 0)) + count
 	var names: Array = counts_by_name.keys()
+	## 作用：按升级选取次数降序、同次数按名称升序排列摘要条目。
+	## 使用：sort_custom 自动调用此比较回调；a/b 为名称键，返回 a 是否应排在 b 前。
 	names.sort_custom(func(a: Variant, b: Variant) -> bool:
 		var a_count: int = int(counts_by_name[a])
 		var b_count: int = int(counts_by_name[b])
@@ -88,6 +101,8 @@ static func _upgrade_summary(upgrade_counts: Dictionary) -> String:
 	return "、".join(parts) if not parts.is_empty() else "本局未选择升级"
 
 
+## 作用：升级名称。
+## 使用：本文件由 _upgrade_summary 调用；输入 option_id（选项ID）；返回 String 文本/标识。
 static func _upgrade_name(option_id: String) -> String:
 	var parts: PackedStringArray = option_id.split(":")
 	if parts.size() > 1 and parts[0] == "skill_level_up":
@@ -103,6 +118,8 @@ static func _upgrade_name(option_id: String) -> String:
 	return String(upgrade.get("display_name", upgrade_id))
 
 
+## 作用：来源标签。
+## 使用：本文件由 build_diagnostic 调用；输入 source（来源）；返回 String 文本/标识。
 static func _source_label(source: String) -> String:
 	match source:
 		"boss":
@@ -125,6 +142,8 @@ static func _source_label(source: String) -> String:
 			return source
 
 
+## 作用：推荐。
+## 使用：本文件由 build_diagnostic 调用；输入 character_id（角色ID）、map_id（地图ID）、summary（摘要）、reason（原因）；返回字典包含 recommended_character_id/recommended_map_id/summary/reason。
 static func _recommend(character_id: StringName, map_id: StringName, summary: String, reason: String) -> Dictionary:
 	return {
 		"recommended_character_id": character_id,
@@ -134,6 +153,8 @@ static func _recommend(character_id: StringName, map_id: StringName, summary: St
 	}
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 build_diagnostic 调用；输入 value（值）。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)

@@ -1,7 +1,11 @@
+## 文件用途：执行严格伤害、低血斩杀、状态施加消耗转移和冻结粉碎等命中动作。
+## 使用方式：context 提供目标与技能来源；伤害通过 DamagePacket 和目标受击入口，状态经目标公开方法操作。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionStatusExecutor
 
 
+## 作用：解析单体或范围目标，为每个目标执行标准伤害动作。
+## 使用：params 读取 amount/low_hp_execute_threshold；context 携带 target；返回布尔判断或执行是否成功。
 func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 	context = _context_with_resolved_target(params, context)
 	var target: Node = context.get("target") as Node
@@ -20,6 +24,8 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 	return damaged_any
 
 
+## 作用：继承弹体伤害来源并应用斩杀与规则修正后调用目标 take_damage。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文；amount 为本次伤害或动作数值；返回布尔判断或执行是否成功。
 func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_target: Node, amount: int, damage_type: StringName, requires_low_hp_execute: bool) -> bool:
 	if damage_target == null or not damage_target.has_method("take_damage"):
 		return false
@@ -38,6 +44,8 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 	return true
 
 
+## 作用：检查有效存活目标生命比例是否不高于 low_hp_execute_threshold，零门槛不触发。
+## 使用：params 读取 low_hp_execute_threshold；target 为本次命中目标；返回布尔判断或执行是否成功。
 func _should_execute_low_hp_target(params: Dictionary, target: Node) -> bool:
 	var threshold: float = clampf(float(params.get("low_hp_execute_threshold", 0.0)), 0.0, 1.0)
 	if threshold <= 0.0 or target == null:
@@ -49,6 +57,8 @@ func _should_execute_low_hp_target(params: Dictionary, target: Node) -> bool:
 	return current_health / max_health <= threshold
 
 
+## 作用：取当前生命加最大生命的向上取整值与备用伤害较大者，作为斩杀伤害量。
+## 使用：target 为本次命中目标。
 func _get_low_hp_execute_amount(target: Node, fallback_amount: int) -> int:
 	if target == null:
 		return fallback_amount
@@ -57,6 +67,8 @@ func _get_low_hp_execute_amount(target: Node, fallback_amount: int) -> int:
 	return maxi(ceili(current_health + max_health), fallback_amount)
 
 
+## 作用：原地把伤害包改为足额 true_damage 特殊来源，并标记斩杀与阈值；本函数不应用伤害。
+## 使用：packet 为待修饰伤害包视图；params 读取 low_hp_execute_threshold；target 为本次命中目标；会原地更新 packet.raw_amount/amount/damage_origin。
 func _apply_low_hp_execute_packet(packet: Dictionary, params: Dictionary, target: Node) -> void:
 	var amount: int = _get_low_hp_execute_amount(target, int(packet.get("amount", packet.get("raw_amount", 0))))
 	packet["raw_amount"] = amount
@@ -67,6 +79,8 @@ func _apply_low_hp_execute_packet(packet: Dictionary, params: Dictionary, target
 	packet["low_hp_execute_threshold"] = clampf(float(params.get("low_hp_execute_threshold", 0.0)), 0.0, 1.0)
 
 
+## 作用：优先动作指定目标集合，否则用上下文目标或范围查询解析伤害目标。
+## 使用：params 读取 radius/target_group；context 携带 target_group。
 func _resolve_damage_targets(params: Dictionary, context: Dictionary, primary_target: Node) -> Array[Node]:
 	var targets: Array[Node] = [primary_target]
 	var radius: float = maxf(float(params.get("radius", 0.0)), 0.0)
@@ -79,6 +93,8 @@ func _resolve_damage_targets(params: Dictionary, context: Dictionary, primary_ta
 	return targets
 
 
+## 作用：从命中弹体继承运行伤害包的来源和规则字段。
+## 使用：packet 为待修饰伤害包视图；context 携带 projectile；target 为本次命中目标；会原地更新 packet.target_id。
 func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dictionary, target: Node) -> void:
 	var projectile: Node = context.get("projectile") as Node
 	if projectile == null:
@@ -97,6 +113,8 @@ func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dict
 		packet["target_id"] = str(target.get_instance_id())
 
 
+## 作用：解析目标与状态参数并执行施加，支持区域同帧合并语义。
+## 使用：params 读取 chance/status_id/duration/damage；context 携带 target；返回布尔判断或执行是否成功。
 func _apply_status(params: Dictionary, context: Dictionary) -> bool:
 	context = _context_with_resolved_target(params, context)
 	var target: Node = context.get("target") as Node
@@ -142,6 +160,8 @@ func _apply_status(params: Dictionary, context: Dictionary) -> bool:
 	return false
 
 
+## 作用：对动作目标消耗指定状态层数。
+## 使用：params 读取 status_id/stacks/stack/retain_stacks_modifier；context 携带 target；返回布尔判断或执行是否成功。
 func _consume_status_stack(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
@@ -175,6 +195,8 @@ func _consume_status_stack(params: Dictionary, context: Dictionary) -> bool:
 	return false
 
 
+## 作用：按目标状态当前层数计算伤害，并按规则消费状态。
+## 使用：params 读取 amount_per_stack/damage_per_stack/amount/consume；context 携带 target；返回布尔判断或执行是否成功。
 func _damage_by_status_stack(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null or not target.has_method("take_damage"):
@@ -205,6 +227,8 @@ func _damage_by_status_stack(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：把指定状态从来源目标转移到动作选择的目标集合。
+## 使用：params 读取 status_id/status/stacks/stack；context 携带 source/target/caster；返回布尔判断或执行是否成功。
 func _transfer_status(params: Dictionary, context: Dictionary) -> bool:
 	var source: Node = context.get("source") as Node
 	var target: Node = context.get("target") as Node
@@ -228,6 +252,8 @@ func _transfer_status(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：按动作数值减少目标状态剩余持续时间。
+## 使用：params 读取 status_id/status/duration/seconds；context 携带 target；返回布尔判断或执行是否成功。
 func _consume_status_duration(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
@@ -245,6 +271,8 @@ func _consume_status_duration(params: Dictionary, context: Dictionary) -> bool:
 	return false
 
 
+## 作用：根据电压、感电和动作参数触发过载伤害与状态变化。
+## 使用：params 读取 status_id/duration；context 携带 target；返回布尔判断或执行是否成功。
 func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
@@ -253,6 +281,8 @@ func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
 	return _apply_status_to_target(target, overload_id, {"stacks": 1, "duration": float(params.get("duration", 0.1))})
 
 
+## 作用：检查冻结目标并执行粉碎伤害及派生效果。
+## 使用：params 读取 projectile_count/projectile_id；context 携带 target；返回布尔判断或执行是否成功。
 func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
@@ -270,6 +300,8 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：将粉碎规则与事件来源整理为标准伤害动作参数。
+## 使用：params 读取 amount/damage。
 func _prepare_shatter_damage_params(params: Dictionary) -> Dictionary:
 	var damage_value: Variant = params.get("amount", params.get("damage", {"stat": "power", "scale": 0.25}))
 	var damage_params: Dictionary = params.duplicate(true)
@@ -284,6 +316,8 @@ func _prepare_shatter_damage_params(params: Dictionary) -> Dictionary:
 	return damage_params
 
 
+## 作用：在命中目标写入动作指定标记元数据。
+## 使用：params 读取 mark/key/duration；context 为施放或命中上下文；返回布尔判断或执行是否成功。
 func _mark_target(params: Dictionary, context: Dictionary) -> bool:
 	var resolved_context: Dictionary = _context_with_resolved_target(params, context)
 	var target: Node = resolved_context.get("target") as Node

@@ -1,7 +1,11 @@
+## 文件用途：创建召唤物与粒子并维护其攻击 tick 和表现配置。
+## 使用方式：召唤动作优先接入 SummonManager；共享上下文提供施法者、父节点、目标组与技能配置。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionSummonExecutor
 
 
+## 作用：创建并配置动作声明的粒子表现节点。
+## 使用：params 读取 profile/lifetime；context 为施放或命中上下文；返回布尔判断或执行是否成功。
 func _spawn_particles(params: Dictionary, context: Dictionary) -> bool:
 	var parent: Node = _get_parent_node(context)
 	if parent == null:
@@ -20,6 +24,8 @@ func _spawn_particles(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：解析召唤配置，优先接入召唤管理器，不适用时创建动作召唤对象。
+## 使用：params 读取 summon_definition_id/summon_id/spawn_offset/attack_interval；context 携带 caster；返回布尔判断或执行是否成功。
 func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 	var caster: Node2D = context.get("caster") as Node2D
 	var parent: Node = _get_parent_node(context)
@@ -52,6 +58,8 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 	timer.one_shot = false
 	timer.autostart = true
 	summon.add_child(timer)
+	## 作用：召唤攻击计时回调：触发一次当前召唤物的目标查询与攻击。
+	## 使用：Timer 每个 attack_interval 超时调用；闭包捕获 summon、params 与 context。
 	timer.timeout.connect(func() -> void:
 		_summon_tick(summon, params, context)
 	)
@@ -63,6 +71,8 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：把规范召唤定义和技能上下文交给 SummonManager 创建管理型召唤物。
+## 使用：params 读取 summon_definition_id；context 携带 target_group；caster 为施法者节点；返回布尔判断或执行是否成功。
 func _spawn_managed_summon(params: Dictionary, context: Dictionary, caster: Node2D, parent: Node) -> bool:
 	var manager: Node = caster.get_node_or_null("SummonManager")
 	if manager == null:
@@ -83,6 +93,8 @@ func _spawn_managed_summon(params: Dictionary, context: Dictionary, caster: Node
 	return summon != null
 
 
+## 作用：实例化动作召唤节点并设置父节点、位置和生命周期。
+## 使用：params 读取 summon_script。
 func _create_summon_node(params: Dictionary) -> Node2D:
 	var script_path: String = str(params.get("summon_script", ""))
 	if script_path != "" and ResourceLoader.exists(script_path):
@@ -94,6 +106,8 @@ func _create_summon_node(params: Dictionary) -> Node2D:
 	return Node2D.new()
 
 
+## 作用：召唤物周期查找目标并执行配置攻击动作。
+## 使用：params 读取 radius/range/max_targets/target_group；context 携带 target_group。
 func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> void:
 	if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
 		return
@@ -119,6 +133,8 @@ func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> vo
 		affected += 1
 
 
+## 作用：为召唤节点挂载模型或粒子表现配置。
+## 使用：params 读取 visual_texture/visual_scale/visual_z_index；写入 summon_visual_texture 元数据。
 func _attach_summon_visual(summon: Node2D, params: Dictionary) -> void:
 	var texture_path: String = str(params.get("visual_texture", ""))
 	if summon == null or texture_path == "":
@@ -140,6 +156,8 @@ func _attach_summon_visual(summon: Node2D, params: Dictionary) -> void:
 	summon.set_meta("summon_visual_texture", texture_path)
 
 
+## 作用：根据目标或移动方向更新召唤物视觉朝向。
+## 使用：target 为本次命中目标。
 func _update_summon_visual_facing(summon: Node2D, target: Node2D) -> void:
 	if summon == null or target == null:
 		return
@@ -152,6 +170,8 @@ func _update_summon_visual_facing(summon: Node2D, target: Node2D) -> void:
 	sprite.rotation = direction.angle() - PI * 0.5
 
 
+## 作用：为召唤攻击创建呼吸或吐息粒子表现。
+## 使用：target 为本次命中目标；params 读取 breath_particles/breath_offset/breath_particle_amount。
 func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dictionary) -> void:
 	if summon == null or target == null or not bool(params.get("breath_particles", false)):
 		return
@@ -182,6 +202,8 @@ func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dict
 	particles.emitting = true
 
 
+## 作用：重新启动召唤物粒子发射，供重复攻击表现。
+## 使用：params 读取 profile。
 func _restart_summon_particles(summon: Node2D, params: Dictionary) -> void:
 	if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
 		return
@@ -195,6 +217,8 @@ func _restart_summon_particles(summon: Node2D, params: Dictionary) -> void:
 	particles.emitting = true
 
 
+## 作用：根据配置设置 GPU 粒子材质、数量、寿命与方向。
+## 使用：params 读取 profile/emission_radius/spread/gravity_y。
 func _configure_gpu_particles(particles: GPUParticles2D, params: Dictionary, color: Color) -> void:
 	if particles == null:
 		return

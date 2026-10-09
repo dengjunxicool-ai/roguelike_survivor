@@ -1,3 +1,6 @@
+## 文件用途：构建角色选择卡、预览、属性和确认/解锁按钮。
+## 使用方式：UI 创建后 build，进页面 refresh(character_id)；确认通过 loadout_confirmed 信号交给编排。
+
 extends RefCounted
 class_name CharacterLoadoutController
 
@@ -43,6 +46,8 @@ var _layout_controls: Dictionary = {}
 var _command_dispatcher: RefCounted = UICommandDispatcherScript.new()
 
 
+## 作用：构建角色选择卡、预览、属性和确认/解锁按钮。
+## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；返回 Control 对象/值。
 func build() -> Control:
 	_screen = Control.new()
 	_screen.name = "CHARACTER_SELECT"
@@ -76,6 +81,8 @@ func build() -> Control:
 	return _screen
 
 
+## 作用：选择默认或指定角色，并重绘角色卡、预览、属性和确认区域。
+## 使用：build 后调用；非空 character_id 替换当前选择，空值沿用已有选择并校验默认角色。
 func refresh(character_id: StringName = &"") -> void:
 	if character_id != &"":
 		selected_character_id = character_id
@@ -84,6 +91,8 @@ func refresh(character_id: StringName = &"") -> void:
 	_refresh_selected_character()
 
 
+## 作用：更新布局。
+## 使用：供本模块调用者使用；输入 viewport_size（视口尺寸）。
 func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
@@ -101,6 +110,8 @@ func update_layout(viewport_size: Vector2) -> void:
 	_set_control_min_size("confirm_panel", Vector2(0, maxf(88.0, viewport_size.y * 0.12)))
 
 
+## 作用：横向内容宽度。
+## 使用：本文件由 update_layout 调用；输入 row（行）；返回计算或读取的数值。
 func _horizontal_content_width(row: BoxContainer) -> float:
 	if row == null:
 		return 0.0
@@ -110,6 +121,8 @@ func _horizontal_content_width(row: BoxContainer) -> float:
 	return width + row.get_theme_constant("separation") * maxi(0, row.get_child_count() - 1)
 
 
+## 作用：可用内容宽度。
+## 使用：本文件由 update_layout 调用；输入 viewport_width（视口宽度）；返回计算或读取的数值。
 func _available_content_width(viewport_width: float) -> float:
 	var margin: MarginContainer = _layout_controls.get("margin") as MarginContainer
 	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
@@ -118,6 +131,8 @@ func _available_content_width(viewport_width: float) -> float:
 	return viewport_width - margin.get_theme_constant("margin_left") - margin.get_theme_constant("margin_right") - scroll.get_v_scroll_bar().get_combined_minimum_size().x
 
 
+## 作用：构建导航进度条并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 root（root）。
 func _build_nav_bar(root: VBoxContainer) -> void:
 	var nav_bar: HBoxContainer = HBoxContainer.new()
 	nav_bar.custom_minimum_size = Vector2(0, NAV_HEIGHT)
@@ -140,6 +155,8 @@ func _build_nav_bar(root: VBoxContainer) -> void:
 	soul_label.size_flags_horizontal = Control.SIZE_SHRINK_END
 
 
+## 作用：构建主体并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 root（root）。
 func _build_body(root: VBoxContainer) -> void:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -169,6 +186,8 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_confirm_panel(body)
 
 
+## 作用：构建角色列表并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_character_list(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(LIST_MIN_WIDTH, 0), 0.95)
 	panel.name = "CharacterListPanel"
@@ -195,6 +214,8 @@ func _build_character_list(parent: BoxContainer) -> void:
 	layout.add_child(_character_list)
 
 
+## 作用：构建预览面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_preview_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(PREVIEW_MIN_WIDTH, 0), 1.35)
 	panel.name = "CharacterPreviewPanel"
@@ -235,6 +256,8 @@ func _build_preview_panel(parent: BoxContainer) -> void:
 	_description_label.custom_minimum_size = Vector2(0, 80)
 
 
+## 作用：构建详情面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_detail_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(DETAIL_MIN_WIDTH, 0), 1.2)
 	panel.name = "CharacterDetailPanel"
@@ -270,6 +293,8 @@ func _build_detail_panel(parent: BoxContainer) -> void:
 	_starting_skill_label.custom_minimum_size = Vector2(0, 120)
 
 
+## 作用：构建确认面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_confirm_panel(parent: VBoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(0, 104), 1.0)
 	panel.name = "CharacterConfirmPanel"
@@ -299,6 +324,8 @@ func _build_confirm_panel(parent: VBoxContainer) -> void:
 	_confirm_button.pressed.connect(Callable(self, "_on_confirm_pressed"))
 
 
+## 作用：选择默认角色按条件按需。
+## 使用：本文件由 refresh 调用。
 func _select_default_character_if_needed() -> void:
 	if not GameData.get_character(selected_character_id).is_empty():
 		return
@@ -309,6 +336,8 @@ func _select_default_character_if_needed() -> void:
 	selected_character_id = StringName(str(_get_dictionary(characters[0]).get("id", "")))
 
 
+## 作用：刷新角色卡片列表。
+## 使用：本文件由 refresh、_select_character 调用。
 func _refresh_character_cards() -> void:
 	_clear_children(_character_list)
 	var characters: Array = GameData.get_character_pool()
@@ -322,6 +351,8 @@ func _refresh_character_cards() -> void:
 			_add_character_card(character, character_id)
 
 
+## 作用：添加角色卡片并配置节点/样式所需的属性。
+## 使用：本文件由 _refresh_character_cards 调用；输入 character（角色）、character_id（角色ID）。
 func _add_character_card(character: Dictionary, character_id: StringName) -> void:
 	var is_selected: bool = character_id == selected_character_id
 	var is_unlocked: bool = SaveManager.is_character_unlocked(character_id)
@@ -348,6 +379,8 @@ func _add_character_card(character: Dictionary, character_id: StringName) -> voi
 	_character_list.add_child(button)
 
 
+## 作用：刷新当前选择角色。
+## 使用：本文件由 refresh、_select_character 调用。
 func _refresh_selected_character() -> void:
 	var character: Dictionary = GameData.get_character(selected_character_id)
 	var is_configured: bool = not character.is_empty()
@@ -379,6 +412,8 @@ func _refresh_selected_character() -> void:
 	_refresh_soul_label()
 
 
+## 作用：刷新属性统计。
+## 使用：本文件由 _refresh_selected_character 调用；输入 stats（属性统计）。
 func _refresh_stats(stats: Dictionary) -> void:
 	_clear_children(_stats_list)
 	_add_stat_row("生命", _format_number(stats.get("max_hp", 0)))
@@ -391,6 +426,8 @@ func _refresh_stats(stats: Dictionary) -> void:
 	_add_stat_row("拾取", _format_number(stats.get("pickup_radius", 0)))
 
 
+## 作用：添加属性行。
+## 使用：本文件由 _refresh_stats 调用；输入 label_text（标签文本）、value_text（值文本）。
 func _add_stat_row(label_text: String, value_text: String) -> void:
 	var name_label: Label = _add_detail_label(_stats_list, label_text)
 	name_label.add_theme_font_size_override("font_size", 15)
@@ -399,6 +436,8 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 	value_label.add_theme_font_size_override("font_size", 15)
 
 
+## 作用：刷新特质。
+## 使用：本文件由 _refresh_selected_character 调用；输入 character（角色）。
 func _refresh_trait(character: Dictionary) -> void:
 	var trait_data: Dictionary = _get_dictionary(character.get("trait", {}))
 	var trait_name: String = str(trait_data.get("display_name", trait_data.get("id", "未配置")))
@@ -406,6 +445,8 @@ func _refresh_trait(character: Dictionary) -> void:
 	_trait_label.text = "角色特质\n%s\n%s" % [trait_name, trait_description]
 
 
+## 作用：刷新起始技能。
+## 使用：本文件由 _refresh_selected_character 调用；输入 character（角色）。
 func _refresh_starting_skill(character: Dictionary) -> void:
 	var starting_skill_id: StringName = StringName(str(character.get("starting_skill_id", "")))
 	var skill: Dictionary = GameData.get_skill(starting_skill_id)
@@ -418,6 +459,8 @@ func _refresh_starting_skill(character: Dictionary) -> void:
 	]
 
 
+## 作用：刷新确认按钮。
+## 使用：本文件由 _refresh_selected_character 调用；输入 character（角色）。
 func _refresh_confirm_button(character: Dictionary) -> void:
 	var starting_skill_id: StringName = StringName(str(character.get("starting_skill_id", "")))
 	var has_skill: bool = starting_skill_id != &"" and not GameData.get_skill(starting_skill_id).is_empty()
@@ -431,18 +474,24 @@ func _refresh_confirm_button(character: Dictionary) -> void:
 		_confirm_button.text = _get_unlock_button_text(character)
 
 
+## 作用：刷新灵魂标签。
+## 使用：本文件由 _refresh_selected_character 调用。
 func _refresh_soul_label() -> void:
 	var soul_label: Label = _screen.find_child("CharacterSoulLabel", true, false) as Label
 	if soul_label != null:
 		soul_label.text = "灵魂石：%d" % SaveManager.get_soul_stones()
 
 
+## 作用：选择角色。
+## 使用：本文件由 _add_character_card 调用；输入 character_id（角色ID）。
 func _select_character(character_id: StringName) -> void:
 	selected_character_id = character_id
 	_refresh_character_cards()
 	_refresh_selected_character()
 
 
+## 作用：响应确认点击并衔接对应的事件处理流程。
+## 使用：本文件由 _build_confirm_panel 调用。
 func _on_confirm_pressed() -> void:
 	var character: Dictionary = GameData.get_character(selected_character_id)
 	if character.is_empty():
@@ -456,6 +505,8 @@ func _on_confirm_pressed() -> void:
 		refresh(selected_character_id)
 
 
+## 作用：获取解锁按钮文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_confirm_button 调用；输入 character（角色）；返回 String 文本/标识。
 func _get_unlock_button_text(character: Dictionary) -> String:
 	var unlock: Dictionary = _get_dictionary(character.get("unlock", {}))
 	var cost: int = int(unlock.get("cost", 0))
@@ -464,20 +515,28 @@ func _get_unlock_button_text(character: Dictionary) -> String:
 	return "解锁"
 
 
+## 作用：获取角色展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_character_card、_refresh_selected_character 调用；输入 character（角色）、fallback_id（回退ID）；返回 String 文本/标识。
 func _get_character_display_name(character: Dictionary, fallback_id: StringName) -> String:
 	return UIDisplayHelperScript.character_name(character, fallback_id)
 
 
+## 作用：获取角色定位，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_character_card、_refresh_selected_character 调用；输入 character（角色）、fallback_id（回退ID）；返回 String 文本/标识。
 func _get_character_role(character: Dictionary, fallback_id: StringName) -> String:
 	return str(character.get("role", ROLE_FALLBACKS.get(str(fallback_id), "")))
 
 
+## 作用：格式化数值。
+## 使用：本文件由 _refresh_stats 调用；输入 value（值）；返回 String 文本/标识。
 func _format_number(value: Variant) -> String:
 	if value is float:
 		return "%.1f" % float(value)
 	return "%d" % int(value)
 
 
+## 作用：格式化倍率。
+## 使用：本文件由 _refresh_stats 调用；输入 value（值）；返回 String 文本/标识。
 func _format_multiplier(value: Variant) -> String:
 	var multiplier: float = float(value)
 	var delta_percent: int = roundi((multiplier - 1.0) * 100.0)
@@ -488,14 +547,20 @@ func _format_multiplier(value: Variant) -> String:
 	return "%d%%" % delta_percent
 
 
+## 作用：格式化百分比。
+## 使用：本文件由 _refresh_stats 调用；输入 value（值）；返回 String 文本/标识。
 func _format_percent(value: Variant) -> String:
 	return "%d%%" % roundi(float(value) * 100.0)
 
 
+## 作用：发出返回请求并衔接对应的事件处理流程。
+## 使用：本文件由 _build_nav_bar 调用。
 func _emit_back_requested() -> void:
 	back_requested.emit()
 
 
+## 作用：添加标签并配置节点/样式所需的属性。
+## 使用：本文件由 _build_nav_bar、_build_preview_panel、_add_detail_label 调用；输入 parent（父节点）、text（文本）、alignment（alignment）、node_name（节点名称）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String, alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, node_name: String = "") -> Label:
 	var label: Label = Label.new()
 	if node_name != "":
@@ -507,6 +572,8 @@ func _add_label(parent: Node, text: String, alignment: HorizontalAlignment = HOR
 	return label
 
 
+## 作用：添加详情标签。
+## 使用：本文件由 _build_character_list、_build_preview_panel、_build_detail_panel 调用；输入 parent（父节点）、text（文本）；返回 Label 对象/值。
 func _add_detail_label(parent: Node, text: String) -> Label:
 	var label: Label = _add_label(parent, text)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -515,6 +582,8 @@ func _add_detail_label(parent: Node, text: String) -> Label:
 	return label
 
 
+## 作用：添加按钮并配置节点/样式所需的属性。
+## 使用：本文件由 _build_nav_bar、_build_confirm_panel 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	var button: Button = Button.new()
 	button.text = text
@@ -525,6 +594,8 @@ func _add_button(parent: Node, text: String) -> Button:
 	return button
 
 
+## 作用：创建面板容器并配置节点/样式所需的属性。
+## 使用：本文件由 _build_character_list、_build_preview_panel、_build_detail_panel 调用；输入 min_size（最小尺寸）、stretch_ratio（stretchratio）；返回 PanelContainer 对象/值。
 func _create_panel_container(min_size: Vector2, stretch_ratio: float) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = min_size
@@ -535,6 +606,8 @@ func _create_panel_container(min_size: Vector2, stretch_ratio: float) -> PanelCo
 	return panel
 
 
+## 作用：创建边距容器并配置节点/样式所需的属性。
+## 使用：本文件由 _build_character_list、_build_preview_panel、_build_detail_panel 调用；输入 left（left）、top（顶部）、right（right）、bottom（bottom）；返回 MarginContainer 对象/值。
 func _create_margin_container(left: int, top: int, right: int, bottom: int) -> MarginContainer:
 	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", left)
@@ -544,6 +617,8 @@ func _create_margin_container(left: int, top: int, right: int, bottom: int) -> M
 	return margin
 
 
+## 作用：创建面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _create_panel_container 调用；返回 StyleBoxFlat 对象/值。
 func _create_panel_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.105, 0.115, 0.13, 0.94)
@@ -559,6 +634,8 @@ func _create_panel_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：创建卡片样式并配置节点/样式所需的属性。
+## 使用：本文件由 _add_character_card 调用；输入 is_selected（判断当前选择）、is_hovered（判断hovered）、is_unlocked（判断已解锁）；返回 StyleBoxFlat 对象/值。
 func _create_card_style(is_selected: bool, is_hovered: bool, is_unlocked: bool) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	var color: Color = Color(0.135, 0.15, 0.18, 0.96)
@@ -592,6 +669,8 @@ func _create_card_style(is_selected: bool, is_hovered: bool, is_unlocked: bool) 
 	return style
 
 
+## 作用：创建活跃按钮样式并配置节点/样式所需的属性。
+## 使用：本文件由 _build_confirm_panel 调用；输入 is_hovered（判断hovered）；返回 StyleBoxFlat 对象/值。
 func _create_active_button_style(is_hovered: bool) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if is_hovered:
@@ -610,15 +689,21 @@ func _create_active_button_style(is_hovered: bool) -> StyleBoxFlat:
 	return style
 
 
+## 作用：设置控件最小尺寸。
+## 使用：本文件由 update_layout 调用；输入 key（键）、size（尺寸）。
 func _set_control_min_size(key: String, size: Vector2) -> void:
 	var control: Control = _layout_controls.get(key, null) as Control
 	if control != null:
 		control.custom_minimum_size = size
 
 
+## 作用：从容器移除子节点并请求释放，供重建列表使用。
+## 使用：本文件由 _refresh_character_cards、_refresh_selected_character、_refresh_stats 调用；输入 parent（父节点）。
 func _clear_children(parent: Node) -> void:
 	UIDisplayHelperScript.clear_children(parent)
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _select_default_character_if_needed、_refresh_character_cards、_refresh_selected_character 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	return UIDisplayHelperScript.dictionary(value)

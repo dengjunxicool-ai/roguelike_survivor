@@ -1,3 +1,6 @@
+## 文件用途：按动作类型分派敌方投射物、区域、召唤和接触状态效果。
+## 使用方式：execute(context) 按 action.type 分派；投射物和区域通过 CombatObjectFactory 创建，召唤、自爆等转交 owner，接触状态调用目标 apply_status。
+
 extends RefCounted
 class_name EnemyActionRegistry
 
@@ -6,6 +9,8 @@ const EnemyDamagePacketBuilderScript: Script = preload("res://scripts/enemies/co
 const CombatObjectFactoryScript: Script = preload("res://scripts/combat/combat_object_factory.gd")
 
 
+## 作用：按 action.type 分派投射物、伤害区域、召唤、核心、自爆、突进标记或接触状态动作。
+## 使用：context 来自 EnemyActionContext，包含 owner/action/runtime_params；未知类型警告并返回 false。
 func execute(context: Dictionary) -> bool:
 	var action: Dictionary = _get_dictionary(context.get("action", {}))
 	match String(action.get("type", "")):
@@ -32,6 +37,8 @@ func execute(context: Dictionary) -> bool:
 			return false
 
 
+## 作用：从池取得敌方投射物，设置方向、弹道、目标组和严格伤害包。
+## 使用：context 提供 owner 和动作参数；缺少场景、父节点或生成失败时返回 false，成功配置返回 true。
 func _execute_projectile(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null or owner.get("enemy_projectile_scene") == null or owner.get_parent() == null:
@@ -73,6 +80,8 @@ func _execute_projectile(context: Dictionary) -> bool:
 	return true
 
 
+## 作用：从池取得伤害区域，设置位置、周期、半径和严格伤害包。
+## 使用：context 提供动作与运行参数；继承基础伤害且周期约为一秒的普通伤害池按现有规则倍增伤害；返回是否满足条件或执行成功。
 func _execute_damage_area(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null or owner.get("damage_area_scene") == null or owner.get_parent() == null:
@@ -112,6 +121,8 @@ func _execute_damage_area(context: Dictionary) -> bool:
 	return true
 
 
+## 作用：解析召唤 ID、数量、中心和半径并转发给敌人的环形生成入口。
+## 使用：owner 必须提供 _spawn_enemies_around；返回 true 表示已发出请求，不逐一验证生成结果。
 func _execute_summon(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null or not owner.has_method("_spawn_enemies_around"):
@@ -128,6 +139,8 @@ func _execute_summon(context: Dictionary) -> bool:
 	return true
 
 
+## 作用：按圆周等分方向生成投射物并跳过配置的安全缺口。
+## 使用：count 至少为 1；每个方向使用独立上下文，返回是否至少成功生成一枚。
 func _execute_ring_projectiles(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null:
@@ -158,6 +171,8 @@ func _execute_ring_projectiles(context: Dictionary) -> bool:
 	return executed
 
 
+## 作用：把数量与血量交给 owner 的腐化核心生成入口。
+## 使用：owner 必须提供 _spawn_corrupted_cores；返回该入口的执行结果。
 func _execute_corrupted_cores(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null or not owner.has_method("_spawn_corrupted_cores"):
@@ -166,6 +181,8 @@ func _execute_corrupted_cores(context: Dictionary) -> bool:
 	return bool(owner.call("_spawn_corrupted_cores", int(params.get("count", 2)), int(params.get("hp", 120))))
 
 
+## 作用：转发给敌人统一自爆动作入口。
+## 使用：owner 必须提供 _run_self_explosion_action；伤害和死亡处理由该入口负责；返回是否满足条件或执行成功。
 func _execute_self_explode(context: Dictionary) -> bool:
 	var owner: Node2D = context.get("owner") as Node2D
 	if owner == null or not owner.has_method("_run_self_explosion_action"):
@@ -173,10 +190,14 @@ func _execute_self_explode(context: Dictionary) -> bool:
 	return bool(owner.call("_run_self_explosion_action"))
 
 
+## 作用：为突进动作返回已识别标记。
+## 使用：_context 当前不用；固定返回 true，本方法不直接移动敌人。
 func _execute_dash_marker(_context: Dictionary) -> bool:
 	return true
 
 
+## 作用：从动作配置合成状态参数并请求目标施加状态。
+## 使用：目标优先取 runtime_params；必须有 apply_status 和非空 status_id，返回实际施加结果。
 func _execute_contact_status(context: Dictionary) -> bool:
 	var params: Dictionary = _get_action_params(context)
 	var runtime: Dictionary = _get_dictionary(context.get("runtime_params", {}))
@@ -202,12 +223,16 @@ func _execute_contact_status(context: Dictionary) -> bool:
 	return bool(target.call("apply_status", status_id, status_params))
 
 
+## 作用：对配置显式伤害应用 owner 的伤害倍率，缺少字段则直接使用回退伤害。
+## 使用：owner/params/key 定位伤害字段，fallback 一般已来自敌人属性；返回非负整数。
 func _get_damage_amount(owner: Node, params: Dictionary, key: String, fallback: int) -> int:
 	if params.has(key):
 		return maxi(roundi(float(params.get(key, fallback)) * float(owner.get("damage_multiplier"))), 0)
 	return maxi(fallback, 0)
 
 
+## 作用：深拷贝动作参数，先以 Boss 技能字段覆盖，再用运行参数填补缺项。
+## 使用：忽略 type/skill_id/cooldown 等控制字段；返回可安全修改的新字典。
 func _get_action_params(context: Dictionary) -> Dictionary:
 	var action: Dictionary = _get_dictionary(context.get("action", {}))
 	var params: Dictionary = _get_dictionary(action.get("params", {}))
@@ -225,6 +250,8 @@ func _get_action_params(context: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：解析区域持续时间，对延迟爆炸和冲击波按预警时间计算最小生命周期。
+## 使用：显式 duration 优先，否则根据 action.type 或 runtime 的 duration 回退；返回计算或读取的数值。
 func _get_area_duration(action: Dictionary, params: Dictionary, runtime: Dictionary) -> float:
 	var action_type: String = String(action.get("type", "damage_area"))
 	if params.has("duration"):
@@ -236,6 +263,8 @@ func _get_area_duration(action: Dictionary, params: Dictionary, runtime: Diction
 	return float(runtime.get("duration", 3.0))
 
 
+## 作用：解析区域伤害周期，对延迟爆炸和冲击波使用延迟或预警时间。
+## 使用：显式 tick_interval 优先；特殊动作周期至少 0.05 秒；返回计算或读取的数值。
 func _get_area_tick_interval(action: Dictionary, params: Dictionary, runtime: Dictionary) -> float:
 	var action_type: String = String(action.get("type", "damage_area"))
 	if params.has("tick_interval"):
@@ -247,6 +276,8 @@ func _get_area_tick_interval(action: Dictionary, params: Dictionary, runtime: Di
 	return float(runtime.get("tick_interval", 1.0))
 
 
+## 作用：判断普通伤害池是否需倍增继承的基础伤害。
+## 使用：显式 damage 或非 damage_area 类型返回 false；无显式伤害且周期至少 0.99 秒返回 true。
 func _should_scale_inherited_tick_damage(action: Dictionary, params: Dictionary, tick_interval: float) -> bool:
 	if params.has("damage"):
 		return false
@@ -256,6 +287,8 @@ func _should_scale_inherited_tick_damage(action: Dictionary, params: Dictionary,
 	return tick_interval >= 0.99
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 execute、_execute_projectile、_execute_damage_area 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -263,12 +296,16 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：获取二维向量，供当前模块后续逻辑使用。
+## 使用：本文件由 _execute_projectile、_execute_damage_area、_execute_summon 调用；输入 value（值）、fallback（回退）；返回 Vector2 对象/值。
 func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value
 	return fallback
 
 
+## 作用：获取颜色，供当前模块后续逻辑使用。
+## 使用：本文件由 _execute_damage_area 调用；输入 value（值）；返回 Color 对象/值。
 func _get_color(value: Variant) -> Color:
 	if value is Color:
 		return value

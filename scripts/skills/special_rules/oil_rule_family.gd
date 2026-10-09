@@ -1,3 +1,5 @@
+## 文件用途：实现火油区域的易燃标记、油层爆燃、烟云和玩家移速增益。
+## 使用方式：宿主在区域 tick、到期或玩家受击转入；烟云与油区通过运行元数据和属性来源维护时限。
 extends RefCounted
 
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
@@ -13,10 +15,14 @@ static var _smoke_cloud_player_damaged_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：火油区域 tick 时按区域类型处理烟云、燃烧、易燃标记、油层与爆燃。
+## 使用：rules 读取 fire_oil_canister_base/fire_oil_burn_damage_in_big_oil/flammable_mark_burst_on_full_mark_tick/oil_fire_deflagration；context 携带 source_id/target；写入 fire_oil_burn_damage_until/fire_oil_burn_damage_multiplier_add/fire_oil_boss_burn_damage_multiplier 元数据；需由仍存活的宿主创建并调度。
 func _apply_fire_oil_on_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("fire_oil_canister_base"):
@@ -44,6 +50,8 @@ func _apply_fire_oil_on_field_tick(rules: Dictionary, context: Dictionary) -> vo
 		host._apply_fire_oil_deflagration(rules, context, target)
 
 
+## 作用：合并油区命中在冷却允许时施加燃烧。
+## 使用：rules 读取 burn_in_merged_oil；context 携带 area；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_burn_in_merged_oil(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("burn_in_merged_oil") or target == null or not target.has_method("apply_status"):
@@ -67,6 +75,8 @@ func _apply_burn_in_merged_oil(rules: Dictionary, context: Dictionary, target: N
 	target.call("apply_status", status_id, status_params)
 
 
+## 作用：油区 tick 命中强敌时施加易燃标记并应用 Boss 调整。
+## 使用：rules 读取 flammable_mark_on_strong_oil_tick/flammable_mark_boss_tuning；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_flammable_mark_on_oil_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("flammable_mark_on_strong_oil_tick") or target == null or not target.has_method("apply_status"):
@@ -84,6 +94,8 @@ func _apply_flammable_mark_on_oil_tick(rules: Dictionary, target: Node) -> void:
 	})
 
 
+## 作用：油区 tick 时为命中目标累积油层。
+## 使用：rules 读取 oil_stack_on_fire_oil_tick；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_oil_stack_on_fire_oil_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("oil_stack_on_fire_oil_tick") or target == null or not target.has_method("apply_status"):
@@ -96,6 +108,8 @@ func _apply_oil_stack_on_fire_oil_tick(rules: Dictionary, target: Node) -> void:
 	})
 
 
+## 作用：目标油层满足门槛且冷却允许时触发火油爆燃并记录来源冷却。
+## 使用：rules 读取 oil_fire_deflagration/deflagration_upgrade；context 携带 area/source_instance_id；target 为本次命中目标；写入 fire_oil_deflagration_cooldowns 元数据；需由仍存活的宿主创建并调度。
 func _apply_fire_oil_deflagration(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not target.has_method("get_status_stack"):
@@ -121,6 +135,8 @@ func _apply_fire_oil_deflagration(rules: Dictionary, context: Dictionary, target
 	SpecialDamageRuleHandlerScript.execute_fire_oil_deflagration(rules, context)
 
 
+## 作用：易燃标记满层 tick 满足冷却后触发爆发，并可影响 Boss 韧性。
+## 使用：rules 读取 flammable_mark_burst_on_full_mark_tick/flammable_burst_boss_poise；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_flammable_mark_burst(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not target.has_method("get_status_stack"):
@@ -140,6 +156,8 @@ func _apply_flammable_mark_burst(rules: Dictionary, context: Dictionary, target:
 		host._apply_flammable_burst_boss_poise(rules, target)
 
 
+## 作用：给烟云内目标刷新限时伤害降低属性元数据。
+## 使用：rules 读取 smoke_enemy_damage_down；target 为本次命中目标；写入 fire_oil_smoke_enemy_damage_down_until/fire_oil_smoke_enemy_damage_multiplier_add 元数据；需由仍存活的宿主创建并调度。
 func _apply_smoke_cloud_target_effects(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null:
@@ -150,6 +168,8 @@ func _apply_smoke_cloud_target_effects(rules: Dictionary, target: Node) -> void:
 		target.set_meta("fire_oil_smoke_enemy_damage_multiplier_add", float(damage_rule.get("damage_multiplier_add", -0.15)))
 
 
+## 作用：油区到期按配置生成烟云。
+## 使用：rules 读取 smoke_cloud_on_oil_expire；context 携带 source_id；需由仍存活的宿主创建并调度。
 func _apply_smoke_cloud_on_oil_expire(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("smoke_cloud_on_oil_expire"):
@@ -159,6 +179,8 @@ func _apply_smoke_cloud_on_oil_expire(rules: Dictionary, context: Dictionary) ->
 	SpecialDamageRuleHandlerScript.execute_smoke_cloud(rules, context, host._get_dictionary(rules.get("smoke_cloud_on_oil_expire", {})), "fire_oil_smoke_expire")
 
 
+## 作用：玩家受伤在规则冷却允许时生成保护烟云。
+## 使用：rules 读取 smoke_cloud_on_player_damaged；context 携带 player/caster；需由仍存活的宿主创建并调度。
 func _apply_smoke_cloud_on_player_damaged(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("smoke_cloud_on_player_damaged"):
@@ -174,6 +196,8 @@ func _apply_smoke_cloud_on_player_damaged(rules: Dictionary, context: Dictionary
 	SpecialDamageRuleHandlerScript.execute_smoke_cloud(rules, context, rule, "fire_oil_smoke_player_damaged")
 
 
+## 作用：根据玩家是否处于烟云增益窗口设置或移除火油移速属性来源。
+## 使用：rules 读取 smoke_player_speed_buff；context 携带 caster；写入 fire_oil_smoke_speed_until 元数据；需由仍存活的宿主创建并调度。
 func _update_fire_oil_smoke_player_buff(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("smoke_player_speed_buff"):
@@ -208,6 +232,8 @@ func _update_fire_oil_smoke_player_buff(rules: Dictionary, context: Dictionary) 
 		player.call("clear_run_modifier_source", modifier_id)
 
 
+## 作用：火系伤害命中带易燃标记目标时按层数修改易伤。
+## 使用：packet 为待修饰伤害包视图；rules 读取 flammable_mark_fire_vulnerability；target 为本次命中目标；会原地更新 packet.vulnerability_total；需由仍存活的宿主创建并调度。
 func _apply_flammable_mark_fire_vulnerability(packet: Dictionary, rules: Dictionary, target: Node, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("flammable_mark_fire_vulnerability") or target == null or packet_object == null:
@@ -223,6 +249,8 @@ func _apply_flammable_mark_fire_vulnerability(packet: Dictionary, rules: Diction
 	packet["vulnerability_total"] = float(packet.get("vulnerability_total", 0.0)) + float(rule.get("fire_damage_taken_multiplier_add_per_stack", 0.01)) * float(stacks)
 
 
+## 作用：易燃标记爆发对 Boss 在冷却允许时施加韧性效果。
+## 使用：rules 读取 flammable_burst_boss_poise；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_flammable_burst_boss_poise(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not host._is_boss(target):
@@ -236,6 +264,8 @@ func _apply_flammable_burst_boss_poise(rules: Dictionary, target: Node) -> void:
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"stun")
 
 
+## 作用：按 Boss 专用易燃标记规则修饰状态参数。
+## 使用：params 读取 duration；context 携带 target；会原地更新 params.duration；需由仍存活的宿主创建并调度。
 func _get_flammable_mark_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)

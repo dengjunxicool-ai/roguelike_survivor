@@ -1,3 +1,6 @@
+## 文件用途：构建地图选择、地图信息、敌人预览和当前角色构筑展示。
+## 使用方式：build 后 refresh(character_id)；地图确认发 start_requested，选位和战斗由运行服务处理。
+
 extends RefCounted
 class_name MapSelectController
 
@@ -24,6 +27,8 @@ var _layout_controls: Dictionary = {}
 var _selected_character_id: StringName = &"mage"
 
 
+## 作用：构建地图选择、地图信息、敌人预览和当前角色构筑展示。
+## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；返回 Control 对象/值。
 func build() -> Control:
 	_screen = Control.new()
 	_screen.name = "MAP_SELECT"
@@ -57,6 +62,8 @@ func build() -> Control:
 	return _screen
 
 
+## 作用：更新当前角色，并重绘地图卡、已选地图详情和角色开局配置。
+## 使用：build 后调用；character_id 为当前角色 ID，无已选地图时先选择默认地图。
 func refresh(character_id: StringName) -> void:
 	_selected_character_id = character_id
 	_select_default_map_if_needed()
@@ -65,12 +72,16 @@ func refresh(character_id: StringName) -> void:
 	_refresh_loadout()
 
 
+## 作用：设置当前选择地图。
+## 使用：供本模块调用者使用；输入 map_id（地图ID）。
 func set_selected_map(map_id: Variant) -> void:
 	var resolved_map_id: StringName = MapRuntimeScript.resolve_map_id(map_id)
 	if resolved_map_id != &"":
 		selected_map_id = resolved_map_id
 
 
+## 作用：更新布局。
+## 使用：供本模块调用者使用；输入 viewport_size（视口尺寸）。
 func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
@@ -91,6 +102,8 @@ func update_layout(viewport_size: Vector2) -> void:
 	_set_control_min_size("loadout_panel", Vector2(0, maxf(96.0, 120.0)))
 
 
+## 作用：横向内容宽度。
+## 使用：本文件由 update_layout 调用；输入 row（行）；返回计算或读取的数值。
 func _horizontal_content_width(row: BoxContainer) -> float:
 	if row == null:
 		return 0.0
@@ -100,6 +113,8 @@ func _horizontal_content_width(row: BoxContainer) -> float:
 	return width + row.get_theme_constant("separation") * maxi(0, row.get_child_count() - 1)
 
 
+## 作用：可用内容宽度。
+## 使用：本文件由 update_layout 调用；输入 viewport_width（视口宽度）；返回计算或读取的数值。
 func _available_content_width(viewport_width: float) -> float:
 	var margin: MarginContainer = _layout_controls.get("margin") as MarginContainer
 	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
@@ -108,6 +123,8 @@ func _available_content_width(viewport_width: float) -> float:
 	return viewport_width - margin.get_theme_constant("margin_left") - margin.get_theme_constant("margin_right") - scroll.get_v_scroll_bar().get_combined_minimum_size().x
 
 
+## 作用：构建导航进度条并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 root（root）。
 func _build_nav_bar(root: VBoxContainer) -> void:
 	var nav_bar: HBoxContainer = HBoxContainer.new()
 	nav_bar.custom_minimum_size = Vector2(0, 64)
@@ -129,6 +146,8 @@ func _build_nav_bar(root: VBoxContainer) -> void:
 	soul_label.size_flags_horizontal = Control.SIZE_SHRINK_END
 
 
+## 作用：构建主体并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 root（root）。
 func _build_body(root: VBoxContainer) -> void:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -158,6 +177,8 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_loadout_panel(body)
 
 
+## 作用：构建地图列表并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_map_list(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(210, 0), 0.9)
 	panel.name = "MapListPanel"
@@ -174,6 +195,8 @@ func _build_map_list(parent: BoxContainer) -> void:
 	margin.add_child(_map_list)
 
 
+## 作用：构建预览并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_preview(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(360, 0), 2.1)
 	panel.name = "MapPreviewPanel"
@@ -203,6 +226,8 @@ func _build_preview(parent: BoxContainer) -> void:
 	_preview_description_label.custom_minimum_size = Vector2(0, 72)
 
 
+## 作用：构建详情面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_detail_panel(parent: BoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(260, 0), 1.15)
 	panel.name = "MapDetailPanel"
@@ -248,6 +273,8 @@ func _build_detail_panel(parent: BoxContainer) -> void:
 	_start_button.pressed.connect(Callable(self, "_start_selected_map"))
 
 
+## 作用：构建开局配置面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_body 调用；输入 parent（父节点）。
 func _build_loadout_panel(parent: VBoxContainer) -> void:
 	var panel: PanelContainer = _create_panel_container(Vector2(0, 120), 1.0)
 	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -266,6 +293,8 @@ func _build_loadout_panel(parent: VBoxContainer) -> void:
 	_loadout_labels["threat"] = _add_loadout_label(row, "MapLoadoutThreatLabel")
 
 
+## 作用：添加开局配置标签。
+## 使用：本文件由 _build_loadout_panel 调用；输入 parent（父节点）、node_name（节点名称）；返回 Label 对象/值。
 func _add_loadout_label(parent: HBoxContainer, node_name: String) -> Label:
 	var label: Label = _add_detail_label(parent, "")
 	label.name = node_name
@@ -274,12 +303,16 @@ func _add_loadout_label(parent: HBoxContainer, node_name: String) -> Label:
 	return label
 
 
+## 作用：选择默认地图按条件按需。
+## 使用：本文件由 refresh 调用。
 func _select_default_map_if_needed() -> void:
 	if not GameData.get_map(selected_map_id).is_empty():
 		return
 	selected_map_id = MapRuntimeScript.get_default_map_id()
 
 
+## 作用：刷新地图卡片列表。
+## 使用：本文件由 refresh、_select_map 调用。
 func _refresh_map_cards() -> void:
 	_clear_children(_map_list)
 	var maps: Array[Dictionary] = GameData.get_map_pool()
@@ -291,6 +324,8 @@ func _refresh_map_cards() -> void:
 		_add_map_card(map_data)
 
 
+## 作用：添加地图卡片并配置节点/样式所需的属性。
+## 使用：本文件由 _refresh_map_cards 调用；输入 map_data（地图数据）。
 func _add_map_card(map_data: Dictionary) -> void:
 	var map_id: StringName = StringName(str(map_data.get("id", "")))
 	if map_id == &"":
@@ -312,6 +347,8 @@ func _add_map_card(map_data: Dictionary) -> void:
 	_map_list.add_child(button)
 
 
+## 作用：刷新当前选择地图详情。
+## 使用：本文件由 refresh、_select_map 调用。
 func _refresh_selected_map_details() -> void:
 	var map_data: Dictionary = GameData.get_map(selected_map_id)
 	if map_data.is_empty():
@@ -339,12 +376,16 @@ func _refresh_selected_map_details() -> void:
 	_update_start_button(map_data)
 
 
+## 作用：更新预览。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）。
 func _update_preview(map_data: Dictionary) -> void:
 	var texture: Texture2D = MapRuntimeScript.load_texture(MapRuntimeScript.get_background_path(map_data))
 	_preview_texture.texture = texture
 	_preview_texture.modulate = Color.WHITE if texture != null else Color(0.25, 0.27, 0.3, 1.0)
 
 
+## 作用：刷新开局配置。
+## 使用：本文件由 refresh、_select_map 调用。
 func _refresh_loadout() -> void:
 	_set_loadout_label("character", "角色\n%s" % _get_character_display_name(GameData.get_character(_selected_character_id)))
 	_set_loadout_label("skill", "初始技能\n%s" % _get_starting_skill_display_name())
@@ -355,6 +396,8 @@ func _refresh_loadout() -> void:
 		soul_label.text = "灵魂石：%d" % SaveManager.get_soul_stones()
 
 
+## 作用：刷新敌人预览组。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）。
 func _refresh_enemy_previews(map_data: Dictionary) -> void:
 	_clear_children(_enemy_preview_list)
 	_add_enemy_preview_group("怪物", _get_map_enemy_preview_ids(map_data))
@@ -362,6 +405,8 @@ func _refresh_enemy_previews(map_data: Dictionary) -> void:
 	_add_enemy_preview_group("Boss", [map_data.get("boss_id", "")])
 
 
+## 作用：添加敌人预览分组并配置节点/样式所需的属性。
+## 使用：本文件由 _refresh_enemy_previews 调用；输入 title（标题）、enemy_ids_variant（敌人ID列表变体）。
 func _add_enemy_preview_group(title: String, enemy_ids_variant: Variant) -> void:
 	var enemy_ids: Array = _get_array(enemy_ids_variant)
 	if enemy_ids.is_empty():
@@ -380,6 +425,8 @@ func _add_enemy_preview_group(title: String, enemy_ids_variant: Variant) -> void
 			row.add_child(_create_enemy_preview_card(enemy_id))
 
 
+## 作用：创建敌人预览卡片并配置节点/样式所需的属性。
+## 使用：本文件由 _add_enemy_preview_group 调用；输入 enemy_id（敌人ID）；返回 PanelContainer 对象/值。
 func _create_enemy_preview_card(enemy_id: StringName) -> PanelContainer:
 	var enemy: Dictionary = GameData.get_enemy(enemy_id)
 	var card: PanelContainer = PanelContainer.new()
@@ -411,6 +458,8 @@ func _create_enemy_preview_card(enemy_id: StringName) -> PanelContainer:
 	return card
 
 
+## 作用：获取开局配置详情文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；返回 String 文本/标识。
 func _get_loadout_detail_text() -> String:
 	return "当前选择：\n角色：%s\n初始技能：%s" % [
 		_get_character_display_name(GameData.get_character(_selected_character_id)),
@@ -418,16 +467,22 @@ func _get_loadout_detail_text() -> String:
 	]
 
 
+## 作用：更新启动按钮。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）。
 func _update_start_button(map_data: Dictionary) -> void:
 	var can_start: bool = _can_start(map_data)
 	_start_button.disabled = not can_start
 	_start_button.text = "开始挑战" if can_start else _get_start_blocked_text(map_data)
 
 
+## 作用：可否启动，返回布尔判断结果。
+## 使用：本文件由 _update_start_button、_start_selected_map 调用；输入 map_data（地图数据）。
 func _can_start(map_data: Dictionary) -> bool:
 	return not GameData.get_character(_selected_character_id).is_empty() and not map_data.is_empty() and MapRuntimeScript.is_map_unlocked(map_data)
 
 
+## 作用：获取启动阻止文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_start_button 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_start_blocked_text(map_data: Dictionary) -> String:
 	if GameData.get_character(_selected_character_id).is_empty():
 		return "请选择角色"
@@ -438,6 +493,8 @@ func _get_start_blocked_text(map_data: Dictionary) -> String:
 	return "暂不可开始"
 
 
+## 作用：获取地图卡片文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_map_card 调用；输入 map_data（地图数据）、is_unlocked（判断已解锁）；返回 String 文本/标识。
 func _get_map_card_text(map_data: Dictionary, is_unlocked: bool) -> String:
 	var map_id: StringName = StringName(str(map_data.get("id", "")))
 	var clear_state: String = "已通关" if SaveManager.is_map_cleared(map_id) else "未通关"
@@ -451,6 +508,8 @@ func _get_map_card_text(map_data: Dictionary, is_unlocked: bool) -> String:
 	]
 
 
+## 作用：获取地图展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details、_get_map_card_text、_get_lock_or_clear_text 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_map_display_name(map_data: Dictionary) -> String:
 	match str(map_data.get("id", "")):
 		"abandoned_dungeon":
@@ -465,6 +524,8 @@ func _get_map_display_name(map_data: Dictionary) -> String:
 			return str(map_data.get("display_name", map_data.get("id", "")))
 
 
+## 作用：获取地图描述，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_map_description(map_data: Dictionary) -> String:
 	match str(map_data.get("id", "")):
 		"abandoned_dungeon":
@@ -479,6 +540,8 @@ func _get_map_description(map_data: Dictionary) -> String:
 			return str(map_data.get("description", "未配置"))
 
 
+## 作用：获取地图特质组文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_map_traits_text(map_data: Dictionary) -> String:
 	var parts: Array[String] = []
 	for entry_variant: Variant in _get_array(map_data.get("map_traits", [])):
@@ -500,6 +563,8 @@ func _get_map_traits_text(map_data: Dictionary) -> String:
 			return "未配置"
 
 
+## 作用：获取地图推荐构建文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_map_recommended_build_text(map_data: Dictionary) -> String:
 	var configured: String = _get_string_list_text(map_data.get("recommended_build_tags", []), "")
 	if configured != "":
@@ -517,6 +582,8 @@ func _get_map_recommended_build_text(map_data: Dictionary) -> String:
 			return "未配置"
 
 
+## 作用：获取地图不满足推荐文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_map_not_recommended_text(map_data: Dictionary) -> String:
 	var configured: String = _get_string_list_text(map_data.get("not_recommended_build_tags", []), "")
 	if configured != "":
@@ -532,6 +599,8 @@ func _get_map_not_recommended_text(map_data: Dictionary) -> String:
 			return "-"
 
 
+## 作用：获取地图敌人预览ID列表，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_enemy_previews 调用；输入 map_data（地图数据）；返回 Array 列表。
 func _get_map_enemy_preview_ids(map_data: Dictionary) -> Array:
 	var configured: Array = _get_array(map_data.get("enemy_preview_ids", []))
 	if not configured.is_empty():
@@ -547,6 +616,8 @@ func _get_map_enemy_preview_ids(map_data: Dictionary) -> Array:
 			return [&"small_slime", &"skeleton", &"bat"]
 
 
+## 作用：获取锁定或清除文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 map_data（地图数据）；返回 String 文本/标识。
 func _get_lock_or_clear_text(map_data: Dictionary) -> String:
 	var map_id: StringName = StringName(str(map_data.get("id", "")))
 	if SaveManager.is_map_cleared(map_id):
@@ -560,10 +631,14 @@ func _get_lock_or_clear_text(map_data: Dictionary) -> String:
 	return "状态：未解锁"
 
 
+## 作用：获取角色展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_loadout、_get_loadout_detail_text 调用；输入 character（角色）；返回 String 文本/标识。
 func _get_character_display_name(character: Dictionary) -> String:
 	return UIDisplayHelperScript.character_name(character, _selected_character_id)
 
 
+## 作用：获取起始技能展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_loadout、_get_loadout_detail_text 调用；返回 String 文本/标识。
 func _get_starting_skill_display_name() -> String:
 	var character: Dictionary = GameData.get_character(_selected_character_id)
 	var starting_skill_id: StringName = StringName(str(character.get("starting_skill_id", "")))
@@ -572,18 +647,26 @@ func _get_starting_skill_display_name() -> String:
 	return UIDisplayHelperScript.skill_name(starting_skill_id)
 
 
+## 作用：获取敌人展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _create_enemy_preview_card 调用；输入 enemy（敌人）、fallback_id（回退ID）；返回 String 文本/标识。
 func _get_enemy_display_name(enemy: Dictionary, fallback_id: StringName) -> String:
 	return UIDisplayHelperScript.enemy_name(enemy, fallback_id)
 
 
+## 作用：获取敌人视觉纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _create_enemy_preview_card 调用；输入 enemy（敌人）；返回 Texture2D 对象/值。
 func _get_enemy_visual_texture(enemy: Dictionary) -> Texture2D:
 	return UIDisplayHelperScript.visual_texture(enemy, "icon")
 
 
+## 作用：获取视觉调色，供当前模块后续逻辑使用。
+## 使用：本文件由 _create_enemy_preview_card 调用；输入 definition（定义）；返回 Color 对象/值。
 func _get_visual_modulate(definition: Dictionary) -> Color:
 	return UIDisplayHelperScript.visual_modulate(definition)
 
 
+## 作用：选择地图。
+## 使用：本文件由 _add_map_card 调用；输入 map_id（地图ID）。
 func _select_map(map_id: StringName) -> void:
 	selected_map_id = map_id
 	_refresh_map_cards()
@@ -591,6 +674,8 @@ func _select_map(map_id: StringName) -> void:
 	_refresh_loadout()
 
 
+## 作用：启动当前选择地图。
+## 使用：本文件由 _build_detail_panel 调用。
 func _start_selected_map() -> void:
 	var map_data: Dictionary = GameData.get_map(selected_map_id)
 	if not _can_start(map_data):
@@ -598,28 +683,38 @@ func _start_selected_map() -> void:
 	start_requested.emit(selected_map_id)
 
 
+## 作用：发出返回请求并衔接对应的事件处理流程。
+## 使用：本文件由 _build_nav_bar 调用。
 func _emit_back_requested() -> void:
 	back_requested.emit()
 
 
+## 作用：设置详情标签。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 key（键）、text（文本）。
 func _set_detail_label(key: String, text: String) -> void:
 	var label: Label = _detail_labels.get(key, null) as Label
 	if label != null:
 		label.text = text
 
 
+## 作用：设置开局配置标签。
+## 使用：本文件由 _refresh_loadout 调用；输入 key（键）、text（文本）。
 func _set_loadout_label(key: String, text: String) -> void:
 	var label: Label = _loadout_labels.get(key, null) as Label
 	if label != null:
 		label.text = text
 
 
+## 作用：设置控件最小尺寸。
+## 使用：本文件由 update_layout 调用；输入 key（键）、size（尺寸）。
 func _set_control_min_size(key: String, size: Vector2) -> void:
 	var control: Control = _layout_controls.get(key, null) as Control
 	if control != null:
 		control.custom_minimum_size = size
 
 
+## 作用：添加标签并配置节点/样式所需的属性。
+## 使用：本文件由 _build_nav_bar、_add_detail_label 调用；输入 parent（父节点）、text（文本）、alignment（alignment）、node_name（节点名称）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String, alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, node_name: String = "") -> Label:
 	var label: Label = Label.new()
 	if node_name != "":
@@ -631,6 +726,8 @@ func _add_label(parent: Node, text: String, alignment: HorizontalAlignment = HOR
 	return label
 
 
+## 作用：添加详情标签。
+## 使用：本文件由 _build_preview、_build_detail_panel、_add_loadout_label 调用；输入 parent（父节点）、text（文本）；返回 Label 对象/值。
 func _add_detail_label(parent: Node, text: String) -> Label:
 	var label: Label = _add_label(parent, text)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -639,6 +736,8 @@ func _add_detail_label(parent: Node, text: String) -> Label:
 	return label
 
 
+## 作用：添加按钮并配置节点/样式所需的属性。
+## 使用：本文件由 _build_nav_bar、_build_detail_panel 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	var button: Button = Button.new()
 	button.text = text
@@ -649,6 +748,8 @@ func _add_button(parent: Node, text: String) -> Button:
 	return button
 
 
+## 作用：创建面板容器并配置节点/样式所需的属性。
+## 使用：本文件由 _build_map_list、_build_preview、_build_detail_panel 调用；输入 min_size（最小尺寸）、stretch_ratio（stretchratio）；返回 PanelContainer 对象/值。
 func _create_panel_container(min_size: Vector2, stretch_ratio: float) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = min_size
@@ -659,6 +760,8 @@ func _create_panel_container(min_size: Vector2, stretch_ratio: float) -> PanelCo
 	return panel
 
 
+## 作用：创建边距容器并配置节点/样式所需的属性。
+## 使用：本文件由 _build_map_list、_build_preview、_build_detail_panel 调用；输入 left（left）、top（顶部）、right（right）、bottom（bottom）；返回 MarginContainer 对象/值。
 func _create_margin_container(left: int, top: int, right: int, bottom: int) -> MarginContainer:
 	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", left)
@@ -668,6 +771,8 @@ func _create_margin_container(left: int, top: int, right: int, bottom: int) -> M
 	return margin
 
 
+## 作用：创建面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _create_panel_container 调用；返回 StyleBoxFlat 对象/值。
 func _create_panel_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.105, 0.115, 0.13, 0.94)
@@ -683,6 +788,8 @@ func _create_panel_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：创建地图卡片样式并配置节点/样式所需的属性。
+## 使用：本文件由 _add_map_card 调用；输入 is_selected（判断当前选择）、is_hovered（判断hovered）、is_unlocked（判断已解锁）；返回 StyleBoxFlat 对象/值。
 func _create_map_card_style(is_selected: bool, is_hovered: bool, is_unlocked: bool) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	var color: Color = Color(0.135, 0.15, 0.18, 0.96)
@@ -709,6 +816,8 @@ func _create_map_card_style(is_selected: bool, is_hovered: bool, is_unlocked: bo
 	return style
 
 
+## 作用：创建敌人预览卡片样式并配置节点/样式所需的属性。
+## 使用：本文件由 _create_enemy_preview_card 调用；返回 StyleBoxFlat 对象/值。
 func _create_enemy_preview_card_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.075, 0.085, 0.1, 0.96)
@@ -724,6 +833,8 @@ func _create_enemy_preview_card_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：获取字符串列表文本，为界面/配置读取提供类型和回退处理。
+## 使用：本文件由 _get_map_recommended_build_text、_get_map_not_recommended_text 调用；输入 value（值）、fallback（回退）；返回 String 文本/标识。
 func _get_string_list_text(value: Variant, fallback: String) -> String:
 	var parts: Array[String] = []
 	for item_variant: Variant in _get_array(value):
@@ -731,6 +842,8 @@ func _get_string_list_text(value: Variant, fallback: String) -> String:
 	return "\n".join(parts) if not parts.is_empty() else fallback
 
 
+## 作用：获取星级文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_selected_map_details、_get_map_card_text 调用；输入 value（值）；返回 String 文本/标识。
 func _get_star_text(value: int) -> String:
 	var clamped_value: int = clampi(value, 1, 5)
 	var parts: Array[String] = []
@@ -739,6 +852,8 @@ func _get_star_text(value: int) -> String:
 	return "".join(parts)
 
 
+## 作用：格式化时间。
+## 使用：本文件由 _refresh_selected_map_details 调用；输入 seconds（秒）；返回 String 文本/标识。
 func _format_time(seconds: float) -> String:
 	var total_seconds: int = maxi(roundi(seconds), 0)
 	var minutes: int = floori(float(total_seconds) / 60.0)
@@ -746,13 +861,19 @@ func _format_time(seconds: float) -> String:
 	return "%02d:%02d" % [minutes, remaining_seconds]
 
 
+## 作用：从容器移除子节点并请求释放，供重建列表使用。
+## 使用：本文件由 _refresh_map_cards、_refresh_enemy_previews 调用；输入 parent（父节点）。
 func _clear_children(parent: Node) -> void:
 	UIDisplayHelperScript.clear_children(parent)
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _add_enemy_preview_group、_get_map_traits_text、_get_map_enemy_preview_ids 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	return UIDisplayHelperScript.array(value)
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _get_map_traits_text、_get_lock_or_clear_text 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	return UIDisplayHelperScript.dictionary(value)

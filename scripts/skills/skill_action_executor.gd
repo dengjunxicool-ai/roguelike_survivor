@@ -1,3 +1,5 @@
+## 文件用途：验证动作条件并把动作按投射物、区域、召唤、状态和属性族分派。
+## 使用方式：execute_actions 依次执行字典动作，execute_action 解析范围单位后分派；族通过 bind_executor 共享支持服务。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionExecutor
 
@@ -9,6 +11,8 @@ const ModifierExecutor: Script = preload("res://scripts/skills/skill_action_modi
 
 var _families: Dictionary = {}
 
+## 作用：创建特殊规则执行器与五个动作族，再逐个绑定共享分派器。
+## 使用：execute_actions 依次执行字典动作，execute_action 解析范围单位后分派；族通过 bind_executor 共享支持服务。
 func _init() -> void:
 	_special_rule_executor = SkillSpecialRuleExecutorScript.new()
 	_families["projectile"] = ProjectileExecutor.new()
@@ -19,12 +23,16 @@ func _init() -> void:
 	for family: RefCounted in _families.values():
 		family.call("bind_executor", self)
 
+## 作用：按动作数组顺序执行字典动作，跳过非字典项。
+## 使用：actions 为依次执行的动作列表；context 为施放或命中上下文。
 func execute_actions(actions: Array, context: Dictionary) -> void:
 	for action_variant: Variant in actions:
 		if action_variant is Dictionary:
 			execute_action(action_variant, context)
 
 
+## 作用：检查动作条件后按 type 转入对应动作族并返回执行结果。
+## 使用：context 为施放或命中上下文。
 func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 	var action_type: String = str(action.get("type", ""))
 	var params: Dictionary = SkillRangeUnitScript.resolve_action_params(_get_dictionary(action.get("params", {})))
@@ -102,6 +110,8 @@ func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 			return null
 
 
+## 作用：把共享辅助入口的方法名与参数数组转发给拥有该方法的动作族，未知方法报错。
+## 使用：execute_actions 依次执行字典动作，execute_action 解析范围单位后分派；族通过 bind_executor 共享支持服务。
 func _dispatch_family_method(method: String, arguments: Array) -> Variant:
 	match method:
 		"_spawn_projectile", "_spawn_projectiles_at_targets", "_spawn_direct_projectile_instance", "_spawn_targeted_projectile_instance", "_spawn_targeted_projectile_instance_after_delay", "_spawn_targeted_projectile_instance_now", "_same_target_projectile_spawn_delay", "_projectile_params_for_same_target_hit", "_damage_only_actions", "_resolve_projectile_runtime_stats", "_build_projectile_runtime_data", "_get_projectile_runtime_statuses_on_hit", "_build_targeted_projectile_launch_data", "_build_direct_projectile_launch_data", "_apply_projectile_visual_start_offset", "_build_projectile_spawn_params", "_build_projectile_target_sequence", "_resolve_projectile_visual_start_position", "_resolve_projectile_visual_target_position", "_apply_projectile_damage_sequence", "_resolve_projectile_damage_sequence", "_get_hail_same_target_decay_rule", "_chain_to_targets", "_actions_with_chain_decay", "_params_with_chain_decay", "_spawn_projectile_burst", "_spawn_projectile_burst_with_budget", "_defer_projectile_burst_to_budget", "_prepare_projectile_burst_params", "_destroy_enemy_projectile":

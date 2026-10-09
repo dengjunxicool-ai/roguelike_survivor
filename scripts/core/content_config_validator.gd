@@ -1,3 +1,6 @@
+## 文件用途：校验内容配置的 schema、ID、引用、资源路径及 Modifier 效果列表。
+## 使用方式：DataManager 发布数据前调用 load_sources 和 validate_documents；错误通过数组集中返回。
+
 extends RefCounted
 class_name ContentConfigValidator
 
@@ -15,6 +18,8 @@ const NONNEGATIVE_FIELDS := ["duration", "tick_interval", "cooldown", "max_level
 	"max_stacks", "max_count", "max_hp", "collision_radius"]
 
 
+## 作用：读取 JSON 根对象并将读盘、解析或根类型错误累积到 errors。
+## 使用：path 为资源路径，errors 为调用者的共享错误数组；失败返回空字典。
 static func read_document(path: String, errors: Array[String]) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -30,6 +35,8 @@ static func read_document(path: String, errors: Array[String]) -> Dictionary:
 	return json.data
 
 
+## 作用：读取内容 schema 及其登记的所有数据文件。
+## 使用：返回 schema、documents 和 errors 字典，供 owner 统一校验后发布。
 static func load_sources() -> Dictionary:
 	var errors: Array[String] = []
 	var schema := read_document(SCHEMA_PATH, errors)
@@ -40,6 +47,8 @@ static func load_sources() -> Dictionary:
 	return {"schema": schema, "documents": documents, "errors": errors}
 
 
+## 作用：校验根字段、定义类型、必需字段、唯一 ID、枚举以及递归引用。
+## 使用：documents 按路径索引，schema 为规则字典；返回全部错误，不发布或修改运行配置。
 static func validate_documents(documents: Dictionary, schema: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	var indexes := {}
@@ -115,6 +124,8 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 	return errors
 
 
+## 作用：递归检查配置中的引用、资源路径、数值和 Modifier 字段。
+## 使用：where 用于定位错误，key 为当前字段名；错误追加至 errors。
 static func _visit(value: Variant, where: String, key: String, indexes: Dictionary, schema: Dictionary, errors: Array[String]) -> void:
 	if REFERENCES.has(key) and (not value is String or value.strip_edges().is_empty()):
 		errors.append("%s: reference must be a nonempty string" % where)
@@ -168,6 +179,8 @@ static func _visit(value: Variant, where: String, key: String, indexes: Dictiona
 			_visit(value[field], "%s.%s" % [where, field], field, indexes, schema, errors)
 
 
+## 作用：检查效果列表必需字段、运算类型、作用域与有限数值。
+## 使用：value 应为效果数组；错误追加至传入 errors，不聚合或应用属性。
 static func _validate_modifiers(value: Variant, where: String, schema: Dictionary, errors: Array[String]) -> void:
 	if not value is Array:
 		errors.append("%s: Modifier configuration must be an effect list" % where)
@@ -205,6 +218,8 @@ static func _validate_modifiers(value: Variant, where: String, schema: Dictionar
 					errors.append("%s.scope.domain: unknown modifier domain" % loc)
 
 
+## 作用：将 Variant 类型转换为 schema 使用的类型名称。
+## 使用：校验器内部调用；返回 null/boolean/number/string/array/object 或 unsupported。
 static func _kind(value: Variant) -> String:
 	match typeof(value):
 		TYPE_NIL: return "null"

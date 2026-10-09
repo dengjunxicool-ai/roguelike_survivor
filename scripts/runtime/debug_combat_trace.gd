@@ -1,3 +1,5 @@
+## 文件用途：为调试单次攻击记录爆炸位置和伤害结算视图，维护根节点 trace 记录及可清理范围圈。
+## 使用方式：由调试面板 begin_attack_trace 开始批次；战斗入口调用 record_damage/record_explosion；界面用 get_records 读取深拷贝并可 clear。
 extends RefCounted
 class_name DebugCombatTrace
 
@@ -9,6 +11,8 @@ const TRACE_ID_META: String = "debug_attack_trace_id"
 const TRACE_RECORDS_META: String = "debug_combat_trace_records"
 
 
+## 作用：递增根节点攻击 trace，清空旧记录并返回新 ID；空根节点返回零。
+## 使用：传入 SceneTree 根节点，返回递增 trace ID；会清空已有记录，空 root 返回零。
 static func begin_attack_trace(root: Node) -> int:
 	if root == null:
 		return 0
@@ -19,10 +23,14 @@ static func begin_attack_trace(root: Node) -> int:
 	return trace_id
 
 
+## 作用：委托 DamageTraceContext 查询根节点当前攻击 trace。
+## 使用：通过预加载脚本的 current_attack_trace_id(...) 静态入口调用。 入参：root: Node。 返回 int；具体值及空输入行为见作用说明。
 static func current_attack_trace_id(root: Node) -> int:
 	return DamageTraceContextScript.current_trace_id(root)
 
 
+## 作用：调试模式下创建爆炸位置覆盖层，再记录半径、技能与伤害包字段；无正数 trace 不保存记录。
+## 使用：传入场景根/挂载父节点、世界位置、半径和技能来源；可选 trace_id 与伤害包字典补齐追踪字段，调试关闭时跳过。
 static func record_explosion(root: Node, parent: Node, position: Vector2, radius: float, skill_id: String, source_instance_id: String, trace_id: int = 0, damage_packet: Dictionary = {}) -> void:
 	if root == null or not _is_debug_enabled(root):
 		return
@@ -66,6 +74,8 @@ static func record_explosion(root: Node, parent: Node, position: Vector2, radius
 	_append_record(root, record)
 
 
+## 作用：仅记录调试模式中与当前 trace 匹配的伤害，保存来源、公式阶段和最终伤害，并绘制状态 DOT 命中点。
+## 使用：在伤害结算后传入 root、目标、来源包、DamageResult 字典视图和 final_amount；仅保存当前 trace 的调试记录，不在此结算伤害。
 static func record_damage(root: Node, target: Node, amount_or_packet: Variant, damage_result: Dictionary, final_amount: int) -> void:
 	if root == null or not _is_debug_enabled(root):
 		return
@@ -100,6 +110,8 @@ static func record_damage(root: Node, target: Node, amount_or_packet: Variant, d
 	_record_element_damage_site(root, target, record, final_amount)
 
 
+## 作用：释放 debug_explosion_site_overlays 组覆盖层并清空记录与 trace ID，返回待释放覆盖层数。
+## 使用：通过预加载脚本的 clear(...) 静态入口调用。 入参：root: Node。 返回 int；具体值及空输入行为见作用说明。
 static func clear(root: Node) -> int:
 	if root == null:
 		return 0
@@ -117,6 +129,8 @@ static func clear(root: Node) -> int:
 	return cleared
 
 
+## 作用：深拷贝根节点追踪记录数组，供面板读取时避免污染存储。
+## 使用：传入记录所在 root，返回记录数组深拷贝；调用方可排序、展示而不修改根记录。
 static func get_records(root: Node) -> Array:
 	if root == null:
 		return []
@@ -127,6 +141,8 @@ static func get_records(root: Node) -> Array:
 	return []
 
 
+## 作用：为状态 DOT 伤害目标创建元素色位置圈和伤害标签，非 Node2D 或无父容器时跳过。
+## 使用：通过预加载脚本的 _record_element_damage_site(...) 静态入口调用。 入参：root: Node, target: Node, record: Dictionary, final_amount: int。
 static func _record_element_damage_site(root: Node, target: Node, record: Dictionary, final_amount: int) -> void:
 	if not _should_record_element_damage_site(record):
 		return
@@ -148,6 +164,8 @@ static func _record_element_damage_site(root: Node, target: Node, record: Dictio
 	overlay_parent.add_child(overlay)
 
 
+## 作用：根据伤害起源、类型或来源是否表示状态 DOT，决定是否绘制元素伤害位置圈。
+## 使用：通过预加载脚本的 _should_record_element_damage_site(...) 静态入口调用。 入参：record: Dictionary。 返回 bool；具体值及空输入行为见作用说明。
 static func _should_record_element_damage_site(record: Dictionary) -> bool:
 	var damage_origin: String = String(record.get("damage_origin", ""))
 	var damage_type: String = String(record.get("damage_type", ""))
@@ -155,6 +173,8 @@ static func _should_record_element_damage_site(record: Dictionary) -> bool:
 	return damage_origin == "status_dot" or damage_type == "status_dot" or source_type == "status"
 
 
+## 作用：按元素映射调试位置圈颜色，未知元素使用淡蓝色。
+## 使用：通过预加载脚本的 _element_site_color(...) 静态入口调用。 入参：element: String。 返回 Color；具体值及空输入行为见作用说明。
 static func _element_site_color(element: String) -> Color:
 	match element:
 		"fire", "burning":
@@ -173,21 +193,29 @@ static func _element_site_color(element: String) -> Color:
 			return Color(0.68, 0.88, 1.0, 0.78)
 
 
+## 作用：深拷贝追加一条追踪记录并写回根节点元数据。
+## 使用：通过预加载脚本的 _append_record(...) 静态入口调用。 入参：root: Node, record: Dictionary。
 static func _append_record(root: Node, record: Dictionary) -> void:
 	var records: Array = get_records(root)
 	records.append(record.duplicate(true))
 	root.set_meta(TRACE_RECORDS_META, records)
 
 
+## 作用：仅在 packet 含 key 时把该字段复制到 record，补齐爆炸记录的来源及公式开关。
+## 使用：通过预加载脚本的 _copy_packet_field(...) 静态入口调用。 入参：record: Dictionary, packet: Dictionary, key: String。
 static func _copy_packet_field(record: Dictionary, packet: Dictionary, key: String) -> void:
 	if packet.has(key):
 		record[key] = packet[key]
 
 
+## 作用：查询根节点开发模式或调试手控标志，确定是否允许记录诊断内容。
+## 使用：通过预加载脚本的 _is_debug_enabled(...) 静态入口调用。 入参：root: Node。 返回 bool；具体值及空输入行为见作用说明。
 static func _is_debug_enabled(root: Node) -> bool:
 	return bool(root.get_meta("developer_mode_enabled", false)) or bool(root.get_meta("debug_control_mode", false))
 
 
+## 作用：优先返回传入 parent，否则从主循环 SceneTree 取 current_scene。
+## 使用：通过预加载脚本的 _resolve_parent(...) 静态入口调用。 入参：parent: Node。 返回 Node；具体值及空输入行为见作用说明。
 static func _resolve_parent(parent: Node) -> Node:
 	if parent != null:
 		return parent
@@ -196,6 +224,8 @@ static func _resolve_parent(parent: Node) -> Node:
 	return tree.current_scene if tree != null else null
 
 
+## 作用：按接口从字典或 RefCounted 包读取字段，优先 get_value 再 packet_value，缺少接口用 fallback。
+## 使用：通过预加载脚本的 _packet_value(...) 静态入口调用。 入参：packet_source: Variant, key: Variant, fallback: Variant = null。 返回 Variant；具体值及空输入行为见作用说明。
 static func _packet_value(packet_source: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if packet_source is Dictionary:
 		return (packet_source as Dictionary).get(key, fallback)
@@ -207,6 +237,8 @@ static func _packet_value(packet_source: Variant, key: Variant, fallback: Varian
 	return fallback
 
 
+## 作用：对字典返回深拷贝，其他值返回空字典，供隔离记录中的公式阶段视图。
+## 使用：通过预加载脚本的 _get_dictionary(...) 静态入口调用。 入参：value: Variant。 返回 Dictionary；具体值及空输入行为见作用说明。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)

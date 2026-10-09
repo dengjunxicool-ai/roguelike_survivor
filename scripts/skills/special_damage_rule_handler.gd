@@ -1,3 +1,5 @@
+## 文件用途：集中构建特殊规则衍生的额外伤害、爆炸和闪电环绕效果。
+## 使用方式：规则族传 rules/context 和基础伤害，通过标准伤害来源构建节点或受击包，保持命中来源身份。
 extends RefCounted
 class_name SpecialDamageRuleHandler
 
@@ -31,6 +33,8 @@ static var _poison_death_explosion_cooldowns: Dictionary = {}
 static var _fire_oil_secondary_deflagration_cooldowns: Dictionary = {}
 
 
+## 作用：根据直接命中额外爆炸比例构建目标 DamageIntent 列表，不立即应用伤害。
+## 使用：rules 读取 direct_hit_extra_explosion_bonus；context 携带 target；base_damage 为来源技能基础伤害；返回 DamageIntent 列表，由 apply_intents 应用。
 static func direct_hit_extra_explosion_intents(rules: Dictionary, context: Dictionary, base_damage: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	if not rules.has("direct_hit_extra_explosion_bonus"):
@@ -46,6 +50,8 @@ static func direct_hit_extra_explosion_intents(rules: Dictionary, context: Dicti
 	return intents
 
 
+## 作用：为正数魂燃爆发量构建带来源追踪的伤害意图列表。
+## 使用：rules 为当前技能有效规则；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func soulburn_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -56,6 +62,8 @@ static func soulburn_burst_intents(rules: Dictionary, context: Dictionary, amoun
 	return intents
 
 
+## 作用：按焰核 Boss 爆发规则构建来源、元素与暴击语义正确的伤害意图。
+## 使用：rules 读取 flame_core_boss_burst；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func flame_core_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -76,6 +84,8 @@ static func flame_core_burst_intents(rules: Dictionary, context: Dictionary, amo
 	return intents
 
 
+## 作用：按指定冰锁规则键构建冰系额外命中意图。
+## 使用：rules 为当前技能有效规则；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func frost_bonus_hit_intents(rules: Dictionary, context: Dictionary, amount: int, rule_key: String = "frost_lock_bonus_hit") -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -87,6 +97,8 @@ static func frost_bonus_hit_intents(rules: Dictionary, context: Dictionary, amou
 	return intents
 
 
+## 作用：构建冰核裂解伤害意图，并标记 shatter 主反应语义。
+## 使用：rules 读取 frost_core_crack_on_boss_poise；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func frost_core_crack_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -101,6 +113,8 @@ static func frost_core_crack_intents(rules: Dictionary, context: Dictionary, amo
 	return intents
 
 
+## 作用：燃烧敌人死亡满足规则冷却与防递归条件时生成爆炸表现，并向范围目标应用伤害意图。
+## 使用：rules 读取 burning_target_death_explosion；context 携带 enemy/source_key/parent/position。
 static func execute_burning_target_death_explosion(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("burning_target_death_explosion"):
 		return
@@ -159,6 +173,8 @@ static func execute_burning_target_death_explosion(rules: Dictionary, context: D
 			continue
 		DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)).call("apply")
 		hit_count += 1
+## 作用：按命中规则生成地火或熔岩，二者同时配置时分开创建。
+## 使用：rules 读取 ground_fire_on_hit/player_lava_on_nearby_fireball_hit/lava_duration_add/lava_radius_multiplier_add；context 携带 parent/target/caster/target_group；base_damage 为来源技能基础伤害；写入 fireball_lava_zone 元数据；无法解析或创建时返回 null。
 
 
 static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
@@ -208,6 +224,8 @@ static func spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary, ba
 	return area
 
 
+## 作用：拆分地火和熔岩规则分别执行生成，并优先返回熔岩对象。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；base_damage 为来源技能基础伤害。
 static func _spawn_split_ground_fire_and_lava(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var ground_rules: Dictionary = rules.duplicate(true)
 	ground_rules.erase("player_lava_on_nearby_fireball_hit")
@@ -218,6 +236,8 @@ static func _spawn_split_ground_fire_and_lava(rules: Dictionary, context: Dictio
 	return lava_area if lava_area != null else ground_area
 
 
+## 作用：检查玩家熔岩生成距离与来源冷却，允许时预留生成时机。
+## 使用：caster 为施法者节点；target 为本次命中目标；返回布尔判断或执行是否成功。
 static func _reserve_player_lava_spawn(lava: Dictionary, caster: Node2D, target: Node2D) -> bool:
 	if caster != null and float(lava.get("near_player_radius", 0.0)) > 0.0:
 		var near_radius: float = float(lava.get("near_player_radius", 0.0))
@@ -229,6 +249,8 @@ static func _reserve_player_lava_spawn(lava: Dictionary, caster: Node2D, target:
 	return true if cooldown <= 0.0 else _reserve_rule_cooldown_at(_lava_zone_cooldowns, cooldown_key, now_seconds, cooldown)
 
 
+## 作用：根据熔岩减速规则构建区域命中状态和参数。
+## 使用：rules 读取 lava_slow。
 static func _build_lava_status_data(rules: Dictionary) -> Dictionary:
 	var slow_rule: Dictionary = _get_dictionary(rules.get("lava_slow", {}))
 	if slow_rule.is_empty():
@@ -246,6 +268,8 @@ static func _build_lava_status_data(rules: Dictionary) -> Dictionary:
 	}
 
 
+## 作用：玩家受击满足冷却时生成保护熔岩环，并同步短时防御状态。
+## 使用：rules 读取 protective_lava_ring_on_player_damaged；context 携带 target_group；写入 fireball_lava_zone/protective_lava_zone 元数据；无法解析或创建时返回 null。
 static func execute_protective_lava_ring_on_player_damaged(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("protective_lava_ring_on_player_damaged", {}))
 	if rule.is_empty():
@@ -282,6 +306,8 @@ static func execute_protective_lava_ring_on_player_damaged(rules: Dictionary, co
 	return area
 
 
+## 作用：玩家受击在规则冷却允许时生成冰环与命中状态。
+## 使用：rules 读取 frost_ring_on_player_damaged；context 携带 target_group；无法解析或创建时返回 null。
 static func execute_frost_ring_on_player_damaged(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("frost_ring_on_player_damaged", {}))
 	if rule.is_empty():
@@ -317,10 +343,14 @@ static func execute_frost_ring_on_player_damaged(rules: Dictionary, context: Dic
 	return area
 
 
+## 作用：从规则上下文 player 或 caster 解析 Node2D 玩家。
+## 使用：context 携带 player/caster。
 static func _context_player(context: Dictionary) -> Node2D:
 	return context.get("player", context.get("caster")) as Node2D
 
 
+## 作用：为规则派生对象解析上下文父节点或角色所在父节点。
+## 使用：context 携带 parent。
 static func _context_parent_for_actor(context: Dictionary, actor: Node) -> Node:
 	var parent: Node = context.get("parent") as Node
 	if parent == null and actor != null:
@@ -328,6 +358,8 @@ static func _context_parent_for_actor(context: Dictionary, actor: Node) -> Node:
 	return parent
 
 
+## 作用：以传入当前时间检查冷却表，允许时立即记录下次时间。
+## 使用：cooldowns 为可修改的冷却表；now_seconds 为当前单调计时秒数；返回布尔判断或执行是否成功。
 static func _reserve_rule_cooldown_at(cooldowns: Dictionary, key: String, now_seconds: float, cooldown: float) -> bool:
 	if now_seconds < float(cooldowns.get(key, 0.0)):
 		return false
@@ -335,6 +367,8 @@ static func _reserve_rule_cooldown_at(cooldowns: Dictionary, key: String, now_se
 	return true
 
 
+## 作用：把保护熔岩环的防御值与截止时间写入玩家元数据。
+## 使用：rule 读取 damage_taken_multiplier_add；player 为玩家节点；now_seconds 为当前单调计时秒数；写入 protective_lava_reduction_until/protective_lava_damage_taken_multiplier_add/protective_lava_center 元数据。
 static func _apply_protective_lava_player_state(rule: Dictionary, player: Node2D, now_seconds: float, duration: float, radius: float) -> void:
 	player.set_meta("protective_lava_reduction_until", now_seconds + duration)
 	player.set_meta("protective_lava_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.2)))
@@ -342,6 +376,8 @@ static func _apply_protective_lava_player_state(rule: Dictionary, player: Node2D
 	player.set_meta("protective_lava_radius", radius)
 
 
+## 作用：把冰环规则中的冻结或减速配置整理为区域状态参数。
+## 使用：rule 读取 status_stacks/status_id/status_duration。
 static func _build_frost_ring_status_data(rule: Dictionary) -> Dictionary:
 	if int(rule.get("status_stacks", 0)) <= 0:
 		return {
@@ -358,6 +394,8 @@ static func _build_frost_ring_status_data(rule: Dictionary) -> Dictionary:
 	}
 
 
+## 作用：产生圣盾范围脉冲，并按脉冲顺序处理圣印、聚焦、Boss 审判光束与冲击波。
+## 使用：rules 读取 holy_shield_base；context 为施放或命中上下文。
 static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pulse_count: int) -> void:
 	var base: Dictionary = _get_dictionary(rules.get("holy_shield_base", {}))
 	if base.is_empty():
@@ -377,6 +415,8 @@ static func execute_holy_shield_pulse(rules: Dictionary, context: Dictionary, pu
 	_execute_holy_shockwave_if_due(rules, context, player.global_position, pulse_count)
 
 
+## 作用：合并圣盾基础半径和脉冲半径调整。
+## 使用：rules 读取 holy_pulse_radius。
 static func _holy_shield_pulse_radius(rules: Dictionary, base: Dictionary) -> float:
 	var radius: float = maxf(float(base.get("radius", 120.0)), 1.0)
 	if rules.has("holy_pulse_radius"):
@@ -385,6 +425,8 @@ static func _holy_shield_pulse_radius(rules: Dictionary, base: Dictionary) -> fl
 	return radius
 
 
+## 作用：为圣盾脉冲构建来源包并创建对应区域对象。
+## 使用：context 携带 target_group；parent 为生成对象父节点；position 为生成世界坐标。
 static func _create_holy_shield_area(base: Dictionary, context: Dictionary, parent: Node, position: Vector2, amount: int, radius: float, source_id: String, color: Color) -> Node2D:
 	var packet: Dictionary = _build_traced_special_packet(
 		source_id,
@@ -410,6 +452,8 @@ static func _create_holy_shield_area(base: Dictionary, context: Dictionary, pare
 	})
 
 
+## 作用：按玩家受击载荷处理圣盾剩余值、破盾状态与后续效果。
+## 使用：rules 为当前技能有效规则；context 携带 skill_instance/amount；写入 holy_shield_remaining/holy_shield_active 元数据。
 static func execute_holy_shield_player_damaged(rules: Dictionary, context: Dictionary) -> void:
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	if skill_instance == null or not bool(skill_instance.get_meta("holy_shield_active", false)):
@@ -425,6 +469,8 @@ static func execute_holy_shield_player_damaged(rules: Dictionary, context: Dicti
 	execute_holy_shield_break(rules, context)
 
 
+## 作用：清理圣盾有效状态，并执行破盾冲击波、圣印反击与限时减伤。
+## 使用：rules 读取 holy_shield_base；context 携带 skill_instance。
 static func execute_holy_shield_break(rules: Dictionary, context: Dictionary) -> void:
 	var base: Dictionary = _get_dictionary(rules.get("holy_shield_base", {}))
 	if base.is_empty():
@@ -444,6 +490,8 @@ static func execute_holy_shield_break(rules: Dictionary, context: Dictionary) ->
 	_apply_holy_shield_break_damage_reduction(rules, context)
 
 
+## 作用：圣盾到期时清理相关状态，并按规则执行到期治疗。
+## 使用：rules 读取 holy_shield_expire_heal；context 携带 player/caster；会发出对应变更信号。
 static func execute_holy_shield_expire(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("holy_shield_expire_heal"):
 		return
@@ -461,6 +509,8 @@ static func execute_holy_shield_expire(rules: Dictionary, context: Dictionary) -
 		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
 
 
+## 作用：圣盾脉冲数达到配置周期时生成额外神圣冲击波。
+## 使用：rules 读取 holy_shockwave_every_n_pulses；context 为施放或命中上下文；position 为生成世界坐标。
 static func _execute_holy_shockwave_if_due(rules: Dictionary, context: Dictionary, position: Vector2, pulse_count: int) -> void:
 	if not rules.has("holy_shockwave_every_n_pulses"):
 		return
@@ -471,6 +521,8 @@ static func _execute_holy_shockwave_if_due(rules: Dictionary, context: Dictionar
 	_spawn_holy_area(rule, context, position, "holy_shield_shockwave", Color(1.0, 0.94, 0.48, 0.34))
 
 
+## 作用：按破盾规则生成神圣冲击波区域。
+## 使用：rules 读取 holy_shield_break_shockwave；context 为施放或命中上下文；position 为生成世界坐标。
 static func _execute_holy_shield_break_shockwave(rules: Dictionary, context: Dictionary, position: Vector2) -> void:
 	if not rules.has("holy_shield_break_shockwave"):
 		return
@@ -478,6 +530,8 @@ static func _execute_holy_shield_break_shockwave(rules: Dictionary, context: Dic
 	_spawn_holy_area(rule, context, position, "holy_shield_break_shockwave", Color(1.0, 0.97, 0.56, 0.40))
 
 
+## 作用：构建可追踪的神圣规则伤害包并创建区域效果。
+## 使用：rule 读取 amount/damage_origin/element/damage_type；context 携带 target_group；position 为生成世界坐标；无法解析或创建时返回 null。
 static func _spawn_holy_area(rule: Dictionary, context: Dictionary, position: Vector2, source_id: String, color: Color) -> Node2D:
 	var parent: Node = _context_parent_for_actor(context, _context_player(context))
 	if parent == null:
@@ -512,6 +566,8 @@ static func _spawn_holy_area(rule: Dictionary, context: Dictionary, position: Ve
 	})
 
 
+## 作用：查询脉冲范围内符合圣印条件的目标并应用聚焦伤害。
+## 使用：rules 读取 holy_mark_pulse_focus；context 为施放或命中上下文；position 为生成世界坐标。
 static func _apply_holy_mark_pulse_focus(rules: Dictionary, context: Dictionary, position: Vector2, radius: float, base_amount: int) -> void:
 	if not rules.has("holy_mark_pulse_focus") or base_amount <= 0:
 		return
@@ -528,11 +584,15 @@ static func _apply_holy_mark_pulse_focus(rules: Dictionary, context: Dictionary,
 	apply_intents(intents)
 
 
+## 作用：按强敌和最近目标两种脉冲圣印规则施加状态。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；position 为生成世界坐标。
 static func _apply_holy_mark_on_pulse(rules: Dictionary, context: Dictionary, position: Vector2, radius: float) -> void:
 	_apply_holy_mark_on_strong_pulse_hit(rules, context, position, radius)
 	_apply_holy_mark_nearest_pulse_target(rules, context, position, radius)
 
 
+## 作用：对脉冲范围内精英或 Boss 施加圣印。
+## 使用：rules 读取 holy_mark_on_strong_pulse_hit；context 为施放或命中上下文；position 为生成世界坐标。
 static func _apply_holy_mark_on_strong_pulse_hit(rules: Dictionary, context: Dictionary, position: Vector2, radius: float) -> void:
 	if not rules.has("holy_mark_on_strong_pulse_hit"):
 		return
@@ -547,6 +607,8 @@ static func _apply_holy_mark_on_strong_pulse_hit(rules: Dictionary, context: Dic
 		})
 
 
+## 作用：从圣盾脉冲范围中选最近目标并施加圣印。
+## 使用：rules 读取 holy_mark_nearest_pulse_target；context 为施放或命中上下文；position 为生成世界坐标。
 static func _apply_holy_mark_nearest_pulse_target(rules: Dictionary, context: Dictionary, position: Vector2, radius: float) -> void:
 	if not rules.has("holy_mark_nearest_pulse_target"):
 		return
@@ -567,6 +629,8 @@ static func _apply_holy_mark_nearest_pulse_target(rules: Dictionary, context: Di
 	})
 
 
+## 作用：Boss 圣印脉冲计数满足周期规则时应用审判光束伤害。
+## 使用：rules 读取 judgement_beam_on_boss_mark_pulses；context 携带 skill_instance；position 为生成世界坐标。
 static func _apply_judgement_beam_on_boss_mark_pulses(rules: Dictionary, context: Dictionary, position: Vector2, radius: float) -> void:
 	if not rules.has("judgement_beam_on_boss_mark_pulses"):
 		return
@@ -599,6 +663,8 @@ static func _apply_judgement_beam_on_boss_mark_pulses(rules: Dictionary, context
 	apply_intents(intents)
 
 
+## 作用：破盾命中带标记目标时应用反击伤害与 Boss 韧性效果。
+## 使用：rules 读取 holy_counter_on_marked_break_hit；context 为施放或命中上下文；position 为生成世界坐标。
 static func _execute_holy_counter_on_marked_break_hit(rules: Dictionary, context: Dictionary, position: Vector2, radius: float) -> void:
 	if not rules.has("holy_counter_on_marked_break_hit"):
 		return
@@ -627,6 +693,8 @@ static func _execute_holy_counter_on_marked_break_hit(rules: Dictionary, context
 	apply_intents(intents)
 
 
+## 作用：按同目标冷却限制给圣盾反击命中的 Boss 施加韧性效果。
+## 使用：rules 读取 holy_counter_boss_poise；target 为本次命中目标。
 static func _apply_holy_counter_boss_poise(rules: Dictionary, target: Node) -> void:
 	if not rules.has("holy_counter_boss_poise") or target == null or not _is_boss(target):
 		return
@@ -639,6 +707,8 @@ static func _apply_holy_counter_boss_poise(rules: Dictionary, target: Node) -> v
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"holy_mark")
 
 
+## 作用：破盾后按规则冷却登记玩家短时承伤减免。
+## 使用：rules 读取 holy_shield_break_damage_reduction；context 为施放或命中上下文；写入 holy_shield_break_reduction_until/holy_shield_break_damage_taken_multiplier_add 元数据。
 static func _apply_holy_shield_break_damage_reduction(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("holy_shield_break_damage_reduction"):
 		return
@@ -654,6 +724,8 @@ static func _apply_holy_shield_break_damage_reduction(rules: Dictionary, context
 	player.set_meta("holy_shield_break_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.4)))
 
 
+## 作用：按战锤裂痕与震地升级配置生成可追踪的持续裂痕区域。
+## 使用：rules 读取 warhammer_crack_field/warhammer_crack_upgrade/warhammer_quake_slam_every_n_casts；context 携带 caster/parent/skill_instance/target_group；无法解析或创建时返回 null。
 static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("warhammer_crack_field"):
 		return null
@@ -694,6 +766,8 @@ static func execute_warhammer_crack_field(rules: Dictionary, context: Dictionary
 	})
 
 
+## 作用：为战锤裂痕定位来源对象，优先命中来源其次施法者。
+## 使用：context 携带 target/source/caster。
 static func _warhammer_crack_origin(context: Dictionary) -> Node2D:
 	var target: Node2D = context.get("target") as Node2D
 	var source: Node2D = context.get("source") as Node2D
@@ -705,6 +779,8 @@ static func _warhammer_crack_origin(context: Dictionary) -> Node2D:
 	return caster
 
 
+## 作用：计算战锤裂痕规则与升级后的最终半径。
+## 使用：rule 读取 radius。
 static func _warhammer_crack_radius(rule: Dictionary, upgrade: Dictionary, quake_rule: Dictionary, quake_active: bool) -> float:
 	var radius: float = maxf(float(rule.get("radius", 80.0)), 1.0)
 	radius *= maxf(1.0 + float(upgrade.get("length_multiplier_add", 0.0)), 0.05)
@@ -713,6 +789,8 @@ static func _warhammer_crack_radius(rule: Dictionary, upgrade: Dictionary, quake
 	return radius
 
 
+## 作用：计算战锤裂痕规则与升级后的持续秒数。
+## 使用：rule 读取 duration/tick_interval。
 static func _warhammer_crack_duration(rule: Dictionary, quake_rule: Dictionary, quake_active: bool) -> float:
 	var duration: float = maxf(float(rule.get("duration", 1.2)), 0.05)
 	if quake_active and int(quake_rule.get("same_target_max_hits", 0)) > 0:
@@ -720,6 +798,8 @@ static func _warhammer_crack_duration(rule: Dictionary, quake_rule: Dictionary, 
 	return duration
 
 
+## 作用：构建战锤裂痕区域专用的追踪伤害包。
+## 使用：rule 读取 damage_origin/element/damage_type/boss_damage_multiplier；context 携带 source_origin_id/skill_id；caster 为施法者节点。
 static func _build_warhammer_crack_packet(rule: Dictionary, context: Dictionary, caster: Node2D, amount: int) -> Dictionary:
 	var packet: Dictionary = _build_traced_special_packet(
 		"warhammer_crack_field",
@@ -739,6 +819,8 @@ static func _build_warhammer_crack_packet(rule: Dictionary, context: Dictionary,
 	return packet
 
 
+## 作用：根据裂痕来源与上下文偏移确定生成位置。
+## 使用：origin 为世界位置或伤害来源；caster 为施法者节点；radius 为世界坐标半径。
 static func _warhammer_crack_position(origin: Node2D, caster: Node2D, radius: float, quake_active: bool) -> Vector2:
 	var position: Vector2 = origin.global_position
 	if not quake_active or caster == null:
@@ -749,6 +831,8 @@ static func _warhammer_crack_position(origin: Node2D, caster: Node2D, radius: fl
 	return position
 
 
+## 作用：按审判冲击和 Boss 韧性追加规则构建目标伤害意图列表。
+## 使用：rules 读取 warhammer_judgement_shock/warhammer_boss_poise_judgement_bonus；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictionary, amount: int, source_id: String) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -771,6 +855,8 @@ static func warhammer_judgement_shock_intents(rules: Dictionary, context: Dictio
 	return intents
 
 
+## 作用：合并审判冲击升级、规则倍率及 Boss 修正，计算最终伤害量。
+## 使用：rules 读取 warhammer_judgement_shock_upgrade/warhammer_judgement_shock；target 为本次命中目标；amount 为本次伤害或动作数值。
 static func _warhammer_judgement_final_amount(rules: Dictionary, target: Node, amount: int) -> int:
 	var final_amount: int = amount
 	if _is_elite(target) or _is_boss(target):
@@ -782,6 +868,8 @@ static func _warhammer_judgement_final_amount(rules: Dictionary, target: Node, a
 	return final_amount
 
 
+## 作用：低血 Boss 命中满足规则冷却后生成战锤冲击波区域。
+## 使用：rules 读取 warhammer_boss_low_hp_shockwave；context 携带 target/parent/target_group；无法解析或创建时返回 null。
 static func execute_warhammer_boss_low_hp_shockwave(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("warhammer_boss_low_hp_shockwave"):
 		return null
@@ -825,6 +913,8 @@ static func execute_warhammer_boss_low_hp_shockwave(rules: Dictionary, context: 
 	})
 
 
+## 作用：执行十字领域 tick 的回响与净化等规则效果。
+## 使用：rules 读取 cross_relic_base；context 为施放或命中上下文。
 static func execute_cross_relic_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	if not rules.has("cross_relic_base"):
 		return
@@ -832,6 +922,8 @@ static func execute_cross_relic_field_tick(rules: Dictionary, context: Dictionar
 	execute_cross_relic_purify_dot(rules, context)
 
 
+## 作用：按易燃满层爆发与 Boss 调整构建火油伤害意图。
+## 使用：rules 读取 flammable_mark_burst_on_full_mark_tick/flammable_mark_boss_tuning；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func fire_oil_flammable_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -854,6 +946,8 @@ static func fire_oil_flammable_burst_intents(rules: Dictionary, context: Diction
 	return intents
 
 
+## 作用：按火油爆燃和升级创建爆炸区域，补充燃烧及二次爆燃规则。
+## 使用：rules 读取 oil_fire_deflagration/deflagration_upgrade/deflagration_apply_burn；context 携带 target/parent/target_group；无法解析或创建时返回 null。
 static func execute_fire_oil_deflagration(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("oil_fire_deflagration"):
 		return null
@@ -912,6 +1006,8 @@ static func execute_fire_oil_deflagration(rules: Dictionary, context: Dictionary
 	return area
 
 
+## 作用：为传入酸爆伤害构建带追踪的目标伤害意图。
+## 使用：rules 为当前技能有效规则；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func acid_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -933,6 +1029,8 @@ static func acid_burst_intents(rules: Dictionary, context: Dictionary, amount: i
 	return intents
 
 
+## 作用：按满酸痕或残留规则生成酸爆区域，并处理高防收益和残留扩散。
+## 使用：rules 读取 acid_burst_on_full_acid_mark_hit/acid_burst_on_full_acid_residue_hit/acid_burst_damage_tuning/acid_burst_high_defense_bonus；context 携带 target/parent/target_group；无法解析或创建时返回 null。
 static func execute_acid_burst(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not (rules.has("acid_burst_on_full_acid_mark_hit") or rules.has("acid_burst_on_full_acid_residue_hit")):
 		return null
@@ -994,6 +1092,8 @@ static func execute_acid_burst(rules: Dictionary, context: Dictionary) -> Node2D
 	return area
 
 
+## 作用：按酸液基础与薄膜升级给玩家增加腐蚀薄膜护盾元数据。
+## 使用：rules 读取 acid_sprayer_base/corrosive_film_upgrade；context 为施放或命中上下文；player 为玩家节点；写入 corrosive_film_shield_points/corrosive_film_until/corrosive_film_shield_cap 元数据。
 static func grant_corrosive_film(rules: Dictionary, context: Dictionary, player: Node, amount: int, base_duration: float = 4.0) -> void:
 	if player == null or amount <= 0:
 		return
@@ -1007,6 +1107,8 @@ static func grant_corrosive_film(rules: Dictionary, context: Dictionary, player:
 	player.set_meta("corrosive_film_shield_cap", cap)
 
 
+## 作用：选择酸爆触发类别的规则，并以酸液基础配置补足数值。
+## 使用：rules 读取 acid_sprayer_base/acid_burst_on_full_acid_mark_hit/acid_burst_on_full_acid_residue_hit。
 static func _acid_burst_rule(rules: Dictionary) -> Dictionary:
 	var base: Dictionary = _get_dictionary(rules.get("acid_sprayer_base", {}))
 	var rule: Dictionary = _get_dictionary(rules.get("acid_burst_on_full_acid_mark_hit", {}))
@@ -1025,12 +1127,16 @@ static func _acid_burst_rule(rules: Dictionary) -> Dictionary:
 	return rule
 
 
+## 作用：读取目标 defense 属性和防御护甲元数据，取二者较大值作为规则判定数值。
+## 使用：target 为本次命中目标。
 static func _target_defense_value(target: Node) -> float:
 	if target == null:
 		return 0.0
 	return maxf(float(target.get("defense")) if "defense" in target else 0.0, float(target.get_meta("defense", target.get_meta("armor", 0.0))))
 
 
+## 作用：满油二次爆燃满足规则条件与冷却后创建派生爆炸区域。
+## 使用：rules 读取 full_oil_secondary_deflagration；context 携带 source_key/parent/target_group；target 为本次命中目标；无法解析或创建时返回 null。
 static func _execute_fire_oil_secondary_deflagration(rules: Dictionary, context: Dictionary, target: Node2D, primary_amount: int, primary_radius: float) -> Node2D:
 	if not rules.has("full_oil_secondary_deflagration") or target == null:
 		return null
@@ -1072,6 +1178,8 @@ static func _execute_fire_oil_secondary_deflagration(rules: Dictionary, context:
 	})
 
 
+## 作用：根据烟云配置创建无直接伤害的区域，并标记后续烟云事件语义。
+## 使用：rules 为当前技能有效规则；context 携带 area/player/caster/parent；rule 读取 radius/duration；写入 fire_oil_smoke_cloud/fire_oil_smoke_radius/source_rule_id 元数据；无法解析或创建时返回 null。
 static func execute_smoke_cloud(rules: Dictionary, context: Dictionary, rule: Dictionary, source_id: String) -> Node2D:
 	if rule.is_empty():
 		return null
@@ -1108,6 +1216,8 @@ static func execute_smoke_cloud(rules: Dictionary, context: Dictionary, rule: Di
 	return area
 
 
+## 作用：中毒击杀在来源冷却与数量限制允许时生成小毒云，超量时回收最旧区域。
+## 使用：rules 读取 toxic_vial_small_cloud_on_poison_kill/toxic_vial_small_cloud_upgrade/toxic_vial_small_cloud_cooldown；context 携带 enemy/source_key/parent/target_group；写入 toxic_vial_poison_cloud/toxic_vial_small_cloud/toxic_vial_poison_cloud_radius 元数据；无法解析或创建时返回 null。
 static func execute_toxic_vial_small_cloud(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("toxic_vial_small_cloud_on_poison_kill"):
 		return null
@@ -1167,6 +1277,8 @@ static func execute_toxic_vial_small_cloud(rules: Dictionary, context: Dictionar
 	return area
 
 
+## 作用：按死亡目标中毒层数和规则冷却创建毒爆区域。
+## 使用：rules 读取 poison_death_explosion/full_poison_death_explosion/poison_death_explosion_upgrade；context 携带 enemy/source_key/parent/target_group；无法解析或创建时返回 null。
 static func execute_poison_death_explosion(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("poison_death_explosion") and not rules.has("full_poison_death_explosion"):
 		return null
@@ -1236,6 +1348,8 @@ static func execute_poison_death_explosion(rules: Dictionary, context: Dictionar
 	})
 
 
+## 作用：按毒核 Boss 脉冲配置构建可应用的伤害意图列表。
+## 使用：rules 读取 toxic_core_boss_pulse；context 携带 target；amount 为本次伤害或动作数值。
 static func execute_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -1256,6 +1370,8 @@ static func execute_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary
 	return intents
 
 
+## 作用：创建玩家低血解毒规则对应的云区。
+## 使用：rules 读取 antidote_cloud_on_low_hp；context 携带 caster/parent/target_group；写入 toxic_vial_antidote_cloud 元数据；无法解析或创建时返回 null。
 static func execute_antidote_cloud(rules: Dictionary, context: Dictionary) -> Node2D:
 	if not rules.has("antidote_cloud_on_low_hp"):
 		return null
@@ -1287,6 +1403,8 @@ static func execute_antidote_cloud(rules: Dictionary, context: Dictionary) -> No
 	return area
 
 
+## 作用：按十字领域回响周期选择目标，构建回响与信仰审判伤害意图。
+## 使用：rules 读取 cross_relic_echo_every_n_ticks/cross_relic_echo_upgrade/cross_relic_faith_judgement；context 携带 source；写入 cross_relic_echo_tick_count 元数据；返回 DamageIntent 列表，由 apply_intents 应用。
 static func cross_relic_echo_intents(rules: Dictionary, context: Dictionary) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	if not rules.has("cross_relic_echo_every_n_ticks"):
@@ -1324,6 +1442,8 @@ static func cross_relic_echo_intents(rules: Dictionary, context: Dictionary) -> 
 	return intents
 
 
+## 作用：净化目标持续伤害状态，并按规则执行净化伤害、Boss 韧性或派生脉冲。
+## 使用：rules 读取 cross_relic_purify_impurity/cross_relic_purify_dot/cross_relic_purify_boss_poise/cross_relic_purify_upgrade；context 携带 target。
 static func execute_cross_relic_purify_dot(rules: Dictionary, context: Dictionary) -> void:
 	if rules.has("cross_relic_purify_impurity"):
 		execute_cross_relic_purify_impurity(rules, context)
@@ -1362,6 +1482,8 @@ static func execute_cross_relic_purify_dot(rules: Dictionary, context: Dictionar
 	apply_intents([DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet))])
 
 
+## 作用：消耗目标杂质状态并执行十字净化伤害与 Boss 韧性追加效果。
+## 使用：rules 读取 cross_relic_purify_impurity/cross_relic_purify_upgrade/cross_relic_purify_boss_poise；context 携带 target。
 static func execute_cross_relic_purify_impurity(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_purify_impurity", {}))
 	if rule.is_empty():
@@ -1398,6 +1520,8 @@ static func execute_cross_relic_purify_impurity(rules: Dictionary, context: Dict
 		execute_cross_relic_purify_small_pulse(rules, context, target)
 
 
+## 作用：按净化小脉冲规则与冷却创建派生范围伤害。
+## 使用：rules 读取 cross_relic_purify_small_pulse；context 携带 parent/target_group；target 为本次命中目标；无法解析或创建时返回 null。
 static func execute_cross_relic_purify_small_pulse(rules: Dictionary, context: Dictionary, target: Node) -> Node2D:
 	if not rules.has("cross_relic_purify_small_pulse"):
 		return null
@@ -1441,6 +1565,8 @@ static func execute_cross_relic_purify_small_pulse(rules: Dictionary, context: D
 	})
 
 
+## 作用：按十字回响目标策略在领域范围内选取优先目标。
+## 使用：rules 读取 cross_relic_echo_targeting；context 携带 target；origin 为世界位置或伤害来源。
 static func _select_cross_relic_echo_target(rules: Dictionary, context: Dictionary, origin: Vector2, radius: float) -> Node:
 	var candidates: Array[Node2D] = _find_targets_in_radius(context, origin, radius)
 	if candidates.is_empty():
@@ -1463,6 +1589,8 @@ static func _select_cross_relic_echo_target(rules: Dictionary, context: Dictiona
 	return best
 
 
+## 作用：依据信仰审判条件构建十字领域追加伤害意图。
+## 使用：rules 读取 cross_relic_faith_judgement；context 为施放或命中上下文；target 为本次命中目标；返回 DamageIntent 列表，由 apply_intents 应用。
 static func _cross_relic_faith_judgement_intents(rules: Dictionary, context: Dictionary, target: Node) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_faith_judgement", {}))
@@ -1486,6 +1614,8 @@ static func _cross_relic_faith_judgement_intents(rules: Dictionary, context: Dic
 	return intents
 
 
+## 作用：净化命中 Boss 在冷却允许时施加韧性相关效果。
+## 使用：rules 读取 cross_relic_purify_boss_poise；target 为本次命中目标。
 static func _apply_cross_relic_purify_boss_poise(rules: Dictionary, target: Node) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("cross_relic_purify_boss_poise", {}))
 	var key: String = "cross_relic_purify:%s" % str(target.get_instance_id())
@@ -1496,6 +1626,8 @@ static func _apply_cross_relic_purify_boss_poise(rules: Dictionary, target: Node
 		ReactionLimiterScript.apply_boss_control_conversion(target, &"stun")
 
 
+## 作用：按配置列表顺序返回目标具有的首个状态，未找到返回空 ID。
+## 使用：target 为本次命中目标。
 static func _first_matching_status(target: Node, status_ids: Array) -> StringName:
 	for status_variant: Variant in status_ids:
 		var status_id: StringName = StringName(String(status_variant))
@@ -1504,6 +1636,8 @@ static func _first_matching_status(target: Node, status_ids: Array) -> StringNam
 	return &""
 
 
+## 作用：按冰系粉碎规则与升级创建范围伤害区域。
+## 使用：rules 读取 shatter_on_freeze_or_frost_hit/shatter_upgrade；context 携带 target/parent/target_group；无法解析或创建时返回 null。
 static func execute_shatter_area(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("shatter_on_freeze_or_frost_hit", {}))
 	if rule.is_empty():
@@ -1537,6 +1671,8 @@ static func execute_shatter_area(rules: Dictionary, context: Dictionary) -> Node
 	})
 
 
+## 作用：粉碎击杀后选择附近目标并生成继承来源的冰锥投射物。
+## 使用：rules 读取 shatter_kill_spawn_icicle；context 携带 source_key/enemy/caster/parent；无法解析或创建时返回 null。
 static func execute_shatter_kill_spawn_icicle(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("shatter_kill_spawn_icicle", {}))
 	if rule.is_empty():
@@ -1575,6 +1711,8 @@ static func execute_shatter_kill_spawn_icicle(rules: Dictionary, context: Dictio
 	})
 
 
+## 作用：逐跳选择未命中目标并应用连锁伤害与状态，记录路径表现和末端爆发。
+## 使用：rules 读取 lightning_chain_bounce/chain_new_target_damage_ramp/chain_end_burst；context 携带 target/parent/projectile/target_group；base_damage 为来源技能基础伤害；写入 lightning_chain_targets 元数据；无适用数据时返回空字典。
 static func execute_lightning_chain_bounce(rules: Dictionary, context: Dictionary, base_damage: int) -> Dictionary:
 	var rule: Dictionary = _get_dictionary(rules.get("lightning_chain_bounce", {}))
 	if rule.is_empty():
@@ -1630,6 +1768,8 @@ static func execute_lightning_chain_bounce(rules: Dictionary, context: Dictionar
 	}
 
 
+## 作用：把上下文来源身份补入连锁或派生伤害包。
+## 使用：packet 为待修饰伤害包视图；context 携带 source_origin_id/caster/skill_id；会原地更新 packet.source_origin_id/source_skill_id。
 static func _apply_context_source_identity(packet: Dictionary, context: Dictionary, source_node: Node = null) -> void:
 	var source_origin_id: String = String(context.get("source_origin_id", packet.get("source_origin_id", "")))
 	if source_origin_id == "":
@@ -1648,6 +1788,8 @@ static func _apply_context_source_identity(packet: Dictionary, context: Dictiona
 		packet["source_skill_id"] = StringName(source_skill_id)
 
 
+## 作用：用连锁路径点创建短时闪电视觉连线，计时结束回收。
+## 使用：parent 为生成对象父节点；duration 为持续秒数。
 static func _spawn_lightning_chain_path_visual(parent: Node, from_position: Vector2, to_position: Vector2, duration: float = 0.18) -> void:
 	if parent == null:
 		return
@@ -1668,6 +1810,8 @@ static func _spawn_lightning_chain_path_visual(parent: Node, from_position: Vect
 	tree.create_timer(maxf(duration, 0.05)).timeout.connect(Callable(line, "queue_free"), CONNECT_ONE_SHOT)
 
 
+## 作用：把世界坐标转换为 Node2D 父节点局部坐标，普通父节点保留世界值。
+## 使用：parent 为生成对象父节点。
 static func _to_parent_local(parent: Node, global_position: Vector2) -> Vector2:
 	var parent_2d: Node2D = parent as Node2D
 	if parent_2d == null:
@@ -1675,6 +1819,8 @@ static func _to_parent_local(parent: Node, global_position: Vector2) -> Vector2:
 	return parent_2d.to_local(global_position)
 
 
+## 作用：在连锁末端按规则创建爆发区域。
+## 使用：rules 读取 chain_end_burst；context 携带 projectile/target/parent/target_group；写入 lightning_chain_end_burst_done 元数据；无法解析或创建时返回 null。
 static func execute_chain_end_burst(rules: Dictionary, context: Dictionary, origin_target: Node2D = null) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("chain_end_burst", {}))
 	if rule.is_empty():
@@ -1717,6 +1863,8 @@ static func execute_chain_end_burst(rules: Dictionary, context: Dictionary, orig
 	})
 
 
+## 作用：根据电压过载规则构建目标过载伤害意图。
+## 使用：rules 读取 overload_on_voltage；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func lightning_overload_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -1731,6 +1879,8 @@ static func lightning_overload_intents(rules: Dictionary, context: Dictionary, a
 	return intents
 
 
+## 作用：根据过载感电闪电规则构建额外电击意图。
+## 使用：rules 读取 overload_shock_lightning；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func overload_shock_lightning_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -1746,6 +1896,8 @@ static func overload_shock_lightning_intents(rules: Dictionary, context: Diction
 	return intents
 
 
+## 作用：按感电消耗规则构建反应伤害意图。
+## 使用：rules 读取 shock_consume_reaction；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func shock_consume_reaction_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -1760,6 +1912,8 @@ static func shock_consume_reaction_intents(rules: Dictionary, context: Dictionar
 	return intents
 
 
+## 作用：寻找未命中的附近目标并传播感电状态。
+## 使用：rules 读取 shock_consume_reaction/shock_upgrade；context 携带 target/parent/target_group。
 static func spread_shock_from_shock(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("shock_consume_reaction", {}))
 	if rule.is_empty():
@@ -1788,6 +1942,8 @@ static func spread_shock_from_shock(rules: Dictionary, context: Dictionary) -> v
 			})
 
 
+## 作用：感电消耗触发磁暴规则时创建磁暴区域。
+## 使用：rules 读取 magnetic_storm_on_shock_consume；context 携带 target/parent/target_group；无法解析或创建时返回 null。
 static func execute_magnetic_storm_on_shock_consume(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("magnetic_storm_on_shock_consume", {}))
 	if rule.is_empty():
@@ -1818,6 +1974,8 @@ static func execute_magnetic_storm_on_shock_consume(rules: Dictionary, context: 
 	})
 
 
+## 作用：在发射前按闪电环绕规则创建环绕电球，并补接触伤害、减速和额外电球。
+## 使用：rules 读取 orbit_before_launch/orbit_contact_damage/orbit_contact_slow/orbit_guard_extra_orb；context 携带 caster/parent/target_group；base_damage 为来源技能基础伤害；无匹配项时返回空数组。
 static func execute_lightning_orbit_before_launch(rules: Dictionary, context: Dictionary, base_damage: int) -> Array[Node2D]:
 	var orbit_rule: Dictionary = _get_dictionary(rules.get("orbit_before_launch", {}))
 	if orbit_rule.is_empty():
@@ -1874,6 +2032,8 @@ static func execute_lightning_orbit_before_launch(rules: Dictionary, context: Di
 	return result
 
 
+## 作用：选择其他附近目标或最近目标，生成奥术页复制投射物。
+## 使用：rules 读取 arcane_page_copy_on_hit；context 携带 projectile/target/parent/target_group；base_damage 为来源技能基础伤害；写入 arcane_page_hit_ids 元数据；无法解析或创建时返回 null。
 static func execute_arcane_page_copy(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("arcane_page_copy_on_hit", {}))
 	if rule.is_empty():
@@ -1939,6 +2099,8 @@ static func execute_arcane_page_copy(rules: Dictionary, context: Dictionary, bas
 	})
 
 
+## 作用：按奥术封印爆发规则构建目标伤害意图。
+## 使用：rules 读取 arcane_seal_burst；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func arcane_seal_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -1954,6 +2116,8 @@ static func arcane_seal_burst_intents(rules: Dictionary, context: Dictionary, am
 	return intents
 
 
+## 作用：把禁页风险伤害以标准伤害包应用到施法者。
+## 使用：caster 为施法者节点；context 为施放或命中上下文；amount 为本次伤害或动作数值。
 static func apply_forbidden_page_self_damage(caster: Node, context: Dictionary, amount: int) -> void:
 	if caster == null or amount <= 0 or not caster.has_method("take_damage"):
 		return
@@ -1965,6 +2129,8 @@ static func apply_forbidden_page_self_damage(caster: Node, context: Dictionary, 
 	caster.call("take_damage", DamagePacketScript.from_dictionary(packet))
 
 
+## 作用：按生成和攻击冷却维护纸灵规则，查询附近目标并执行纸灵攻击。
+## 使用：rules 读取 page_spirit_spawn/page_spirit_attack；context 携带 caster/parent/target_group；写入 page_spirit_count 元数据。
 static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> void:
 	var spawn_rule: Dictionary = _get_dictionary(rules.get("page_spirit_spawn", {}))
 	if spawn_rule.is_empty():
@@ -2004,6 +2170,8 @@ static func execute_page_spirit_tick(rules: Dictionary, context: Dictionary) -> 
 	DamageIntentScript.create(target, DamagePacketScript.from_dictionary(packet)).call("apply")
 
 
+## 作用：按纸灵拦截规则检查可用次数与冷却，判断本次伤害是否被拦截。
+## 使用：rules 读取 page_spirit_intercept；context 携带 player/caster；写入 page_spirit_intercept_ready_at/page_spirit_count 元数据；返回布尔判断或执行是否成功。
 static func page_spirit_intercept(rules: Dictionary, context: Dictionary) -> bool:
 	var rule: Dictionary = _get_dictionary(rules.get("page_spirit_intercept", {}))
 	if rule.is_empty():
@@ -2020,6 +2188,8 @@ static func page_spirit_intercept(rules: Dictionary, context: Dictionary) -> boo
 	return true
 
 
+## 作用：按额外飞刀周期规则生成规定数量的派生飞刀。
+## 使用：rules 读取 extra_knife_every_n_casts；context 为施放或命中上下文；base_damage 为来源技能基础伤害；无匹配项时返回空数组。
 static func execute_extra_knife_throw(rules: Dictionary, context: Dictionary, base_damage: int) -> Array[Node2D]:
 	var rule: Dictionary = _get_dictionary(rules.get("extra_knife_every_n_casts", {}))
 	if rule.is_empty():
@@ -2033,6 +2203,8 @@ static func execute_extra_knife_throw(rules: Dictionary, context: Dictionary, ba
 	return result
 
 
+## 作用：按低血 Boss 处决规则构建额外伤害意图。
+## 使用：rules 读取 boss_low_hp_execution_burst；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func execution_burst_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -2047,6 +2219,8 @@ static func execution_burst_intents(rules: Dictionary, context: Dictionary, amou
 	return intents
 
 
+## 作用：按满创伤暴击撕裂规则构建额外伤害意图。
+## 使用：rules 读取 rupture_on_full_wound_crit；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func rupture_on_full_wound_crit_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -2062,6 +2236,8 @@ static func rupture_on_full_wound_crit_intents(rules: Dictionary, context: Dicti
 	return intents
 
 
+## 作用：按普通怪击杀回收规则生成回收飞刀，并标记来源语义。
+## 使用：rules 读取 recycle_knife_on_normal_kill/recycle_knife_upgrade；context 携带 source_key/enemy；base_damage 为来源技能基础伤害；无法解析或创建时返回 null。
 static func execute_recycle_knife(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("recycle_knife_on_normal_kill", {}))
 	if rule.is_empty():
@@ -2080,6 +2256,8 @@ static func execute_recycle_knife(rules: Dictionary, context: Dictionary, base_d
 	return projectile
 
 
+## 作用：记录回收触发并按配置在玩家元数据上授予限时冲刺收益。
+## 使用：rules 读取 recycle_dash_buff；context 携带 player/caster；写入 recycle_dash_buff_until/recycle_dash_move_speed_multiplier_add/recycle_dash_dodge_chance_add 元数据。
 static func apply_recycle_dash_buff(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("recycle_dash_buff", {}))
 	if rule.is_empty():
@@ -2094,6 +2272,8 @@ static func apply_recycle_dash_buff(rules: Dictionary, context: Dictionary) -> v
 	player.set_meta("recycle_dash_dodge_chance_add", float(rule.get("dodge_chance_add", 0.08)))
 
 
+## 作用：按穿透碎片规则选择其他目标并创建派生箭片列表。
+## 使用：rules 读取 hunter_arrow_shards_after_pierce_hits；context 携带 target/parent/projectile/target_group；无匹配项时返回空数组。
 static func execute_hunter_arrow_shards(rules: Dictionary, context: Dictionary) -> Array[Node2D]:
 	var rule: Dictionary = _get_dictionary(rules.get("hunter_arrow_shards_after_pierce_hits", {}))
 	if rule.is_empty():
@@ -2150,6 +2330,8 @@ static func execute_hunter_arrow_shards(rules: Dictionary, context: Dictionary) 
 	return result
 
 
+## 作用：按 Boss 标记命中鹰击规则构建追加伤害意图。
+## 使用：rules 读取 eagle_shot_on_boss_mark_hits；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func eagle_shot_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -2162,6 +2344,8 @@ static func eagle_shot_intents(rules: Dictionary, context: Dictionary, amount: i
 	return intents
 
 
+## 作用：创建猎弓命中爆炸，并补充爆发标记或升级状态。
+## 使用：rules 读取 hunter_arrow_hit_explosion/hunter_arrow_explosion_upgrade/burst_mark_on_arrow_explosion/hunter_arrow_explosion_mark；context 携带 target/parent/target_group；base_damage 为来源技能基础伤害；无法解析或创建时返回 null。
 static func execute_hunter_arrow_hit_explosion(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("hunter_arrow_hit_explosion", {}))
 	if rule.is_empty():
@@ -2211,6 +2395,8 @@ static func execute_hunter_arrow_hit_explosion(rules: Dictionary, context: Dicti
 	})
 
 
+## 作用：在带爆发标记敌人死亡位置创建规则爆炸。
+## 使用：rules 读取 burst_mark_death_explosion/marked_target_death_explosion；context 携带 enemy/parent/target_group；base_damage 为来源技能基础伤害；无法解析或创建时返回 null。
 static func execute_burst_mark_death_explosion(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("burst_mark_death_explosion", rules.get("marked_target_death_explosion", {})))
 	if rule.is_empty():
@@ -2243,10 +2429,14 @@ static func execute_burst_mark_death_explosion(rules: Dictionary, context: Dicti
 	})
 
 
+## 作用：复用爆发标记死亡爆炸实现，保留通用标记死亡入口。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；base_damage 为来源技能基础伤害。
 static func execute_marked_target_death_explosion(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	return execute_burst_mark_death_explosion(rules, context, base_damage)
 
 
+## 作用：按风步双箭规则创建额外猎弓投射物列表。
+## 使用：rules 读取 windstep_double_arrow；context 为施放或命中上下文；base_damage 为来源技能基础伤害；无匹配项时返回空数组。
 static func execute_windstep_double_arrow(rules: Dictionary, context: Dictionary, base_damage: int) -> Array[Node2D]:
 	var rule: Dictionary = _get_dictionary(rules.get("windstep_double_arrow", {}))
 	if rule.is_empty():
@@ -2260,6 +2450,8 @@ static func execute_windstep_double_arrow(rules: Dictionary, context: Dictionary
 	return result
 
 
+## 作用：按触发小陷阱规则生成派生陷阱，并按子对象元数据限制活动数量。
+## 使用：rules 读取 small_trap_on_trigger/small_trap_upgrade；context 携带 target/parent/target_group/event_bus；base_damage 为来源技能基础伤害；写入 small_trap 元数据；无匹配项时返回空数组。
 static func execute_small_trap_on_trigger(rules: Dictionary, context: Dictionary, base_damage: int) -> Array[Node2D]:
 	var rule: Dictionary = _get_dictionary(rules.get("small_trap_on_trigger", {}))
 	if rule.is_empty():
@@ -2309,6 +2501,8 @@ static func execute_small_trap_on_trigger(rules: Dictionary, context: Dictionary
 	return result
 
 
+## 作用：按定身钳击规则构建追加反应伤害意图。
+## 使用：rules 读取 pincer_reaction_on_root；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func pincer_reaction_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -2323,6 +2517,8 @@ static func pincer_reaction_intents(rules: Dictionary, context: Dictionary, amou
 	return intents
 
 
+## 作用：按 Boss 核心陷阱规则构建追加伤害意图。
+## 使用：rules 读取 boss_core_trap_bonus_damage；context 携带 target；amount 为本次伤害或动作数值；返回 DamageIntent 列表，由 apply_intents 应用。
 static func boss_core_trap_bonus_intents(rules: Dictionary, context: Dictionary, amount: int) -> Array[RefCounted]:
 	var intents: Array[RefCounted] = []
 	var target: Node = context.get("target") as Node
@@ -2335,6 +2531,8 @@ static func boss_core_trap_bonus_intents(rules: Dictionary, context: Dictionary,
 	return intents
 
 
+## 作用：按陷阱命中爆炸规则及升级创建派生爆炸区域。
+## 使用：rules 读取 trap_hit_explosion/trap_explosion_upgrade；context 携带 target/parent/target_group；base_damage 为来源技能基础伤害；无法解析或创建时返回 null。
 static func execute_trap_hit_explosion(rules: Dictionary, context: Dictionary, base_damage: int) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("trap_hit_explosion", {}))
 	if rule.is_empty():
@@ -2368,6 +2566,8 @@ static func execute_trap_hit_explosion(rules: Dictionary, context: Dictionary, b
 	})
 
 
+## 作用：陷阱击杀后创建碎片领域，并维护有限活动领域列表。
+## 使用：rules 读取 trap_kill_fragment_field；context 携带 enemy/parent/target_group；写入 trap_fragment_field 元数据；无法解析或创建时返回 null。
 static func execute_trap_kill_fragment_field(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("trap_kill_fragment_field", {}))
 	if rule.is_empty():
@@ -2404,6 +2604,8 @@ static func execute_trap_kill_fragment_field(rules: Dictionary, context: Diction
 	return area
 
 
+## 作用：按诱饵陷阱配置创建带到期爆炸及 Boss 核心语义的区域。
+## 使用：rules 读取 decoy_trap_spawn/decoy_trap_upgrade/decoy_trap_explosion/decoy_boss_core_bonus；context 携带 caster/parent/target_group/event_bus；写入 decoy_trap/decoy_trap_hp/decoy_attracts_normal 元数据；无法解析或创建时返回 null。
 static func execute_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("decoy_trap_spawn", {}))
 	if rule.is_empty():
@@ -2445,6 +2647,8 @@ static func execute_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> 
 	return area
 
 
+## 作用：诱饵陷阱到期时按升级与 Boss 核心加成创建爆炸区域。
+## 使用：rules 读取 decoy_trap_explosion/decoy_trap_upgrade/decoy_boss_core_bonus；context 携带 area/parent/target_group；无法解析或创建时返回 null。
 static func execute_decoy_trap_explosion(rules: Dictionary, context: Dictionary) -> Node2D:
 	var rule: Dictionary = _get_dictionary(rules.get("decoy_trap_explosion", {}))
 	if rule.is_empty() or not bool(rule.get("explode_on_expire", true)):
@@ -2479,6 +2683,8 @@ static func execute_decoy_trap_explosion(rules: Dictionary, context: Dictionary)
 	})
 
 
+## 作用：更新回收触发的计数或时间，并记录规则需要的运行状态。
+## 使用：rules 读取 recycle_dash_buff；context 携带 caster；写入 recycle_knife_trigger_times 元数据。
 static func _record_recycle_trigger(rules: Dictionary, context: Dictionary) -> void:
 	var rule: Dictionary = _get_dictionary(rules.get("recycle_dash_buff", {}))
 	if rule.is_empty():
@@ -2504,6 +2710,8 @@ static func _record_recycle_trigger(rules: Dictionary, context: Dictionary) -> v
 		caster.set_meta("recycle_knife_trigger_times", [])
 
 
+## 作用：选择低血或最近目标，构建来源明确的派生飞刀投射物。
+## 使用：rules 为当前技能有效规则；context 携带 caster/parent/enemy/target_group；base_damage 为来源技能基础伤害；无法解析或创建时返回 null。
 static func _spawn_throwing_knife_projectile(rules: Dictionary, context: Dictionary, base_damage: int, damage_multiplier: float, source_key: String, prefer_low_hp: bool, projectile_index: int) -> Node2D:
 	var caster: Node2D = context.get("caster") as Node2D
 	var parent: Node = context.get("parent") as Node
@@ -2551,6 +2759,8 @@ static func _spawn_throwing_knife_projectile(rules: Dictionary, context: Diction
 	})
 
 
+## 作用：选择最近目标，构建来源明确的派生猎弓投射物。
+## 使用：context 携带 caster/parent/target/target_group；base_damage 为来源技能基础伤害；source_key 为来源冷却身份；无法解析或创建时返回 null。
 static func _spawn_hunter_arrow_projectile(_rules: Dictionary, context: Dictionary, base_damage: int, damage_multiplier: float, source_key: String, projectile_index: int) -> Node2D:
 	var caster: Node2D = context.get("caster") as Node2D
 	var parent: Node = context.get("parent") as Node
@@ -2596,6 +2806,8 @@ static func _spawn_hunter_arrow_projectile(_rules: Dictionary, context: Dictiona
 	})
 
 
+## 作用：按来源子对象元数据列表清理失效项并回收超出活动上限的旧对象。
+## 使用：parent 为生成对象父节点；可能回收匹配节点。
 static func _enforce_child_meta_limit(parent: Node, meta_key: String, max_active: int) -> void:
 	if parent == null or meta_key == "" or max_active <= 0:
 		return
@@ -2611,6 +2823,8 @@ static func _enforce_child_meta_limit(parent: Node, meta_key: String, max_active
 			oldest.queue_free()
 
 
+## 作用：清理碎片领域 ID 列表并回收超出规则容量的旧区域。
+## 使用：可能回收匹配节点。
 static func _enforce_fragment_field_limit(max_active: int) -> void:
 	if max_active <= 0:
 		return
@@ -2627,12 +2841,16 @@ static func _enforce_fragment_field_limit(max_active: int) -> void:
 			(oldest as Node).queue_free()
 
 
+## 作用：按意图列表顺序调用有效 DamageIntent 的 apply，将构建结果真正交给目标受击入口。
+## 使用：返回 DamageIntent 列表，由 apply_intents 应用。
 static func apply_intents(intents: Array[RefCounted]) -> void:
 	for intent: RefCounted in intents:
 		if intent != null:
 			intent.call("apply")
 
 
+## 作用：为特殊规则构建具有来源 ID、伤害来源、元素与暴击语义的标准包视图。
+## 使用：source_id 为稳定效果来源 ID；amount 为本次伤害或动作数值；origin 为世界位置或伤害来源。
 static func build_special_packet(source_id: String, amount: int, origin: String, can_crit: bool, element: String = "fire", damage_type: String = "") -> Dictionary:
 	var args: Dictionary = {
 		"source_id": source_id,
@@ -2655,10 +2873,14 @@ static func build_special_packet(source_id: String, amount: int, origin: String,
 	})
 
 
+## 作用：构建特殊规则伤害包后附加上下文追踪与来源身份字段。
+## 使用：source_id 为稳定效果来源 ID；amount 为本次伤害或动作数值；origin 为世界位置或伤害来源。
 static func _build_traced_special_packet(source_id: String, amount: int, origin: String, can_crit: bool, context: Dictionary, element: String = "fire", damage_type: String = "") -> Dictionary:
 	return DamageTraceContextScript.apply_to_packet(build_special_packet(source_id, amount, origin, can_crit, element, damage_type), context)
 
 
+## 作用：优先通过当前技能的最终属性读取伤害，缺实例路径使用定义基础值或备用量。
+## 使用：context 携带 skill_instance/skill_manager/relic_manager/caster；fallback 为缺值备用结果。
 static func _get_skill_base_damage(context: Dictionary, fallback: int) -> int:
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	if skill_instance == null:
@@ -2676,6 +2898,8 @@ static func _get_skill_base_damage(context: Dictionary, fallback: int) -> int:
 	))), 0)
 
 
+## 作用：寻找同来源熔岩区并刷新时长或参数，成功返回 true。
+## 使用：parent 为生成对象父节点；position 为生成世界坐标；radius 为世界坐标半径；返回布尔判断或执行是否成功。
 static func _merge_existing_lava_zone(parent: Node, position: Vector2, radius: float, duration: float, rule: Dictionary) -> bool:
 	for child: Node in parent.get_children():
 		var area: Node2D = child as Node2D
@@ -2689,6 +2913,8 @@ static func _merge_existing_lava_zone(parent: Node, position: Vector2, radius: f
 	return false
 
 
+## 作用：统计当前仍有效且匹配来源的熔岩区数量。
+## 使用：parent 为生成对象父节点。
 static func _count_active_lava_zones(parent: Node) -> int:
 	var count: int = 0
 	for child: Node in parent.get_children():
@@ -2697,6 +2923,8 @@ static func _count_active_lava_zones(parent: Node) -> int:
 	return count
 
 
+## 作用：通过目标注册表查询范围内目标并执行规则击退。
+## 使用：parent 为生成对象父节点；origin 为世界位置或伤害来源；radius 为世界坐标半径。
 static func _knockback_targets(parent: Node, origin: Vector2, radius: float, force: float, target_group: Variant) -> void:
 	if parent == null or force <= 0.0:
 		return
@@ -2713,6 +2941,8 @@ static func _knockback_targets(parent: Node, origin: Vector2, radius: float, for
 			target.global_position += direction.normalized() * force
 
 
+## 作用：从战斗目标注册表查询指定世界圆心、半径与目标组的可用目标。
+## 使用：context 携带 parent/player/caster/target_group；origin 为世界位置或伤害来源；radius 为世界坐标半径；无匹配项时返回空数组。
 static func _find_targets_in_radius(context: Dictionary, origin: Vector2, radius: float) -> Array[Node2D]:
 	var parent: Node = context.get("parent") as Node
 	if parent == null:
@@ -2734,6 +2964,8 @@ static func _find_targets_in_radius(context: Dictionary, origin: Vector2, radius
 	return targets
 
 
+## 作用：在指定范围内查询距离来源最近的有效目标。
+## 使用：parent 为生成对象父节点；origin 为世界位置或伤害来源；target_group 为目标注册分组；无法解析或创建时返回 null。
 static func _find_nearest_target(parent: Node, origin: Vector2, target_group: Variant, excluded: Node = null) -> Node2D:
 	if parent == null:
 		return null
@@ -2753,6 +2985,8 @@ static func _find_nearest_target(parent: Node, origin: Vector2, target_group: Va
 	return best
 
 
+## 作用：在范围内排除已命中身份列表后选最近目标。
+## 使用：parent 为生成对象父节点；origin 为世界位置或伤害来源；target_group 为目标注册分组；无法解析或创建时返回 null。
 static func _find_nearest_target_excluding(parent: Node, origin: Vector2, target_group: Variant, excluded_ids: Array, max_distance: float) -> Node2D:
 	if parent == null:
 		return null
@@ -2776,6 +3010,8 @@ static func _find_nearest_target_excluding(parent: Node, origin: Vector2, target
 	return best
 
 
+## 作用：从规则查询范围内选择生命最低的目标。
+## 使用：parent 为生成对象父节点；origin 为世界位置或伤害来源；target_group 为目标注册分组；无法解析或创建时返回 null。
 static func _find_lowest_hp_target(parent: Node, origin: Vector2, target_group: Variant) -> Node2D:
 	if parent == null:
 		return null
@@ -2798,6 +3034,8 @@ static func _find_lowest_hp_target(parent: Node, origin: Vector2, target_group: 
 	return best
 
 
+## 作用：返回投射物已命中实例 ID 列表副本。
+## 使用：由本文件 execute_lightning_chain_bounce/execute_hunter_arrow_shards 调用；无匹配项时返回空数组。
 static func _get_projectile_hit_ids(projectile: Node) -> Array:
 	if projectile == null:
 		return []
@@ -2807,6 +3045,8 @@ static func _get_projectile_hit_ids(projectile: Node) -> Array:
 	return []
 
 
+## 作用：仅在未记录时把目标实例 ID 追加到命中列表。
+## 使用：target 为本次命中目标。
 static func _add_unique_hit_id(hit_ids: Array, target: Node) -> void:
 	if target == null:
 		return
@@ -2815,16 +3055,22 @@ static func _add_unique_hit_id(hit_ids: Array, target: Node) -> void:
 		hit_ids.append(target_id)
 
 
+## 作用：优先以来源节点实例 ID 构造身份，缺节点时使用备用来源与毫秒时间。
+## 使用：context 为施放或命中上下文；source 为来源数据或对象；fallback 为缺值备用结果。
 static func _source_instance_id(context: Dictionary, source: Node, fallback: String) -> String:
 	if source != null:
 		return "%s:%s" % [fallback, str(source.get_instance_id())]
 	return "%s:%d" % [fallback, Time.get_ticks_msec()]
 
 
+## 作用：检查目标公开 has_status 入口是否具有指定状态。
+## 使用：target 为本次命中目标；status_id 为标准状态 ID。
 static func _has_status(target: Node, status_id: StringName) -> bool:
 	return target != null and target.has_method("has_status") and bool(target.call("has_status", status_id))
 
 
+## 作用：提供状态层数下限：中毒至少三层，其余至少一层；当前不读取目标参数。
+## 使用：status_id 为标准状态 ID；fallback 为缺值备用结果。
 static func _target_status_max_stacks(_target: Node, status_id: StringName, fallback: int) -> int:
 	match status_id:
 		&"poison":
@@ -2833,6 +3079,8 @@ static func _target_status_max_stacks(_target: Node, status_id: StringName, fall
 			return maxi(fallback, 1)
 
 
+## 作用：统计父节点下符合来源且未释放的小毒云数量。
+## 使用：parent 为生成对象父节点。
 static func _count_active_toxic_small_clouds(parent: Node) -> int:
 	if parent == null:
 		return 0
@@ -2843,6 +3091,8 @@ static func _count_active_toxic_small_clouds(parent: Node) -> int:
 	return count
 
 
+## 作用：在匹配的小毒云中回收最早创建对象，腾出活动数量预算。
+## 使用：parent 为生成对象父节点；可能回收匹配节点。
 static func _remove_oldest_toxic_small_cloud(parent: Node) -> void:
 	if parent == null:
 		return
@@ -2852,42 +3102,62 @@ static func _remove_oldest_toxic_small_cloud(parent: Node) -> void:
 			return
 
 
+## 作用：根据目标的标准敌人等级判断 Boss。
+## 使用：target 为本次命中目标。
 static func _is_boss(target: Node) -> bool:
 	return SpecialRuleCommonScript.is_boss(target)
 
 
+## 作用：根据目标的标准敌人等级判断精英。
+## 使用：target 为本次命中目标。
 static func _is_elite(target: Node) -> bool:
 	return SpecialRuleCommonScript.is_elite(target)
 
 
+## 作用：判断目标是否为 Boss 核心，供核心专属规则使用。
+## 使用：target 为本次命中目标。
 static func _is_boss_core(target: Node) -> bool:
 	return SpecialRuleCommonScript.is_boss_core(target)
 
 
+## 作用：读取目标生命比例并夹紧到零至一。
+## 使用：target 为本次命中目标。
 static func _health_ratio(target: Node) -> float:
 	return SpecialRuleCommonScript.health_ratio(target)
 
 
+## 作用：把引擎单调毫秒计时转换为冷却使用的秒数。
+## 使用：由本文件 execute_burning_target_death_explosion/_reserve_player_lava_spawn 调用。
 static func _now_seconds() -> float:
 	return SpecialRuleCommonScript.now_seconds()
 
 
+## 作用：通过项目 MetadataKey 规范组合规则命名空间与后缀。
+## 使用：由本文件 _apply_judgement_beam_on_boss_mark_pulses 调用。
 static func _metadata_key(namespace_text: String, suffix: String) -> String:
 	return SpecialRuleCommonScript.metadata_key(namespace_text, suffix)
 
 
+## 作用：将规则键转换为项目允许的统一元数据标识。
+## 使用：规则族传 rules/context 和基础伤害，通过标准伤害来源构建节点或受击包，保持命中来源身份。
 static func _metadata_identifier(raw_key: String) -> String:
 	return SpecialRuleCommonScript.metadata_identifier(raw_key)
 
 
+## 作用：从事件上下文或施法者获取当前场景树根节点。
+## 使用：由本文件 execute_burning_target_death_explosion 调用。
 static func _get_root_node() -> Node:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	return tree.root if tree != null else null
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 flame_core_burst_intents/frost_bonus_hit_intents 调用。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	return SpecialRuleCommonScript.get_dictionary(value)
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 execute_cross_relic_purify_dot 调用。
 static func _get_array(value: Variant) -> Array:
 	return SpecialRuleCommonScript.get_array(value)

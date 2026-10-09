@@ -1,7 +1,12 @@
+## 文件用途：实现远程敌人在射程外追逐、进入射程后停下并预警射击的行为。
+## 使用方式：registry 以 keep_distance_and_shoot 类型创建；先 setup，tick 推进预警与射击时机。
+
 extends EnemyBehavior
 class_name KeepDistanceShootBehavior
 
 
+## 作用：射程外追逐，射程内停下并在预警结束后射击。
+## 使用：先 setup 绑定 enemy；由控制器每物理帧调用，delta 为秒。
 func tick(delta: float) -> void:
 	var body: CharacterBody2D = _body()
 	var target: Node2D = _target()
@@ -34,6 +39,8 @@ func tick(delta: float) -> void:
 			_fire_projectile()
 
 
+## 作用：发射投射物。
+## 使用：本文件由 tick 调用。
 func _fire_projectile() -> void:
 	var direction: Vector2 = enemy.get("_ranged_warning_direction") if enemy != null else Vector2.RIGHT
 	_execute_required_action("projectile", {"direction": direction})

@@ -1,3 +1,5 @@
+## 文件用途：验证真实波次、玩家地图边界和相机可见区域，以及波末拾取、延迟经验幂等和超时保留敌人。
+## 使用方式：通过 tools/verify/run_isolated_godot.ps1 -Script res://scripts/debug/wave_system_check.gd -OutputRoot E:/codex/<独立批次> 运行；实例化真实主场景，检查结束以退出码表示结果。
 extends SceneTree
 
 
@@ -6,16 +8,22 @@ const CharacterLoadoutServiceScript: Script = preload("res://scripts/characters/
 var _failed: bool = false
 
 
+## 作用：一次性连接 process_frame，延后启动场景检查。
+## 使用：由 Godot 构造此 SceneTree 时自动调用。
 func _init() -> void:
 	process_frame.connect(_run_checks, CONNECT_ONE_SHOT)
 
 
+## 作用：等待一帧后执行异步波次验证，以 _failed 决定进程退出码。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 直接调用时须 await 等待异步流程完成。
 func _run_checks() -> void:
 	await process_frame
 	await _run_checks_impl()
 	quit(1 if _failed else 0)
 
 
+## 作用：装配真实主场景和法师 loadout，显式推进波次并冻结自动处理，顺序检查边界、相机和奖励。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 直接调用时须 await 等待异步流程完成。
 func _run_checks_impl() -> void:
 	var main_scene: PackedScene = load("res://scenes/app/main.tscn") as PackedScene
 	if main_scene == null:
@@ -52,6 +60,8 @@ func _run_checks_impl() -> void:
 	print("[WaveSystemCheck] done failed=%s" % str(_failed))
 
 
+## 作用：把主场景地牢背景设置为废弃地牢纹理、左上锚点和原始缩放。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node。
 func _apply_default_map_background(main: Node) -> void:
 	var background: Sprite2D = main.get_node_or_null("DungeonBackground") as Sprite2D
 	if background == null:
@@ -64,6 +74,8 @@ func _apply_default_map_background(main: Node) -> void:
 	background.scale = Vector2.ONE
 
 
+## 作用：把玩家移到地图外，再调用边界刷新和夹取，等待物理帧后确认玩家回到背景范围。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, player: Node2D。 直接调用时须 await 等待异步流程完成。
 func _check_player_bounds(main: Node, player: Node2D) -> void:
 	var background: Sprite2D = main.get_node_or_null("DungeonBackground") as Sprite2D
 	if background == null or background.texture == null:
@@ -84,6 +96,8 @@ func _check_player_bounds(main: Node, player: Node2D) -> void:
 	_expect(bounds.has_point(player.global_position), "player clamped inside background bounds")
 
 
+## 作用：检查活跃相机、正数缩放，在三种视口和地图角落确认 limits 与完整可见世界均位于背景内。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, player: Node2D。 直接调用时须 await 等待异步流程完成。
 func _check_camera_limits(main: Node, player: Node2D) -> void:
 	var camera: Camera2D = player.get_node_or_null("Camera2D") as Camera2D
 	if camera == null:
@@ -117,6 +131,8 @@ func _check_camera_limits(main: Node, player: Node2D) -> void:
 	await process_frame
 
 
+## 作用：检查首波索引、持续时间与配置一致且总生成预算为正。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：spawner: Node。
 func _check_wave_started(spawner: Node) -> void:
 	_expect(int(spawner.get("_current_wave_index")) == 0, "first wave started")
 	var current_wave: Dictionary = spawner.call("_get_current_wave")
@@ -125,6 +141,8 @@ func _check_wave_started(spawner: Node) -> void:
 	_expect(int(spawner.get("_wave_total_count")) > 0, "wave has fixed total count")
 
 
+## 作用：将已生成计数设到波次总量后推进生成，确认不再新增敌人。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：spawner: Node。
 func _check_wave_spawn_cap(spawner: Node) -> void:
 	var total_count: int = int(spawner.get("_wave_total_count"))
 	spawner.set("_wave_spawned_count", total_count)
@@ -134,6 +152,8 @@ func _check_wave_spawn_cap(spawner: Node) -> void:
 	_expect(after_count == before_count, "wave does not spawn after total count reached")
 
 
+## 作用：生成经验晶体后结束波次，等待奖励物理队列确认经验或等级增长及晶体清除，再重启首波。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, player: Node2D, spawner: Node。 直接调用时须 await 等待异步流程完成。
 func _check_wave_end_collects_experience(main: Node, player: Node2D, spawner: Node) -> void:
 	var crystal_scene: PackedScene = load("res://scenes/drops/experience_crystal.tscn") as PackedScene
 	var crystal: Node2D = crystal_scene.instantiate() as Node2D
@@ -158,6 +178,8 @@ func _check_wave_end_collects_experience(main: Node, player: Node2D, spawner: No
 	spawner.call("_start_wave", 0)
 
 
+## 作用：延迟挂入晶体同时结束波次，确认过渡收集有效且重复收集不重复发经验，随后重启首波。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, player: Node2D, spawner: Node。 直接调用时须 await 等待异步流程完成。
 func _check_wave_transition_collects_deferred_experience(main: Node, player: Node2D, spawner: Node) -> void:
 	var crystal_scene: PackedScene = load("res://scenes/drops/experience_crystal.tscn") as PackedScene
 	var crystal: Node2D = crystal_scene.instantiate() as Node2D
@@ -190,6 +212,8 @@ func _check_wave_transition_collects_deferred_experience(main: Node, player: Nod
 	spawner.call("_start_wave", 0)
 
 
+## 作用：构造普通敌人并把波次时间推进到超时，检查场上仍保留普通敌人。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, spawner: Node。 直接调用时须 await 等待异步流程完成。
 func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
 	var enemy: Node2D = enemy_scene.instantiate() as Node2D
@@ -209,6 +233,8 @@ func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 	_expect(normal_count > 0, "wave timeout keeps normal enemies")
 
 
+## 作用：condition 为真输出 PASS，否则记录检查失败。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：condition: bool, message: String。
 func _expect(condition: bool, message: String) -> void:
 	if condition:
 		print("[WaveSystemCheck] PASS %s" % message)
@@ -216,6 +242,8 @@ func _expect(condition: bool, message: String) -> void:
 		_fail(message)
 
 
+## 作用：设置 _failed 并用 push_error 输出检查失败信息。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：message: String。
 func _fail(message: String) -> void:
 	_failed = true
 	push_error("[WaveSystemCheck] FAIL %s" % message)

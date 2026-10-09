@@ -1,3 +1,5 @@
+## 文件用途：管理宿主状态的叠层、时限、DOT、满层反应、移动/易伤查询及视觉事件。
+## 使用方式：作为角色/敌人子节点使用；宿主按should_update_status_effects积累时间再调用update_status_effects，伤害走typed包。
 extends Node
 class_name StatusEffectManager
 
@@ -33,6 +35,8 @@ static var _apply_coalesce_frame: int = -1
 static var _apply_coalesce_keys: Dictionary = {}
 
 
+## 作用：规范状态ID并合并同物理帧重复施加，否则计时执行完整施加。
+## 使用：params含层数、时长、tick与来源覆盖；返回是否成功。
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"":
@@ -45,6 +49,8 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	return result
 
 
+## 作用：解析配置和阶级转换、构建叠层数据并登记tick，再通知施加和满层反应。
+## 使用：未知/免疫状态返回false；状态入表后才发送事件。
 func _apply_status_profiled(status_id: Variant, params: Dictionary = {}) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"":
@@ -89,6 +95,8 @@ func _apply_status_profiled(status_id: Variant, params: Dictionary = {}) -> bool
 	return true
 
 
+## 作用：按宿主实例和状态ID记录本物理帧首次施加。
+## 使用：同帧后续返回true，跨帧清共享去重表。
 func _should_coalesce_status_apply(status_id: StringName) -> bool:
 	if status_id == &"":
 		return false
@@ -106,6 +114,8 @@ func _should_coalesce_status_apply(status_id: StringName) -> bool:
 	return false
 
 
+## 作用：合并同帧重复施加的层数/时限，保留满层和协同但省略施加通知。
+## 使用：支持转换状态，仍更新tick调度与显示脏标记。
 func _merge_coalesced_status_apply(id: StringName, params: Dictionary) -> bool:
 	if id == &"":
 		return false
@@ -141,6 +151,8 @@ func _merge_coalesced_status_apply(id: StringName, params: Dictionary) -> bool:
 	return true
 
 
+## 作用：复制已有状态并计算加层上限和本次持续时间。
+## 使用：stacks至少加1，max_stacks至少1，时长至少0.05秒。
 func _resolve_status_stack_data(id: StringName, definition: Dictionary, params: Dictionary) -> Dictionary:
 	var status: Dictionary = _statuses.get(id, {}).duplicate(true)
 	var stacks_to_add: int = maxi(int(params.get("stacks", params.get("stack", 1))), 1)
@@ -155,6 +167,8 @@ func _resolve_status_stack_data(id: StringName, definition: Dictionary, params: 
 	}
 
 
+## 作用：合并定义与参数生成包含tick、来源追踪、减速及易伤的运行状态。
+## 使用：续时取较长剩余时间；返回字典待写入状态表。
 func _build_status_runtime_data(id: StringName, definition: Dictionary, params: Dictionary, stack_data: Dictionary) -> Dictionary:
 	var status: Dictionary = stack_data.get("status", {}).duplicate(true)
 	var max_stacks: int = int(stack_data.get("max_stacks", 1))
@@ -196,6 +210,8 @@ func _build_status_runtime_data(id: StringName, definition: Dictionary, params: 
 	return status
 
 
+## 作用：状态非空时以性能采样包装推进全部状态。
+## 使用：delta为待消费的累计秒数。
 func update_status_effects(delta: float) -> void:
 	if _statuses.is_empty():
 		return
@@ -204,6 +220,8 @@ func update_status_effects(delta: float) -> void:
 	HotPathProfilerScript.end(self, &"status_update_total", hot_path_start)
 
 
+## 作用：推进状态tick后收集过期快照，统一移除与发事件再刷新协同。
+## 使用：避免遍历时删除键；层数变化会标记显示脏。
 func _update_status_effects_profiled(delta: float) -> void:
 	if delta <= 0.0 or _statuses.is_empty():
 		return
@@ -231,6 +249,8 @@ func _update_status_effects_profiled(delta: float) -> void:
 	_apply_poison_slow_synergy()
 
 
+## 作用：先扣持续时间，再为DOT推进调度并在到期时处理伤害。
+## 使用：status原地更新；调度已扣delta，因此执行tick时传0。
 func _advance_status_tick(status: Dictionary, delta: float) -> void:
 	StatusEffectTickHelperScript.advance_duration(status, delta)
 	if _is_dot_status(status):
@@ -239,10 +259,14 @@ func _advance_status_tick(status: Dictionary, delta: float) -> void:
 			_update_damage_over_time(status, 0.0)
 
 
+## 作用：判断层数用尽或剩余时间非正。
+## 使用：返回布尔值，移除和过期效果由管理器负责。 本入口委托StatusEffectTickHelperScript.is_status_expired执行。
 func _is_status_expired(status: Dictionary) -> bool:
 	return StatusEffectTickHelperScript.is_status_expired(status)
 
 
+## 作用：移除过期状态并注销tick，执行过期效果与事件。
+## 使用：expired_snapshots保存移除前内容；结束标记显示脏。
 func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Dictionary) -> void:
 	for id: StringName in expired_statuses:
 		_statuses.erase(id)
@@ -255,14 +279,20 @@ func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Di
 		_mark_status_display_dirty()
 
 
+## 作用：查询宿主运行表是否存在指定状态。
+## 使用：status_id转换为StringName后查键；过期清理由更新时间处理。
 func has_status(status_id: Variant) -> bool:
 	return StatusEffectQueryScript.has_status(_statuses, status_id)
 
 
+## 作用：读取宿主指定状态的叠层数。
+## 使用：status_id为状态标识，缺失返回0；委托StatusEffectQuery查询。
 func get_status_stack(status_id: Variant) -> int:
 	return StatusEffectQueryScript.get_status_stack(_statuses, status_id)
 
 
+## 作用：更新已有运行状态的可扩展字段并按需续时。
+## 使用：禁止改id/definition/stacks，更新后重同步tick和显示。
 func merge_status_fields(status_id: Variant, fields: Dictionary, duration: float = 0.0) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"" or not _statuses.has(id):
@@ -282,10 +312,14 @@ func merge_status_fields(status_id: Variant, fields: Dictionary, duration: float
 	return true
 
 
+## 作用：通过通用叠层消费入口移除一层shock。
+## 使用：返回状态是否存在并完成消费。
 func consume_shock_stack() -> bool:
 	return consume_status_stack(&"shock", 1)
 
 
+## 作用：扣至少一层，耗尽则移除并注销tick。
+## 使用：不会执行过期效果；标记显示和视觉刷新。
 func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"" or not _statuses.has(id):
@@ -305,6 +339,8 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	return true
 
 
+## 作用：扣指定非负时长，耗尽时执行过期效果和事件。
+## 使用：状态缺失返回false，结束后更新显示视觉与毒协同。
 func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"" or not _statuses.has(id):
@@ -327,10 +363,14 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 	return true
 
 
+## 作用：导出宿主各状态ID、层数、时限和tick/元素信息。
+## 使用：返回独立简化快照数组，供显示与事件读取。
 func get_status_snapshot() -> Array[Dictionary]:
 	return StatusEffectQueryScript.get_status_snapshot(_statuses)
 
 
+## 作用：累计非负delta并与最近状态到期/tick时机比较。
+## 使用：空表清累计返回false，true后宿主应消费累计值。
 func should_update_status_effects(delta: float) -> bool:
 	if _statuses.is_empty():
 		_pending_status_update_delta = 0.0
@@ -339,22 +379,30 @@ func should_update_status_effects(delta: float) -> bool:
 	return _pending_status_update_delta >= _next_status_update_delay()
 
 
+## 作用：取出累计更新时间并清零。
+## 使用：should_update返回true后交给update_status_effects，避免丢失间隔。
 func consume_pending_status_update_delta() -> float:
 	var pending_delta: float = _pending_status_update_delta
 	_pending_status_update_delta = 0.0
 	return pending_delta
 
 
+## 作用：检查当前状态表是否非空。
+## 使用：用于宿主决定是否推进状态。
 func has_active_statuses() -> bool:
 	return not _statuses.is_empty()
 
 
+## 作用：读取并清除显示脏标记。
+## 使用：显示层只在true时重建状态文本。
 func consume_status_display_dirty() -> bool:
 	var dirty: bool = _status_display_dirty
 	_status_display_dirty = false
 	return dirty
 
 
+## 作用：清空状态并注销所有tick，取消视觉刷新标记并立刻隐藏/刷新视觉。
+## 使用：重置或清状态时调用，不执行逐个过期效果。
 func clear_statuses() -> void:
 	_statuses.clear()
 	if _status_tick_scheduler != null:
@@ -364,6 +412,8 @@ func clear_statuses() -> void:
 	_refresh_status_visual()
 
 
+## 作用：检查固定冻结、冰冻、眩晕、麻痹状态是否存在。
+## 使用：返回移动锁定标志。
 func is_movement_frozen() -> bool:
 	for status_id: StringName in MOVEMENT_LOCK_STATUS_IDS:
 		if has_status(status_id):
@@ -371,24 +421,34 @@ func is_movement_frozen() -> bool:
 	return false
 
 
+## 作用：按状态查询减速系数并应用Boss/精英上限。
+## 使用：不修改状态；冻结应由is_movement_frozen先判断。
 func get_move_speed_multiplier() -> float:
 	return StatusEffectQueryScript.movement_speed_multiplier(_statuses, MOVEMENT_LOCK_STATUS_IDS, _is_boss(), _is_elite())
 
 
+## 作用：将易伤加法总量转换为1+总量承伤倍率。
+## 使用：damage_type实际用于元素键、category用于伤害类型键。
 func get_damage_taken_multiplier(damage_type: Variant = &"", category: Variant = &"") -> float:
 	return 1.0 + get_vulnerability_total(damage_type, category, {})
 
 
+## 作用：委托状态查询合并易伤并传入宿主阶级。
+## 使用：packet区分下一击和爆炸易伤资格，返回加法总量。
 func get_vulnerability_total(damage_type: Variant = &"", category: Variant = &"", packet: Variant = {}) -> float:
 	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite())
 
 
+## 作用：以性能采样包装单个状态的DOT处理。
+## 使用：status原地更新tick计时器与可消耗层数。
 func _update_damage_over_time(status: Dictionary, delta: float) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_update_damage_over_time_profiled(status, delta)
 	HotPathProfilerScript.end(self, &"status_tick", hot_path_start)
 
 
+## 作用：执行到期tick、伤害、效果与事件，必要时消耗叠层并推进计时器。
+## 使用：满足纯Power burning条件可合并多次tick，普通路径逐次循环。
 func _update_damage_over_time_profiled(status: Dictionary, delta: float) -> void:
 	var tick_interval: float = maxf(
 		float(status.get("tick_interval", 1.0)) * float(status.get("tick_interval_multiplier", 1.0)),
@@ -428,6 +488,8 @@ func _update_damage_over_time_profiled(status: Dictionary, delta: float) -> void
 	status["tick_timer"] = tick_timer
 
 
+## 作用：计算可合并的积压tick数，消耗叠层时不超过当前层数。
+## 使用：不能合并/未到期/已过期返回1。
 func _coalesced_dot_tick_count(status: Dictionary, tick_timer: float, tick_interval: float, stacks: int) -> int:
 	if tick_timer > 0.0 or not _can_coalesce_dot_ticks(status) or not _has_status_tick_work(status):
 		return 1
@@ -440,6 +502,8 @@ func _coalesced_dot_tick_count(status: Dictionary, tick_timer: float, tick_inter
 	return maxi(due_ticks, 1)
 
 
+## 作用：仅允许没有固定tick_damage且全部为纯Power damage效果的burning合并。
+## 使用：禁止带逐层Power或显式伤害量，避免改变状态效果语义。
 func _can_coalesce_dot_ticks(status: Dictionary) -> bool:
 	if StringName(String(status.get("id", ""))) != &"burning":
 		return false
@@ -460,6 +524,8 @@ func _can_coalesce_dot_ticks(status: Dictionary) -> bool:
 	return true
 
 
+## 作用：复制状态并放大tick效果，一次执行并携带有效tick数量事件。
+## 使用：tick_count为积压数量，原始状态计时/层数由调用方更新。
 func _apply_coalesced_damage_over_time(status: Dictionary, status_id: StringName, tick_damage: float, tick_interval: float, tick_count: int) -> void:
 	var coalesced_status: Dictionary = status.duplicate(true)
 	coalesced_status["coalesced_tick_count"] = tick_count
@@ -478,6 +544,8 @@ func _apply_coalesced_damage_over_time(status: Dictionary, status_id: StringName
 	})
 
 
+## 作用：复制每项damage效果并乘以合并tick数的power_scale。
+## 使用：仅在纯Power效果已验证可合并后调用。
 func _coalesced_status_tick_effects(effects: Array, tick_count: int) -> Array:
 	var coalesced_effects: Array = []
 	for effect_variant: Variant in effects:
@@ -487,6 +555,8 @@ func _coalesced_status_tick_effects(effects: Array, tick_count: int) -> Array:
 	return coalesced_effects
 
 
+## 作用：为宿主构造状态DOT严格包并调用take_damage。
+## 使用：amount为阶级缩放后小数值，强目标设置忽略重复来源阶级倍率。
 func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 	var owning_node: Node = get_parent()
 	if owning_node == null or amount <= 0:
@@ -504,6 +574,8 @@ func _apply_tick_damage(amount: float, status: Dictionary = {}) -> void:
 		owning_node.call(&"take_damage", DamagePacketBuilderScript.from_status_dot_object(tick_packet_args))
 
 
+## 作用：按DOT性质和tick工作登记或注销状态。
+## 使用：运行状态变化后调用，scheduler为空时无操作。
 func _sync_status_tick_scheduler(status_id: StringName, status: Dictionary) -> void:
 	if _status_tick_scheduler == null:
 		return
@@ -513,11 +585,15 @@ func _sync_status_tick_scheduler(status_id: StringName, status: Dictionary) -> v
 		_status_tick_scheduler.call("unregister_status", self, status_id)
 
 
+## 作用：移除一个状态的tick登记。
+## 使用：状态移除/耗尽时调用。
 func _unregister_status_tick(status_id: StringName) -> void:
 	if _status_tick_scheduler != null:
 		_status_tick_scheduler.call("unregister_status", self, status_id)
 
 
+## 作用：取剩余时限和DOT计时器中的最早更新延迟。
+## 使用：无有效项返回0.1，返回值限制非负。
 func _next_status_update_delay() -> float:
 	var next_delay: float = INF
 	for status_variant: Variant in _statuses.values():
@@ -536,29 +612,41 @@ func _next_status_update_delay() -> float:
 	return maxf(next_delay, 0.0)
 
 
+## 作用：判断状态有正tick_damage或非空on_tick_effects。
+## 使用：用于避免没有tick工作的调度。 本入口委托StatusEffectTickHelperScript.has_status_tick_work执行。
 func _has_status_tick_work(status: Dictionary) -> bool:
 	return StatusEffectTickHelperScript.has_status_tick_work(status)
 
 
+## 作用：优先读运行状态开关，否则读定义默认开关。
+## 使用：返回每次tick是否消耗一层。 本入口委托StatusEffectTickHelperScript.should_consume_stack_on_tick执行。
 func _should_consume_stack_on_tick(status: Dictionary) -> bool:
 	return StatusEffectTickHelperScript.should_consume_stack_on_tick(status)
 
 
+## 作用：计算固定tick伤害乘层数及damage效果的Power缩放总值。
+## 使用：只计damage效果，不应用阶级减伤和取整。 本入口委托StatusEffectTickHelperScript.tick_damage_total执行。
 func _get_status_tick_damage_total(status: Dictionary) -> float:
 	return StatusEffectTickHelperScript.tick_damage_total(status)
 
 
+## 作用：以性能采样包装满层反应入队处理。
+## 使用：仅首次跨越层数上限调用，避免每次刷新重复反应。
 func _handle_max_stack_reached(status_id: StringName, status: Dictionary) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_handle_max_stack_reached_profiled(status_id, status)
 	HotPathProfilerScript.end(self, &"status_reaction", hot_path_start)
 
 
+## 作用：将满层状态入队并尝试处理队列。
+## 使用：重入期间只入队，由外层循环继续消费。
 func _handle_max_stack_reached_profiled(status_id: StringName, status: Dictionary) -> void:
 	_enqueue_status_reaction(status_id, status)
 	_process_status_reaction_queue()
 
 
+## 作用：深复制满层状态并保存反应队列项。
+## 使用：空status_id不入队。
 func _enqueue_status_reaction(status_id: StringName, status: Dictionary) -> void:
 	if status_id == &"":
 		return
@@ -568,6 +656,8 @@ func _enqueue_status_reaction(status_id: StringName, status: Dictionary) -> void
 	})
 
 
+## 作用：用重入标志串行消费全部反应项。
+## 使用：反应内再次施加状态可继续入队，避免递归处理嵌套。
 func _process_status_reaction_queue() -> void:
 	if _processing_reaction_queue:
 		return
@@ -578,6 +668,8 @@ func _process_status_reaction_queue() -> void:
 	_processing_reaction_queue = false
 
 
+## 作用：先发满层事件，再施加配置转换状态并发送配置专用事件。
+## 使用：status为入队快照，事件使用当前宿主上下文。
 func _execute_status_reaction(status_id: StringName, status: Dictionary) -> void:
 	_emit_status_skill_event(&"status_max_stack_reached", status_id, status)
 	_emit_profiler_status_event(&"status_reaction_triggered", status_id, status, {"trigger": &"status_max_stack_reached"})
@@ -594,6 +686,8 @@ func _execute_status_reaction(status_id: StringName, status: Dictionary) -> void
 			event_bus.call("emit_skill_event", max_stack_event, event_context)
 
 
+## 作用：读取tick/expire效果并适配为action交由技能总线执行。
+## 使用：effects_key指定运行列表；缺总线或空效果无操作。
 func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
 	var effects: Array = _get_array(status.get(effects_key, []))
 	if effects.is_empty():
@@ -606,6 +700,8 @@ func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
 	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, status))
 
 
+## 作用：复制效果并将逐层Power系数换算为当前叠层的power_scale。
+## 使用：不改定义列表，已有power_scale优先。
 func _prepare_status_effects(effects: Array, status: Dictionary) -> Array:
 	var prepared: Array = []
 	var stacks: float = float(maxi(int(status.get("stacks", 1)), 1))
@@ -619,12 +715,16 @@ func _prepare_status_effects(effects: Array, status: Dictionary) -> Array:
 	return prepared
 
 
+## 作用：向可用技能总线发送状态事件和完整来源上下文。
+## 使用：event_name、status_id及状态快照描述事件。
 func _emit_status_skill_event(event_name: StringName, status_id: StringName, status: Dictionary) -> void:
 	var event_bus: Node = _get_skill_event_bus()
 	if event_bus != null and event_bus.has_method("emit_skill_event"):
 		event_bus.call("emit_skill_event", event_name, _build_status_event_context(status_id, status))
 
 
+## 作用：构造目标、玩家、来源、Power、位置和技能/遗物服务引用。
+## 使用：缺来源实例时用目标/状态/攻击者生成稳定ID；状态深复制。
 func _build_status_event_context(status_id: StringName, status: Dictionary) -> Dictionary:
 	var target: Node = get_parent()
 	var position: Vector2 = (target as Node2D).global_position if target is Node2D else Vector2.ZERO
@@ -657,6 +757,8 @@ func _build_status_event_context(status_id: StringName, status: Dictionary) -> D
 	}
 
 
+## 作用：优先返回宿主本地总线，否则查询玩家总线。
+## 使用：找不到玩家或总线返回null。
 func _get_skill_event_bus() -> Node:
 	var owner: Node = get_parent()
 	if owner != null:
@@ -667,6 +769,8 @@ func _get_skill_event_bus() -> Node:
 	return player.get_node_or_null("SkillEventBus") if player != null else null
 
 
+## 作用：查询player组首节点，否则用带技能总线的宿主。
+## 使用：场景树缺失返回null。
 func _get_player() -> Node:
 	var tree: SceneTree = get_tree()
 	if tree == null:
@@ -680,12 +784,16 @@ func _get_player() -> Node:
 	return null
 
 
+## 作用：以性能采样包装状态叠加视觉刷新。
+## 使用：由清空或deferred刷新调用。
 func _refresh_status_visual() -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_refresh_status_visual_profiled()
 	HotPathProfilerScript.end(self, &"status_visual_update", hot_path_start)
 
 
+## 作用：选最高优先级视觉并播放状态，视觉身份相同则省略重复应用。
+## 使用：无视觉隐藏overlay，设置z_index和当前优先级。
 func _refresh_status_visual_profiled() -> void:
 	var visual: Dictionary = _get_active_status_visual()
 	if visual.is_empty():
@@ -712,6 +820,8 @@ func _refresh_status_visual_profiled() -> void:
 	})
 
 
+## 作用：合并视觉刷新请求并deferred调用一次刷新。
+## 使用：避免同帧多次施加重建视觉。
 func _queue_status_visual_refresh() -> void:
 	if _status_visual_refresh_queued:
 		return
@@ -719,10 +829,14 @@ func _queue_status_visual_refresh() -> void:
 	call_deferred("_flush_status_visual_refresh")
 
 
+## 作用：标记状态文本快照需要刷新。
+## 使用：宿主通过consume_status_display_dirty消费。
 func _mark_status_display_dirty() -> void:
 	_status_display_dirty = true
 
 
+## 作用：消费待刷新标记并执行视觉刷新。
+## 使用：deferred回调，标记已取消时无操作。
 func _flush_status_visual_refresh() -> void:
 	if not _status_visual_refresh_queued:
 		return
@@ -730,6 +844,8 @@ func _flush_status_visual_refresh() -> void:
 	_refresh_status_visual()
 
 
+## 作用：判断新状态资源和优先级是否值得刷新当前overlay。
+## 使用：同身份不刷新，低于当前优先级不抢占。
 func _status_visual_refresh_needed_after_apply(status_id: StringName, definition: Dictionary) -> bool:
 	var visual: Dictionary = _get_dictionary(definition.get("visual", {}))
 	if not _has_visual_resource(visual):
@@ -746,6 +862,8 @@ func _status_visual_refresh_needed_after_apply(status_id: StringName, definition
 	return float(visual.get("priority", 0.0)) >= _status_visual_priority
 
 
+## 作用：遍历状态选择最高优先级且有可用资源的visual。
+## 使用：返回深复制并补status_id，相同优先级保留先出现项。
 func _get_active_status_visual() -> Dictionary:
 	var best_visual: Dictionary = {}
 	var best_priority: float = -INF
@@ -766,10 +884,14 @@ func _get_active_status_visual() -> Dictionary:
 	return best_visual
 
 
+## 作用：检查texture、sprite_frames或sprite_sheet资源配置是否存在。
+## 使用：仅检测字段，不加载资源。
 func _has_visual_resource(visual: Dictionary) -> bool:
 	return String(visual.get("texture", "")) != "" or String(visual.get("sprite_frames", "")) != "" or visual.has("sprite_sheet")
 
 
+## 作用：复用有效overlay或在二维宿主创建隐藏状态视觉节点。
+## 使用：宿主非Node2D返回null；创建时发可选性能事件。
 func _get_or_create_status_visual_overlay() -> Node2D:
 	if _status_visual_overlay != null and is_instance_valid(_status_visual_overlay):
 		return _status_visual_overlay
@@ -791,6 +913,8 @@ func _get_or_create_status_visual_overlay() -> Node2D:
 	return _status_visual_overlay
 
 
+## 作用：隐藏overlay并清当前身份和优先级。
+## 使用：无有效overlay时无操作。
 func _hide_status_visual() -> void:
 	if _status_visual_overlay == null or not is_instance_valid(_status_visual_overlay):
 		return
@@ -799,6 +923,8 @@ func _hide_status_visual() -> void:
 	_status_visual_priority = -INF
 
 
+## 作用：组合状态ID、贴图、帧资源和播放状态为缓存身份。
+## 使用：用于跳过重复视觉应用。
 func _status_visual_identity(visual: Dictionary, state: String) -> String:
 	return "%s|%s|%s|%s" % [
 		String(visual.get("status_id", "")),
@@ -808,6 +934,8 @@ func _status_visual_identity(visual: Dictionary, state: String) -> String:
 	]
 
 
+## 作用：按定义effect.dot或预设燃烧/毒/流血ID判定DOT。
+## 使用：用于tick调度，不检查实际伤害伤害量。
 func _is_dot_status(status: Dictionary) -> bool:
 	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
 	if _get_effect_bool(definition, "dot", false):
@@ -815,6 +943,8 @@ func _is_dot_status(status: Dictionary) -> bool:
 	return DOT_STATUS_IDS.has(StringName(String(status.get("id", ""))))
 
 
+## 作用：按精英/Boss定义缩放DOT并应用未过期火油燃烧加成。
+## 使用：返回非负伤害，Boss火油倍率与普通加法规则不同。
 func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
 	var multiplier: float = 1.0
@@ -832,6 +962,8 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 	return maxf(float(amount) * multiplier, 0.0)
 
 
+## 作用：复制状态定义，转换Boss控制并合并阶级持续时间、层数、减速和下一击易伤规则。
+## 使用：duration_multiplier非正表示免疫，返回空字典。
 func _apply_enemy_tier_rules(_status_id: StringName, definition: Dictionary) -> Dictionary:
 	var result: Dictionary = definition.duplicate(true)
 	var boss_control_conversion: Dictionary = ReactionLimiterScript.apply_boss_control_conversion(get_parent(), _status_id)
@@ -867,18 +999,26 @@ func _apply_enemy_tier_rules(_status_id: StringName, definition: Dictionary) -> 
 	return result
 
 
+## 作用：判断伤害是否可使用下一击承伤加成，排除DOT、场地与minor反应。
+## 使用：空字典视为允许，支持typed包和上下文。 本入口委托StatusEffectQueryScript.can_consume_next_damage_taken执行。
 func _can_consume_next_damage_taken(packet: Variant) -> bool:
 	return StatusEffectQueryScript.can_consume_next_damage_taken(packet)
 
 
+## 作用：检查满层阈值与反应/爆炸来源是否同时符合。
+## 使用：status含required_stacks与加成，返回布尔值。 本入口委托StatusEffectQueryScript.is_full_stack_explosion_vulnerability_active执行。
 func _is_full_stack_explosion_vulnerability_active(status: Dictionary, packet: Variant) -> bool:
 	return StatusEffectQueryScript.is_full_stack_explosion_vulnerability_active(status, packet)
 
 
+## 作用：从伤害输入读取字段值。
+## 使用：key 为伤害字段名，fallback 为字段缺失时的默认值。
 func _damage_packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	return StatusEffectQueryScript.damage_packet_value(packet, key, fallback)
 
 
+## 作用：从静态定义缓存或GameData查询状态并深复制隔离。
+## 使用：未知ID返回空字典，不读JSON文件。
 func _get_status_definition(status_id: StringName) -> Dictionary:
 	var cache_key: String = String(status_id)
 	if _status_definition_cache.has(cache_key):
@@ -891,16 +1031,22 @@ func _get_status_definition(status_id: StringName) -> Dictionary:
 	return {}
 
 
+## 作用：读取状态定义 effect 下的浮点参数。
+## 使用：key 为效果字段，字段缺失或 effect 非字典时返回 fallback。
 func _get_effect_value(definition: Dictionary, key: String, fallback: float) -> float:
 	var effect: Dictionary = _get_dictionary(definition.get("effect", {}))
 	return float(effect.get(key, fallback))
 
 
+## 作用：读取状态定义 effect 下的布尔参数。
+## 使用：key 为效果开关，字段缺失时使用 fallback。
 func _get_effect_bool(definition: Dictionary, key: String, fallback: bool) -> bool:
 	var effect: Dictionary = _get_dictionary(definition.get("effect", {}))
 	return bool(effect.get(key, fallback))
 
 
+## 作用：发送技能事件、记录局内状态统计，再通知遗物协同管理器。
+## 使用：状态已入表后调用，传给协同的状态为副本。
 func _notify_status_applied(status_id: StringName, status: Dictionary) -> void:
 	_emit_status_skill_event(&"status_applied", status_id, status)
 
@@ -919,6 +1065,8 @@ func _notify_status_applied(status_id: StringName, status: Dictionary) -> void:
 	})
 
 
+## 作用：若存在有效性能回调，拼接状态来源、层数与附加数据并发送。
+## 使用：仅开发采样副作用，不依赖debug页面。
 func _emit_profiler_status_event(event_name: StringName, status_id: StringName, status: Dictionary, extra: Dictionary = {}) -> void:
 	var profiler_callback: Callable = _real_full_run_profiler_status_callback()
 	if not profiler_callback.is_valid():
@@ -937,6 +1085,8 @@ func _emit_profiler_status_event(event_name: StringName, status_id: StringName, 
 	profiler_callback.call(event_name, payload)
 
 
+## 作用：从根元数据读取已启用的性能采样Callable。
+## 使用：未开启或缺失返回无效Callable。
 func _real_full_run_profiler_status_callback() -> Callable:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null:
@@ -949,6 +1099,8 @@ func _real_full_run_profiler_status_callback() -> Callable:
 	return callback if callback is Callable else Callable()
 
 
+## 作用：读取协同的毒tick间隔倍率并缩短计时器至新间隔。
+## 使用：毒不存在则无操作，不影响其他状态。
 func _apply_poison_slow_synergy() -> void:
 	if not _statuses.has(&"poison"):
 		return
@@ -965,16 +1117,22 @@ func _apply_poison_slow_synergy() -> void:
 	_statuses[&"poison"] = poison
 
 
+## 作用：检查宿主enemy_rank是否为boss。
+## 使用：宿主为空返回false。
 func _is_boss() -> bool:
 	var owning_node: Node = get_parent()
 	return owning_node != null and String(owning_node.get_meta("enemy_rank", "normal")) == "boss"
 
 
+## 作用：检查宿主enemy_rank是否为elite。
+## 使用：宿主为空返回false。
 func _is_elite() -> bool:
 	var owning_node: Node = get_parent()
 	return owning_node != null and String(owning_node.get_meta("enemy_rank", "normal")) == "elite"
 
 
+## 作用：返回player组首节点的SynergyManager子节点。
+## 使用：场景树/玩家缺失返回null。
 func _get_synergy_manager() -> Node:
 	var tree: SceneTree = get_tree()
 	if tree == null:
@@ -987,6 +1145,8 @@ func _get_synergy_manager() -> Node:
 	return player.get_node_or_null("SynergyManager")
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回输入字典本身，调用方写入会影响原值。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -994,6 +1154,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：读取数组配置，非数组输入返回空数组。
+## 使用：value为待检查配置；返回深复制。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		var array: Array = value

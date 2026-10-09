@@ -1,7 +1,12 @@
+## 文件用途：实现范围外追逐、进入行为射程后停下并按冷却施放地面伤害池。
+## 使用方式：behavior 配置选择 chase_and_cast_pool；tick 显式请求 damage_area 动作并处理近身攻击。
+
 extends EnemyBehavior
 class_name ChaseAndCastPoolBehavior
 
 
+## 作用：范围外追逐，范围内停下，冷却到期施放地面伤害池并可处理近身攻击。
+## 使用：显式请求 damage_area 动作；_delta 未用于冷却递减，冷却更新在 EnemyBase。
 func tick(_delta: float) -> void:
 	_cancel_ranged_attack_warning()
 	var target: Node2D = _target()

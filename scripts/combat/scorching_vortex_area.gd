@@ -1,3 +1,5 @@
+## 文件用途：扩展AreaEffect为命中停顿、追逐密集敌群并补移动扫掠命中的灼热旋涡。
+## 使用方式：挂专用AreaEffect派生场景，工厂传移动和密度参数；伤害/事件仍复用基类。
 extends AreaEffect
 class_name ScorchingVortexArea
 
@@ -11,6 +13,8 @@ var _last_position: Vector2 = Vector2.ZERO
 var _swept_body_ids: Dictionary = {}
 
 
+## 作用：读取命中停顿与搜索/聚类半径，基类配置后立即触发tick。
+## 使用：保存初始位置，params继续交给AreaEffect。
 func setup(params: Dictionary) -> void:
 	hit_stop_duration = maxf(float(params.get("hit_stop_duration", hit_stop_duration)), 0.0)
 	density_seek_radius = maxf(float(params.get("density_seek_radius", density_seek_radius)), 1.0)
@@ -20,6 +24,8 @@ func setup(params: Dictionary) -> void:
 	_apply_tick_damage()
 
 
+## 作用：命中停顿期间临时停速度，否则转向密集群，再执行基类更新和扫掠命中。
+## 使用：伤害窗口关闭时无动作，delta为物理帧秒数。
 func _physics_process(delta: float) -> void:
 	if _damage_window_finished:
 		return
@@ -37,6 +43,8 @@ func _physics_process(delta: float) -> void:
 	_last_position = global_position
 
 
+## 作用：执行基类命中后刷新停顿计时并从目标附近重新寻找密集群。
+## 使用：返回基类是否处理，成功时才停顿。
 func _damage_body(body: Node) -> bool:
 	var damaged: bool = super._damage_body(body)
 	if damaged and body is Node2D:
@@ -45,6 +53,8 @@ func _damage_body(body: Node) -> bool:
 	return damaged
 
 
+## 作用：查询移动线段周围候选，距离不超过半径且未扫掠命中过则处理。
+## 使用：from/to为世界坐标，扫掠历史按目标ID保存。
 func _damage_swept_targets(from_position: Vector2, to_position: Vector2) -> void:
 	if from_position.distance_squared_to(to_position) <= 0.0001:
 		return
@@ -60,6 +70,8 @@ func _damage_swept_targets(from_position: Vector2, to_position: Vector2) -> void
 				_swept_body_ids[body.get_instance_id()] = true
 
 
+## 作用：查最密集群中心并更新移动单位方向。
+## 使用：未找到中心或与当前位置重合则保持方向。
 func _redirect_towards_dense_cluster(origin: Vector2) -> void:
 	var center: Vector2 = _find_dense_cluster_center(origin)
 	if center == Vector2.INF:
@@ -69,6 +81,8 @@ func _redirect_towards_dense_cluster(origin: Vector2) -> void:
 		move_direction = direction.normalized()
 
 
+## 作用：在搜索范围内逐候选统计聚类半径邻居，选数量最多且最近的均值中心。
+## 使用：origin为查询中心，没有活目标返回Vector2.INF。
 func _find_dense_cluster_center(origin: Vector2) -> Vector2:
 	var candidates: Array[Node2D] = []
 	var seek_radius_squared: float = density_seek_radius * density_seek_radius
@@ -103,6 +117,8 @@ func _find_dense_cluster_center(origin: Vector2) -> Vector2:
 	return best_center
 
 
+## 作用：求点到有限线段的最近距离，零长段退化为点距离。
+## 使用：所有参数使用同一世界坐标系。
 func _distance_to_segment(point: Vector2, start: Vector2, end: Vector2) -> float:
 	var segment: Vector2 = end - start
 	var length_squared: float = segment.length_squared()

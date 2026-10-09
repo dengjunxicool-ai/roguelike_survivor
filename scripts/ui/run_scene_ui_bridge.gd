@@ -1,3 +1,6 @@
+## 文件用途：连接玩家、生成器和敌人信号到 UIManager。
+## 使用方式：开局 reset 后 connect_runtime_sources；HUD 刷新补接新敌人，连接前避免重复。
+
 extends RefCounted
 class_name RunSceneUIBridge
 
@@ -11,12 +14,16 @@ var _connected_spawner_id: int = 0
 var _tracked_enemy_ids: Dictionary = {}
 
 
+## 作用：重置。
+## 使用：供本模块调用者使用。
 func reset() -> void:
 	_connected_player_id = 0
 	_connected_spawner_id = 0
 	_tracked_enemy_ids.clear()
 
 
+## 作用：连接运行时来源组。
+## 使用：供本模块调用者使用；输入 tree（场景树）、target（目标）。
 func connect_runtime_sources(tree: SceneTree, target: Object) -> void:
 	if tree == null or target == null:
 		return
@@ -24,6 +31,8 @@ func connect_runtime_sources(tree: SceneTree, target: Object) -> void:
 	_connect_spawner(tree.get_first_node_in_group(ENEMY_SPAWNER_GROUP), target)
 
 
+## 作用：连接敌人死亡信号。
+## 使用：供本模块调用者使用；输入 tree（场景树）、target（目标）。
 func connect_enemy_death_signals(tree: SceneTree, target: Object) -> void:
 	if tree == null or target == null:
 		return
@@ -39,6 +48,8 @@ func connect_enemy_death_signals(tree: SceneTree, target: Object) -> void:
 			enemy.connect(&"died", death_callable)
 
 
+## 作用：连接玩家。
+## 使用：本文件由 connect_runtime_sources 调用；输入 player（玩家）、target（目标）。
 func _connect_player(player: Node, target: Object) -> void:
 	if player == null:
 		return
@@ -51,6 +62,8 @@ func _connect_player(player: Node, target: Object) -> void:
 	_connect_if_available(player, &"upgrade_applied", Callable(target, "_on_player_upgrade_applied"))
 
 
+## 作用：连接生成器。
+## 使用：本文件由 connect_runtime_sources 调用；输入 spawner（生成器）、target（目标）。
 func _connect_spawner(spawner: Node, target: Object) -> void:
 	if spawner == null:
 		return
@@ -66,6 +79,8 @@ func _connect_spawner(spawner: Node, target: Object) -> void:
 	_connect_if_available(spawner, &"boss_defeated", Callable(target, "_on_boss_defeated"))
 
 
+## 作用：连接按条件可用。
+## 使用：本文件由 _connect_player、_connect_spawner 调用；输入 node（节点）、signal_name（signal名称）、callable（callable）。
 func _connect_if_available(node: Node, signal_name: StringName, callable: Callable) -> void:
 	if node == null or not node.has_signal(signal_name):
 		return

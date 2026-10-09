@@ -1,3 +1,5 @@
+## 文件用途：按基础规则、受支持的运行属性键和运行特殊规则顺序构建当前有效规则。
+## 使用方式：宿主调用 get_rules 传 SkillInstance；后加入的同名规则覆盖之前的值，空实例返回空字典。
 extends RefCounted
 class_name SkillSpecialRuleSource
 
@@ -13,6 +15,8 @@ const RUNTIME_MODIFIER_RULE_KEYS: Array[String] = [
 ]
 
 
+## 作用：按基础规则、允许的运行属性和运行特殊规则顺序构建有效规则，同键后者覆盖。
+## 使用：skill_instance 为技能运行实例；无适用数据时返回空字典。
 static func get_rules(skill_instance: RefCounted) -> Dictionary:
 	if skill_instance == null:
 		return {}

@@ -1,3 +1,5 @@
+## 文件用途：合并战斗对象定义并生成投射物、区域或环绕物，前两类支持runtime对象池。
+## 使用方式：技能动作调用create_*传parent、位置、方向和payload；返回节点或创建失败的null。
 extends RefCounted
 class_name CombatObjectFactory
 
@@ -8,6 +10,8 @@ const DEFAULT_AREA_EFFECT_SCENE: PackedScene = preload("res://scenes/combat/area
 const DEFAULT_ORBIT_OBJECT_SCENE: PackedScene = preload("res://scenes/combat/orbit_object.tscn")
 
 
+## 作用：合并定义并从池生成投射物，设位置后准备spawn或setup。
+## 使用：params须含非零direction和可用parent；物理帧位置deferred写入。
 static func create_projectile(params: Dictionary) -> Node2D:
 	var object_params: Dictionary = _apply_combat_object_definition(params, String(params.get("projectile_id", params.get("object_id", ""))))
 	var projectile_scene: PackedScene = object_params.get("scene", DEFAULT_PROJECTILE_SCENE) as PackedScene
@@ -33,6 +37,8 @@ static func create_projectile(params: Dictionary) -> Node2D:
 	return projectile
 
 
+## 作用：合并定义并从池生成区域，设位置后配置。
+## 使用：物理帧时位置与setup均deferred，避免初始化期间触碰物理状态。
 static func create_area_effect(params: Dictionary) -> Node2D:
 	var object_params: Dictionary = _apply_combat_object_definition(params, String(params.get("area_id", params.get("object_id", ""))))
 	var area_effect_scene: PackedScene = object_params.get("scene", DEFAULT_AREA_EFFECT_SCENE) as PackedScene
@@ -61,6 +67,8 @@ static func create_area_effect(params: Dictionary) -> Node2D:
 	return area_effect
 
 
+## 作用：实例化环绕场景、挂父节点并配置位置和setup。
+## 使用：此路径不经对象池，params含owner等环绕上下文。
 static func create_orbit_object(params: Dictionary) -> Node2D:
 	var object_params: Dictionary = _apply_combat_object_definition(params, String(params.get("object_id", "")))
 	var orbit_scene: PackedScene = object_params.get("scene", DEFAULT_ORBIT_OBJECT_SCENE) as PackedScene
@@ -80,6 +88,8 @@ static func create_orbit_object(params: Dictionary) -> Node2D:
 	return orbit_object
 
 
+## 作用：复制参数并用DataManager定义补缺失场景、碰撞与视觉字段。
+## 使用：显式params优先，object_id空或定义缺失返回原参数副本。
 static func _apply_combat_object_definition(params: Dictionary, object_id: String) -> Dictionary:
 	var merged_params: Dictionary = params.duplicate(true)
 	if object_id == "":
@@ -119,6 +129,8 @@ static func _apply_combat_object_definition(params: Dictionary, object_id: Strin
 	return merged_params
 
 
+## 作用：从SceneTree根查询DataManager。
+## 使用：无有效树返回null；仅查询已发布配置。
 static func _get_data_manager() -> Node:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if tree == null or tree.root == null:
@@ -127,6 +139,8 @@ static func _get_data_manager() -> Node:
 	return tree.root.get_node_or_null("DataManager")
 
 
+## 作用：优先返回参数节点，否则使用当前主场景。
+## 使用：找不到父节点返回null。
 static func _resolve_parent(value: Variant) -> Node:
 	if value is Node:
 		return value
@@ -138,6 +152,8 @@ static func _resolve_parent(value: Variant) -> Node:
 	return null
 
 
+## 作用：按场景与类别池键请求节点，缺池时直接实例化并挂父节点。
+## 使用：物理帧下挂节点deferred；返回Node或null。
 static func _spawn_pooled_combat_node(scene: PackedScene, parent: Node, category: StringName) -> Node:
 	if scene == null:
 		return null
@@ -155,10 +171,14 @@ static func _spawn_pooled_combat_node(scene: PackedScene, parent: Node, category
 	return node
 
 
+## 作用：实例化指定PackedScene。
+## 使用：用作池工厂Callable，空场景返回null。
 static func _instantiate_scene(scene: PackedScene) -> Node:
 	return scene.instantiate() if scene != null else null
 
 
+## 作用：用类别和场景路径构成池键。
+## 使用：匿名场景用anonymous，返回StringName。
 static func _pool_key_for_scene(scene: PackedScene, category: StringName) -> StringName:
 	var scene_path: String = scene.resource_path
 	if scene_path == "":
@@ -166,6 +186,8 @@ static func _pool_key_for_scene(scene: PackedScene, category: StringName) -> Str
 	return StringName("combat_scene:%s:%s" % [String(category), scene_path])
 
 
+## 作用：将Vector2或至少两个成员的[x,y]数组解析为二维值。
+## 使用：无法解析时返回fallback；不修改输入。
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value
@@ -177,6 +199,8 @@ static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	return fallback
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回深复制，嵌套修改不会污染输入。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)

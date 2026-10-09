@@ -1,4 +1,7 @@
-﻿extends CharacterBody2D
+﻿## 文件用途：聚合敌人配置、状态、AI、移动、受击、死亡与奖励子系统。
+## 使用方式：挂载敌人场景；生成时先设置 ID/倍率，入树初始化；伤害经 take_damage，死亡经统一流水线。
+
+extends CharacterBody2D
 class_name EnemyBase
 
 
@@ -106,6 +109,8 @@ static var _neighbor_check_budget_frame: int = -1
 static var _neighbor_checks_this_frame: int = 0
 
 
+## 作用：注册目标并初始化视觉、奖励、状态、行为和技能组件，再载入敌人配置。
+## 使用：生成服务须在 add_child 前设置 enemy_id 与倍率；Godot 入树回调最后初始化生命值并寻找玩家。
 func _ready() -> void:
 	add_to_group(&"enemy")
 	add_to_group(&"enemies")
@@ -132,16 +137,22 @@ func _ready() -> void:
 		target = _find_target_in_group()
 
 
+## 作用：在节点离树时清理其注册关系。
+## 使用：由 Godot 自动调用，避免服务继续持有已移除节点。
 func _exit_tree() -> void:
 	_unregister_combat_target()
 
 
+## 作用：推进本节点的物理帧更新流程。
+## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _physics_process(delta: float) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_physics_process_profiled(delta)
 	HotPathProfilerScript.end(self, &"enemy_update", hot_path_start)
 
 
+## 作用：推进本节点的物理帧更新流程。
+## 使用：由 _physics_process 调用；delta 为自上一帧经过的秒数。
 func _physics_process_profiled(delta: float) -> void:
 	if _is_dead:
 		return
@@ -225,6 +236,8 @@ func _physics_process_profiled(delta: float) -> void:
 	HotPathProfilerScript.end(self, &"enemy_attack_update", attack_hot_path_start)
 
 
+## 作用：更新敌人运行时周期。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _update_enemy_runtime_tick(delta: float) -> void:
 	_update_status_effects(delta)
 	var status_visual_hot_path_start: int = HotPathProfilerScript.begin(self)
@@ -232,6 +245,8 @@ func _update_enemy_runtime_tick(delta: float) -> void:
 	HotPathProfilerScript.end(self, &"enemy_status_visual_update", status_visual_hot_path_start)
 
 
+## 作用：更新敌人动作冷却计时。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _update_enemy_action_cooldowns(delta: float) -> void:
 	_damage_cooldown = maxf(_damage_cooldown - delta, 0.0)
 	_shoot_cooldown = maxf(_shoot_cooldown - delta, 0.0)
@@ -240,39 +255,53 @@ func _update_enemy_action_cooldowns(delta: float) -> void:
 	_dash_cooldown = maxf(_dash_cooldown - delta, 0.0)
 
 
+## 作用：解析当前目标，供当前模块后续逻辑使用。
+## 使用：本文件由 _physics_process_profiled 调用；返回是否满足条件或执行成功。
 func _resolve_current_target() -> bool:
 	if not is_instance_valid(target):
 		target = _find_target_in_group()
 	return target != null
 
 
+## 作用：登记战斗目标；具体处理委托给 registry.register_enemy。
+## 使用：本文件由 _ready 调用。
 func _register_combat_target() -> void:
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
 	if registry != null and registry.has_method("register_enemy"):
 		registry.call("register_enemy", self)
 
 
+## 作用：注销战斗目标；具体处理委托给 registry.unregister_enemy。
+## 使用：本文件由 _exit_tree、_finish_death 调用。
 func _unregister_combat_target() -> void:
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
 	if registry != null and registry.has_method("unregister_enemy"):
 		registry.call("unregister_enemy", self)
 
 
+## 作用：停止移动。
+## 使用：本文件由 _physics_process_profiled、_stop_motion_and_update_visual 调用。
 func _stop_motion() -> void:
 	_cancel_ranged_attack_warning()
 	velocity = Vector2.ZERO
 	move_and_slide()
 
 
+## 作用：停止移动与更新视觉。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _stop_motion_and_update_visual(delta: float) -> void:
 	_stop_motion()
 	_update_enemy_visual_state(delta)
 
 
+## 作用：更新行为；具体处理委托给 _behavior_controller.tick。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _update_behavior(delta: float) -> void:
 	_behavior_controller.call("tick", delta)
 
 
+## 作用：应用调试强制状态。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）、forced_state（强制状态）。
 func _apply_debug_forced_state(delta: float, forced_state: String) -> void:
 	_cancel_ranged_attack_warning()
 	_damage_cooldown = maxf(_damage_cooldown - delta, 0.0)
@@ -297,6 +326,8 @@ func _apply_debug_forced_state(delta: float, forced_state: String) -> void:
 	_update_enemy_visual_state(delta)
 
 
+## 作用：应用调试追逐移动。
+## 使用：本文件由 _apply_debug_forced_state 调用。
 func _apply_debug_chase_movement() -> void:
 	if target == null:
 		velocity = Vector2.ZERO
@@ -306,6 +337,8 @@ func _apply_debug_chase_movement() -> void:
 	velocity = direction * _get_effective_move_speed()
 
 
+## 作用：启动远程攻击预警；具体处理委托给 _attack_telegraph.show。
+## 使用：内部辅助入口；输入 direction（方向）。
 func _start_ranged_attack_warning(direction: Vector2) -> void:
 	_ranged_warning_direction = direction.normalized() if direction != Vector2.ZERO else Vector2.RIGHT
 	_ranged_warning_timer = maxf(float(_behavior.get("projectile_warning_time", 0.0)), 0.0)
@@ -313,6 +346,8 @@ func _start_ranged_attack_warning(direction: Vector2) -> void:
 		_attack_telegraph.call("show", _ranged_warning_direction, _behavior, attack_range)
 
 
+## 作用：取消远程攻击预警。
+## 使用：本文件由 _stop_motion、_apply_debug_forced_state 调用。
 func _cancel_ranged_attack_warning() -> void:
 	if _ranged_warning_timer <= 0.0:
 		_attack_telegraph.call("hide")
@@ -322,18 +357,26 @@ func _cancel_ranged_attack_warning() -> void:
 	_attack_telegraph.call("hide")
 
 
+## 作用：显示远程攻击预警；具体处理委托给 _attack_telegraph.show。
+## 使用：内部辅助入口。
 func _show_ranged_attack_warning() -> void:
 	_attack_telegraph.call("show", _ranged_warning_direction, _behavior, attack_range)
 
 
+## 作用：显示突进攻击预警；具体处理委托给 _attack_telegraph.show。
+## 使用：内部辅助入口。
 func _show_dash_attack_warning() -> void:
 	_attack_telegraph.call("show", _dash_direction, _behavior, attack_range)
 
 
+## 作用：隐藏攻击攻击预警；具体处理委托给 _attack_telegraph.hide。
+## 使用：内部辅助入口。
 func _hide_attack_telegraph() -> void:
 	_attack_telegraph.call("hide")
 
 
+## 作用：判断目标处于攻击范围内，返回布尔判断结果。
+## 使用：内部辅助入口；输入 distance（距离）。
 func _is_target_in_attack_range(distance: float = -1.0) -> bool:
 	if target == null:
 		return false
@@ -345,6 +388,8 @@ func _is_target_in_attack_range(distance: float = -1.0) -> bool:
 	return current_distance <= attack_range
 
 
+## 作用：判断目标处于行为攻击范围内，返回布尔判断结果。
+## 使用：内部辅助入口；输入 distance（距离）。
 func _is_target_in_behavior_attack_range(distance: float = -1.0) -> bool:
 	if target == null:
 		return false
@@ -356,6 +401,8 @@ func _is_target_in_behavior_attack_range(distance: float = -1.0) -> bool:
 	return current_distance <= _get_behavior_attack_range()
 
 
+## 作用：获取目标来源路径，供当前模块后续逻辑使用。
+## 使用：本文件由 _ready 调用；返回 Node2D 对象/值。
 func _get_target_from_path() -> Node2D:
 	if target_path.is_empty():
 		return null
@@ -363,28 +410,40 @@ func _get_target_from_path() -> Node2D:
 	return get_node_or_null(target_path) as Node2D
 
 
+## 作用：查找目标范围内分组，供当前模块后续逻辑使用。
+## 使用：本文件由 _ready、_resolve_current_target、_apply_debug_forced_state 调用；返回 Node2D 对象/值。
 func _find_target_in_group() -> Node2D:
 	return get_tree().get_first_node_in_group(target_group) as Node2D
 
 
+## 作用：更新状态效果效果列表；具体处理委托给 _status_facade.update_status_effects。
+## 使用：本文件由 _update_enemy_runtime_tick 调用；输入 delta（delta）。
 func _update_status_effects(delta: float) -> void:
 	_status_facade.call("update_status_effects", delta)
 
 
+## 作用：更新状态效果标签。
+## 使用：本文件由 _update_enemy_runtime_tick 调用。
 func _update_status_label() -> void:
 	if not bool(_status_facade.call("consume_status_display_dirty")):
 		return
 	_status_display_controller.call("update", get_status_snapshot())
 
 
+## 作用：判断移动冻结，返回布尔判断结果；具体处理委托给 _status_facade.is_movement_frozen。
+## 使用：本文件由 _physics_process_profiled 调用。
 func _is_movement_frozen() -> bool:
 	return bool(_status_facade.call("is_movement_frozen"))
 
 
+## 作用：获取生效移动速度，供当前模块后续逻辑使用；具体处理委托给 _status_facade.get_effective_move_speed。
+## 使用：本文件由 _apply_debug_chase_movement 调用；返回计算或读取的数值。
 func _get_effective_move_speed() -> float:
 	return float(_status_facade.call("get_effective_move_speed", move_speed))
 
 
+## 作用：接触半径内按冷却伤害目标，并执行接触状态动作。
+## 使用：在敌人物理更新末调用；突进期间可使用 dash_damage，成功发起攻击后重置接触冷却。
 func _apply_contact_damage() -> void:
 	if _damage_cooldown > 0.0:
 		return
@@ -402,6 +461,8 @@ func _apply_contact_damage() -> void:
 	_damage_cooldown = damage_interval
 
 
+## 作用：判断目标接触接触半径，返回布尔判断结果。
+## 使用：本文件由 _apply_contact_damage 调用。
 func _is_target_touching_contact_radius() -> bool:
 	if target == null or not is_instance_valid(target):
 		return false
@@ -412,6 +473,8 @@ func _is_target_touching_contact_radius() -> bool:
 	return global_position.distance_squared_to(target.global_position) <= contact_radius * contact_radius
 
 
+## 作用：应用范围攻击伤害；具体处理委托给 target.take_damage。
+## 使用：本文件由 _apply_debug_forced_state 调用。
 func _apply_range_attack_damage() -> void:
 	if _damage_cooldown > 0.0 or target == null:
 		return
@@ -422,43 +485,67 @@ func _apply_range_attack_damage() -> void:
 		_damage_cooldown = damage_interval
 
 
+## 作用：把严格 DamagePacket 交给统一敌人伤害应用服务。
+## 使用：外部命中入口；不要传裸数字或直接修改 current_health。
 func take_damage(packet: DamagePacket) -> void:
 	DamageApplicationServiceScript.apply_enemy_damage(self, packet)
 
 
+## 作用：应用状态效果；具体处理委托给 _status_facade.apply_status。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）、params（参数）；返回是否满足条件或执行成功。
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	return bool(_status_facade.call("apply_status", status_id, params))
 
+## 作用：是否包含状态效果，返回布尔判断结果；具体处理委托给 _status_facade.has_status。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）。
 func has_status(status_id: Variant) -> bool:
 	return bool(_status_facade.call("has_status", status_id))
 
+## 作用：获取状态效果叠层，供当前模块后续逻辑使用；具体处理委托给 _status_facade.get_status_stack。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）；返回计算或读取的数值。
 func get_status_stack(status_id: Variant) -> int:
 	return int(_status_facade.call("get_status_stack", status_id))
 
+## 作用：消耗感电叠层；具体处理委托给 _status_facade.consume_shock_stack。
+## 使用：供本模块调用者使用；返回是否满足条件或执行成功。
 func consume_shock_stack() -> bool:
 	return bool(_status_facade.call("consume_shock_stack"))
 
+## 作用：消耗状态效果叠层；具体处理委托给 _status_facade.consume_status_stack。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）、stack_count（叠层数量）；返回是否满足条件或执行成功。
 func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	return bool(_status_facade.call("consume_status_stack", status_id, stack_count))
 
+## 作用：判断死亡，返回布尔判断结果。
+## 使用：供本模块调用者使用。
 func is_dead() -> bool:
 	return _is_dead
 
+## 作用：获取状态效果快照，供当前模块后续逻辑使用；具体处理委托给 _status_facade.get_status_snapshot。
+## 使用：本文件由 _update_status_label 调用；返回 Array[Dictionary] 列表。
 func get_status_snapshot() -> Array[Dictionary]:
 	return _status_facade.call("get_status_snapshot")
 
+## 作用：清除状态效果组；具体处理委托给 _status_facade.clear_statuses。
+## 使用：供本模块调用者使用。
 func clear_statuses() -> void:
 	_status_facade.call("clear_statuses")
 
 
+## 作用：死亡。
+## 使用：内部辅助入口。
 func _die() -> void:
 	_finish_death("damage")
 
 
+## 作用：记录输出伤害；具体处理委托给 _reward_controller.record_damage_done。
+## 使用：内部辅助入口；输入 amount（数量）、damage_result（伤害结果）、source_packet（来源伤害包）。
 func _record_damage_done(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	_reward_controller.call("record_damage_done", amount, damage_result, source_packet)
 
 
+## 作用：获取伤害来源键，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 source_packet（来源伤害包）、damage_result（伤害结果）；返回 String 文本/标识。
 func _get_damage_source_key(source_packet: DamagePacket, damage_result: Dictionary) -> String:
 	for key: String in ["source_instance_id", "source_id", "source_skill_id", "attacker_id"]:
 		var packet_value: String = String(source_packet.get_value(key, ""))
@@ -471,6 +558,8 @@ func _get_damage_source_key(source_packet: DamagePacket, damage_result: Dictiona
 	return "unknown"
 
 
+## 作用：获取敌人伤害包，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_contact_damage、_apply_range_attack_damage 调用；输入 amount（数量）、source_kind（来源类型）；返回 DamagePacket 对象/值。
 func _get_enemy_damage_packet(amount: int, source_kind: String) -> DamagePacket:
 	return EnemyDamagePacketBuilderScript.build(self, amount, source_kind, StringName(source_kind), {
 		"target": target,
@@ -481,6 +570,8 @@ func _get_enemy_damage_packet(amount: int, source_kind: String) -> DamagePacket:
 	})
 
 
+## 作用：先执行爆炸，再以 self_explosion 原因结束生命。
+## 使用：爆炸失败或已经死亡返回 false；成功后按自爆奖励策略进入死亡流水线。
 func _run_self_explosion_action() -> bool:
 	if _is_dead:
 		return false
@@ -490,6 +581,8 @@ func _run_self_explosion_action() -> bool:
 	return true
 
 
+## 作用：注销战斗目标并按原因构建死亡上下文，交给死亡流水线。
+## 使用：已死亡时直接返回；cause 为 damage 或 self_explosion 等原因。
 func _finish_death(cause: String = "damage") -> void:
 	if _is_dead:
 		return
@@ -504,6 +597,8 @@ func _finish_death(cause: String = "damage") -> void:
 	_death_pipeline.call("execute", self, context)
 
 
+## 作用：获取死亡策略，供当前模块后续逻辑使用。
+## 使用：本文件由 _finish_death 调用；输入 cause（原因）；返回结果字典。
 func _get_death_policy(cause: String) -> Dictionary:
 	var policy: Dictionary = _get_default_death_policy(cause)
 	_merge_death_policy(policy, _get_dictionary(_death_policy.get("default", {})))
@@ -511,6 +606,8 @@ func _get_death_policy(cause: String) -> Dictionary:
 	return policy
 
 
+## 作用：获取默认死亡策略，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_death_policy 调用；输入 cause（原因）；返回字典包含 play_death_visual/record_boss_core/award_soul/notify_kill_events/emit_died_signal/run_death_effect/drop_experience。
 func _get_default_death_policy(cause: String) -> Dictionary:
 	if cause == "self_explosion":
 		return {
@@ -533,28 +630,40 @@ func _get_default_death_policy(cause: String) -> Dictionary:
 	}
 
 
+## 作用：合并死亡策略。
+## 使用：本文件由 _get_death_policy 调用；输入 target_policy（目标策略）、override_policy（override策略）。
 func _merge_death_policy(target_policy: Dictionary, override_policy: Dictionary) -> void:
 	for key: Variant in override_policy.keys():
 		target_policy[String(key)] = override_policy[key]
 
 
+## 作用：应用死亡效果；具体处理委托给 _action_executor.apply_death_effect。
+## 使用：内部辅助入口。
 func _apply_death_effect() -> void:
 	_action_executor.call("apply_death_effect", _death_effect)
 
 
+## 作用：生成敌人组周围；具体处理委托给 _action_executor.spawn_enemies_around。
+## 使用：内部辅助入口；输入 spawn_enemy_id（生成敌人ID）、count（数量）、center（中心）、radius（半径）。
 func _spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector2, radius: float = 48.0) -> void:
 	_action_executor.call("spawn_enemies_around", spawn_enemy_id, count, center, radius)
 
 
+## 作用：生成腐化核心列表；具体处理委托给 _action_executor.spawn_corrupted_cores。
+## 使用：内部辅助入口；输入 count（数量）、hp（生命值）；返回是否满足条件或执行成功。
 func _spawn_corrupted_cores(count: int, hp: int) -> bool:
 	return bool(_action_executor.call("spawn_corrupted_cores", count, hp))
 
 
+## 作用：更新Boss技能冷却计时。
+## 使用：内部辅助入口；输入 delta（delta）。
 func _update_boss_skill_cooldowns(delta: float) -> void:
 	for key: Variant in _boss_skill_cooldowns.keys():
 		_boss_skill_cooldowns[key] = maxf(float(_boss_skill_cooldowns[key]) - delta, 0.0)
 
 
+## 作用：按当前血量阶段的并发上限与独立冷却请求 Boss 技能。
+## 使用：只对本阶段冷却已结束的技能尝试执行；成功后记录冷却，不吞失败重试机会。
 func _process_boss_phase_skills() -> void:
 	var phase: Dictionary = _get_active_boss_phase()
 	var skills: Array = _get_array(phase.get("skills", []))
@@ -577,6 +686,8 @@ func _process_boss_phase_skills() -> void:
 			active_count += 1
 
 
+## 作用：按当前生命值比例选取首个包含该比例的阶段。
+## 使用：返回附带 _phase_index 的配置深拷贝；无阶段匹配返回空字典。
 func _get_active_boss_phase() -> Dictionary:
 	var phases: Array = _get_array(_behavior.get("phases", []))
 	if phases.is_empty():
@@ -599,6 +710,8 @@ func _get_active_boss_phase() -> Dictionary:
 	return {}
 
 
+## 作用：执行Boss技能。
+## 使用：本文件由 _process_boss_phase_skills 调用；输入 skill（技能）；返回是否满足条件或执行成功。
 func _execute_boss_skill(skill: Dictionary) -> bool:
 	var skill_id: StringName = StringName(String(skill.get("skill_id", "")))
 	if skill_id == &"":
@@ -614,6 +727,8 @@ func _execute_boss_skill(skill: Dictionary) -> bool:
 	return executed
 
 
+## 作用：获取Boss技能目标位置，供当前模块后续逻辑使用。
+## 使用：本文件由 _execute_boss_skill 调用；输入 skill（技能）；返回 Vector2 对象/值。
 func _get_boss_skill_target_position(skill: Dictionary) -> Vector2:
 	match String(skill.get("type", "")):
 		"shockwave", "corrupted_cores", "ring_projectiles", "summon", "shield_orbs":
@@ -622,6 +737,8 @@ func _get_boss_skill_target_position(skill: Dictionary) -> Vector2:
 			return target.global_position if target != null else global_position
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _process_boss_phase_skills、_get_active_boss_phase 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
@@ -629,6 +746,8 @@ func _get_array(value: Variant) -> Array:
 	return []
 
 
+## 作用：更新引信视觉。
+## 使用：内部辅助入口。
 func _update_fuse_visual() -> void:
 	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 	if sprite == null:
@@ -638,6 +757,8 @@ func _update_fuse_visual() -> void:
 	sprite.modulate = Color(1.0, pulse, 0.18, 1.0)
 
 
+## 作用：掉落经验晶体。
+## 使用：内部辅助入口。
 func _drop_experience_crystal() -> void:
 	var parent: Node = get_parent()
 	if dropped_experience <= 0 or experience_crystal_scene == null or parent == null:
@@ -655,6 +776,8 @@ func _drop_experience_crystal() -> void:
 		crystal.call(&"set_experience_amount", dropped_experience)
 
 
+## 作用：生成经验晶体。
+## 使用：本文件由 _drop_experience_crystal 调用；输入 parent（父节点）；返回 Node2D 对象/值。
 func _spawn_experience_crystal(parent: Node) -> Node2D:
 	var pool: Node = RuntimePoolRegistryScript.get_or_create(parent)
 	if pool != null and pool.has_method("spawn"):
@@ -668,10 +791,14 @@ func _spawn_experience_crystal(parent: Node) -> Node2D:
 	return crystal
 
 
+## 作用：实例化经验晶体。
+## 使用：本文件由 _spawn_experience_crystal 调用；返回 Node 对象/值。
 func _instantiate_experience_crystal() -> Node:
 	return experience_crystal_scene.instantiate() if experience_crystal_scene != null else null
 
 
+## 作用：经验晶体池键。
+## 使用：本文件由 _spawn_experience_crystal 调用；返回 StringName 文本/标识。
 func _experience_crystal_pool_key() -> StringName:
 	var scene_path: String = experience_crystal_scene.resource_path if experience_crystal_scene != null else "anonymous"
 	if scene_path == "":
@@ -679,6 +806,8 @@ func _experience_crystal_pool_key() -> StringName:
 	return StringName("pickup_scene:%s" % scene_path)
 
 
+## 作用：应用敌人配置。
+## 使用：本文件由 _ready 调用。
 func _apply_enemy_config() -> void:
 	var enemy_config: Dictionary = GameData.get_enemy(enemy_id)
 	if enemy_config.is_empty():
@@ -722,14 +851,20 @@ func _apply_enemy_config() -> void:
 		_apply_collision_radius(collision_radius)
 
 
+## 作用：取得敌人配置字典的独立深拷贝。
+## 使用：转发 EnemyConfigHelper.duplicate_dictionary；类型非法返回空字典。
 func _get_dictionary(value: Variant) -> Dictionary:
 	return EnemyConfigHelperScript.duplicate_dictionary(value)
 
 
+## 作用：获取字典数组，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_enemy_config 调用；输入 value（值）；返回 Array[Dictionary] 列表。
 func _get_dictionary_array(value: Variant) -> Array[Dictionary]:
 	return EnemyConfigHelperScript.duplicate_dictionary_array(value)
 
 
+## 作用：执行敌方技能动作；具体处理委托给 _skill_controller.execute_action_type。
+## 使用：本文件由 _apply_contact_damage 调用；输入 action_type（动作类型）、runtime_params（运行时参数）；返回是否满足条件或执行成功。
 func _execute_enemy_skill_action(action_type: String, runtime_params: Dictionary = {}) -> bool:
 	var executed: bool = bool(_skill_controller.call("execute_action_type", action_type, runtime_params))
 	if executed and not _is_dead and action_type != "contact_status":
@@ -737,42 +872,62 @@ func _execute_enemy_skill_action(action_type: String, runtime_params: Dictionary
 	return executed
 
 
+## 作用：标记运行时状态；具体处理委托给 _state_controller.mark。
+## 使用：本文件由 _apply_contact_damage、_apply_range_attack_damage、_execute_boss_skill 调用；输入 state（状态）、duration（持续时间）。
 func _mark_runtime_state(state: String, duration: float) -> void:
 	_state_controller.call("mark", state, duration)
 
 
+## 作用：显示受击视觉。
+## 使用：内部辅助入口。
 func _show_hurt_visual() -> void:
 	_mark_runtime_state("hurt", 0.12)
 
 
+## 作用：获取运行时状态，供当前模块后续逻辑使用；具体处理委托给 _state_controller.get_snapshot。
+## 使用：供本模块调用者使用；返回 String 文本/标识。
 func get_runtime_state() -> String:
 	return String(_state_controller.call("get_snapshot").get("state", "idle"))
 
 
+## 作用：获取运行时状态快照，供当前模块后续逻辑使用；具体处理委托给 _state_controller.get_snapshot。
+## 使用：供本模块调用者使用；返回结果字典。
 func get_runtime_state_snapshot() -> Dictionary:
 	return _state_controller.call("get_snapshot")
 
 
+## 作用：获取行为类型，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；返回 String 文本/标识。
 func get_behavior_type() -> String:
 	return String(_behavior.get("type", ""))
 
 
+## 作用：获取敌方技能冷却，供当前模块后续逻辑使用；具体处理委托给 _skill_controller.get_cooldown_for_action。
+## 使用：内部辅助入口；输入 action_type（动作类型）、fallback（回退）；返回计算或读取的数值。
 func _get_enemy_skill_cooldown(action_type: String, fallback: float) -> float:
 	return float(_skill_controller.call("get_cooldown_for_action", action_type, fallback))
 
 
+## 作用：应用分类元数据。
+## 使用：本文件由 _apply_enemy_config 调用；输入 enemy_config（敌人配置）。
 func _apply_classification_metadata(enemy_config: Dictionary) -> void:
 	EnemyConfigHelperScript.apply_classification_metadata(self, enemy_config)
 
 
+## 作用：获取行为攻击范围回退，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_enemy_config 调用；返回计算或读取的数值。
 func _get_behavior_attack_range_fallback() -> float:
 	return EnemyConfigHelperScript.behavior_attack_range_fallback(_behavior, attack_range)
 
 
+## 作用：获取行为攻击范围，供当前模块后续逻辑使用。
+## 使用：本文件由 _is_target_in_behavior_attack_range 调用；返回计算或读取的数值。
 func _get_behavior_attack_range() -> float:
 	return EnemyConfigHelperScript.behavior_attack_range(_behavior, attack_range)
 
 
+## 作用：应用碰撞半径。
+## 使用：本文件由 _apply_enemy_config 调用；输入 radius（半径）。
 func _apply_collision_radius(radius: float) -> void:
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape == null:
@@ -783,6 +938,8 @@ func _apply_collision_radius(radius: float) -> void:
 		circle_shape.radius = radius
 
 
+## 作用：限制实体移动。
+## 使用：本文件由 _physics_process_profiled、_apply_debug_forced_state 调用；输入 delta（delta）、include_player（include玩家）、include_enemy_neighbors（include敌人neighbors）。
 func _limit_actor_motion(delta: float, include_player: bool = false, include_enemy_neighbors: bool = true) -> void:
 	if velocity.length_squared() <= 0.01 or delta <= 0.0:
 		return
@@ -805,6 +962,8 @@ func _limit_actor_motion(delta: float, include_player: bool = false, include_ene
 		velocity *= maxf(scale, 0.0)
 
 
+## 作用：是否需要限制实体移动，返回布尔判断结果。
+## 使用：本文件由 _physics_process_profiled 调用。
 func _should_limit_actor_motion() -> bool:
 	if velocity.length_squared() <= 0.01:
 		return false
@@ -816,14 +975,20 @@ func _should_limit_actor_motion() -> bool:
 	return true
 
 
+## 作用：是否需要跳过敌人邻居移动限制，返回布尔判断结果。
+## 使用：本文件由 _limit_actor_motion 调用。
 func _should_skip_enemy_neighbor_motion_limit() -> bool:
 	return not _is_strong_enemy() and _is_crowded_enemy_lod_active()
 
 
+## 作用：是否需要跳过近战邻居逻辑，返回布尔判断结果。
+## 使用：内部辅助入口。
 func _should_skip_melee_neighbor_logic() -> bool:
 	return not _is_strong_enemy() and not _should_run_neighbor_check(0.0)
 
 
+## 作用：是否需要跳过拥挤运行时帧，返回布尔判断结果。
+## 使用：本文件由 _physics_process_profiled 调用。
 func _should_skip_crowded_runtime_frame() -> bool:
 	if _is_strong_enemy() or target == null or not is_instance_valid(target):
 		return false
@@ -840,11 +1005,15 @@ func _should_skip_crowded_runtime_frame() -> bool:
 	return frame % throttle_frames != int(get_instance_id()) % throttle_frames
 
 
+## 作用：判断拥挤敌人更新降频活跃，返回布尔判断结果。
+## 使用：本文件由 _should_skip_enemy_neighbor_motion_limit 调用。
 func _is_crowded_enemy_lod_active() -> bool:
 	_ensure_nearby_enemy_index()
 	return _nearby_enemy_total_count >= CROWDED_ENEMY_LOD_THRESHOLD
 
 
+## 作用：附近敌人组。
+## 使用：本文件由 _limit_actor_motion 调用；输入 center（中心）、radius（半径）、max_results（上限results）；返回 Array[Node2D] 列表。
 func _nearby_enemies(center: Vector2, radius: float, max_results: int = 0) -> Array[Node2D]:
 	var neighbor_hot_path_start: int = HotPathProfilerScript.begin(self)
 	_ensure_nearby_enemy_index()
@@ -870,6 +1039,8 @@ func _nearby_enemies(center: Vector2, radius: float, max_results: int = 0) -> Ar
 	return result
 
 
+## 作用：是否需要单局邻居检查，返回布尔判断结果。
+## 使用：本文件由 _physics_process_profiled、_should_skip_melee_neighbor_logic 调用；输入 delta（delta）。
 func _should_run_neighbor_check(delta: float) -> bool:
 	if _is_strong_enemy():
 		return true
@@ -882,14 +1053,20 @@ func _should_run_neighbor_check(delta: float) -> bool:
 	return true
 
 
+## 作用：重置邻居检查计时器。
+## 使用：本文件由 _should_run_neighbor_check 调用。
 func _reset_neighbor_check_timer() -> void:
 	_neighbor_check_timer = ENEMY_NEIGHBOR_CHECK_INTERVAL + _neighbor_check_initial_offset() * 0.25
 
 
+## 作用：邻居检查初始偏移。
+## 使用：本文件由 _ready、_reset_neighbor_check_timer 调用；返回计算或读取的数值。
 func _neighbor_check_initial_offset() -> float:
 	return float(int(get_instance_id()) % 100) / 100.0 * ENEMY_NEIGHBOR_CHECK_INTERVAL
 
 
+## 作用：尝试消耗邻居检查预算。
+## 使用：本文件由 _should_run_neighbor_check 调用；返回是否满足条件或执行成功。
 func _try_consume_neighbor_check_budget() -> bool:
 	var frame: int = int(Engine.get_physics_frames())
 	if _neighbor_check_budget_frame != frame:
@@ -901,6 +1078,8 @@ func _try_consume_neighbor_check_budget() -> bool:
 	return true
 
 
+## 作用：确保附近敌人索引。
+## 使用：本文件由 _should_skip_crowded_runtime_frame、_is_crowded_enemy_lod_active、_nearby_enemies 调用。
 func _ensure_nearby_enemy_index() -> void:
 	var tree: SceneTree = get_tree()
 	if tree == null:
@@ -931,6 +1110,8 @@ func _ensure_nearby_enemy_index() -> void:
 		_nearby_enemy_total_count += 1
 
 
+## 作用：敌人空间网格。
+## 使用：本文件由 _nearby_enemies、_ensure_nearby_enemy_index 调用；输入 position（位置）；返回 Vector2i 对象/值。
 static func _enemy_spatial_cell(position: Vector2) -> Vector2i:
 	return Vector2i(
 		floori(position.x / NEARBY_ENEMY_CELL_SIZE),
@@ -938,6 +1119,8 @@ static func _enemy_spatial_cell(position: Vector2) -> Vector2i:
 	)
 
 
+## 作用：获取敌人性能采样快照，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；输入 reset（重置）；返回结果字典。
 func get_enemy_profile_snapshot(reset: bool = true) -> Dictionary:
 	var snapshot: Dictionary = _enemy_profile_sections.duplicate(true)
 	if reset:
@@ -945,6 +1128,8 @@ func get_enemy_profile_snapshot(reset: bool = true) -> Dictionary:
 	return snapshot
 
 
+## 作用：性能采样启动。
+## 使用：本文件由 _physics_process_profiled 调用；返回计算或读取的数值。
 func _profile_start() -> int:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null or not bool(tree.root.get_meta("profile_enemy_physics", false)):
@@ -952,6 +1137,8 @@ func _profile_start() -> int:
 	return Time.get_ticks_usec()
 
 
+## 作用：性能采样添加。
+## 使用：本文件由 _physics_process_profiled 调用；输入 section（段）、start_usec（启动usec）。
 func _profile_add(section: String, start_usec: int) -> void:
 	if start_usec <= 0:
 		return
@@ -962,6 +1149,8 @@ func _profile_add(section: String, start_usec: int) -> void:
 	_enemy_profile_sections[section] = record
 
 
+## 作用：获取实体移动缩放，供当前模块后续逻辑使用。
+## 使用：本文件由 _limit_actor_motion 调用；输入 motion（移动）、blocker（blocker）；返回计算或读取的数值。
 func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:
 	var radius: float = _get_collision_radius(self, 24.0) + _get_collision_radius(blocker, 24.0) + 2.0
 	var offset: Vector2 = global_position - blocker.global_position
@@ -979,6 +1168,8 @@ func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:
 	return clampf(t, 0.0, 1.0) if t >= 0.0 and t <= 1.0 else 1.0
 
 
+## 作用：获取碰撞半径，供当前模块后续逻辑使用。
+## 使用：本文件由 _is_target_touching_contact_radius、_limit_actor_motion、_get_actor_motion_scale 调用；输入 node（节点）、fallback（回退）；返回计算或读取的数值。
 func _get_collision_radius(node: Node2D, fallback: float) -> float:
 	var collision_shape: CollisionShape2D = node.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null and collision_shape.shape is CircleShape2D:
@@ -986,16 +1177,22 @@ func _get_collision_radius(node: Node2D, fallback: float) -> float:
 	return fallback
 
 
+## 作用：应用视觉配置；具体处理委托给 _visual_controller.apply_enemy_config。
+## 使用：本文件由 _apply_enemy_config 调用；输入 enemy_config（敌人配置）。
 func _apply_visual_config(enemy_config: Dictionary) -> void:
 	_visual_controller.call("apply_enemy_config", enemy_config)
 
 
+## 作用：更新敌人视觉状态。
+## 使用：本文件由 _physics_process_profiled、_stop_motion_and_update_visual、_apply_debug_forced_state 调用；输入 delta（delta）。
 func _update_enemy_visual_state(delta: float) -> void:
 	var state: Dictionary = _state_controller.call("get_snapshot")
 	state["status_state"] = _get_priority_status_visual_state()
 	_visual_controller.call("update", state, delta)
 
 
+## 作用：是否需要更新敌人视觉状态，返回布尔判断结果。
+## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _should_update_enemy_visual_state(delta: float) -> bool:
 	var interval: float = _get_enemy_visual_update_interval()
 	if interval <= 0.0:
@@ -1009,6 +1206,8 @@ func _should_update_enemy_visual_state(delta: float) -> bool:
 	return true
 
 
+## 作用：获取敌人视觉更新间隔，供当前模块后续逻辑使用。
+## 使用：本文件由 _should_update_enemy_visual_state 调用；返回计算或读取的数值。
 func _get_enemy_visual_update_interval() -> float:
 	if not _is_normal_enemy():
 		return 0.0
@@ -1026,6 +1225,8 @@ func _get_enemy_visual_update_interval() -> float:
 	return 0.0
 
 
+## 作用：判断屏幕外对应视觉更新，返回布尔判断结果。
+## 使用：本文件由 _get_enemy_visual_update_interval 调用。
 func _is_offscreen_for_visual_update() -> bool:
 	var viewport: Viewport = get_viewport()
 	if viewport == null:
@@ -1035,35 +1236,51 @@ func _is_offscreen_for_visual_update() -> bool:
 	return not visible_rect.has_point(screen_position)
 
 
+## 作用：获取优先级状态效果视觉状态，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_enemy_visual_state 调用；返回 String 文本/标识。
 func _get_priority_status_visual_state() -> String:
 	return ""
 
 
+## 作用：更新调试生命值展示；具体处理委托给 _debug_display_controller.update_health。
+## 使用：内部辅助入口。
 func _update_debug_health_display() -> void:
 	_debug_display_controller.call("update_health", current_health, max_health)
 
 
+## 作用：显示调试伤害数值；具体处理委托给 _debug_display_controller.show_damage_number。
+## 使用：内部辅助入口；输入 amount（数量）、damage_result（伤害结果）。
 func _show_debug_damage_number(amount: int, damage_result: Dictionary = {}) -> void:
 	_debug_display_controller.call("show_damage_number", amount, damage_result)
 
 
+## 作用：发放灵魂石；具体处理委托给 _reward_controller.award_soul_stones。
+## 使用：内部辅助入口。
 func _award_soul_stones() -> void:
 	_reward_controller.call("award_soul_stones")
 
 
+## 作用：应用伤害协同；具体处理委托给 _reward_controller.apply_damage_synergies。
+## 使用：内部辅助入口；输入 amount（数量）、damage_type（伤害类型）；返回计算或读取的数值。
 func _apply_damage_synergies(amount: int, damage_type: Variant) -> int:
 	return int(_reward_controller.call("apply_damage_synergies", amount, damage_type))
 
 
+## 作用：通知敌人击杀协同；具体处理委托给 _reward_controller.notify_enemy_killed_synergies。
+## 使用：内部辅助入口。
 func _notify_enemy_killed_synergies() -> void:
 	_reward_controller.call("notify_enemy_killed_synergies")
 
 
+## 作用：判断调试控件模式，返回布尔判断结果。
+## 使用：本文件由 _physics_process_profiled 调用。
 func _is_debug_control_mode() -> bool:
 	var tree: SceneTree = get_tree()
 	return tree != null and tree.root != null and bool(tree.root.get_meta("debug_control_mode", false))
 
 
+## 作用：获取调试敌人强制状态，供当前模块后续逻辑使用。
+## 使用：本文件由 _physics_process_profiled 调用；返回 String 文本/标识。
 func _get_debug_enemy_forced_state() -> String:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null:
@@ -1080,15 +1297,21 @@ func _get_debug_enemy_forced_state() -> String:
 			return ""
 
 
+## 作用：可否调试强制精英视觉状态，返回布尔判断结果。
+## 使用：本文件由 _get_debug_enemy_forced_state 调用。
 func _can_debug_force_elite_visual_state() -> bool:
 	var rank: String = String(get_meta("enemy_rank", "normal"))
 	return rank == "elite" or rank == "boss"
 
 
+## 作用：判断普通敌人，返回布尔判断结果。
+## 使用：本文件由 _get_enemy_visual_update_interval 调用。
 func _is_normal_enemy() -> bool:
 	return String(get_meta("enemy_rank", "normal")) == "normal" and String(get_meta("spawn_source_type", "")) != "boss_minion"
 
 
+## 作用：判断强化敌人，返回布尔判断结果。
+## 使用：本文件由 _should_limit_actor_motion、_should_skip_enemy_neighbor_motion_limit、_should_skip_melee_neighbor_logic 调用。
 func _is_strong_enemy() -> bool:
 	var rank: String = String(get_meta("enemy_rank", "normal"))
 	return rank == "elite" or rank == "boss"

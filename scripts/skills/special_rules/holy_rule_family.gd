@@ -1,3 +1,5 @@
+## 文件用途：实现圣盾、圣印、战锤审判与十字领域的治疗、减伤和护盾规则。
+## 使用方式：由宿主在施放、命中及玩家更新调度；盾和领域通过技能或玩家元数据保存持续效果与脉冲状态。
 extends RefCounted
 
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
@@ -17,10 +19,14 @@ static var _cross_relic_low_hp_rescue_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：按战锤施放计数和秒数预留震地及强制震击标记。
+## 使用：rules 读取 warhammer_base/warhammer_quake_slam_every_n_casts/warhammer_forced_shock_every_n_seconds；context 携带 skill_instance；写入 warhammer_quake_slam_active/warhammer_forced_shock_active/warhammer_forced_shock_next_at 元数据；需由仍存活的宿主创建并调度。
 func _prepare_warhammer_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_base"):
@@ -43,6 +49,8 @@ func _prepare_warhammer_cast(rules: Dictionary, context: Dictionary) -> void:
 			skill_instance.set_meta("warhammer_forced_shock_next_at", now_seconds + maxf(float(shock_rule.get("interval", 8.0)), 0.0))
 
 
+## 作用：按圣盾规则创建盾值、持续时间及脉冲元数据，并同步玩家接触减伤。
+## 使用：rules 读取 holy_shield_base；context 携带 caster/skill_instance；写入 holy_shield_active/holy_shield_value/holy_shield_remaining 元数据；需由仍存活的宿主创建并调度。
 func _deploy_holy_shield(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("holy_shield_base"):
@@ -67,6 +75,8 @@ func _deploy_holy_shield(rules: Dictionary, context: Dictionary) -> void:
 	host._apply_holy_shield_player_meta(caster, rules, now_seconds + duration)
 
 
+## 作用：推进圣盾有效期与脉冲计数，按规则执行脉冲或到期处理。
+## 使用：rules 读取 holy_shield_base；context 携带 caster/skill_instance；写入 holy_shield_active/holy_shield_pulse_count/holy_shield_next_pulse_at 元数据；需由仍存活的宿主创建并调度。
 func _update_holy_shield(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("holy_shield_base"):
@@ -94,6 +104,8 @@ func _update_holy_shield(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_holy_shield_pulse(rules, context, pulse_count)
 
 
+## 作用：合并基础圣盾与脉冲间隔规则，计算下一次脉冲间隔。
+## 使用：rules 读取 holy_shield_base/holy_pulse_interval；需由仍存活的宿主创建并调度。
 func _holy_shield_pulse_interval(rules: Dictionary) -> float:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var base: Dictionary = host._get_dictionary(rules.get("holy_shield_base", {}))
@@ -104,6 +116,8 @@ func _holy_shield_pulse_interval(rules: Dictionary) -> float:
 	return interval
 
 
+## 作用：将圣盾接触减伤及有效截止时间同步到玩家元数据。
+## 使用：caster 为施法者节点；rules 读取 holy_shield_contact_damage_reduction；写入 holy_shield_contact_reduction_until/holy_shield_contact_damage_taken_multiplier_add 元数据；需由仍存活的宿主创建并调度。
 func _apply_holy_shield_player_meta(caster: Node, rules: Dictionary, until_time: float) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if caster == null or not rules.has("holy_shield_contact_damage_reduction"):
@@ -113,6 +127,8 @@ func _apply_holy_shield_player_meta(caster: Node, rules: Dictionary, until_time:
 	caster.set_meta("holy_shield_contact_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.15)))
 
 
+## 作用：清空玩家圣盾接触减伤值和有效时间。
+## 使用：caster 为施法者节点；写入 holy_shield_contact_reduction_until/holy_shield_contact_damage_taken_multiplier_add 元数据；需由仍存活的宿主创建并调度。
 func _clear_holy_shield_player_meta(caster: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if caster == null:
@@ -121,6 +137,8 @@ func _clear_holy_shield_player_meta(caster: Node) -> void:
 	caster.set_meta("holy_shield_contact_damage_taken_multiplier_add", 0.0)
 
 
+## 作用：按圣印调整规则补充状态层数与时长参数。
+## 使用：params 读取 duration；context 为施放或命中上下文；会原地更新 params.duration；需由仍存活的宿主创建并调度。
 func _get_holy_mark_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -131,6 +149,8 @@ func _get_holy_mark_status_params(params: Dictionary, context: Dictionary) -> Di
 	return params
 
 
+## 作用：目标带圣印且伤害符合圣系条件时修改伤害包易伤。
+## 使用：packet 为待修饰伤害包视图；rules 读取 holy_mark_holy_vulnerability；target 为本次命中目标；会原地更新 packet.vulnerability_total；需由仍存活的宿主创建并调度。
 func _apply_holy_mark_holy_vulnerability(packet: Dictionary, rules: Dictionary, target: Node, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("holy_mark_holy_vulnerability") or target == null or packet_object == null:
@@ -143,6 +163,8 @@ func _apply_holy_mark_holy_vulnerability(packet: Dictionary, rules: Dictionary, 
 	packet["vulnerability_total"] = float(packet.get("vulnerability_total", 0.0)) + float(rule.get("holy_damage_taken_multiplier_add", 0.08))
 
 
+## 作用：目标处于战锤眩晕条件时应用承伤加成。
+## 使用：packet 为待修饰伤害包视图；rules 读取 warhammer_stun_target_damage_taken；target 为本次命中目标；会原地更新 packet.vulnerability_total；需由仍存活的宿主创建并调度。
 func _apply_warhammer_stun_target_damage_taken(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_stun_target_damage_taken") or target == null:
@@ -153,6 +175,8 @@ func _apply_warhammer_stun_target_damage_taken(packet: Dictionary, rules: Dictio
 	packet["vulnerability_total"] = float(packet.get("vulnerability_total", 0.0)) + float(rule.get("primary_attack_damage_taken_multiplier_add", 0.15))
 
 
+## 作用：根据目标持续伤害或杂质状态应用十字领域直接伤害收益。
+## 使用：packet 为待修饰伤害包视图；rules 读取 cross_relic_dot_target_damage_bonus/cross_relic_purify_impurity；target 为本次命中目标；会原地更新 packet.direct_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_dot_target_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_dot_target_damage_bonus") and not rules.has("cross_relic_purify_impurity"):
@@ -172,6 +196,8 @@ func _apply_cross_relic_dot_target_damage_bonus(packet: Dictionary, rules: Dicti
 			return
 
 
+## 作用：十字领域命中 tick 时转入杂质施加规则。
+## 使用：rules 读取 cross_relic_base；context 携带 source_id；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_on_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_base"):
@@ -182,6 +208,8 @@ func _apply_cross_relic_on_field_tick(rules: Dictionary, context: Dictionary) ->
 	SpecialDamageRuleHandlerScript.execute_cross_relic_field_tick(rules, context)
 
 
+## 作用：按十字领域杂质规则给命中目标施加状态。
+## 使用：rules 读取 cross_relic_impurity_on_field_tick；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_impurity_on_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_impurity_on_field_tick"):
@@ -197,6 +225,8 @@ func _apply_cross_relic_impurity_on_field_tick(rules: Dictionary, context: Dicti
 	})
 
 
+## 作用：在战锤命中时依次处理审判、击退、眩晕或韧性及审判冲击。
+## 使用：rules 读取 warhammer_base；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_warhammer_on_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_base"):
@@ -213,6 +243,8 @@ func _apply_warhammer_on_hit(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_warhammer_boss_low_hp_shockwave(rules, context)
 
 
+## 作用：在强敌命中且同来源冷却允许时累积审判状态。
+## 使用：rules 读取 judgment_on_strong_hit；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_warhammer_judgment_status(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("judgment_on_strong_hit") or target == null or not target.has_method("apply_status"):
@@ -231,6 +263,8 @@ func _apply_warhammer_judgment_status(rules: Dictionary, context: Dictionary, ta
 	})
 
 
+## 作用：按战锤基础值与击退倍率对命中目标执行击退。
+## 使用：rules 读取 warhammer_base/warhammer_knockback_multiplier；context 携带 source/caster；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_warhammer_knockback(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var target_2d: Node2D = target as Node2D
@@ -251,6 +285,8 @@ func _apply_warhammer_knockback(rules: Dictionary, context: Dictionary, target: 
 		target_2d.global_position += direction.normalized() * force
 
 
+## 作用：按目标类型施加战锤眩晕或 Boss 韧性效果，并消费强制震击标记。
+## 使用：rules 读取 warhammer_stun_on_hit/warhammer_forced_shock_every_n_seconds；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_warhammer_stun_or_poise(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var forced: bool = host._consume_warhammer_forced_shock(context)
@@ -279,6 +315,8 @@ func _apply_warhammer_stun_or_poise(rules: Dictionary, context: Dictionary, targ
 	})
 
 
+## 作用：按审判层数与冷却触发审判冲击，并检查 Boss 韧性追加收益。
+## 使用：rules 读取 warhammer_judgement_shock；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_warhammer_judgement_shock(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_judgement_shock") or target == null or not target.has_method("get_status_stack"):
@@ -297,6 +335,8 @@ func _apply_warhammer_judgement_shock(rules: Dictionary, context: Dictionary, ta
 	host._apply_warhammer_boss_poise_judgement_bonus(rules, context, target)
 
 
+## 作用：仅对新的 Boss 韧性破坏计数触发审判加成，避免重复消费。
+## 使用：rules 读取 warhammer_boss_poise_judgement_bonus；context 为施放或命中上下文；target 为本次命中目标；写入 warhammer_poise_judgement_consumed_count 元数据；需由仍存活的宿主创建并调度。
 func _apply_warhammer_boss_poise_judgement_bonus(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_boss_poise_judgement_bonus") or not host._is_boss(target):
@@ -317,6 +357,8 @@ func _apply_warhammer_boss_poise_judgement_bonus(rules: Dictionary, context: Dic
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.warhammer_judgement_shock_intents(rules, context, maxi(int(rule.get("amount", 34)), 0), "warhammer_boss_poise_judgement_bonus"))
 
 
+## 作用：按战锤来源身份限制同一来源重复处理。
+## 使用：context 携带 skill_instance/source_instance_id/source_key/source_id；需由仍存活的宿主创建并调度；返回布尔判断或执行是否成功。
 func _warhammer_source_once(context: Dictionary, source_namespace: String) -> bool:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
@@ -337,6 +379,8 @@ func _warhammer_source_once(context: Dictionary, source_namespace: String) -> bo
 	return true
 
 
+## 作用：读取并清除技能预留强制震击标记，返回本次是否强化。
+## 使用：context 携带 skill_instance；写入 warhammer_forced_shock_active 元数据；需由仍存活的宿主创建并调度；返回布尔判断或执行是否成功。
 func _consume_warhammer_forced_shock(context: Dictionary) -> bool:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
@@ -346,6 +390,8 @@ func _consume_warhammer_forced_shock(context: Dictionary) -> bool:
 	return true
 
 
+## 作用：确定玩家是否站在十字领域内，更新治疗、减伤、补盾及低血救援。
+## 使用：rules 读取 cross_relic_base；context 携带 player/caster；写入 cross_relic_field_reduction_until/cross_relic_inside_field_since 元数据；需由仍存活的宿主创建并调度。
 func _update_cross_relic_field(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_base"):
@@ -369,6 +415,8 @@ func _update_cross_relic_field(rules: Dictionary, context: Dictionary) -> void:
 	host._apply_cross_relic_low_hp_rescue(rules, player, now_seconds)
 
 
+## 作用：按领域治疗与庇护规则的间隔恢复玩家生命。
+## 使用：rules 读取 cross_relic_field_heal_upgrade/cross_relic_shelter_upgrade；context 携带 skill_instance；player 为玩家节点；写入 cross_relic_next_heal_at 元数据；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_field_heal(rules: Dictionary, context: Dictionary, player: Node, now_seconds: float, base: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
@@ -392,6 +440,8 @@ func _apply_cross_relic_field_heal(rules: Dictionary, context: Dictionary, playe
 	host._heal_player(player, heal_amount)
 
 
+## 作用：刷新玩家领域承伤修正及其短时有效截止时间。
+## 使用：rules 读取 cross_relic_field_damage_reduction；player 为玩家节点；now_seconds 为当前单调计时秒数；写入 cross_relic_field_reduction_until/cross_relic_field_damage_taken_multiplier_add 元数据；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_field_damage_reduction(rules: Dictionary, player: Node, now_seconds: float) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_field_damage_reduction"):
@@ -401,6 +451,8 @@ func _apply_cross_relic_field_damage_reduction(rules: Dictionary, player: Node, 
 	player.set_meta("cross_relic_field_damage_taken_multiplier_add", float(rule.get("damage_taken_multiplier_add", -0.08)))
 
 
+## 作用：在领域内按规则冷却补充十字护盾。
+## 使用：rules 读取 cross_relic_periodic_shield；player 为玩家节点；now_seconds 为当前单调计时秒数；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_periodic_shield(rules: Dictionary, player: Node, now_seconds: float) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_periodic_shield"):
@@ -412,6 +464,8 @@ func _apply_cross_relic_periodic_shield(rules: Dictionary, player: Node, now_sec
 	host._grant_cross_relic_shield(player, int(rule.get("shield_value", 5)), rules)
 
 
+## 作用：玩家在领域内持续站立达门槛后，按冷却授予十字护盾。
+## 使用：rules 读取 cross_relic_stand_shield；player 为玩家节点；now_seconds 为当前单调计时秒数；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_stand_shield(rules: Dictionary, player: Node, now_seconds: float) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_stand_shield"):
@@ -426,6 +480,8 @@ func _apply_cross_relic_stand_shield(rules: Dictionary, player: Node, now_second
 	host._grant_cross_relic_shield(player, int(rule.get("shield_value", 12)), rules)
 
 
+## 作用：领域内玩家满足低血条件且冷却允许时恢复生命并授予护盾。
+## 使用：rules 读取 cross_relic_low_hp_rescue；player 为玩家节点；now_seconds 为当前单调计时秒数；需由仍存活的宿主创建并调度。
 func _apply_cross_relic_low_hp_rescue(rules: Dictionary, player: Node, now_seconds: float) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("cross_relic_low_hp_rescue"):
@@ -440,6 +496,8 @@ func _apply_cross_relic_low_hp_rescue(rules: Dictionary, player: Node, now_secon
 	host._grant_cross_relic_shield(player, int(rule.get("shield_value", 12)), rules)
 
 
+## 作用：查找当前包含玩家位置的有效十字领域对象。
+## 使用：player 为玩家节点；需由仍存活的宿主创建并调度；无法解析或创建时返回 null。
 func _find_cross_relic_field_containing_player(player: Node2D) -> Node2D:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var tree: SceneTree = player.get_tree()
@@ -455,6 +513,8 @@ func _find_cross_relic_field_containing_player(player: Node2D) -> Node2D:
 	return null
 
 
+## 作用：结合基础领域和庇护规则增加玩家十字护盾点数。
+## 使用：player 为玩家节点；amount 为本次伤害或动作数值；rules 读取 cross_relic_base/cross_relic_shelter_upgrade；写入 cross_relic_shield_points 元数据；需由仍存活的宿主创建并调度。
 func _grant_cross_relic_shield(player: Node, amount: int, rules: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if player == null or amount <= 0:
@@ -468,6 +528,8 @@ func _grant_cross_relic_shield(player: Node, amount: int, rules: Dictionary) -> 
 	player.set_meta("cross_relic_shield_points", mini(current + amount, maxi(cap, amount)))
 
 
+## 作用：在玩家治疗接口存在时恢复指定正数生命。
+## 使用：player 为玩家节点；amount 为本次伤害或动作数值；会发出对应变更信号；需由仍存活的宿主创建并调度。
 func _heal_player(player: Node, amount: int) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if player == null or amount <= 0:
@@ -479,6 +541,8 @@ func _heal_player(player: Node, amount: int) -> void:
 		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
 
 
+## 作用：读取玩家当前生命比例并夹紧到零至一，缺玩家视作满血。
+## 使用：player 为玩家节点；需由仍存活的宿主创建并调度。
 func _player_health_ratio(player: Node) -> float:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if player == null:

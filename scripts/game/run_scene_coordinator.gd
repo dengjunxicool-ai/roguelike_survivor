@@ -1,3 +1,6 @@
+## 文件用途：创建、重置和销毁单局主场景及地图变量、统计服务。
+## 使用方式：UIManager 提供 SceneTree、RunLoadout 等上下文调用 start_run；离局 teardown。
+
 extends RefCounted
 class_name RunSceneCoordinator
 
@@ -18,6 +21,8 @@ var _run_stats_tracker: Node
 ## - context: Run setup values, including tree, scene_parent, map_id, run_loadout, choice_modal, and stat_event_callable.
 ## Returns:
 ## - Dictionary with resolved map_id, map_name, map_data, and run_stats_tracker.
+## 作用：验证 RunLoadout，创建主场景、统计与地图变量并重置玩家和生成器。
+## 使用：context 需提供 tree/run_loadout，可含 scene_parent/map_id/debug/choice_modal/stat_event_callable；返回实际地图与统计服务。
 func start_run(context: Dictionary) -> Dictionary:
 	var tree: SceneTree = context.get("tree", null) as SceneTree
 	var scene_parent: Node = context.get("scene_parent", null) as Node
@@ -59,6 +64,8 @@ func start_run(context: Dictionary) -> Dictionary:
 ## - context: Run setup values that must contain a RunLoadout.
 ## Returns:
 ## - Valid RunLoadout when resolvable, otherwise null.
+## 作用：解析单局开局配置，供当前模块后续逻辑使用。
+## 使用：本文件由 start_run 调用；输入 context（上下文）；返回 RefCounted 对象/值。
 func _resolve_run_loadout(context: Dictionary) -> RefCounted:
 	var loadout: RefCounted = context.get("run_loadout", null) as RefCounted
 	if loadout != null and bool(loadout.call("is_valid")):
@@ -70,6 +77,8 @@ func _resolve_run_loadout(context: Dictionary) -> RefCounted:
 ## - tree: Scene tree whose transient combat nodes should be cleared.
 ## Returns:
 ## - Nothing.
+## 作用：清除瞬时节点并释放地图变量、统计和主运行场景。
+## 使用：tree 为当前场景树；同时清空本协调器持有的引用。
 func teardown(tree: SceneTree) -> void:
 	clear_runtime_nodes(tree)
 	if _map_variable_runtime != null and is_instance_valid(_map_variable_runtime):
@@ -87,6 +96,8 @@ func teardown(tree: SceneTree) -> void:
 ## - tree: Scene tree used as fallback when the active run scene has not been created.
 ## Returns:
 ## - Active run scene when available, otherwise the tree current_scene.
+## 作用：获取单局场景父节点，供当前模块后续逻辑使用。
+## 使用：本文件由 start_run 调用；输入 tree（场景树）；返回 Node 对象/值。
 func get_run_scene_parent(tree: SceneTree) -> Node:
 	if _active_run_scene != null and is_instance_valid(_active_run_scene):
 		return _active_run_scene
@@ -97,6 +108,8 @@ func get_run_scene_parent(tree: SceneTree) -> Node:
 ## - map_id: Raw map id value from UI or config.
 ## Returns:
 ## - Canonical map id.
+## 作用：解析地图ID，供当前模块后续逻辑使用。
+## 使用：本文件由 start_run 调用；输入 map_id（地图ID）；返回 StringName 文本/标识。
 func resolve_map_id(map_id: Variant) -> StringName:
 	return MapRuntimeScript.resolve_map_id(map_id)
 
@@ -105,6 +118,8 @@ func resolve_map_id(map_id: Variant) -> StringName:
 ## - map_data: Map dictionary from GameData.
 ## Returns:
 ## - Background texture path for the map.
+## 作用：获取背景路径，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；输入 map_data（地图数据）；返回 String 文本/标识。
 func get_background_path(map_data: Dictionary) -> String:
 	return MapRuntimeScript.get_background_path(map_data)
 
@@ -113,6 +128,8 @@ func get_background_path(map_data: Dictionary) -> String:
 ## - tree: Scene tree whose transient runtime nodes should be removed.
 ## Returns:
 ## - Nothing.
+## 作用：清除运行时节点组。
+## 使用：本文件由 start_run、teardown 调用；输入 tree（场景树）。
 func clear_runtime_nodes(tree: SceneTree) -> void:
 	if tree == null:
 		return
@@ -125,6 +142,8 @@ func clear_runtime_nodes(tree: SceneTree) -> void:
 ## - node: Transient runtime node being removed while changing run state.
 ## Returns:
 ## - Nothing.
+## 作用：回收或释放运行时节点；具体处理委托给 node.despawn_or_free。
+## 使用：本文件由 clear_runtime_nodes 调用；输入 node（节点）。
 func _despawn_or_free_runtime_node(node: Node) -> void:
 	if node == null or not is_instance_valid(node):
 		return
@@ -139,6 +158,8 @@ func _despawn_or_free_runtime_node(node: Node) -> void:
 ## - scene_parent: Preferred parent for the run scene.
 ## Returns:
 ## - Nothing.
+## 作用：确保单局场景。
+## 使用：本文件由 start_run 调用；输入 tree（场景树）、scene_parent（场景父节点）。
 func _ensure_run_scene(tree: SceneTree, scene_parent: Node) -> void:
 	if _active_run_scene != null and is_instance_valid(_active_run_scene):
 		return
@@ -156,6 +177,8 @@ func _ensure_run_scene(tree: SceneTree, scene_parent: Node) -> void:
 	parent.move_child(_active_run_scene, 0)
 
 
+## 作用：设置单局调试启用。
+## 使用：本文件由 start_run 调用；输入 enabled（启用）。
 func _set_run_debug_enabled(enabled: bool) -> void:
 	if _active_run_scene == null or not is_instance_valid(_active_run_scene):
 		return
@@ -167,6 +190,8 @@ func _set_run_debug_enabled(enabled: bool) -> void:
 ## - parent: Node that owns map runtime helpers.
 ## Returns:
 ## - Nothing.
+## 作用：初始化地图变量运行时。
+## 使用：本文件由 start_run 调用；输入 map_data（地图数据）、parent（父节点）。
 func _setup_map_variable_runtime(map_data: Dictionary, parent: Node) -> void:
 	if parent == null:
 		return
@@ -187,6 +212,8 @@ func _setup_map_variable_runtime(map_data: Dictionary, parent: Node) -> void:
 ## - event_callable: Callback for stat events.
 ## Returns:
 ## - Nothing.
+## 作用：初始化局内统计统计器。
+## 使用：本文件由 start_run 调用；输入 map_data（地图数据）、parent（父节点）、character_id（角色ID）、map_id（地图ID）、map_name（地图名称）、event_callable（事件callable）。
 func _setup_run_stats_tracker(
 	map_data: Dictionary,
 	parent: Node,
@@ -212,6 +239,8 @@ func _setup_run_stats_tracker(
 ## - choice_modal: Run choice modal controller to reset.
 ## Returns:
 ## - Nothing.
+## 作用：重置选择弹窗；具体处理委托给 choice_modal.reset_run。
+## 使用：本文件由 start_run 调用；输入 choice_modal（选择弹窗）。
 func _reset_choice_modal(choice_modal: Variant) -> void:
 	if choice_modal != null and choice_modal.has_method("reset_run"):
 		choice_modal.call("reset_run")
@@ -222,6 +251,8 @@ func _reset_choice_modal(choice_modal: Variant) -> void:
 ## - loadout: Resolved run loadout.
 ## Returns:
 ## - Nothing.
+## 作用：重置运行时来源组。
+## 使用：本文件由 start_run 调用；输入 tree（场景树）、loadout（开局配置）。
 func _reset_runtime_sources(tree: SceneTree, loadout: RefCounted) -> void:
 	if tree == null:
 		return

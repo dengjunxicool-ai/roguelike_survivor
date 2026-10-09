@@ -1,3 +1,5 @@
+## 文件用途：实现纯视觉火星导弹的追踪飞行、命中火花与可持续发射模式。
+## 使用方式：挂对应Node2D特效场景，configure设起终点，set_continuous切换自身飞行或生成子导弹；不施加伤害。
 extends Node2D
 class_name MarsSparkMissileEffect
 
@@ -25,6 +27,8 @@ var _self_scene: PackedScene
 @onready var _smoke_particles: GPUParticles2D = get_node_or_null("SmokeParticles") as GPUParticles2D
 
 
+## 作用：设置默认目标与带随机偏角速度，启动单次粒子并启用_process。
+## 使用：入树自动调用，configure可随后覆盖位置/方向。
 func _ready() -> void:
 	_target_position = global_position + Vector2.RIGHT * 220.0
 	_velocity = Vector2.RIGHT.rotated(randf_range(-0.28, 0.28)) * speed
@@ -32,6 +36,8 @@ func _ready() -> void:
 	set_process(true)
 
 
+## 作用：设世界起点和目标，初始化非零速度/朝向后切换持续模式。
+## 使用：continuous=false表示本节点飞行，起终点相同用随机回退方向。
 func configure(origin: Vector2, target: Vector2, continuous: bool = false) -> void:
 	global_position = origin
 	_target_position = target
@@ -43,6 +49,8 @@ func configure(origin: Vector2, target: Vector2, continuous: bool = false) -> vo
 	set_continuous(continuous)
 
 
+## 作用：重置年龄和发射计时；持续模式停自身粒子并立即发子导弹。
+## 使用：false重新启动自身粒子，不创建发射器节点。
 func set_continuous(enabled: bool) -> void:
 	_continuous = enabled
 	_age = 0.0
@@ -54,6 +62,8 @@ func set_continuous(enabled: bool) -> void:
 		_start_single_emission()
 
 
+## 作用：推进年龄并按模式分派持续发射或单导弹更新。
+## 使用：delta为帧秒数。
 func _process(delta: float) -> void:
 	_age += delta
 	if _continuous:
@@ -62,6 +72,8 @@ func _process(delta: float) -> void:
 		_process_missile(delta)
 
 
+## 作用：按fire_interval生成子导弹，到continuous_duration结束释放发射节点。
+## 使用：计时到期每帧最多发一个，不补积压次数。
 func _process_continuous(delta: float) -> void:
 	_fire_timer -= delta
 	if _fire_timer <= 0.0:
@@ -71,6 +83,8 @@ func _process_continuous(delta: float) -> void:
 		queue_free()
 
 
+## 作用：选最近目标并平滑转向、移动和旋转，接近目标时触发火花，到寿命结束释放。
+## 使用：此路径只驱动视觉，不检查战斗命中。
 func _process_missile(delta: float) -> void:
 	var target: Node2D = _find_nearest_enemy() if homing_enabled else null
 	if target != null:
@@ -90,6 +104,8 @@ func _process_missile(delta: float) -> void:
 		queue_free()
 
 
+## 作用：缓存并实例化自身场景作为子导弹，复制追踪参数并选择目标或扰动方向。
+## 使用：新导弹configure为非持续模式。
 func _spawn_missile() -> void:
 	if _self_scene == null:
 		_self_scene = load("res://scenes/effects/mars_spark_missile_effect.tscn") as PackedScene
@@ -109,6 +125,8 @@ func _spawn_missile() -> void:
 	missile.configure(global_position, aim, false)
 
 
+## 作用：基于当前旋转加随机小偏角返回单位发射方向。
+## 使用：用于没有目标时的视觉扩散。
 func _spawn_direction() -> Vector2:
 	var player_direction: Vector2 = Vector2.RIGHT.rotated(rotation)
 	if player_direction.length_squared() <= 0.0001:
@@ -116,6 +134,8 @@ func _spawn_direction() -> Vector2:
 	return player_direction.rotated(randf_range(-0.24, 0.24)).normalized()
 
 
+## 作用：通过目标注册表在seek_range内选最近有效节点。
+## 使用：按target_group查询，未找到返回null。
 func _find_nearest_enemy() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_squared: float = seek_range * seek_range
@@ -132,6 +152,8 @@ func _find_nearest_enemy() -> Node2D:
 	return nearest
 
 
+## 作用：重启并开启所有现有粒子发射器。
+## 使用：缺少节点跳过。
 func _start_single_emission() -> void:
 	for particles: GPUParticles2D in _get_emitters():
 		if particles == null:
@@ -140,12 +162,16 @@ func _start_single_emission() -> void:
 		particles.emitting = true
 
 
+## 作用：停止所有自身粒子发射，保留已有粒子寿命。
+## 使用：持续发射器模式使用。
 func _stop_own_particles() -> void:
 	for particles: GPUParticles2D in _get_emitters():
 		if particles != null:
 			particles.emitting = false
 
 
+## 作用：重启余烬和核心发射器后queue_free结束导弹。
+## 使用：靠近目标时调用，当前没有等待粒子播完的延迟。
 func _trigger_hit_spark() -> void:
 	if _ember_particles != null:
 		_ember_particles.restart()
@@ -154,5 +180,7 @@ func _trigger_hit_spark() -> void:
 	queue_free()
 
 
+## 作用：返回核心、尾迹、余烬和烟雾发射器引用列表。
+## 使用：成员可空，由调用方逐项检查。
 func _get_emitters() -> Array[GPUParticles2D]:
 	return [_core_particles, _trail_particles, _ember_particles, _smoke_particles]

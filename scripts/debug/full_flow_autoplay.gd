@@ -1,3 +1,5 @@
+## 文件用途：装配真实 App 启动流程并自动驱动法师在废弃地牢战斗九十秒，记录状态后短暂停留退出。
+## 使用方式：由 scenes/app/full_flow_autoplay.tscn 挂载并运行；通过 UIManager 完成标题、角色和地图入口，使用 Input 模拟移动，结束后保持八秒。
 extends Node
 
 
@@ -16,6 +18,8 @@ var _movement_phase: float = 0.0
 var _finished: bool = false
 
 
+## 作用：实例化 app_bootstrap 场景，定位 UIManager 并完成菜单流程，取得玩家后打印开局状态；缺场景或玩家退出失败。
+## 使用：由 Godot 在节点入树并完成子节点就绪后调用。
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var packed_scene: PackedScene = load("res://scenes/app/app_bootstrap.tscn") as PackedScene
@@ -48,6 +52,8 @@ func _ready() -> void:
 	_log_status(0.0)
 
 
+## 作用：按 UI 状态累计战斗时间、驱动移动和定时日志，升级或诅咒时选择选项，终局或达到时限后结束。
+## 使用：由 Godot 每处理帧调用，delta 参数以秒为单位。 入参：delta: float。
 func _process(delta: float) -> void:
 	if _finished or _ui == null:
 		return
@@ -70,6 +76,8 @@ func _process(delta: float) -> void:
 		_finish(0)
 
 
+## 作用：依次调用标题、角色选择、法师 loadout 确认与地图开局入口，等待处理和物理帧完成装配。
+## 使用：由自动开局与战斗驱动流程调用。 直接调用时须 await 等待异步流程完成。
 func _run_menu_flow() -> void:
 	await get_tree().process_frame
 	_ui.call("transition_to", "TITLE")
@@ -89,6 +97,8 @@ func _run_menu_flow() -> void:
 	await get_tree().physics_frame
 
 
+## 作用：累积移动相位，释放上一帧移动并按生存方向按下四方向输入，无方向时用旋转轨迹。
+## 使用：由自动开局与战斗驱动流程调用。 入参：delta: float。
 func _drive_player(delta: float) -> void:
 	_movement_phase += delta
 	_release_all_movement()
@@ -107,6 +117,8 @@ func _drive_player(delta: float) -> void:
 		Input.action_press("move_up")
 
 
+## 作用：合成敌人排斥、经验吸引、攻击间距与切向移动，返回归一化生存方向。
+## 使用：由自动开局与战斗驱动流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _get_survival_direction() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -160,6 +172,8 @@ func _get_survival_direction() -> Vector2:
 	return desired.normalized() if desired != Vector2.ZERO else Vector2.ZERO
 
 
+## 作用：仅在 UI 仍为指定弹窗状态时点击首个启用按钮，无选择则退回 RUNNING。
+## 使用：由自动开局与战斗驱动流程调用。 入参：state: String。
 func _choose_first_modal_option(state: String) -> void:
 	if _ui == null or String(_ui.get("current_state")) != state:
 		return
@@ -189,6 +203,8 @@ func _choose_first_modal_option(state: String) -> void:
 	_ui.call("transition_to", "RUNNING")
 
 
+## 作用：递归收集 root 下所有未禁用 Button，保持节点遍历顺序。
+## 使用：由自动开局与战斗驱动流程调用。 入参：root: Node。 返回 Array[Button]；具体值及空输入行为见作用说明。
 func _collect_enabled_buttons(root: Node) -> Array[Button]:
 	var buttons: Array[Button] = []
 	if root == null:
@@ -200,6 +216,8 @@ func _collect_enabled_buttons(root: Node) -> Array[Button]:
 	return buttons
 
 
+## 作用：取得按钮直接文本或后代 Label 文本，用竖线分隔多行供日志展示。
+## 使用：由自动开局与战斗驱动流程调用。 入参：button: Button。 返回 String；具体值及空输入行为见作用说明。
 func _describe_button(button: Button) -> String:
 	var direct_text: String = button.text.strip_edges()
 	if direct_text != "":
@@ -209,6 +227,8 @@ func _describe_button(button: Button) -> String:
 	return " | ".join(labels)
 
 
+## 作用：递归收集非空 Label 文本到 labels，换行替换成日志分隔符。
+## 使用：由自动开局与战斗驱动流程调用。 入参：root: Node, labels: Array[String]。
 func _collect_label_text(root: Node, labels: Array[String]) -> void:
 	for child: Node in root.get_children():
 		if child is Label:
@@ -218,6 +238,8 @@ func _collect_label_text(root: Node, labels: Array[String]) -> void:
 		_collect_label_text(child, labels)
 
 
+## 作用：打印指定时间点的 UI 状态、玩家血量成长、击杀和场景实体数量。
+## 使用：由自动开局与战斗驱动流程调用。 入参：time_value: float。
 func _log_status(time_value: float) -> void:
 	var player: Node = get_tree().get_first_node_in_group(&"player")
 	var enemy_count: int = get_tree().get_nodes_in_group(&"enemy").size()
@@ -245,6 +267,8 @@ func _log_status(time_value: float) -> void:
 	])
 
 
+## 作用：统计当前场景直属子节点中 owner_instance_id 匹配玩家的节点数量。
+## 使用：由自动开局与战斗驱动流程调用。 入参：player: Node。 返回 int；具体值及空输入行为见作用说明。
 func _count_player_orbit_objects(player: Node) -> int:
 	if player == null or get_tree().current_scene == null:
 		return 0
@@ -257,6 +281,8 @@ func _count_player_orbit_objects(player: Node) -> int:
 	return count
 
 
+## 作用：设置结束标记、释放输入并输出最后状态，等待八秒定时器后以 exit_code 退出。
+## 使用：从自动流程 await 调用，传入退出码；释放模拟移动，等待 POST_FINISH_HOLD_SECONDS 后终止进程。
 func _finish(exit_code: int) -> void:
 	_finished = true
 	_release_all_movement()
@@ -266,6 +292,8 @@ func _finish(exit_code: int) -> void:
 	get_tree().quit(exit_code)
 
 
+## 作用：释放四方向移动 Input 动作，避免自动流程结束后保持按键。
+## 使用：由自动开局与战斗驱动流程调用。
 func _release_all_movement() -> void:
 	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
 		Input.action_release(action)

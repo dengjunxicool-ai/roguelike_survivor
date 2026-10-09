@@ -1,3 +1,5 @@
+## 文件用途：实现面向玩家等目标组的简单圆形危险区域，按时长决定一次命中或周期伤害并支持回池。
+## 使用方式：挂Area2D危险区域场景，setup可传字典或位置参数；命中统一构造DamagePacket调用take_damage。
 extends Area2D
 class_name DamageArea
 
@@ -19,10 +21,14 @@ var _tick_timer: float = 0.0
 var _one_shot: bool = false
 
 
+## 作用：将导出area_radius应用到圆形碰撞。
+## 使用：节点入树自动调用。
 func _ready() -> void:
 	_apply_area_radius(area_radius)
 
 
+## 作用：恢复显示与处理并调用setup重建本次spawn状态。
+## 使用：params为对象完整生成参数，池复用时调用。
 func prepare_for_pool_spawn(params: Dictionary) -> void:
 	visible = true
 	set_process(true)
@@ -30,6 +36,8 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 	setup(params)
 
 
+## 作用：关闭监测和碰撞，清模板、年龄、tick与一次性标记并隐藏。
+## 使用：回池前调用，保持下次spawn状态干净。
 func prepare_for_pool_despawn() -> void:
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
@@ -43,6 +51,8 @@ func prepare_for_pool_despawn() -> void:
 	visible = false
 
 
+## 作用：有有效runtime池元数据时清理并回池，否则queue_free释放。
+## 使用：生命周期结束入口；池路径会调用prepare_for_pool_despawn。
 func despawn_or_free() -> void:
 	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
 		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
@@ -54,6 +64,8 @@ func despawn_or_free() -> void:
 	queue_free()
 
 
+## 作用：接受字典配置或分散数值参数，初始化伤害量/时长/组/范围/视觉和tick。
+## 使用：new_damage为字典时走字典入口，否则转整数伤害；duration接近tick_interval时一次性。
 func setup(
 	new_damage: Variant,
 	new_duration: float = 3.0,
@@ -84,6 +96,8 @@ func setup(
 	_apply_visual_color(visual_color)
 
 
+## 作用：解析危险区域参数与模板追踪，重置计时并启用监测。
+## 使用：params支持radius/area_radius及damage_packet模板。
 func _setup_from_dictionary(params: Dictionary) -> void:
 	damage = maxi(int(params.get("damage", damage)), 0)
 	duration = maxf(float(params.get("duration", duration)), 0.05)
@@ -103,6 +117,8 @@ func _setup_from_dictionary(params: Dictionary) -> void:
 	_apply_visual_color(_get_color(params.get("visual_color", Color(0.35, 0.95, 0.2, 0.32))))
 
 
+## 作用：给现有Sprite2D设置颜色和按area_radius缩放。
+## 使用：无sprite时无操作，不改变碰撞半径。
 func _apply_visual_color(visual_color: Color) -> void:
 	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 	if sprite != null:
@@ -110,6 +126,8 @@ func _apply_visual_color(visual_color: Color) -> void:
 		sprite.scale = Vector2.ONE * (area_radius / 64.0)
 
 
+## 作用：一次性区域当帧命中后结束，持续区域按间隔命中并在duration到期结束。
+## 使用：delta推进年龄与tick，不补偿多次积压tick。
 func _physics_process(delta: float) -> void:
 	_age += delta
 	if _one_shot:
@@ -126,6 +144,8 @@ func _physics_process(delta: float) -> void:
 		despawn_or_free()
 
 
+## 作用：遍历重叠体，对匹配目标组且支持受击的目标应用typed伤害。
+## 使用：damage非正不处理，包按每个目标补target_id。
 func _apply_damage_to_overlaps() -> void:
 	if damage <= 0:
 		return
@@ -137,6 +157,8 @@ func _apply_damage_to_overlaps() -> void:
 			body.call(&"take_damage", _get_damage_payload(body))
 
 
+## 作用：优先用Area2D重叠列表，为空时直接形状查询当前物理空间。
+## 使用：fallback最多64结果并去重，解决初始化重叠缓存尚未发布。
 func _get_overlap_bodies() -> Array[Node]:
 	var bodies: Array[Node] = []
 	for body: Node in get_overlapping_bodies():
@@ -162,10 +184,14 @@ func _get_overlap_bodies() -> Array[Node]:
 	return bodies
 
 
+## 作用：判断duration是否不超过tick_interval加0.05秒。
+## 使用：返回true时物理帧执行一次伤害即结束。
 func _is_one_shot_duration() -> bool:
 	return duration <= tick_interval + 0.05
 
 
+## 作用：构造默认场地或反应typed包，保留模板伤害量并关闭暴击/反应/玩家缩放。
+## 使用：source_type=reaction时切换反应来源和类型。
 func _get_damage_payload(target: Node) -> DamagePacket:
 	var is_reaction: bool = String(source_type) == "reaction"
 	return DamagePacketBuilderScript.from_combat_object_hit_object({
@@ -188,6 +214,8 @@ func _get_damage_payload(target: Node) -> DamagePacket:
 	})
 
 
+## 作用：将圆形碰撞半径更新为配置值。
+## 使用：仅对现有CircleShape2D生效，节点或形状不符时无操作。
 func _apply_area_radius(radius: float) -> void:
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape == null or not (collision_shape.shape is CircleShape2D):
@@ -197,6 +225,8 @@ func _apply_area_radius(radius: float) -> void:
 	circle_shape.radius = maxf(radius, 1.0)
 
 
+## 作用：deferred启用monitoring、monitorable和碰撞。
+## 使用：setup后调用，避免物理更新中直接切换。
 func _enable_area_monitoring() -> void:
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
@@ -205,6 +235,8 @@ func _enable_area_monitoring() -> void:
 		collision_shape.set_deferred("disabled", false)
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回深复制，嵌套修改不会污染输入。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -212,6 +244,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：解析Color、RGB/RGBA数组或HTML字符串，缺失返回危险区域默认绿。
+## 使用：三成员数组透明度默认1。
 func _get_color(value: Variant) -> Color:
 	if value is Color:
 		return value

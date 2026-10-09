@@ -1,3 +1,5 @@
+## 文件用途：封装严格伤害输入，分离伤害量、来源、开关、缩放和已登记扩展字段，并保留原始解析错误。
+## 使用方式：由构建器生成后传给 take_damage 或 DamageSystem.calculate；变更后仍须 validate，事件展示使用 to_dictionary。
 extends RefCounted
 class_name DamagePacket
 
@@ -22,10 +24,14 @@ var extras: Dictionary = {}
 var _input_errors: Array[String] = []
 
 
+## 作用：初始化来源、开关和缩放子对象。
+## 使用：new() 时自动调用，确保字段访问具备可用默认对象。
 func _init() -> void:
 	_ensure_parts()
 
 
+## 作用：通过字典视图复制伤害包并保留原始输入错误。
+## 使用：返回独立包供吸收、反应等后续调整；不能借克隆清除非法输入证据。
 func clone() -> DamagePacket:
 	var copy: DamagePacket = from_dictionary(to_dictionary())
 	copy._input_errors = _input_errors.duplicate()
@@ -34,12 +40,16 @@ func clone() -> DamagePacket:
 
 
 
+## 作用：创建伤害包并解析字典中的核心字段与扩展字段。
+## 使用：attacker/target 可补充来源与目标；返回包仍需校验。
 static func from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> DamagePacket:
 	var result: DamagePacket = new()
 	result.call("sync_from_dictionary", packet, attacker, target)
 	return result
 
 
+## 作用：重新解析伤害量、来源、规则默认开关和扩展字段，同时记录输入类型错误。
+## 使用：覆盖当前包并返回 self；target 优先用于目标ID，未知核心字段进入 extras。
 func sync_from_dictionary(packet: Dictionary, attacker: Node = null, target: Node = null) -> DamagePacket:
 	_input_errors = _validate_input_fields(packet)
 	extras = {}
@@ -72,11 +82,15 @@ func sync_from_dictionary(packet: Dictionary, attacker: Node = null, target: Nod
 	return self
 
 
+## 作用：判断字段是已定义核心字段或存在于扩展字典中。
+## 使用：传入 String/StringName 字段名；核心字段即使未显式输入也视为存在。
 func has_value(key: Variant) -> bool:
 	var field: String = String(key)
 	return _is_known_field(field) or extras.has(key) or extras.has(field) or extras.has(StringName(field))
 
 
+## 作用：按字段归属读取核心值、子对象或扩展字段。
+## 使用：缺失扩展返回 fallback；标签数组返回副本。
 func get_value(key: Variant, fallback: Variant = null) -> Variant:
 	_ensure_parts()
 	var field: String = String(key)
@@ -115,6 +129,8 @@ func get_value(key: Variant, fallback: Variant = null) -> Variant:
 	return fallback
 
 
+## 作用：按字段归属写入伤害量、来源、开关、缩放或扩展字段。
+## 使用：value 按目标字段转换类型，后续使用前调用 validate 检查合法性。
 func set_value(key: Variant, value: Variant) -> void:
 	_ensure_parts()
 	var field: String = String(key)
@@ -153,6 +169,8 @@ func set_value(key: Variant, value: Variant) -> void:
 			extras[field] = value
 
 
+## 作用：合并核心字段、来源、开关、缩放和扩展为事件字典视图。
+## 使用：返回深复制扩展及复制标签；用于记录和构建后续包。
 func to_dictionary() -> Dictionary:
 	_ensure_parts()
 	var result: Dictionary = extras.duplicate(true)
@@ -170,6 +188,8 @@ func to_dictionary() -> Dictionary:
 	return result
 
 
+## 作用：合并原始输入错误并校验当前伤害量、系数、深度、登记值和稳定来源ID。
+## 使用：返回错误字符串数组；非空时必须在护盾或扣血等副作用前拒绝。
 func validate() -> Array[String]:
 	_ensure_parts()
 	var errors: Array[String] = _input_errors.duplicate()
@@ -193,6 +213,8 @@ func validate() -> Array[String]:
 	return errors
 
 
+## 作用：为缺失的来源、开关和缩放对象补默认实例。
+## 使用：字段读写及校验内部调用，不修改已有子对象。
 func _ensure_parts() -> void:
 	if source_context == null:
 		source_context = DamageSourceContextScript.from_dictionary({})
@@ -202,6 +224,8 @@ func _ensure_parts() -> void:
 		scaling = DamageScalingScript.from_dictionary({})
 
 
+## 作用：识别伤害量、来源、开关和缩放的核心字段。
+## 使用：返回布尔值，用于将非核心字段分流到 extras。
 static func _is_known_field(field: String) -> bool:
 	return [
 		"raw_amount",
@@ -234,12 +258,16 @@ static func _is_known_field(field: String) -> bool:
 	].has(field)
 
 
+## 作用：读取数组配置，非数组输入返回空数组。
+## 使用：value为待检查配置；返回浅复制，嵌套成员仍可共享。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return (value as Array).duplicate()
 	return []
 
 
+## 作用：将数组内容转换为去空、去重的 StringName 列表。
+## 使用：非数组返回空列表，用于来源标签或状态等标识符集合。
 static func _string_name_array(value: Variant) -> Array[StringName]:
 	var result: Array[StringName] = []
 	if value is Array:
@@ -251,6 +279,8 @@ static func _string_name_array(value: Variant) -> Array[StringName]:
 
 
 
+## 作用：按伤害类型查询防御、抗性和易伤默认忽略规则。
+## 使用：key 为对应 ignore 字段；未识别键返回 false。
 static func _default_ignore(key: String, kind: String) -> bool:
 	match key:
 		"ignore_defense": return DamageRuleRegistry.default_ignore_defense(kind)
@@ -259,6 +289,8 @@ static func _default_ignore(key: String, kind: String) -> bool:
 	return false
 
 
+## 作用：检查原始字典必填伤害量和数值、深度、开关、数组字段类型。
+## 使用：返回解析错误列表；保留输入错误，即使后续强制类型转换也不会消失。
 static func _validate_input_fields(packet: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	if not packet.has("raw_amount"):

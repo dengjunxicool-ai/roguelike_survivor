@@ -1,3 +1,5 @@
+## 文件用途：按伤害类型防御权重及减伤上限计算固定防御抵扣。
+## 使用方式：普通伤害暴击后执行，结合目标防御快照、酸系Boss减防和反应限制。
 extends RefCounted
 class_name DamageDefenseResolver
 
@@ -10,6 +12,8 @@ const DamageTargetRuntimeModifiersScript: Script = preload("res://scripts/combat
 const DEFAULT_DEFENSE_REDUCTION_CAP: float = 0.45
 
 
+## 作用：计算防御抵扣并把结果保存为 after_defense。
+## 使用：pre_mitigation 为暴击后的浮点伤害，返回非负抵扣结果。
 static func apply_defense_stage(calculation_context: RefCounted, pre_mitigation: float) -> float:
 	var stages: Dictionary = calculation_context.get("stages")
 	var after_defense: float = apply_defense_for_context(calculation_context, pre_mitigation)
@@ -17,6 +21,8 @@ static func apply_defense_stage(calculation_context: RefCounted, pre_mitigation:
 	return after_defense
 
 
+## 作用：从目标现场防御属性与字典包计算固定抵扣。
+## 使用：忽略防御或无有效目标时原值返回；抵扣不超过包/规则规定比例。
 static func apply_defense(pre_mitigation: float, packet: Dictionary, target: Node) -> float:
 	if target == null or bool(packet.get("ignore_defense", false)):
 		return pre_mitigation
@@ -34,6 +40,8 @@ static func apply_defense(pre_mitigation: float, packet: Dictionary, target: Nod
 	return maxf(pre_mitigation - actual_def_flat, 0.0)
 
 
+## 作用：使用已解析目标快照及包字段计算防御抵扣。
+## 使用：读取酸系Boss临时减防与反应限制，返回抵扣后的浮点伤害。
 static func apply_defense_for_context(calculation_context: RefCounted, pre_mitigation: float) -> float:
 	var target: Node = calculation_context.get("target") as Node
 	if target == null or bool(calculation_context.call("packet_value", "ignore_defense", false)):
@@ -53,5 +61,7 @@ static func apply_defense_for_context(calculation_context: RefCounted, pre_mitig
 	return maxf(pre_mitigation - actual_def_flat, 0.0)
 
 
+## 作用：查询伤害类型使用的防御权重。
+## 使用：来源为 DamageRuleRegistry，零权重表示不做固定防御抵扣。
 static func defense_rate(damage_type: String) -> float:
 	return DamageRuleRegistryScript.defense_rate(damage_type)

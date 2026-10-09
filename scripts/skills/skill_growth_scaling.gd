@@ -1,3 +1,5 @@
+## 文件用途：按技能类型、等级和稀有度提供伤害、范围、时长及间隔成长系数。
+## 使用方式：数值适配器调用 apply_to_number；核心技能和 tick 数值系数为 1，选项编排器传 RNG 抽取等级上限对应稀有度。
 extends RefCounted
 class_name SkillGrowthScaling
 
@@ -21,6 +23,8 @@ const TYPE_GROWTH: Dictionary = {
 }
 
 
+## 作用：根据技能类型、等级和稀有度计算成长，core 与 tick 数值保持系数一。
+## 使用：skill_instance 为技能运行实例。
 static func stat_multiplier(skill_instance: RefCounted, stat_kind: String) -> float:
 	if skill_instance == null:
 		return 1.0
@@ -38,14 +42,20 @@ static func stat_multiplier(skill_instance: RefCounted, stat_kind: String) -> fl
 	return maxf(1.0 + per_level * float(level - 1), 0.0) * rarity
 
 
+## 作用：将传入数值乘以当前技能指定属性类别的成长系数。
+## 使用：skill_instance 为技能运行实例。
 static func apply_to_number(value: float, skill_instance: RefCounted, stat_kind: String) -> float:
 	return value * stat_multiplier(skill_instance, stat_kind)
 
 
+## 作用：从固定稀有度表取得倍率，未知稀有度按一处理。
+## 使用：rarity 为目标稀有度。
 static func rarity_multiplier(rarity: String) -> float:
 	return float(RARITY_MULTIPLIERS.get(rarity, 1.0))
 
 
+## 作用：根据技能最大等级返回可出现稀有度及其抽取权重。
+## 使用：由本文件 pick_rarity_for_max_level 调用。
 static func rarity_weight_map_for_max_level(max_level: int) -> Dictionary:
 	if max_level <= 1:
 		return {"legendary": 1.0}
@@ -54,6 +64,8 @@ static func rarity_weight_map_for_max_level(max_level: int) -> Dictionary:
 	return {"normal": 1.0, "rare": 2.0, "epic": 1.0, "legendary": 1.0}
 
 
+## 作用：使用传入随机流在最大等级对应稀有度权重中抽取一项。
+## 使用：rng 为保持本次流程顺序的随机流。
 static func pick_rarity_for_max_level(max_level: int, rng: RandomNumberGenerator) -> String:
 	var weights: Dictionary = rarity_weight_map_for_max_level(max_level)
 	var total: float = 0.0
@@ -71,10 +83,14 @@ static func pick_rarity_for_max_level(max_level: int, rng: RandomNumberGenerator
 	return String(weights.keys()[weights.size() - 1])
 
 
+## 作用：按实例技能类型查询每级成长配置。
+## 使用：skill_instance 为技能运行实例。
 static func _growth_for(skill_instance: RefCounted) -> Dictionary:
 	return TYPE_GROWTH.get(_skill_type(skill_instance), {})
 
 
+## 作用：把范围、状态时长、攻击间隔和被动 Modifier 别名映射到成长表类别。
+## 使用：由本文件 stat_multiplier 调用。
 static func _growth_key(stat_kind: String) -> String:
 	match stat_kind:
 		"area_radius", "radius", "projectile_radius", "explosion_radius", "orbit_radius":
@@ -89,10 +105,14 @@ static func _growth_key(stat_kind: String) -> String:
 			return stat_kind
 
 
+## 作用：判断冷却或攻击间隔是否采用随等级缩短的成长公式。
+## 使用：由本文件 stat_multiplier 调用。
 static func _is_reduction_stat(stat_kind: String) -> bool:
 	return stat_kind == "cooldown" or stat_kind == "attack_cooldown" or stat_kind == "attack_interval" or stat_kind == "hit_interval"
 
 
+## 作用：优先读取实例技能类型，缺失时从定义读取。
+## 使用：skill_instance 为技能运行实例。
 static func _skill_type(skill_instance: RefCounted) -> String:
 	var direct: String = _string_or(skill_instance.get("skill_type"), "")
 	if direct != "":
@@ -103,6 +123,8 @@ static func _skill_type(skill_instance: RefCounted) -> String:
 	return ""
 
 
+## 作用：读取技能定义稀有度，缺定义时使用 normal。
+## 使用：skill_instance 为技能运行实例。
 static func _definition_rarity(skill_instance: RefCounted) -> String:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition != null:
@@ -110,6 +132,8 @@ static func _definition_rarity(skill_instance: RefCounted) -> String:
 	return "normal"
 
 
+## 作用：把 Variant 转为字符串，null、空字符串和 <null>时使用默认文字。
+## 使用：fallback 为缺值备用结果。
 static func _string_or(value: Variant, fallback: String = "") -> String:
 	if value == null:
 		return fallback

@@ -1,4 +1,7 @@
-﻿extends RefCounted
+﻿## 文件用途：构建并刷新玩家、Boss、波次、经验和技能槽 HUD。
+## 使用方式：先 build(tree)，再 update(tree,state)；展示数据由 RunHudStateProvider 提供。
+
+extends RefCounted
 class_name RunHudController
 
 signal pause_requested
@@ -42,6 +45,8 @@ var _skill_slot_nodes: Array[Dictionary] = []
 var _last_layout_size: Vector2 = Vector2.ZERO
 
 
+## 作用：构建并刷新玩家、Boss、波次、经验和技能槽 HUD。
+## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；输入 tree（场景树）；返回 CanvasLayer 对象/值。
 func build(tree: SceneTree) -> CanvasLayer:
 	_tree = tree
 	_screen = CanvasLayer.new()
@@ -65,10 +70,14 @@ func build(tree: SceneTree) -> CanvasLayer:
 	return _screen
 
 
+## 作用：获取页面，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；返回 CanvasLayer 对象/值。
 func get_screen() -> CanvasLayer:
 	return _screen
 
 
+## 作用：更新布局。
+## 使用：本文件由 update 调用。
 func update_layout() -> void:
 	if not is_instance_valid(_root):
 		return
@@ -102,6 +111,8 @@ func update_layout() -> void:
 	_enforce_fixed_panel_spacing(viewport_size)
 
 
+## 作用：在 HUD 可见时刷新血量经验、时间波次、Boss、技能槽与调试信息，并适配视口变化。
+## 使用：支持 update(tree,state,...) 或 update(state,...)；state 为 HUD 字典，末尾参数提供默认波次与时间值。
 func update(first: Variant, second: Variant = null, current_wave: int = 0, wave_time_remaining: float = 0.0, run_seconds: float = 0.0) -> void:
 	if not is_instance_valid(_screen) or not _screen.visible:
 		return
@@ -126,16 +137,22 @@ func update(first: Variant, second: Variant = null, current_wave: int = 0, wave_
 	_enforce_fixed_panel_spacing(_last_layout_size)
 
 
+## 作用：设置标签。
+## 使用：本文件由 show_announcement 调用；输入 key（键）、text（文本）。
 func set_label(key: String, text: String) -> void:
 	var label: Label = _get_label_for_external_key(key)
 	if label != null:
 		label.text = text
 
 
+## 作用：显示公告。
+## 使用：供本模块调用者使用；输入 text（文本）。
 func show_announcement(text: String) -> void:
 	set_label("announcement", text)
 
 
+## 作用：构建暂停按钮并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用。
 func _build_pause_button() -> void:
 	var pause_button := Button.new()
 	pause_button.name = "PauseButton"
@@ -151,6 +168,8 @@ func _build_pause_button() -> void:
 	_register_layout(pause_button, Rect2(HUD_EDGE_MARGIN, HUD_EDGE_MARGIN, 54, 54), "top_right")
 
 
+## 作用：构建玩家状态效果并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用。
 func _build_player_status() -> void:
 	var panel := _create_panel("PlayerStatusPanel", Rect2(18, 18, 392, 118), true)
 	var avatar_frame := Control.new()
@@ -176,6 +195,8 @@ func _build_player_status() -> void:
 	_labels.status = _create_label(panel, "StatusIconRow", "-", Rect2(122, 90, 232, 22), 12, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, COLOR_MUTED)
 
 
+## 作用：构建Boss状态效果。
+## 使用：本文件由 build 调用。
 func _build_boss_status() -> void:
 	var panel := _create_panel("BossStatusPanel", Rect2(0, 14, 660, 70), true, "top_center")
 	_labels.boss_name = _create_label(panel, "BossName", "Boss", Rect2(0, 4, 660, 24), 19, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
@@ -185,6 +206,8 @@ func _build_boss_status() -> void:
 	panel.visible = false
 
 
+## 作用：构建顶部中心并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用。
 func _build_top_center() -> void:
 	var panel := _create_panel("TimerPanel", Rect2(0, 48, 126, 44), true, "top_center")
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -193,6 +216,8 @@ func _build_top_center() -> void:
 	_labels.center_warning = _create_label(_root, "CenterWarning", "", Rect2(0, 100, 360, 38), 18, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_WARN, "top_center")
 
 
+## 作用：构建技能进度条。
+## 使用：本文件由 build 调用。
 func _build_skill_bar() -> void:
 	var panel := _create_panel("SkillBar", Rect2(0, 30, 780, 112), false, "bottom_center")
 	_skill_slot_panel = panel
@@ -200,10 +225,14 @@ func _build_skill_bar() -> void:
 	_ensure_fixed_skill_slots()
 
 
+## 作用：保留 _build_exp_bar 接口，当前实现不执行操作。
+## 使用：本文件由 build 调用。
 func _build_exp_bar() -> void:
 	pass
 
 
+## 作用：创建面板并配置节点/样式所需的属性。
+## 使用：本文件由 _build_player_status、_build_boss_status、_build_top_center 调用；输入 name（名称）、rect（矩形）、strong（强化）、anchor（anchor）；返回 Panel 对象/值。
 func _create_panel(name: String, rect: Rect2, strong: bool, anchor: String = "top_left") -> Panel:
 	var panel := Panel.new()
 	panel.name = name
@@ -215,6 +244,8 @@ func _create_panel(name: String, rect: Rect2, strong: bool, anchor: String = "to
 	return panel
 
 
+## 作用：创建美术图矩形并配置节点/样式所需的属性。
+## 使用：本文件由 _build_pause_button、_build_player_status、_build_top_center 调用；输入 parent（父节点）、name（名称）、rect（矩形）、texture_path（纹理路径）；返回 TextureRect 对象/值。
 func _create_art_rect(parent: Control, name: String, rect: Rect2, texture_path: String) -> TextureRect:
 	var art := TextureRect.new()
 	art.name = name
@@ -227,6 +258,8 @@ func _create_art_rect(parent: Control, name: String, rect: Rect2, texture_path: 
 	return art
 
 
+## 作用：创建技能槽位并配置节点/样式所需的属性。
+## 使用：内部辅助入口；输入 parent（父节点）、slot_name（槽位名称）、icon_name（图标名称）、rect（矩形）、placeholder（placeholder）。
 func _create_skill_slot(parent: Control, slot_name: String, icon_name: String, rect: Rect2, placeholder: String) -> void:
 	var slot := Control.new()
 	slot.name = slot_name
@@ -242,6 +275,8 @@ func _create_skill_slot(parent: Control, slot_name: String, icon_name: String, r
 		_create_label(slot, "%sPlaceholder" % slot_name, placeholder, Rect2(0, 0, rect.size.x, rect.size.y), 13, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, Color(1, 1, 1, 0.34))
 
 
+## 作用：创建标签并配置节点/样式所需的属性。
+## 使用：本文件由 _build_player_status、_build_boss_status、_build_top_center 调用；输入 parent（父节点）、name（名称）、text（文本）、rect（矩形）、font_size（字体尺寸）、h_align（halign）、v_align（valign）、color（颜色）、anchor（anchor）；返回 Label 对象/值。
 func _create_label(parent: Control, name: String, text: String, rect: Rect2, font_size: int, h_align: HorizontalAlignment, v_align: VerticalAlignment, color: Color = COLOR_TEXT, anchor: String = "top_left") -> Label:
 	var label := Label.new()
 	label.name = name
@@ -259,6 +294,8 @@ func _create_label(parent: Control, name: String, text: String, rect: Rect2, fon
 	return label
 
 
+## 作用：创建图标矩形并配置节点/样式所需的属性。
+## 使用：本文件由 _build_player_status、_create_skill_slot 调用；输入 parent（父节点）、name（名称）、rect（矩形）；返回 TextureRect 对象/值。
 func _create_icon_rect(parent: Control, name: String, rect: Rect2) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.name = name
@@ -271,6 +308,8 @@ func _create_icon_rect(parent: Control, name: String, rect: Rect2) -> TextureRec
 	return icon
 
 
+## 作用：创建直接标签并配置节点/样式所需的属性。
+## 使用：本文件由 _create_dynamic_skill_slot 调用；输入 parent（父节点）、name（名称）、text（文本）、rect（矩形）、font_size（字体尺寸）、h_align（halign）、v_align（valign）、color（颜色）；返回 Label 对象/值。
 func _create_direct_label(parent: Control, name: String, text: String, rect: Rect2, font_size: int, h_align: HorizontalAlignment, v_align: VerticalAlignment, color: Color = COLOR_TEXT) -> Label:
 	var label := Label.new()
 	label.name = name
@@ -287,6 +326,8 @@ func _create_direct_label(parent: Control, name: String, text: String, rect: Rec
 	return label
 
 
+## 作用：创建直接纹理矩形并配置节点/样式所需的属性。
+## 使用：本文件由 _create_dynamic_skill_slot 调用；输入 parent（父节点）、name（名称）、rect（矩形）、texture_path（纹理路径）；返回 TextureRect 对象/值。
 func _create_direct_texture_rect(parent: Control, name: String, rect: Rect2, texture_path: String = "") -> TextureRect:
 	var texture_rect := TextureRect.new()
 	texture_rect.name = name
@@ -299,6 +340,8 @@ func _create_direct_texture_rect(parent: Control, name: String, rect: Rect2, tex
 	return texture_rect
 
 
+## 作用：创建进度进度条并配置节点/样式所需的属性。
+## 使用：本文件由 _build_player_status、_build_boss_status 调用；输入 parent（父节点）、name（名称）、rect（矩形）、color（颜色）、anchor（anchor）、variant（变体）；返回 TextureProgressBar 对象/值。
 func _create_progress_bar(parent: Control, name: String, rect: Rect2, color: Color, anchor: String = "top_left", variant: String = "default") -> TextureProgressBar:
 	var bar := TextureProgressBar.new()
 	bar.name = name
@@ -318,10 +361,14 @@ func _create_progress_bar(parent: Control, name: String, rect: Rect2, color: Col
 	return bar
 
 
+## 作用：登记布局。
+## 使用：本文件由 _build_pause_button、_build_player_status、_create_panel 调用；输入 control（控件）、rect（矩形）、anchor（anchor）。
 func _register_layout(control: Control, rect: Rect2, anchor: String = "top_left") -> void:
 	_layout_items.append({"control": control, "rect": rect, "anchor": anchor})
 
 
+## 作用：应用布局矩形。
+## 使用：本文件由 update_layout 调用；输入 control（控件）、rect（矩形）、anchor（anchor）、viewport_size（视口尺寸）、layout_scale（布局缩放）。
 func _apply_layout_rect(control: Control, rect: Rect2, anchor: String, viewport_size: Vector2, layout_scale: float = 1.0) -> void:
 	# Scale only root groups; descendants retain their design-space geometry.
 	control.scale = Vector2.ONE * layout_scale
@@ -350,6 +397,8 @@ func _apply_layout_rect(control: Control, rect: Rect2, anchor: String, viewport_
 	control.custom_minimum_size = rect.size
 
 
+## 作用：强制固定面板间距。
+## 使用：本文件由 update_layout、update 调用；输入 viewport_size（视口尺寸）。
 func _enforce_fixed_panel_spacing(viewport_size: Vector2) -> void:
 	var boss_panel := _get_panel("BossStatusPanel")
 	var timer_panel := _get_panel("TimerPanel")
@@ -365,10 +414,14 @@ func _enforce_fixed_panel_spacing(viewport_size: Vector2) -> void:
 	_place_below(warning_label, timer_panel if is_instance_valid(timer_panel) else timer_label, HUD_CENTER_GAP)
 
 
+## 作用：获取面板，供当前模块后续逻辑使用。
+## 使用：本文件由 _enforce_fixed_panel_spacing 调用；输入 name（名称）；返回 Control 对象/值。
 func _get_panel(name: String) -> Control:
 	return _panels.get(name, null) as Control
 
 
+## 作用：获取标签控件，供当前模块后续逻辑使用。
+## 使用：本文件由 _enforce_fixed_panel_spacing 调用；输入 primary_key（主要键）、fallback_key（回退键）；返回 Control 对象/值。
 func _get_label_control(primary_key: String, fallback_key: String = "") -> Control:
 	var control := _labels.get(primary_key, null) as Control
 	if control == null and fallback_key != "":
@@ -376,10 +429,14 @@ func _get_label_control(primary_key: String, fallback_key: String = "") -> Contr
 	return control
 
 
+## 作用：判断可见控件，返回布尔判断结果。
+## 使用：本文件由 _enforce_fixed_panel_spacing 调用；输入 control（控件）。
 func _is_visible_control(control: Control) -> bool:
 	return is_instance_valid(control) and control.visible
 
 
+## 作用：放置下方。
+## 使用：本文件由 _enforce_fixed_panel_spacing 调用；输入 control（控件）、previous（previous）、gap（间隔）。
 func _place_below(control: Control, previous: Control, gap: float) -> void:
 	if not is_instance_valid(control) or not is_instance_valid(previous):
 		return
@@ -391,6 +448,8 @@ func _place_below(control: Control, previous: Control, gap: float) -> void:
 	_set_control_rect(control, control_rect)
 
 
+## 作用：获取控件矩形，供当前模块后续逻辑使用。
+## 使用：本文件由 _enforce_fixed_panel_spacing、_place_below 调用；输入 control（控件）；返回 Rect2 对象/值。
 func _get_control_rect(control: Control) -> Rect2:
 	return Rect2(
 		Vector2(control.offset_left, control.offset_top),
@@ -398,6 +457,8 @@ func _get_control_rect(control: Control) -> Rect2:
 	)
 
 
+## 作用：设置控件矩形。
+## 使用：本文件由 _create_direct_label、_create_direct_texture_rect、_enforce_fixed_panel_spacing 调用；输入 control（控件）、rect（矩形）。
 func _set_control_rect(control: Control, rect: Rect2) -> void:
 	control.offset_left = rect.position.x
 	control.offset_top = rect.position.y
@@ -406,10 +467,14 @@ func _set_control_rect(control: Control, rect: Rect2) -> void:
 	control.custom_minimum_size = rect.size
 
 
+## 作用：登记字体。
+## 使用：本文件由 _create_label 调用；输入 label（标签）、base_size（基础尺寸）。
 func _register_font(label: Label, base_size: int) -> void:
 	_font_items.append({"label": label, "size": base_size})
 
 
+## 作用：生成面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _build_skill_bar、_create_panel 调用；输入 fill（填充）、stroke（stroke）、radius（半径）；返回 StyleBoxFlat 对象/值。
 func _make_panel_style(fill: Color, stroke: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill
@@ -428,12 +493,16 @@ func _make_panel_style(fill: Color, stroke: Color, radius: int) -> StyleBoxFlat:
 	return style
 
 
+## 作用：生成矩形纹理。
+## 使用：本文件由 _create_progress_bar 调用；输入 color（颜色）；返回 ImageTexture 对象/值。
 func _make_rect_texture(color: Color) -> ImageTexture:
 	var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)
 	image.fill(color)
 	return ImageTexture.create_from_image(image)
 
 
+## 作用：生成进度条底图纹理。
+## 使用：本文件由 _create_progress_bar 调用；输入 size（尺寸）、_variant（变体）；返回 ImageTexture 对象/值。
 func _make_bar_under_texture(size: Vector2, _variant: String) -> ImageTexture:
 	var width: int = maxi(16, int(round(size.x)))
 	var height: int = maxi(8, int(round(size.y)))
@@ -455,6 +524,8 @@ func _make_bar_under_texture(size: Vector2, _variant: String) -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
+## 作用：生成进度条填充纹理。
+## 使用：本文件由 _create_progress_bar 调用；输入 size（尺寸）、color（颜色）、_variant（变体）；返回 ImageTexture 对象/值。
 func _make_bar_fill_texture(size: Vector2, color: Color, _variant: String) -> ImageTexture:
 	var width: int = maxi(16, int(round(size.x)))
 	var height: int = maxi(8, int(round(size.y)))
@@ -479,6 +550,8 @@ func _make_bar_fill_texture(size: Vector2, color: Color, _variant: String) -> Im
 	return ImageTexture.create_from_image(image)
 
 
+## 作用：生成进度条前景纹理。
+## 使用：本文件由 _create_progress_bar 调用；输入 size（尺寸）、_variant（变体）；返回 ImageTexture 对象/值。
 func _make_bar_over_texture(size: Vector2, _variant: String) -> ImageTexture:
 	var width: int = maxi(16, int(round(size.x)))
 	var height: int = maxi(8, int(round(size.y)))
@@ -495,10 +568,14 @@ func _make_bar_over_texture(size: Vector2, _variant: String) -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
+## 作用：判断进度条拐角镂空，返回布尔判断结果。
+## 使用：本文件由 _make_bar_under_texture、_make_bar_fill_texture、_make_bar_over_texture 调用；输入 x（x）、y（y）、width（宽度）、height（height）。
 func _is_bar_corner_cutout(x: int, y: int, width: int, height: int) -> bool:
 	return not _is_inside_bar_shape(x, y, width, height)
 
 
+## 作用：判断内部进度条形状，返回布尔判断结果。
+## 使用：本文件由 _is_bar_corner_cutout、_is_bar_outline_pixel 调用；输入 x（x）、y（y）、width（宽度）、height（height）。
 func _is_inside_bar_shape(x: int, y: int, width: int, height: int) -> bool:
 	var radius: float = maxf(5.0, float(height) * 0.45)
 	var left_center := Vector2(radius, float(height) * 0.5)
@@ -510,6 +587,8 @@ func _is_inside_bar_shape(x: int, y: int, width: int, height: int) -> bool:
 	return true
 
 
+## 作用：判断进度条描边像素，返回布尔判断结果。
+## 使用：本文件由 _make_bar_over_texture 调用；输入 x（x）、y（y）、width（宽度）、height（height）、thickness（thickness）。
 func _is_bar_outline_pixel(x: int, y: int, width: int, height: int, thickness: int) -> bool:
 	if not _is_inside_bar_shape(x, y, width, height):
 		return false
@@ -528,6 +607,8 @@ func _is_bar_outline_pixel(x: int, y: int, width: int, height: int, thickness: i
 	return false
 
 
+## 作用：更新玩家进度条组。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）。
 func _update_player_bars(run_state: Dictionary) -> void:
 	var max_health: float = maxf(1.0, float(run_state.get("max_health", 100.0)))
 	var health: float = clampf(float(run_state.get("health", max_health)), 0.0, max_health)
@@ -543,6 +624,8 @@ func _update_player_bars(run_state: Dictionary) -> void:
 	_labels.exp_number.text = "%d/%d" % [int(round(exp_value)), exp_required]
 
 
+## 作用：更新运行时标签组。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）、current_wave（当前波次）、wave_time_remaining（波次时间剩余）、run_seconds（单局秒）。
 func _update_runtime_labels(run_state: Dictionary, current_wave: int, wave_time_remaining: float, run_seconds: float) -> void:
 	var duration: float = float(run_state.get("run_duration", 0.0))
 	var remaining: float = maxf(0.0, duration - run_seconds) if duration > 0.0 else maxf(0.0, wave_time_remaining)
@@ -551,6 +634,8 @@ func _update_runtime_labels(run_state: Dictionary, current_wave: int, wave_time_
 	_labels.status.text = status_summary
 
 
+## 作用：更新Boss进度条。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）。
 func _update_boss_bar(run_state: Dictionary) -> void:
 	if not _bars.has("boss"):
 		return
@@ -571,6 +656,8 @@ func _update_boss_bar(run_state: Dictionary) -> void:
 		boss_panel.visible = has_boss
 
 
+## 作用：更新HUD视觉组。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）。
 func _update_hud_visuals(run_state: Dictionary) -> void:
 	_update_character_visual(run_state)
 	_update_starting_skill_visual(run_state)
@@ -578,6 +665,8 @@ func _update_hud_visuals(run_state: Dictionary) -> void:
 	_update_ultimate_slot_visual()
 
 
+## 作用：更新技能槽位组。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）。
 func _update_skill_slots(run_state: Dictionary) -> void:
 	_ensure_fixed_skill_slots()
 	var active_skills: Array = _get_array(run_state.get("active_skills", []))
@@ -606,6 +695,8 @@ func _update_skill_slots(run_state: Dictionary) -> void:
 		_update_skill_slot_nodes(nodes, skill)
 
 
+## 作用：更新技能槽位节点组。
+## 使用：本文件由 _update_skill_slots 调用；输入 nodes（节点组）、skill（技能）。
 func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 	var slot: Control = nodes.get("slot", null) as Control
 	if not is_instance_valid(slot):
@@ -654,6 +745,8 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 			_set_control_rect(cooldown_mask, Rect2(0.0, slot_size.y * (1.0 - progress), slot_size.x, slot_size.y * progress))
 
 
+## 作用：确保技能槽位数量。
+## 使用：内部辅助入口；输入 count（数量）。
 func _ensure_skill_slot_count(count: int) -> void:
 	if not is_instance_valid(_skill_slot_panel):
 		return
@@ -666,6 +759,8 @@ func _ensure_skill_slot_count(count: int) -> void:
 			slot.visible = index < count
 
 
+## 作用：确保固定技能槽位组。
+## 使用：本文件由 update_layout、_build_skill_bar、_update_skill_slots 调用。
 func _ensure_fixed_skill_slots() -> void:
 	if not is_instance_valid(_skill_slot_panel):
 		return
@@ -679,6 +774,8 @@ func _ensure_fixed_skill_slots() -> void:
 		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotPassive%d" % index, "P%d" % (index + 1), "passive", index))
 
 
+## 作用：创建动态技能槽位并配置节点/样式所需的属性。
+## 使用：本文件由 _ensure_skill_slot_count、_ensure_fixed_skill_slots 调用；输入 index（索引）、slot_name（槽位名称）、key_text（键文本）、kind（类型）、slot_index（槽位索引）、featured（featured）；返回字典包含 slot/frame/icon/cooldown_mask/name_label/key_label/cooldown_label/kind 等字段。
 func _create_dynamic_skill_slot(index: int, slot_name: String = "", key_text: String = "", kind: String = "active", slot_index: int = 0, featured: bool = false) -> Dictionary:
 	var slot := Control.new()
 	slot.name = slot_name if slot_name != "" else "SkillSlot%d" % index
@@ -716,6 +813,8 @@ func _create_dynamic_skill_slot(index: int, slot_name: String = "", key_text: St
 	}
 
 
+## 作用：布局技能槽位组。
+## 使用：本文件由 update_layout、_update_skill_slots 调用；输入 count（数量）。
 func _layout_skill_slots(count: int = -1) -> void:
 	if not is_instance_valid(_skill_slot_panel):
 		return
@@ -754,6 +853,8 @@ func _layout_skill_slots(count: int = -1) -> void:
 			_set_control_rect(cooldown_mask, Rect2(0, 0, slot_size, slot_size))
 
 
+## 作用：获取当前技能数量，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；返回计算或读取的数值。
 func _get_current_skill_count() -> int:
 	var count: int = 0
 	for nodes: Dictionary in _skill_slot_nodes:
@@ -763,6 +864,8 @@ func _get_current_skill_count() -> int:
 	return count
 
 
+## 作用：更新角色视觉。
+## 使用：本文件由 _update_hud_visuals 调用；输入 run_state（单局状态）。
 func _update_character_visual(run_state: Dictionary) -> void:
 	var character_id: StringName = StringName(String(run_state.get("character_id", "")))
 	var character_data: Dictionary = GameData.get_character(character_id)
@@ -773,6 +876,8 @@ func _update_character_visual(run_state: Dictionary) -> void:
 		avatar.self_modulate = Color.WHITE if texture != null else Color(0.35, 0.30, 0.45, 1.0)
 
 
+## 作用：更新起始技能视觉。
+## 使用：本文件由 _update_hud_visuals 调用；输入 run_state（单局状态）。
 func _update_starting_skill_visual(run_state: Dictionary) -> void:
 	var skill_data := _get_primary_attack_data(run_state)
 	var texture: Texture2D = _get_definition_texture(skill_data, ["icon", "texture", "background_texture"])
@@ -782,6 +887,8 @@ func _update_starting_skill_visual(run_state: Dictionary) -> void:
 		icon.self_modulate = Color.WHITE if texture != null else Color(1, 1, 1, 0.18)
 
 
+## 作用：更新主要攻击技能视觉。
+## 使用：本文件由 _update_hud_visuals 调用；输入 run_state（单局状态）。
 func _update_primary_attack_visual(run_state: Dictionary) -> void:
 	var attack_data := _get_primary_attack_data(run_state)
 	var texture: Texture2D = _get_primary_attack_texture(attack_data, run_state)
@@ -791,6 +898,8 @@ func _update_primary_attack_visual(run_state: Dictionary) -> void:
 		icon.self_modulate = Color.WHITE if texture != null else Color(1, 1, 1, 0.18)
 
 
+## 作用：更新终极槽位视觉。
+## 使用：本文件由 _update_hud_visuals 调用。
 func _update_ultimate_slot_visual() -> void:
 	var icon: TextureRect = _textures.get("skill_ultimate_icon", null) as TextureRect
 	if is_instance_valid(icon):
@@ -798,6 +907,8 @@ func _update_ultimate_slot_visual() -> void:
 		icon.self_modulate = Color(1, 1, 1, 0.18)
 
 
+## 作用：更新调试属性统计。
+## 使用：本文件由 update 调用；输入 run_state（单局状态）。
 func _update_debug_stats(run_state: Dictionary) -> void:
 	if _debug_labels.is_empty() or not OS.is_debug_build():
 		return
@@ -808,6 +919,8 @@ func _update_debug_stats(run_state: Dictionary) -> void:
 	_debug_labels.pickup_count.text = "Pickups: %d" % int(debug_stats.get("pickup_count", 0))
 
 
+## 作用：获取主要攻击技能数据，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_starting_skill_visual、_update_primary_attack_visual 调用；输入 run_state（单局状态）；返回结果字典。
 func _get_primary_attack_data(run_state: Dictionary) -> Dictionary:
 	var attack_id: StringName = StringName(String(run_state.get("main_attack", "")))
 	if attack_id != &"":
@@ -817,6 +930,8 @@ func _get_primary_attack_data(run_state: Dictionary) -> Dictionary:
 	return {}
 
 
+## 作用：获取主要攻击技能纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_primary_attack_visual 调用；输入 attack_data（攻击数据）、run_state（单局状态）；返回 Texture2D 对象/值。
 func _get_primary_attack_texture(attack_data: Dictionary, run_state: Dictionary) -> Texture2D:
 	var attack_id: String = String(attack_data.get("id", ""))
 	if attack_id == "fireball":
@@ -827,6 +942,8 @@ func _get_primary_attack_texture(attack_data: Dictionary, run_state: Dictionary)
 	return null
 
 
+## 作用：获取定义纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_character_visual、_update_starting_skill_visual、_get_primary_attack_texture 调用；输入 definition（定义）、visual_keys（视觉keys）；返回 Texture2D 对象/值。
 func _get_definition_texture(definition: Dictionary, visual_keys: Array[String]) -> Texture2D:
 	if definition.is_empty():
 		return null
@@ -844,6 +961,8 @@ func _get_definition_texture(definition: Dictionary, visual_keys: Array[String])
 	return null
 
 
+## 作用：加载纹理。
+## 使用：本文件由 _create_art_rect、_create_direct_texture_rect、_update_skill_slot_nodes 调用；输入 texture_path（纹理路径）；返回 Texture2D 对象/值。
 func _load_texture(texture_path: String) -> Texture2D:
 	if texture_path == "":
 		return null
@@ -852,29 +971,39 @@ func _load_texture(texture_path: String) -> Texture2D:
 	return load(texture_path) as Texture2D
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _update_boss_bar、_update_skill_slots、_update_debug_stats 调用；输入 value（值）。
 func _variant_to_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _update_skill_slots 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：格式化时间。
+## 使用：本文件由 _update_runtime_labels 调用；输入 seconds（秒）；返回 String 文本/标识。
 func _format_time(seconds: float) -> String:
 	var total: int = maxi(0, int(seconds))
 	return "%02d:%02d" % [int(total / 60), total % 60]
 
 
+## 作用：格式化冷却。
+## 使用：本文件由 _update_skill_slot_nodes 调用；输入 seconds（秒）；返回 String 文本/标识。
 func _format_cooldown(seconds: float) -> String:
 	if seconds >= 10.0:
 		return "%d" % int(ceilf(seconds))
 	return "%.1f" % seconds
 
 
+## 作用：获取标签对应外部键，供当前模块后续逻辑使用。
+## 使用：本文件由 set_label 调用；输入 key（键）；返回 Label 对象/值。
 func _get_label_for_external_key(key: String) -> Label:
 	var label_key: String = key
 	match key:
@@ -888,10 +1017,14 @@ func _get_label_for_external_key(key: String) -> Label:
 	return label
 
 
+## 作用：响应暂停点击并衔接对应的事件处理流程。
+## 使用：内部辅助入口。
 func _on_pause_pressed() -> void:
 	pause_requested.emit()
 
 
+## 作用：获取节点或空引用，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；输入 path（路径）；返回 Node 对象/值。
 func get_node_or_null(path: NodePath) -> Node:
 	if not is_instance_valid(_tree) or not is_instance_valid(_tree.root):
 		return null

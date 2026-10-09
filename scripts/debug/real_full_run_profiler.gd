@@ -1,3 +1,5 @@
+## 文件用途：从真实标题界面自动开局，采集帧时长、节点与状态归因、热点耗时及 AOE tick 统计，输出整局性能报告。
+## 使用方式：挂在 app_bootstrap 的 RealFullRunProfiler 节点；启动用户参数 --real-full-run-profile，可加 --survival-guard 或 --profile-force-skill=<逗号分隔ID>。写入 reports/real-full-run-profile 下四份报告并结束进程；运行前使用 E:/codex 下隔离的 APPDATA、LOCALAPPDATA、TEMP、TMP。
 extends Node
 
 
@@ -133,6 +135,8 @@ var _hot_path_windows: Array[Dictionary] = []
 var _area_effect_tick_stats: Dictionary = {}
 
 
+## 作用：仅在 --real-full-run-profile 下启用采样与自动驱动，注册根节点状态/热点/AOE 回调，创建报告目录并监听节点生命周期。
+## 使用：由 Godot 入树后调用；启动必须携带用户参数 --real-full-run-profile，--survival-guard 会补血，--profile-force-skill= 会授予指定技能。
 func _ready() -> void:
 	_enabled = OS.get_cmdline_args().has("--real-full-run-profile") or OS.get_cmdline_user_args().has("--real-full-run-profile")
 	if not _enabled:
@@ -160,6 +164,8 @@ func _ready() -> void:
 	print("[RealFullRunProfile] enabled real startup profile character=%s map=%s" % [String(CHARACTER_ID), String(MAP_ID)])
 
 
+## 作用：用真实墙钟帧时长采样，定位 UIManager 并记录状态变化，随后按 UI 状态推进流程。
+## 使用：由 Godot 每处理帧调用，delta 参数以秒为单位。 入参：_delta: float。
 func _process(_delta: float) -> void:
 	if not _enabled or _finished:
 		return
@@ -176,6 +182,8 @@ func _process(_delta: float) -> void:
 	_drive_state(state, delta_seconds)
 
 
+## 作用：按标题、角色、地图、战斗、弹窗或终局驱动自动流程，定期记录样本，满足 Boss 伤害阈值、胜负或超时时写报告并退出。
+## 使用：由已启用的整局采样流程调用。 入参：state: String, delta_seconds: float。
 func _drive_state(state: String, delta_seconds: float) -> void:
 	match state:
 		"TITLE":
@@ -227,6 +235,8 @@ func _drive_state(state: String, delta_seconds: float) -> void:
 			_release_movement()
 
 
+## 作用：查找可见开始按钮并点击一次；标题未展开时先模拟 Enter，避免重复开局。
+## 使用：由已启用的整局采样流程调用。
 func _press_start_button() -> void:
 	if _startup_actions.has("press_start"):
 		return
@@ -246,6 +256,8 @@ func _press_start_button() -> void:
 		button.emit_signal(&"pressed")
 
 
+## 作用：按 node_name 查找可见启用按钮，记录 action_name 后发射 pressed，使此启动操作至多执行一次。
+## 使用：由已启用的整局采样流程调用。 入参：node_name: String, action_name: String。
 func _press_named_button(node_name: String, action_name: String) -> void:
 	if _startup_actions.has(action_name):
 		return
@@ -256,6 +268,8 @@ func _press_named_button(node_name: String, action_name: String) -> void:
 	button.emit_signal(&"pressed")
 
 
+## 作用：收集当前弹窗可见按钮，按生存与火系偏好评分选择一项，保存选择日志；空选项退回战斗。
+## 使用：由已启用的整局采样流程调用。 入参：state: String。
 func _choose_visible_modal_option(state: String) -> void:
 	if _ui == null or String(_ui.get("current_state")) != state:
 		return
@@ -281,6 +295,8 @@ func _choose_visible_modal_option(state: String) -> void:
 	_last_modal_state = ""
 
 
+## 作用：依据按钮文本、稀有度、火系、施放/召唤、伤害和玩家血量，为升级选项计算自动选择分数。
+## 使用：由已启用的整局采样流程调用。 入参：button: Button。 返回 float；具体值及空输入行为见作用说明。
 func _score_choice_button(button: Button) -> float:
 	var text: String = _button_text(button).to_lower()
 	var score: float = 0.0
@@ -302,6 +318,8 @@ func _score_choice_button(button: Button) -> float:
 	return score
 
 
+## 作用：从引擎及用户参数解析 --profile-force-skill= 的逗号列表，去空白和重复后返回技能 ID 数组。
+## 使用：由已启用的整局采样流程调用。 返回 Array[StringName]；具体值及空输入行为见作用说明。
 func _parse_forced_profile_skill_ids() -> Array[StringName]:
 	var result: Array[StringName] = []
 	var args: Array = []
@@ -319,6 +337,8 @@ func _parse_forced_profile_skill_ids() -> Array[StringName]:
 	return result
 
 
+## 作用：对尚未处理的强制技能尝试 add_skill，记录授予前后持有状态、主攻击 ID 与耗时，不重复尝试。
+## 使用：由已启用的整局采样流程调用。
 func _apply_forced_profile_skills() -> void:
 	if _forced_profile_skill_ids.is_empty() or _player == null:
 		return
@@ -353,6 +373,8 @@ func _apply_forced_profile_skills() -> void:
 		])
 
 
+## 作用：根据生存方向模拟移动，距离敌人较近时按下 dash，每帧先释放旧输入。
+## 使用：由已启用的整局采样流程调用。 入参：delta: float。
 func _drive_player(delta: float) -> void:
 	_movement_phase += delta
 	_release_movement()
@@ -373,6 +395,8 @@ func _drive_player(delta: float) -> void:
 		Input.action_press(&"dash")
 
 
+## 作用：仅 survival-guard 开关启用时，将低于九成最大血量的玩家直接补满并记录修改标志。
+## 使用：由已启用的整局采样流程调用。
 func _apply_survival_guard() -> void:
 	if not _survival_guard_enabled or _player == null:
 		return
@@ -383,6 +407,8 @@ func _apply_survival_guard() -> void:
 		_player_health_modified = true
 
 
+## 作用：综合敌人排斥、经验吸引、边界回推和旋转趋势选择移动方向，危险时优先使用离敌脱困方向。
+## 使用：由已启用的整局采样流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _survival_direction() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -422,6 +448,8 @@ func _survival_direction() -> Vector2:
 	return desired.normalized() if desired != Vector2.ZERO else Vector2.ZERO
 
 
+## 作用：枚举十六个等角方向，选择逃生评分最高者，无玩家返回零向量。
+## 使用：由已启用的整局采样流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _best_escape_direction() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -436,6 +464,8 @@ func _best_escape_direction() -> Vector2:
 	return best_direction
 
 
+## 作用：对前进 260 像素后的敌距、人群、地图边缘和距中心代价评分，返回越高越安全的分数。
+## 使用：由已启用的整局采样流程调用。 入参：direction: Vector2。 返回 float；具体值及空输入行为见作用说明。
 func _escape_direction_score(direction: Vector2) -> float:
 	if _player == null:
 		return -INF
@@ -458,6 +488,8 @@ func _escape_direction_score(direction: Vector2) -> float:
 	return nearest_after_step - crowd_penalty * 115.0 - edge_penalty * 1100.0 + center_score
 
 
+## 作用：用微秒时钟记录有效帧时长并结算事件桶，累计慢帧计数；返回最多 0.25 秒的驱动 delta。
+## 使用：由已启用的整局采样流程调用。 返回 float；具体值及空输入行为见作用说明。
 func _record_frame_delta() -> float:
 	var now_usec: int = Time.get_ticks_usec()
 	if _last_tick_usec <= 0:
@@ -476,6 +508,8 @@ func _record_frame_delta() -> float:
 	return clampf(frame_ms / 1000.0, 0.0, 0.25) if frame_ms > 0.0 else 1.0 / 60.0
 
 
+## 作用：收集引擎对象数、帧分位、实体、状态、Boss 和玩家快照，存入样本并结算热点窗口、重置节点窗口计数。
+## 使用：由已启用的整局采样流程调用。 入参：reason: String。
 func _record_sample(reason: String) -> void:
 	var object_count: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
 	if _initial_object_count < 0:
@@ -537,6 +571,8 @@ func _record_sample(reason: String) -> void:
 	_window_start_seconds = _elapsed
 
 
+## 作用：结算最后热点窗口，覆盖写样本 JSON、归因 JSON、热点 JSON 和 Markdown 报告，打印报告路径。
+## 使用：传入终局/停止 status；覆盖 REPORT_DIR 中 latest_samples.json、latest_attribution.json、latest_hot_path.json 与 report.md，目录由 _ready 建立。
 func _write_outputs(status: String) -> void:
 	_status = status
 	_snapshot_hot_path_window("final")
@@ -663,6 +699,8 @@ func _write_outputs(status: String) -> void:
 	print("[RealFullRunProfile] report=%s" % ProjectSettings.globalize_path(REPORT_PATH))
 
 
+## 作用：首次发现 Boss 时保存初始血量，后续更新已损失血量用于停止条件。
+## 使用：由已启用的整局采样流程调用。
 func _track_boss() -> void:
 	var boss: Node2D = _boss()
 	if boss != null and not _boss_seen:
@@ -673,6 +711,8 @@ func _track_boss() -> void:
 		_boss_damage_done = maxi(_boss_start_health - int(boss.get("current_health")), 0)
 
 
+## 作用：优先读 UIManager 局时，再读生成器累计时间，均不可用时用采样器当前时间。
+## 使用：由已启用的整局采样流程调用。 返回 float；具体值及空输入行为见作用说明。
 func _runtime_elapsed_seconds() -> float:
 	if _ui != null:
 		var ui_seconds: float = float(_ui.get("_run_seconds"))
@@ -684,6 +724,8 @@ func _runtime_elapsed_seconds() -> float:
 	return _elapsed
 
 
+## 作用：返回 enemy 组中首个 enemy_rank=boss 的 Node2D，无 Boss 返回 null。
+## 使用：由已启用的整局采样流程调用。 返回 Node2D；具体值及空输入行为见作用说明。
 func _boss() -> Node2D:
 	for item: Node in get_tree().get_nodes_in_group(&"enemy"):
 		var enemy: Node2D = item as Node2D
@@ -692,10 +734,14 @@ func _boss() -> Node2D:
 	return null
 
 
+## 作用：根据 enemy_rank 元数据判断目标是否为 Boss。
+## 使用：由已启用的整局采样流程调用。 入参：enemy: Node。 返回 bool；具体值及空输入行为见作用说明。
 func _is_boss(enemy: Node) -> bool:
 	return enemy != null and String(enemy.get_meta("enemy_rank", "")) == "boss"
 
 
+## 作用：返回当前 Boss 的 ID、血量和二维位置快照，无 Boss 返回空字典。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _boss_snapshot() -> Dictionary:
 	var boss: Node2D = _boss()
 	if boss == null:
@@ -708,6 +754,8 @@ func _boss_snapshot() -> Dictionary:
 	}
 
 
+## 作用：返回玩家血量、等级与二维位置快照，无玩家返回空字典。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _player_snapshot() -> Dictionary:
 	if _player == null:
 		return {}
@@ -719,6 +767,8 @@ func _player_snapshot() -> Dictionary:
 	}
 
 
+## 作用：在玩家距地图四边 260 像素内计算向内推力，地图边界无效时返回零向量。
+## 使用：由已启用的整局采样流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _movement_bounds_push() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -743,6 +793,8 @@ func _movement_bounds_push() -> Vector2:
 	return push
 
 
+## 作用：根据玩家到地图中心的距离计算归一方向与强度，用于自动移动回中。
+## 使用：由已启用的整局采样流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _movement_center_push() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -755,6 +807,8 @@ func _movement_center_push() -> Vector2:
 	return to_center.normalized() * strength if to_center.length_squared() > 0.01 else Vector2.ZERO
 
 
+## 作用：按给定世界坐标距地图四边 190 像素安全带的超出程度求边界惩罚。
+## 使用：由已启用的整局采样流程调用。 入参：position: Vector2。 返回 float；具体值及空输入行为见作用说明。
 func _bounds_penalty(position: Vector2) -> float:
 	if _player == null:
 		return 0.0
@@ -774,6 +828,8 @@ func _bounds_penalty(position: Vector2) -> float:
 	return penalty
 
 
+## 作用：返回玩家有效运动边界的中心，缺玩家或边界无效时返回零向量。
+## 使用：由已启用的整局采样流程调用。 返回 Vector2；具体值及空输入行为见作用说明。
 func _movement_bounds_center() -> Vector2:
 	if _player == null:
 		return Vector2.ZERO
@@ -781,6 +837,8 @@ func _movement_bounds_center() -> Vector2:
 	return bounds.get_center() if bounds.size.x > 0.0 and bounds.size.y > 0.0 else Vector2.ZERO
 
 
+## 作用：计算玩家到 enemy 组实体的最短距离，无玩家或无敌人时为 INF。
+## 使用：由已启用的整局采样流程调用。 返回 float；具体值及空输入行为见作用说明。
 func _nearest_enemy_distance() -> float:
 	if _player == null:
 		return INF
@@ -792,12 +850,16 @@ func _nearest_enemy_distance() -> float:
 	return nearest
 
 
+## 作用：将当前血量除最大血量约束到零至一，缺玩家时返回一。
+## 使用：由已启用的整局采样流程调用。 返回 float；具体值及空输入行为见作用说明。
 func _hp_percent() -> float:
 	if _player == null:
 		return 1.0
 	return clampf(float(_player.get("current_health")) / maxf(float(_player.get("max_health")), 1.0), 0.0, 1.0)
 
 
+## 作用：遍历整棵场景树，统计脚本资源路径以 script_name 结尾的节点数。
+## 使用：由已启用的整局采样流程调用。 入参：script_name: String。 返回 int；具体值及空输入行为见作用说明。
 func _count_nodes_by_script(script_name: String) -> int:
 	var count: int = 0
 	var stack: Array[Node] = [get_tree().root]
@@ -811,6 +873,8 @@ func _count_nodes_by_script(script_name: String) -> int:
 	return count
 
 
+## 作用：遍历具有 get_status_snapshot 的节点，累计状态快照数组大小作为状态实例计数。
+## 使用：由已启用的整局采样流程调用。 返回 int；具体值及空输入行为见作用说明。
 func _count_status_effect_instances() -> int:
 	var count: int = 0
 	var stack: Array[Node] = [get_tree().root]
@@ -825,6 +889,8 @@ func _count_status_effect_instances() -> int:
 	return count
 
 
+## 作用：遍历场景树统计调试面板脚本节点和可见数量，返回存在、可见和开启标志。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _debug_panel_snapshot() -> Dictionary:
 	var count: int = 0
 	var visible_count: int = 0
@@ -841,6 +907,8 @@ func _debug_panel_snapshot() -> Dictionary:
 	return {"present": count > 0, "count": count, "visible_count": visible_count, "enabled": visible_count > 0}
 
 
+## 作用：为每个尚未连接的 run_stats_tracker 监听 event_recorded，并记录实例 ID 避免重复连接。
+## 使用：由已启用的整局采样流程调用。
 func _connect_run_stats_tracker() -> void:
 	for tracker: Node in get_tree().get_nodes_in_group(&"run_stats_tracker"):
 		var instance_id: int = int(tracker.get_instance_id())
@@ -851,6 +919,8 @@ func _connect_run_stats_tracker() -> void:
 			_connected_tracker_ids[instance_id] = true
 
 
+## 作用：统计运行事件，并把 DOT 伤害、元素反应及特定状态施加映射到逐帧状态 tick/反应计数。
+## 使用：由已连接的信号或采样 Callable 触发。 入参：event_name: StringName, payload: Dictionary。
 func _on_run_event_recorded(event_name: StringName, payload: Dictionary) -> void:
 	var event_key: String = String(event_name)
 	_increment_dict(_run_event_counts, event_key, 1)
@@ -868,6 +938,8 @@ func _on_run_event_recorded(event_name: StringName, payload: Dictionary) -> void
 			_increment_dict(_status_tick_observation, "status_reaction_events", 1)
 
 
+## 作用：过滤采样专用状态事件，累计运行事件次数后交给状态事件归因逻辑。
+## 使用：由已连接的信号或采样 Callable 触发。 入参：event_name: StringName, payload: Dictionary。
 func _on_profiler_status_event(event_name: StringName, payload: Dictionary) -> void:
 	var event_key: String = String(event_name)
 	if not _is_profiler_status_event(event_key):
@@ -876,6 +948,8 @@ func _on_profiler_status_event(event_name: StringName, payload: Dictionary) -> v
 	_record_profiler_status_event(event_key, payload)
 
 
+## 作用：判断事件名是否属于状态到期、tick、特效生成/刷新或反应触发的采样白名单。
+## 使用：由已启用的整局采样流程调用。 入参：event_key: String。 返回 bool；具体值及空输入行为见作用说明。
 func _is_profiler_status_event(event_key: String) -> bool:
 	return [
 		"status_tick_due",
@@ -887,6 +961,8 @@ func _is_profiler_status_event(event_key: String) -> bool:
 	].has(event_key)
 
 
+## 作用：累积采样状态事件次数、来源归因和逐帧指标，tick_applied 与反应触发额外计入诊断统计。
+## 使用：由已启用的整局采样流程调用。 入参：event_key: String, _payload: Dictionary。
 func _record_profiler_status_event(event_key: String, _payload: Dictionary) -> void:
 	_increment_dict(_status_tick_observation, event_key, 1)
 	_record_status_source_attribution(event_key, _payload)
@@ -900,6 +976,8 @@ func _record_profiler_status_event(event_key: String, _payload: Dictionary) -> v
 			_increment_dict(_status_tick_observation, "status_reaction_events", 1)
 
 
+## 作用：按状态、来源技能和来源 ID 更新全局及当前帧的状态事件归因计数。
+## 使用：由已启用的整局采样流程调用。 入参：event_key: String, payload: Dictionary。
 func _record_status_source_attribution(event_key: String, payload: Dictionary) -> void:
 	var status_id: String = _attribution_value(payload.get("status_id", ""))
 	var source_skill_id: String = _attribution_value(payload.get("source_skill_id", payload.get("source_id", "")))
@@ -914,6 +992,8 @@ func _record_status_source_attribution(event_key: String, payload: Dictionary) -
 	_increment_dict(_dict(_current_frame_bucket.get("status_events_by_source_id", {})), "%s|%s" % [source_id, event_key], 1)
 
 
+## 作用：创建带帧索引、阶段、UI 状态和零初始化节点/状态计数的逐帧事件桶。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _new_frame_bucket() -> Dictionary:
 	return {
 		"frame_index": _frame_index,
@@ -944,6 +1024,8 @@ func _new_frame_bucket() -> Dictionary:
 	}
 
 
+## 作用：结束当前帧事件桶，记录活动帧和 50/100 毫秒慢帧以及前五帧上下文，分离弹窗慢帧后开启新桶。
+## 使用：由已启用的整局采样流程调用。 入参：frame_ms: float。
 func _finalize_frame_bucket(frame_ms: float) -> void:
 	if _current_frame_bucket.is_empty():
 		_current_frame_bucket = _new_frame_bucket()
@@ -977,6 +1059,8 @@ func _finalize_frame_bucket(frame_ms: float) -> void:
 	_current_frame_bucket = _new_frame_bucket()
 
 
+## 作用：按当前 UI 状态区分 ui_modal 与 runtime，供慢帧归因。
+## 使用：由已启用的整局采样流程调用。 返回 String；具体值及空输入行为见作用说明。
 func _profile_phase_for_frame() -> String:
 	var ui_state: String = _ui_state_for_frame()
 	if ["LEVEL_UP_MODAL", "RUN_REWARD_MODAL", "CURSE_CHOICE_MODAL"].has(ui_state):
@@ -984,12 +1068,16 @@ func _profile_phase_for_frame() -> String:
 	return "runtime"
 
 
+## 作用：读取当前 UIManager.current_state，尚未找到 UI 时返回空字符串。
+## 使用：由已启用的整局采样流程调用。 返回 String；具体值及空输入行为见作用说明。
 func _ui_state_for_frame() -> String:
 	if _ui == null:
 		return ""
 	return String(_ui.get("current_state"))
 
 
+## 作用：从事件桶提取 AOE、状态、拾取与瞬态特效的创建、销毁、活动和当前存活数量。
+## 使用：由已启用的整局采样流程调用。 入参：bucket: Dictionary。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _spike_category_activity(bucket: Dictionary) -> Dictionary:
 	var activity: Dictionary = {}
 	var created: Dictionary = _dict(bucket.get("created_by_category", {}))
@@ -1011,6 +1099,8 @@ func _spike_category_activity(bucket: Dictionary) -> Dictionary:
 	return activity
 
 
+## 作用：求事件桶内六种采样状态事件次数总和，用于判断帧是否有诊断活动。
+## 使用：由已启用的整局采样流程调用。 入参：bucket: Dictionary。 返回 int；具体值及空输入行为见作用说明。
 func _status_profiler_activity_total(bucket: Dictionary) -> int:
 	var total: int = 0
 	for key: String in [
@@ -1025,6 +1115,8 @@ func _status_profiler_activity_total(bucket: Dictionary) -> int:
 	return total
 
 
+## 作用：按 kind 将节点创建或销毁记录加入当前帧，累计类别、键和来源维度计数。
+## 使用：由已启用的整局采样流程调用。 入参：kind: String, record: Dictionary。
 func _add_frame_node_event(kind: String, record: Dictionary) -> void:
 	if _current_frame_bucket.is_empty():
 		_current_frame_bucket = _new_frame_bucket()
@@ -1044,6 +1136,8 @@ func _add_frame_node_event(kind: String, record: Dictionary) -> void:
 		_increment_dict(_dict(_current_frame_bucket.get("destroyed_by_source_id", {})), _attribution_value(record.get("source_id", "")), 1)
 
 
+## 作用：在当前帧累加指定 metric，并同步 category_metric 的整局事件计数。
+## 使用：由已启用的整局采样流程调用。 入参：metric: String, category: String, amount: int。
 func _add_frame_metric(metric: String, category: String, amount: int) -> void:
 	if _current_frame_bucket.is_empty():
 		_current_frame_bucket = _new_frame_bucket()
@@ -1052,6 +1146,8 @@ func _add_frame_metric(metric: String, category: String, amount: int) -> void:
 	_increment_dict(_run_event_counts, key, amount)
 
 
+## 作用：读取节点脚本、场景、类、名称及来源属性，生成节点生命周期归因记录。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _node_record(node: Node) -> Dictionary:
 	var script: Script = node.get_script() as Script
 	var script_path: String = script.resource_path if script != null else ""
@@ -1069,6 +1165,8 @@ func _node_record(node: Node) -> Dictionary:
 	return record
 
 
+## 作用：优先返回节点自身 scene_file_path，否则取 owner 场景路径，无场景返回空字符串。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node。 返回 String；具体值及空输入行为见作用说明。
 func _node_scene_path(node: Node) -> String:
 	if node.scene_file_path != "":
 		return node.scene_file_path
@@ -1078,12 +1176,16 @@ func _node_scene_path(node: Node) -> String:
 	return ""
 
 
+## 作用：组合场景路径、脚本路径、原生类与节点名作为稳定归因键。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node, script_path: String, scene_path: String。 返回 String；具体值及空输入行为见作用说明。
 func _node_attribution_key(node: Node, script_path: String, scene_path: String) -> String:
 	var scene_key: String = scene_path if scene_path != "" else "no_scene"
 	var script_key: String = script_path if script_path != "" else "no_script"
 	return "%s|%s|%s|%s" % [scene_key, script_key, node.get_class(), String(node.name)]
 
 
+## 作用：依据节点脚本、分组、名称与类型归类为 AOE、状态、拾取、弹字、投射物、敌人、特效、UI 或其他。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node, script_path: String, scene_path: String。 返回 String；具体值及空输入行为见作用说明。
 func _node_category(node: Node, script_path: String, scene_path: String) -> String:
 	var node_name: String = String(node.name).to_lower()
 	var node_class: String = node.get_class()
@@ -1107,6 +1209,8 @@ func _node_category(node: Node, script_path: String, scene_path: String) -> Stri
 	return "other"
 
 
+## 作用：从节点元数据、属性、伤害包和技能实例提取来源 ID、技能 ID 与状态 ID，空值统一归为 unknown。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _source_attribution_record(node: Node) -> Dictionary:
 	var damage_packet: Dictionary = _dict(_node_property(node, "damage_packet"))
 	var source_id: String = _node_source_string(node, "source_id")
@@ -1131,6 +1235,8 @@ func _source_attribution_record(node: Node) -> Dictionary:
 	}
 
 
+## 作用：优先读取节点同名元数据，否则读取已登记属性，将非空值转为字符串。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node, key: String。 返回 String；具体值及空输入行为见作用说明。
 func _node_source_string(node: Node, key: String) -> String:
 	if node == null:
 		return ""
@@ -1142,6 +1248,8 @@ func _node_source_string(node: Node, key: String) -> String:
 	return String(property_value) if property_value != null else ""
 
 
+## 作用：先检查 get_property_list 确认属性存在，再安全读取，缺属性或缺节点返回 null。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node, key: String。 返回 Variant；具体值及空输入行为见作用说明。
 func _node_property(node: Node, key: String) -> Variant:
 	if node == null:
 		return null
@@ -1151,11 +1259,15 @@ func _node_property(node: Node, key: String) -> Variant:
 	return null
 
 
+## 作用：把值转字符串并去两端空白，空内容归为 unknown。
+## 使用：由已启用的整局采样流程调用。 入参：value: Variant。 返回 String；具体值及空输入行为见作用说明。
 func _attribution_value(value: Variant) -> String:
 	var text: String = String(value).strip_edges()
 	return text if text != "" else "unknown"
 
 
+## 作用：按弹字脚本或节点名片段识别伤害数字节点，供瞬态寿命诊断。
+## 使用：由已启用的整局采样流程调用。 入参：node: Node, script_path: String = ""。 返回 bool；具体值及空输入行为见作用说明。
 func _is_damage_number_node(node: Node, script_path: String = "") -> bool:
 	var node_name: String = String(node.name).to_lower()
 	return script_path.ends_with("damage_number_popup.gd") \
@@ -1164,6 +1276,8 @@ func _is_damage_number_node(node: Node, script_path: String = "") -> bool:
 		or node_name.contains("playerdamagenumber")
 
 
+## 作用：按节点归因键和类别更新存活增量，同时维护各类别最大存活数。
+## 使用：由已启用的整局采样流程调用。 入参：record: Dictionary, delta: int。
 func _record_live_delta(record: Dictionary, delta: int) -> void:
 	var key: String = String(record.get("key", "unknown"))
 	var category: String = String(record.get("category", "other"))
@@ -1172,16 +1286,22 @@ func _record_live_delta(record: Dictionary, delta: int) -> void:
 	_max_live_counts_by_category[category] = maxi(int(_max_live_counts_by_category.get(category, 0)), int(_live_by_category.get(category, 0)))
 
 
+## 作用：按记录内来源技能和来源 ID 累加创建计数，amount 可为负数用于修正归因。
+## 使用：由已启用的整局采样流程调用。 入参：record: Dictionary, amount: int。
 func _record_node_source_created(record: Dictionary, amount: int) -> void:
 	_increment_dict(_created_by_source_skill_id, _attribution_value(record.get("source_skill_id", "")), amount)
 	_increment_dict(_created_by_source_id, _attribution_value(record.get("source_id", "")), amount)
 
 
+## 作用：按记录内来源技能和来源 ID 累加销毁计数。
+## 使用：由已启用的整局采样流程调用。 入参：record: Dictionary, amount: int。
 func _record_node_source_destroyed(record: Dictionary, amount: int) -> void:
 	_increment_dict(_destroyed_by_source_skill_id, _attribution_value(record.get("source_skill_id", "")), amount)
 	_increment_dict(_destroyed_by_source_id, _attribution_value(record.get("source_id", "")), amount)
 
 
+## 作用：在节点配置完成后的延迟调用中重读来源，撤销旧创建归因、应用新归因并更新记录缓存。
+## 使用：由已启用的整局采样流程调用。 入参：instance_id: int。
 func _refresh_node_record_source_attribution(instance_id: int) -> void:
 	if not _node_records_by_instance_id.has(instance_id):
 		return
@@ -1208,6 +1328,8 @@ func _refresh_node_record_source_attribution(instance_id: int) -> void:
 	_node_records_by_instance_id[instance_id] = new_record
 
 
+## 作用：按 amount 修正当前帧节点创建的来源技能与来源 ID 计数。
+## 使用：由已启用的整局采样流程调用。 入参：record: Dictionary, amount: int。
 func _adjust_current_frame_created_source(record: Dictionary, amount: int) -> void:
 	if _current_frame_bucket.is_empty():
 		return
@@ -1215,6 +1337,8 @@ func _adjust_current_frame_created_source(record: Dictionary, amount: int) -> vo
 	_increment_dict(_dict(_current_frame_bucket.get("created_by_source_id", {})), _attribution_value(record.get("source_id", "")), amount)
 
 
+## 作用：组合来源技能、来源 ID 和状态 ID，用于比较节点来源归因是否发生变化。
+## 使用：由已启用的整局采样流程调用。 入参：record: Dictionary。 返回 String；具体值及空输入行为见作用说明。
 func _source_record_key(record: Dictionary) -> String:
 	return "%s|%s|%s" % [
 		_attribution_value(record.get("source_skill_id", "")),
@@ -1223,17 +1347,23 @@ func _source_record_key(record: Dictionary) -> String:
 	]
 
 
+## 作用：把计数字典转换为条目数组，按 count 降序返回前 limit 项。
+## 使用：由已启用的整局采样流程调用。 入参：source: Dictionary, limit: int = 25。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _top_entries(source: Dictionary, limit: int = 25) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for key_variant: Variant in source.keys():
 		var key: String = String(key_variant)
 		entries.append({"key": key, "count": int(source.get(key_variant, 0))})
+	## 作用：匿名比较器按 count 计数 降序排列条目。
+	## 使用：由 sort_custom 传入 a、b 两条字典；前项更大时返回 true，不改写条目。
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a.get("count", 0)) > int(b.get("count", 0))
 	)
 	return entries.slice(0, mini(limit, entries.size()))
 
 
+## 作用：按节点归因键计算创建减销毁的净数量，包含仅有销毁记录的键。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _net_nodes_by_key() -> Dictionary:
 	var result: Dictionary = {}
 	for key_variant: Variant in _created_by_key.keys():
@@ -1246,6 +1376,8 @@ func _net_nodes_by_key() -> Dictionary:
 	return result
 
 
+## 作用：按类别计算创建减销毁的净数量，包含仅有销毁记录的类别。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _net_nodes_by_category() -> Dictionary:
 	var result: Dictionary = {}
 	for key_variant: Variant in _created_by_category.keys():
@@ -1258,6 +1390,8 @@ func _net_nodes_by_category() -> Dictionary:
 	return result
 
 
+## 作用：结合弹字生命周期计数、当前选择器结果和伤害事件数，区分短寿命、关闭显示或无伤害等诊断情况。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _damage_number_diagnosis() -> Dictionary:
 	var current_candidates: Array[Dictionary] = []
 	var stack: Array[Node] = [get_tree().root]
@@ -1290,6 +1424,8 @@ func _damage_number_diagnosis() -> Dictionary:
 	}
 
 
+## 作用：把 ObjectDB 总数增量与节点类别净增量对照，非 Node 的 Resource/RefCounted 增量标为未归因。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _object_delta_attribution() -> Dictionary:
 	var object_delta: int = _final_object_count - _initial_object_count
 	var node_net: Dictionary = _net_nodes_by_category()
@@ -1307,6 +1443,8 @@ func _object_delta_attribution() -> Dictionary:
 	}
 
 
+## 作用：按强制技能参数原顺序返回授予记录，尚未处理的技能补 pending 条目。
+## 使用：由已启用的整局采样流程调用。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _forced_profile_skill_report() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for skill_id: StringName in _forced_profile_skill_ids:
@@ -1326,6 +1464,8 @@ func _forced_profile_skill_report() -> Array[Dictionary]:
 	return result
 
 
+## 作用：从 SkillManager 收集全部技能 ID、等级、类型和稀有度快照。
+## 使用：由已启用的整局采样流程调用。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _skills_snapshot() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if _player == null:
@@ -1349,6 +1489,8 @@ func _skills_snapshot() -> Array[Dictionary]:
 	return result
 
 
+## 作用：仅接受已开启采样的白名单热点 section 和正耗时，将微秒样本累计到窗口及整局统计。
+## 使用：由根元数据中的热点 Callable 回调；section 须在 HOT_PATH_SECTIONS，duration_usec 是正数微秒耗时。
 func _on_hot_path_event(section: Variant, duration_usec: Variant) -> void:
 	if not _enabled:
 		return
@@ -1362,6 +1504,8 @@ func _on_hot_path_event(section: Variant, duration_usec: Variant) -> void:
 	_record_hot_path_stat(_dict(_hot_path_run_sections.get(section_key, {})), elapsed_usec)
 
 
+## 作用：接受 AOE tick 字典事件，累计总体以及 area_id、source_id、source_skill_id 分组统计。
+## 使用：由 AOE 采样 Callable 传入字典，读取 candidate_count、hit_count、status_apply_count 与来源字段；仅采样启用时累计。
 func _on_area_effect_tick_event(payload_variant: Variant) -> void:
 	if not _enabled or not (payload_variant is Dictionary):
 		return
@@ -1372,6 +1516,8 @@ func _on_area_effect_tick_event(payload_variant: Variant) -> void:
 	_record_area_effect_tick_group(_dict(_area_effect_tick_stats.get("by_source_skill_id", {})), String(payload.get("source_skill_id", "unknown")), payload)
 
 
+## 作用：创建 AOE tick 次数、候选、命中、状态施加总量/峰值与三个分组容器。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _new_area_effect_tick_stats() -> Dictionary:
 	return {
 		"tick_count": 0,
@@ -1387,6 +1533,8 @@ func _new_area_effect_tick_stats() -> Dictionary:
 	}
 
 
+## 作用：按分组键懒创建 AOE 统计桶，去除不需要的嵌套组再累积此次 tick。
+## 使用：由已启用的整局采样流程调用。 入参：groups: Dictionary, key: String, payload: Dictionary。
 func _record_area_effect_tick_group(groups: Dictionary, key: String, payload: Dictionary) -> void:
 	var group_key: String = key if key.strip_edges() != "" else "unknown"
 	var stat: Dictionary = _dict(groups.get(group_key, {}))
@@ -1399,6 +1547,8 @@ func _record_area_effect_tick_group(groups: Dictionary, key: String, payload: Di
 	_record_area_effect_tick_stat(stat, payload)
 
 
+## 作用：将 tick 事件的候选、命中和状态施加计数累加到 stat，并更新每次最大值。
+## 使用：由已启用的整局采样流程调用。 入参：stat: Dictionary, payload: Dictionary。
 func _record_area_effect_tick_stat(stat: Dictionary, payload: Dictionary) -> void:
 	var candidate_count: int = int(payload.get("candidate_count", 0))
 	var hit_count: int = int(payload.get("hit_count", 0))
@@ -1412,6 +1562,8 @@ func _record_area_effect_tick_stat(stat: Dictionary, payload: Dictionary) -> voi
 	stat["max_status_apply_count"] = maxi(int(stat.get("max_status_apply_count", 0)), status_apply_count)
 
 
+## 作用：构建 AOE 总体与区域、来源、技能三个维度的报告字典。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _area_effect_tick_stats_report() -> Dictionary:
 	var report: Dictionary = _area_effect_tick_stat_report(_area_effect_tick_stats)
 	report["by_area_id"] = _area_effect_tick_group_report(_dict(_area_effect_tick_stats.get("by_area_id", {})))
@@ -1420,6 +1572,8 @@ func _area_effect_tick_stats_report() -> Dictionary:
 	return report
 
 
+## 作用：将每个 AOE 分组统计转换为包含总数、均值和峰值的报告。
+## 使用：由已启用的整局采样流程调用。 入参：groups: Dictionary。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _area_effect_tick_group_report(groups: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
 	for key_variant: Variant in groups.keys():
@@ -1428,6 +1582,8 @@ func _area_effect_tick_group_report(groups: Dictionary) -> Dictionary:
 	return result
 
 
+## 作用：计算 AOE 每 tick 的候选、命中和状态施加均值，零 tick 时均值为零。
+## 使用：由已启用的整局采样流程调用。 入参：stat: Dictionary。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _area_effect_tick_stat_report(stat: Dictionary) -> Dictionary:
 	var tick_count: int = int(stat.get("tick_count", 0))
 	var candidate_count: int = int(stat.get("candidate_count", 0))
@@ -1447,6 +1603,8 @@ func _area_effect_tick_stat_report(stat: Dictionary) -> Dictionary:
 	}
 
 
+## 作用：重置热点窗口起始秒数、帧索引和统计桶，首次使用时同时创建整局桶。
+## 使用：由已启用的整局采样流程调用。 入参：start_seconds: float。
 func _reset_hot_path_window(start_seconds: float) -> void:
 	_hot_path_window_start_seconds = start_seconds
 	_hot_path_window_start_frame = _frame_index
@@ -1455,6 +1613,8 @@ func _reset_hot_path_window(start_seconds: float) -> void:
 		_hot_path_run_sections = _new_hot_path_sections()
 
 
+## 作用：为所有已登记热点 section 创建独立零值统计字典。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _new_hot_path_sections() -> Dictionary:
 	var sections: Dictionary = {}
 	for section: String in HOT_PATH_SECTIONS:
@@ -1462,6 +1622,8 @@ func _new_hot_path_sections() -> Dictionary:
 	return sections
 
 
+## 作用：创建热点累计微秒、峰值、调用次数与原始耗时数组的统计桶。
+## 使用：由已启用的整局采样流程调用。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _new_hot_path_stat() -> Dictionary:
 	return {
 		"total_usec": 0,
@@ -1471,6 +1633,8 @@ func _new_hot_path_stat() -> Dictionary:
 	}
 
 
+## 作用：原位累计一次 elapsed_usec 样本的总时长、峰值和调用次数，并保存分位计算样本。
+## 使用：由已启用的整局采样流程调用。 入参：stat: Dictionary, elapsed_usec: int。
 func _record_hot_path_stat(stat: Dictionary, elapsed_usec: int) -> void:
 	stat["total_usec"] = int(stat.get("total_usec", 0)) + elapsed_usec
 	stat["max_usec"] = maxi(int(stat.get("max_usec", 0)), elapsed_usec)
@@ -1480,6 +1644,8 @@ func _record_hot_path_stat(stat: Dictionary, elapsed_usec: int) -> void:
 	stat["durations_usec"] = durations
 
 
+## 作用：将有调用的热点窗口转换为带时间和帧范围的报告并保存，随后重置；无调用仅推进窗口起点。
+## 使用：由已启用的整局采样流程调用。 入参：reason: String。
 func _snapshot_hot_path_window(reason: String) -> void:
 	if _hot_path_window_sections.is_empty():
 		_reset_hot_path_window(_elapsed)
@@ -1507,6 +1673,8 @@ func _snapshot_hot_path_window(reason: String) -> void:
 	_reset_hot_path_window(_elapsed)
 
 
+## 作用：按 HOT_PATH_SECTIONS 顺序把统计字典转换成每区间报告。
+## 使用：由已启用的整局采样流程调用。 入参：source: Dictionary, frame_count: int。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _hot_path_report_sections(source: Dictionary, frame_count: int) -> Dictionary:
 	var result: Dictionary = {}
 	for section: String in HOT_PATH_SECTIONS:
@@ -1514,6 +1682,8 @@ func _hot_path_report_sections(source: Dictionary, frame_count: int) -> Dictiona
 	return result
 
 
+## 作用：将微秒统计转为平均、最大、p95 和总毫秒数，同时计算调用数与每帧调用数。
+## 使用：由已启用的整局采样流程调用。 入参：stat: Dictionary, frame_count: int。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _hot_path_section_report(stat: Dictionary, frame_count: int) -> Dictionary:
 	var call_count: int = int(stat.get("call_count", 0))
 	var total_usec: int = int(stat.get("total_usec", 0))
@@ -1527,18 +1697,24 @@ func _hot_path_section_report(stat: Dictionary, frame_count: int) -> Dictionary:
 	}
 
 
+## 作用：按 total_ms 降序返回前 limit 个热点报告条目，附上 section 名称。
+## 使用：由已启用的整局采样流程调用。 入参：source: Dictionary, frame_count: int, limit: int = 10。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _top_hot_path_entries(source: Dictionary, frame_count: int, limit: int = 10) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for section: String in HOT_PATH_SECTIONS:
 		var entry: Dictionary = _hot_path_section_report(_dict(source.get(section, {})), frame_count)
 		entry["section"] = section
 		entries.append(entry)
+	## 作用：匿名比较器按 total_ms 热点总毫秒数 降序排列条目。
+	## 使用：由 sort_custom 传入 a、b 两条字典；前项更大时返回 true，不改写条目。
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return float(a.get("total_ms", 0.0)) > float(b.get("total_ms", 0.0))
 	)
 	return entries.slice(0, mini(limit, entries.size()))
 
 
+## 作用：覆盖写 latest_hot_path.json，包含采样窗口、整局热点排行、AOE 计数和最终技能快照。
+## 使用：由已启用的整局采样流程调用。 入参：status: String。
 func _write_hot_path_output(status: String) -> void:
 	var frame_count: int = _frame_ms_values.size()
 	var payload: Dictionary = {
@@ -1571,6 +1747,8 @@ func _write_hot_path_output(status: String) -> void:
 	print("[RealFullRunProfile] hot_path=%s" % ProjectSettings.globalize_path(HOT_PATH_PATH))
 
 
+## 作用：复制并排序微秒样本，用向上取整的分位索引取得值并转为毫秒；空或非数组返回零。
+## 使用：由已启用的整局采样流程调用。 入参：values_variant: Variant, percentile: float。 返回 float；具体值及空输入行为见作用说明。
 func _percentile_usec(values_variant: Variant, percentile: float) -> float:
 	if not (values_variant is Array):
 		return 0.0
@@ -1583,6 +1761,8 @@ func _percentile_usec(values_variant: Variant, percentile: float) -> float:
 	return float(int(sorted[index])) / 1000.0
 
 
+## 作用：结算最后事件桶并覆盖写 latest_attribution.json，汇总来源、净增节点、慢帧上下文及归因诊断。
+## 使用：由已启用的整局采样流程调用。 入参：status: String。
 func _write_attribution_output(status: String) -> void:
 	_finalize_frame_bucket(0.0)
 	var payload: Dictionary = {
@@ -1639,6 +1819,8 @@ func _write_attribution_output(status: String) -> void:
 	print("[RealFullRunProfile] attribution=%s" % ProjectSettings.globalize_path(ATTRIBUTION_PATH))
 
 
+## 作用：递归收集 root 中可见且启用的 Button，保留遍历顺序。
+## 使用：由已启用的整局采样流程调用。 入参：root: Node。 返回 Array[Button]；具体值及空输入行为见作用说明。
 func _collect_visible_enabled_buttons(root: Node) -> Array[Button]:
 	var buttons: Array[Button] = []
 	if root == null:
@@ -1650,11 +1832,15 @@ func _collect_visible_enabled_buttons(root: Node) -> Array[Button]:
 	return buttons
 
 
+## 作用：返回首个可见启用按钮，没有匹配时返回 null。
+## 使用：由已启用的整局采样流程调用。 入参：root: Node。 返回 Button；具体值及空输入行为见作用说明。
 func _first_visible_enabled_button(root: Node) -> Button:
 	var buttons: Array[Button] = _collect_visible_enabled_buttons(root)
 	return buttons[0] if not buttons.is_empty() else null
 
 
+## 作用：按 needles 在按钮文本中的匹配数量，选出最高分的可见启用按钮。
+## 使用：由已启用的整局采样流程调用。 入参：needles: Array[String]。 返回 Button；具体值及空输入行为见作用说明。
 func _best_visible_button(needles: Array[String]) -> Button:
 	var best: Button = null
 	var best_score: int = 0
@@ -1670,6 +1856,8 @@ func _best_visible_button(needles: Array[String]) -> Button:
 	return best
 
 
+## 作用：合并按钮直接文本与后代 Label 文本，返回用空格连接的字符串。
+## 使用：由已启用的整局采样流程调用。 入参：button: Button。 返回 String；具体值及空输入行为见作用说明。
 func _button_text(button: Button) -> String:
 	var parts: Array[String] = []
 	if button.text.strip_edges() != "":
@@ -1678,6 +1866,8 @@ func _button_text(button: Button) -> String:
 	return " ".join(parts)
 
 
+## 作用：递归把非空 Label 文本追加到 parts，供按钮文本评分。
+## 使用：由已启用的整局采样流程调用。 入参：root: Node, parts: Array[String]。
 func _collect_label_text(root: Node, parts: Array[String]) -> void:
 	for child: Node in root.get_children():
 		if child is Label:
@@ -1687,10 +1877,14 @@ func _collect_label_text(root: Node, parts: Array[String]) -> void:
 		_collect_label_text(child, parts)
 
 
+## 作用：检查 Control 非空且在场景树中可见。
+## 使用：由已启用的整局采样流程调用。 入参：control: Control。 返回 bool；具体值及空输入行为见作用说明。
 func _is_control_visible(control: Control) -> bool:
 	return control != null and control.is_visible_in_tree()
 
 
+## 作用：节点入树时累计创建/存活计数、逐帧事件和来源记录，延迟修正来源；弹字另外保留历史候选。
+## 使用：由已连接的信号或采样 Callable 触发。 入参：_node: Node。
 func _on_node_added(_node: Node) -> void:
 	if _enabled:
 		_node_created_total += 1
@@ -1709,6 +1903,8 @@ func _on_node_added(_node: Node) -> void:
 			_damage_number_selector_candidates[str(instance_id)] = record
 
 
+## 作用：节点出树时使用缓存归因记录累计销毁与存活减量，记录逐帧事件后移除实例缓存。
+## 使用：由已连接的信号或采样 Callable 触发。 入参：_node: Node。
 func _on_node_removed(_node: Node) -> void:
 	if _enabled:
 		_node_destroyed_total += 1
@@ -1727,11 +1923,15 @@ func _on_node_removed(_node: Node) -> void:
 		_node_records_by_instance_id.erase(instance_id)
 
 
+## 作用：由平均帧毫秒换算平均 FPS，非正平均值返回零。
+## 使用：由已启用的整局采样流程调用。 返回 float；具体值及空输入行为见作用说明。
 func _average_fps() -> float:
 	var avg_ms: float = _average(_frame_ms_values)
 	return 1000.0 / avg_ms if avg_ms > 0.0 else 0.0
 
 
+## 作用：计算 float 数组的算术均值，空数组返回零。
+## 使用：由已启用的整局采样流程调用。 入参：values: Array[float]。 返回 float；具体值及空输入行为见作用说明。
 func _average(values: Array[float]) -> float:
 	if values.is_empty():
 		return 0.0
@@ -1741,6 +1941,8 @@ func _average(values: Array[float]) -> float:
 	return total / float(values.size())
 
 
+## 作用：复制排序帧时长数组，按 ceil(percentile*N)-1 取得分位值，空数组返回零。
+## 使用：由已启用的整局采样流程调用。 入参：values: Array[float], percentile: float。 返回 float；具体值及空输入行为见作用说明。
 func _percentile(values: Array[float], percentile: float) -> float:
 	if values.is_empty():
 		return 0.0
@@ -1750,19 +1952,27 @@ func _percentile(values: Array[float], percentile: float) -> float:
 	return sorted[index]
 
 
+## 作用：把调试面板 enabled 快照字段转为报告中的 on/off 文本。
+## 使用：由已启用的整局采样流程调用。 入参：snapshot: Dictionary。 返回 String；具体值及空输入行为见作用说明。
 func _debug_panel_summary(snapshot: Dictionary) -> String:
 	return "on" if bool(snapshot.get("enabled", false)) else "off"
 
 
+## 作用：将报告文字中的回车、换行和制表符替换为空格，保持单行日志。
+## 使用：由已启用的整局采样流程调用。 入参：value: Variant。 返回 String；具体值及空输入行为见作用说明。
 func _safe_text(value: Variant) -> String:
 	return String(value).replace("\r", " ").replace("\n", " ").replace("\t", " ")
 
 
+## 作用：释放移动与冲刺 Input 动作，避免结束流程遗留按键状态。
+## 使用：由已启用的整局采样流程调用。
 func _release_movement() -> void:
 	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down", &"dash"]:
 		Input.action_release(action)
 
 
+## 作用：幂等结束采样，恢复时间倍率为一，移除根节点采样回调和标志，释放输入后用 exit_code 退出。
+## 使用：传入进程 exit_code；结束标记保证重复调用无副作用，清除 root 回调并退出场景树。
 func _finish(exit_code: int) -> void:
 	if _finished:
 		return
@@ -1781,9 +1991,13 @@ func _finish(exit_code: int) -> void:
 	get_tree().quit(exit_code)
 
 
+## 作用：字典输入直接返回引用，其他值返回空字典，供统计桶原位更新。
+## 使用：由已启用的整局采样流程调用。 入参：value: Variant。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _dict(value: Variant) -> Dictionary:
 	return value if value is Dictionary else {}
 
 
+## 作用：按 key 给 dictionary 原位累计 amount，缺失键从零开始。
+## 使用：由已启用的整局采样流程调用。 入参：dictionary: Dictionary, key: Variant, amount: int。
 func _increment_dict(dictionary: Dictionary, key: Variant, amount: int) -> void:
 	dictionary[key] = int(dictionary.get(key, 0)) + amount

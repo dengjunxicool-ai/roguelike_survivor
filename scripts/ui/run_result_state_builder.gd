@@ -1,7 +1,12 @@
+## 文件用途：从玩家、统计和选择信息构建终局展示状态。
+## 使用方式：UIManager 终局提供上下文并调用 build_result_state；读取实际技能等级和存活状态。
+
 extends RefCounted
 class_name RunResultStateBuilder
 
 
+## 作用：获取局内统计摘要，供当前模块后续逻辑使用；具体处理委托给 tracker.get_summary。
+## 使用：本文件由 build_result_state 调用；输入 tracker（统计器）；返回结果字典。
 static func get_run_stats_summary(tracker: Node) -> Dictionary:
 	if tracker != null and tracker.has_method("get_summary"):
 		var summary_variant: Variant = tracker.call("get_summary")
@@ -10,6 +15,8 @@ static func get_run_stats_summary(tracker: Node) -> Dictionary:
 	return {}
 
 
+## 作用：获取主要攻击等级，供当前模块后续逻辑使用。
+## 使用：本文件由 build_result_state 调用；输入 tree（场景树）、player_group（玩家分组）；返回计算或读取的数值。
 static func get_main_attack_level(tree: SceneTree, player_group: StringName) -> int:
 	var player: Node = tree.get_first_node_in_group(player_group) if tree != null else null
 	if player == null:
@@ -34,6 +41,8 @@ static func get_main_attack_level(tree: SceneTree, player_group: StringName) -> 
 	return 1
 
 
+## 作用：获取技能组快照，供当前模块后续逻辑使用。
+## 使用：本文件由 build_result_state 调用；输入 tree（场景树）、player_group（玩家分组）；返回 Array[Dictionary] 列表。
 static func get_skills_snapshot(tree: SceneTree, player_group: StringName) -> Array[Dictionary]:
 	var snapshot: Array[Dictionary] = []
 	var player: Node = tree.get_first_node_in_group(player_group) if tree != null else null
@@ -61,6 +70,8 @@ static func get_skills_snapshot(tree: SceneTree, player_group: StringName) -> Ar
 	return snapshot
 
 
+## 作用：获取玩家死亡，供当前模块后续逻辑使用。
+## 使用：本文件由 build_result_state 调用；输入 tree（场景树）、player_group（玩家分组）；返回 Variant 对象/值。
 static func get_player_dead(tree: SceneTree, player_group: StringName) -> Variant:
 	var player: Node = tree.get_first_node_in_group(player_group) if tree != null else null
 	if player == null:
@@ -77,6 +88,8 @@ static func get_player_dead(tree: SceneTree, player_group: StringName) -> Varian
 	return null
 
 
+## 作用：从上下文和玩家运行节点构建终局展示状态。
+## 使用：context 提供 tree/player_group/统计器及选择信息；返回主攻等级、player_dead、skills_snapshot、run_stats 和 progression_summary 等字段。
 static func build_result_state(context: Dictionary) -> Dictionary:
 	var tree: SceneTree = context.get("tree", null) as SceneTree
 	var player_group: StringName = StringName(String(context.get("player_group", &"player")))

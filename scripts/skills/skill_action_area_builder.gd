@@ -1,7 +1,11 @@
+## 文件用途：纯数据构建区域效果和瞬时范围命中的生成及视觉参数。
+## 使用方式：区域执行族传运行参数和上下文，返回工厂可消费的字典；该构建器不创建节点或命中目标。
 extends RefCounted
 class_name SkillActionAreaBuilder
 
 
+## 作用：汇总区域伤害、时长、半径、目标组与表现字段为工厂生成参数。
+## 使用：区域执行族传运行参数和上下文，返回工厂可消费的字典；该构建器不创建节点或命中目标。
 static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 	var area_params: Dictionary = _get_dictionary(input.get("area_params", input.get("params", {})))
 	var context: Dictionary = _get_dictionary(input.get("context", {}))
@@ -58,6 +62,8 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 	return area_effect_params
 
 
+## 作用：从瞬时范围动作提取表现参数，供池化视觉对象配置。
+## 使用：params 读取 visual_duration/duration；definition 为技能定义；radius 为世界坐标半径。
 static func build_instant_hit_visual_params(params: Dictionary, definition: Dictionary, radius: float) -> Dictionary:
 	var visual_params: Dictionary = {
 		"radius": radius,
@@ -71,6 +77,8 @@ static func build_instant_hit_visual_params(params: Dictionary, definition: Dict
 	return visual_params
 
 
+## 作用：把向量或配置坐标转换为 Vector2，无法解析时使用备用向量。
+## 使用：fallback 为缺值备用结果。
 static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	if value is Vector2:
 		return value
@@ -81,12 +89,16 @@ static func _get_vector2(value: Variant, fallback: Vector2) -> Vector2:
 	return fallback
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 build_effect_spawn_params 调用；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value
 	return {}
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 build_effect_spawn_params 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

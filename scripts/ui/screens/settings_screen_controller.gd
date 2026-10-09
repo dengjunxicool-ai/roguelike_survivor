@@ -1,3 +1,6 @@
+## 文件用途：构建并处理全屏、主音量和语言设置控件。
+## 使用方式：build 接收容器；控件回调通过设置服务/SaveManager 应用与保存。
+
 extends RefCounted
 class_name SettingsScreenController
 
@@ -15,6 +18,8 @@ var _fullscreen_button: CheckBox
 var _master_slider: HSlider
 
 
+## 作用：构建并处理全屏、主音量和语言设置控件。
+## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；输入 body（主体）。
 func build(body: VBoxContainer) -> void:
 	_languages = LocalizationServiceScript.get_language_options()
 	_add_label(body, _tr("settings.audio", "音频"), 1)
@@ -48,16 +53,22 @@ func build(body: VBoxContainer) -> void:
 	_add_state_button(body, _tr("settings.back", "返回主菜单"), STATE_TITLE)
 
 
+## 作用：设置全屏。
+## 使用：本文件由 build 调用；输入 enabled（启用）；可能写入 user:// 存档。
 func _set_fullscreen(enabled: bool) -> void:
 	SaveManager.set_fullscreen_enabled(enabled)
 	UISettingsServiceScript.apply_window_mode(enabled)
 
 
+## 作用：响应主音量变化并衔接对应的事件处理流程。
+## 使用：本文件由 build 调用；输入 value（值）；可能写入 user:// 存档。
 func _on_master_volume_changed(value: float) -> void:
 	SaveManager.set_master_volume_percent(value)
 	UISettingsServiceScript.apply_master_volume(value)
 
 
+## 作用：响应语言当前选择并衔接对应的事件处理流程。
+## 使用：本文件由 build 调用；输入 index（索引）；可能写入 user:// 存档。
 func _on_language_selected(index: int) -> void:
 	if index < 0 or index >= _languages.size():
 		return
@@ -66,6 +77,8 @@ func _on_language_selected(index: int) -> void:
 	UISettingsServiceScript.apply_language(language_id)
 
 
+## 作用：获取语言索引，供当前模块后续逻辑使用。
+## 使用：本文件由 build 调用；输入 language_id（语言ID）；返回计算或读取的数值。
 func _get_language_index(language_id: String) -> int:
 	for index: int in range(_languages.size()):
 		if String(_languages[index].get("id", "")) == language_id:
@@ -73,20 +86,28 @@ func _get_language_index(language_id: String) -> int:
 	return 0
 
 
+## 作用：本地化。
+## 使用：本文件由 build 调用；输入 key（键）、fallback（回退）；返回 String 文本/标识。
 func _tr(key: String, fallback: String) -> String:
 	return LocalizationServiceScript.translate(key, {}, fallback)
 
 
+## 作用：添加状态切换按钮。
+## 使用：本文件由 build 调用；输入 parent（父节点）、text（文本）、state（状态）；返回 Button 对象/值。
 func _add_state_button(parent: Node, text: String, state: String) -> Button:
 	var button: Button = _add_button(parent, text)
 	button.pressed.connect(Callable(self, "_emit_state").bind(state))
 	return button
 
 
+## 作用：发出状态并衔接对应的事件处理流程。
+## 使用：本文件由 _add_state_button 调用；输入 state（状态）。
 func _emit_state(state: String) -> void:
 	state_requested.emit(state)
 
 
+## 作用：添加标签并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）、text（文本）、alignment（alignment）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String, alignment: int = 0) -> Label:
 	var label: Label = Label.new()
 	label.text = text
@@ -97,6 +118,8 @@ func _add_label(parent: Node, text: String, alignment: int = 0) -> Label:
 	return label
 
 
+## 作用：添加按钮并配置节点/样式所需的属性。
+## 使用：本文件由 _add_state_button 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	var button: Button = Button.new()
 	button.text = text

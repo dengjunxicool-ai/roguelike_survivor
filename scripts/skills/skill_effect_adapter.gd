@@ -1,8 +1,12 @@
+## 文件用途：把技能 effects 配置转换为执行器动作，并应用属性类别对应的等级稀有度成长。
+## 使用方式：事件与触发适配器调用 to_actions；每项 effect 的 damage/status/area/projectile 等字段被整理到动作参数。
 extends RefCounted
 class_name SkillEffectAdapter
 
 const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 
+## 作用：按配置 effects 顺序转换有效项为动作列表并应用技能成长。
+## 使用：effects 为配置效果列表；skill_instance 为技能运行实例。
 static func to_actions(effects: Array, skill_instance: RefCounted = null, effect_context: String = "") -> Array:
 	var actions: Array = []
 	for effect_variant: Variant in effects:
@@ -13,6 +17,8 @@ static func to_actions(effects: Array, skill_instance: RefCounted = null, effect
 	return actions
 
 
+## 作用：按 effect.type 整理单个动作参数与条件，未知效果无动作。
+## 使用：skill_instance 为技能运行实例；无适用数据时返回空字典。
 static func to_action(effect: Dictionary, skill_instance: RefCounted = null, effect_context: String = "") -> Dictionary:
 	var effect_type: String = str(effect.get("type", ""))
 	var params: Dictionary = effect.duplicate(true)
@@ -76,6 +82,8 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 			return {}
 
 
+## 作用：把伤害效果字段整理为伤害动作 amount、类型与元素参数。
+## 使用：params 读取 power_scale/amount/source_type/damage_origin；会原地更新 params.amount/damage_origin。
 static func _normalize_damage_params(params: Dictionary) -> Dictionary:
 	if params.has("power_scale") and not params.has("amount"):
 		params["amount"] = {"stat": "power", "scale": float(params.get("power_scale", 0.0))}
@@ -85,6 +93,8 @@ static func _normalize_damage_params(params: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：把状态效果字段整理为状态 ID、层数、时长和来源参数。
+## 使用：params 读取 status/status_id/stacks/stack；会原地更新 params.status_id/stack。
 static func _normalize_status_params(params: Dictionary) -> Dictionary:
 	if params.has("status") and not params.has("status_id"):
 		params["status_id"] = params["status"]
@@ -94,6 +104,8 @@ static func _normalize_status_params(params: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：整理区域效果的伤害、几何、持续时间及 tick 动作参数。
+## 使用：params 读取 effects_on_tick/_skill_instance/effects_on_apply/effects_on_expire；会原地更新 params.actions_on_tick/actions_on_apply/actions_on_expire。
 static func _normalize_area_params(params: Dictionary) -> Dictionary:
 	if params.has("effects_on_tick"):
 		params["actions_on_tick"] = to_actions(_get_array(params.get("effects_on_tick", [])), params.get("_skill_instance", null) as RefCounted, "tick")
@@ -107,6 +119,8 @@ static func _normalize_area_params(params: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：整理投射物效果的发射、数值与命中动作参数。
+## 使用：params 读取 on_hit/_skill_instance/effects_on_hit/damage；会原地更新 params.actions_on_hit/damage。
 static func _normalize_projectile_params(params: Dictionary) -> Dictionary:
 	if params.has("on_hit"):
 		params["actions_on_hit"] = to_actions(_get_array(params.get("on_hit", [])), params.get("_skill_instance", null) as RefCounted, "hit")
@@ -124,6 +138,8 @@ static func _normalize_projectile_params(params: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：整理连锁命中的目标、跳数和伤害衰减参数。
+## 使用：params 读取 actions/_skill_instance；会原地更新 params.actions。
 static func _normalize_chain_params(params: Dictionary) -> Dictionary:
 	if params.has("actions"):
 		params["actions"] = to_actions(_get_array(params.get("actions", [])), params.get("_skill_instance", null) as RefCounted, "chain")
@@ -131,6 +147,8 @@ static func _normalize_chain_params(params: Dictionary) -> Dictionary:
 	return params
 
 
+## 作用：整理按状态层数造成伤害或消耗状态的动作参数。
+## 使用：params 读取 status/status_id/power_scale_per_stack/amount_per_stack；会原地更新 params.status_id/amount_per_stack。
 static func _normalize_status_stack_damage_params(params: Dictionary) -> Dictionary:
 	if params.has("status") and not params.has("status_id"):
 		params["status_id"] = params["status"]
@@ -140,12 +158,16 @@ static func _normalize_status_stack_damage_params(params: Dictionary) -> Diction
 	return params
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 _normalize_area_params/_normalize_projectile_params 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：按效果类型给伤害、范围、时长或冷却字段应用等级稀有度成长。
+## 使用：params 为动作或状态参数；skill_instance 为技能运行实例；会原地更新 params._skill_instance。
 static func _apply_growth_to_params(params: Dictionary, effect_type: String, skill_instance: RefCounted, effect_context: String) -> void:
 	if skill_instance == null:
 		return
@@ -168,6 +190,8 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 			_scale_damage_params(params, skill_instance)
 
 
+## 作用：对伤害动作的 amount 或 damage 配置施加伤害成长。
+## 使用：params 读取 power_scale/scale/amount/damage；skill_instance 为技能运行实例；会原地更新 params.power_scale/scale/amount。
 static func _scale_damage_params(params: Dictionary, skill_instance: RefCounted) -> void:
 	if params.has("power_scale"):
 		params["power_scale"] = SkillGrowthScalingScript.apply_to_number(float(params.get("power_scale", 0.0)), skill_instance, "damage")
@@ -183,6 +207,8 @@ static func _scale_damage_params(params: Dictionary, skill_instance: RefCounted)
 			damage["scale"] = SkillGrowthScalingScript.apply_to_number(float(damage.get("scale", 0.0)), skill_instance, "damage")
 
 
+## 作用：缩放数值或数值表达式中的伤害量并保留配置结构。
+## 使用：skill_instance 为技能运行实例。
 static func _scale_amount_value(value: Variant, skill_instance: RefCounted) -> Variant:
 	if value is Dictionary:
 		var amount: Dictionary = (value as Dictionary).duplicate(true)
@@ -195,6 +221,8 @@ static func _scale_amount_value(value: Variant, skill_instance: RefCounted) -> V
 	return value
 
 
+## 作用：只对列出的数值字段应用指定成长类别。
+## 使用：params 为动作或状态参数；skill_instance 为技能运行实例。
 static func _scale_numeric_keys(params: Dictionary, skill_instance: RefCounted, keys: Array[String], stat_kind: String) -> void:
 	for key: String in keys:
 		if not params.has(key) or not _is_number(params[key]):
@@ -203,6 +231,8 @@ static func _scale_numeric_keys(params: Dictionary, skill_instance: RefCounted, 
 		params[key] = roundi(scaled) if typeof(params[key]) == TYPE_INT else scaled
 
 
+## 作用：严格判断 Variant 是否为 int 或 float，不把布尔或字符串当数值。
+## 使用：由本文件 _scale_amount_value/_scale_numeric_keys 调用。
 static func _is_number(value: Variant) -> bool:
 	var value_type: int = typeof(value)
 	return value_type == TYPE_INT or value_type == TYPE_FLOAT

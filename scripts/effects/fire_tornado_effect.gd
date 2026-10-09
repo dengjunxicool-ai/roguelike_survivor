@@ -1,3 +1,5 @@
+## 文件用途：组合GPU粒子与程序化火柱、螺旋带、烟尘和余烬绘制有生成/消散阶段的火龙卷视觉。
+## 使用方式：挂对应Node2D特效场景，导出字段控制时长与尺寸；_ready配置具名粒子节点并在寿命结束释放，不处理伤害。
 extends Node2D
 class_name FireTornadoEffect
 
@@ -19,6 +21,8 @@ var _base_modulate: Color = Color.WHITE
 @onready var _outer_embers: GPUParticles2D = get_node_or_null("OuterEmbers") as GPUParticles2D
 
 
+## 作用：保存基础颜色、检查具名子节点并配置/重启粒子，开启处理和重绘。
+## 使用：引擎入树回调，缺节点输出警告但继续可用层绘制。
 func _ready() -> void:
 	_base_modulate = modulate
 	_warn_missing_children()
@@ -28,6 +32,8 @@ func _ready() -> void:
 	queue_redraw()
 
 
+## 作用：为底火、双螺旋、火花、烟雾与外圈余烬设不同粒子密度、颜色和运动。
+## 使用：读取base_radius生成发射半径，修改现有节点process_material。
 func _configure_particle_emitters() -> void:
 	_configure_particles(_base_fire_ring, {
 		"amount": 170,
@@ -103,6 +109,8 @@ func _configure_particle_emitters() -> void:
 	})
 
 
+## 作用：推进年龄、更新粒子螺旋位置和淡出，再请求重绘，到寿命结束释放。
+## 使用：delta为帧秒数。
 func _process(delta: float) -> void:
 	_age += delta
 	_update_spiral_emitters(_age)
@@ -112,6 +120,8 @@ func _process(delta: float) -> void:
 		queue_free()
 
 
+## 作用：按烟灰、烟雾、火柱、螺旋、底环、喷发和余烬顺序绘制并组合生成/消散透明度。
+## 使用：只在绘图回调调用draw_*，不改战斗状态。
 func _draw() -> void:
 	var fade: float = _get_fade_alpha()
 	var loop_alpha: float = _get_gif_loop_alpha()
@@ -126,22 +136,32 @@ func _draw() -> void:
 	_draw_ember_streaks(fade * (0.48 + dissolve * 0.85))
 
 
+## 作用：在生命周期前22%用smoothstep计算生成强度。
+## 使用：返回0至1供火柱和底环使用。
 func _get_growth_alpha() -> float:
 	return smoothstep(0.0, 0.22, _get_life_progress())
 
 
+## 作用：在生命周期72%至结束用smoothstep计算消散进度。
+## 使用：返回0至1。
 func _get_dissolve_alpha() -> float:
 	return smoothstep(0.72, 1.0, _get_life_progress())
 
 
+## 作用：组合生成强度和消散抑制得到主体可见强度。
+## 使用：用于模拟参考循环的生成/消散节奏。
 func _get_gif_loop_alpha() -> float:
 	return _get_growth_alpha() * (1.0 - _get_dissolve_alpha() * 0.82)
 
 
+## 作用：将年龄除寿命并限制0至1。
+## 使用：寿命分母最少0.001防除零。
 func _get_life_progress() -> float:
 	return clampf(_age / maxf(lifetime, 0.001), 0.0, 1.0)
 
 
+## 作用：以十二层深色/热色椭圆构成摆动龙卷主体。
+## 使用：fade为外部透明度系数，半径/中心随高度与时间变化。
 func _draw_tornado_body(fade: float) -> void:
 	var pulse: float = 0.5 + 0.5 * sin(_age * 5.4)
 	for level: int in range(12):
@@ -157,6 +177,8 @@ func _draw_tornado_body(fade: float) -> void:
 			_draw_filled_ellipse(center + Vector2(sin(_age * 3.0 + t * TAU) * radius * 0.10, -1.0), Vector2(radius * 0.20, radius * 0.06), hot_color)
 
 
+## 作用：采样五条平滑螺旋路径并以暗边、红焰、热芯多层线绘制。
+## 使用：fade控制整层透明度，仅绘图使用。
 func _draw_smooth_fire_column(fade: float) -> void:
 	for ribbon_index: int in range(5):
 		var phase: float = float(ribbon_index) * TAU / 5.0
@@ -173,6 +195,8 @@ func _draw_smooth_fire_column(fade: float) -> void:
 		draw_polyline(points, Color(1.0, 0.58, 0.12, alpha * 1.10), 1.1, true)
 
 
+## 作用：采样四条随年龄旋转的火焰带，叠加外边和高亮芯。
+## 使用：fade为外部淡出系数。
 func _draw_spiral_fire_ribbons(fade: float) -> void:
 	for ribbon_index: int in range(4):
 		var points: PackedVector2Array = PackedVector2Array()
@@ -189,6 +213,8 @@ func _draw_spiral_fire_ribbons(fade: float) -> void:
 		draw_polyline(points, Color(1.0, 0.58, 0.12, intensity * 0.46 * fade), 1.2, true)
 
 
+## 作用：随生成/消散进度绘制底部火弧与26条放射余烬线。
+## 使用：fade为整层透明度，使用base_radius。
 func _draw_gif_base_ember_ring(fade: float) -> void:
 	var growth: float = _get_growth_alpha()
 	var dissolve: float = _get_dissolve_alpha()
@@ -205,6 +231,8 @@ func _draw_gif_base_ember_ring(fade: float) -> void:
 		draw_line(start, end, Color(1.0, 0.25, 0.035, 0.22 * alpha), 0.8, true)
 
 
+## 作用：绘制底火椭圆、两道火弧与16条喷发线。
+## 使用：fade控制透明度，年龄驱动脉动。
 func _draw_base_eruption(fade: float) -> void:
 	var pulse: float = 0.5 + 0.5 * sin(_age * 8.6)
 	_draw_filled_ellipse(Vector2.ZERO, Vector2(base_radius * (0.72 + pulse * 0.05), base_radius * (0.72 + pulse * 0.05)), Color(1.0, 0.12, 0.012, 0.12 * fade))
@@ -217,6 +245,8 @@ func _draw_base_eruption(fade: float) -> void:
 		draw_line(start, end, Color(1.0, 0.34, 0.055, 0.28 * fade), 0.9, true)
 
 
+## 作用：沿火柱高度绘制十二团摆动烟雾椭圆，消散期增加飘散幅度。
+## 使用：fade控制整层透明度。
 func _draw_smoke_wisps(fade: float) -> void:
 	var dissolve: float = _get_dissolve_alpha()
 	for index: int in range(12):
@@ -227,6 +257,8 @@ func _draw_smoke_wisps(fade: float) -> void:
 		_draw_filled_ellipse(center + Vector2(drift, 0.0), Vector2(radius * 0.82, radius * 0.22), Color(0.015, 0.010, 0.006, (0.085 + dissolve * 0.05) * fade))
 
 
+## 作用：绘制主体暗灰遮罩并在消散期增加十八团旋转灰尘。
+## 使用：fade结合growth/dissolve调节遮罩，未消散不画颗粒。
 func _draw_dissolve_ash_cloud(fade: float) -> void:
 	var dissolve: float = _get_dissolve_alpha()
 	var growth: float = _get_growth_alpha()
@@ -243,6 +275,8 @@ func _draw_dissolve_ash_cloud(fade: float) -> void:
 		_draw_filled_ellipse(pos, Vector2(5.0 + dissolve * 7.0, 2.0 + dissolve * 3.0), Color(0.05, 0.028, 0.018, 0.08 * dissolve * fade))
 
 
+## 作用：沿高度循环采样28条旋转漂移余烬线。
+## 使用：fade为透明度系数，不创建子节点。
 func _draw_ember_streaks(fade: float) -> void:
 	for index: int in range(28):
 		var t: float = fposmod(_age * (0.16 + float(index % 5) * 0.020) + float(index) * 0.071, 1.0)
@@ -255,6 +289,8 @@ func _draw_ember_streaks(fade: float) -> void:
 		draw_line(start, end, Color(1.0, 0.28, 0.045, alpha), 0.8, true)
 
 
+## 作用：停止给定粒子节点并按字典构造球形发射ParticleProcessMaterial。
+## 使用：config必有amount/lifetime/spread/velocity/color；节点空跳过，配置后由restart开启。
 func _configure_particles(particles: GPUParticles2D, config: Dictionary) -> void:
 	if particles == null:
 		return
@@ -283,6 +319,8 @@ func _configure_particles(particles: GPUParticles2D, config: Dictionary) -> void
 	particles.process_material = material
 
 
+## 作用：重启所有有效发射器并设emitting=true。
+## 使用：配置材质完成后调用。
 func _restart_particles() -> void:
 	for particles: GPUParticles2D in _get_emitters():
 		if particles == null:
@@ -291,6 +329,8 @@ func _restart_particles() -> void:
 		particles.emitting = true
 
 
+## 作用：更新双螺旋位置，并旋转火花、烟雾和外圈余烬节点。
+## 使用：age为秒，双螺旋相差PI。
 func _update_spiral_emitters(age: float) -> void:
 	_position_spiral_emitter(_spiral_a, age, 0.0)
 	_position_spiral_emitter(_spiral_b, age, PI)
@@ -306,6 +346,8 @@ func _update_spiral_emitters(age: float) -> void:
 		_outer_embers.rotation = -age * spin_speed * 0.18
 
 
+## 作用：按周期高度与旋转相位设置螺旋粒子位置和朝向。
+## 使用：phase区分两条发射带，particles空无操作。
 func _position_spiral_emitter(particles: GPUParticles2D, age: float, phase: float) -> void:
 	if particles == null:
 		return
@@ -317,6 +359,8 @@ func _position_spiral_emitter(particles: GPUParticles2D, age: float, phase: floa
 	particles.rotation = angle + PI * 0.5
 
 
+## 作用：恢复根基础modulate，并对粒子和HeatCore单独设置淡出透明度。
+## 使用：读取当前年龄，不让根与子节点重复乘淡出。
 func _update_fade() -> void:
 	var fade: float = _get_fade_alpha()
 	modulate = _base_modulate
@@ -327,6 +371,8 @@ func _update_fade() -> void:
 		_heat_core.modulate = Color(1.0, 1.0, 1.0, fade)
 
 
+## 作用：剩余时间进入fade_out_time时线性计算透明度。
+## 使用：无淡出时间返回1，其余限制0至1。
 func _get_fade_alpha() -> float:
 	if fade_out_time <= 0.0:
 		return 1.0
@@ -336,6 +382,8 @@ func _get_fade_alpha() -> float:
 	return clampf(remaining / fade_out_time, 0.0, 1.0)
 
 
+## 作用：逐个检查HeatCore与六个预期粒子子节点。
+## 使用：只输出诊断，不创建替代节点。
 func _warn_missing_children() -> void:
 	_warn_missing_child(_heat_core, "HeatCore", "Node2D")
 	_warn_missing_child(_base_fire_ring, "BaseFireRing", "GPUParticles2D")
@@ -346,20 +394,28 @@ func _warn_missing_children() -> void:
 	_warn_missing_child(_outer_embers, "OuterEmbers", "GPUParticles2D")
 
 
+## 作用：节点缺失时输出含名字和类型的警告。
+## 使用：node有效时无操作。
 func _warn_missing_child(node: Node, child_name: String, expected_type: String) -> void:
 	if node == null:
 		push_warning("FireTornadoEffect is missing expected child '%s' (%s)." % [child_name, expected_type])
 
 
+## 作用：返回六个粒子发射器引用列表。
+## 使用：节点可空，调用方检查后配置/重启/淡出。
 func _get_emitters() -> Array[GPUParticles2D]:
 	return [_base_fire_ring, _spiral_a, _spiral_b, _ember_spray, _smoke_wisps, _outer_embers]
 
 
+## 作用：按归一化高度与时间计算摆动火柱中心。
+## 使用：t通常0至1，返回本地坐标。
 func _column_center(t: float, time: float) -> Vector2:
 	var sway: float = sin(time * 0.95 + t * TAU * 1.32) * base_radius * (0.055 + t * 0.085)
 	return Vector2(sway, -column_height * t)
 
 
+## 作用：按高度生成收腰、底部/顶部膨胀和轻微脉动的火柱半径。
+## 使用：t为归一化高度，pulse为视觉强度。
 func _column_radius(t: float, pulse: float) -> float:
 	var waist: float = 1.0 - 0.38 * sin(clampf(t, 0.0, 1.0) * PI)
 	var base_bloom: float = 0.26 * (1.0 - smoothstep(0.0, 0.26, t))
@@ -367,10 +423,14 @@ func _column_radius(t: float, pulse: float) -> float:
 	return base_radius * (0.28 + waist * 0.34 + base_bloom + top_bloom) * (0.97 + pulse * 0.04)
 
 
+## 作用：用40边椭圆多边形填充指定颜色。
+## 使用：仅绘图回调内调用，radius为横纵轴半径。
 func _draw_filled_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
 	draw_colored_polygon(_ellipse_points(center, radius, 40), color)
 
 
+## 作用：按段数生成围绕center的椭圆顶点。
+## 使用：segments需为正，返回PackedVector2Array供填充绘制。
 func _ellipse_points(center: Vector2, radius: Vector2, segments: int) -> PackedVector2Array:
 	var points: PackedVector2Array = PackedVector2Array()
 	for index: int in range(segments):

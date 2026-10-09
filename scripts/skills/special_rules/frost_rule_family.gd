@@ -1,3 +1,5 @@
+## 文件用途：实现冰系冰锁、冻伤、冰雹、碎裂和 Boss 韧性规则。
+## 使用方式：宿主按命中及玩家更新转入；普通冻结和 Boss 韧性按目标类型分别处理，同目标触发受规则冷却限制。
 extends RefCounted
 
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
@@ -18,10 +20,14 @@ static var _frostbite_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：按冰雹施放计数预留周期强化标记。
+## 使用：rules 读取 storm_hail_every_n_casts；context 携带 skill_instance；写入 storm_hail_next_cast 元数据；需由仍存活的宿主创建并调度。
 func _prepare_storm_hail_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("storm_hail_every_n_casts"):
@@ -35,6 +41,8 @@ func _prepare_storm_hail_cast(rules: Dictionary, context: Dictionary) -> void:
 	skill_instance.set_meta("storm_hail_next_cast", cast_count % interval == 0)
 
 
+## 作用：依次执行冰锁、冰锁额外命中、冻伤和碎裂规则。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_frost_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_frost_lock_on_direct_hit(rules, context)
@@ -44,11 +52,15 @@ func _apply_frost_projectile_hit_rules(rules: Dictionary, context: Dictionary) -
 	host._apply_shatter_on_freeze_or_frost_hit(rules, context)
 
 
+## 作用：对 Boss 韧性破坏事件检查冰核裂解触发。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_frost_reaction_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_frost_core_crack_on_boss_poise(rules, context)
 
 
+## 作用：强敌直接命中在同来源冷却允许时施加冰锁。
+## 使用：rules 读取 frost_lock_on_elite_boss_direct_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_frost_lock_on_direct_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frost_lock_on_elite_boss_direct_hit"):
@@ -70,6 +82,8 @@ func _apply_frost_lock_on_direct_hit(rules: Dictionary, context: Dictionary) -> 
 	})
 
 
+## 作用：按冰锁层数门槛与冷却触发额外命中，并消耗对应状态。
+## 使用：rules 读取 frost_lock_bonus_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_frost_lock_bonus_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frost_lock_bonus_hit"):
@@ -94,6 +108,8 @@ func _apply_frost_lock_bonus_hit(rules: Dictionary, context: Dictionary) -> void
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.frost_bonus_hit_intents(rules, context, maxi(int(rule.get("amount", 14)), 0), "frost_lock_bonus_hit"))
 
 
+## 作用：冰雹命中在冷却允许时给目标累积冻伤。
+## 使用：rules 读取 frostbite_on_hail_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_frostbite_on_hail_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frostbite_on_hail_hit"):
@@ -113,6 +129,8 @@ func _apply_frostbite_on_hail_hit(rules: Dictionary, context: Dictionary) -> voi
 	})
 
 
+## 作用：冻伤达到门槛后消耗层数，对普通敌人冻结，对 Boss 转入韧性处理。
+## 使用：rules 读取 frostbite_freeze_or_poise；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_frostbite_freeze_or_poise(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frostbite_freeze_or_poise"):
@@ -138,6 +156,8 @@ func _apply_frostbite_freeze_or_poise(rules: Dictionary, context: Dictionary) ->
 		})
 
 
+## 作用：识别尚未消费的 Boss 韧性破坏计数，在冷却允许时触发冰核裂解。
+## 使用：rules 读取 frost_core_crack_on_boss_poise；context 携带 target；写入 frost_core_crack_consumed_poise_count 元数据；需由仍存活的宿主创建并调度。
 func _apply_frost_core_crack_on_boss_poise(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frost_core_crack_on_boss_poise"):
@@ -163,6 +183,8 @@ func _apply_frost_core_crack_on_boss_poise(rules: Dictionary, context: Dictionar
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.frost_core_crack_intents(rules, context, maxi(int(rule.get("amount", 30)), 0)))
 
 
+## 作用：按冻结或冰系命中条件与冷却触发粉碎区域。
+## 使用：rules 读取 shatter_on_freeze_or_frost_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_shatter_on_freeze_or_frost_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("shatter_on_freeze_or_frost_hit"):
@@ -180,6 +202,8 @@ func _apply_shatter_on_freeze_or_frost_hit(rules: Dictionary, context: Dictionar
 	SpecialDamageRuleHandlerScript.execute_shatter_area(rules, context)
 
 
+## 作用：把 Boss 韧性升级的持续时间修正写入目标元数据。
+## 使用：context 携带 target；写入 boss_poise_duration_add 元数据；需由仍存活的宿主创建并调度。
 func _apply_boss_poise_upgrade_meta(context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -192,6 +216,8 @@ func _apply_boss_poise_upgrade_meta(context: Dictionary) -> void:
 	target.set_meta("boss_poise_duration_add", maxf(float(rule.get("duration_add", 2.0)), 0.0))
 
 
+## 作用：按 Boss 当前韧性状态给伤害包应用增伤规则。
+## 使用：packet 为待修饰伤害包视图；rules 读取 boss_poise_upgrade；target 为本次命中目标；会原地更新 packet.direct_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_boss_poise_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("boss_poise_upgrade") or not host._is_boss(target):
@@ -202,6 +228,8 @@ func _apply_boss_poise_damage_bonus(packet: Dictionary, rules: Dictionary, targe
 	packet["direct_damage_multiplier_add"] = float(packet.get("direct_damage_multiplier_add", 0.0)) + float(rule.get("damage_multiplier_add", 0.08))
 
 
+## 作用：根据冰雹本次周期强化标记应用 Boss 专属伤害系数。
+## 使用：packet 为待修饰伤害包视图；rules 读取 storm_hail_every_n_casts；context 携带 projectile/skill_instance；会原地更新 packet.boss_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_storm_hail_boss_modifier(packet: Dictionary, rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("storm_hail_every_n_casts") or not host._is_boss(target):
@@ -216,6 +244,8 @@ func _apply_storm_hail_boss_modifier(packet: Dictionary, rules: Dictionary, cont
 	packet["boss_damage_multiplier_add"] = float(packet.get("boss_damage_multiplier_add", 0.0)) + float(rule.get("boss_damage_multiplier", 0.8)) - 1.0
 
 
+## 作用：查询玩家附近敌人并按冰霜光环规则施加减速。
+## 使用：rules 读取 frost_aura_slow；context 携带 caster/target_group；需由仍存活的宿主创建并调度。
 func _apply_frost_aura_slow(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("frost_aura_slow"):
@@ -240,6 +270,8 @@ func _apply_frost_aura_slow(rules: Dictionary, context: Dictionary) -> void:
 			})
 
 
+## 作用：对玩家附近达到冻伤门槛的目标按冷却施加冻结或韧性相关效果。
+## 使用：rules 读取 freeze_frostbite_near_player；context 携带 caster/target_group；需由仍存活的宿主创建并调度。
 func _apply_freeze_frostbite_near_player(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("freeze_frostbite_near_player"):

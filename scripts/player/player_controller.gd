@@ -1,3 +1,6 @@
+## 文件用途：聚合玩家移动、突进、状态、经验成长、升级、属性来源与受击入口。
+## 使用方式：挂载玩家场景；开局 reset_for_loadout 注入合法角色配置；伤害经 take_damage，技能成长与状态通过公开接口。
+
 extends CharacterBody2D
 
 
@@ -111,6 +114,8 @@ var _status_display_controller: RefCounted = PlayerStatusDisplayControllerScript
 var _run_loadout: RefCounted
 
 
+## 作用：在节点入树后完成组件初始化与信号登记。
+## 使用：由 Godot 自动调用；场景中的配置与依赖应在入树前设置。
 func _ready() -> void:
 	add_to_group(&"player")
 	_visual_controller.call("setup", self)
@@ -125,6 +130,8 @@ func _ready() -> void:
 		push_error("[Player] Could not build initial RunLoadout for %s." % String(selected_character_id))
 
 
+## 作用：确保调试叠层。
+## 使用：本文件由 _ready 调用。
 func _ensure_debug_overlay() -> void:
 	if get_node_or_null("PlayerDebugOverlay") != null:
 		return
@@ -134,6 +141,8 @@ func _ensure_debug_overlay() -> void:
 	add_child(overlay)
 
 
+## 作用：验证并保存 loadout，重置运行状态，再应用角色、永久成长和起始技能。
+## 使用：开局或重开调用；必须传合法 RunLoadout，最后复位位置、边界并发出血量/经验信号。
 func reset_for_loadout(loadout: RefCounted) -> void:
 	if loadout == null or not bool(loadout.call("is_valid")):
 		push_error("[Player] reset_for_loadout requires a valid RunLoadout.")
@@ -160,6 +169,8 @@ func reset_for_loadout(loadout: RefCounted) -> void:
 	experience_changed.emit(current_experience, experience_to_next_level, level)
 
 
+## 作用：确保角色系统组。
+## 使用：本文件由 _ready、reset_for_loadout 调用。
 func _ensure_character_systems() -> void:
 	if get_node_or_null("CharacterRuntime") == null:
 		var runtime: CharacterRuntime = CharacterRuntimeScript.new()
@@ -175,6 +186,8 @@ func _ensure_character_systems() -> void:
 		add_child(modifier_store)
 
 
+## 作用：确保状态效果管理服务。
+## 使用：本文件由 _ready、_update_status_label、_is_movement_frozen 调用；返回 Node 对象/值。
 func _ensure_status_manager() -> Node:
 	if _status_manager != null and is_instance_valid(_status_manager):
 		return _status_manager
@@ -189,6 +202,8 @@ func _ensure_status_manager() -> Node:
 	return _status_manager
 
 
+## 作用：更新状态效果效果列表。
+## 使用：本文件由 _update_player_runtime_tick 调用；输入 delta（delta）。
 func _update_status_effects(delta: float) -> void:
 	var manager: Node = _status_manager if _status_manager != null and is_instance_valid(_status_manager) else null
 	if manager == null:
@@ -203,6 +218,8 @@ func _update_status_effects(delta: float) -> void:
 		manager.call("update_status_effects", delta)
 
 
+## 作用：更新状态效果标签。
+## 使用：本文件由 apply_status、consume_status_stack、clear_statuses 调用。
 func _update_status_label() -> void:
 	var manager: Node = _ensure_status_manager()
 	if manager != null and manager.has_method("consume_status_display_dirty") and not bool(manager.call("consume_status_display_dirty")):
@@ -210,11 +227,15 @@ func _update_status_label() -> void:
 	_status_display_controller.call("update", get_status_snapshot())
 
 
+## 作用：判断移动冻结，返回布尔判断结果；具体处理委托给 manager.is_movement_frozen。
+## 使用：本文件由 _update_player_runtime_tick 调用。
 func _is_movement_frozen() -> bool:
 	var manager: Node = _ensure_status_manager()
 	return manager != null and manager.has_method("is_movement_frozen") and bool(manager.call("is_movement_frozen"))
 
 
+## 作用：获取生效移动速度，供当前模块后续逻辑使用；具体处理委托给 manager.get_move_speed_multiplier。
+## 使用：本文件由 _apply_dash_or_walk_velocity 调用；返回计算或读取的数值。
 func _get_effective_move_speed() -> float:
 	var manager: Node = _ensure_status_manager()
 	var multiplier: float = 1.0
@@ -223,6 +244,8 @@ func _get_effective_move_speed() -> float:
 	return move_speed * _get_modifier_move_speed_multiplier() * multiplier
 
 
+## 作用：获取属性修正移动速度倍率，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_effective_move_speed 调用；返回计算或读取的数值。
 func _get_modifier_move_speed_multiplier() -> float:
 	var modifiers: Dictionary = ModifierAggregatorScript.collect(ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_MOVEMENT))
 	var multiplier: float = float(modifiers.get("move_speed_multiplier", 1.0))
@@ -230,6 +253,8 @@ func _get_modifier_move_speed_multiplier() -> float:
 	return maxf(multiplier, 0.05)
 
 
+## 作用：获取生效拾取半径，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；返回计算或读取的数值。
 func get_effective_pickup_radius() -> float:
 	var modifiers: Dictionary = ModifierAggregatorScript.collect(ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PICKUP))
 	var radius: float = pickup_radius
@@ -238,6 +263,8 @@ func get_effective_pickup_radius() -> float:
 	return maxf(radius, 1.0)
 
 
+## 作用：应用状态效果；具体处理委托给 manager.apply_status。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）、params（参数）；返回是否满足条件或执行成功。
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	var manager: Node = _ensure_status_manager()
 	if manager == null or not manager.has_method("apply_status"):
@@ -247,11 +274,15 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	return applied
 
 
+## 作用：是否包含状态效果，返回布尔判断结果；具体处理委托给 manager.has_status。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）。
 func has_status(status_id: Variant) -> bool:
 	var manager: Node = _ensure_status_manager()
 	return manager != null and manager.has_method("has_status") and bool(manager.call("has_status", status_id))
 
 
+## 作用：获取状态效果叠层，供当前模块后续逻辑使用；具体处理委托给 manager.get_status_stack。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）；返回计算或读取的数值。
 func get_status_stack(status_id: Variant) -> int:
 	var manager: Node = _ensure_status_manager()
 	if manager == null or not manager.has_method("get_status_stack"):
@@ -259,10 +290,14 @@ func get_status_stack(status_id: Variant) -> int:
 	return int(manager.call("get_status_stack", status_id))
 
 
+## 作用：消耗感电叠层。
+## 使用：供本模块调用者使用；返回是否满足条件或执行成功。
 func consume_shock_stack() -> bool:
 	return consume_status_stack(&"shock", 1)
 
 
+## 作用：消耗状态效果叠层；具体处理委托给 manager.consume_status_stack。
+## 使用：本文件由 consume_shock_stack 调用；输入 status_id（状态效果ID）、stack_count（叠层数量）；返回是否满足条件或执行成功。
 func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	var manager: Node = _ensure_status_manager()
 	if manager == null or not manager.has_method("consume_status_stack"):
@@ -272,6 +307,8 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	return consumed
 
 
+## 作用：获取状态效果快照，供当前模块后续逻辑使用；具体处理委托给 manager.get_status_snapshot。
+## 使用：本文件由 _update_status_label 调用；返回 Array[Dictionary] 列表。
 func get_status_snapshot() -> Array[Dictionary]:
 	var manager: Node = _ensure_status_manager()
 	if manager == null or not manager.has_method("get_status_snapshot"):
@@ -279,6 +316,8 @@ func get_status_snapshot() -> Array[Dictionary]:
 	return manager.call("get_status_snapshot")
 
 
+## 作用：清除状态效果组；具体处理委托给 manager.clear_statuses。
+## 使用：本文件由 _reset_runtime_subsystems 调用。
 func clear_statuses() -> void:
 	var manager: Node = _ensure_status_manager()
 	if manager != null and manager.has_method("clear_statuses"):
@@ -286,6 +325,8 @@ func clear_statuses() -> void:
 	_update_status_label()
 
 
+## 作用：初始化角色运行时；具体处理委托给 _character_run_initializer.initialize_loadout。
+## 使用：本文件由 reset_for_loadout 调用；返回是否满足条件或执行成功。
 func _initialize_character_runtime() -> bool:
 	if _run_loadout != null:
 		return bool(_character_run_initializer.call("initialize_loadout", self, _run_loadout))
@@ -293,6 +334,8 @@ func _initialize_character_runtime() -> bool:
 	return false
 
 
+## 作用：重置运行时属性统计。
+## 使用：本文件由 reset_for_loadout 调用。
 func _reset_runtime_stats() -> void:
 	_reset_core_runtime_stats()
 	_reset_reward_and_spawn_modifiers()
@@ -302,6 +345,8 @@ func _reset_runtime_stats() -> void:
 	_reset_runtime_subsystems()
 
 
+## 作用：重置核心运行时属性统计。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_core_runtime_stats() -> void:
 	move_speed = 220.0
 	max_health = 100
@@ -317,6 +362,8 @@ func _reset_core_runtime_stats() -> void:
 	armor = 0
 
 
+## 作用：重置奖励与生成属性修正。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_reward_and_spawn_modifiers() -> void:
 	soul_gain_multiplier = 1.0
 	experience_gain_multiplier = 1.0
@@ -343,6 +390,8 @@ func _reset_reward_and_spawn_modifiers() -> void:
 	status_duration_multiplier = 1.0
 
 
+## 作用：重置伤害反应状态。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_damage_reaction_state() -> void:
 	_last_boss_skill_hit_time = -10.0
 	_last_contact_damage_time = -10.0
@@ -350,6 +399,8 @@ func _reset_damage_reaction_state() -> void:
 	_recent_enemy_damage_sources.clear()
 
 
+## 作用：重置突进运行时状态。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_dash_runtime_state() -> void:
 	_last_move_direction = Vector2.DOWN
 	_dash_direction = Vector2.DOWN
@@ -359,6 +410,8 @@ func _reset_dash_runtime_state() -> void:
 	_clear_dash_collision_exceptions()
 
 
+## 作用：重置经验运行时状态。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_experience_runtime_state() -> void:
 	set_meta("level_up_upgrade_levels", {})
 	_experience_formula_type = "exponential"
@@ -367,6 +420,8 @@ func _reset_experience_runtime_state() -> void:
 	_experience_table = []
 
 
+## 作用：重置运行时子系统。
+## 使用：本文件由 _reset_runtime_stats 调用。
 func _reset_runtime_subsystems() -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager != null and skill_manager.has_method("clear_skills"):
@@ -380,6 +435,8 @@ func _reset_runtime_subsystems() -> void:
 	clear_statuses()
 
 
+## 作用：推进本节点的物理帧更新流程。
+## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _physics_process(delta: float) -> void:
 	var input_direction: Vector2 = _get_movement_input_direction()
 	var movement_frozen: bool = _update_player_runtime_tick(delta)
@@ -401,6 +458,8 @@ func _physics_process(delta: float) -> void:
 	_update_visual_state(_dash_direction if is_dash_active() else input_direction, delta)
 
 
+## 作用：获取移动输入方向，供当前模块后续逻辑使用。
+## 使用：本文件由 _physics_process 调用；返回 Vector2 对象/值。
 func _get_movement_input_direction() -> Vector2:
 	return Input.get_vector(
 		"move_left",
@@ -410,6 +469,8 @@ func _get_movement_input_direction() -> Vector2:
 	)
 
 
+## 作用：更新玩家运行时周期。
+## 使用：本文件由 _physics_process 调用；输入 delta（delta）；返回是否满足条件或执行成功。
 func _update_player_runtime_tick(delta: float) -> bool:
 	_update_status_effects(delta)
 	_update_player_tick_special_rules(delta)
@@ -417,11 +478,15 @@ func _update_player_runtime_tick(delta: float) -> bool:
 	return _is_movement_frozen()
 
 
+## 作用：更新上次移动方向。
+## 使用：本文件由 _physics_process 调用；输入 input_direction（输入方向）。
 func _update_last_move_direction(input_direction: Vector2) -> void:
 	if input_direction.length_squared() > 0.001:
 		_last_move_direction = input_direction.normalized()
 
 
+## 作用：应用突进或行走速度。
+## 使用：本文件由 _physics_process 调用；输入 input_direction（输入方向）、delta（delta）、was_dash_active（was突进活跃）。
 func _apply_dash_or_walk_velocity(input_direction: Vector2, delta: float, was_dash_active: bool) -> void:
 	if was_dash_active:
 		_apply_dash_collision_exceptions()
@@ -432,6 +497,8 @@ func _apply_dash_or_walk_velocity(input_direction: Vector2, delta: float, was_da
 		velocity = input_direction * _get_effective_move_speed()
 
 
+## 作用：检查速度、时长、冷却及当前突进状态后启动突进。
+## 使用：direction 为零时沿最后移动方向；成功加入碰撞例外、生成残影并发送 dash_start，返回成功标志。
 func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
 	if dash_speed <= 0.0 or dash_duration <= 0.0 or _dash_cooldown_remaining > 0.0 or is_dash_active():
 		return false
@@ -450,6 +517,8 @@ func start_dash(direction: Vector2 = Vector2.ZERO) -> bool:
 	return true
 
 
+## 作用：发出突进技能事件并衔接对应的事件处理流程。
+## 使用：本文件由 _physics_process、start_dash、_update_dash_afterimage 调用；输入 event_name（事件名称）。
 func _emit_dash_skill_event(event_name: StringName) -> void:
 	var event_bus: Node = get_node_or_null("SkillEventBus")
 	if event_bus == null or not event_bus.has_method("emit_skill_event"):
@@ -460,14 +529,20 @@ func _emit_dash_skill_event(event_name: StringName) -> void:
 	event_bus.call("emit_skill_event", event_name, PlayerSkillEventContextScript.build_dash_context(self, _dash_direction, skill_manager, get_node_or_null("RelicManager"), event_bus))
 
 
+## 作用：判断突进活跃，返回布尔判断结果。
+## 使用：本文件由 _physics_process、start_dash 调用。
 func is_dash_active() -> bool:
 	return _dash_time_remaining > 0.0
 
 
+## 作用：更新突进冷却。
+## 使用：本文件由 _physics_process 调用；输入 delta（delta）。
 func _update_dash_cooldown(delta: float) -> void:
 	_dash_cooldown_remaining = maxf(_dash_cooldown_remaining - delta, 0.0)
 
 
+## 作用：只忽略剩余突进路径附近的有效敌人物理碰撞。
+## 使用：突进开始及每帧调用；记录 body 列表供结束后恢复，不忽略路径外敌人。
 func _apply_dash_collision_exceptions() -> void:
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
 	var targets: Array = _get_dash_collision_candidates(registry)
@@ -483,6 +558,8 @@ func _apply_dash_collision_exceptions() -> void:
 		_dash_collision_exceptions.append(body)
 
 
+## 作用：获取突进碰撞候选项，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_dash_collision_exceptions 调用；输入 registry（registry）；返回 Array 列表。
 func _get_dash_collision_candidates(registry: Node) -> Array:
 	if registry == null:
 		return []
@@ -497,6 +574,8 @@ func _get_dash_collision_candidates(registry: Node) -> Array:
 	return []
 
 
+## 作用：判断主体附近突进路径，返回布尔判断结果。
+## 使用：本文件由 _apply_dash_collision_exceptions 调用；输入 body（主体）。
 func _is_body_near_dash_path(body: PhysicsBody2D) -> bool:
 	var target: Node2D = body as Node2D
 	if target == null:
@@ -517,10 +596,14 @@ func _is_body_near_dash_path(body: PhysicsBody2D) -> bool:
 	return closest_point.distance_squared_to(target.global_position) <= clearance * clearance
 
 
+## 作用：突进剩余距离。
+## 使用：本文件由 _get_dash_collision_candidates、_is_body_near_dash_path 调用；返回计算或读取的数值。
 func _dash_remaining_distance() -> float:
 	return maxf(dash_speed * _dash_time_remaining, 0.0)
 
 
+## 作用：移除本轮突进登记的全部有效碰撞例外。
+## 使用：突进结束或重开时调用；清空列表，避免永久穿过敌人。
 func _clear_dash_collision_exceptions() -> void:
 	for body: PhysicsBody2D in _dash_collision_exceptions:
 		if body != null and is_instance_valid(body):
@@ -528,6 +611,8 @@ func _clear_dash_collision_exceptions() -> void:
 	_dash_collision_exceptions.clear()
 
 
+## 作用：更新突进残影。
+## 使用：本文件由 _apply_dash_or_walk_velocity 调用；输入 delta（delta）。
 func _update_dash_afterimage(delta: float) -> void:
 	_dash_afterimage_timer -= delta
 	if _dash_afterimage_timer > 0.0:
@@ -537,6 +622,8 @@ func _update_dash_afterimage(delta: float) -> void:
 	_dash_afterimage_timer = dash_afterimage_interval
 
 
+## 作用：生成突进残影。
+## 使用：本文件由 start_dash、_update_dash_afterimage 调用。
 func _spawn_dash_afterimage() -> void:
 	var source: Node2D = _get_dash_visual_source()
 	if source == null:
@@ -571,6 +658,8 @@ func _spawn_dash_afterimage() -> void:
 	tween.tween_callback(afterimage.queue_free)
 
 
+## 作用：获取突进视觉来源，供当前模块后续逻辑使用。
+## 使用：本文件由 _spawn_dash_afterimage 调用；返回 Node2D 对象/值。
 func _get_dash_visual_source() -> Node2D:
 	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if animated_sprite != null and animated_sprite.visible and animated_sprite.sprite_frames != null:
@@ -581,6 +670,8 @@ func _get_dash_visual_source() -> Node2D:
 	return null
 
 
+## 作用：获取突进视觉纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _spawn_dash_afterimage 调用；输入 source（来源）；返回 Texture2D 对象/值。
 func _get_dash_visual_texture(source: Node2D) -> Texture2D:
 	if source is Sprite2D:
 		return (source as Sprite2D).texture
@@ -592,10 +683,14 @@ func _get_dash_visual_texture(source: Node2D) -> Texture2D:
 	return null
 
 
+## 作用：保留玩家移动限制接口，当前直接返回不做限制。
+## 使用：delta 未用于运算；现有行走依赖 move_and_slide 与地图边界，不要误以为调用会改变速度。
 func _limit_actor_motion(delta: float) -> void:
 	return
 
 
+## 作用：获取实体移动缩放，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 motion（移动）、blocker（blocker）；返回计算或读取的数值。
 func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:
 	var radius: float = _get_collision_radius(self, 24.0) + _get_collision_radius(blocker, 24.0) + 2.0
 	var offset: Vector2 = global_position - blocker.global_position
@@ -613,6 +708,8 @@ func _get_actor_motion_scale(motion: Vector2, blocker: Node2D) -> float:
 	return clampf(t, 0.0, 1.0) if t >= 0.0 and t <= 1.0 else 1.0
 
 
+## 作用：获取碰撞半径，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_dash_collision_candidates、_is_body_near_dash_path、_get_actor_motion_scale 调用；输入 node（节点）、fallback（回退）；返回计算或读取的数值。
 func _get_collision_radius(node: Node2D, fallback: float) -> float:
 	var collision_shape: CollisionShape2D = node.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null and collision_shape.shape is CircleShape2D:
@@ -620,6 +717,8 @@ func _get_collision_radius(node: Node2D, fallback: float) -> float:
 	return fallback
 
 
+## 作用：限制转换移动边界。
+## 使用：本文件由 _physics_process 调用。
 func _clamp_to_movement_bounds() -> void:
 	if not _has_movement_bounds:
 		_refresh_movement_bounds()
@@ -632,6 +731,8 @@ func _clamp_to_movement_bounds() -> void:
 	)
 
 
+## 作用：刷新移动边界。
+## 使用：本文件由 reset_for_loadout、_clamp_to_movement_bounds、refresh_movement_bounds 调用。
 func _refresh_movement_bounds() -> void:
 	var background: Sprite2D = get_tree().root.find_child("DungeonBackground", true, false) as Sprite2D
 	if background == null or background.texture == null:
@@ -653,11 +754,15 @@ func _refresh_movement_bounds() -> void:
 	_apply_camera_limits(Rect2(top_left, scaled_size))
 
 
+## 作用：刷新移动边界。
+## 使用：供本模块调用者使用。
 func refresh_movement_bounds() -> void:
 	_has_movement_bounds = false
 	_refresh_movement_bounds()
 
 
+## 作用：应用相机边界。
+## 使用：本文件由 _refresh_movement_bounds 调用；输入 background_bounds（背景边界）。
 func _apply_camera_limits(background_bounds: Rect2) -> void:
 	var camera: Camera2D = get_node_or_null("Camera2D") as Camera2D
 	if camera == null:
@@ -670,10 +775,14 @@ func _apply_camera_limits(background_bounds: Rect2) -> void:
 	camera.limit_smoothed = true
 
 
+## 作用：把严格 DamagePacket 交给统一玩家伤害应用服务。
+## 使用：外部受击入口；包校验、命中保护、吸收与扣血遵循统一管线顺序。
 func take_damage(packet: DamagePacket) -> void:
 	DamageApplicationServiceScript.apply_player_damage(self, packet)
 
 
+## 作用：记录承伤；具体处理委托给 tracker.record_damage_taken。
+## 使用：内部辅助入口；输入 amount（数量）、damage_result（伤害结果）、source_packet（来源伤害包）。
 func _record_damage_taken(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	var tracker: Node = RunStatsTrackerScript.get_active(get_tree())
 	if tracker != null and tracker.has_method("record_damage_taken"):
@@ -683,6 +792,8 @@ func _record_damage_taken(amount: int, damage_result: Dictionary, source_packet:
 		_trigger_damage_taken_special_rules(source_packet, damage_result, amount)
 
 
+## 作用：返回敌人在最近时间窗口内造成的伤害权重。
+## 使用：enemy 为候选目标，window_seconds 为秒；过期或未知来源返回 0，并移除过期记录。
 func get_recent_enemy_damage_priority(enemy: Node, window_seconds: float = RECENT_ENEMY_DAMAGE_PRIORITY_WINDOW_SECONDS) -> float:
 	if enemy == null:
 		return 0.0
@@ -702,6 +813,8 @@ func get_recent_enemy_damage_priority(enemy: Node, window_seconds: float = RECEN
 	return maxf(float(record.get("amount", 0.0)), 0.0)
 
 
+## 作用：记录近期敌人伤害来源。
+## 使用：本文件由 _record_damage_taken 调用；输入 amount（数量）、source_packet（来源伤害包）、damage_result（伤害结果）。
 func _record_recent_enemy_damage_source(amount: int, source_packet: DamagePacket, damage_result: Dictionary = {}) -> void:
 	if amount <= 0:
 		return
@@ -720,6 +833,8 @@ func _record_recent_enemy_damage_source(amount: int, source_packet: DamagePacket
 	_prune_recent_enemy_damage_sources(now_seconds)
 
 
+## 作用：按真实正承伤依次触发被动运行时、事件总线和各技能受击规则。
+## 使用：传入原伤害包与结果；上下文标记跳过重复火系被动执行。
 func _trigger_damage_taken_special_rules(source_packet: DamagePacket, damage_result: Dictionary = {}, amount: int = 0) -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
@@ -749,6 +864,8 @@ func _trigger_damage_taken_special_rules(source_packet: DamagePacket, damage_res
 			SpecialDamageRuleHandlerScript.execute_frost_ring_on_player_damaged(rules, PlayerSkillEventContextScript.build_damage_rule_context(self, source_packet.to_dictionary(), damage_result, skill_instance))
 
 
+## 作用：更新玩家周期特殊规则。
+## 使用：本文件由 _update_player_runtime_tick 调用；输入 _delta（delta）。
 func _update_player_tick_special_rules(_delta: float) -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
@@ -769,6 +886,8 @@ func _update_player_tick_special_rules(_delta: float) -> void:
 		})
 
 
+## 作用：提取敌人实例ID。
+## 使用：本文件由 _record_recent_enemy_damage_source 调用；输入 source_instance_id（来源实例ID）、attacker_id（攻击者ID）；返回 String 文本/标识。
 func _extract_enemy_instance_id(source_instance_id: String, attacker_id: String) -> String:
 	if source_instance_id != "":
 		var source_parts: PackedStringArray = source_instance_id.split(":", false, 1)
@@ -779,10 +898,14 @@ func _extract_enemy_instance_id(source_instance_id: String, attacker_id: String)
 	return ""
 
 
+## 作用：判断正数整数字符串，返回布尔判断结果。
+## 使用：本文件由 _extract_enemy_instance_id 调用；输入 value（值）。
 func _is_positive_int_string(value: String) -> bool:
 	return value.is_valid_int() and int(value) > 0
 
 
+## 作用：清理近期敌人伤害来源组。
+## 使用：本文件由 _record_recent_enemy_damage_source 调用；输入 now_seconds（当前秒）。
 func _prune_recent_enemy_damage_sources(now_seconds: float) -> void:
 	var max_age: float = RECENT_ENEMY_DAMAGE_PRIORITY_WINDOW_SECONDS * 2.0
 	for key: Variant in _recent_enemy_damage_sources.keys():
@@ -795,10 +918,14 @@ func _prune_recent_enemy_damage_sources(now_seconds: float) -> void:
 			_recent_enemy_damage_sources.erase(key)
 
 
+## 作用：当前秒。
+## 使用：本文件由 get_recent_enemy_damage_priority、_record_recent_enemy_damage_source 调用；返回计算或读取的数值。
 func _now_seconds() -> float:
 	return float(Time.get_ticks_msec()) / 1000.0
 
 
+## 作用：显示伤害数值。
+## 使用：内部辅助入口；输入 amount（数量）、damage_result（伤害结果）。
 func _show_damage_number(amount: int, damage_result: Dictionary) -> void:
 	DamageNumberPopupScript.show(self, amount, damage_result, {
 		"name": "PlayerDamageNumber",
@@ -813,6 +940,8 @@ func _show_damage_number(amount: int, damage_result: Dictionary) -> void:
 	_damage_popup_offset_index += 1
 
 
+## 作用：降低短时间内重复 Boss 来源伤害并更新命中时间。
+## 使用：source_id 为 boss 且距离上次 <=0.3 秒时伤害减半、至少 1；其他来源保持原值；返回计算或读取的数值。
 func _apply_boss_overlap_protection(amount: int, source_packet: DamagePacket) -> int:
 	if amount <= 0:
 		return amount
@@ -826,6 +955,8 @@ func _apply_boss_overlap_protection(amount: int, source_packet: DamagePacket) ->
 	return adjusted_amount
 
 
+## 作用：判断接触/同一伤害区是否落在保护间隔内，并登记此次允许命中的时间。
+## 使用：严格伤害包验证后调用；接触间隔 0.45 秒，同来源区域间隔 0.5 秒；返回是否满足条件或执行成功。
 func _is_damage_blocked_by_hit_protection(source_packet: DamagePacket) -> bool:
 	var now_seconds: float = float(Time.get_ticks_msec()) / 1000.0
 	var source_type: String = String(_damage_source_value(source_packet, "source_type", ""))
@@ -846,14 +977,20 @@ func _is_damage_blocked_by_hit_protection(source_packet: DamagePacket) -> bool:
 	return false
 
 
+## 作用：伤害来源值。
+## 使用：本文件由 _record_recent_enemy_damage_source、_apply_boss_overlap_protection、_is_damage_blocked_by_hit_protection 调用；输入 source_packet（来源伤害包）、key（键）、fallback（回退）；返回 Variant 对象/值。
 func _damage_source_value(source_packet: DamagePacket, key: Variant, fallback: Variant = null) -> Variant:
 	return source_packet.get_value(key, fallback)
 
 
+## 作用：更新视觉状态；具体处理委托给 _visual_controller.update。
+## 使用：本文件由 _physics_process 调用；输入 input_direction（输入方向）、delta（delta）。
 func _update_visual_state(input_direction: Vector2, delta: float) -> void:
 	_visual_controller.call("update", input_direction, current_health, delta)
 
 
+## 作用：更新特质移动；具体处理委托给 trait_system.handle_movement。
+## 使用：本文件由 _physics_process 调用；输入 input_direction（输入方向）、delta（delta）。
 func _update_trait_movement(input_direction: Vector2, delta: float) -> void:
 	var trait_system: Node = get_node_or_null("CharacterTraitSystem")
 	if trait_system == null or not trait_system.has_method("handle_movement"):
@@ -861,6 +998,8 @@ func _update_trait_movement(input_direction: Vector2, delta: float) -> void:
 	trait_system.call("handle_movement", input_direction.length_squared() > 0.001, delta)
 
 
+## 作用：添加经验。
+## 使用：供本模块调用者使用；输入 amount（数量）。
 func add_experience(amount: int) -> void:
 	if amount <= 0:
 		return
@@ -868,6 +1007,8 @@ func add_experience(amount: int) -> void:
 	_apply_experience_total(_calculate_experience_gain(amount))
 
 
+## 作用：分别计算每份经验倍率与取整后累计为一次成长输入。
+## 使用：amounts 来自 PickupManager 队列；逐条取整保持单晶体收益语义，仍逐级发升级信号。
 func add_experience_batch(amounts: Array) -> void:
 	var final_amount: int = 0
 	for amount_variant: Variant in amounts:
@@ -875,12 +1016,16 @@ func add_experience_batch(amounts: Array) -> void:
 	_apply_experience_total(final_amount)
 
 
+## 作用：计算经验收益。
+## 使用：本文件由 add_experience、add_experience_batch 调用；输入 amount（数量）；返回计算或读取的数值。
 func _calculate_experience_gain(amount: int) -> int:
 	if amount <= 0:
 		return 0
 	return maxi(roundi(float(amount) * experience_gain_multiplier), 1)
 
 
+## 作用：累计最终经验并循环处理跨越的所有等级。
+## 使用：final_amount 须为正；每升一级发 leveled_up，最后发一次 experience_changed。
 func _apply_experience_total(final_amount: int) -> void:
 	if final_amount <= 0:
 		return
@@ -896,6 +1041,8 @@ func _apply_experience_total(final_amount: int) -> void:
 	experience_changed.emit(current_experience, experience_to_next_level, level)
 
 
+## 作用：根据选项 ID 前缀分派技能升级、局内升级或通用升级。
+## 使用：接收 skill_level_up:/level_up_upgrade: 或配置 ID；成功后发送 upgrade_applied 并刷新对应状态。
 func apply_upgrade(upgrade_id: StringName) -> void:
 	var upgrade_id_text: String = String(upgrade_id)
 	var dev_enabled: bool = _is_dev_run()
@@ -919,6 +1066,8 @@ func apply_upgrade(upgrade_id: StringName) -> void:
 		_apply_upgrade_data(upgrade_id, upgrade_id, upgrade)
 
 
+## 作用：应用升级数据。
+## 使用：本文件由 apply_upgrade 调用；输入 _definition_upgrade_id（定义升级ID）、emitted_upgrade_id（emitted升级ID）、upgrade（升级）。
 func _apply_upgrade_data(_definition_upgrade_id: StringName, emitted_upgrade_id: StringName, upgrade: Dictionary) -> void:
 	if upgrade.is_empty():
 		return
@@ -936,6 +1085,8 @@ func _apply_upgrade_data(_definition_upgrade_id: StringName, emitted_upgrade_id:
 	_refresh_synergies()
 
 
+## 作用：解析动态学习定义，检查等级上限并学习技能或施加逐级修正。
+## 使用：upgrade_id 为定义 ID；只有实际应用成功才增加该选项已选等级；返回是否满足条件或执行成功。
 func _apply_level_up_upgrade(upgrade_id: StringName, rarity: String = "") -> bool:
 	var upgrade: Dictionary = SkillLearnDefinitionRepositoryScript.resolve_upgrade(upgrade_id)
 	if upgrade.is_empty():
@@ -973,6 +1124,8 @@ func _apply_level_up_upgrade(upgrade_id: StringName, rarity: String = "") -> boo
 	return true
 
 
+## 作用：学习活跃技能；具体处理委托给 skill_manager.add_skill。
+## 使用：本文件由 _apply_level_up_upgrade 调用；输入 skill_id（技能ID）、rarity（稀有度）；返回是否满足条件或执行成功。
 func _learn_active_skill(skill_id: StringName, rarity: String = "") -> bool:
 	if skill_id == &"":
 		return false
@@ -982,6 +1135,8 @@ func _learn_active_skill(skill_id: StringName, rarity: String = "") -> bool:
 	return bool(skill_manager.call("add_skill", skill_id, rarity))
 
 
+## 作用：按线性、查表或指数公式计算该等级所需经验。
+## 使用：character_level 为当前等级；所有分支结果至少为 1，查表索引限制在有效范围；返回计算或读取的数值。
 func _get_experience_required_for_level(character_level: int) -> int:
 	if _experience_formula_type == "linear":
 		return maxi(_experience_formula_base + _experience_formula_per_level * maxi(character_level, 0), 1)
@@ -993,6 +1148,8 @@ func _get_experience_required_for_level(character_level: int) -> int:
 	return maxi(roundi(base_experience_to_next_level * pow(experience_growth_per_level, level_offset)), 1)
 
 
+## 作用：应用单局配置。
+## 使用：内部辅助入口。
 func _apply_run_config() -> void:
 	var run_config: Dictionary = GameData.get_run_config()
 	if run_config.is_empty():
@@ -1009,6 +1166,8 @@ func _apply_run_config() -> void:
 		_experience_table = _parse_int_array(formula_data.get("values", []))
 
 
+## 作用：应用基础属性统计。
+## 使用：内部辅助入口；输入 base_stats（基础属性统计）。
 func _apply_base_stats(base_stats: Dictionary) -> void:
 	max_health = int(base_stats.get("max_hp", max_health))
 	move_speed = float(base_stats.get("move_speed", move_speed))
@@ -1022,10 +1181,14 @@ func _apply_base_stats(base_stats: Dictionary) -> void:
 	soul_gain_multiplier = float(base_stats.get("soul_gain_multiplier", soul_gain_multiplier))
 
 
+## 作用：应用视觉配置；具体处理委托给 _visual_controller.apply_character_config。
+## 使用：内部辅助入口；输入 character（角色）。
 func _apply_visual_config(character: Dictionary) -> void:
 	_visual_controller.call("apply_character_config", character)
 
 
+## 作用：应用永久升级属性修正。
+## 使用：本文件由 reset_for_loadout 调用。
 func _apply_permanent_upgrade_modifiers() -> void:
 	var modifiers: Dictionary = SaveManager.get_permanent_upgrade_total_modifiers()
 	if modifiers.is_empty():
@@ -1034,10 +1197,14 @@ func _apply_permanent_upgrade_modifiers() -> void:
 	set_run_modifier_source(&"permanent_upgrades", modifiers)
 
 
+## 作用：获取技能管理服务，供当前模块后续逻辑使用。
+## 使用：本文件由 _reset_runtime_subsystems、_emit_dash_skill_event、_trigger_damage_taken_special_rules 调用；返回 Node 对象/值。
 func _get_skill_manager() -> Node:
 	return get_node_or_null("SkillManager")
 
 
+## 作用：获取升级升级等级，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_level_up_upgrade 调用；输入 upgrade_id（升级ID）；返回计算或读取的数值。
 func _get_level_up_upgrade_level(upgrade_id: StringName) -> int:
 	var levels_variant: Variant = get_meta("level_up_upgrade_levels", {})
 	if levels_variant is Dictionary:
@@ -1046,6 +1213,8 @@ func _get_level_up_upgrade_level(upgrade_id: StringName) -> int:
 	return 0
 
 
+## 作用：设置升级升级等级。
+## 使用：本文件由 _apply_level_up_upgrade 调用；输入 upgrade_id（升级ID）、level_value（等级值）。
 func _set_level_up_upgrade_level(upgrade_id: StringName, level_value: int) -> void:
 	var levels: Dictionary = {}
 	var levels_variant: Variant = get_meta("level_up_upgrade_levels", {})
@@ -1055,6 +1224,8 @@ func _set_level_up_upgrade_level(upgrade_id: StringName, level_value: int) -> vo
 	set_meta("level_up_upgrade_levels", levels)
 
 
+## 作用：获取技能实例，供当前模块后续逻辑使用；具体处理委托给 skill_manager.get_skill。
+## 使用：本文件由 _apply_skill_level_up_upgrade 调用；输入 skill_id（技能ID）；返回 RefCounted 对象/值。
 func _get_skill_instance(skill_id: StringName) -> RefCounted:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_skill"):
@@ -1063,18 +1234,24 @@ func _get_skill_instance(skill_id: StringName) -> RefCounted:
 	return skill_manager.call("get_skill", skill_id) as RefCounted
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：传入待解析 Variant；返回独立深拷贝；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _apply_level_up_upgrade 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：解析整数数组。
+## 使用：本文件由 _apply_run_config 调用；输入 value（值）；返回 Array[int] 列表。
 func _parse_int_array(value: Variant) -> Array[int]:
 	var parsed: Array[int] = []
 	if not (value is Array):
@@ -1084,6 +1261,8 @@ func _parse_int_array(value: Variant) -> Array[int]:
 	return parsed
 
 
+## 作用：获取等级字典，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 value（值）、level_index（等级索引）；返回结果字典。
 func _get_level_dictionary(value: Variant, level_index: int) -> Dictionary:
 	if value is Array:
 		var items: Array = value
@@ -1094,6 +1273,8 @@ func _get_level_dictionary(value: Variant, level_index: int) -> Dictionary:
 	return {}
 
 
+## 作用：获取等级属性修正值，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_level_up_upgrade 调用；输入 value（值）、level_index（等级索引）；返回 Variant 对象/值。
 func _get_level_modifier_value(value: Variant, level_index: int) -> Variant:
 	if value is Array:
 		var items: Array = value
@@ -1108,6 +1289,8 @@ func _get_level_modifier_value(value: Variant, level_index: int) -> Variant:
 	return []
 
 
+## 作用：判断空值属性修正值，返回布尔判断结果。
+## 使用：本文件由 _apply_upgrade_data、_apply_level_up_upgrade 调用；输入 value（值）。
 func _is_empty_modifier_value(value: Variant) -> bool:
 	if value is Array:
 		return (value as Array).is_empty()
@@ -1116,16 +1299,22 @@ func _is_empty_modifier_value(value: Variant) -> bool:
 	return true
 
 
+## 作用：刷新技能配置组。
+## 使用：本文件由 apply_upgrade、_apply_upgrade_data 调用。
 func _refresh_skill_configs() -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager != null and skill_manager.has_signal("skill_changed"):
 		skill_manager.emit_signal("skill_changed")
 
 
+## 作用：应用属性修正；具体处理委托给 _modifier_applier.apply。
+## 使用：本文件由 set_run_modifier_source、merge_run_modifier_source、refresh_run_modifier_snapshot 调用；输入 modifiers（属性修正）。
 func _apply_modifiers(modifiers: Variant) -> void:
 	_modifier_applier.call("apply", self, ModifierSourceScript.flatten(modifiers, ModifierSourceScript.SOURCE_UNKNOWN, ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PLAYER)))
 
 
+## 作用：获取快照属性修正，供当前模块后续逻辑使用。
+## 使用：本文件由 set_run_modifier_source、merge_run_modifier_source、refresh_run_modifier_snapshot 调用；输入 modifiers（属性修正）；返回结果字典。
 func _get_snapshot_modifiers(modifiers: Variant) -> Dictionary:
 	var flat_modifiers: Dictionary = ModifierSourceScript.flatten(modifiers, ModifierSourceScript.SOURCE_UNKNOWN, ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PLAYER))
 	var snapshot_modifiers: Dictionary = {}
@@ -1137,10 +1326,14 @@ func _get_snapshot_modifiers(modifiers: Variant) -> Dictionary:
 	return snapshot_modifiers
 
 
+## 作用：判断动态作用域属性修正键，返回布尔判断结果。
+## 使用：本文件由 _get_snapshot_modifiers 调用；输入 key（键）。
 func _is_dynamic_scope_modifier_key(key: String) -> bool:
 	return _is_damage_scope_modifier_key(key) or _is_movement_scope_modifier_key(key) or _is_pickup_scope_modifier_key(key)
 
 
+## 作用：判断伤害作用域属性修正键，返回布尔判断结果。
+## 使用：本文件由 _is_dynamic_scope_modifier_key、_get_run_modifier_scopes 调用；输入 key（键）。
 func _is_damage_scope_modifier_key(key: String) -> bool:
 	match key:
 		"damage_multiplier", "damage_multiplier_add", "crit_chance_add", "crit_damage_add", "starting_skill_damage_add":
@@ -1150,14 +1343,20 @@ func _is_damage_scope_modifier_key(key: String) -> bool:
 	return false
 
 
+## 作用：判断移动作用域属性修正键，返回布尔判断结果。
+## 使用：本文件由 _is_dynamic_scope_modifier_key、_get_run_modifier_scopes 调用；输入 key（键）。
 func _is_movement_scope_modifier_key(key: String) -> bool:
 	return key == "move_speed_multiplier" or key == "move_speed_multiplier_add"
 
 
+## 作用：判断拾取物作用域属性修正键，返回布尔判断结果。
+## 使用：本文件由 _is_dynamic_scope_modifier_key、_get_run_modifier_scopes 调用；输入 key（键）。
 func _is_pickup_scope_modifier_key(key: String) -> bool:
 	return key == "pickup_radius_multiplier_add" or key == "pickup_radius_add"
 
 
+## 作用：获取单局属性修正作用域，供当前模块后续逻辑使用。
+## 使用：本文件由 set_run_modifier_source、merge_run_modifier_source 调用；输入 modifiers（属性修正）；返回 Array[StringName] 列表。
 func _get_run_modifier_scopes(modifiers: Variant) -> Array[StringName]:
 	var scopes: Array[StringName] = [ModifierQueryScript.SCOPE_PLAYER]
 	var flat_modifiers: Dictionary = ModifierSourceScript.flatten(modifiers)
@@ -1172,6 +1371,8 @@ func _get_run_modifier_scopes(modifiers: Variant) -> Array[StringName]:
 	return scopes
 
 
+## 作用：更新 ModifierStore 来源及作用域，并把非动态属性快照应用到玩家。
+## 使用：source_id 标识来源；伤害、移动与拾取动态字段由查询计算，避免重复写入基础字段。
 func set_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("set_source"):
@@ -1179,6 +1380,8 @@ func set_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
 	_apply_modifiers(_get_snapshot_modifiers(modifiers))
 
 
+## 作用：合并同一来源的属性效果并应用非动态字段。
+## 使用：与 set_run_modifier_source 的覆盖行为不同，使用 ModifierStore.merge_source。
 func merge_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("merge_source"):
@@ -1186,12 +1389,16 @@ func merge_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
 	_apply_modifiers(_get_snapshot_modifiers(modifiers))
 
 
+## 作用：移除 ModifierStore 中指定来源。
+## 使用：source_id 为来源键；本函数不逆向回滚已应用的基础字段快照。
 func clear_run_modifier_source(source_id: Variant) -> void:
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("clear_source"):
 		modifier_store.call("clear_source", source_id)
 
 
+## 作用：刷新单局属性修正快照；具体处理委托给 modifier_store.collect。
+## 使用：供本模块调用者使用。
 func refresh_run_modifier_snapshot() -> void:
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store == null or not modifier_store.has_method("collect"):
@@ -1201,6 +1408,8 @@ func refresh_run_modifier_snapshot() -> void:
 		_apply_modifiers(_get_snapshot_modifiers(modifiers_variant))
 
 
+## 作用：应用环境属性修正；具体处理委托给 spawner.apply_run_modifiers。
+## 使用：内部辅助入口。
 func _apply_environment_modifiers() -> void:
 	var spawner: Node = get_tree().get_first_node_in_group(&"enemy_spawner")
 	if spawner != null and spawner.has_method("apply_run_modifiers"):
@@ -1210,6 +1419,8 @@ func _apply_environment_modifiers() -> void:
 		})
 
 
+## 作用：升级技能。
+## 使用：本文件由 _upgrade_all_owned_skills、_apply_skill_level_up_upgrade 调用；输入 skill_id（技能ID）、amount（数量）、rarity（稀有度）、_dev_level_hint（开发模式等级hint）、_dev_enabled（开发模式启用）；返回是否满足条件或执行成功。
 func _upgrade_skill(skill_id: StringName, amount: int, rarity: String = "", _dev_level_hint: Variant = &"", _dev_enabled: bool = false) -> bool:
 	if amount <= 0:
 		return false
@@ -1229,6 +1440,8 @@ func _upgrade_skill(skill_id: StringName, amount: int, rarity: String = "", _dev
 	return upgraded
 
 
+## 作用：升级全部已拥有技能组。
+## 使用：内部辅助入口；输入 amount（数量）。
 func _upgrade_all_owned_skills(amount: int) -> void:
 	var skill_manager: Node = _get_skill_manager()
 	if skill_manager == null or not skill_manager.has_method("get_all_skills"):
@@ -1243,12 +1456,16 @@ func _upgrade_all_owned_skills(amount: int) -> void:
 		_upgrade_skill(skill_id, amount)
 
 
+## 作用：刷新协同；具体处理委托给 synergy_manager.refresh_active_synergies。
+## 使用：本文件由 reset_for_loadout、apply_upgrade、_apply_upgrade_data 调用。
 func _refresh_synergies() -> void:
 	var synergy_manager: Node = get_node_or_null("SynergyManager")
 	if synergy_manager != null and synergy_manager.has_method("refresh_active_synergies"):
 		synergy_manager.call("refresh_active_synergies", self)
 
 
+## 作用：应用技能升级升级。
+## 使用：本文件由 apply_upgrade 调用；输入 upgrade_id_text（升级ID文本）、dev_enabled（开发模式启用）；返回是否满足条件或执行成功。
 func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = false) -> bool:
 	var level_parts: PackedStringArray = upgrade_id_text.split(":")
 	var skill_id_from_option: StringName = StringName(level_parts[1] if level_parts.size() > 1 else "")
@@ -1265,6 +1482,8 @@ func _apply_skill_level_up_upgrade(upgrade_id_text: String, dev_enabled: bool = 
 	return _upgrade_skill(skill_id_from_option, target_level - int(skill_instance.get("current_level")), rarity, target_level, true)
 
 
+## 作用：判断开发模式单局，返回布尔判断结果。
+## 使用：本文件由 apply_upgrade 调用。
 func _is_dev_run() -> bool:
 	var node: Node = self
 	while node != null:

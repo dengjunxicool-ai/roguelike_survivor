@@ -1,3 +1,6 @@
+## 文件用途：构建永久升级列表并派发购买命令。
+## 使用方式：build 接收容器，refresh 读取货币与等级；成功购买后重绘列表。
+
 extends RefCounted
 class_name MetaUpgradeController
 
@@ -16,6 +19,8 @@ var _command_dispatcher: RefCounted = UICommandDispatcherScript.new()
 var _view_model_builder: RefCounted = MetaUpgradeViewModelBuilderScript.new()
 
 
+## 作用：构建永久升级列表并派发购买命令。
+## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；输入 body（主体）。
 func build(body: VBoxContainer) -> void:
 	_soul_label = _add_label(body, "灵魂石：0", 1)
 	if OS.is_debug_build():
@@ -26,6 +31,8 @@ func build(body: VBoxContainer) -> void:
 	_add_state_button(body, "返回欢迎页", STATE_TITLE)
 
 
+## 作用：读取永久升级展示模型并重建货币、等级、费用和购买按钮列表。
+## 使用：build 后及购买成功后调用；只刷新展示，实际购买由命令分派器完成。
 func refresh() -> void:
 	var view_model: Dictionary = _view_model_builder.call("build")
 	if _soul_label != null:
@@ -37,6 +44,8 @@ func refresh() -> void:
 		_add_upgrade_row(upgrade)
 
 
+## 作用：添加升级行并配置节点/样式所需的属性。
+## 使用：本文件由 refresh 调用；输入 upgrade（升级）。
 func _add_upgrade_row(upgrade: Dictionary) -> void:
 	var upgrade_id: StringName = StringName(String(upgrade.get("id", "")))
 	if upgrade_id == &"":
@@ -57,26 +66,36 @@ func _add_upgrade_row(upgrade: Dictionary) -> void:
 	button.pressed.connect(Callable(self, "_buy_upgrade").bind(upgrade_id))
 
 
+## 作用：购买升级；具体处理委托给 _command_dispatcher.dispatch。
+## 使用：本文件由 _add_upgrade_row 调用；输入 upgrade_id（升级ID）。
 func _buy_upgrade(upgrade_id: StringName) -> void:
 	_command_dispatcher.call("dispatch", UICommandScript.purchase_meta_upgrade(upgrade_id))
 	refresh()
 
 
+## 作用：响应添加测试灵魂石点击并衔接对应的事件处理流程；具体处理委托给 _command_dispatcher.dispatch。
+## 使用：本文件由 build 调用。
 func _on_add_test_souls_pressed() -> void:
 	_command_dispatcher.call("dispatch", UICommandScript.add_soul_stones(100))
 	refresh()
 
 
+## 作用：添加状态切换按钮。
+## 使用：本文件由 build 调用；输入 parent（父节点）、text（文本）、state（状态）；返回 Button 对象/值。
 func _add_state_button(parent: Node, text: String, state: String) -> Button:
 	var button: Button = _add_button(parent, text)
 	button.pressed.connect(Callable(self, "_emit_state").bind(state))
 	return button
 
 
+## 作用：发出状态并衔接对应的事件处理流程。
+## 使用：本文件由 _add_state_button 调用；输入 state（状态）。
 func _emit_state(state: String) -> void:
 	state_requested.emit(state)
 
 
+## 作用：添加标签并配置节点/样式所需的属性。
+## 使用：本文件由 build、_add_upgrade_row 调用；输入 parent（父节点）、text（文本）、alignment（alignment）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String, alignment: int = 0) -> Label:
 	var label: Label = Label.new()
 	label.text = text
@@ -87,6 +106,8 @@ func _add_label(parent: Node, text: String, alignment: int = 0) -> Label:
 	return label
 
 
+## 作用：添加按钮并配置节点/样式所需的属性。
+## 使用：本文件由 build、_add_upgrade_row、_add_state_button 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	var button: Button = Button.new()
 	button.text = text
@@ -97,6 +118,8 @@ func _add_button(parent: Node, text: String) -> Button:
 	return button
 
 
+## 作用：添加滚动区并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）；返回 ScrollContainer 对象/值。
 func _add_scroll(parent: Node) -> ScrollContainer:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -105,6 +128,8 @@ func _add_scroll(parent: Node) -> ScrollContainer:
 	return scroll
 
 
+## 作用：添加纵向容器并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）；返回 VBoxContainer 对象/值。
 func _add_vbox(parent: Node) -> VBoxContainer:
 	var container: VBoxContainer = VBoxContainer.new()
 	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -114,6 +139,8 @@ func _add_vbox(parent: Node) -> VBoxContainer:
 	return container
 
 
+## 作用：从容器移除子节点并请求释放，供重建列表使用。
+## 使用：本文件由 refresh 调用；输入 parent（父节点）。
 func _clear_children(parent: Node) -> void:
 	if parent == null:
 		return

@@ -1,3 +1,5 @@
+## 文件用途：调度技能组件的冷却、目标查找、触发规则施放和持续环绕物创建。
+## 使用方式：SkillExecutor 每帧 tick 传技能实例、delta 和上下文，冷却到期且满足目标条件后触发动作和事件。
 extends RefCounted
 class_name SkillComponentRunner
 
@@ -7,6 +9,8 @@ const ModifierResolverScript: Script = preload("res://scripts/skills/modifier_re
 const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 
 
+## 作用：在技能有效时包裹性能采样并推进组件施放调度。
+## 使用：skill_instance 为技能运行实例；delta 为本帧经过的秒数；context 为施放或命中上下文。
 func tick(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool:
 	var hot_path_start: int = HotPathProfilerScript.begin_context(context)
 	var result: bool = _tick_profiled(skill_instance, delta, context)
@@ -14,6 +18,8 @@ func tick(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool
 	return result
 
 
+## 作用：扣减技能冷却，查找组件目标并在就绪后执行动作与施放事件。
+## 使用：skill_instance 为技能运行实例；delta 为本帧经过的秒数；context 携带 event_bus；返回布尔判断或执行是否成功。
 func _tick_profiled(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool:
 	if skill_instance == null:
 		return false
@@ -44,6 +50,8 @@ func _tick_profiled(skill_instance: RefCounted, delta: float, context: Dictionar
 	return true
 
 
+## 作用：为以 cast_skill 触发规则描述的技能安排冷却与施放事件。
+## 使用：skill_instance 为技能运行实例；delta 为本帧经过的秒数；context 携带 event_bus；返回布尔判断或执行是否成功。
 func _tick_trigger_rule_cast_skill(skill_instance: RefCounted, delta: float, context: Dictionary) -> bool:
 	if not _has_cast_skill_trigger_rule(skill_instance):
 		return false
@@ -65,10 +73,14 @@ func _tick_trigger_rule_cast_skill(skill_instance: RefCounted, delta: float, con
 	return true
 
 
+## 作用：取得技能当前最终冷却，供外部调度和调试展示。
+## 使用：skill_instance 为技能运行实例；context 为施放或命中上下文。
 func get_cooldown(skill_instance: RefCounted, context: Dictionary) -> float:
 	return _get_cooldown(skill_instance, _get_components(skill_instance), context)
 
 
+## 作用：检查技能持续环绕组件，缺对象时创建而非每次重建。
+## 使用：context 携带 event_bus。
 func _ensure_persistent_orbit(_skill_instance: RefCounted, components: Array, context: Dictionary) -> void:
 	var event_bus: Node = context.get("event_bus") as Node
 	if event_bus == null or not event_bus.has_method("emit_skill_event"):
@@ -86,6 +98,8 @@ func _ensure_persistent_orbit(_skill_instance: RefCounted, components: Array, co
 		event_bus.call("emit_skill_event", &"on_cast", orbit_context)
 
 
+## 作用：根据组件目标策略和上下文选择技能施放目标。
+## 使用：context 携带 caster/skill_instance；无法解析或创建时返回 null。
 func _find_target(components: Array, context: Dictionary) -> Node2D:
 	var caster: Node = context.get("caster") as Node
 	for component_variant: Variant in components:
@@ -111,6 +125,8 @@ func _find_target(components: Array, context: Dictionary) -> Node2D:
 	return null
 
 
+## 作用：使用技能默认策略查询施放目标。
+## 使用：context 携带 caster。
 func _find_default_target(context: Dictionary) -> Node2D:
 	var caster: Node = context.get("caster") as Node
 	return TargetingServiceScript.find_target(caster, "nearest_enemy", {
@@ -119,6 +135,8 @@ func _find_default_target(context: Dictionary) -> Node2D:
 	})
 
 
+## 作用：通过属性服务和组件配置求得施放间隔。
+## 使用：context 为施放或命中上下文。
 func _get_cooldown(_skill_instance: RefCounted, components: Array, context: Dictionary) -> float:
 	for component_variant: Variant in components:
 		if not (component_variant is Dictionary):
@@ -133,6 +151,8 @@ func _get_cooldown(_skill_instance: RefCounted, components: Array, context: Dict
 	return maxf(float(ModifierResolverScript.get_stat(context, "cooldown", 1.0)), 0.05)
 
 
+## 作用：从施放触发规则计算冷却间隔。
+## 使用：skill_instance 为技能运行实例；context 为施放或命中上下文。
 func _get_cast_skill_trigger_cooldown(skill_instance: RefCounted, context: Dictionary) -> float:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition == null:
@@ -147,10 +167,14 @@ func _get_cast_skill_trigger_cooldown(skill_instance: RefCounted, context: Dicti
 	return maxf(fallback, 0.05)
 
 
+## 作用：判断技能组件施放是否必须有有效目标。
+## 使用：由本文件 _tick_profiled 调用。
 func _requires_target(components: Array) -> bool:
 	return _has_component(components, "targeting")
 
 
+## 作用：检查技能配置是否包含指定组件类型。
+## 使用：由本文件 _tick_profiled/_requires_target 调用；返回布尔判断或执行是否成功。
 func _has_component(components: Array, component_type: String) -> bool:
 	for component_variant: Variant in components:
 		if component_variant is Dictionary and String(component_variant.get("type", "")) == component_type:
@@ -158,6 +182,8 @@ func _has_component(components: Array, component_type: String) -> bool:
 	return false
 
 
+## 作用：判断定义是否具备 cast_skill 触发规则入口。
+## 使用：skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 func _has_cast_skill_trigger_rule(skill_instance: RefCounted) -> bool:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition == null:
@@ -168,6 +194,8 @@ func _has_cast_skill_trigger_rule(skill_instance: RefCounted) -> bool:
 	return false
 
 
+## 作用：读取技能定义 components 并返回可用于调度的数组。
+## 使用：skill_instance 为技能运行实例；无匹配项时返回空数组。
 func _get_components(skill_instance: RefCounted) -> Array:
 	var definition: RefCounted = skill_instance.get("definition") as RefCounted
 	if definition == null:
@@ -177,6 +205,8 @@ func _get_components(skill_instance: RefCounted) -> Array:
 	return components_variant if components_variant is Array else []
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 _get_cast_skill_trigger_cooldown/_has_cast_skill_trigger_rule 调用；无匹配项时返回空数组。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		var items: Array = value
@@ -184,6 +214,8 @@ func _get_array(value: Variant) -> Array:
 	return []
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 _find_target/_get_cooldown 调用；无适用数据时返回空字典。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value

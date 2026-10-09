@@ -1,3 +1,5 @@
+## 文件用途：伤害应用管线的玩家护盾吸收阶段。
+## 使用方式：由DamageApplicationPipeline按固定顺序实例化调用；写context结果可短路后续阶段。
 extends RefCounted
 class_name PlayerAbsorbApplicationStage
 
@@ -5,6 +7,8 @@ class_name PlayerAbsorbApplicationStage
 var stage_name: StringName = &"player_absorb"
 
 
+## 作用：依次消费角色特性、火系被动、十字遗物和腐蚀膜护盾；全部吸收即终止。
+## 使用：host提供统一结果构造，context保存目标/原包与阶段值；调用会更新受击状态。
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var player: Node = context.get("target") as Node
 	var packet: DamagePacket = context.get("packet")
@@ -46,6 +50,8 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	context.set("damage_payload", host.call("packet_with_amount", packet, absorbed_amount))
 
 
+## 作用：读取火系被动护盾，到期时同时清护盾量和期限。
+## 使用：player为受击玩家；返回当前可消费整数盾量。
 func _get_live_fire_passive_shield(player: Node) -> int:
 	var expires_at: float = float(player.get_meta("fire_passive_shield_expires_at", 0.0))
 	if expires_at > 0.0 and Time.get_ticks_msec() / 1000.0 >= expires_at:

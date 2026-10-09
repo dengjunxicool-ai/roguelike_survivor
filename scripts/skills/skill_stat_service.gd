@@ -1,3 +1,5 @@
+## 文件用途：汇总技能属性来源并在基础计算后应用范围别名及玩家速度、范围、状态时长修正。
+## 使用方式：get_effective_stat 从定义读取基础值，calculate_value 修饰指定值；标签查询同时考虑定义和运行标签。
 extends RefCounted
 class_name SkillStatService
 
@@ -7,6 +9,8 @@ const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_qu
 const ModifierAggregatorScript: Script = preload("res://scripts/modifiers/modifier_aggregator.gd")
 
 
+## 作用：从定义基础值计算实例属性，合并运行属性；缺定义返回零。
+## 使用：skill_instance 为技能运行实例；stat_name 为待查询属性键；default_value 为缺值备用结果。
 static func get_effective_stat(
 	skill_instance: RefCounted,
 	stat_name: String,
@@ -23,6 +27,8 @@ static func get_effective_stat(
 	return calculate_value(skill_instance, stat_name, base_value, skill_manager, relic_manager, caster)
 
 
+## 作用：先应用统一属性计算，再处理数值别名和玩家攻速、范围与时长修正。
+## 使用：skill_instance 为技能运行实例；stat_name 为待查询属性键；base_value 为修饰前数值。
 static func calculate_value(
 	skill_instance: RefCounted,
 	stat_name: String,
@@ -41,10 +47,14 @@ static func calculate_value(
 	return value
 
 
+## 作用：构建技能查询并汇总运行、被动、特性与遗物属性。
+## 使用：skill_instance 为技能运行实例；skill_manager 为技能管理器；relic_manager 为遗物管理器。
 static func get_combined_modifiers(skill_instance: RefCounted, skill_manager: Node = null, relic_manager: Node = null, caster: Node = null) -> Dictionary:
 	return ModifierAggregatorScript.collect(ModifierQueryScript.for_skill(skill_instance, caster), skill_manager, relic_manager)
 
 
+## 作用：优先读定义基础 damage_type，缺失时按元素标签查找伤害类型。
+## 使用：skill_instance 为技能运行实例。
 static func get_damage_type(skill_instance: RefCounted) -> StringName:
 	var definition: RefCounted = _get_definition(skill_instance)
 	if definition == null or not definition.has_method("has_tag"):
@@ -62,6 +72,8 @@ static func get_damage_type(skill_instance: RefCounted) -> StringName:
 	return &""
 
 
+## 作用：先检查定义标签，再检查实例运行标签，兼容 String 与 StringName。
+## 使用：skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 static func skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	var definition: RefCounted = _get_definition(skill_instance)
 	if definition != null and definition.has_method("has_tag") and bool(definition.call("has_tag", tag)):
@@ -75,6 +87,8 @@ static func skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	return false
 
 
+## 作用：将 area_radius 的旧运行别名倍率合并到最终范围值，并保持数字类型。
+## 使用：stat_name 为待查询属性键。
 static func _apply_alias_modifiers(value: Variant, stat_name: String, modifiers: Dictionary) -> Variant:
 	var adjusted_value: float = float(value)
 	if stat_name == "area_radius":
@@ -84,6 +98,8 @@ static func _apply_alias_modifiers(value: Variant, stat_name: String, modifiers:
 	return _match_number_type(adjusted_value, value)
 
 
+## 作用：按玩家攻速换算冷却，并应用陷阱间隔、技能范围或状态时长系数。
+## 使用：stat_name 为待查询属性键；skill_instance 为技能运行实例；caster 为施法者节点。
 static func _apply_caster_modifiers(value: Variant, stat_name: String, modifiers: Dictionary, skill_instance: RefCounted, caster: Node) -> Variant:
 	if caster == null:
 		return value
@@ -103,6 +119,8 @@ static func _apply_caster_modifiers(value: Variant, stat_name: String, modifiers
 	return _match_number_type(adjusted_value, value)
 
 
+## 作用：组合玩家攻速和查询快照的乘法、加法攻速修正，并保留最低倍率。
+## 使用：caster 为施法者节点。
 static func _get_effective_attack_speed_multiplier(caster: Node, modifiers: Dictionary) -> float:
 	var attack_speed_multiplier: float = maxf(_get_float_property(caster, "attack_speed_multiplier", 1.0), 0.05)
 	attack_speed_multiplier *= maxf(float(modifiers.get("attack_speed_multiplier", 1.0)), 0.05)
@@ -110,6 +128,8 @@ static func _get_effective_attack_speed_multiplier(caster: Node, modifiers: Dict
 	return maxf(attack_speed_multiplier, 0.1)
 
 
+## 作用：读取对象浮点属性，空对象或缺值时使用默认值。
+## 使用：fallback 为缺值备用结果。
 static func _get_float_property(object: Object, property: String, fallback: float) -> float:
 	if object == null:
 		return fallback
@@ -119,6 +139,8 @@ static func _get_float_property(object: Object, property: String, fallback: floa
 	return float(value)
 
 
+## 作用：从技能实例读取定义引用，空实例返回 null。
+## 使用：skill_instance 为技能运行实例；无法解析或创建时返回 null。
 static func _get_definition(skill_instance: RefCounted) -> RefCounted:
 	if skill_instance == null:
 		return null
@@ -126,6 +148,8 @@ static func _get_definition(skill_instance: RefCounted) -> RefCounted:
 	return skill_instance.get("definition") as RefCounted
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：get_effective_stat 从定义读取基础值，calculate_value 修饰指定值；标签查询同时考虑定义和运行标签；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -134,11 +158,15 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：严格判断 Variant 是否为 int 或 float，不把布尔或字符串当数值。
+## 使用：由本文件 calculate_value 调用。
 static func _is_number(value: Variant) -> bool:
 	var value_type: int = typeof(value)
 	return value_type == TYPE_INT or value_type == TYPE_FLOAT
 
 
+## 作用：以原始数值类型决定返回浮点或四舍五入后的整数。
+## 使用：由本文件 _apply_alias_modifiers/_apply_caster_modifiers 调用。
 static func _match_number_type(value: float, original_value: Variant) -> Variant:
 	if typeof(original_value) == TYPE_INT:
 		return roundi(value)

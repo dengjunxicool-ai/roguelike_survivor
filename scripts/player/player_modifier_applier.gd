@@ -1,7 +1,12 @@
+## 文件用途：把已聚合属性快照应用到玩家基础字段、生命值和环境倍率。
+## 使用方式：Player 的属性来源接口调用 apply(player,modifiers)；输入为聚合字典，动态作用域另由 ModifierStore 查询。
+
 extends RefCounted
 class_name PlayerModifierApplier
 
 
+## 作用：按既定顺序应用技能全体升级、血量、基础属性与环境修正。
+## 使用：player 为玩家节点，modifiers 为已聚合快照；会更新字段、发血量信号并通知生成器。
 func apply(player: Node, modifiers: Dictionary) -> void:
 	var all_owned_skills_level_add: int = int(modifiers.get("all_owned_skills_level_add", 0))
 	if all_owned_skills_level_add != 0:
@@ -56,6 +61,8 @@ func apply(player: Node, modifiers: Dictionary) -> void:
 	player.call("_apply_environment_modifiers")
 
 
+## 作用：依次处理生命上限加值、倍率和治疗并限制当前血量。
+## 使用：增加上限时补充对应血量；治疗不超过新上限，每个生效步骤发 health_changed。
 func _apply_health_modifiers(player: Node, modifiers: Dictionary) -> void:
 	var max_hp_add: int = int(modifiers.get("max_hp_add", 0))
 	if max_hp_add != 0:
@@ -84,24 +91,34 @@ func _apply_health_modifiers(player: Node, modifiers: Dictionary) -> void:
 		player.emit_signal("health_changed", current_health, max_health)
 
 
+## 作用：将非零 amount 加到指定浮点属性。
+## 使用：target/property 指定对象与字段；就地写入，不聚合来源。
 func _add_float(target: Node, property: StringName, amount: float) -> void:
 	if amount != 0.0:
 		target.set(property, float(target.get(property)) + amount)
 
 
+## 作用：以 multiplier 乘指定浮点属性。
+## 使用：倍率为 1 时不写入；target 必须有对应可读属性。
 func _multiply_float(target: Node, property: StringName, multiplier: float) -> void:
 	if multiplier != 1.0:
 		target.set(property, float(target.get(property)) * multiplier)
 
 
+## 作用：将非零 amount 加到指定整数属性。
+## 使用：target/property 指定字段；将现有值按 int 转换后写回。
 func _add_int(target: Node, property: StringName, amount: int) -> void:
 	if amount != 0:
 		target.set(property, int(target.get(property)) + amount)
 
 
+## 作用：让指定浮点属性取当前值和 value 中较大者。
+## 使用：用于保留更强减速、回复比例等效果；就地修改 target。
 func _set_max_float(target: Node, property: StringName, value: float) -> void:
 	target.set(property, maxf(float(target.get(property)), value))
 
 
+## 作用：把指定浮点属性限制为不小于 minimum。
+## 使用：apply 最后用于限制倍率/拾取半径；就地修改 target。
 func _clamp_min_float(target: Node, property: StringName, minimum: float) -> void:
 	target.set(property, maxf(float(target.get(property)), minimum))

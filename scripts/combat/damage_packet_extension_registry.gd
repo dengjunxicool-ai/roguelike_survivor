@@ -1,3 +1,5 @@
+## 文件用途：登记核心包以外允许携带的伤害、事件与追踪扩展及其类型。
+## 使用方式：DamagePacket.validate 调用 validate 检查 extras；新增扩展必须在此明确登记。
 extends RefCounted
 class_name DamagePacketExtensionRegistry
 
@@ -29,6 +31,8 @@ const TEXT_FIELDS: Array[String] = [
 ]
 const INTEGER_FIELDS: Array[String] = ["max_targets", "debug_attack_trace_id", "_rapid_same_target_hits"]
 
+## 作用：逐项检查扩展是否登记并符合数值、布尔、文本、整数或技能实例类型。
+## 使用：输入 extras 字典；返回所有错误，不修改输入也不静默接受未知字段。
 static func validate(fields: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	for key: Variant in fields:

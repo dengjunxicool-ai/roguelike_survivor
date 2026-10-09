@@ -1,13 +1,19 @@
+## 文件用途：验证敌人技能动作及碰撞脱离行为，覆盖投射物、区域伤害、自爆、召唤、状态与 Boss 技能。
+## 使用方式：通过 tools/verify/run_isolated_godot.ps1 -Script res://scripts/debug/enemy_skill_system_check.gd -OutputRoot E:/codex/<独立批次> 运行；实例化真实主场景，检查结束以退出码表示结果。
 extends SceneTree
 
 
 var _failed: bool = false
 
 
+## 作用：把检查入口一次性连接到 process_frame，避免构造阶段立即实例化场景。
+## 使用：由 Godot 构造此 SceneTree 时自动调用。
 func _init() -> void:
 	process_frame.connect(_run_checks, CONNECT_ONE_SHOT)
 
 
+## 作用：等待首帧后执行异步检查，输出失败标记并以零或一退出。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 直接调用时须 await 等待异步流程完成。
 func _run_checks() -> void:
 	await process_frame
 	await _run_checks_impl()
@@ -15,6 +21,8 @@ func _run_checks() -> void:
 	quit(1 if _failed else 0)
 
 
+## 作用：加载真实主场景与敌人场景，定位玩家并顺序执行敌人动作检查。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 直接调用时须 await 等待异步流程完成。
 func _run_checks_impl() -> void:
 	var main_scene: PackedScene = load("res://scenes/app/main.tscn") as PackedScene
 	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
@@ -41,6 +49,8 @@ func _run_checks_impl() -> void:
 	await _check_boss_phase_actions(main, enemy_scene)
 
 
+## 作用：生成骷髅弓手并执行 projectile 动作，检查敌方投射物数量增加。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene。 直接调用时须 await 等待异步流程完成。
 func _check_projectile_action(main: Node, enemy_scene: PackedScene) -> void:
 	var enemy: Node2D = await _spawn_enemy(main, enemy_scene, &"archer_skeleton", Vector2(420, 512))
 	var before_count: int = get_nodes_in_group("enemy_projectile").size()
@@ -50,6 +60,8 @@ func _check_projectile_action(main: Node, enemy_scene: PackedScene) -> void:
 	_expect(executed and after_count > before_count, "projectile action spawns enemy projectile")
 
 
+## 作用：检查玩家移动不被敌人身体阻挡，而敌人移动会被其他敌人限制；随后释放夹具实体。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene, player: Node2D。 直接调用时须 await 等待异步流程完成。
 func _check_enemy_overlap_escape(main: Node, enemy_scene: PackedScene, player: Node2D) -> void:
 	var blocker: Node2D = await _spawn_enemy(main, enemy_scene, &"skeleton", player.global_position + Vector2(0, -46))
 	var blocker_position: Vector2 = blocker.global_position
@@ -71,6 +83,8 @@ func _check_enemy_overlap_escape(main: Node, enemy_scene: PackedScene, player: N
 	await process_frame
 
 
+## 作用：生成毒性敌人执行 damage_area，检查主场景伤害区域数量增加。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene。 直接调用时须 await 等待异步流程完成。
 func _check_damage_area_action(main: Node, enemy_scene: PackedScene) -> void:
 	var enemy: Node2D = await _spawn_enemy(main, enemy_scene, &"toxic_matriarch", Vector2(460, 512))
 	var before_count: int = _count_damage_areas(main)
@@ -80,6 +94,8 @@ func _check_damage_area_action(main: Node, enemy_scene: PackedScene) -> void:
 	_expect(executed and after_count > before_count, "damage_area action spawns damage area")
 
 
+## 作用：在玩家附近执行自爆，等待十二帧后确认伤害发生且爆破敌人已释放。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene, player: Node2D。 直接调用时须 await 等待异步流程完成。
 func _check_self_explode_action(main: Node, enemy_scene: PackedScene, player: Node2D) -> void:
 	var enemy: Node2D = await _spawn_enemy(main, enemy_scene, &"bomber", player.global_position + Vector2(24, 0))
 	var before_area_count: int = _count_damage_areas(main)
@@ -91,6 +107,8 @@ func _check_self_explode_action(main: Node, enemy_scene: PackedScene, player: No
 	_expect(executed and damaged_player and not is_instance_valid(enemy) and _count_damage_areas(main) >= before_area_count, "self_explode damages and removes bomber safely")
 
 
+## 作用：让骷髅祭司执行 summon，确认 enemy 组实体数增加。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene。 直接调用时须 await 等待异步流程完成。
 func _check_summon_action(main: Node, enemy_scene: PackedScene) -> void:
 	var enemy: Node2D = await _spawn_enemy(main, enemy_scene, &"skeleton_priest", Vector2(560, 512))
 	var before_count: int = get_nodes_in_group("enemy").size()
@@ -100,6 +118,8 @@ func _check_summon_action(main: Node, enemy_scene: PackedScene) -> void:
 	_expect(executed and after_count > before_count, "summon action spawns summoned enemy")
 
 
+## 作用：让毒虫向玩家执行 contact_status，确认玩家获得 poison。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene, player: Node2D。 直接调用时须 await 等待异步流程完成。
 func _check_contact_status_action(main: Node, enemy_scene: PackedScene, player: Node2D) -> void:
 	var enemy: Node2D = await _spawn_enemy(main, enemy_scene, &"toxic_bug", Vector2(600, 512))
 	var executed: bool = bool(enemy.call("_execute_enemy_skill_action", "contact_status", {"target": player}))
@@ -107,6 +127,8 @@ func _check_contact_status_action(main: Node, enemy_scene: PackedScene, player: 
 	_expect(executed and player.has_method("has_status") and bool(player.call("has_status", &"poison")), "contact_status action applies poison")
 
 
+## 作用：对 Boss 分别执行延迟区域爆炸和环形弹幕，检查对应区域、投射物生成。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene。 直接调用时须 await 等待异步流程完成。
 func _check_boss_phase_actions(main: Node, enemy_scene: PackedScene) -> void:
 	var boss: Node2D = await _spawn_enemy(main, enemy_scene, &"dungeon_heart", Vector2(620, 512))
 	var before_area_count: int = _count_damage_areas(main)
@@ -132,6 +154,8 @@ func _check_boss_phase_actions(main: Node, enemy_scene: PackedScene) -> void:
 	_expect(projectile_executed and get_nodes_in_group("enemy_projectile").size() > before_projectile_count, "boss phase ring skill uses enemy skill action")
 
 
+## 作用：按 enemy_id 与世界坐标实例化敌人并挂入 main，等待入树一帧后返回实体。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：main: Node, enemy_scene: PackedScene, enemy_id: StringName, position: Vector2。 返回 Node2D；具体值及空输入行为见作用说明。 直接调用时须 await 等待异步流程完成。
 func _spawn_enemy(main: Node, enemy_scene: PackedScene, enemy_id: StringName, position: Vector2) -> Node2D:
 	var enemy: Node2D = enemy_scene.instantiate() as Node2D
 	enemy.set("enemy_id", enemy_id)
@@ -141,6 +165,8 @@ func _spawn_enemy(main: Node, enemy_scene: PackedScene, enemy_id: StringName, po
 	return enemy
 
 
+## 作用：统计 root_node 直属子节点中的 DamageArea 数量。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：root_node: Node。 返回 int；具体值及空输入行为见作用说明。
 func _count_damage_areas(root_node: Node) -> int:
 	var count: int = 0
 	for child: Node in root_node.get_children():
@@ -149,6 +175,8 @@ func _count_damage_areas(root_node: Node) -> int:
 	return count
 
 
+## 作用：检查 condition，成功打印 PASS，失败转交 _fail。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：condition: bool, message: String。
 func _expect(condition: bool, message: String) -> void:
 	if condition:
 		print("[EnemySkillSystemCheck] PASS %s" % message)
@@ -156,6 +184,8 @@ func _expect(condition: bool, message: String) -> void:
 		_fail(message)
 
 
+## 作用：锁定 _failed 标记并 push_error 输出失败内容。
+## 使用：由本脚本检查流程调用，使用已装配的场景夹具。 入参：message: String。
 func _fail(message: String) -> void:
 	_failed = true
 	push_error("[EnemySkillSystemCheck] FAIL %s" % message)
