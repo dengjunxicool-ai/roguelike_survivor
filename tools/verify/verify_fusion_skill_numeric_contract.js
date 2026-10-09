@@ -26,6 +26,14 @@ for (const row of rows) {
   assert(skill, `missing fusion skill named ${row.name}`);
   assert(skill.skill_type === "fusion", `${skill.id} must use fusion type`);
   assert(skill.max_level === 2, `${skill.id} max_level must match docs`);
+  if (skill.fusion_rules?.length) {
+    const cases=readJson("tools/verify/fusion_semantic_cases.json");
+    const evidence=cases.find(c=>c.skill_id===skill.id);
+    assert(evidence && evidence.negative_fixtures.length>=3,`${skill.id} needs positive and independent rejection fixtures`);
+    assert(skill.trigger_rules.length===0,`${skill.id} must not retain duplicate placeholder outputs`);
+    assert(skill.fusion_rules.every(r=>r.rule_id && r.event && r.operation && r.cooldown>=0),`${skill.id} needs real bounded interaction rules`);
+    continue; // Actual per-tick packets and complete outputs run in verify_fusion_semantics_v2 and spatial_runtime_v2.
+  }
   assert(Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0, `${skill.id} must have runtime trigger rules`);
 
   const spec = extractNumericSpec(row);

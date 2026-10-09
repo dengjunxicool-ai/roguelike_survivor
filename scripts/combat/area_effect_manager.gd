@@ -42,6 +42,7 @@ func register_area(area: Node, _tick_interval: float) -> int:
 		return int(_tick_buckets.get(area_instance_id, 0))
 	var tick_bucket: int = _next_tick_bucket % TICK_BUCKET_COUNT
 	_next_tick_bucket += 1
+	_spatial_frame = -1
 	_active_area_ids[area_instance_id] = weakref(area)
 	_tick_buckets[area_instance_id] = tick_bucket
 	return tick_bucket
@@ -53,6 +54,7 @@ func unregister_area(area: Node) -> void:
 	if area == null:
 		return
 	var area_instance_id: int = int(area.get_instance_id())
+	_spatial_frame = -1
 	_active_area_ids.erase(area_instance_id)
 	_tick_buckets.erase(area_instance_id)
 
@@ -136,3 +138,34 @@ func get_active_areas() -> Array[Node]:
 			_tick_buckets.erase(id)
 		else: result.append(area)
 	return result
+
+# Uniform grid broadphase, rebuilt once per physics frame; narrowphase is mandatory.
+var _spatial_frame: int = -1
+var _spatial_cells: Dictionary = {}
+const SPATIAL_CELL: float = 168.0
+func query_areas(box: Rect2) -> Array[Node]:
+	if _spatial_frame != Engine.get_physics_frames():
+		_spatial_frame = Engine.get_physics_frames()
+		_spatial_cells.clear()
+		for area: Node in get_active_areas():
+			if not area.has_method("geometry_shape"): continue
+			var bounds: Rect2 = preload("res://scripts/skills/skill_object_geometry.gd").bounds(area.geometry_shape())
+			for cell: Vector2i in _cells_for(bounds):
+				if not _spatial_cells.has(cell): _spatial_cells[cell] = []
+				_spatial_cells[cell].append(weakref(area))
+	var found: Dictionary = {}
+	var out: Array[Node] = []
+	for cell: Vector2i in _cells_for(box):
+		for ref: WeakRef in _spatial_cells.get(cell,[]):
+			var area: Node = ref.get_ref()
+			if area != null and not area.is_queued_for_deletion() and not found.has(area.get_instance_id()):
+				found[area.get_instance_id()] = true
+				out.append(area)
+	return out
+func _cells_for(box: Rect2) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var low: Vector2i = Vector2i(floori(box.position.x/SPATIAL_CELL),floori(box.position.y/SPATIAL_CELL))
+	var high: Vector2i = Vector2i(floori(box.end.x/SPATIAL_CELL),floori(box.end.y/SPATIAL_CELL))
+	for x: int in range(low.x,high.x+1):
+		for y: int in range(low.y,high.y+1): out.append(Vector2i(x,y))
+	return out

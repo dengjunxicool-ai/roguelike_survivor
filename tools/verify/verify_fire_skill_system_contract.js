@@ -343,7 +343,7 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   });
   validateEffectArray(skill.effects, skill.id, "effects");
 
-  assert(skill.trigger_rules.length > 0 || skill.effects.length > 0, `${skill.id} has no runtime payload`);
+  assert(skill.trigger_rules.length > 0 || skill.effects.length > 0 || skill.fusion_rules?.length > 0, `${skill.id} has no runtime payload`);
 }
 
 function findSkill(skills, id) {

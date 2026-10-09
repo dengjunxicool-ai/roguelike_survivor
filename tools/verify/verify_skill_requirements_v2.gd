@@ -35,6 +35,6 @@ func run() -> void:
 		var data := {"id": school + "_test", "skill_type": "core", "school": school, "offer_rule": {}}
 		var result: Dictionary = policy.evaluate(c.caster, data)
 		check(not result.available and not result.missing_requirements.is_empty(), "core requires reaction " + school)
-	check(not offer.is_skill_available(c.caster, GameData.get_skill(&"fusion_fire_frost_steam_mist")), "fusion stays disabled in actual M2 pool")
+	check(offer.is_skill_available(c.caster, GameData.get_skill(&"fusion_fire_frost_steam_mist")), "behavior-accepted steam is available after M3 migration")
 	print("[requirements] PASS" if not failed else "[requirements] FAIL")
 	quit(1 if failed else 0)

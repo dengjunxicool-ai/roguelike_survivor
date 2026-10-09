@@ -211,7 +211,7 @@ function validateSkill(skill, index, godIds, errors) {
     errors.push(`${label} effects must be an array`);
   }
   const topLevelEffectCount = Array.isArray(skill.effects) ? skill.effects.length : 0;
-  if (triggerEffectCount + topLevelEffectCount <= 0) {
+  if (triggerEffectCount + topLevelEffectCount <= 0 && skill.chaos_contract?.runtime !== "bounded_cycle_v2" && !skill.fusion_rules?.length) {
     errors.push(`${label} must define at least one runtime effect`);
   }
 

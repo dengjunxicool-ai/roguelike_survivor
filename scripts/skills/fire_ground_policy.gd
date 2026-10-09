@@ -12,7 +12,7 @@ static func burning_bonus(target: Node2D, player: Node) -> float:
 	for area: Node in areas.get_active_areas():
 		if not is_fire_ground(area) or area.is_queued_for_deletion(): continue
 		if area is AreaEffect and (area._damage_window_finished or area._age >= area.duration or (area._dash_path_filter and not area._is_body_on_dash_path(target))): continue
-		if (area as Node2D).global_position.distance_squared_to(target.global_position) <= pow(float(area.get("radius")), 2):
+		if area._body_in_effect_shape(target) if area.has_method("_body_in_effect_shape") else (area as Node2D).global_position.distance_squared_to(target.global_position) <= pow(float(area.get("radius")), 2):
 			var rule: Dictionary = skill.definition.trigger_rules[0]
 			return preload("res://scripts/skills/skill_growth_scaling.gd").apply_to_number(float(rule.effects[0].value), skill, "modifier")
 	return 0.0

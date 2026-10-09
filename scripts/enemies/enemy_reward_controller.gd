@@ -145,7 +145,8 @@ func notify_enemy_killed_synergies() -> void:
 	}
 	var death_source: Dictionary = DamageTraceContextScript.get_last_damage_trace_context(_owner)
 	var statuses: Node = _owner.get_node_or_null("StatusEffectManager")
-	event["target_statuses"] = statuses.call("get_status_snapshot") if statuses != null else []
+	event["target_statuses"] = statuses.call("get_death_status_snapshot") if statuses != null else []
+	event["cursed_snapshot"] = statuses.call("death_curse_snapshot") if statuses != null else {}
 	for key: Variant in death_source:
 		if not event.has(key): event[key] = death_source[key]
 

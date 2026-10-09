@@ -22,15 +22,22 @@ class Enemy:
 		var snapshot: Array = $StatusEffectManager.get_status_snapshot()
 		current_health = maxi(0, current_health - roundi(packet.raw_amount))
 		if hit_bus != null:
-			var context: Dictionary = {"caster":hit_bus.get_parent(), "owner":hit_bus.get_parent(), "target":self, "position":global_position, "damage_packet":packet.to_dictionary(), "damage_amount":packet.raw_amount, "target_statuses":snapshot, "skill_manager":hit_bus.get_parent().get_node("SkillManager")}
+			var context: Dictionary = {"caster":hit_bus.get_parent(), "owner":hit_bus.get_parent(), "target":self, "position":global_position, "damage_packet":packet.to_dictionary(), "damage_amount":packet.raw_amount, "parent":get_parent(), "target_statuses":snapshot, "skill_manager":hit_bus.get_parent().get_node("SkillManager")}
 			hit_bus.emit_skill_event(&"post_damage_hit", context)
-			if before > 0 and current_health == 0: hit_bus.emit_skill_event(&"on_enemy_killed",context)
+			if before > 0 and current_health == 0:
+				context.target_statuses=$StatusEffectManager.get_death_status_snapshot()
+				context.cursed_snapshot=$StatusEffectManager.death_curse_snapshot()
+				hit_bus.emit_skill_event(&"on_enemy_killed",context)
 	func has_status(id: Variant) -> bool:
 		return $StatusEffectManager.has_status(id)
 	func apply_status(id: Variant, params: Dictionary = {}) -> bool:
 		return $StatusEffectManager.apply_status(id, params)
 	func get_status_stack(id: Variant) -> int:
 		return $StatusEffectManager.get_status_stack(id)
+	func interrupt_preparing_attack() -> bool:
+		if not bool(get_meta("preparing_attack",false)): return false
+		set_meta("preparing_attack",false)
+		return true
 	func is_dead() -> bool:
 		return current_health <= 0
 var player: Player

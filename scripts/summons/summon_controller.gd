@@ -29,6 +29,7 @@ var _movement: RefCounted
 var _attack: RefCounted
 var _context: Dictionary = {}
 var _remaining_duration: float = 0.0
+var _copy_remaining: float = 2.0
 
 
 ## 作用：解析定义与拥有者，按技能成长缩放时长和攻击配置，再创建组件与视觉并启用物理处理。
@@ -92,6 +93,21 @@ func _physics_process_profiled(delta: float) -> void:
 	if summon_owner == null or not is_instance_valid(summon_owner):
 		state = STATE_EXPIRED
 		queue_free()
+		return
+
+	if String(definition.get("id")) == "chaos_clone":
+		_copy_remaining -= delta
+		if _copy_remaining <= 0.000001:
+			_copy_remaining = 2.0
+			var bus: Node = summon_owner.get_node_or_null("SkillEventBus")
+			if bus != null:
+				var copy_context: Dictionary = _context.duplicate(true)
+				copy_context["caster"] = summon_owner
+				copy_context["skill_manager"] = summon_owner.get_node_or_null("SkillManager")
+				copy_context["event_bus"] = bus
+				copy_context["copy_owner"] = weakref(self)
+				bus.replay_cast(bus.get_cast_snapshot(),copy_context,0.35)
+		_movement.move_follow(self,summon_owner,delta)
 		return
 
 	_movement.update_owner_motion(summon_owner)

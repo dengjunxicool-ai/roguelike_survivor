@@ -43,7 +43,9 @@ func run() -> void:
 	await process_frame
 	for area: Node in root.get_children():
 		if area is AreaEffect:
-			if String(area.source_id)=="lava_rift": area.call("_physics_process",1.0)
+			if String(area.source_id)=="lava_rift":
+				area.set_physics_process(false)
+				area.call("_damage_body",enemy)
 	var actual_area_ignite: bool=false
 	for packet: Dictionary in enemy.packets:
 		actual_area_ignite=actual_area_ignite or (String(packet.get("listener_skill_id",""))=="fire_power_ignite_core" and int(packet.raw_amount)==90)

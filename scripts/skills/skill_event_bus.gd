@@ -15,6 +15,12 @@ const EventContext: Script = preload("res://scripts/skills/skill_event_context.g
 const ProcPolicy: Script = preload("res://scripts/skills/skill_proc_policy.gd")
 const Clock: Script = preload("res://scripts/runtime/run_combat_clock.gd")
 
+var _fusion: RefCounted = preload("res://scripts/skills/fusion_runtime.gd").new()
+var _interactions: RefCounted = preload("res://scripts/skills/fusion_interaction_service.gd").new()
+var _snapshots: RefCounted = preload("res://scripts/skills/skill_cast_snapshot_service.gd").new()
+var _replay: RefCounted = preload("res://scripts/skills/skill_replay_service.gd").new()
+var _chaos: RefCounted = preload("res://scripts/skills/chaos_cycle_runtime.gd").new()
+
 var _cycles: RefCounted = preload("res://scripts/skills/skill_cycle_runtime.gd").new()
 var _crowd_scan: float = 0.0
 
@@ -23,6 +29,7 @@ var _action_executor: RefCounted = SkillActionExecutorScript.new()
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 var _clock: Node = Clock.new()
 var _pending_events: Array[Dictionary] = []
+var _delayed_outputs: Array[Dictionary] = []
 var _dispatching: bool = false
 var _budget_frame: int = -1
 var _frame_events: int = 0
@@ -47,7 +54,12 @@ func combat_seconds() -> float:
 	return _clock.now_seconds()
 
 func reset_run_state() -> void:
+	_fusion.reset()
+	_interactions.reset()
 	_pending_events.clear()
+	_snapshots.clear()
+	_delayed_outputs.clear()
+	_chaos.reset()
 	_clock.reset()
 	_budget_frame = -1
 	_frame_events = 0
@@ -87,6 +99,7 @@ func subscribe(event_name: StringName, listener: Callable) -> void:
 ## 使用：event_name 为统一技能事件名。
 func emit_skill_event(event_name: StringName, event_context: Dictionary = {}) -> Array:
 	var context: Dictionary = EventContext.from_context(DamageTraceContextScript.normalize_event_context(event_context), event_name)
+	if event_context.has("chain_result"): context["chain_result"]=event_context.chain_result
 	_event_nonce += 1
 	context["event_id"] = _event_nonce
 	# Each new event uses its occurrence time; delayed objects retain ancestry,
@@ -110,13 +123,18 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 	if event_name == &"on_enemy_killed": _cycles.death(self, context)
 	if event_name == &"on_cast":
 		context["_cast_result"] = {"successful_outputs": 0}
+		context["retarget_result"] = {}
+		_fusion.handle(self,&"on_cast",context)
+		if context.retarget_result.has("target"): context["target"] = context.retarget_result.target
 		_prepare_cast_charge(context)
+		_chaos.prepare(context)
 		_special_rule_executor.call("execute_event", event_name, context)
 		if not bool(context.get("skip_fire_passive_runtime", false)):
 			_execute_fire_passive_runtime(event_name, context)
 		_execute_skill_events(event_name, context)
 		if int(context["_cast_result"].successful_outputs) > 0:
 			_commit_cast_charge(context)
+			_snapshots.record(context,context["_cast_result"].get("actions",[]))
 			var succeeded: Dictionary = context.duplicate(true)
 			succeeded["parent_event_id"] = int(context.event_id)
 			emit_skill_event(&"skill_cast_succeeded", succeeded)
@@ -126,6 +144,8 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 			_execute_fire_passive_runtime(event_name, context)
 		_special_rule_executor.call("execute_event", event_name, context)
 
+	if event_name != &"on_cast": _fusion.handle(self,event_name,context)
+	_chaos.handle(self,event_name,context)
 	var results: Array = []
 	var listeners: Array = _listeners.get(event_name, [])
 	for listener_variant: Variant in listeners:
@@ -234,7 +254,20 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 			event_context["is_cast_source"] = true
 		else:
 			event_context = ProcPolicy.child_context(event_context, proc_id)
+		var reaction: String = {"thunder_power_overload_burst":"overload","holy_power_divine_punishment":"judgment","chaos_power_fission_burst":"fission"}.get(String(skill_instance.skill_id),"")
+		var reaction_statuses: Array = context.get("target_statuses",[])
+		var reaction_target: Node = context.get("target") as Node
+		if reaction_target != null and reaction_statuses.is_empty():
+			var statuses: Node = reaction_target.get_node_or_null("StatusEffectManager")
+			if statuses != null: reaction_statuses = statuses.get_status_snapshot()
 		_action_executor.call("execute_actions", actions, event_context)
+		if reaction != "" and event_name == &"status_max_stack_reached":
+			var resolved: Dictionary = context.duplicate(true)
+			resolved["reaction_kind"] = reaction
+			resolved["reaction_id"] = "%s:%s" % [reaction,context.get("event_id",0)]
+			resolved["reaction_actions"] = preload("res://scripts/skills/skill_cast_snapshot_service.gd").filter_actions(actions)
+			resolved["target_statuses"] = reaction_statuses
+			emit_skill_event(&"reaction_resolved",resolved)
 
 
 ## 作用：遍历拥有技能，把匹配当前事件的触发规则适配并执行。
@@ -281,7 +314,14 @@ func _get_array(value: Variant) -> Array:
 	return []
 
 func update_skill_cycles() -> void:
+	_fusion.update()
 	_cycles.update(self)
+	_chaos.update(self)
+	for item: Dictionary in _delayed_outputs.duplicate():
+		if item.at > combat_seconds(): continue
+		_delayed_outputs.erase(item)
+		var manager: Node = item.context.get("skill_manager") as Node
+		if manager != null and is_instance_valid(manager) and int(manager.run_generation) == item.generation and manager.has_skill(item.origin): execute_adapted_actions(item.actions,item.context)
 
 func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
 	_cycles.mark(target, context, duration, combat_seconds())
@@ -290,6 +330,47 @@ func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
 	return _cycles.start(self, context, params)
 
 func clear_origin(skill_id: StringName) -> void:
+	_fusion.clear_origin(skill_id)
 	_cycles.clear_origin(skill_id)
+	_snapshots.clear_origin(skill_id)
+	_delayed_outputs = _delayed_outputs.filter(func(x: Dictionary) -> bool: return x.origin != skill_id)
+	_chaos.clear_origin(skill_id)
 	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
 		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)
+
+func get_cast_snapshot(filter: Dictionary = {}) -> Dictionary:
+	return _snapshots.get_last(filter)
+func replay_cast(snapshot: Dictionary, context: Dictionary, damage_scale: float) -> bool:
+	return _replay.replay(snapshot,context,damage_scale)
+func chaos_state() -> Dictionary:
+	return _chaos.state()
+
+func prepare_geometry(params: Dictionary, context: Dictionary) -> Dictionary:
+	return _chaos.geometry(params,context)
+
+func schedule_output(actions: Array, context: Dictionary, delay: float) -> bool:
+	if actions.is_empty(): return false
+	var manager: Node = context.get("skill_manager") as Node
+	if manager == null: return false
+	var child: Dictionary = context.duplicate(true)
+	child.erase("_cast_result")
+	child.erase("is_cast_source")
+	child["can_generate_secondary_proc"] = false
+	child["proc_depth"] = mini(int(child.get("proc_depth",0))+1,2)
+	_delayed_outputs.append({"at":combat_seconds()+maxf(delay,0.0),"actions":actions.duplicate(true),"context":child,"generation":manager.run_generation,"origin":StringName(context.get("origin_skill_id",context.get("skill_id","")))})
+	return true
+
+func observe_area(area: Node2D) -> void:
+	_interactions.observe_area(self,area)
+func observe_projectile(object: Node2D,from: Vector2,to: Vector2,radius: float) -> void:
+	_interactions.observe_projectile(self,object,from,to,radius)
+func clear_interaction_object(object: Node) -> void:
+	_interactions.clear_object(object)
+
+func fusion_output_count(id: String) -> int:
+	return _fusion.count(id)
+
+func interaction_interest(event: StringName,object: Node) -> bool:
+	return not _listeners.get(event,[]).is_empty() or _fusion.has_interaction(object.get("skill_manager") as Node,event)
+func area_pair_relevant(area: Node,other: Node) -> bool:
+	return not _listeners.get(&"area_overlap",[]).is_empty() or _fusion.area_pair_relevant(area.get("skill_manager") as Node,area,other)

@@ -27,6 +27,12 @@ func _spawn_particles(params: Dictionary, context: Dictionary) -> bool:
 ## 作用：解析召唤配置，优先接入召唤管理器，不适用时创建动作召唤对象。
 ## 使用：params 读取 summon_definition_id/summon_id/spawn_offset/attack_interval；context 携带 caster；返回布尔判断或执行是否成功。
 func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
+	var spawned: bool = false
+	for index: int in maxi(int(params.get("count", 1)), 0):
+		spawned = _spawn_single_summon(params, context) or spawned
+	return spawned
+
+func _spawn_single_summon(params: Dictionary, context: Dictionary) -> bool:
 	var caster: Node2D = context.get("caster") as Node2D
 	var parent: Node = _get_parent_node(context)
 	if caster == null or parent == null:
@@ -36,6 +42,7 @@ func _spawn_summon(params: Dictionary, context: Dictionary) -> bool:
 
 	var summon: Node2D = _create_summon_node(params)
 	summon.name = str(params.get("summon_id", "skill_summon"))
+	summon.set_meta("action_summon_id", params.get("summon_id", "skill_summon"))
 	summon.global_position = caster.global_position + Vector2(float(params.get("spawn_offset", 48.0)), 0.0).rotated(randf() * TAU)
 	parent.add_child(summon)
 	if summon.has_method("setup"):

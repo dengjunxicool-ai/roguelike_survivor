@@ -130,6 +130,7 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 		var shield_context: Dictionary = context.duplicate(true)
 		shield_context["owner"] = owner
 		shield_context["shield_type"] = shield_type
+		shield_context["shield_source_skill_id"] = context.get("listener_skill_id", context.get("skill_id", &""))
 		shield_context["shield_amount"] = maxi(final_amount - current, 0)
 		shield_context["shield_overflowed"] = overflow > 0
 		shield_context["shield_overflow_amount"] = overflow
@@ -141,6 +142,9 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 ## 使用：params 读取 actions/times/count；context 为施放或命中上下文；返回布尔判断或执行是否成功。
 func _repeat_skill(params: Dictionary, context: Dictionary) -> bool:
 	var actions: Array = _get_array(params.get("actions", []))
+	if bool(params.get("use_snapshot",false)):
+		var bus: Node = context.get("event_bus") as Node
+		return bus.replay_cast(bus.get_cast_snapshot(params.get("filter",{})),context,float(params.get("damage_multiplier",0.4))) if bus != null else false
 	if actions.is_empty():
 		push_warning("[SkillActionExecutor] repeat_skill needs explicit actions in this runtime.")
 		return false

@@ -43,7 +43,16 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 	if execute_triggered:
 		_apply_low_hp_execute_packet(packet, params, damage_target)
 	packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
+	var frozen_execute: bool = execute_triggered and String(context.get("origin_skill_id","")) == "frost_power_shatter_execute" and not context.get("is_copy",false) and damage_target.has_method("get_status_stack") and damage_target.get_status_stack(&"frozen") > 0
+	var status_manager: Node = damage_target.get_node_or_null("StatusEffectManager")
+	var before_statuses: Array = status_manager.get_status_snapshot() if frozen_execute and status_manager != null else []
 	damage_target.call("take_damage", DamagePacketScript.from_dictionary(packet))
+	if frozen_execute and damage_target.has_method("is_dead") and damage_target.is_dead() and context.get("event_bus") != null:
+		var shatter: Dictionary = target_context.duplicate(true)
+		shatter["target_statuses"] = before_statuses
+		shatter["can_generate_secondary_proc"] = true
+		shatter["proc_depth"] = 1
+		context.event_bus.emit_skill_event(&"frozen_shattered", shatter)
 	return true
 
 
@@ -296,8 +305,15 @@ func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
 		return false
-	var overload_id: StringName = StringName(str(params.get("status_id", "overload")))
-	return _apply_status_to_target(target, overload_id, {"stacks": 1, "duration": float(params.get("duration", 0.1))})
+	var manager: Node=context.get("skill_manager") as Node
+	var bus: Node=context.get("event_bus") as Node
+	if bus==null or manager==null or not manager.has_skill(&"thunder_power_overload_burst") or int(context.get("proc_depth",0))>=2: return false
+	var child: Dictionary=context.duplicate(true)
+	child["status_id"]=&"conductive"
+	var statuses: Node=target.get_node_or_null("StatusEffectManager")
+	if statuses!=null: child["target_statuses"]=statuses.get_status_snapshot()
+	bus.emit_skill_event(&"status_max_stack_reached",child)
+	return true
 
 
 ## 作用：检查冻结目标并执行粉碎伤害及派生效果。
@@ -308,6 +324,7 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 		return false
 	if target.has_method("get_status_stack") and int(target.call("get_status_stack", &"frozen")) <= 0:
 		return false
+	context.event_bus.emit_skill_event(&"frozen_shattered",context) if context.get("event_bus") != null else false
 	_consume_status_stack_on_target(target, &"frozen", 1)
 
 	_deal_damage(_prepare_shatter_damage_params(params), context)

@@ -31,6 +31,7 @@ var _processing_reaction_queue: bool = false
 var _pending_status_update_delta: float = 0.0
 var _freeze_immunity_remaining: float = 0.0
 var _resolution_nonce: int = 0
+var _resolving_curse: Dictionary = {}
 var _boss_frost_weak_until: float = 0.0
 var _boss_frost_weak_ready: float = 0.0
 var _freeze_immunity_ready_at: float = 0.0
@@ -364,12 +365,19 @@ func resolve_cursed(reason: StringName) -> bool:
 		var bonus: float = clampf(float(values.get("cursed_low_hp_damage_multiplier_add", 0.0)), 0.0, 0.4)
 		if _is_boss(): bonus *= 0.3
 		status["power"] = float(status.get("power", 0.0)) * (1.0+bonus)
+	status["power"] = float(status.get("power",0.0))*(1.0+float(status.get("fusion_resolve_bonus",0.0)))
+	var raw_damage: float = float(status.get("power",0.0))*float(status.get("stacks",0))*0.75
+	_resolving_curse=status.duplicate(true)
 	_execute_status_effects(status, "on_expire_effects")
+	_resolving_curse.clear()
 	var after: float = float(target.get("current_health")) if is_instance_valid(target) and target.get("current_health") != null else 0.0
 	var context: Dictionary = _build_status_event_context(&"cursed", status)
 	context["resolution_id"] = "%d:%d" % [get_instance_id(), _resolution_nonce]
 	context["resolution_reason"] = reason
+	context["resolved_status"] = status.duplicate(true)
 	context["stacks"] = int(status.get("stacks", 0))
+	context["resolved_raw_damage"] = raw_damage
+	context["target_statuses"] = get_status_snapshot()
 	context["resolved_damage"] = maxf(before - after, 0.0)
 	var bus: Node = _get_skill_event_bus()
 	if bus != null:
@@ -1308,5 +1316,20 @@ func _get_array(value: Variant) -> Array:
 
 func clear_origin(skill_id: StringName) -> void:
 	for id: Variant in _statuses.keys():
+		var status: Dictionary = _statuses[id]
+		var pauses: Dictionary = status.get("pause_sources",{})
+		pauses.erase(skill_id)
+		if String(status.get("fusion_thaw_origin",""))==String(skill_id): status.erase("fusion_thaw_origin")
+		if skill_id==&"fusion_curse_fire_ash_soul_pact": status.erase("fusion_resolve_bonus")
 		if StringName(String(_statuses[id].get("source_skill_id", ""))) == skill_id:
 			consume_status_stack(id, get_status_stack(id))
+
+func export_status(id: StringName) -> Dictionary:
+	return _statuses.get(id,{}).duplicate(true)
+
+func get_death_status_snapshot() -> Array[Dictionary]:
+	var snapshot: Array[Dictionary]=get_status_snapshot()
+	if not _resolving_curse.is_empty(): snapshot.append({"id":&"cursed","stacks":int(_resolving_curse.get("stacks",1))})
+	return snapshot
+func death_curse_snapshot() -> Dictionary:
+	return _statuses.get(&"cursed",_resolving_curse).duplicate(true)

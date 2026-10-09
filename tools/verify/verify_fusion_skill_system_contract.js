@@ -101,7 +101,7 @@ for (const [id, name, school, fusionSchool, description] of expected) {
   const minCount = skill.offer_rule.required_min_skill_count || {};
   assert(minCount[school] === 2, `${id} main school required_min_skill_count must be 2`);
   assert(minCount[fusionSchool] === 1, `${id} fusion school required_min_skill_count must be 1`);
-  assert(Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0, `${id} must have runtime trigger rules`);
+  assert((Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0) || skill.fusion_rules?.length > 0, `${id} must have runtime trigger rules`);
   assert(Array.isArray(skill.effects), `${id} must have effects array`);
 }
 

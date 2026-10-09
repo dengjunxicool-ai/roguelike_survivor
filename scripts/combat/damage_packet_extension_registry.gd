@@ -29,11 +29,11 @@ const BOOLEAN_FIELDS: Array[String] = [
 	"ignore_target_class_origin_modifier", "uses_fractional_buffer"
 ]
 const TEXT_FIELDS: Array[String] = [
-	"origin_skill_id", "listener_skill_id",
+	"origin_skill_id", "listener_skill_id", "source_object_kind",
 	"source_id", "field_damage_model", "special_final_modifier_source", "reaction_type",
 	"reaction_tier", "object_type", "skill_id", "status_id", "target_type"
 ]
-const INTEGER_FIELDS: Array[String] = ["max_targets", "debug_attack_trace_id", "_rapid_same_target_hits", "event_id", "parent_event_id", "proc_depth"]
+const INTEGER_FIELDS: Array[String] = ["source_object_id", "source_generation", "max_targets", "debug_attack_trace_id", "_rapid_same_target_hits", "event_id", "parent_event_id", "proc_depth"]
 
 ## 作用：逐项检查扩展是否登记并符合数值、布尔、文本、整数或技能实例类型。
 ## 使用：输入 extras 字典；返回所有错误，不修改输入也不静默接受未知字段。
