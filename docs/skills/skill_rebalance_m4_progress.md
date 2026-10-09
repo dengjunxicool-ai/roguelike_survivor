@@ -19,8 +19,8 @@
 ## Tasks
 
 - Task 14: complete (8be02b3 + supplemental feedback regression)
-- Task 15: implementation and pilot in progress; balance acceptance open
-- Task 16: regression/documentation/rollback in progress; human acceptance open
+- Task 15: test-version tooling/pilot complete; statistical tuning and performance acceptance open
+- Task 16: test-version regression/documentation/rollback complete; human and full release acceptance open
 
 ## Evidence
 
@@ -63,3 +63,27 @@ Final performance protocol correction: capture process_frame wall intervals afte
 
 
 T16 final UI: Rendered T16-ui-final PASS/noengineerrors; cards960 and replacement screenshots inspected; HUD1280/960 captured. Static content/Modifier/UTF8 checks PASS. Release manifest has144accepted behavior IDs,208validated checks,108/180pilot rows,0complete300s,0human games andemptyaccepted_balance_targets.
+
+## Final review and single fix pass
+
+Review06e3b37..2c8c51a: 0Critical/6Important/1Minor, With fixes for test-version only. All six Important grades retained for actual player decisions. One fresh reviewer; no re-review.
+
+Final: fixed fictional event/dash cast cooldown — verify_m4_review_previews R1 RED→GREEN, suite209/209.
+Final: fixed swallowed passive/native fusion benefits — verify_m4_review_previews R2 RED→GREEN (actual region/tick and utility cap), suite209/209.
+Final: fixed nested conditional damage/stage labels — verify_m4_review_previews R3 RED→GREEN (actual120/180 and tooltip), suite209/209.
+Final: fixed status duration resolver mismatch — verify_m4_review_previews R4 RED→GREEN (actual4.0/4.8 and source removal), suite209/209.
+Final: fixed replacement old/new output comparison — verify_m4_review_previews R5 RED→GREEN (Lv5legendary/Lv1new, cancel), suite209/209; prior real confirm regression PASS.
+Final: fixed placeholder next milestones — verify_m4_review_previews R6 RED→GREEN for18cast×levels1–5, suite209/209;36description-only changes checked against unchanged patches.
+
+Evidence: M4-review-red expected six-category failures/noengineerrors →M4-review-green2 PASS; extended card/utility assertions M4-review-final-green had test-only typed-array runtime error, excluded, then M4-review-final-green2 PASS. M4-final-regression209/209 fresh; M4-final-ui Rendered PASS, noengine/script errors, cards960/replacement inspected; HUD1280/960 captured. Fix2626d1e. Tests and docs claim output parameters, not random/mitigated damage guarantee.
+
+Final: minor (deferred): generated previews retain stun/slow and some descriptions retain Overload — actual labels remain partially English; future localization regression should cover generated tooltip text rather than only seven static main-state keys.
+
+Final: Ruling: 完整平衡统计不予通过，保持测试版 — 当前仅108/180预检，缺10/20与5/20种子队列，独立审查不能替代采样 — cost if wrong: 构筑/融合收益可能不均，无法宣称已平衡。
+Final: Ruling: 人工可玩性与胜率不予通过 — 没有六神系各两局人工结果，自动控制器结果不可当玩家体验 — cost if wrong: 人工体验问题或胜率偏差可能尚未发现。
+Final: Ruling: 完整300秒无辅助实战不予通过 — 唯一正常视口样本102.95秒死亡，完成数0 — cost if wrong: 后半局生存与触发稳定性没有证据。
+Final: Ruling: 真实永久不可移动Boss平衡不予通过 — 静止攻击阶段代理不等于该敌人类型 — cost if wrong: 不能覆盖此类Boss的实际收益与控制边界。
+Final: Ruling: 完整后期密集性能及长期对象增长/饥饿不予通过 — 固定24怪历史p95相对退化55.19%，仅前60秒窗口通过；最终UI修复后未重新采样，有限窗口无法证明长期性质 — cost if wrong: 密集后期卡顿、对象增长或饥饿风险仍未排除。
+Final: Ruling: 精细数值回滚能力不予通过 — 混合数值/语义提交的可逆演练只能证明整提交恢复 — cost if wrong: 线上只回退数值可能连带撤销机制，需拆分后再验收。
+
+Stage stop: M4 runnable test-version branch retained; no push/PR/merge. Full acceptance remains open. Historical sampling/performance evidence predates2626d1e; manifest qualifies this. Original user checkout remains untouched. Plan auxiliary review workspace is removed only after final ledger/report are committed; substantive repo/worktrees and raw E logs remain.

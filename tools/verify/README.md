@@ -21,7 +21,7 @@ not spawn debug targets or enemies just to manufacture damage traces.
 
 ## M4 隔离验证与采样
 
-自动行为回归：`pwsh -NoProfile -File tools/verify/run_skill_rebalance_suite.ps1 -ProjectPath E:/codex/skill-rebalance/worktree -OutputRoot E:/codex/skill-rebalance/<fresh-suite>`。M4新预览/反馈/计量/协议合同已纳入，共208项。必须使用全新用户目录，脚本级PASS不能覆盖engine/script errors。
+自动行为回归：`pwsh -NoProfile -File tools/verify/run_skill_rebalance_suite.ps1 -ProjectPath E:/codex/skill-rebalance/worktree -OutputRoot E:/codex/skill-rebalance/<fresh-suite>`。M4新预览/反馈/计量/协议合同已纳入，共209项。必须使用全新用户目录，脚本级PASS不能覆盖engine/script errors。
 
 `verify_skill_balance_matrix.gd` 不带`--execute`仅核对18预设/15融合前置，不宣称平衡。`verify_skill_rebalance_performance.gd` 不带`--execute`仅核对压力技能清单。
 
@@ -34,3 +34,5 @@ not spawn debug targets or enemies just to manufacture damage traces.
 ```
 
 渲染压力测试用包装器`-Rendered -Script res://tools/verify/verify_skill_rebalance_performance.gd -UserArguments @('--execute')`，不加fixed-fps。按T0和M4串行运行同一脚本；实际process_frame墙钟间隔、暖机2秒、固定24怪和前60秒实际波次。12技能初始授予与回满生命只服务压力测试，不计平衡/存活率。各数据的通过范围和缺口见`docs/skills/skill_rebalance_validation.md`。所有临时目录、日志、Godot缓存和存档都必须位于E:/codex；不使用会写默认C盘用户目录的npm Godot命令。
+
+审查补充：`verify_m4_review_previews.gd` 检查事件/冲刺CD、被动与原生融合实际收益、嵌套条件输出、状态时长加成/移除、替换旧新数值及36个具体里程碑；与完整套件同时运行。M4仍为测试版，采样及性能日志的历史版本限制见验证报告。
