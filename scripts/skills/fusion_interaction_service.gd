@@ -35,7 +35,7 @@ func observe_projectile(bus: Node,object: Node2D,from: Vector2,to: Vector2,radiu
   if Geometry.contains(shape,to): active[pair] = true
   if not _contacts.has(pair) and Geometry.swept(shape,from,to,radius):
    _contacts[pair] = {"object":weakref(object),"other":weakref(area)}
-   bus.emit_skill_event(&"projectile_area_entered",_context(bus,object,{"projectile":object,"area":area,"interaction_key":pair,"interaction_entered":true,"position":to}))
+   bus.emit_skill_event(&"projectile_area_entered",_context(bus,object,{"projectile":object,"area":area,"interaction_key":pair,"interaction_entered":true,"position":to,"interaction_from":from,"interaction_to":to}))
  _remove_exited(key(object)+"/",active)
 func _remove_exited(prefix: String,active: Dictionary) -> void:
  for pair: String in _contacts.keys():

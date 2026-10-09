@@ -430,6 +430,15 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 				return a_cursed
 			return origin.global_position.distance_squared_to(a.global_position) < origin.global_position.distance_squared_to(b.global_position)
 		)
+	var bus: Node = context.get("event_bus") as Node
+	if bus!=null:
+		var selection: Dictionary=context.duplicate(true)
+		selection["chain_candidates"]=candidates
+		selection["chain_result"]={}
+		selection["position"]=origin.global_position
+		bus.emit_skill_event(&"chain_select",selection)
+		var preferred: Node2D=selection.chain_result.get("target") as Node2D
+		if preferred!=null and candidates.has(preferred): candidates.erase(preferred);candidates.push_front(preferred)
 	var affected: int = 0
 
 	for candidate: Node2D in candidates:

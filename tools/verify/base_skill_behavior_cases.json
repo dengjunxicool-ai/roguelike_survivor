@@ -1,0 +1,545 @@
+{
+  "cases": [
+    {
+      "id": "fire_cast_meteor_rain",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "meteor_rain_meteor",
+      "count": 3,
+      "value": 0
+    },
+    {
+      "id": "fire_cast_lava_rift",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "lava_rift",
+      "count": 1,
+      "value": 1.5
+    },
+    {
+      "id": "fire_cast_scorching_vortex",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "scorching_vortex",
+      "count": 1,
+      "value": 4
+    },
+    {
+      "id": "frost_cast_frost_field",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "frost_field",
+      "count": 1,
+      "value": 3
+    },
+    {
+      "id": "frost_cast_glacial_lance",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "glacial_lance_projectile",
+      "count": 1,
+      "value": 125
+    },
+    {
+      "id": "frost_cast_blizzard_cloud",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "blizzard_cloud",
+      "count": 1,
+      "value": 5
+    },
+    {
+      "id": "thunder_cast_chain_lightning",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "chain_lightning_bolt",
+      "count": 1,
+      "value": 100
+    },
+    {
+      "id": "thunder_cast_storm_circle",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "thunderstorm_cloud",
+      "count": 1,
+      "value": 4
+    },
+    {
+      "id": "thunder_cast_emp_ring",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "emp_ring",
+      "count": 1,
+      "value": 0.28
+    },
+    {
+      "id": "curse_cast_black_serpent_hunt",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "black_serpent_projectile",
+      "count": 2,
+      "value": 65
+    },
+    {
+      "id": "curse_cast_death_scythe",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "death_scythe_projectile",
+      "count": 2,
+      "value": 100
+    },
+    {
+      "id": "curse_cast_doom_circle",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "doom_circle_delay",
+      "count": 1,
+      "value": 1.2
+    },
+    {
+      "id": "holy_cast_holy_ray",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "holy_ray_beam",
+      "count": 3,
+      "value": 90
+    },
+    {
+      "id": "holy_cast_divine_barrier",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "divine_barrier_field",
+      "count": 1,
+      "value": 5
+    },
+    {
+      "id": "holy_cast_judgment_hammer",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "judgment_hammer_area",
+      "count": 1,
+      "value": 0.2
+    },
+    {
+      "id": "chaos_cast_void_rift",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "void_rift_field",
+      "count": 1,
+      "value": 4
+    },
+    {
+      "id": "chaos_cast_singularity_barrage",
+      "kind": "projectile",
+      "event": "on_cast",
+      "output": "chaos_orb",
+      "count": 5,
+      "value": 50
+    },
+    {
+      "id": "chaos_cast_mutation_pulse",
+      "kind": "area",
+      "event": "on_cast",
+      "output": "mutation_pulse_area",
+      "count": 1,
+      "value": 0.24
+    },
+    {
+      "id": "fire_dash_blazing_run",
+      "kind": "area",
+      "event": "dash_start",
+      "output": "blazing_run_path",
+      "count": 1
+    },
+    {
+      "id": "frost_dash_ice_shard_assault",
+      "kind": "projectile",
+      "event": "dash_start",
+      "output": "ice_shard_projectile",
+      "count": 6
+    },
+    {
+      "id": "thunder_dash_ball_lightning",
+      "kind": "area",
+      "event": "dash_end",
+      "output": "ball_lightning_orb",
+      "count": 1
+    },
+    {
+      "id": "curse_dash_soul_chain",
+      "kind": "area",
+      "event": "dash_start",
+      "output": "soul_chain_link",
+      "count": 3
+    },
+    {
+      "id": "holy_dash_heavenly_wings",
+      "kind": "area",
+      "event": "dash_start",
+      "output": "heavenly_wings_path",
+      "count": 1
+    },
+    {
+      "id": "chaos_dash_rift_step",
+      "kind": "area",
+      "event": "dash_start",
+      "output": "chaos_rift",
+      "count": 1
+    },
+    {
+      "id": "fire_attack_searing",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "burning",
+      "stacks": 1
+    },
+    {
+      "id": "frost_attack_frostbite",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "chilled",
+      "stacks": 1
+    },
+    {
+      "id": "thunder_attack_thundering",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "conductive",
+      "stacks": 1
+    },
+    {
+      "id": "curse_attack_cursing",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "cursed",
+      "stacks": 1
+    },
+    {
+      "id": "holy_attack_judgment",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "judgment",
+      "stacks": 1
+    },
+    {
+      "id": "chaos_attack_chaotic",
+      "kind": "status",
+      "event": "attack_hit",
+      "status": "instability",
+      "stacks": 1
+    },
+    {
+      "id": "fire_summon_crimson_dragon",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "crimson_dragon",
+      "count": 1
+    },
+    {
+      "id": "frost_summon_frost_wolf",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "summon_frost_wolf",
+      "count": 1
+    },
+    {
+      "id": "frost_summon_ice_crystal_guard",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "ice_crystal_guard",
+      "count": 1
+    },
+    {
+      "id": "thunder_summon_storm_lynx",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "storm_lynx",
+      "count": 1
+    },
+    {
+      "id": "thunder_summon_storm_crow",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "storm_crow",
+      "count": 1
+    },
+    {
+      "id": "curse_summon_soul_crow",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "soul_crow",
+      "count": 1
+    },
+    {
+      "id": "holy_summon_seraph",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "seraph",
+      "count": 1
+    },
+    {
+      "id": "chaos_summon_void_maw",
+      "kind": "summon",
+      "event": "on_cast",
+      "output": "void_maw",
+      "count": 1
+    },
+    {
+      "id": "fire_summon_ember_fox_pack",
+      "kind": "summon",
+      "event": "status_applied",
+      "status": "burning",
+      "threshold": 8,
+      "output": "ember_fox",
+      "count": 2
+    },
+    {
+      "id": "curse_summon_bone_servant",
+      "kind": "summon",
+      "event": "on_enemy_killed",
+      "status": "cursed",
+      "threshold": 5,
+      "output": "bone_servant",
+      "count": 1
+    },
+    {
+      "id": "fire_passive_burning_focus",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "dot_damage_multiplier_add": 0.25,
+        "status_duration_multiplier_add": 0.2
+      }
+    },
+    {
+      "id": "frost_passive_frozen_vulnerability",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "frozen_damage_taken_multiplier_add": 0.25
+      }
+    },
+    {
+      "id": "frost_passive_chill_extension",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "chilled_duration_multiplier_add": 0.2,
+        "frozen_duration_multiplier_add": 0.2,
+        "frost_area_duration_multiplier_add": 0.2
+      }
+    },
+    {
+      "id": "thunder_passive_high_frequency_discharge",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "cooldown_multiplier_add": -0.15
+      }
+    },
+    {
+      "id": "thunder_passive_superconductor",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "conductive_lightning_damage_taken_multiplier_add": 0.2,
+        "lightning_chain_range_multiplier_add": 0.15
+      }
+    },
+    {
+      "id": "curse_passive_deathbed_deepen",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "cursed_low_hp_damage_multiplier_add": 0.4,
+        "cursed_low_hp_boss_effect_multiplier_add": 0.3
+      }
+    },
+    {
+      "id": "holy_passive_weakening_judgment",
+      "kind": "modifier",
+      "event": "",
+      "stats": {
+        "judgment_holy_damage_taken_multiplier_add": 0.05,
+        "judgment_damage_dealt_multiplier_add": -0.03
+      }
+    },
+    {
+      "id": "fire_power_ember_attachment",
+      "kind": "event",
+      "event": "on_enemy_killed",
+      "output": "ember_attachment_bolt",
+      "count": 1,
+      "status": "burning"
+    },
+    {
+      "id": "frost_power_ice_crack_chain",
+      "kind": "event",
+      "event": "post_damage_hit",
+      "output": "ice_crack_shard",
+      "count": 4,
+      "status": "frozen"
+    },
+    {
+      "id": "frost_power_frost_ring_counter",
+      "kind": "event",
+      "event": "dash_end",
+      "output": "frost_ring",
+      "count": 1,
+      "status": ""
+    },
+    {
+      "id": "frost_core_absolute_zero",
+      "kind": "event",
+      "event": "on_cast",
+      "output": "absolute_zero_field",
+      "count": 1,
+      "status": ""
+    },
+    {
+      "id": "thunder_power_magnetic_pull",
+      "kind": "event",
+      "event": "post_damage_hit",
+      "output": "magnetic_pull_field",
+      "count": 1,
+      "status": "conductive"
+    },
+    {
+      "id": "holy_power_divine_punishment",
+      "kind": "event",
+      "event": "status_max_stack_reached",
+      "output": "divine_punishment_strike",
+      "count": 1,
+      "status": "judgment"
+    },
+    {
+      "id": "holy_power_counter_seal",
+      "kind": "event",
+      "event": "shield_broken",
+      "output": "counter_seal_wave",
+      "count": 1,
+      "status": ""
+    },
+    {
+      "id": "holy_power_absolution_light",
+      "kind": "event",
+      "event": "on_enemy_killed",
+      "output": "absolution_light_burst",
+      "count": 0,
+      "status": "judgment"
+    },
+    {
+      "id": "holy_core_final_judgment_domain",
+      "kind": "event",
+      "event": "status_max_stack_reached",
+      "output": "counter_seal_wave",
+      "count": 1,
+      "status": "judgment"
+    },
+    {
+      "id": "curse_power_fear_whisper",
+      "kind": "event",
+      "event": "on_cast",
+      "output": "curse_whisper_burst",
+      "count": 1,
+      "status": "cursed"
+    },
+    {
+      "id": "chaos_power_chaos_exchange",
+      "kind": "event",
+      "event": "on_cast",
+      "output": "chaos_exchange_line",
+      "count": 1,
+      "status": "instability"
+    },
+    {
+      "id": "curse_passive_vampiric_ritual",
+      "kind": "heal",
+      "event": "on_enemy_killed",
+      "status": "cursed",
+      "health": 510
+    },
+    {
+      "id": "curse_passive_plague_spread",
+      "kind": "spread",
+      "event": "on_enemy_killed",
+      "status": "cursed",
+      "stacks": 3
+    },
+    {
+      "id": "frost_power_ice_mist_guard",
+      "kind": "shield",
+      "event": "status_applied",
+      "status": "frozen",
+      "threshold": 5,
+      "shield": 80
+    },
+    {
+      "id": "fire_core_inferno_cycle",
+      "kind": "damage",
+      "event": "on_enemy_killed",
+      "status": "burning",
+      "damage": 80
+    },
+    {
+      "id": "thunder_core_storm_center",
+      "kind": "projectile",
+      "event": "post_damage_hit",
+      "threshold": 60,
+      "output": "thunder_arc_bolt",
+      "count": 8,
+      "value": 90
+    },
+    {
+      "id": "curse_core_grand_coffin",
+      "kind": "projectile",
+      "event": "on_enemy_killed",
+      "threshold": 20,
+      "status": "cursed",
+      "output": "soul_storm_bolt",
+      "count": 10,
+      "value": 50
+    },
+    {
+      "id": "curse_power_soul_harvest",
+      "kind": "charge",
+      "event": "on_enemy_killed",
+      "threshold": 12,
+      "status": "cursed",
+      "modifier": 0.35
+    },
+    {
+      "id": "fire_passive_overheated_casting",
+      "kind": "timed",
+      "event": "on_player_damaged",
+      "modifier": 0.3
+    },
+    {
+      "id": "chaos_power_fission_burst",
+      "kind": "event",
+      "event": "status_max_stack_reached",
+      "status": "instability",
+      "output": "instability_fission_burst",
+      "count": 1
+    }
+  ],
+  "bindings": {
+    "fire_power_combustion_chain": "verify_fire_curse_boss_cycle",
+    "fire_power_ignite_core": "verify_fire_curse_cycle_v2",
+    "fire_passive_scorched_ground_affinity": "verify_m2_review_regressions",
+    "frost_power_shatter_execute": "verify_frost_execute_tiers",
+    "curse_power_death_pact": "verify_fire_curse_cycle_v2",
+    "holy_summon_shield_guardian": "verify_holy_shield_time_v2",
+    "holy_passive_sanctuary": "verify_m2_review_regressions",
+    "holy_passive_devotion": "verify_holy_shield_time_v2",
+    "chaos_summon_chaos_clone": "verify_chaos_replay_v2",
+    "chaos_passive_entropy_growth": "verify_chaos_mutation_v2",
+    "chaos_passive_geometric_imbalance": "verify_chaos_mutation_v2",
+    "chaos_passive_anomalous_stability": "verify_chaos_mutation_v2",
+    "chaos_power_echo_cast": "verify_chaos_echo_contract_v2",
+    "chaos_core_chaos_singularity": "verify_chaos_mutation_v2",
+    "thunder_power_double_strike": "verify_thunder_proc_v2",
+    "thunder_power_overload_burst": "verify_thunder_proc_v2",
+    "thunder_passive_static_charge": "verify_chaos_echo_contract_v2"
+  }
+}

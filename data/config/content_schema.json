@@ -1224,7 +1224,10 @@
 		"shield_gained",
 		"shield_broken",
 		"enemy_preparing_attack",
-		"fusion_clock"
+		"fusion_clock",
+		"area_pulse",
+		"chain_select",
+		"storm_strike"
 	],
 	"fusion_operations": [
 		"effects",
@@ -1244,6 +1247,32 @@
 		"teleport",
 		"area_clone",
 		"wire",
-		"summon_one"
+		"summon_one",
+		"curse_shorten_mark",
+		"marked_effects",
+		"consume_effects",
+		"area_edge",
+		"reverse_echo",
+		"beam",
+		"preferred_projectiles",
+		"teleport_shard",
+		"path_jump",
+		"store_area_charge",
+		"consume_area_charge",
+		"shatter_targets",
+		"chain_priority",
+		"count_targets",
+		"curse_resume",
+		"transfer_curse",
+		"death_effects",
+		"rift_projectile",
+		"full_shield_effects",
+		"projectile_path",
+		"caster_effects",
+		"holy_overload",
+		"area_curse_shorten",
+		"extend_area",
+		"dual_burst",
+		"area_curse_exchange"
 	]
 }

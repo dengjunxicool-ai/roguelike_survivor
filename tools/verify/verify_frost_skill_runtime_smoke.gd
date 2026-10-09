@@ -139,6 +139,8 @@ func _run() -> void:
 
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_frost_wolf") as RefCounted)
 	_enemy.current_health = _enemy.max_health
+	# The execution scenario removes dead targets from the registry. Re-register the revived fixture.
+	CombatTargetRegistryScript.get_or_create(root).call("register_enemy", _enemy)
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_ice_crystal_guard") as RefCounted)
 	await process_frame
 	_expect(_count_summons(&"summon_frost_wolf") > 0, "frost wolf spawns through Summon system", _count_summons(&"summon_frost_wolf"))

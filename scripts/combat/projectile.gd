@@ -45,6 +45,7 @@ var caster: Node
 var skill_manager: Node
 var relic_manager: Node
 var actions_on_hit: Array = []
+var _apply_direct_damage_on_hit: bool = false
 var _visual_config: Dictionary = {}
 var _visual_mode: String = ""
 var _visual_style: String = ""
@@ -168,6 +169,7 @@ func _apply_projectile_payload_params(params: Dictionary) -> void:
 	_stabilize_damage_packet_source("projectile")
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
+	_apply_direct_damage_on_hit = bool(params.get("apply_direct_damage_on_hit", false))
 	_geometry_branch = int(params.get("chaos_geometry_branch",-1))
 	_geometry_done = false
 	_return_once = bool(params.get("return_once",false)) or _geometry_branch == 1
@@ -336,6 +338,8 @@ func _emit_hit_event(body: Node) -> bool:
 	})
 	var status_manager: Node = body.get_node_or_null("StatusEffectManager")
 	if status_manager != null: event_context["target_statuses"] = status_manager.get_status_snapshot()
+	if _apply_direct_damage_on_hit and damage > 0 and body.has_method("take_damage"):
+		body.call(&"take_damage", _get_damage_payload(body))
 	_emit_primary_attack_hit_event(event_context)
 	event_bus.call_deferred("emit_skill_event", event_on_hit, event_context)
 	_execute_adapted_actions(actions_on_hit, event_context)
@@ -430,8 +434,12 @@ func _on_hit_visual_finished() -> void:
 ## 作用：用模板、caster与命中目标构造typed投射物包。
 ## 使用：target可空，默认主攻击/物理直伤，保留稳定来源。
 func _get_damage_payload(target: Node = null) -> DamagePacket:
+	var template: Dictionary = damage_packet.duplicate(true)
+	template["source_object_id"] = get_instance_id()
+	template["source_generation"] = spawn_generation
+	template["source_object_kind"] = "projectile"
 	return DamagePacketBuilderScript.from_combat_object_hit_object({
-		"template": damage_packet,
+		"template": template,
 		"target": target,
 		"owner": caster,
 		"amount": damage,
@@ -936,6 +944,7 @@ func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Arr
 	return statuses
 
 func _begin_return() -> void:
+	if _returned: return
 	_returned = true
 	_geometry_done = true
 	_trajectory_mode = "linear"

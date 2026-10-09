@@ -214,11 +214,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillCastSnapshotService.record(context: Dictionary, actions: Array) -> bool`；`get_last(filter: Dictionary = {}) -> Dictionary`；`clear_origin(skill_id: StringName) -> void`；`SkillReplayService.replay(snapshot: Dictionary, context: Dictionary, damage_scale: float) -> bool`。快照字段`version, origin_skill_id, school, actions, base_growth_applied`，纯序列化数据，无Node/Callable。
 
-- [ ] 用冰矛/火雨验证回声真正重放弹道/区域，0.4伤害倍率只一次；分身每2s按0.35复制；奇点复制非混沌cast0.5；不能复制heal/shield/summon/core/fusion。
-- [ ] 测试复制不推进自身计数；空快照不生成固定假弹幕；来源技能移除清快照；失效目标重选有效目标；暂停不耗时；分身消失清pending动作。
-- [ ] 测试熵增4分支轮换、最多最近2种、5s结束；几何变化每代最多一次；反常稳定每5次合格混沌cast充能，第6次+25%，未成功释放不消费。
-- [ ] 实现记录/纯参数重放，排除任何有业务副作用动作；原始状态传播允许但使用T3派生限制；奇点2s后爆发而非与吸附同时立即爆发。
-- [ ] 隔离新测试及`verify_chaos_skill_runtime_smoke.gd`、召唤/死亡重开回归，OutputRoot=`T10-replay`/`T10-mutation`，提交。
+- [x] 用冰矛/火雨验证回声真正重放弹道/区域，0.4伤害倍率只一次；分身每2s按0.35复制；奇点复制非混沌cast0.5；不能复制heal/shield/summon/core/fusion。
+- [x] 测试复制不推进自身计数；空快照不生成固定假弹幕；来源技能移除清快照；失效目标重选有效目标；暂停不耗时；分身消失清pending动作。
+- [x] 测试熵增4分支轮换、最多最近2种、5s结束；几何变化每代最多一次；反常稳定每5次合格混沌cast充能，第6次+25%，未成功释放不消费。
+- [x] 实现记录/纯参数重放，排除任何有业务副作用动作；原始状态传播允许但使用T3派生限制；奇点2s后爆发而非与吸附同时立即爆发。
+- [x] 隔离新测试及`verify_chaos_skill_runtime_smoke.gd`、召唤/死亡重开回归，OutputRoot=`T10-replay`/`T10-mutation`，提交。
 
 ### T11：18cast关键等级与统一成长预览数据
 
@@ -226,11 +226,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillGrowthProfile.resolve_actions(definition: Dictionary, level: int) -> Array`、`describe_next_milestone(definition: Dictionary, level: int) -> Dictionary`；按effect_id定位覆盖，不依赖效果数组位置；先应用里程碑的基础覆盖，再统一等级/品质计算，额外乘法明确只有一次。
 
-- [ ] 按规格第7.1节为18项建立Lv1/Lv3/Lv5三组断言；相同实例重复请求Lv5参数结果相同，不能再加一枚弹体；Lv2→3→4保持Lv3效果但不再次叠加。
-- [ ] 测试火雨3/4/4枚，伤害按同目标衰减；冰矛6/8/8穿透；CD变更与加弹体不能误修改全部规则；copy重放该等级最终动作且不再套一次成长。
-- [ ] 对`thunder_cast_emp_ring`等全部ID先通过T0清单验证，任何不存在的名称必须改为已有真实ID，不创建另一个技能来掩盖拼写错误。
-- [ ] 实现规格表，测试每项输出对象数、有效伤害、状态、最终CD；没有改动的66基础技能验证通用成长并保留Lv1动作。
-- [ ] 跑新测试和成长适配回归，OutputRoot=`T11-milestones`，提交。
+- [x] 按规格第7.1节为18项建立Lv1/Lv3/Lv5三组断言；相同实例重复请求Lv5参数结果相同，不能再加一枚弹体；Lv2→3→4保持Lv3效果但不再次叠加。
+- [x] 测试火雨3/4/4枚，伤害按同目标衰减；冰矛6/8/8穿透；CD变更与加弹体不能误修改全部规则；copy重放该等级最终动作且不再套一次成长。
+- [x] 对`thunder_cast_emp_ring`等全部ID先通过T0清单验证，任何不存在的名称必须改为已有真实ID，不创建另一个技能来掩盖拼写错误。
+- [x] 实现规格表，测试每项输出对象数、有效伤害、状态、最终CD；没有改动的66基础技能验证通用成长并保留Lv1动作。
+- [x] 跑新测试和成长适配回归，OutputRoot=`T11-milestones`，提交。
 
 ### T12：30代表融合的真实交互
 
@@ -238,12 +238,12 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `FusionInteractionService.observe_projectile_area(projectile: Node2D, area: Node2D, context: Dictionary) -> void`；`observe_area_overlap(first: Node2D, second: Node2D, context: Dictionary) -> void`；`reserve(pair_id: String, interaction_id: StringName, cooldown: float) -> bool`；`clear_object(instance_id: int) -> void`。用空间索引候选和真实形状相交，不做所有对象全组合扫描。
 
-- [ ] 为规格第9节首批30张逐张写案例：正确来源/状态/几何触发1次；错误来源、缺状态、无重叠分别0次；命中前后状态变化不混淆；计数、ICD和派生标记符合规格。
-- [ ] 专项测试：咒文回声监听cursed_resolved；太阳圣锤非圣锤神圣伤害不触发；审判冰矛非冰矛冰伤不触发；跃迁雷球无裂隙不传送；蒸灼雾域只建1份伤害区。
-- [ ] 空间测试覆盖擦边、不相交、穿越、同对象第二次进入、传送出入口、对象销毁/池复用；每条几何测试真实推进物理帧。
-- [ ] 实现真实交互、冻结暂停/结算、目标选择和对象对ICD；offer_enabled只在对应语义案例全部通过后启用；其他融合暂保留迁移状态，不删ID。
-- [ ] 同步原文案和数值表，只保留原语义对应的一套伤害；更新旧“字段包含某个数值”断言并增加实际每秒总伤害断言。
-- [ ] 跑两新测试与融合runtime_smoke，OutputRoot=`T12-semantics`/`T12-geometry`；首批30accepted后提交。
+- [x] 为规格第9节首批30张逐张写案例：正确来源/状态/几何触发1次；错误来源、缺状态、无重叠分别0次；命中前后状态变化不混淆；计数、ICD和派生标记符合规格。
+- [x] 专项测试：咒文回声监听cursed_resolved；太阳圣锤非圣锤神圣伤害不触发；审判冰矛非冰矛冰伤不触发；跃迁雷球无裂隙不传送；蒸灼雾域只建1份伤害区。
+- [x] 空间测试覆盖擦边、不相交、穿越、同对象第二次进入、传送出入口、对象销毁/池复用；每条几何测试真实推进物理帧。
+- [x] 实现真实交互、冻结暂停/结算、目标选择和对象对ICD；offer_enabled只在对应语义案例全部通过后启用；其他融合暂保留迁移状态，不删ID。
+- [x] 同步原文案和数值表，只保留原语义对应的一套伤害；更新旧“字段包含某个数值”断言并增加实际每秒总伤害断言。
+- [x] 跑两新测试与融合runtime_smoke，OutputRoot=`T12-semantics`/`T12-geometry`；首批30accepted后提交。
 
 ### T13：剩余30融合与全技能覆盖
 
@@ -251,10 +251,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** 每融合case固定`skill_id, required_skills, positive_fixture, negative_fixtures, expected_damage, expected_statuses, expected_spawn_count, max_trigger_count`；fixture包含形状/位置/来源/原始状态/生命阶级，无“任意配置即可触发”的占位用例。
 
-- [ ] 按规格第9表第二批逐张写真实正反案例；黑雷收束只第5次本法阵落雷；冰棺契约死亡仅转移不双结算；裂火分叉必须有火弹进入裂隙；圣雷裁决反应链有限。
-- [ ] 调整事件与依赖至符合各自描述，补全原设计的形状、传送、下一次充能、延时与定向选敌；每完成一个神系组合4张就跑组合回归。
-- [ ] 全量台账检查：144个ID仍存在、144条accepted、60融合全部offer_enabled；每项至少1正例和1语义负例，必要专项负例依T12；任何未完成项阻止完整交付。
-- [ ] 跑T12两测试和全覆盖测试，OutputRoot=`T13-coverage`；六神系runtime_smoke全回归，完成M3提交。
+- [x] 按规格第9表第二批逐张写真实正反案例；黑雷收束只第5次本法阵落雷；冰棺契约死亡仅转移不双结算；裂火分叉必须有火弹进入裂隙；圣雷裁决反应链有限。
+- [x] 调整事件与依赖至符合各自描述，补全原设计的形状、传送、下一次充能、延时与定向选敌；每完成一个神系组合4张就跑组合回归。
+- [x] 全量台账检查：144个ID仍存在、144条accepted、60融合全部offer_enabled；每项至少1正例和1语义负例，必要专项负例依T12；任何未完成项阻止完整交付。
+- [x] 跑T12两测试和全覆盖测试，OutputRoot=`T13-coverage`；六神系runtime_smoke全回归，完成M3提交。
 
 ## M4：玩家反馈与调优
 

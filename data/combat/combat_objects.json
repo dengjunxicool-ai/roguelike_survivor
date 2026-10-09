@@ -4277,6 +4277,338 @@
 				1,
 				0.78
 			]
+		},
+		{
+			"id": "shattered_ember_ice",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "shattered_ember_fire",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "absolution_beam",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "ember_echo_path",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "crystal_flame_spike",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "aurora_frost_beam",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "cold_harvest_shard",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "rift_funeral_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "holy_frost_path",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "riftfire_fork_bolt",
+			"type": "projectile",
+			"scene": "res://scenes/combat/fireball_projectile.tscn",
+			"collision_radius": 9,
+			"destroy_on_wall": true,
+			"destroy_on_hit": true,
+			"visual_mode": "programmatic",
+			"visual_style": "ice_crack_shard",
+			"visual_color": [
+				0.68,
+				0.92,
+				1,
+				0.9
+			],
+			"visual_ring_color": [
+				0.95,
+				1,
+				1,
+				0.92
+			]
+		},
+		{
+			"id": "quantum_overload_burst",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "void_holy_shield_pulse",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "ash_curse_ground",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "absolution_harvest_beam",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "crystal_shelter_field",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
+		},
+		{
+			"id": "thunder_shield_prayer_pulse",
+			"type": "area",
+			"scene": "res://scenes/combat/area_effect.tscn",
+			"collision_radius": 134.4,
+			"visual_mode": "programmatic",
+			"visual_style": "frost_field",
+			"visual_color": [
+				0.42,
+				0.82,
+				1,
+				0.34
+			],
+			"visual_ring_color": [
+				0.82,
+				0.96,
+				1,
+				0.78
+			]
 		}
 	]
 }

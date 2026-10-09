@@ -160,6 +160,8 @@ static func _normalize_chain_params(params: Dictionary) -> Dictionary:
 ## 作用：整理按状态层数造成伤害或消耗状态的动作参数。
 ## 使用：params 读取 status/status_id/power_scale_per_stack/amount_per_stack；会原地更新 params.status_id/amount_per_stack。
 static func _normalize_status_stack_damage_params(params: Dictionary) -> Dictionary:
+	if params.has("statuses") and not params.has("status_ids"):
+		params["status_ids"] = params["statuses"].duplicate()
 	if params.has("status") and not params.has("status_id"):
 		params["status_id"] = params["status"]
 	if params.has("power_scale_per_stack") and not params.has("amount_per_stack"):

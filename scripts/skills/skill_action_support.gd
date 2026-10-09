@@ -337,6 +337,12 @@ func _build_damage_packet(params: Dictionary, context: Dictionary, amount: int, 
 		"element": element,
 		"skill_level_coefficient": _get_skill_level_coefficient(context) if uses_skill_level else 1.0
 	})
+	var object: Node = context.get("projectile",context.get("area")) as Node
+	if object!=null and is_instance_valid(object) and (object.has_method("_begin_return") or object.has_method("geometry_shape")):
+		packet["source_object_id"]=object.get_instance_id()
+		packet["source_generation"]=int(object.get("spawn_generation"))
+		packet["source_object_kind"]="projectile" if object.has_method("_begin_return") else "area"
+	if source_type=="status" and context.has("status_id"): packet["status_id"]=String(context.status_id)
 	_apply_damage_packet_modifiers(packet, params, context)
 	_apply_shared_primary_attack_crit(packet, params, context, caster)
 	return packet

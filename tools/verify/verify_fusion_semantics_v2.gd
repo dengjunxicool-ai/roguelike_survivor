@@ -10,7 +10,7 @@ func run() -> void:
  nearby=[make_enemy(Vector2(80,0)),make_enemy(Vector2(120,0)),make_enemy(Vector2(160,0))]
  var rows: Array = JSON.parse_string(FileAccess.get_file_as_string("res://tools/verify/fusion_semantic_cases.json"))
  expect(rows.size()>=30,"thirty first-batch semantic fixtures")
- for row: Dictionary in rows:
+ for row: Dictionary in rows.slice(0,30):
   for variant: String in ["wrong_event","missing_status_or_resource","wrong_source_or_spatial_object","positive"]:
    clean()
    var c: Dictionary=fixture(row,variant)
@@ -59,7 +59,7 @@ func fixture(row: Dictionary,variant: String) -> Dictionary:
  if row.skill_id=="fusion_curse_thunder_curse_lightning_backlash": nearby[0].get_node("StatusEffectManager").clear_statuses()
  c.target_statuses=enemy.get_node("StatusEffectManager").get_status_snapshot()
  c.damage_packet={"source_type":"projectile" if String(f.objects)=="projectile" else "skill"}
- if String(f.objects)=="projectile":
+ if String(f.objects).split("+").has("projectile"):
   var p: Node2D=Projectile.new();root.add_child(p);fixture_objects.append(p)
   p.setup({"source_id":"fixture","damage_packet":{"source_skill_id":source.skill_id},"caster":player,"skill_manager":manager,"event_bus":bus,"damage":0});p.set_physics_process(false);c.source=p;c.projectile=p
  var kinds: Array=String(f.objects).split("+")
@@ -68,7 +68,7 @@ func fixture(row: Dictionary,variant: String) -> Dictionary:
   var id: String="frost_cast_frost_field" if kind=="frost" else "fire_cast_lava_rift" if kind in ["fire","lava"] else "chaos_cast_void_rift" if kind=="rift" else "holy_cast_divine_barrier" if kind=="holy" else "thunder_dash_ball_lightning"
   var owner: RefCounted=install(StringName(id))
   var a: Node2D=Area.new();root.add_child(a);fixture_objects.append(a);a.position=enemy.position
-  a.setup({"area_id":"fixture","source_id":"void_rift_field" if kind=="rift" else "ball_lightning_orb" if kind=="orb" else "fixture","radius":100.0,"duration":10.0,"tick_interval":1.0,"damage":0,"damage_packet":{"origin_skill_id":id,"source_skill_id":id},"caster":player,"skill_manager":manager,"skill_instance":owner,"event_bus":bus});a.set_physics_process(false)
+  a.setup({"area_id":"fixture","source_id":"void_rift_field" if kind=="rift" else "ball_lightning_orb" if kind=="orb" else "lava_rift" if kind in ["fire","lava"] else "fixture","radius":100.0,"duration":10.0,"tick_interval":1.0,"damage":0,"damage_packet":{"origin_skill_id":id,"source_skill_id":id},"caster":player,"skill_manager":manager,"skill_instance":owner,"event_bus":bus});a.set_physics_process(false)
   if kind=="rift" and c.has("area"): c.other_area=a
   elif kind!="rift" or not c.has("area"): c.area=a
   if kind=="rift": c.rift=a

@@ -296,8 +296,15 @@ func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
 		return false
-	var overload_id: StringName = StringName(str(params.get("status_id", "overload")))
-	return _apply_status_to_target(target, overload_id, {"stacks": 1, "duration": float(params.get("duration", 0.1))})
+	var manager: Node=context.get("skill_manager") as Node
+	var bus: Node=context.get("event_bus") as Node
+	if bus==null or manager==null or not manager.has_skill(&"thunder_power_overload_burst") or int(context.get("proc_depth",0))>=2: return false
+	var child: Dictionary=context.duplicate(true)
+	child["status_id"]=&"conductive"
+	var statuses: Node=target.get_node_or_null("StatusEffectManager")
+	if statuses!=null: child["target_statuses"]=statuses.get_status_snapshot()
+	bus.emit_skill_event(&"status_max_stack_reached",child)
+	return true
 
 
 ## 作用：检查冻结目标并执行粉碎伤害及派生效果。

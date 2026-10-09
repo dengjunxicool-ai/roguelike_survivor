@@ -53,6 +53,7 @@ var effect_length: float = 0.0
 var effect_width: float = 0.0
 var _age: float = 0.0
 var _area_step_second: int = 0
+var _fusion_pulse_half: int = 0
 var _tick_timer: float = 0.0
 var _visual_config: Dictionary = {}
 var _visual_mode: String = ""
@@ -120,6 +121,7 @@ func setup(params: Dictionary) -> void:
 	_register_area_effect()
 	_emit_area_event(&"area_created",null)
 	_execute_apply_actions()
+	if source_id==&"lightning_strike_area" and event_bus!=null: _emit_area_event(&"storm_strike",null)
 	_enforce_max_active(int(params.get("max_active", 0)))
 
 
@@ -270,6 +272,7 @@ func _apply_area_visual_params(params: Dictionary) -> void:
 func _reset_area_runtime_state(params: Dictionary) -> void:
 	_age = 0.0
 	_area_step_second = 0
+	_fusion_pulse_half = 0
 	_tick_timer = 0.0
 	_damage_window_finished = false
 	_finished_by_damage = false
@@ -525,6 +528,11 @@ func _physics_process_profiled(delta: float) -> void:
 
 	if event_bus != null: event_bus.observe_area(self)
 	_age += delta
+	if event_bus!=null and event_bus.interaction_interest(&"area_pulse",self):
+		var halves: int=floori(minf(_age,duration)*2.0+0.000001)
+		while _fusion_pulse_half<halves:
+			_fusion_pulse_half+=1
+			_emit_area_event(&"area_pulse",null,{"elapsed":_fusion_pulse_half*.5})
 	# Advance the area contract before target budgets; it also runs with no enemies.
 	if source_id == &"divine_barrier_field" and event_bus != null:
 		var steps: int = floori(minf(_age, duration)+0.000001)
@@ -1339,10 +1347,10 @@ func _on_visual_animation_finished() -> void:
 
 ## 作用：发送包含区域、来源、当前命中数和技能服务的规范事件上下文。
 ## 使用：空event_name或无有效总线时无操作。
-func _emit_area_event(event_name: StringName, target: Node) -> void:
+func _emit_area_event(event_name: StringName, target: Node, extra: Dictionary = {}) -> void:
 	if event_bus == null or event_name == &"" or not event_bus.has_method("emit_skill_event"):
 		return
-	event_bus.call("emit_skill_event", event_name, DamageTraceContextScript.normalize_event_context({
+	var c: Dictionary = DamageTraceContextScript.normalize_event_context({
 		"caster": caster,
 		"owner": caster,
 		"target": target,
@@ -1363,7 +1371,9 @@ func _emit_area_event(event_name: StringName, target: Node) -> void:
 		"damage_type": damage_type,
 		"damage_packet": damage_packet,
 		"position": global_position
-	}))
+	})
+	c.merge(extra,true)
+	event_bus.call("emit_skill_event",event_name,c)
 
 
 ## 作用：读取字典配置，非字典输入返回空字典。
@@ -1427,9 +1437,13 @@ func _execute_apply_actions() -> void:
 		return
 	if impact_target != null:
 		if _can_damage_body(impact_target):
+			var statuses: Node = impact_target.get_node_or_null("StatusEffectManager")
+			_milestone_statuses = statuses.get_status_snapshot() if statuses != null else []
 			_execute_adapted_actions(actions_on_apply, impact_target)
 		return
 	for target: Node in _collect_tick_damage_targets():
+		var statuses: Node = target.get_node_or_null("StatusEffectManager")
+		_milestone_statuses = statuses.get_status_snapshot() if statuses != null else []
 		_execute_adapted_actions(actions_on_apply, target)
 
 

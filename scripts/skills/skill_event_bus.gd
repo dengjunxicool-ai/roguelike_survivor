@@ -99,6 +99,7 @@ func subscribe(event_name: StringName, listener: Callable) -> void:
 ## 使用：event_name 为统一技能事件名。
 func emit_skill_event(event_name: StringName, event_context: Dictionary = {}) -> Array:
 	var context: Dictionary = EventContext.from_context(DamageTraceContextScript.normalize_event_context(event_context), event_name)
+	if event_context.has("chain_result"): context["chain_result"]=event_context.chain_result
 	_event_nonce += 1
 	context["event_id"] = _event_nonce
 	# Each new event uses its occurrence time; delayed objects retain ancestry,

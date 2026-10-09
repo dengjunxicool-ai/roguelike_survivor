@@ -91,6 +91,7 @@ static func build_spawn_params(input: Dictionary) -> Dictionary:
 		"relic_manager": context.get("relic_manager"),
 		"source_id": source_id,
 		"event_on_hit": &"on_projectile_hit",
+		"apply_direct_damage_on_hit": projectile_params.has("damage"),
 		"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
 		"cast_instance_id": str(input.get("cast_instance_id", "")),
 		"trajectory_mode": str(input.get("trajectory_mode", "linear")),

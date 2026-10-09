@@ -20,6 +20,12 @@ static func from_context(context: Dictionary, event_name: StringName) -> Diction
 	if not result.has("target_statuses") and target != null and event_name in [&"attack_hit", &"on_projectile_hit", &"area_tick", &"post_damage_hit"]:
 		var statuses: Node = target.get_node_or_null("StatusEffectManager")
 		if statuses != null: result["target_statuses"] = statuses.get_status_snapshot()
+	var object_id: int = int(packet.get("source_object_id",0))
+	if object_id>0 and is_instance_id_valid(object_id):
+		var object: Node = instance_from_id(object_id) as Node
+		if object!=null and not object.is_queued_for_deletion() and int(object.get("spawn_generation"))==int(packet.get("source_generation",-1)):
+			var kind: String = String(packet.get("source_object_kind",""))
+			if kind in ["projectile","area"] and not result.has(kind): result[kind]=object;result["source"]=object;result["source_id"]=object.source_id
 	var manager: Node = context.get("skill_manager") as Node
 	var caster: Node = context.get("caster") as Node
 	if manager == null and caster != null:

@@ -74,3 +74,36 @@ static func overlaps(a: Dictionary,b: Dictionary) -> bool:
     for j: int in bp.size():
      if Geometry2D.segment_intersects_segment(ap[i],ap[(i+1)%ap.size()],bp[j],bp[(j+1)%bp.size()]) != null: return true
  return false
+
+# A deterministic shared point in the intersection, used by overlap-born outputs.
+static func overlap_point(a: Dictionary,b: Dictionary) -> Variant:
+ var ap: Vector2=a.position;var bp: Vector2=b.position
+ if contains(a,bp) and contains(b,bp): return bp
+ if contains(a,ap) and contains(b,ap): return ap
+ var ac: bool=String(a.get("shape","circle"))=="circle"
+ var bc: bool=String(b.get("shape","circle"))=="circle"
+ if ac and bc:
+  var distance: float=ap.distance_to(bp)
+  if distance>float(a.radius)+float(b.radius): return null
+  var low: float=maxf(distance-float(b.radius),0)
+  var high: float=minf(float(a.radius),distance)
+  return ap+ap.direction_to(bp)*(low+high)*.5
+ if ac or bc:
+  var circle: Dictionary=a if ac else b
+  var other: Dictionary=b if ac else a
+  for poly: PackedVector2Array in polygons(other):
+   for i: int in poly.size():
+    var point: Vector2=Geometry2D.get_closest_point_to_segment(circle.position,poly[i],poly[(i+1)%poly.size()])
+    if contains(circle,point) and contains(other,point): return point
+  return null
+ for poly_a: PackedVector2Array in polygons(a):
+  for poly_b: PackedVector2Array in polygons(b):
+   for point: Vector2 in poly_a:
+    if contains(b,point): return point
+   for point: Vector2 in poly_b:
+    if contains(a,point): return point
+   for i: int in poly_a.size():
+    for j: int in poly_b.size():
+     var point: Variant=Geometry2D.segment_intersects_segment(poly_a[i],poly_a[(i+1)%poly_a.size()],poly_b[j],poly_b[(j+1)%poly_b.size()])
+     if point!=null: return point
+ return null
