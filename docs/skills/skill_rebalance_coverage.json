@@ -1,0 +1,1944 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "6dfee02",
+  "starting_skills": [
+    "fireball"
+  ],
+  "observations": [
+    {
+      "case": "legendary_L1_normal_L2",
+      "observed": "rarity normal, damage ratio 0.574358974",
+      "replacement": "verify_skill_upgrade_monotonic.gd"
+    },
+    {
+      "case": "timed_buff",
+      "observed": "no timed API; runtime_modifiers retains +0.3",
+      "replacement": "verify_skill_timed_modifiers.gd"
+    },
+    {
+      "case": "cursed_t3",
+      "observed": "2 stacks, 0 damage after t2 reapply",
+      "replacement": "verify_skill_status_lifecycle_v2.gd"
+    }
+  ],
+  "legacy_assertions": [
+    {
+      "test": "verify_skill_growth_scaling.gd",
+      "replacement": "verify_skill_damage_growth_paths.gd",
+      "reason": "rarity no longer affects radius/duration/cooldown; tick damage grows once"
+    },
+    {
+      "test": "verify_burning_status_stack_decay_devtools.gd",
+      "replacement": "verify_skill_status_lifecycle_v2.gd",
+      "reason": "burn tick does not consume stacks"
+    },
+    {
+      "test": "verify_burn_status_table.js",
+      "replacement": "verify_skill_status_lifecycle_v2.gd",
+      "reason": "36P percent per stack every second for four seconds"
+    },
+    {
+      "test": "verify_fusion_skill_numeric_contract.js",
+      "replacement": "T12/T13 fusion behavior",
+      "reason": "fusion tick growth changes; fusion semantics deferred to M3"
+    }
+  ],
+  "skills": [
+    {
+      "id": "fire_attack_searing",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_dash_blazing_run",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_cast_meteor_rain",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_cast_lava_rift",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_cast_scorching_vortex",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_summon_crimson_dragon",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_summon_ember_fox_pack",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_passive_burning_focus",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_passive_overheated_casting",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_passive_scorched_ground_affinity",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_power_combustion_chain",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_power_ember_attachment",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_power_ignite_core",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fire_core_inferno_cycle",
+      "school": "fire",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_attack_frostbite",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_dash_ice_shard_assault",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_cast_frost_field",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_cast_glacial_lance",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_cast_blizzard_cloud",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_summon_frost_wolf",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_summon_ice_crystal_guard",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_power_shatter_execute",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_passive_frozen_vulnerability",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_passive_chill_extension",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_power_frost_ring_counter",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_power_ice_crack_chain",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_power_ice_mist_guard",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "frost_core_absolute_zero",
+      "school": "frost",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_attack_thundering",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_dash_ball_lightning",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_cast_chain_lightning",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_cast_storm_circle",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_cast_emp_ring",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_summon_storm_lynx",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_summon_storm_crow",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_passive_high_frequency_discharge",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_passive_superconductor",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_passive_static_charge",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_power_overload_burst",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_power_double_strike",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_power_magnetic_pull",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "thunder_core_storm_center",
+      "school": "thunder",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_attack_cursing",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_dash_soul_chain",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_cast_black_serpent_hunt",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_cast_death_scythe",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_cast_doom_circle",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_summon_bone_servant",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_summon_soul_crow",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_passive_vampiric_ritual",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_passive_plague_spread",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_passive_deathbed_deepen",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_power_fear_whisper",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_power_soul_harvest",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_power_death_pact",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "curse_core_grand_coffin",
+      "school": "curse",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_attack_judgment",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_dash_heavenly_wings",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_cast_holy_ray",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_cast_divine_barrier",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_cast_judgment_hammer",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_summon_seraph",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_summon_shield_guardian",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_passive_sanctuary",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_passive_devotion",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_passive_weakening_judgment",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_power_divine_punishment",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_power_counter_seal",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_power_absolution_light",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "holy_core_final_judgment_domain",
+      "school": "holy",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_attack_chaotic",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "attack",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_dash_rift_step",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "dash",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_cast_void_rift",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_cast_singularity_barrage",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_cast_mutation_pulse",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "cast",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_summon_chaos_clone",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_summon_void_maw",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "summon",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_passive_entropy_growth",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_passive_geometric_imbalance",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_passive_anomalous_stability",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "passive",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_power_fission_burst",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_power_echo_cast",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_power_chaos_exchange",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "power",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "chaos_core_chaos_singularity",
+      "school": "chaos",
+      "fusion_school": null,
+      "skill_type": "core",
+      "task": "T1-T4; T7-T11",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_skill_growth_scaling.gd",
+        "verify_burning_status_stack_decay_devtools.gd",
+        "verify_burn_status_table.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_frost_steam_mist",
+      "school": "fire",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_frost_shattered_ember",
+      "school": "fire",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_thunder_plasma_fire_path",
+      "school": "fire",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_thunder_thunderburn_meteor",
+      "school": "fire",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_curse_ash_curse_rune",
+      "school": "fire",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_curse_blackflame_serpents",
+      "school": "fire",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_holy_holy_flame_absolution",
+      "school": "fire",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_holy_burning_light_barrier",
+      "school": "fire",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_chaos_ember_echo",
+      "school": "fire",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_fire_chaos_molten_split",
+      "school": "fire",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_fire_crystalized_flame",
+      "school": "frost",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_fire_frostburn_shards",
+      "school": "frost",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_thunder_lightning_ice_pillar",
+      "school": "frost",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_thunder_aurora_frost_channel",
+      "school": "frost",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_curse_ice_coffin_curse_burst",
+      "school": "frost",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_curse_cold_scythe_harvest",
+      "school": "frost",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_holy_holy_frost_anchor",
+      "school": "frost",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_holy_judgment_ice_lance",
+      "school": "frost",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_chaos_rift_avalanche",
+      "school": "frost",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_frost_chaos_inverted_ice_shard",
+      "school": "frost",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_fire_arc_ignition",
+      "school": "thunder",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_fire_thunderfire_circuit",
+      "school": "thunder",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_frost_shatter_thunder",
+      "school": "thunder",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_frost_cryo_capacitor",
+      "school": "thunder",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_curse_curse_lightning_rebound",
+      "school": "thunder",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_curse_black_thunder_convergence",
+      "school": "thunder",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_holy_judgment_wire",
+      "school": "thunder",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_holy_shield_capacitor",
+      "school": "thunder",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_chaos_fractal_arc",
+      "school": "thunder",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_thunder_chaos_rift_lightning_orb",
+      "school": "thunder",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_fire_ash_soul_pact",
+      "school": "curse",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_fire_burning_soul_minion",
+      "school": "curse",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_frost_ice_coffin_contract",
+      "school": "curse",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_frost_cold_scythe_soul_chase",
+      "school": "curse",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_thunder_curse_lightning_backlash",
+      "school": "curse",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_thunder_black_serpent_conduction",
+      "school": "curse",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_holy_confession_curse_seal",
+      "school": "curse",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_holy_absolution_harvest",
+      "school": "curse",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_chaos_paradox_curse_mark",
+      "school": "curse",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_curse_chaos_rift_funeral",
+      "school": "curse",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_fire_holy_flame_purification",
+      "school": "holy",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_fire_solar_hammer",
+      "school": "holy",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_frost_crystal_shelter",
+      "school": "holy",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_frost_holy_frost_beam",
+      "school": "holy",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_thunder_thunder_shield_prayer",
+      "school": "holy",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_thunder_holy_thunder_judgment",
+      "school": "holy",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_curse_purifying_chain",
+      "school": "holy",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_curse_penitence_barrier",
+      "school": "holy",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_chaos_divine_domain_rift",
+      "school": "holy",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_holy_chaos_judgment_echo",
+      "school": "holy",
+      "fusion_school": "chaos",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_fire_riftfire_fork",
+      "school": "chaos",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_fire_lava_refraction",
+      "school": "chaos",
+      "fusion_school": "fire",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_frost_zero_rift",
+      "school": "chaos",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_frost_shattered_ice_warp",
+      "school": "chaos",
+      "fusion_school": "frost",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_thunder_quantum_overload",
+      "school": "chaos",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_thunder_warp_lightning_orb",
+      "school": "chaos",
+      "fusion_school": "thunder",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_curse_curse_rune_echo",
+      "school": "chaos",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_curse_rift_curse_exchange",
+      "school": "chaos",
+      "fusion_school": "curse",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_holy_void_holy_shield",
+      "school": "chaos",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    },
+    {
+      "id": "fusion_chaos_holy_echoing_judgment",
+      "school": "chaos",
+      "fusion_school": "holy",
+      "skill_type": "fusion",
+      "task": "T12/T13",
+      "semantic_cases": [],
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js"
+      ],
+      "status": "baseline"
+    }
+  ]
+}
