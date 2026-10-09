@@ -1,0 +1,1078 @@
+{
+  "version": 1,
+  "exploration_seeds": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110
+  ],
+  "confirmation_seeds": [
+    301,
+    302,
+    303,
+    304,
+    305,
+    306,
+    307,
+    308,
+    309,
+    310,
+    311,
+    312,
+    313,
+    314,
+    315,
+    316,
+    317,
+    318,
+    319,
+    320
+  ],
+  "fusion_seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "outlier_seeds": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020
+  ],
+  "fixed_scene_seconds": 30,
+  "real_run_seconds": 300,
+  "scenes": [
+    {
+      "id": "single_normal",
+      "enemy_id": "small_slime",
+      "count": 1
+    },
+    {
+      "id": "eight_normal",
+      "enemy_id": "small_slime",
+      "count": 8
+    },
+    {
+      "id": "twentyfour_normal",
+      "enemy_id": "small_slime",
+      "count": 24
+    },
+    {
+      "id": "three_elite",
+      "enemy_id": "giant_slime",
+      "count": 3
+    },
+    {
+      "id": "mobile_boss",
+      "enemy_id": "dungeon_heart",
+      "count": 1,
+      "policy": "avoid_nearest_collect_safe_dash_no_new_choices"
+    },
+    {
+      "id": "boss_stationary_phase",
+      "enemy_id": "dungeon_heart",
+      "count": 1,
+      "policy": "hold_position_in_attack_range"
+    }
+  ],
+  "presets": [
+    {
+      "id": "fire_attack",
+      "school": "fire",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "fire_attack_searing",
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain",
+        "fire_passive_burning_focus"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "fire_area",
+      "school": "fire",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "fire_cast_meteor_rain",
+        "fire_cast_lava_rift",
+        "fire_power_combustion_chain",
+        "fire_passive_burning_focus"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "fire_summon",
+      "school": "fire",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "fire_summon_crimson_dragon",
+        "fire_summon_ember_fox_pack",
+        "fire_power_combustion_chain",
+        "fire_passive_burning_focus"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "frost_attack",
+      "school": "frost",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "frost_attack_frostbite",
+        "frost_cast_frost_field",
+        "frost_power_shatter_execute",
+        "frost_passive_frozen_vulnerability"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "frost_area",
+      "school": "frost",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "frost_cast_frost_field",
+        "frost_cast_glacial_lance",
+        "frost_power_shatter_execute",
+        "frost_passive_frozen_vulnerability"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "frost_summon",
+      "school": "frost",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "frost_summon_frost_wolf",
+        "frost_summon_ice_crystal_guard",
+        "frost_power_shatter_execute",
+        "frost_passive_frozen_vulnerability"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_attack",
+      "school": "thunder",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "thunder_attack_thundering",
+        "thunder_cast_chain_lightning",
+        "thunder_power_overload_burst",
+        "thunder_passive_high_frequency_discharge"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_area",
+      "school": "thunder",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "thunder_cast_chain_lightning",
+        "thunder_cast_storm_circle",
+        "thunder_power_overload_burst",
+        "thunder_passive_high_frequency_discharge"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_summon",
+      "school": "thunder",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "thunder_summon_storm_lynx",
+        "thunder_summon_storm_crow",
+        "thunder_power_overload_burst",
+        "thunder_passive_high_frequency_discharge"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "curse_attack",
+      "school": "curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "curse_attack_cursing",
+        "curse_cast_black_serpent_hunt",
+        "curse_power_fear_whisper",
+        "curse_passive_vampiric_ritual"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "curse_area",
+      "school": "curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "curse_cast_black_serpent_hunt",
+        "curse_cast_death_scythe",
+        "curse_power_fear_whisper",
+        "curse_passive_vampiric_ritual"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "curse_summon",
+      "school": "curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "curse_summon_bone_servant",
+        "curse_summon_soul_crow",
+        "curse_power_fear_whisper",
+        "curse_passive_vampiric_ritual"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "holy_attack",
+      "school": "holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "holy_attack_judgment",
+        "holy_cast_holy_ray",
+        "holy_power_divine_punishment",
+        "holy_passive_sanctuary"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "holy_area",
+      "school": "holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "holy_cast_holy_ray",
+        "holy_cast_divine_barrier",
+        "holy_power_divine_punishment",
+        "holy_passive_sanctuary"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "holy_summon",
+      "school": "holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "holy_summon_seraph",
+        "holy_summon_shield_guardian",
+        "holy_power_divine_punishment",
+        "holy_passive_sanctuary"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "chaos_attack",
+      "school": "chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "chaos_attack_chaotic",
+        "chaos_cast_void_rift",
+        "chaos_power_fission_burst",
+        "chaos_passive_entropy_growth"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "chaos_area",
+      "school": "chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "chaos_cast_void_rift",
+        "chaos_cast_singularity_barrage",
+        "chaos_power_fission_burst",
+        "chaos_passive_entropy_growth"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    },
+    {
+      "id": "chaos_summon",
+      "school": "chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 101,
+      "skills": [
+        "chaos_summon_chaos_clone",
+        "chaos_summon_void_maw",
+        "chaos_power_fission_burst",
+        "chaos_passive_entropy_growth"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 12,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "player_level": 6
+    }
+  ],
+  "fusion_pairs": [
+    {
+      "id": "fire_frost",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain",
+        "frost_cast_frost_field",
+        "frost_cast_glacial_lance"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_fire_frost_steam_mist",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "fire_thunder",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain",
+        "thunder_cast_chain_lightning",
+        "thunder_cast_emp_ring"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_fire_thunder_plasma_fire_path",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "fire_curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "curse_cast_black_serpent_hunt",
+        "fire_cast_lava_rift",
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_fire_curse_ash_curse_rune",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "fire_holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain",
+        "holy_cast_divine_barrier",
+        "holy_power_divine_punishment"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_fire_holy_holy_flame_absolution",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "fire_chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "chaos_cast_void_rift",
+        "fire_cast_lava_rift",
+        "fire_cast_meteor_rain",
+        "fire_power_combustion_chain"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_fire_chaos_ember_echo",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "frost_thunder",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "frost_cast_frost_field",
+        "frost_power_shatter_execute",
+        "thunder_cast_chain_lightning",
+        "thunder_cast_emp_ring"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_frost_thunder_lightning_ice_pillar",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "frost_curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "curse_cast_black_serpent_hunt",
+        "frost_cast_frost_field",
+        "frost_cast_glacial_lance",
+        "frost_power_shatter_execute"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_frost_curse_ice_coffin_curse_burst",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "frost_holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "frost_cast_frost_field",
+        "frost_cast_glacial_lance",
+        "frost_power_shatter_execute",
+        "holy_cast_holy_ray"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_frost_holy_holy_frost_anchor",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "frost_chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "chaos_cast_void_rift",
+        "frost_cast_frost_field",
+        "frost_cast_glacial_lance",
+        "frost_power_shatter_execute"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_frost_chaos_rift_avalanche",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_curse",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "curse_cast_black_serpent_hunt",
+        "thunder_cast_chain_lightning",
+        "thunder_cast_storm_circle",
+        "thunder_power_overload_burst"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_thunder_curse_curse_lightning_rebound",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "holy_cast_holy_ray",
+        "thunder_cast_chain_lightning",
+        "thunder_cast_storm_circle",
+        "thunder_power_overload_burst"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_thunder_holy_judgment_wire",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "thunder_chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "chaos_cast_singularity_barrage",
+        "chaos_cast_void_rift",
+        "thunder_cast_chain_lightning",
+        "thunder_cast_storm_circle"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_thunder_chaos_fractal_arc",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "curse_holy",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "curse_cast_black_serpent_hunt",
+        "curse_power_fear_whisper",
+        "holy_cast_divine_barrier",
+        "holy_cast_holy_ray"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_curse_holy_confession_curse_seal",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "curse_chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "chaos_cast_void_rift",
+        "chaos_power_fission_burst",
+        "curse_cast_black_serpent_hunt",
+        "curse_power_fear_whisper"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_curse_chaos_paradox_curse_mark",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    },
+    {
+      "id": "holy_chaos",
+      "character_id": "mage",
+      "map_id": "abandoned_dungeon",
+      "meta_state": "fresh_save_zero_unlocks",
+      "seed": 1001,
+      "skills": [
+        "chaos_cast_singularity_barrage",
+        "chaos_cast_void_rift",
+        "holy_cast_divine_barrier",
+        "holy_cast_holy_ray"
+      ],
+      "levels": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "upgrade_budget": 13,
+      "controller_policy": "avoid_nearest_collect_safe_dash_no_new_choices",
+      "fusion": "fusion_holy_chaos_divine_domain_rift",
+      "control_compensation": "first skill level +1 instead of fusion",
+      "player_level": 6
+    }
+  ]
+}

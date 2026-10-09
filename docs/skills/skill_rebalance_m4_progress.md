@@ -18,16 +18,29 @@
 
 ## Tasks
 
-- Task 14: pending
-- Task 15: pending
-- Task 16: pending
+- Task 14: complete (8be02b3 + supplemental feedback regression)
+- Task 15: implementation and pilot in progress; balance acceptance open
+- Task 16: regression/documentation/rollback in progress; human acceptance open
 
 ## Evidence
 
-- Baseline: E:/codex/skill-rebalance/M4-baseline/results.json（运行中）
+- Baseline: E:/codex/skill-rebalance/M4-baseline/results.json（199/199 PASS）
 
 Ruling T14: 将 7 个旧文案合同的预期状态名本地化，并迁移“无 tooltip”/旧学习说明断言 — M4 明确要求中文状态及可读全量预览；语义文本与行为测试保留 — cost if wrong: 本地化映射可能掩盖文案偏差，新 UI 测试逐项检查 144 项和实际输出对照补充覆盖。
 
 T14 evidence: parity RED missing service → GREEN 18 cast；实际区域/召唤/复制误差≤1，CD≤0.01；UI RED missing feedback → GREEN 12 槽/1280及960/真实替换取消确认；截图 T14-ui-rendered3 已检查。全量初跑 192/202，10 项根因已记录与修复，等待复跑。
 
 Task 14: complete (base 06e3b37, tests T14-verified 202/202 PASS; additionally long-description screenshot fix and bounded card assertions PASS in T14-final-cards). Card summary uses shared adapted actions/area/CD/summon/replay resolvers; core and echo feedback, admission text, rarity retention, all descriptions localized. Screenshots inspected; compact description uses bounded lines and full values remain in tooltip.
+
+
+T14 supplemental: inherited attack hit / echo charge versus snapshot / final HUD cooldown RED 3 → GREEN 3 (T14-feedback-red, T14-feedback-green3). Tooltip preserves complete bounded-card description. Initial supplemental edit had an indentation parse error; M4-regression-1 198/208 is invalid for acceptance; corrected and awaiting a fresh stable-tree run.
+
+T15 instrumentation: opt-in HP-clamped effective damage/overkill/status damage, shield generation/absorption, matched rule execution/denial, resource crossings and Boss-qualified rule execution. Buff uptime in episodes is the integral of active timed ModifierStore sources (source-seconds). No metric is a player win-rate proxy. Calibration RED missing service → GREEN exact 100P/1000HP actual enemy pipeline plus shield 25/10. Logs T15-metrics-runtime2.
+
+T15 protocol: headless default viewport 64×64 excluded actual targets. T15-protocol-red → T15-protocol-green proves normal 1280×720 targeting. Invalid pilot T15-smoke-real2 and early fixed pilots are excluded. Corrected pilot-exploration: 18 builds × 1 seed × 6 scenes = 108 rows; 18/18 workers exit 0. Normal clears: 18/18 single, 18/18 eight, 9/18 twentyfour. All 36 Boss rows die early. These are preflight observations, not the requested 10/20-seed acceptance.
+
+Ruling: 不对预检暴露的巨大跨度盲目调整技能数值，保留测试版资格与统计门槛未通过 — 单体清怪跨度3.4、8怪36.29、24怪16.43，Boss样本均早死；≤10%单维改动不能证明能修正这些差距，需先校准控制器和场景适配 — cost if wrong: 延后完成10探索/20确认及融合异常扩样，当前版本不能宣称已平衡。
+
+Ruling: 不可移动Boss暂记录为独立未通过项，现有唯一真实Boss的静止攻击阶段仅作为代理场景 — 规格禁止为实际平衡采样改变敌人参数，当前数据没有永久不可移动Boss；M2的不可移动夹具只证明机制边界 — cost if wrong: 缺少真实不可移动Boss的平衡证据，不能用代理补齐验收计数。
+
+Performance: first M4 rendered run overlapped regression jobs, excluded from baseline comparison. Serial reruns use the same copied script at T0 6dfee02 and M4; fixed24 replenishment and 60s actual waves, 12 forced skills, normal Lv3, seed618, survival assistance explicitly limited to stress profiling. Full-run balance evidence never uses this assistance.

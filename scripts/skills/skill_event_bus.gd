@@ -244,10 +244,17 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 
 		var conditions: Array = _get_array(event.get("conditions", []))
 		if not ConditionEvaluatorScript.evaluate_all(conditions, event_context):
+			preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"denied","reason":"conditions"})
 			continue
 		if not SkillTriggerRuleAdapterScript.can_execute_rule_event(event, event_context, skill_instance):
+			preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"denied","reason":"counter_or_cooldown"})
 			continue
 
+		preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"trigger","origin_skill_id":str(skill_instance.skill_id)})
+		var observed_target: Node = event_context.get("target") as Node
+		if is_instance_valid(observed_target) and String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(observed_target).target_type) == "boss":
+			preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"boss_trigger"})
+		if event_context.has("resource_crossings"): preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"resource","crossings":event_context.resource_crossings})
 		var actions: Array = _get_array(event.get("actions", []))
 		if source_cast:
 			event_context["_cast_result"] = context["_cast_result"]
