@@ -730,6 +730,8 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 			display_name = "-"
 		if is_instance_valid(name_label):
 			name_label.text = display_name
+			name_label.visible = true
+			name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		if is_instance_valid(icon):
 			var texture: Texture2D = _load_texture(String(skill.get("icon", "")))
 			icon.texture = texture
@@ -738,8 +740,9 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 		var cooldown_total: float = maxf(float(skill.get("cooldown_total", 0.0)), cooldown_remaining)
 		var show_cooldown: bool = cooldown_remaining > 0.05 and cooldown_total > 0.0
 		if is_instance_valid(cooldown_label):
-			cooldown_label.visible = show_cooldown
-			cooldown_label.text = _format_cooldown(cooldown_remaining)
+			cooldown_label.visible = show_cooldown or String(skill.get("feedback","")) != ""
+			cooldown_label.text = String(skill.get("feedback","")) if not show_cooldown else _format_cooldown(cooldown_remaining)
+			cooldown_label.add_theme_font_size_override("font_size",10 if not show_cooldown else 18)
 		if is_instance_valid(key_label):
 			key_label.visible = true
 		if is_instance_valid(cooldown_mask):
@@ -834,7 +837,7 @@ func _layout_skill_slots(count: int = -1) -> void:
 	var gap: float = 6.0
 	var max_slot_size: float = 68.0
 	var slot_size: float = minf(max_slot_size, floorf((panel_size.x - gap * float(maxi(visible_count - 1, 0)) - 16.0) / float(visible_count)))
-	slot_size = clampf(slot_size, 44.0, max_slot_size)
+	slot_size = clampf(slot_size, 24.0, max_slot_size)
 	var total_width: float = slot_size * float(visible_count) + gap * float(maxi(visible_count - 1, 0))
 	var start_x: float = (panel_size.x - total_width) * 0.5
 	var top: float = (panel_size.y - slot_size) * 0.5
@@ -851,7 +854,7 @@ func _layout_skill_slots(count: int = -1) -> void:
 		_set_control_rect(nodes.get("frame", null) as Control, Rect2(0, 0, slot_size, slot_size))
 		var icon_inset: float = maxf(8.0, slot_size * 0.18)
 		_set_control_rect(nodes.get("icon", null) as Control, Rect2(icon_inset, icon_inset * 0.75, slot_size - icon_inset * 2.0, slot_size - icon_inset * 2.2))
-		_set_control_rect(nodes.get("name_label", null) as Control, Rect2(3, slot_size - 27.0, slot_size - 6.0, 16.0))
+		_set_control_rect(nodes.get("name_label", null) as Control, Rect2(3, 5, slot_size - 6.0, 16.0))
 		_set_control_rect(nodes.get("key_label", null) as Control, Rect2((slot_size - 24.0) * 0.5, slot_size - 18.0, 24.0, 18.0))
 		_set_control_rect(nodes.get("cooldown_label", null) as Control, Rect2(0, 0, slot_size, slot_size))
 		var cooldown_mask: ColorRect = nodes.get("cooldown_mask", null) as ColorRect

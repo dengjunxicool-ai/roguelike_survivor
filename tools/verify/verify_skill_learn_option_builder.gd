@@ -57,7 +57,7 @@ func _verify_complete_result_and_ownership() -> void:
 	_expect(str(result.get("background_texture", "")) == "res://skill-primary.png", "primary skill texture wins", result)
 	_expect(str(result.get("affected_origin", "")) == "神系技能", "affected origin is unchanged", result)
 	_expect(str(result.get("does_not_affect", "")) == "不替换角色初始技能。", "does-not-affect text is unchanged", result)
-	_expect(str(result.get("recommended_reason", "")) == "从神系技能池学习一个新技能。", "recommendation text is unchanged", result)
+	_expect(str(result.get("recommended_reason", "")) == "首次学习确定品质，后续升级保持品质。", "recommendation explains retained rarity", result)
 	_expect(str(result.get("level_text", "")) == "Lv1 / 5", "level text is unchanged", result)
 	var payload: Dictionary = result.get("payload", {}) as Dictionary
 	_expect(payload.get("upgrade_id") is StringName and payload.get("upgrade_id") == &"learn_skill_fire_attack_searing", "payload upgrade id is StringName", payload)

@@ -41,6 +41,51 @@
       "test": "verify_fusion_skill_numeric_contract.js",
       "replacement": "T12/T13 fusion behavior",
       "reason": "original numeric contract retained; full60 fusion semantics deferred to M3"
+    },
+    {
+      "test": "verify_skill_card_reference_layout.gd",
+      "replacement": "verify_skill_rebalance_ui.gd",
+      "reason": "M4 bounded card description plus full numeric tooltip replaces old empty-tooltip expectation"
+    },
+    {
+      "test": "verify_chaos_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_curse_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_first_version_fire_skill_card.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_frost_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_fusion_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_holy_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_thunder_skill_system_contract.js",
+      "replacement": "verify_skill_rebalance_ui.gd + verify_skill_preview_output_paths.gd",
+      "reason": "M4 localized state labels; original semantic descriptions and behavior contracts retained"
+    },
+    {
+      "test": "verify_skill_learn_option_builder.gd",
+      "replacement": "verify_skill_upgrade_monotonic.gd + verify_skill_rebalance_ui.gd",
+      "reason": "M4 first-learning rarity selection and later quality retention text"
     }
   ],
   "skills": [

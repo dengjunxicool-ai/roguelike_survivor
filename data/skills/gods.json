@@ -26,7 +26,7 @@
 			"id": "thunder",
 			"display_name": "雷霆",
 			"title": "雷之神",
-			"description": "规划中的电荷、跳电、过载和高速触发神系。",
+			"description": "电荷、跳电、过载和高速触发神系。",
 			"tags": [
 				"thunder",
 				"conductive",
@@ -48,7 +48,7 @@
 			"id": "frost",
 			"display_name": "寒霜",
 			"title": "冰之神",
-			"description": "以 Chilled、Frozen、碎冰、护盾和控场为核心的冰系神系。",
+			"description": "以 寒冷、冻结、碎冰、护盾和控场为核心的冰系神系。",
 			"tags": [
 				"frost",
 				"slow",
@@ -70,7 +70,7 @@
 			"id": "curse",
 			"display_name": "诅咒",
 			"title": "暗之神",
-			"description": "规划中的诅咒、债务、牺牲和暗影清算神系。",
+			"description": "诅咒、债务、牺牲和暗影清算神系。",
 			"tags": [
 				"curse",
 				"shadow",
@@ -92,7 +92,7 @@
 			"id": "holy",
 			"display_name": "神圣",
 			"title": "圣之神",
-			"description": "规划中的治疗、护盾、圣印和审判神系。",
+			"description": "治疗、护盾、圣印和审判神系。",
 			"tags": [
 				"holy",
 				"shield",
@@ -114,7 +114,7 @@
 			"id": "chaos",
 			"display_name": "混沌",
 			"title": "混沌之神",
-			"description": "规划中的随机、熵变、多神系混搭和概率强化神系。",
+			"description": "随机、熵变、多神系混搭和概率强化神系。",
 			"tags": [
 				"chaos",
 				"random",

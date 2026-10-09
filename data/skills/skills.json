@@ -174,7 +174,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域",
+			"description": "攻击变强，命中施加 燃烧 效果，并有概率在目标脚下生成火焰区域",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -283,7 +283,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning",
+			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 燃烧",
 			"skill_type": "dash",
 			"slot_category": "active",
 			"capabilities": [
@@ -397,7 +397,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "流星数量增至4枚",
 					"patches": [
 						{
 							"effect_id": "fire_cast_meteor_rain:0:effects:0:spawn_projectiles_at_targets",
@@ -409,7 +409,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中后燃烧地面的基础持续时间增至4秒",
 					"patches": [
 						{
 							"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:spawn_area",
@@ -491,7 +491,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "熔岩路径宽度增至80.64px",
 					"patches": [
 						{
 							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
@@ -503,7 +503,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "路径结束时在终点追加0.4P冲击",
 					"patches": [
 						{
 							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
@@ -602,7 +602,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "对燃烧目标的旋涡伤害额外提高15%",
 					"patches": [
 						{
 							"effect_id": "fire_cast_scorching_vortex:0:effects:0:effects_on_tick:0:damage",
@@ -615,7 +615,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "旋涡到期后返回一次，回程伤害为50%",
 					"patches": [
 						{
 							"effect_id": "fire_cast_scorching_vortex:0:effects:0:spawn_area",
@@ -684,7 +684,7 @@
 				}
 			],
 			"effects": [],
-			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning",
+			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 燃烧",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -768,7 +768,7 @@
 				}
 			],
 			"effects": [],
-			"description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花",
+			"description": "每当你施加一定次数 燃烧，召唤火狐冲向敌人，命中后爆成小火花",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -816,7 +816,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "Burning 持续时间和伤害提高",
+			"description": "燃烧 持续时间和伤害提高",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -1119,7 +1119,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
+			"description": "燃烧 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -1325,7 +1325,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨 精英与Boss：每5次有效燃烧跳伤+1点。",
+			"description": "燃烧 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 燃烧。每触发若干次爆裂，额外召唤一次流星火雨 精英与Boss：每5次有效燃烧跳伤+1点。",
 			"skill_type": "core",
 			"slot_category": "active",
 			"capabilities": [
@@ -1398,7 +1398,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，并施加 Chilled；对已 Chilled 敌人额外提高冻结效率",
+			"description": "攻击变强，并施加 寒冷；对已 寒冷 敌人额外提高冻结效率",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -1459,7 +1459,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时向周围投掷冰片，造成伤害并施加 Chilled",
+			"description": "冲刺时向周围投掷冰片，造成伤害并施加 寒冷",
 			"skill_type": "dash",
 			"slot_category": "active",
 			"capabilities": [
@@ -1542,7 +1542,7 @@
 				}
 			],
 			"effects": [],
-			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 Chilled",
+			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 寒冷",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -1553,7 +1553,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "每个目标首次命中施加2层寒冷",
 					"patches": [
 						{
 							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_tick:1:apply_status",
@@ -1565,7 +1565,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "到期冰霜冲击的基础持续时间增至4秒",
 					"patches": [
 						{
 							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_expire:0:spawn_area",
@@ -1665,7 +1665,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "冰矛穿透次数增至8次",
 					"patches": [
 						{
 							"effect_id": "frost_cast_glacial_lance:0:effects:0:spawn_projectile",
@@ -1677,7 +1677,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中冻结目标产生的碎冰范围基础半径增至126px",
 					"patches": [
 						{
 							"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:spawn_area",
@@ -1748,7 +1748,7 @@
 				}
 			],
 			"effects": [],
-			"description": "在怪物密集区域生成移动暴雪，持续施加 Chilled，并降低敌人移动速度",
+			"description": "在怪物密集区域生成移动暴雪，持续施加 寒冷，并降低敌人移动速度",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -1759,7 +1759,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "暴雪云团基础持续时间增至6秒",
 					"patches": [
 						{
 							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:spawn_area",
@@ -1771,7 +1771,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "每个目标首次命中施加2层寒冷",
 					"patches": [
 						{
 							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:effects_on_tick:1:apply_status",
@@ -1819,7 +1819,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冰狼协助作战，攻击命中敌人时施加 Chilled；优先扑击 Frozen 目标",
+			"description": "冰狼协助作战，攻击命中敌人时施加 寒冷；优先扑击 冻结 目标",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -1957,7 +1957,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "被 Frozen、定身或强控的敌人受到更多伤害",
+			"description": "被 冻结、定身或强控的敌人受到更多伤害",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -2012,7 +2012,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "Chilled 和 Frozen 持续时间提高；冰霜区域持续时间提高",
+			"description": "寒冷 和 冻结 持续时间提高；冰霜区域持续时间提高",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -2187,7 +2187,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Frozen 敌人受到重击或技能伤害时，向周围发射碎冰片",
+			"description": "冻结 敌人受到重击或技能伤害时，向周围发射碎冰片",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -2364,7 +2364,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "敌人被冻结所需的 Chilled 层数降低；每隔数秒，全场敌人获得一层 Chilled；Frozen 敌人碎裂时会在原地生成小型冰霜领域",
+			"description": "敌人被冻结所需的 寒冷 层数降低；每隔数秒，全场敌人获得一层 寒冷；冻结 敌人碎裂时会在原地生成小型冰霜领域",
 			"skill_type": "core",
 			"slot_category": "active",
 			"capabilities": [
@@ -2446,7 +2446,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Conductive；每数次攻击额外向附近敌人弹射一道电弧",
+			"description": "攻击变强，命中施加 导电；每数次攻击额外向附近敌人弹射一道电弧",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -2646,7 +2646,7 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 Conductive 敌人",
+			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 导电 敌人",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -2656,7 +2656,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "连锁目标数增至5个",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
@@ -2668,7 +2668,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "最后一个连锁目标追加0.3P伤害",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
@@ -2746,7 +2746,7 @@
 				}
 			],
 			"effects": [],
-			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 Conductive 敌人",
+			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 导电 敌人",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -2756,7 +2756,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "首次落雷额外施加1层导电",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:1:apply_status",
@@ -2768,7 +2768,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "最后一次落雷伤害提高50%",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:0:damage",
@@ -2851,7 +2851,7 @@
 				}
 			],
 			"effects": [],
-			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 Conductive 敌人伤害更高",
+			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 导电 敌人伤害更高",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -2860,7 +2860,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "对导电目标的额外基础伤害增至0.8P",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:1:damage",
@@ -2872,7 +2872,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中至少5层导电目标时恢复自身0.5秒冷却，每次施放限一次",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_emp_ring:0:effects:0:spawn_area",
@@ -2932,7 +2932,7 @@
 				}
 			],
 			"effects": [],
-			"description": "雷兽在敌人之间跳跃攻击，优先攻击 Conductive 目标，并补充导电层数",
+			"description": "雷兽在敌人之间跳跃攻击，优先攻击 导电 目标，并补充导电层数",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -3064,7 +3064,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高",
+			"description": "导电 敌人受到更多雷电伤害，且雷电弹射距离提高",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -3351,7 +3351,7 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中",
+			"description": "雷电命中 导电 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": []
@@ -3429,7 +3429,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁",
+			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 导电，而是保留部分层数继续连锁",
 			"skill_type": "core",
 			"slot_category": "active",
 			"capabilities": [
@@ -3500,7 +3500,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Cursed；对低生命敌人施加额外诅咒伤害",
+			"description": "攻击变强，命中施加 诅咒；对低生命敌人施加额外诅咒伤害",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -3565,7 +3565,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时向附近 Cursed 敌人连接魂链，造成伤害并吸取少量生命",
+			"description": "冲刺时向附近 诅咒 敌人连接魂链，造成伤害并吸取少量生命",
 			"skill_type": "dash",
 			"slot_category": "active",
 			"capabilities": []
@@ -3625,7 +3625,7 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 Cursed",
+			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 诅咒",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -3635,7 +3635,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "黑蛇数量增至3条",
 					"patches": [
 						{
 							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:spawn_projectile_burst",
@@ -3647,7 +3647,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "首次命中未受诅咒的目标施加2层诅咒",
 					"patches": [
 						{
 							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:on_hit:0:apply_status",
@@ -3722,7 +3722,7 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 Cursed 敌人造成额外伤害",
+			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 诅咒 敌人造成额外伤害",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -3731,7 +3731,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "镰刃返回一次，回程伤害为50%",
 					"patches": [
 						{
 							"effect_id": "curse_cast_death_scythe:0:effects:0:spawn_projectile_burst",
@@ -3744,7 +3744,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "附加命中伤害仅在回程阶段生效",
 					"patches": [
 						{
 							"effect_id": "curse_cast_death_scythe:0:effects:0:on_hit:0:damage",
@@ -3823,7 +3823,7 @@
 				}
 			],
 			"effects": [],
-			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高",
+			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 诅咒 层数越高，伤害越高",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -3832,7 +3832,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "终末爆发的基础等待时间缩短至1秒",
 					"patches": [
 						{
 							"effect_id": "curse_cast_doom_circle:0:effects:0:spawn_area",
@@ -3844,7 +3844,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "对至少3层诅咒目标追加0.4P伤害",
 					"patches": [
 						{
 							"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:spawn_area",
@@ -3912,7 +3912,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间",
+			"description": "诅咒 敌人死亡时有概率召唤骷髅仆从，持续一段时间",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -3979,7 +3979,7 @@
 				}
 			],
 			"effects": [],
-			"description": "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人",
+			"description": "魂鸦收集 诅咒 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -4090,7 +4090,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人",
+			"description": "诅咒 敌人死亡时，将自身部分负面状态传播给附近敌人",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": [
@@ -4215,7 +4215,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离",
+			"description": "诅咒 敌人靠近玩家时，有概率陷入恐惧并向外逃离",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": []
@@ -4471,7 +4471,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人 精英与Boss每次诅咒结算+0.5点。",
+			"description": "诅咒 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人 精英与Boss每次诅咒结算+0.5点。",
 			"skill_type": "core",
 			"slot_category": "active",
 			"capabilities": [
@@ -4546,7 +4546,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值",
+			"description": "攻击变强，命中施加 审判；攻击带有 审判 的敌人时，额外获得少量护盾值",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -4704,7 +4704,7 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人",
+			"description": "周期性从天而降数道圣光，优先攻击 审判 层数高的敌人",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -4714,7 +4714,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "圣光数量增至4道",
 					"patches": [
 						{
 							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
@@ -4726,7 +4726,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "主目标至少5层审判时追加一道0.4P圣光",
 					"patches": [
 						{
 							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
@@ -4829,7 +4829,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "命中补盾提高至最大生命的1.25%",
 					"patches": [
 						{
 							"effect_id": "holy_cast_divine_barrier:1:effects:0:grant_shield",
@@ -4841,7 +4841,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "结界基础持续时间增至6秒",
 					"patches": [
 						{
 							"effect_id": "holy_cast_divine_barrier:0:effects:0:spawn_area",
@@ -4926,7 +4926,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "圣锤基础半径增至135.24px",
 					"patches": [
 						{
 							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
@@ -4938,7 +4938,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "对至少3层审判目标追加0.4P伤害",
 					"patches": [
 						{
 							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
@@ -5245,7 +5245,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "Judgment 敌人造成的伤害降低，并受到更多神圣伤害",
+			"description": "审判 敌人造成的伤害降低，并受到更多神圣伤害",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -5315,7 +5315,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标",
+			"description": "审判 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -5482,7 +5482,7 @@
 				}
 			],
 			"effects": [],
-			"description": "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸",
+			"description": "击杀 审判 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": []
@@ -5558,7 +5558,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱",
+			"description": "审判 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱",
 			"skill_type": "core",
 			"slot_category": "active",
 			"capabilities": []
@@ -5655,7 +5655,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "攻击变强，命中施加 Instability；命中时有概率使弹体分裂、偏转或追加一次弱化命中",
+			"description": "攻击变强，命中施加 不稳定；命中时有概率使弹体分裂、偏转或追加一次弱化命中",
 			"skill_type": "attack",
 			"slot_category": "active",
 			"capabilities": [
@@ -5745,7 +5745,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 Instability",
+			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 不稳定",
 			"skill_type": "dash",
 			"slot_category": "active",
 			"capabilities": [
@@ -5827,7 +5827,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "裂缝基础半径增至241.5px",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
@@ -5839,7 +5839,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "裂缝到期时追加一次0.5P冲击",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
@@ -5945,7 +5945,7 @@
 				}
 			],
 			"effects": [],
-			"description": "发射数个会弹跳的混沌球，命中 Instability 敌人时有概率分裂",
+			"description": "发射数个会弹跳的混沌球，命中 不稳定 敌人时有概率分裂",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -5955,7 +5955,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "弹幕数量增至6枚",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_singularity_barrage:0:effects:0:spawn_projectile_burst",
@@ -5967,7 +5967,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "分裂弹基础伤害增至0.28P",
 					"patches": [
 						{
 							"effect_id": "chaos_barrage:split_damage",
@@ -6062,7 +6062,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "脉冲施加的不稳定增至3层",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:1:apply_status",
@@ -6074,7 +6074,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "到期后延迟0.5秒追加一次0.3P脉冲，不追加不稳定",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:spawn_area",
@@ -6375,7 +6375,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙",
+			"description": "不稳定 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -6460,7 +6460,7 @@
 				}
 			],
 			"effects": [],
-			"description": "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害",
+			"description": "周期性标记两个 不稳定 敌人并交换位置，交换时对路径敌人造成撕裂伤害",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": []
@@ -6545,7 +6545,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Burning 敌人进入冰霜区域时，在区域边缘生成蒸汽伤害区；区域内敌人持续受到火焰伤害，并被施加 Chilled",
+			"description": "燃烧 敌人进入冰霜区域时，在区域边缘生成蒸汽伤害区；区域内敌人持续受到火焰伤害，并被施加 寒冷",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -6624,7 +6624,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Frozen 敌人被火焰技能击杀或碎裂时，向周围喷出碎冰与余烬；碎冰施加 Chilled，余烬施加 Burning",
+			"description": "冻结 敌人被火焰技能击杀或碎裂时，向周围喷出碎冰与余烬；碎冰施加 寒冷，余烬施加 燃烧",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -6812,7 +6812,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "流星、熔岩类技能命中 Conductive 敌人时，从落点向附近 Conductive 敌人释放电弧；电弧命中 Burning 敌人会延长 Burning 持续时间",
+			"description": "流星、熔岩类技能命中 导电 敌人时，从落点向附近 导电 敌人释放电弧；电弧命中 燃烧 敌人会延长 燃烧 持续时间",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -6873,7 +6873,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Burning 每次造成伤害时，缩短目标身上 Cursed 的剩余结算时间；Cursed 结算时若目标仍在 Burning，则留下燃烧地面",
+			"description": "燃烧 每次造成伤害时，缩短目标身上 诅咒 的剩余结算时间；诅咒 结算时若目标仍在 燃烧，则留下燃烧地面",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -6954,7 +6954,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "黑蛇、诅咒弹体类技能命中 Burning 敌人后，拖出黑焰路径；路径造成火焰伤害，并对经过敌人施加 Cursed",
+			"description": "黑蛇、诅咒弹体类技能命中 燃烧 敌人后，拖出黑焰路径；路径造成火焰伤害，并对经过敌人施加 诅咒",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7040,7 +7040,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Judgment 触发神罚时，若目标带有 Burning，则消耗部分 Burning 持续时间，为玩家生成护盾，并向前释放圣焰光束",
+			"description": "审判 触发神罚时，若目标带有 燃烧，则消耗部分 燃烧 持续时间，为玩家生成护盾，并向前释放圣焰光束",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7123,7 +7123,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "神圣结界存在时，结界边缘会点燃敌人；Burning 敌人在结界内死亡时，为玩家恢复少量护盾",
+			"description": "神圣结界存在时，结界边缘会点燃敌人；燃烧 敌人在结界内死亡时，为玩家恢复少量护盾",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7274,7 +7274,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "火焰弹体命中带有 Instability 的敌人时，弹体分裂成两个较小火弹，分别飞向附近不同敌人",
+			"description": "火焰弹体命中带有 不稳定 的敌人时，弹体分裂成两个较小火弹，分别飞向附近不同敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7351,7 +7351,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "冰霜区域覆盖火焰路径时，在交界处生成冰晶尖刺；尖刺造成伤害并施加 Chilled，同时保留原本火焰路径",
+			"description": "冰霜区域覆盖火焰路径时，在交界处生成冰晶尖刺；尖刺造成伤害并施加 寒冷，同时保留原本火焰路径",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7429,7 +7429,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Burning 敌人被 Frozen 后，下一次受到冰系技能伤害时喷出霜燃碎片；碎片施加 Chilled，命中 Burning 敌人时造成额外火焰伤害",
+			"description": "燃烧 敌人被 冻结 后，下一次受到冰系技能伤害时喷出霜燃碎片；碎片施加 寒冷，命中 燃烧 敌人时造成额外火焰伤害",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7509,7 +7509,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "雷电命中 Frozen 敌人时，在其位置生成短暂冰柱；冰柱阻挡小怪移动，并周期性对周围敌人施加 Chilled",
+			"description": "雷电命中 冻结 敌人时，在其位置生成短暂冰柱；冰柱阻挡小怪移动，并周期性对周围敌人施加 寒冷",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7595,7 +7595,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Conductive 敌人站在冰霜区域内时，冰霜区域会向另一个 Conductive 敌人释放寒光脉冲，沿途敌人获得 Chilled",
+			"description": "导电 敌人站在冰霜区域内时，冰霜区域会向另一个 导电 敌人释放寒光脉冲，沿途敌人获得 寒冷",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7664,7 +7664,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 敌人被冻结时，Cursed 的结算暂停；冻结结束时，Cursed 立即结算，并在目标位置释放冰霜冲击",
+			"description": "诅咒 敌人被冻结时，诅咒 的结算暂停；冻结结束时，诅咒 立即结算，并在目标位置释放冰霜冲击",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7743,7 +7743,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "镰刀、黑蛇、诅咒弹体命中 Frozen 敌人时，额外释放一圈冰片；冰片优先飞向 Cursed 敌人",
+			"description": "镰刀、黑蛇、诅咒弹体命中 冻结 敌人时，额外释放一圈冰片；冰片优先飞向 诅咒 敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7813,7 +7813,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "带有 Judgment 的敌人进入冰霜区域后，该区域以它为中心周期性扩散 Chilled；每次扩散命中敌人，玩家获得少量护盾",
+			"description": "带有 审判 的敌人进入冰霜区域后，该区域以它为中心周期性扩散 寒冷；每次扩散命中敌人，玩家获得少量护盾",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -7895,7 +7895,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "极寒冰矛优先攻击 Judgment 层数最高的敌人；若目标被 Frozen，冰矛命中后额外降下一道圣光",
+			"description": "极寒冰矛优先攻击 审判 层数最高的敌人；若目标被 冻结，冰矛命中后额外降下一道圣光",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -7970,7 +7970,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Frozen 敌人在虚空裂隙附近碎裂时，裂隙喷出一波冰雪，对扇形区域敌人施加 Chilled",
+			"description": "冻结 敌人在虚空裂隙附近碎裂时，裂隙喷出一波冰雪，对扇形区域敌人施加 寒冷",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8050,7 +8050,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "冰片进入虚空裂隙后，会从另一个裂隙或远处敌人背后飞出；飞出后的冰片仍施加 Chilled",
+			"description": "冰片进入虚空裂隙后，会从另一个裂隙或远处敌人背后飞出；飞出后的冰片仍施加 寒冷",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8114,7 +8114,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "连锁闪电命中 Burning 敌人时，沿最近的火焰路径额外跳转一次；跳转目标优先为 Conductive 敌人",
+			"description": "连锁闪电命中 燃烧 敌人时，沿最近的火焰路径额外跳转一次；跳转目标优先为 导电 敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8174,7 +8174,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "燃烧地面被雷电命中后，暂存一次放电；下一批敌人进入该地面时，立即受到雷电伤害并获得 Conductive",
+			"description": "燃烧地面被雷电命中后，暂存一次放电；下一批敌人进入该地面时，立即受到雷电伤害并获得 导电",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8249,7 +8249,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Overload 在 Frozen 敌人身上触发时，直接碎裂目标，并把雷电跳转到附近 Chilled 敌人",
+			"description": "Overload 在 冻结 敌人身上触发时，直接碎裂目标，并把雷电跳转到附近 寒冷 敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8310,7 +8310,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "雷电命中 Chilled 敌人时，把 Conductive 传播给附近另一个 Chilled 敌人；同一目标短时间内只触发一次",
+			"description": "雷电命中 寒冷 敌人时，把 导电 传播给附近另一个 寒冷 敌人；同一目标短时间内只触发一次",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8374,7 +8374,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "连锁闪电命中 Cursed 敌人后，下一跳优先寻找另一个 Cursed 敌人；若没有目标，则缩短当前 Cursed 的结算时间",
+			"description": "连锁闪电命中 诅咒 敌人后，下一跳优先寻找另一个 诅咒 敌人；若没有目标，则缩短当前 诅咒 的结算时间",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8429,7 +8429,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "雷暴云每隔数次落雷，锁定一个 Cursed 敌人连续劈击；最后一次劈击会让 Cursed 立即结算",
+			"description": "雷暴云每隔数次落雷，锁定一个 诅咒 敌人连续劈击；最后一次劈击会让 诅咒 立即结算",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8501,7 +8501,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "雷电命中 Judgment 敌人时，与另一个 Judgment 敌人之间生成短暂雷线；穿过雷线的敌人受到雷电伤害",
+			"description": "雷电命中 审判 敌人时，与另一个 审判 敌人之间生成短暂雷线；穿过雷线的敌人受到雷电伤害",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8564,7 +8564,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "玩家获得护盾时，下一次雷电技能附带额外一次小落雷；护盾破裂时，立即对最近 Conductive 敌人触发 Overload",
+			"description": "玩家获得护盾时，下一次雷电技能附带额外一次小落雷；护盾破裂时，立即对最近 导电 敌人触发 Overload",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8647,7 +8647,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "雷电弹射到带有 Instability 的敌人时，下一次弹射会从附近虚空裂隙重新出现，并分裂成两道较弱电弧",
+			"description": "雷电弹射到带有 不稳定 的敌人时，下一次弹射会从附近虚空裂隙重新出现，并分裂成两道较弱电弧",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8778,7 +8778,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Burning 每次造成伤害时，提高下一次 Cursed 结算伤害；该提升只作用于当前目标，不额外生成新状态",
+			"description": "燃烧 每次造成伤害时，提高下一次 诅咒 结算伤害；该提升只作用于当前目标，不额外生成新状态",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8831,7 +8831,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 且 Burning 的敌人死亡时，召唤物优先从该位置出现；亡骸仆从首次攻击附带 Burning",
+			"description": "诅咒 且 燃烧 的敌人死亡时，召唤物优先从该位置出现；亡骸仆从首次攻击附带 燃烧",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -8892,7 +8892,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 敌人被冻结期间不会结算；若其在 Frozen 中死亡，则 Cursed 转移给附近生命最高的敌人",
+			"description": "诅咒 敌人被冻结期间不会结算；若其在 冻结 中死亡，则 诅咒 转移给附近生命最高的敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -8967,7 +8967,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "死镰类技能命中 Frozen 敌人后，额外飞向最近的 Cursed 敌人；若没有 Cursed 目标，则对原目标施加 Cursed",
+			"description": "死镰类技能命中 冻结 敌人后，额外飞向最近的 诅咒 敌人；若没有 诅咒 目标，则对原目标施加 诅咒",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9037,7 +9037,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Overload 在 Cursed 敌人身上触发时，Cursed 立即结算；结算后雷电跳向最近未被 Cursed 的敌人并施加 Conductive",
+			"description": "Overload 在 诅咒 敌人身上触发时，诅咒 立即结算；结算后雷电跳向最近未被 诅咒 的敌人并施加 导电",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9108,7 +9108,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "黑蛇优先沿 Conductive 敌人的方向移动；命中 Conductive 敌人时，额外向附近敌人传播 Cursed",
+			"description": "黑蛇优先沿 导电 敌人的方向移动；命中 导电 敌人时，额外向附近敌人传播 诅咒",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9180,7 +9180,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "同时带有 Judgment 和 Cursed 的敌人准备攻击玩家时，被短暂打断；打断结束时 Cursed 立即结算",
+			"description": "同时带有 审判 和 诅咒 的敌人准备攻击玩家时，被短暂打断；打断结束时 诅咒 立即结算",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9240,7 +9240,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 且 Judgment 的敌人死亡时，玩家获得护盾；如果死亡来自 Cursed 结算，额外释放一道短距离圣光",
+			"description": "诅咒 且 审判 的敌人死亡时，玩家获得护盾；如果死亡来自 诅咒 结算，额外释放一道短距离圣光",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9321,7 +9321,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 敌人触发 Instability 裂变时，Cursed 复制到远处一个敌人；复制版本持续时间更短，伤害较低",
+			"description": "诅咒 敌人触发 不稳定 裂变时，诅咒 复制到远处一个敌人；复制版本持续时间更短，伤害较低",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9378,7 +9378,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 敌人在虚空裂隙附近死亡时，裂隙向远处敌人发射一枚诅咒弹体，命中后施加 Cursed",
+			"description": "诅咒 敌人在虚空裂隙附近死亡时，裂隙向远处敌人发射一枚诅咒弹体，命中后施加 诅咒",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9454,7 +9454,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸",
+			"description": "圣光技能命中 燃烧 敌人时，消耗部分 燃烧 持续时间，并为玩家恢复护盾；被消耗的 燃烧 不触发火焰爆炸",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9527,7 +9527,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "审判圣锤命中 Burning 敌人时，在落点生成十字形圣焰路径；路径施加 Burning 和 Judgment",
+			"description": "审判圣锤命中 燃烧 敌人时，在落点生成十字形圣焰路径；路径施加 燃烧 和 审判",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9618,7 +9618,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Frozen 且带有 Judgment 的敌人死亡时，玩家获得护盾；若护盾已满，则在死亡位置生成小型冰霜区域",
+			"description": "冻结 且带有 审判 的敌人死亡时，玩家获得护盾；若护盾已满，则在死亡位置生成小型冰霜区域",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9698,7 +9698,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "圣光射线命中 Chilled 敌人时，沿射线轨迹留下短暂冰霜路径；命中 Frozen 敌人时，射线持续时间延长",
+			"description": "圣光射线命中 寒冷 敌人时，沿射线轨迹留下短暂冰霜路径；命中 冻结 敌人时，射线持续时间延长",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9773,7 +9773,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "每次玩家获得护盾时，最近的 Conductive 敌人受到一次小落雷；护盾破裂时，附近敌人获得 Judgment",
+			"description": "每次玩家获得护盾时，最近的 导电 敌人受到一次小落雷；护盾破裂时，附近敌人获得 审判",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9859,7 +9859,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "神罚命中 Conductive 敌人时，额外引发一次 Overload；Overload 命中的敌人获得 Judgment",
+			"description": "神罚命中 导电 敌人时，额外引发一次 Overload；Overload 命中的敌人获得 审判",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -9912,7 +9912,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "圣光技能命中 Cursed 敌人后，跳向另一个 Cursed 敌人；每次跳跃为玩家恢复少量护盾",
+			"description": "圣光技能命中 诅咒 敌人后，跳向另一个 诅咒 敌人；每次跳跃为玩家恢复少量护盾",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -9984,7 +9984,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "神圣结界内的 Cursed 敌人移动速度降低；它们死亡时，结界持续时间延长",
+			"description": "神圣结界内的 诅咒 敌人移动速度降低；它们死亡时，结界持续时间延长",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -10054,7 +10054,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "神圣结界覆盖虚空裂隙时，裂隙周期性向外释放圣光脉冲，施加 Judgment",
+			"description": "神圣结界覆盖虚空裂隙时，裂隙周期性向外释放圣光脉冲，施加 审判",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -10137,7 +10137,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Judgment 在带有 Instability 的敌人身上触发神罚时，从最近裂隙处额外释放一次较弱神罚",
+			"description": "审判 在带有 不稳定 的敌人身上触发神罚时，从最近裂隙处额外释放一次较弱神罚",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -10192,7 +10192,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "火焰弹体经过虚空裂隙时，分成两枚较小火弹，从裂隙两侧飞出；小火弹仍可施加 Burning",
+			"description": "火焰弹体经过虚空裂隙时，分成两枚较小火弹，从裂隙两侧飞出；小火弹仍可施加 燃烧",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -10403,7 +10403,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Frozen 敌人碎裂产生的冰片优先进入附近裂隙，并从远处敌群旁飞出",
+			"description": "冻结 敌人碎裂产生的冰片优先进入附近裂隙，并从远处敌群旁飞出",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -10470,7 +10470,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "带有 Instability 的敌人触发 Overload 时，在当前位置和远处敌群之间各释放一次雷电爆发",
+			"description": "带有 不稳定 的敌人触发 Overload 时，在当前位置和远处敌群之间各释放一次雷电爆发",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -10599,7 +10599,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "Cursed 结算时，如果目标带有 Instability，则从最近裂隙处重复一次较弱诅咒冲击",
+			"description": "诅咒 结算时，如果目标带有 不稳定，则从最近裂隙处重复一次较弱诅咒冲击",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],
@@ -10653,7 +10653,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "虚空裂隙每隔一段时间寻找一个 Cursed 敌人，把它身上的 Cursed 复制给远处未被 Cursed 的敌人",
+			"description": "虚空裂隙每隔一段时间寻找一个 诅咒 敌人，把它身上的 诅咒 复制给远处未被 诅咒 的敌人",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -10710,7 +10710,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "玩家获得护盾时，最近虚空裂隙向外释放一次冲击，命中敌人施加 Judgment",
+			"description": "玩家获得护盾时，最近虚空裂隙向外释放一次冲击，命中敌人施加 审判",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [
@@ -10790,7 +10790,7 @@
 			},
 			"trigger_rules": [],
 			"effects": [],
-			"description": "神罚命中带有 Instability 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚",
+			"description": "神罚命中带有 不稳定 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚",
 			"skill_type": "fusion",
 			"slot_category": "active",
 			"capabilities": [],

@@ -51,7 +51,7 @@ for (const [id, name, type, description] of expected) {
   assert(skill, `missing chaos skill ${id}`);
   assert(skill.display_name === name, `${id} name mismatch`);
   assert(skill.skill_type === type, `${id} type mismatch`);
-  assert(skill.description === description, `${id} description must use the requested description field`);
+  assert(skill.description === localizedDescription(description), `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("chaos"), `${id} must be tagged chaos`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
   assert(skill.offer_rule.required_schools.includes("chaos"), `${id} must require chaos school`);
@@ -121,3 +121,9 @@ for (const summonId of ["chaos_clone", "void_maw"]) {
 }
 
 console.log("[verify_chaos_skill_system_contract] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

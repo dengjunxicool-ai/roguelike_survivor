@@ -119,6 +119,7 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 	context["shield_overflow_amount"] = overflow
 	context["shield_gained_amount"] = maxi(final_amount - current, 0)
 
+	preload("res://scripts/runtime/skill_balance_metrics.gd").observe(owner,{"kind":"shield_generated","amount":maxi(final_amount-current,0)})
 	owner.set_meta("fire_passive_shield", final_amount)
 	owner.set_meta("fire_passive_shield_expires_at", now + duration)
 	var shield_meta_key: String = _metadata_key(shield_type, "shield")

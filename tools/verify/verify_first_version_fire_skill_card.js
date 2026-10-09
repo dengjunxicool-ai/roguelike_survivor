@@ -47,7 +47,7 @@ const fireEffectDescriptions = {
 
 for (const [skillId, expectedDescription] of Object.entries(fireEffectDescriptions)) {
   const skill = findById(skills, skillId, "fire skill");
-  assert(skill.description === expectedDescription, `${skillId} must expose its fire god skill description`);
+  assert(skill.description === localizedDescription(expectedDescription), `${skillId} must expose its fire god skill description`);
   assert(!Object.prototype.hasOwnProperty.call(skill, "effect_description"), `${skillId} must use description instead of effect_description`);
 }
 
@@ -61,3 +61,9 @@ for (const obsoleteId of ["mars_spark_missile", "fire_tornado", "soulburn"]) {
 }
 
 console.log("[verify_first_version_fire_skill_card] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

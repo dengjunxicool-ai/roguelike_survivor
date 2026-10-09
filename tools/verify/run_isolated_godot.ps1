@@ -5,7 +5,8 @@ param(
     [string]$ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path,
     [switch]$Rendered,
     [switch]$Import,
-    [string[]]$UserArguments = @()
+    [string[]]$UserArguments = @(),
+    [string[]]$EngineArguments = @()
 )
 $ErrorActionPreference = 'Stop'
 $outputPath = [System.IO.Path]::GetFullPath($OutputRoot).Replace('\','/').TrimEnd('/')
@@ -19,7 +20,7 @@ $env:TMP = $env:TEMP
 $env:__GL_SHADER_DISK_CACHE_PATH = "$outputPath/shader-cache"
 $env:MESA_SHADER_CACHE_DIR = "$outputPath/shader-cache"
 New-Item -ItemType Directory -Force -Path $outputPath,$env:APPDATA,$env:LOCALAPPDATA,$env:TEMP,$env:MESA_SHADER_CACHE_DIR | Out-Null
-$godotArguments = @('--path', $ProjectPath)
+$godotArguments = @('--path', $ProjectPath) + $EngineArguments
 if ($Import) { $godotArguments += @('--headless','--editor','--quit') }
 else {
     if ($Script -eq '' -and $Scene -eq '') { throw 'A script or scene is required outside import mode' }
