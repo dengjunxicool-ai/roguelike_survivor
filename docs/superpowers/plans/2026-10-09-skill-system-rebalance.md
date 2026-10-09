@@ -10,7 +10,7 @@
 
 **Spec:** `../specs/2026-10-09-skill-system-rebalance-design.md`。数值、资格、槽位和技能语义以该规格为准；本文件中的新增接口是拟实施接口，当前源码不保证已有。
 
-**阶段状态（2026-10-09）：** M1（T0–T4）完成；M2（T5–T9）实现及180/180自动检查完成，独立审查8项问题已修复，但五神系无辅助300秒完整局验收尚未通过，停在M2汇报。M3/M4未执行。工作树：`E:/codex/skill-rebalance/worktree`，分支：`codex/skill-rebalance-m2`；详情见`../../skills/skill_rebalance_m2_report.md`和`../../skills/skill_rebalance_m2_progress.md`。
+**阶段状态（2026-10-09）：** M1–M3已实现并合入远端main；M2完整实战验收仍未通过。M4 T14已完成，T15采样工具/预检与T16测试版文档/回滚已实施；统计种子、完整300秒、性能全部门槛及人工验收仍开放，不能标记完整交付。工作树`E:/codex/skill-rebalance/worktree`，分支`codex/skill-rebalance-m4`；状态及证据见`../../skills/skill_rebalance_validation.md`、`../../skills/skill_rebalance_m4_release.json`和M4台账。
 
 ## Global Constraints
 
@@ -264,10 +264,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillPreviewService.build(player: Node, skill_id: StringName, level: int, rarity: String) -> Dictionary`返回`damage, dps, cooldown, radius, duration, statuses, shield_amount, next_milestone, requirements`；使用T1/T11及运行时resolver，不再次实现公式。卡片消费预览字段，不读取内部proc字段展示给玩家。
 
-- [ ] 在100P夹具断言预览与实际直接/区域/召唤/复制输出误差≤取整1点、冷却误差≤0.01s；多目标倍率与未知未来命中不伪装成单体DPS。
-- [ ] UI测试正常与较窄窗口、中文长描述、满12技能、核心/融合独立槽、替换取消和确认、Lv5无下一里程碑；卡片明确品质保持而非随机变化。
-- [ ] 更新全部基础/融合说明，Burning等内部名以中文呈现；移除已实现神系“规划中”描述；显示核心充能、回声就绪，但不显示代码ID。
-- [ ] 隔离headless合同测试与Rendered视觉测试，OutputRoot=`T14-parity`/`T14-ui`；Rendered使用隔离脚本`-Rendered`，截图只能写E:/codex；检查截图后提交。
+- [x] 在100P夹具断言预览与实际直接/区域/召唤/复制输出误差≤取整1点、冷却误差≤0.01s；多目标倍率与未知未来命中不伪装成单体DPS。
+- [x] UI测试正常与较窄窗口、中文长描述、满12技能、核心/融合独立槽、替换取消和确认、Lv5无下一里程碑；卡片明确品质保持而非随机变化。
+- [x] 更新全部基础/融合说明，Burning等内部名以中文呈现；移除已实现神系“规划中”描述；显示核心充能、回声就绪，但不显示代码ID。
+- [x] 隔离headless合同测试与Rendered视觉测试，OutputRoot=`T14-parity`/`T14-ui`；Rendered使用隔离脚本`-Rendered`，截图只能写E:/codex；检查截图后提交。
 
 ### T15：同条件平衡矩阵与性能预算
 
@@ -287,11 +287,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** 发布清单包含`source_revision, config_revision, validated_scripts, log_paths, coverage_counts, accepted_balance_targets, remaining_risks, rollback_commits`。
 
-- [ ] 从隔离用户目录全新启动，跑六神系/融合runtime_smoke、成长、槽位、供给、伤害、状态、召唤、HUD、暂停和重开回归；所有新测试全跑。静态跑内容/Modifier/严格伤害/边界校验。
+- [x] 从隔离用户目录全新启动，跑六神系/融合runtime_smoke、成长、槽位、供给、伤害、状态、召唤、HUD、暂停和重开回归；所有新测试全跑。静态跑内容/Modifier/严格伤害/边界校验。
 - [ ] 人工试玩至少6神系各2局，覆盖最小可成型构筑、满12技能、移动Boss、不可移动Boss、替换取消；记录卡片预测、触发画面和实际收益一致性。
-- [ ] 按台账核对144项，检查每条旧断言的替代行为证据，移除迁移中提示；凡未完成不标记完整交付。
-- [ ] 在执行期隔离worktree/分支中演练回退最近数值提交，再恢复；不得对用户主工作区使用reset --hard。缓存/用户文件始终留在E盘，不清理用户其他目录。
-- [ ] 输出可运行测试版本、文档、实际测试证据与遗留项。未达平衡或性能目标可交付“测试版”，但不能宣称已平衡/生产就绪。用户未要求发布时不上传、不合并、不推送。
+- [x] 按台账核对144项，检查每条旧断言的替代行为证据，移除迁移中提示；凡未完成不标记完整交付。
+- [x] 在执行期隔离worktree/分支中演练回退最近数值提交，再恢复；不得对用户主工作区使用reset --hard。缓存/用户文件始终留在E盘，不清理用户其他目录。
+- [x] 输出可运行测试版本、文档、实际测试证据与遗留项。未达平衡或性能目标可交付“测试版”，但不能宣称已平衡/生产就绪。用户未要求发布时不上传、不合并、不推送。
 
 ## D. 最终验收清单
 

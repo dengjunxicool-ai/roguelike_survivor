@@ -44,3 +44,22 @@ Ruling: 不对预检暴露的巨大跨度盲目调整技能数值，保留测试
 Ruling: 不可移动Boss暂记录为独立未通过项，现有唯一真实Boss的静止攻击阶段仅作为代理场景 — 规格禁止为实际平衡采样改变敌人参数，当前数据没有永久不可移动Boss；M2的不可移动夹具只证明机制边界 — cost if wrong: 缺少真实不可移动Boss的平衡证据，不能用代理补齐验收计数。
 
 Performance: first M4 rendered run overlapped regression jobs, excluded from baseline comparison. Serial reruns use the same copied script at T0 6dfee02 and M4; fixed24 replenishment and 60s actual waves, 12 forced skills, normal Lv3, seed618, survival assistance explicitly limited to stress profiling. Full-run balance evidence never uses this assistance.
+
+
+Stable regression: 208/208 PASS in M4-stable-regression; final contract probes T15-final-contract/T15-final-perf-contract PASS. Supplemental UI commit1ff2d2c; T15 tooling commite433e9a. Corrected real upper300s pilot: early defeat102.95s, effective10897, status2907, completed300s=false (T15-real-corrected).
+
+T15 paired fusion pilot: 15 pairs × 1 seed × 6 scenes × 2 variants =180; all15 workers exit0; actualfusion-attributed effective damage874. This does not satisfy5/20seed cohorts or utility acceptance. No numeric tuning commits.
+
+Ruling: 因M4尚无数值调参提交，在独立演练分支回退并恢复最近含数值的混合提交cc80738 — 完成可逆回滚验证，避免对M4运行中分支和用户main操作 — cost if wrong: 该回滚会同时撤回语义功能，不能冒充线上精细数值回滚；清单明确这个限制。
+
+Rollback: cc80738 →5a54041 →6f735c2; tree814363fc8b29b0b4711809362d59ceafc98c5833 before/after identical. Content and144ID inventory PASS both states. Output rollback-reports/result.json; E:/codex/skill-rebalance/rollback-rehearsal preserved for review.
+
+Ruling: 用PowerShell/Python维护阶段台账和审查包，替代技能的POSIX临时脚本 — 保证所有可控写入留在E盘并符合当前Windows环境 — cost if wrong: 辅助记录流程与技能脚本不完全相同，提交/日志/审查范围在文件中显式记录。
+
+T16: test-version documentation and rollback complete;208/208 fresh regression. Manual6×2 absent; statistical/performance/full-run gates unaccepted. Independent whole-M4review remains pending. This line does not mark complete acceptance.
+
+
+Final performance protocol correction: capture process_frame wall intervals after2s warmup, not physics_frame intervals. Valid serial logs T15-performance/T0-frame-serial andM4-frame-serial. Fixed24: T0p95=2.321ms/10990frames, M4=3.602ms/4253frames (+55.19%, relative gateFAIL). Actualfirst60swaves:1.334→1.420ms (+6.45%, gatesPASSforwindowonly). Object peaks1384/1424; pending18/0. Full late dense-wave, starvation and infinite-growth acceptance remainopen. Numeric balance targets accepted=[] in release manifest.
+
+
+T16 final UI: Rendered T16-ui-final PASS/noengineerrors; cards960 and replacement screenshots inspected; HUD1280/960 captured. Static content/Modifier/UTF8 checks PASS. Release manifest has144accepted behavior IDs,208validated checks,108/180pilot rows,0complete300s,0human games andemptyaccepted_balance_targets.
