@@ -35,12 +35,12 @@
     {
       "test": "verify_burn_status_table.js",
       "replacement": "verify_skill_status_lifecycle_v2.gd",
-      "reason": "36P percent per stack every second for four seconds"
+      "reason": "0.36P per stack every second for four seconds, no tick decay"
     },
     {
       "test": "verify_fusion_skill_numeric_contract.js",
       "replacement": "T12/T13 fusion behavior",
-      "reason": "fusion tick growth changes; fusion semantics deferred to M3"
+      "reason": "original numeric contract retained; full60 fusion semantics deferred to M3"
     }
   ],
   "skills": [
@@ -1940,5 +1940,15 @@
       ],
       "status": "baseline"
     }
-  ]
+  ],
+  "m1_stage": {
+    "state": "completed_stopped_before_M2",
+    "worktree": "E:/codex/skill-rebalance/worktree",
+    "branch": "codex/skill-rebalance-m1",
+    "baseline_checks": 159,
+    "final_report": "E:/codex/skill-rebalance/suite-m1-acceptance/results.json",
+    "full_skill_semantics_accepted": false,
+    "checks_passed": 169,
+    "checks_total": 169
+  }
 }

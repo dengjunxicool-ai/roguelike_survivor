@@ -10,6 +10,8 @@
 
 **Spec:** `../specs/2026-10-09-skill-system-rebalance-design.md`。数值、资格、槽位和技能语义以该规格为准；本文件中的新增接口是拟实施接口，当前源码不保证已有。
 
+**阶段状态（2026-10-09）：** M1（T0–T4）完成，169/169检查通过，按用户要求暂停；M2–M4未执行。工作树：`E:/codex/skill-rebalance/worktree`，分支：`codex/skill-rebalance-m1`；详情见`../../skills/skill_rebalance_m1_progress.md`。
+
 ## Global Constraints
 
 - 任何 C 盘文件写入均禁止。
@@ -75,7 +77,7 @@
 以下命令从E盘项目根目录运行，Godot每个用例使用独立输出目录。`Txx`与文件名在对应任务中列出，禁止复制模板后保留占位符。
 
 ```powershell
-powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://tools/verify/verify_skill_upgrade_monotonic.gd -OutputRoot E:/codex/skill-rebalance/T01
+powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E:/codex/skill-rebalance/worktree -Script res://tools/verify/verify_skill_upgrade_monotonic.gd -OutputRoot E:/codex/skill-rebalance/T01
 ```
 
 通过证据：退出码0、用例自身`[verify_*] PASS`、包装器`script_errors=0 engine_errors=0`。Godot日志最后几行没有PASS并不算通过。新增GDScript测试沿用现有SceneTree、`_failed`、断言与退出码结构，不能只验证字符串出现。
@@ -92,11 +94,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://
 
 **Interfaces:** 台账根字段`skills`；每行`id, school, fusion_school, skill_type, task, semantic_cases, legacy_assertions, status`。`status`只能为baseline/proven/migrating/accepted；基础84条、融合60条分别覆盖，初始技能另列不混入144条。
 
-- [ ] 写库存验证：断言144个不重复ID、84基础/60融合、六神系各14基础，每15神系组合各4融合，规格18cast ID全部存在。
-- [ ] 用现有角色/同一地图/同一永久成长采集基线，并在100P夹具中复现品质倒退、buff过期、Cursed事件；实际结果写入台账，不能预填“失败”。
-- [ ] 读取并登记受新规则影响的旧断言，重点包括`verify_skill_growth_scaling.gd`、`verify_burning_status_stack_decay_devtools.gd`、`verify_burn_status_table.js`、`verify_fusion_skill_numeric_contract.js`。每条旧断言关联后续替代行为测试。
-- [ ] 运行`node tools/verify/verify_skill_rebalance_inventory.js`和隔离`skill_rebalance_baseline.gd`，OutputRoot=`E:/codex/skill-rebalance/T00`；前者PASS，后者完整输出基线而不把已知失败静默当PASS。
-- [ ] 仅提交台账与基线工具；基线战斗日志不入仓库。
+- [x] 写库存验证：断言144个不重复ID、84基础/60融合、六神系各14基础，每15神系组合各4融合，规格18cast ID全部存在。
+- [x] 用现有角色/同一地图/同一永久成长采集基线，并在100P夹具中复现品质倒退、buff过期、Cursed事件；实际结果写入台账，不能预填“失败”。
+- [x] 读取并登记受新规则影响的旧断言，重点包括`verify_skill_growth_scaling.gd`、`verify_burning_status_stack_decay_devtools.gd`、`verify_burn_status_table.js`、`verify_fusion_skill_numeric_contract.js`。每条旧断言关联后续替代行为测试。
+- [x] 运行`node tools/verify/verify_skill_rebalance_inventory.js`和隔离`skill_rebalance_baseline.gd`，OutputRoot=`E:/codex/skill-rebalance/T00`；前者PASS，后者完整输出基线而不把已知失败静默当PASS。
+- [x] 仅提交台账与基线工具；基线战斗日志不入仓库。
 
 ### T1：升级品质单调与一次成长
 
@@ -104,11 +106,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://
 
 **Interfaces:** `SkillGrowthScaling.keep_highest_rarity(current: String, requested: String) -> String`；保留`stat_multiplier(instance, stat_kind)`入口。新增`rarity_applies_to(stat_kind: String) -> bool`；品质保留在学习与升级入口统一处理，不交给UI猜测。
 
-- [ ] 写失败用例：传奇Lv1选普通Lv2卡后实例品质仍传奇；空品质保留；满级拒绝不改变品质；普通到稀有仅显式请求才升品质。
-- [ ] 写成长用例：cast Lv2传奇直接与tick伤害倍率均`1.12×1.50=1.68`；冷却倍率0.96、半径1.05、持续1.06；core固定1；弹幕/连锁/召唤各命中一次不得重复乘1.68。
-- [ ] 运行新测试证明旧行为失败，OutputRoot分别`T01-monotonic`、`T01-growth`。
-- [ ] 实现规格第3节；首次抽取与普通升级分开；保持所有伤害经过DamagePacket和统一来源/减伤，不引入直接扣血捷径。修正`spawn_projectile_burst`等遗漏路径和调度/规则双重CD缩放。
-- [ ] 跑新测试、`verify_skill_growth_scaling.gd`、`verify_skill_growth_rule_adapter.gd`、`verify_skill_growth_summon_runtime.gd`；记录旧断言变更原因后提交。
+- [x] 写失败用例：传奇Lv1选普通Lv2卡后实例品质仍传奇；空品质保留；满级拒绝不改变品质；普通到稀有仅显式请求才升品质。
+- [x] 写成长用例：cast Lv2传奇直接与tick伤害倍率均`1.12×1.50=1.68`；冷却倍率0.96、半径1.05、持续1.06；core固定1；弹幕/连锁/召唤各命中一次不得重复乘1.68。
+- [x] 运行新测试证明旧行为失败，OutputRoot分别`T01-monotonic`、`T01-growth`。
+- [x] 实现规格第3节；首次抽取与普通升级分开；保持所有伤害经过DamagePacket和统一来源/减伤，不引入直接扣血捷径。修正`spawn_projectile_burst`等遗漏路径和调度/规则双重CD缩放。
+- [x] 跑新测试、`verify_skill_growth_scaling.gd`、`verify_skill_growth_rule_adapter.gd`、`verify_skill_growth_summon_runtime.gd`；记录旧断言变更原因后提交。
 
 ### T2：临时增益生命周期、scope与一次性强化
 
@@ -116,11 +118,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://
 
 **Interfaces:** `ModifierStore.set_timed_source(source_id: Variant, effects: Array, scopes: Array, duration: float, refresh: StringName = &"replace") -> void`；`tick_timed_sources(delta: float) -> void`；`clear_skill_sources(skill_id: StringName) -> void`。沿用`collect`/`clear_all`，时长用游戏delta而非系统时钟；一次性施法加成记录独立充能，在T3成功施放事件中消费。
 
-- [ ] 写测试：过热加成对另一个cast生效而不作用attack；到5.01s回到基线；2s时重新授予5s后仅刷新不相加；暂停推进0s仍保留；移除技能或重开立即清除。
-- [ ] 写属性消费测试：高频放电真正减少雷电cast冷却；寒意延展影响Chilled/Frozen；冰封易伤影响合格目标；庇护仅有盾时增伤；未知stat导致内容验证失败。比较实际数值，不只检查属性字典。
-- [ ] 红灯后接入ModifierStore；把数据stat/scope迁移到被实际读取的标准键，保留静态与限时来源区分。
-- [ ] 写灵魂收割一份充能只强化一次完整释放、不会强化后续普通命中；消费接入T3时补齐测试，不在M1验收中忽略未接接口。
-- [ ] 运行隔离测试，OutputRoot=`T02-timed`/`T02-consumption`；回归`verify_modifier_effect_contract.gd`与既有玩家属性测试，提交。
+- [x] 写测试：过热加成对另一个cast生效而不作用attack；到5.01s回到基线；2s时重新授予5s后仅刷新不相加；暂停推进0s仍保留；移除技能或重开立即清除。
+- [x] 写属性消费测试：高频放电真正减少雷电cast冷却；寒意延展影响Chilled/Frozen；冰封易伤影响合格目标；庇护仅有盾时增伤；未知stat导致内容验证失败。比较实际数值，不只检查属性字典。
+- [x] 红灯后接入ModifierStore；把数据stat/scope迁移到被实际读取的标准键，保留静态与限时来源区分。
+- [x] 写灵魂收割一份充能只强化一次完整释放、不会强化后续普通命中；消费接入T3时补齐测试，不在M1验收中忽略未接接口。
+- [x] 运行隔离测试，OutputRoot=`T02-timed`/`T02-consumption`；回归`verify_modifier_effect_contract.gd`与既有玩家属性测试，提交。
 
 ### T3：真实事件来源、成功施放与派生限制
 
@@ -128,11 +130,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://
 
 **Interfaces:** `SkillEventContext.from_context(context: Dictionary, event_name: StringName) -> Dictionary`；`SkillProcPolicy.can_generate(context: Dictionary, proc_id: StringName) -> bool`；`child_context(context: Dictionary, proc_id: StringName) -> Dictionary`。事件字段固定`origin_skill_id, listener_skill_id, event_id, parent_event_id, proc_depth, is_copy, can_generate_secondary_proc, combat_seconds`；有效动作执行后发`skill_cast_succeeded`。`RunCombatClock.tick(delta: float) -> void`、`now_seconds() -> float`、`reset() -> void`；仅运行态推进，重开归零，后续资源窗口和对象对ICD消费同一时钟。
 
-- [ ] 测试圣锤事件被其他技能监听后origin仍圣锤；无目标失败创建不发成功施放；一次3陨石仅计1次cast；监听器不能把来源改成自身。
-- [ ] 测试二重落雷/复制产生的派生伤害不会继续计数自身；护盾-雷击-补盾链有限结束；65个队列事件第1帧64、第2帧1，不丢事件且顺序不变。
-- [ ] 冷却可配置`cooldown_scope=skill/target/object_pair`，默认skill；按目标ICD必须包含目标实例，按对象对包含稳定对象实例ID，不能因换监听器失去原始ID。补测试：暂停10s不缩短6sICD，恢复后只消耗运行delta，重开不继承旧时间。
-- [ ] 接入成功施放和一次性增伤消费；原先`on_cast`动作分派保留，但计数/复制不得监听未确认成功的广播。
-- [ ] 隔离两项新测试，OutputRoot=`T03-source`/`T03-proc`；跑现有严格伤害与来源上下文回归，完成M1事件接口提交。
+- [x] 测试圣锤事件被其他技能监听后origin仍圣锤；无目标失败创建不发成功施放；一次3陨石仅计1次cast；监听器不能把来源改成自身。
+- [x] 测试二重落雷/复制产生的派生伤害不会继续计数自身；护盾-雷击-补盾链有限结束；65个队列事件第1帧64、第2帧1，不丢事件且顺序不变。
+- [x] 冷却可配置`cooldown_scope=skill/target/object_pair`，默认skill；按目标ICD必须包含目标实例，按对象对包含稳定对象实例ID，不能因换监听器失去原始ID。补测试：暂停10s不缩短6sICD，恢复后只消耗运行delta，重开不继承旧时间。
+- [x] 接入成功施放和一次性增伤消费；原先`on_cast`动作分派保留，但计数/复制不得监听未确认成功的广播。
+- [x] 隔离两项新测试，OutputRoot=`T03-source`/`T03-proc`；跑现有严格伤害与来源上下文回归，完成M1事件接口提交。
 
 ### T4：燃烧、诅咒与控制状态行为
 
@@ -140,11 +142,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -Script res://
 
 **Interfaces:** `StatusEffectManager.resolve_cursed(reason: StringName) -> bool`，输出T3事件字段及`resolution_id, stacks, resolved_damage, resolution_reason`；`pause_status(status_id: StringName, source_id: StringName) -> void`、`resume_status(...) -> void`；冻结阈值通过统一玩家属性读取。已有`consume_status_duration`保持bool入口，强制到期走同一结算函数。
 
-- [ ] 写100P测试：1层燃烧每1s36伤害且tick后仍1层；5层每tick180；重复施加只刷新；到期与最后tick同一时刻按预定顺序结算最后tick后移除，4s总量144/720。
-- [ ] 写Cursed测试：t0一层、t2加一层，t3只结算150伤害；叠满不续时；强制引爆只结算一次；死亡后不再结算；固定期限不能被全局status_duration增益偷偷延长。
-- [ ] 写冻结测试：7层/核心5层成功、消费Chilled、普通1.2s/精英0.5s/Boss0.15s；免疫期不重复触发；冻结与Cursed到期同帧采用冻结暂停；死亡转移只能走一个分支。
-- [ ] 实现每状态显式refresh_rule；对持续时间为0的instant状态保留原规则；保留状态来源与有效Power，不改变无关poison/bleed规则。
-- [ ] 跑两项新测试与现有燃烧、冰霜状态回归，OutputRoot=`T04-lifecycle`/`T04-race`；迁移旧燃烧衰减断言并登记替代测试，验收M1。
+- [x] 写100P测试：1层燃烧每1s36伤害且tick后仍1层；5层每tick180；重复施加只刷新；到期与最后tick同一时刻按预定顺序结算最后tick后移除，4s总量144/720。
+- [x] 写Cursed测试：t0一层、t2加一层，t3只结算150伤害；叠满不续时；强制引爆只结算一次；死亡后不再结算；固定期限不能被全局status_duration增益偷偷延长。
+- [x] 写冻结测试：7层/核心5层成功、消费Chilled、普通1.2s/精英0.5s/Boss0.15s；免疫期不重复触发；冻结与Cursed到期同帧采用冻结暂停；死亡转移只能走一个分支。
+- [x] 实现每状态显式refresh_rule；对持续时间为0的instant状态保留原规则；保留状态来源与有效Power，不改变无关poison/bleed规则。
+- [x] 跑两项新测试与现有燃烧、冰霜状态回归，OutputRoot=`T04-lifecycle`/`T04-race`；迁移旧燃烧衰减断言并登记替代测试，验收M1。
 
 ## M2：构筑与神系闭环
 
