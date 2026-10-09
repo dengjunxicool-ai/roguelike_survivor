@@ -2,7 +2,7 @@
 
 M2 scope: T5–T9 only. Base c63688f; branch codex/skill-rebalance-m2; existing isolated E:/codex/skill-rebalance/worktree reused. All output E:/codex/skill-rebalance/. M1 PR branch retained.
 Ruling: reuse linked E-drive worktree with a new branch instead of native creation — native tool cannot specify E-drive placement and user prohibits C writes — M1 commits remain on codex/skill-rebalance-m1.
-Ruling: PowerShell/Python bookkeeping replaces Bash helper scripts; durable ledger and per-task commits retain the same completion contract.
+Ruling: PowerShell/Python bookkeeping replaces Bash helper scripts — durable ledger and per-task commits retain the same completion contract — cost if wrong: manual ledger bookkeeping could omit a verification item; checked against plan and git history.
 Pre-flight T5→T6: replacement must use the same requirements as offers, bypass ordinary capacity only during confirmation; do not lock a school on begin/cancel.
 Pre-flight T3→T7/T9: counters use stable event_id; damage/resource eligibility uses provenance and target snapshots, not listener identity.
 Pre-flight T4→T8: reuse freeze immunity and effective Power; do not add a second freeze pipeline.
@@ -37,3 +37,5 @@ Final: Ruling: resource_crossings action repetition remains per legal occurrence
 Final: Ruling: retain legacy offer-rule compatibility filtering alongside shared M2 capability policy — reviewer found no current nonredundant base-data divergence; no generalized migration in this phase — cost if wrong: future legacy rule fields could diverge between learning and offers; current M2 entry tests pass.
 Final: Ruling: retain E-drive worktree and verification evidence at the requested stage stop — the durable report/next phase still need them, no plan scratch workspace was created — cost if wrong: E-drive disk usage until later cleanup.
 Final: deferred minors: none identified by reviewer.
+
+M2 gameplay acceptance: NOT PASSED. Corrected unassisted runner inherits real attack runtime through add_skill; no HP/speed/damage assists, original mage75HP/98speed, seed618, abandoned_dungeon, time_scale5. School-biased real offers choose initial attack upgrade and two casts/summons; all subsequent progression uses real choice modal. Fire112.7s / Frost70.5s / Thunder68.8s / Curse67.8s / Holy39.5s ended DEFEAT, script_errors0/engine_errors0, Boss not reached. This autoplay evidence does not establish player impossibility or isolate balance vs controller strategy; it does not prove the 300s full-run criterion. Evidence M2-playable-{school}/result.json + report.md (JSON), retained on E drive. No production balance changes were made to manufacture victory. Stop and report M2 implementation/regression complete with gameplay acceptance still open; do not enter M3/M4.
