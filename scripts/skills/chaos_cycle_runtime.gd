@@ -22,6 +22,8 @@ func reset() -> void:
 	pending.clear()
 func clear_origin(id: StringName) -> void:
 	pending = pending.filter(func(x: Dictionary) -> bool: return x.origin != id)
+	for item: Dictionary in pending:
+		if String(item.snapshot.get("origin_skill_id","")) == String(id): item.snapshot = {}
 	if id == &"chaos_passive_anomalous_stability": stability_ready = false; stability_count = 0
 	if id == &"chaos_power_echo_cast": echo_count = 0
 	if id == &"chaos_passive_entropy_growth": entropy.clear()

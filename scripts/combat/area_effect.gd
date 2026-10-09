@@ -87,6 +87,9 @@ var skill_manager: Node
 var relic_manager: Node
 var impact_target: Node
 var actions_on_apply: Array = []
+var actions_on_interval: Array = []
+var action_interval: float = 1.0
+var _action_interval_count: int = 0
 var actions_on_tick: Array = []
 var actions_on_hit: Array = []
 var actions_on_expire: Array = []
@@ -158,6 +161,8 @@ func prepare_for_pool_despawn() -> void:
 	_dash_path_end = Vector2.ZERO
 	actions_on_apply.clear()
 	actions_on_tick.clear()
+	actions_on_interval.clear()
+	_action_interval_count = 0
 	actions_on_hit.clear()
 	actions_on_expire.clear()
 	actions_on_death.clear()
@@ -232,6 +237,9 @@ func _apply_area_action_params(params: Dictionary) -> void:
 	_return_multiplier = float(params.get("return_damage_multiplier",1.0))
 	actions_on_apply = _get_array(params.get("actions_on_apply", []))
 	actions_on_tick = _get_array(params.get("actions_on_tick", []))
+	actions_on_interval = _get_array(params.get("actions_on_interval", []))
+	action_interval = maxf(float(params.get("action_interval",1.0)),0.05)
+	_action_interval_count = 0
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
 	actions_on_expire = _get_array(params.get("actions_on_expire", []))
 	actions_on_death = _get_array(params.get("actions_on_death", []))
@@ -528,6 +536,11 @@ func _physics_process_profiled(delta: float) -> void:
 
 	if event_bus != null: event_bus.observe_area(self)
 	_age += delta
+	if not actions_on_interval.is_empty():
+		var steps: int = floori(minf(_age,duration)/action_interval+0.000001)
+		while _action_interval_count < steps:
+			_action_interval_count += 1
+			_execute_adapted_actions(actions_on_interval,null)
 	if event_bus!=null and event_bus.interaction_interest(&"area_pulse",self):
 		var halves: int=floori(minf(_age,duration)*2.0+0.000001)
 		while _fusion_pulse_half<halves:

@@ -552,7 +552,8 @@
     "skill_id": "fusion_frost_chaos_rift_avalanche",
     "required_skills": [
       "frost_cast_glacial_lance",
-      "chaos_cast_void_rift"
+      "chaos_cast_void_rift",
+      "frost_power_shatter_execute"
     ],
     "positive_fixture": {
       "event": "frozen_shattered",

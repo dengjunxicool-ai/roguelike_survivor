@@ -47,6 +47,8 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 		"event_on_expire": StringName(str(area_params.get("event_on_expire", ""))),
 		"actions_on_apply": _get_array(area_params.get("actions_on_apply", [])),
 		"actions_on_tick": _get_array(area_params.get("actions_on_tick", [])),
+		"actions_on_interval": _get_array(area_params.get("actions_on_interval", [])),
+		"action_interval": maxf(float(area_params.get("action_interval",1.0)),0.05),
 		"actions_on_hit": _get_array(area_params.get("actions_on_hit", [])),
 		"actions_on_expire": _get_array(area_params.get("actions_on_expire", [])),
 		"actions_on_death": _get_array(area_params.get("actions_on_death", [])),

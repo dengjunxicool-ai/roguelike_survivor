@@ -43,7 +43,16 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 	if execute_triggered:
 		_apply_low_hp_execute_packet(packet, params, damage_target)
 	packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
+	var frozen_execute: bool = execute_triggered and String(context.get("origin_skill_id","")) == "frost_power_shatter_execute" and not context.get("is_copy",false) and damage_target.has_method("get_status_stack") and damage_target.get_status_stack(&"frozen") > 0
+	var status_manager: Node = damage_target.get_node_or_null("StatusEffectManager")
+	var before_statuses: Array = status_manager.get_status_snapshot() if frozen_execute and status_manager != null else []
 	damage_target.call("take_damage", DamagePacketScript.from_dictionary(packet))
+	if frozen_execute and damage_target.has_method("is_dead") and damage_target.is_dead() and context.get("event_bus") != null:
+		var shatter: Dictionary = target_context.duplicate(true)
+		shatter["target_statuses"] = before_statuses
+		shatter["can_generate_secondary_proc"] = true
+		shatter["proc_depth"] = 1
+		context.event_bus.emit_skill_event(&"frozen_shattered", shatter)
 	return true
 
 

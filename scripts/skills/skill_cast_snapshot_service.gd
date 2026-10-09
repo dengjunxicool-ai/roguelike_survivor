@@ -8,6 +8,7 @@ func record(context: Dictionary, actions: Array) -> bool:
 	if skill == null or String(skill.skill_type) not in ["attack", "cast"] or bool(context.get("is_copy", false)) or int(context.get("proc_depth",0)) > 0:
 		return false
 	var safe: Array = filter_actions(actions)
+	_embed_owned_projectile_hits(safe, skill)
 	if safe.is_empty(): return false
 	var item: Dictionary = {"version":1,"origin_skill_id":String(skill.skill_id),"school":String(skill.school),"skill_type":String(skill.skill_type),"actions":safe,"base_growth_applied":true,"power":float(context.get("power",100.0))}
 	clear_origin(skill.skill_id)
@@ -48,3 +49,21 @@ static func pure_data(value: Variant) -> Variant:
 			if not item is Object and not item is Callable: result.append(pure_data(item))
 		return result
 	return String(value) if value is StringName else value
+
+# Legacy attacks deliver their own damage via a hit event. Copy its pure payload,
+# rather than allowing unrelated listeners to fire on a derived projectile.
+static func _embed_owned_projectile_hits(actions: Array, skill: RefCounted) -> void:
+	var events: Array = skill.definition.events.duplicate(true)
+	events.append_array(skill.runtime_events)
+	for action: Dictionary in actions:
+		if String(action.type) not in ["spawn_projectile","spawn_projectile_burst","spawn_projectiles_at_targets"]: continue
+		var params: Dictionary = action.params
+		var hits: Array = params.get("actions_on_hit",[])
+		for event: Dictionary in events:
+			if String(event.get("trigger","")) != "on_projectile_hit": continue
+			if event.has("source_id") and String(event.source_id) != String(params.get("projectile_id","")): continue
+			var payload: Array = filter_actions(event.get("actions",[]))
+			for hit: Dictionary in payload:
+				if event.has("conditions"): hit["conditions"] = pure_data(event.conditions)
+			hits.append_array(payload)
+		params["actions_on_hit"] = hits

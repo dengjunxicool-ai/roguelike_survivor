@@ -23,6 +23,10 @@ func replay(snapshot: Dictionary, context: Dictionary, damage_scale: float) -> b
 	child["cast_damage_multiplier"] = 1.0
 	var manager: Node = context.get("skill_manager") as Node
 	child["skill_instance"] = manager.get_skill(snapshot.origin_skill_id) if manager != null else null
+	if child.skill_instance == null and manager != null:
+		var primary: RefCounted = manager.get_primary_attack_method()
+		if primary != null and String(primary.skill_id)==String(snapshot.origin_skill_id): child.skill_instance = primary
+	if child.skill_instance == null: return false
 	var target: Node = child.get("target") as Node
 	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion() or (target.has_method("is_dead") and target.is_dead()):
 		child["target"] = Targeting.find_target(context.get("caster"),"nearest_enemy",{"range":INF})
@@ -39,7 +43,7 @@ static func scale_damage(value: Variant, multiplier: float) -> void:
 		for child: Variant in value: scale_damage(child,multiplier)
 	elif value is Dictionary:
 		for key: Variant in value.keys():
-			if key in ["amount","damage","power_scale","power_scale_per_stack","amount_per_stack"]:
+			if key in ["amount","damage","power_scale","power_scale_per_stack","amount_per_stack","last_target_bonus_power","extra_main_power"]:
 				if value[key] is int or value[key] is float: value[key] = float(value[key])*multiplier
 				elif value[key] is Dictionary and value[key].get("stat","") == "power": value[key]["scale"] = float(value[key].get("scale",1.0))*multiplier
 			else: scale_damage(value[key],multiplier)

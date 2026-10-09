@@ -128,6 +128,7 @@ func object_origin(object: Node) -> String:
 func area_is(area: Node,kind: String) -> bool:
 	if area == null or not is_instance_valid(area) or area.is_queued_for_deletion() or not area.has_method("geometry_shape"): return false
 	if bool(area.get("_damage_window_finished")): return false
+	if kind=="barrier": return object_origin(area)=="holy_cast_divine_barrier" and String(area.source_id)=="divine_barrier_field"
 	if kind=="rift": return (object_origin(area)=="chaos_cast_void_rift" and String(area.source_id)=="void_rift_field") or (object_origin(area)=="chaos_dash_rift_step" and String(area.source_id)=="chaos_rift")
 	if kind=="fire_path": return object_origin(area) in ["fire_cast_lava_rift","fire_attack_searing","fire_dash_blazing_run"] and String(area.source_id) in ["lava_rift","searing_fire_path","blazing_run_path"]
 	var skill: RefCounted = area.skill_manager.get_skill(StringName(object_origin(area))) if area.skill_manager!=null else null
@@ -159,7 +160,8 @@ func targets(c: Dictionary,rule: Dictionary) -> Array[Node2D]:
 		out.append(target)
 	out.sort_custom(func(a: Node2D,b: Node2D) -> bool:
 		if String(rule.get("priority",""))=="highest_health" and float(a.get("current_health"))!=float(b.get("current_health")): return float(a.get("current_health"))>float(b.get("current_health"))
-		return a.global_position.distance_squared_to(center)>b.global_position.distance_squared_to(center) if bool(rule.get("far",false)) else a.global_position.distance_squared_to(center)<b.global_position.distance_squared_to(center))
+		var distance_origin: Vector2 = player.global_position if bool(rule.get("far",false)) else center
+		return a.global_position.distance_squared_to(distance_origin)>b.global_position.distance_squared_to(distance_origin) if bool(rule.get("far",false)) else a.global_position.distance_squared_to(distance_origin)<b.global_position.distance_squared_to(distance_origin))
 	return out
 func effects(bus: Node,items: Array,c: Dictionary,skill: RefCounted) -> bool:
 	var actions: Array = Adapter.to_actions(items,skill)

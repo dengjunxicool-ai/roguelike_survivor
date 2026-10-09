@@ -117,6 +117,8 @@ static func _normalize_status_params(params: Dictionary) -> Dictionary:
 ## 作用：整理区域效果的伤害、几何、持续时间及 tick 动作参数。
 ## 使用：params 读取 effects_on_tick/_skill_instance/effects_on_apply/effects_on_expire；会原地更新 params.actions_on_tick/actions_on_apply/actions_on_expire。
 static func _normalize_area_params(params: Dictionary) -> Dictionary:
+	if params.has("effects_on_interval"):
+		params["actions_on_interval"] = to_actions(_get_array(params.effects_on_interval), params.get("_skill_instance", null) as RefCounted, "tick")
 	if params.has("effects_on_tick"):
 		params["actions_on_tick"] = to_actions(_get_array(params.get("effects_on_tick", [])), params.get("_skill_instance", null) as RefCounted, "tick")
 	if params.has("effects_on_apply"):

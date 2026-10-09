@@ -7162,7 +7162,7 @@
 					"statuses": [
 						"burning"
 					],
-					"target_area": "holy",
+					"target_area": "barrier",
 					"rule_id": "fusion_fire_holy_burning_light_barrier:1"
 				}
 			]
@@ -7530,7 +7530,7 @@
 							"tick_interval": 1,
 							"damage": 0,
 							"position_mode": "event",
-							"effects_on_tick": [
+							"effects_on_interval": [
 								{
 									"type": "instant_area_hit",
 									"radius": 151.2,
@@ -7550,7 +7550,8 @@
 										}
 									]
 								}
-							]
+							],
+							"action_interval": 1.0
 						}
 					],
 					"school": "thunder",
@@ -7953,7 +7954,8 @@
 					"chaos"
 				],
 				"required_skills": [
-					"chaos_cast_void_rift"
+					"chaos_cast_void_rift",
+					"frost_power_shatter_execute"
 				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
@@ -10008,7 +10010,7 @@
 					"statuses": [
 						"cursed"
 					],
-					"target_area": "holy",
+					"target_area": "barrier",
 					"seconds": 0.5,
 					"rule_id": "fusion_holy_curse_penitence_barrier:1"
 				}
@@ -10359,7 +10361,8 @@
 					"radius_scale": 0.5,
 					"duration": 2,
 					"entry": true,
-					"rule_id": "fusion_chaos_frost_zero_rift:0"
+					"rule_id": "fusion_chaos_frost_zero_rift:0",
+					"far": true
 				}
 			]
 		},
@@ -10556,7 +10559,8 @@
 					"rule_id": "fusion_chaos_thunder_warp_lightning_orb:0",
 					"area_origin": "thunder_dash_ball_lightning",
 					"area_id": "ball_lightning_orb",
-					"other_area": "rift"
+					"other_area": "rift",
+					"far": true
 				}
 			]
 		},

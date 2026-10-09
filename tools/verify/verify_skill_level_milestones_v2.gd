@@ -38,7 +38,7 @@ func run() -> void:
 	expect(region != null,"Lv3 field creates original real area")
 	if region != null:
 		region.set_physics_process(false)
-		
+
 		expect(enemy.get_status_stack("chilled") == 2,"Lv3 frost field first hit adds two Chilled")
 		await physics_frame
 		region._damage_body(enemy)
