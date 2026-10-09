@@ -353,6 +353,12 @@ func resolve_cursed(reason: StringName) -> bool:
 		return false
 	_resolution_nonce += 1
 	var before: float = float(target.get("current_health")) if target.get("current_health") != null else 0.0
+	if before > 0.0 and before <= float(target.get("max_health")) * 0.4:
+		var query: RefCounted = preload("res://scripts/modifiers/modifier_query.gd").for_skill(null, _get_player())
+		var values: Dictionary = preload("res://scripts/modifiers/modifier_aggregator.gd").collect(query)
+		var bonus: float = clampf(float(values.get("cursed_low_hp_damage_multiplier_add", 0.0)), 0.0, 0.4)
+		if _is_boss(): bonus *= 0.3
+		status["power"] = float(status.get("power", 0.0)) * (1.0+bonus)
 	_execute_status_effects(status, "on_expire_effects")
 	var after: float = float(target.get("current_health")) if is_instance_valid(target) and target.get("current_health") != null else 0.0
 	var context: Dictionary = _build_status_event_context(&"cursed", status)
@@ -809,8 +815,12 @@ func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
 	if event_bus == null or not event_bus.has_method("execute_adapted_actions"):
 		return
 	var status_id: StringName = StringName(String(status.get("id", "")))
-	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, status))
-	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, status))
+	var output_status: Dictionary = status
+	if status_id == &"burning" and effects_key == "on_tick_effects" and float(status.get("ground_bonus_until", 0.0)) > _status_time_seconds():
+		output_status = status.duplicate(true)
+		output_status["power"] = float(status.get("power", 0.0)) * (1.0+float(status.get("ground_bonus", 0.0)))
+	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, output_status))
+	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, output_status))
 
 
 ## 作用：复制效果并将逐层Power系数换算为当前叠层的power_scale。
@@ -1080,6 +1090,7 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 				multiplier *= maxf(float(owner.get_meta("fire_oil_boss_burn_damage_multiplier", 0.7)), 0.0)
 			else:
 				multiplier *= maxf(1.0 + float(owner.get_meta("fire_oil_burn_damage_multiplier_add", 0.0)), 0.0)
+	if float(status.get("ground_bonus_until", 0.0)) > _status_time_seconds(): multiplier *= 1.0+float(status.get("ground_bonus", 0.0))
 	return maxf(float(amount) * multiplier, 0.0)
 
 

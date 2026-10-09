@@ -330,8 +330,10 @@ func _mark_target(params: Dictionary, context: Dictionary) -> bool:
 	if mark == "":
 		return false
 
+	if mark == "death_pact" and context.get("event_bus") != null:
+		context.event_bus.register_death_pact(target, resolved_context, float(params.get("duration", 5.0)))
 	var mark_key: String = _metadata_identifier(mark)
 	target.set_meta(mark_key, true)
 	if params.has("duration"):
-		target.set_meta(_metadata_key(mark, "expires_at"), float(Time.get_ticks_msec()) / 1000.0 + maxf(float(params.get("duration", 0.0)), 0.0))
+		target.set_meta(_metadata_key(mark, "expires_at"), float(context.get("combat_seconds", 0.0)) + maxf(float(params.get("duration", 0.0)), 0.0))
 	return true

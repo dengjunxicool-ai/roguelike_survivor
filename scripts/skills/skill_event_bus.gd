@@ -15,6 +15,9 @@ const EventContext: Script = preload("res://scripts/skills/skill_event_context.g
 const ProcPolicy: Script = preload("res://scripts/skills/skill_proc_policy.gd")
 const Clock: Script = preload("res://scripts/runtime/run_combat_clock.gd")
 
+var _cycles: RefCounted = preload("res://scripts/skills/skill_cycle_runtime.gd").new()
+var _crowd_scan: float = 0.0
+
 var _listeners: Dictionary = {}
 var _action_executor: RefCounted = SkillActionExecutorScript.new()
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
@@ -30,6 +33,7 @@ func _ready() -> void:
 	add_child(_clock)
 
 func _physics_process(_delta: float) -> void:
+	update_skill_cycles()
 	process_pending_events()
 
 func combat_seconds() -> float:
@@ -96,6 +100,7 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 	EventContext.purge_invalid_references(context)
 	context["event_name"] = event_name
 	context["event_bus"] = self
+	if event_name == &"on_enemy_killed": _cycles.death(self, context)
 	if event_name == &"on_cast":
 		context["_cast_result"] = {"successful_outputs": 0}
 		_prepare_cast_charge(context)
@@ -268,6 +273,16 @@ func _get_array(value: Variant) -> Array:
 		return value
 	return []
 
+func update_skill_cycles() -> void:
+	_cycles.update(self)
+
+func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
+	_cycles.mark(target, context, duration, combat_seconds())
+
+func start_combustion(context: Dictionary) -> bool:
+	return _cycles.start(self, context)
+
 func clear_origin(skill_id: StringName) -> void:
+	_cycles.clear_origin(skill_id)
 	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
 		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)

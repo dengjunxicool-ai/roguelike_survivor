@@ -29,6 +29,11 @@ func _heal_owner(params: Dictionary, context: Dictionary) -> bool:
 ## 作用：把动作属性合入技能运行快照或管理器被动列表；燃烧每层易伤使用单独状态字段路径。
 ## 使用：params 读取 stat/scope；context 携带 skill_instance/skill_manager；返回布尔判断或执行是否成功。
 func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
+	if String(params.get("stat", "")) == "burning_damage_taken":
+		var target: Node = context.get("target") as Node
+		var statuses: Node = target.get_node_or_null("StatusEffectManager") if target != null else null
+		if statuses == null: return false
+		return statuses.merge_status_fields(&"burning", {"ground_bonus": float(params.get("value", 0.0)), "ground_bonus_until": float(context.get("combat_seconds", 0.0))+float(params.get("duration", 0.6))})
 	var modifier: Dictionary = _build_modifier_from_params(params)
 	if modifier.is_empty():
 		return false

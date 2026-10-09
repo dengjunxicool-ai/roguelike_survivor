@@ -25,6 +25,8 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 	params.erase("type")
 	_apply_growth_to_params(params, effect_type, skill_instance, effect_context)
 	match effect_type:
+		"combustion_explosion":
+			return {"type": "combustion_explosion", "params": params}
 		"damage":
 			return {"type": "deal_damage", "params": _normalize_damage_params(params)}
 		"apply_status":

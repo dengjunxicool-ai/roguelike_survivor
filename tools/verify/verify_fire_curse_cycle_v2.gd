@@ -1,0 +1,43 @@
+extends "res://tools/verify/skill_m2_combat_fixture.gd"
+func _init() -> void:
+	call_deferred("run")
+func run() -> void:
+	setup()
+	install(&"fire_power_ignite_core")
+	var attack: RefCounted = install(&"fire_attack_searing")
+	var cast: RefCounted = install(&"fire_cast_meteor_rain")
+	enemy.apply_status(&"burning", {"duration": 4.0, "power": 100.0})
+	bus.emit_skill_event(&"on_projectile_hit", ctx(enemy, attack))
+	expect(is_equal_approx(float(enemy.get_node("StatusEffectManager").get_status_snapshot()[0].duration_remaining), 4.0), "attack does not consume burning")
+	bus.emit_skill_event(&"on_projectile_hit", ctx(enemy, cast))
+	expect(is_equal_approx(float(enemy.get_node("StatusEffectManager").get_status_snapshot()[0].duration_remaining), 3.0), "cast consumes one second")
+	manager.clear_skills()
+	enemy.get_node("StatusEffectManager").clear_statuses()
+	var pact: RefCounted = install(&"curse_power_death_pact")
+	var boss: Enemy = make_enemy(Vector2(50,0), "boss")
+	bus.emit_skill_event(&"on_cast", ctx(enemy, pact))
+	expect(boss.has_meta("death_pact") and not enemy.has_meta("death_pact"), "pact prefers strong target")
+	advance(5.0)
+	if bus.has_method("update_skill_cycles"): bus.update_skill_cycles()
+	await process_frame
+	expect(boss.packets.size() == 1 and int(boss.packets[0].raw_amount) == 90, "living pact expiry deals 0.9P once")
+	if bus.has_method("update_skill_cycles"): bus.update_skill_cycles()
+	expect(boss.packets.size() == 1 and not bool(boss.get_meta("death_pact", false)), "expiry clears mark")
+	advance(8.0)
+	bus.emit_skill_event(&"on_cast", ctx(enemy,pact))
+	var neighbor_before: int = enemy.packets.size()
+	boss.current_health = 0
+	bus.emit_skill_event(&"on_enemy_killed", ctx(boss))
+	advance(5.0)
+	if bus.has_method("update_skill_cycles"): bus.update_skill_cycles()
+	expect(not bool(boss.get_meta("death_pact", false)), "death settles and clears pact before expiry")
+	await process_frame
+	expect(enemy.packets.size() > neighbor_before and int(enemy.packets[-1].raw_amount) == 180, "pact death explodes for 1.8P")
+	manager.clear_skills()
+	install(&"curse_passive_deathbed_deepen")
+	enemy.get_node("StatusEffectManager").clear_statuses()
+	enemy.current_health = 3000
+	enemy.apply_status(&"cursed", {"power":100.0,"stacks":1})
+	enemy.get_node("StatusEffectManager").resolve_cursed(&"natural")
+	expect(int(enemy.packets[-1].raw_amount) == 105, "deathbed boosts only low HP curse resolution by forty percent")
+	finish()

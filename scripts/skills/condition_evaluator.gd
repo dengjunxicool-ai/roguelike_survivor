@@ -16,6 +16,12 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 		params.erase("type")
 
 	match condition_type:
+		"origin_skill_type":
+			var origin: RefCounted = context.get("origin_skill_instance") as RefCounted
+			return origin != null and String(origin.get("skill_type")) == String(params.get("skill_type", ""))
+		"fire_ground":
+			var area: Node = context.get("area") as Node
+			return area != null and String(area.get("source_id")) in ["meteor_burning_ground", "lava_rift", "fire_ground", "inferno_fire_ground"]
 		"target_has_status":
 			var target: Node = context.get("target") as Node
 			if context.has("target_statuses"):

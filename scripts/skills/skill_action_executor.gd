@@ -44,6 +44,8 @@ func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 		return null
 
 	match action_type:
+		"combustion_explosion":
+			return context.event_bus.start_combustion(context) if context.get("event_bus") != null else false
 		"deal_damage":
 			return _families["status"]._deal_damage(params, context)
 		"apply_status":
