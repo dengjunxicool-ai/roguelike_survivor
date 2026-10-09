@@ -29,8 +29,12 @@ class Target:
 	var is_boss: bool = false
 	var is_elite: bool = false
 	var packets: Array[Dictionary] = []
+	var hit_event_bus: Node = null
 	func take_damage(packet: DamagePacket) -> void:
 		packets.append(packet.to_dictionary())
+		current_health = maxi(current_health - roundi(packet.raw_amount), 0)
+		if hit_event_bus != null:
+			hit_event_bus.emit_skill_event(&"post_damage_hit", {"damage_packet": packet.to_dictionary(), "target": self, "caster": hit_event_bus.get_parent(), "owner": hit_event_bus.get_parent(), "skill_manager": hit_event_bus.get_parent().get_node("SkillManager"), "damage_amount": packet.raw_amount, "event_bus": hit_event_bus})
 	func apply_status(id: Variant, params: Dictionary = {}) -> bool:
 		return get_node("StatusEffectManager").apply_status(id, params)
 	func get_status_stack(id: Variant) -> int:
@@ -56,6 +60,10 @@ static func build(tree: SceneTree) -> Dictionary:
 	bus.name = "SkillEventBus"
 	player.add_child(bus)
 	bus.set_process(false)
+	bus.set_physics_process(false)
+	var clock: Node = bus.get_node_or_null("RunCombatClock")
+	if clock != null:
+		clock.set_physics_process(false)
 	var target := Target.new()
 	target.name = "RebalanceTarget"
 	target.add_to_group(&"enemies")

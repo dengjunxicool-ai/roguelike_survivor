@@ -106,6 +106,8 @@ func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dict
 		var key: String = str(key_variant)
 		if key == "raw_amount" or key == "amount" or key == "target_id":
 			continue
+		if key in ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds", "cast_damage_multiplier"] and packet.has(key):
+			continue
 		if (key == "damage_origin" or key == "source_type" or key == "damage_type" or key == "element") and packet.has(key):
 			continue
 		packet[key] = runtime_packet[key_variant]

@@ -18,6 +18,10 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 	match condition_type:
 		"target_has_status":
 			var target: Node = context.get("target") as Node
+			if context.has("target_statuses"):
+				for status: Dictionary in context.target_statuses:
+					if String(status.get("id", "")) == String(params.get("status_id", params.get("status", ""))): return true
+				return false
 			return target != null and target.has_method("has_status") and bool(target.call("has_status", params.get("status_id", params.get("status", ""))))
 		"target_missing_status":
 			return not _target_has_any_status(context.get("target") as Node, [params.get("status_id", params.get("status", ""))])
@@ -41,7 +45,7 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 			var relic_manager: Node = context.get("relic_manager") as Node
 			return relic_manager != null and relic_manager.has_method("has_relic") and bool(relic_manager.call("has_relic", params.get("relic_id", "")))
 		"skill_has_tag":
-			return _skill_has_tag(context.get("skill_instance") as RefCounted, str(params.get("tag", "")))
+			return _skill_has_tag(context.get("origin_skill_instance", context.get("skill_instance")) as RefCounted, str(params.get("tag", "")))
 		"source_has_tag":
 			return _source_has_tag(context, str(params.get("tag", "")))
 		"random_chance":
@@ -81,7 +85,7 @@ static func _skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	return definition != null and definition.has_method("has_tag") and bool(definition.call("has_tag", tag))
 
 
-## 作用：依次检查事件标签、来源节点分组与元数据，最后依据来源 ID 推断配置标签。
+## 作用：依次检查事件显式标签、来源节点分组与元数据，来源名称不用于推断标签。
 ## 使用：context 携带 source/area/source_id/source_key；返回布尔判断或执行是否成功。
 static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 	if tag == "":
@@ -98,22 +102,7 @@ static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 			return true
 		if source.has_meta(tag) and bool(source.get_meta(tag)):
 			return true
-	var source_id: String = str(context.get("source_id", context.get("source_key", "")))
-	match tag:
-		"fire_area":
-			return source_id.contains("fire") or source_id.contains("burn") or source_id.contains("lava") or source_id.contains("ember") or source_id.contains("flame")
-		"frost_area":
-			return source_id.contains("frost") or source_id.contains("ice") or source_id.contains("blizzard") or source_id.contains("snow")
-		"thunder_area":
-			return source_id.contains("thunder") or source_id.contains("lightning") or source_id.contains("storm") or source_id.contains("conductive")
-		"curse_area":
-			return source_id.contains("curse") or source_id.contains("cursed") or source_id.contains("soul") or source_id.contains("black")
-		"holy_area":
-			return source_id.contains("holy") or source_id.contains("judgment") or source_id.contains("divine") or source_id.contains("barrier")
-		"chaos_area":
-			return source_id.contains("chaos") or source_id.contains("rift") or source_id.contains("void") or source_id.contains("instability")
-		_:
-			return source_id == tag or source_id.contains(tag)
+	return false
 
 
 ## 作用：读取目标当前血量比例，缺目标时按满血处理。

@@ -28,7 +28,10 @@ func _init() -> void:
 func execute_actions(actions: Array, context: Dictionary) -> void:
 	for action_variant: Variant in actions:
 		if action_variant is Dictionary:
-			execute_action(action_variant, context)
+			var result: Variant = execute_action(action_variant, context)
+			if bool(context.get("is_cast_source", false)) and context.has("_cast_result"):
+				if (result is bool and result) or ((result is int or result is float) and result > 0):
+					context["_cast_result"]["successful_outputs"] = int(context["_cast_result"].get("successful_outputs", 0)) + 1
 
 
 ## 作用：检查动作条件后按 type 转入对应动作族并返回执行结果。
