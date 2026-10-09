@@ -915,7 +915,9 @@
 					],
 					"effects": [
 						{
-							"type": "combustion_explosion"
+							"type": "combustion_explosion",
+							"radius": 184.8,
+							"power_scale": 2.4
 						}
 					],
 					"resource_kind": "burning"
@@ -932,7 +934,9 @@
 					],
 					"effects": [
 						{
-							"type": "combustion_explosion"
+							"type": "combustion_explosion",
+							"radius": 184.8,
+							"power_scale": 2.4
 						}
 					],
 					"resource_kind": "burning"
@@ -2872,7 +2876,14 @@
 									"damage_type": "thunder",
 									"source_type": "power",
 									"power_scale": 1.5
-								},
+								}
+							]
+						},
+						{
+							"type": "chain_to_targets",
+							"radius_r": 1.8,
+							"count": 4,
+							"actions": [
 								{
 									"type": "apply_status",
 									"status": "conductive",
@@ -2891,7 +2902,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive",
+			"description": "导电满层触发过载伤害并消耗导电，最多向4名邻近敌人传播2层导电，排除原目标。",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -2961,7 +2972,7 @@
 				}
 			],
 			"effects": [],
-			"description": "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人",
+			"description": "每3次初代正雷电伤害命中追加一次0.45P落雷；派生落雷不再积累次数。",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
@@ -3615,7 +3626,7 @@
 				}
 			],
 			"effects": [],
-			"description": "Cursed 造成伤害或击杀时，为玩家恢复少量生命",
+			"description": "诅咒完成结算或带诅咒敌人死亡时恢复少量生命；普通诅咒元素命中不触发。",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -3716,7 +3727,7 @@
 					"source": "skill"
 				}
 			],
-			"description": "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低",
+			"description": "仅对生命不高于40%的目标提高诅咒结算伤害，最高40%；Boss取30%效果。",
 			"skill_type": "passive",
 			"slot_category": "passive",
 			"capabilities": []
@@ -3872,7 +3883,7 @@
 				}
 			],
 			"effects": [],
-			"description": "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害 精英与Boss每次诅咒结算+0.5点。",
+			"description": "累计12点诅咒资源强化下一次施法伤害35%；死亡+1点，精英/Boss每次结算+0.5点。",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": []
@@ -4218,7 +4229,7 @@
 				}
 			],
 			"effects": [],
-			"description": "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment",
+			"description": "冲刺时获得短时护盾，对路径敌人造成神圣伤害并施加审判。",
 			"skill_type": "dash",
 			"slot_category": "active",
 			"capabilities": [
@@ -4334,22 +4345,32 @@
 									"status": "judgment",
 									"stacks": 1,
 									"duration": 6
-								},
-								{
-									"type": "grant_shield",
-									"shield_type": "divine_barrier",
-									"max_health_ratio": 0.005,
-									"duration": 6,
-									"respect_shield_cap": true,
-									"shield_cap_health_ratio": 0.35
 								}
 							]
+						}
+					]
+				},
+				{
+					"trigger": "area_step",
+					"conditions": [
+						{
+							"type": "player_inside_area"
+						}
+					],
+					"effects": [
+						{
+							"type": "grant_shield",
+							"shield_type": "divine_barrier",
+							"max_health_ratio": 0.01,
+							"duration": 6,
+							"respect_shield_cap": true,
+							"shield_cap_health_ratio": 0.35
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复",
+			"description": "在施放点建立R2.3结界，持续5秒、冷却10秒；玩家在区域内每秒恢复1%最大生命护盾，与敌人数无关。",
 			"skill_type": "cast",
 			"slot_category": "active",
 			"capabilities": [
@@ -4544,7 +4565,7 @@
 				}
 			],
 			"effects": [],
-			"description": "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者",
+			"description": "圣盾卫士存活时每2秒挡伤一次，最多吸收10%最大生命；反击造成神圣伤害，不授予无敌。",
 			"skill_type": "summon",
 			"slot_category": "active",
 			"capabilities": [
@@ -4832,7 +4853,8 @@
 								}
 							]
 						}
-					]
+					],
+					"cooldown_key": "counter_seal_shared"
 				},
 				{
 					"trigger": "player_damage_taken",
@@ -4859,11 +4881,17 @@
 								}
 							]
 						}
+					],
+					"cooldown_key": "counter_seal_shared",
+					"conditions": [
+						{
+							"type": "heavy_player_hit"
+						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment",
+			"description": "护盾破裂或单次生命损失至少10%最大生命时反击，两个入口共享8秒冷却。",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [

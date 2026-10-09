@@ -16,6 +16,13 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 		params.erase("type")
 
 	match condition_type:
+		"heavy_player_hit":
+			var owner: Node = context.get("owner",context.get("caster")) as Node
+			return owner != null and float(context.get("amount",0.0)) >= 0.1*float(owner.get("max_health"))
+		"player_inside_area":
+			var area: Node2D = context.get("area") as Node2D
+			var owner: Node2D = context.get("caster") as Node2D
+			return area != null and owner != null and String(area.get("source_id")) == "divine_barrier_field" and owner.global_position.distance_squared_to(area.global_position) <= pow(float(context.get("radius",area.get("radius"))),2)
 		"origin_skill_type":
 			var origin: RefCounted = context.get("origin_skill_instance") as RefCounted
 			return origin != null and String(origin.get("skill_type")) == String(params.get("skill_type", ""))

@@ -180,7 +180,7 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 		"instant_area_hit", "damage_by_status_stack":
 			_scale_damage_params(params, skill_instance)
 			_scale_numeric_keys(params, skill_instance, ["power_scale_per_stack"], "damage")
-		"spawn_area", "create_explosion", "spawn_trap", "spawn_area_from_existing_area":
+		"combustion_explosion", "spawn_area", "create_explosion", "spawn_trap", "spawn_area_from_existing_area":
 			_scale_numeric_keys(params, skill_instance, ["radius", "radius_r", "collision_radius", "collision_radius_r", "area_radius", "area_radius_r", "pull_radius", "pull_radius_r"], "radius")
 			_scale_numeric_keys(params, skill_instance, ["duration"], "duration")
 			_scale_damage_params(params, skill_instance)

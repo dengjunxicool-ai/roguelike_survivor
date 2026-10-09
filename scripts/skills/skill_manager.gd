@@ -355,6 +355,8 @@ func get_passive_skills() -> Array:
 ## 作用：清空主动、被动、学习历史、主攻击和技能效果来源，并发变更信号。
 ## 使用：会发出对应变更信号。
 func clear_skills() -> void:
+	if get_tree() != null:
+		for skill: RefCounted in get_all_skills(): _clear_origin_runtime(get_tree().root, StringName(String(skill.get("skill_id"))))
 	var owner: Node = get_parent()
 	var store: Node = owner.get_node_or_null("ModifierStore") if owner != null else null
 	if store != null:
@@ -363,6 +365,10 @@ func clear_skills() -> void:
 	if bus != null and bus.has_method("reset_run_state"):
 		bus.call("reset_run_state")
 	if owner != null:
+		owner.set_meta("holy_guard_ready_at",0.0)
+		owner.set_meta("holy_guardians",[])
+		owner.set_meta("fire_passive_shield",0)
+		owner.set_meta("fire_passive_shield_expires_at",0.0)
 		owner.set_meta("ordinary_replacement_used", false)
 		owner.set_meta("core_offer_misses", 0)
 		owner.remove_meta("core_offer_level")

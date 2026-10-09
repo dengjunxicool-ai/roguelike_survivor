@@ -39,6 +39,7 @@ const MAX_TICK_HITS_PER_AREA_FRAME: int = 2
 @export var impact_target_damage_multiplier: float = 1.0
 
 var _age: float = 0.0
+var _area_step_second: int = 0
 var _tick_timer: float = 0.0
 var _visual_config: Dictionary = {}
 var _visual_mode: String = ""
@@ -240,6 +241,7 @@ func _apply_area_visual_params(params: Dictionary) -> void:
 ## 使用：支持扩圈参数，启用时初始radius取expand_from_radius。
 func _reset_area_runtime_state(params: Dictionary) -> void:
 	_age = 0.0
+	_area_step_second = 0
 	_tick_timer = 0.0
 	_damage_window_finished = false
 	_finished_by_damage = false
@@ -494,6 +496,12 @@ func _physics_process_profiled(delta: float) -> void:
 		return
 
 	_age += delta
+	# Advance the area contract before target budgets; it also runs with no enemies.
+	if source_id == &"divine_barrier_field" and event_bus != null:
+		var steps: int = floori(minf(_age, duration)+0.000001)
+		while _area_step_second < steps:
+			_area_step_second += 1
+			event_bus.emit_skill_event(&"area_step", {"area":self, "area_instance_id":get_instance_id(), "elapsed":float(_area_step_second), "origin_skill_id":damage_packet.get("origin_skill_id",damage_packet.get("source_skill_id",source_id)), "skill_instance":skill_instance, "skill_id":damage_packet.get("source_skill_id",source_id), "caster":caster, "owner":caster, "skill_manager":skill_manager, "position":global_position, "radius":radius})
 	if move_speed > 0.0 and move_direction.length_squared() > 0.0001:
 		global_position += move_direction * move_speed * delta
 	_update_expanding_radius()

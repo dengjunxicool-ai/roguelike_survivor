@@ -286,8 +286,8 @@ func update_skill_cycles() -> void:
 func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
 	_cycles.mark(target, context, duration, combat_seconds())
 
-func start_combustion(context: Dictionary) -> bool:
-	return _cycles.start(self, context)
+func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
+	return _cycles.start(self, context, params)
 
 func clear_origin(skill_id: StringName) -> void:
 	_cycles.clear_origin(skill_id)
