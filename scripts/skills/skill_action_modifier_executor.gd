@@ -36,21 +36,22 @@ func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
 	if str(params.get("stat", "")) == "status_dot_damage_taken_multiplier_add_per_stack" and params.get("scope", {}).get("status_id", "") == "burning":
 		return _add_status_damage_taken_modifier(&"burning", modifier, params, context)
 
-	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
-	if skill_instance != null:
-		var runtime_modifiers: Dictionary = {}
-		var runtime_variant: Variant = skill_instance.get("runtime_modifiers")
-		if runtime_variant is Dictionary or runtime_variant is Array:
-			runtime_modifiers = ModifierSourceScript.flatten(runtime_variant)
-		ModifierSourceScript.merge_flat_values(runtime_modifiers, ModifierSourceScript.flatten(modifier))
-		skill_instance.set("runtime_modifiers", runtime_modifiers)
+	var caster: Node = context.get("caster", context.get("owner")) as Node
+	var store: Node = caster.get_node_or_null("ModifierStore") if caster != null else null
+	if store == null:
+		return false
+	var skill: RefCounted = context.get("skill_instance") as RefCounted
+	var skill_id: String = String(skill.get("skill_id")) if skill != null else String(context.get("listener_skill_id", context.get("skill_id", "")))
+	var effect_id: String = String(params.get("effect_id", "%s_%s" % [params.get("stat", ""), params.get("op", "")]))
+	var source_id: String = "skill:%s:%s" % [skill_id, effect_id]
+	if bool(params.get("next_cast_only", false)):
+		store.call("set_cast_charge", source_id, float(params.get("value", 0.0)))
 		return true
-
-	var skill_manager: Node = context.get("skill_manager") as Node
-	if skill_manager != null and skill_manager.has_method("add_passive_modifier"):
-		skill_manager.call("add_passive_modifier", modifier)
-		return true
-	return false
+	var effect: Dictionary = params.duplicate(true)
+	for key: String in ["duration", "effect_id", "refresh_rule", "next_cast_only", "_skill_instance"]:
+		effect.erase(key)
+	store.call("set_timed_source", source_id, [effect], [&"skill", &"player", &"movement"], maxf(float(params.get("duration", 0.0)), 0.0), StringName(String(params.get("refresh_rule", "replace"))))
+	return true
 
 
 ## 作用：把目标状态相关承伤增量写入对应临时属性语义。

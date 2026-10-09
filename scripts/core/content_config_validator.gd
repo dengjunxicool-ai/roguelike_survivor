@@ -199,6 +199,8 @@ static func _validate_modifiers(value: Variant, where: String, schema: Dictionar
 				errors.append("%s.%s: must be a nonempty string" % [loc, field])
 		if not schema.modifier_operations.has(effect.get("op")):
 			errors.append("%s.op: unknown modifier operation" % loc)
+		if not schema.get("modifier_stats", []).has(effect.get("stat")):
+			errors.append("%s.stat: unknown modifier stat" % loc)
 		if _kind(effect.get("value")) != "number" or not is_finite(float(effect.get("value", INF))):
 			errors.append("%s.value: modifier value must be finite" % loc)
 		if not effect.get("scope") is Dictionary:

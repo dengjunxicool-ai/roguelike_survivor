@@ -1,5 +1,5 @@
 ## 文件用途：按技能类型、等级和稀有度提供伤害、范围、时长及间隔成长系数。
-## 使用方式：数值适配器调用 apply_to_number；核心技能和 tick 数值系数为 1，选项编排器传 RNG 抽取等级上限对应稀有度。
+## 使用方式：数值适配器调用 apply_to_number；核心技能与 tick 间隔不成长，tick 伤害按伤害成长；首次学习按配置抽取品质。
 extends RefCounted
 class_name SkillGrowthScaling
 
@@ -23,9 +23,9 @@ const TYPE_GROWTH: Dictionary = {
 }
 
 
-## 作用：根据技能类型、等级和稀有度计算成长，core 与 tick 数值保持系数一。
+## 作用：根据技能类型与等级计算成长，品质仅增强伤害或正向属性效果；core 与 tick 间隔保持系数一。
 ## 使用：skill_instance 为技能运行实例。
-static func stat_multiplier(skill_instance: RefCounted, stat_kind: String) -> float:
+static func stat_multiplier(skill_instance: RefCounted, stat_kind: String, allow_rarity: bool = true) -> float:
 	if skill_instance == null:
 		return 1.0
 	if _skill_type(skill_instance) == "core":
@@ -36,7 +36,7 @@ static func stat_multiplier(skill_instance: RefCounted, stat_kind: String) -> fl
 	var growth: Dictionary = _growth_for(skill_instance)
 	var level: int = maxi(int(skill_instance.get("current_level")), 1)
 	var per_level: float = float(growth.get(_growth_key(stat_kind), 0.0))
-	var rarity: float = rarity_multiplier(_string_or(skill_instance.get("current_rarity"), _definition_rarity(skill_instance))) if rarity_applies_to(stat_kind) else 1.0
+	var rarity: float = rarity_multiplier(_string_or(skill_instance.get("current_rarity"), _definition_rarity(skill_instance))) if allow_rarity and rarity_applies_to(stat_kind) else 1.0
 	if _is_reduction_stat(stat_kind):
 		return maxf(1.0 - per_level * float(level - 1), 0.35)
 	return maxf(1.0 + per_level * float(level - 1), 0.0) * rarity

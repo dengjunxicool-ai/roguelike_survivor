@@ -208,7 +208,11 @@ static func _effect_matches_query(effect: Dictionary, query: RefCounted = null) 
 		return true
 	if scope.has("domain") and not _domain_matches(String(scope.get("domain", "")), query):
 		return false
-	for key: String in ["skill_id", "source_origin_id", "damage_origin", "element", "object_type", "target_type", "status_id"]:
+	if String(scope.get("owner_has_shield", "")) == "true":
+		var owner: Node = query.get("owner") as Node
+		if owner == null or int(owner.get_meta("fire_passive_shield", 0)) <= 0:
+			return false
+	for key: String in ["skill_id", "skill_type", "source_origin_id", "damage_origin", "element", "object_type", "target_type", "status_id"]:
 		if scope.has(key) and not _scope_value_matches(scope.get(key), String(query.get(key))):
 			return false
 	if scope.has("tag") and not _tag_scope_matches(scope.get("tag"), query.get("tags")):

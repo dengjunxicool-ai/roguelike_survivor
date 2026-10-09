@@ -723,25 +723,73 @@
 							"type": "add_modifier",
 							"value": 0.3,
 							"duration": 5,
-							"stat": "cast_damage",
+							"stat": "damage",
 							"op": "multiplier_add",
-							"scope": {},
-							"source": "skill"
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast"
+							},
+							"source": "skill",
+							"effect_id": "cast_damage"
 						},
 						{
 							"type": "add_modifier",
 							"value": 0.15,
 							"duration": 5,
-							"stat": "cast_radius",
+							"stat": "radius",
 							"op": "multiplier_add",
-							"scope": {},
-							"source": "skill"
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast"
+							},
+							"source": "skill",
+							"effect_id": "cast_radius"
 						}
-					]
+					],
+					"cooldown_key": "overheated_casting"
+				},
+				{
+					"trigger": "player_health_crossed_below",
+					"cooldown": 12,
+					"conditions": [
+						{
+							"type": "target_has_tag",
+							"tag": "player"
+						}
+					],
+					"effects": [
+						{
+							"type": "add_modifier",
+							"value": 0.3,
+							"duration": 5,
+							"stat": "damage",
+							"op": "multiplier_add",
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast"
+							},
+							"source": "skill",
+							"effect_id": "cast_damage"
+						},
+						{
+							"type": "add_modifier",
+							"value": 0.15,
+							"duration": 5,
+							"stat": "radius",
+							"op": "multiplier_add",
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast"
+							},
+							"source": "skill",
+							"effect_id": "cast_radius"
+						}
+					],
+					"cooldown_key": "overheated_casting"
 				}
 			],
 			"effects": [],
-			"description": "受到伤害或生命值降低时，短时间提高技能类伤害和范围",
+			"description": "受到伤害或生命首次跌破35%时，cast伤害提高30%、范围提高15%，持续5秒；两个入口共享12秒冷却。",
 			"skill_type": "passive",
 			"slot_category": "passive"
 		},
@@ -2432,9 +2480,13 @@
 				{
 					"type": "add_modifier",
 					"value": -0.15,
-					"stat": "thunder_cooldown",
+					"stat": "cooldown",
 					"op": "multiplier_add",
-					"scope": {},
+					"scope": {
+						"domain": "skill",
+						"skill_type": "cast",
+						"tag": "thunder"
+					},
 					"source": "skill"
 				}
 			],
@@ -2528,16 +2580,22 @@
 							"duration": 4,
 							"stat": "attack_speed",
 							"op": "multiplier_add",
-							"scope": {},
+							"scope": {
+								"domain": "skill"
+							},
 							"source": "skill"
 						},
 						{
 							"type": "add_modifier",
 							"value": -0.1,
 							"duration": 4,
-							"stat": "thunder_cooldown",
+							"stat": "cooldown",
 							"op": "multiplier_add",
-							"scope": {},
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast",
+								"tag": "thunder"
+							},
 							"source": "skill"
 						}
 					]
@@ -3513,11 +3571,15 @@
 						{
 							"type": "add_modifier",
 							"value": 0.35,
-							"duration": 5,
-							"stat": "direct_damage",
+							"stat": "damage",
 							"op": "multiplier_add",
-							"scope": {},
-							"source": "skill"
+							"scope": {
+								"domain": "skill",
+								"skill_type": "cast"
+							},
+							"source": "skill",
+							"next_cast_only": true,
+							"effect_id": "next_cast"
 						}
 					]
 				}
@@ -4205,7 +4267,9 @@
 					"value": 0.15,
 					"stat": "holy_damage",
 					"op": "multiplier_add",
-					"scope": {},
+					"scope": {
+						"owner_has_shield": "true"
+					},
 					"source": "skill"
 				}
 			],
@@ -4248,16 +4312,26 @@
 							"type": "add_modifier",
 							"value": 0.2,
 							"duration": 4,
-							"stat": "direct_damage",
+							"stat": "damage",
 							"op": "multiplier_add",
-							"scope": {},
+							"scope": {
+								"domain": "skill",
+								"skill_type": [
+									"attack",
+									"dash",
+									"cast",
+									"summon",
+									"power",
+									"fusion"
+								]
+							},
 							"source": "skill"
 						}
 					]
 				}
 			],
 			"effects": [],
-			"description": "治疗和护盾溢出会转化为短时间伤害加成",
+			"description": "护盾溢出时，直接输出伤害提高20%，持续4秒；重复触发刷新持续时间。",
 			"skill_type": "passive",
 			"slot_category": "passive"
 		},
@@ -5322,7 +5396,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "cast_skill",
+					"trigger": "skill_cast_succeeded",
 					"counter_key": "chaos_echo_casts",
 					"threshold": 4,
 					"effects": [
