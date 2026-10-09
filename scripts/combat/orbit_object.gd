@@ -1,3 +1,5 @@
+## 文件用途：实现跟随拥有者旋转的战斗物，按目标冷却/总目标上限命中并支持敌方投射物靠近事件。
+## 使用方式：挂Area2D环绕场景，由CombatObjectFactory.create_orbit_object传owner、角度、伤害模板与事件上下文。
 extends Area2D
 class_name OrbitObject
 
@@ -35,6 +37,8 @@ var _visual_config: Dictionary = {}
 var _debug_last_attack_nonce: int = -1
 
 
+## 作用：配置半径、角速度、伤害、状态、时长、目标上限和来源/服务引用并应用视觉。
+## 使用：reset_hit_cooldowns可清目标冷却；不重置既有_unique_hit_ids或_age。
 func setup(params: Dictionary) -> void:
 	damage = maxi(int(params.get("damage", damage)), 0)
 	orbit_radius = maxf(float(params.get("orbit_radius", orbit_radius)), 1.0)
@@ -66,6 +70,8 @@ func setup(params: Dictionary) -> void:
 	_apply_visual_config(params)
 
 
+## 作用：拥有者失效/到期释放，否则更新环绕位置和冷却后处理靠近投射物与重叠目标。
+## 使用：debug模式只在攻击nonce变化时发起战斗处理。
 func _physics_process(delta: float) -> void:
 	if owner_node == null or not is_instance_valid(owner_node):
 		queue_free()
@@ -86,6 +92,8 @@ func _physics_process(delta: float) -> void:
 	_damage_overlapping_enemies()
 
 
+## 作用：逐目标扣冷却时间并统一移除到期项。
+## 使用：delta为秒，遍历时不直接删除键。
 func _update_hit_cooldowns(delta: float) -> void:
 	var ids_to_remove: Array[int] = []
 	for enemy_id_variant: Variant in _hit_cooldowns.keys():
@@ -100,11 +108,15 @@ func _update_hit_cooldowns(delta: float) -> void:
 		_hit_cooldowns.erase(enemy_id)
 
 
+## 作用：遍历Area2D重叠体并尝试处理每个目标。
+## 使用：目标组和冷却检查在_try_damage_body执行。
 func _damage_overlapping_enemies() -> void:
 	for body: Node2D in get_overlapping_bodies():
 		_try_damage_body(body)
 
 
+## 作用：按组、冷却和唯一目标上限检查，优先事件路径，否则受击再施加状态。
+## 使用：成功路径登记冷却和唯一命中；不直接扣生命。
 func _try_damage_body(body: Node) -> void:
 	if body == null or not body.is_in_group(target_group):
 		return
@@ -127,11 +139,15 @@ func _try_damage_body(body: Node) -> void:
 		_record_unique_hit(enemy_id)
 
 
+## 作用：将首次命中的实例ID追加到历史列表。
+## 使用：供max_targets限制总不同目标数，重复ID不增加。
 func _record_unique_hit(enemy_id: int) -> void:
 	if not _unique_hit_ids.has(enemy_id):
 		_unique_hit_ids.append(enemy_id)
 
 
+## 作用：用模板和环绕来源构造typed命中包。
+## 使用：仅模板非空时补owner攻击者，target可空，默认主攻击来源。
 func _get_damage_payload(target: Node = null) -> DamagePacket:
 	return DamagePacketBuilderScript.from_combat_object_hit_object({
 		"template": damage_packet,
@@ -148,6 +164,8 @@ func _get_damage_payload(target: Node = null) -> DamagePacket:
 	})
 
 
+## 作用：为非空模板补缺失的实例、来源类型与技能身份。
+## 使用：保留显式来源，持续命中复用节点实例ID。
 func _stabilize_damage_packet_source(default_source_type: String) -> void:
 	if damage_packet.is_empty():
 		return
@@ -163,6 +181,8 @@ func _stabilize_damage_packet_source(default_source_type: String) -> void:
 		damage_packet["source_origin_id"] = StringName("")
 
 
+## 作用：向技能总线同步发送环绕命中上下文。
+## 使用：返回true表示事件处理接管，调用方跳过直接伤害。
 func _emit_hit_event(body: Node) -> bool:
 	if event_bus == null or event_on_hit == &"" or not event_bus.has_method("emit_skill_event"):
 		return false
@@ -186,6 +206,8 @@ func _emit_hit_event(body: Node) -> bool:
 	return true
 
 
+## 作用：仅技能登记了对应trigger时扫描敌方投射物组并发近距事件。
+## 使用：距离以area_radius计算，两组索引按各自列表遍历。
 func _emit_nearby_enemy_projectile_events() -> void:
 	if event_bus == null or not event_bus.has_method("emit_skill_event"):
 		return
@@ -224,6 +246,8 @@ func _emit_nearby_enemy_projectile_events() -> void:
 			})
 
 
+## 作用：检查技能实例runtime_events是否含指定trigger。
+## 使用：技能/数组缺失返回false。
 func _skill_has_runtime_trigger(trigger: StringName) -> bool:
 	if skill_instance == null:
 		return false
@@ -240,6 +264,8 @@ func _skill_has_runtime_trigger(trigger: StringName) -> bool:
 	return false
 
 
+## 作用：对目标施加去重状态列表，优先apply_status带参数。
+## 使用：状态数组空时用status_on_hit回退。
 func _apply_status(body: Node) -> void:
 	if statuses_on_hit.is_empty() and status_on_hit != &"":
 		statuses_on_hit = [status_on_hit]
@@ -256,6 +282,8 @@ func _apply_status(body: Node) -> void:
 			body.call(&"add_status_effect", status_id)
 
 
+## 作用：设置圆形碰撞半径并按范围缩放静态sprite。
+## 使用：使用当前area_radius，不新建节点。
 func _apply_area_radius() -> void:
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape != null and collision_shape.shape is CircleShape2D:
@@ -267,6 +295,8 @@ func _apply_area_radius() -> void:
 		sprite.scale = Vector2.ONE * (area_radius / 64.0)
 
 
+## 作用：复制资源视觉并补默认缩放，播放loop或idle。
+## 使用：visual配置空不更新。
 func _apply_visual_config(params: Dictionary) -> void:
 	_visual_config = _get_dictionary(params.get("visual", {}))
 	if _visual_config.is_empty():
@@ -276,6 +306,8 @@ func _apply_visual_config(params: Dictionary) -> void:
 	VisualConfigApplierScript.play_state(self, _visual_config, "loop", "idle")
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回深复制，嵌套修改不会污染输入。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -284,6 +316,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：将状态数组转为去空去重的StringName列表，空列表可用单状态回退。
+## 使用：fallback_status在没有有效数组成员时追加。
 func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Array[StringName]:
 	var statuses: Array[StringName] = []
 	if value is Array:
@@ -299,11 +333,15 @@ func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Arr
 	return statuses
 
 
+## 作用：读取场景根debug_control_mode元数据开关。
+## 使用：无根返回false。
 func _is_debug_control_mode() -> bool:
 	var tree: SceneTree = get_tree()
 	return tree != null and tree.root != null and bool(tree.root.get_meta("debug_control_mode", false))
 
 
+## 作用：首次仅记录nonce，随后只在根攻击nonce变化时允许一次处理。
+## 使用：用于调试单击攻击，不影响正常模式。
 func _consume_debug_attack_nonce() -> bool:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null:
@@ -320,6 +358,8 @@ func _consume_debug_attack_nonce() -> bool:
 	return true
 
 
+## 作用：把上次nonce设为当前值减1，使下一更新可处理当前调试攻击。
+## 使用：无场景根无操作。
 func debug_allow_current_nonce() -> void:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null:

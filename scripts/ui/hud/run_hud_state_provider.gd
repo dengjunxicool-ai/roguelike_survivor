@@ -1,3 +1,6 @@
+## 文件用途：将局内快照与玩家/Boss/技能状态整理为 HUD 字典。
+## 使用方式：UIManager 周期调用 build(context)，结果只用于展示，不修改战斗数据。
+
 extends RefCounted
 class_name RunHudStateProvider
 
@@ -7,6 +10,8 @@ const MAX_HUD_ACTIVE_SKILLS: int = 5
 const MAX_HUD_PASSIVE_SKILLS: int = 3
 
 
+## 作用：整理上下文和配置为页面展示模型。
+## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；输入 context（上下文）；返回字典包含 run_seconds/run_duration/wave_index/wave_id/wave_remaining_seconds/wave_duration_seconds/wave_spawned_count/wave_total_count 等字段。
 func build(context: Dictionary) -> Dictionary:
 	var tree: SceneTree = context.get("tree", null) as SceneTree
 	var state: Dictionary = {
@@ -32,6 +37,8 @@ func build(context: Dictionary) -> Dictionary:
 	return state
 
 
+## 作用：补全来源玩家。
+## 使用：本文件由 build 调用；输入 state（状态）、player（玩家）。
 func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	if not is_instance_valid(player):
 		return
@@ -58,6 +65,8 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	state["skills"] = state["active_skills"]
 
 
+## 作用：构建Boss状态。
+## 使用：本文件由 build 调用；输入 tree（场景树）；返回字典包含 visible/max_health/health/name。
 func _build_boss_state(tree: SceneTree) -> Dictionary:
 	var boss: Node = _find_boss_enemy(tree)
 	if not is_instance_valid(boss):
@@ -73,6 +82,8 @@ func _build_boss_state(tree: SceneTree) -> Dictionary:
 	}
 
 
+## 作用：构建调试属性统计。
+## 使用：本文件由 build 调用；输入 tree（场景树）；返回字典包含 fps/enemy_count/projectile_count/pickup_count。
 func _build_debug_stats(tree: SceneTree) -> Dictionary:
 	if not OS.is_debug_build() or not is_instance_valid(tree):
 		return {}
@@ -84,6 +95,8 @@ func _build_debug_stats(tree: SceneTree) -> Dictionary:
 	}
 
 
+## 作用：获取起始技能等级，供当前模块后续逻辑使用。
+## 使用：本文件由 _enrich_from_player 调用；输入 player（玩家）；返回计算或读取的数值。
 func _get_starting_skill_level(player: Node) -> int:
 	if not is_instance_valid(player):
 		return 0
@@ -101,6 +114,8 @@ func _get_starting_skill_level(player: Node) -> int:
 	return int(skill_instance.get("current_level"))
 
 
+## 作用：构建技能槽位组。
+## 使用：本文件由 _enrich_from_player 调用；输入 player（玩家）、main_attack_id（主要攻击ID）；返回结果字典。
 func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary:
 	var active_slots: Array[Dictionary] = []
 	var passive_slots: Array[Dictionary] = []
@@ -139,6 +154,8 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 	return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
 
 
+## 作用：技能槽位结果。
+## 使用：本文件由 _build_skill_slots 调用；输入 primary_slot（主要槽位）、dash_slot（突进槽位）、active_slots（活跃槽位组）、passive_slots（passive槽位组）；返回字典包含 primary_skill/dash_skill/active_skills/passive_skills。
 func _skill_slot_result(primary_slot: Dictionary, dash_slot: Dictionary, active_slots: Array[Dictionary], passive_slots: Array[Dictionary]) -> Dictionary:
 	return {
 		"primary_skill": primary_slot,
@@ -148,6 +165,8 @@ func _skill_slot_result(primary_slot: Dictionary, dash_slot: Dictionary, active_
 	}
 
 
+## 作用：构建技能槽位。
+## 使用：本文件由 _build_skill_slots 调用；输入 player（玩家）、skill_instance（技能实例）；返回字典包含 id/display_name/level/cooldown_remaining/cooldown_total/icon/skill_type。
 func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 	var skill_id: String = _string_from_value(skill_instance.get("skill_id"))
 	var definition := skill_instance.get("definition") as RefCounted
@@ -169,6 +188,8 @@ func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 	}
 
 
+## 作用：判断主要技能，返回布尔判断结果。
+## 使用：本文件由 _build_skill_slots 调用；输入 skill_id（技能ID）、slot（槽位）、main_attack_id（主要攻击ID）。
 func _is_primary_skill(skill_id: String, slot: Dictionary, main_attack_id: String) -> bool:
 	if main_attack_id != "" and skill_id == main_attack_id:
 		return true
@@ -179,6 +200,8 @@ func _is_primary_skill(skill_id: String, slot: Dictionary, main_attack_id: Strin
 	return bool(skill_data.get("is_starting_skill", false))
 
 
+## 作用：解析技能展示名称，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_skill_slot 调用；输入 skill_id（技能ID）、definition（定义）；返回 String 文本/标识。
 func _resolve_skill_display_name(skill_id: String, definition: RefCounted) -> String:
 	if definition != null:
 		var display_name: String = _string_from_value(definition.get("display_name"))
@@ -188,6 +211,8 @@ func _resolve_skill_display_name(skill_id: String, definition: RefCounted) -> St
 	return String(skill_data.get("display_name", skill_id))
 
 
+## 作用：解析技能图标路径，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_skill_slot 调用；输入 skill_id（技能ID）、definition（定义）；返回 String 文本/标识。
 func _resolve_skill_icon_path(skill_id: String, definition: RefCounted) -> String:
 	if definition != null:
 		for key: String in ["icon", "texture", "background_texture"]:
@@ -212,6 +237,8 @@ func _resolve_skill_icon_path(skill_id: String, definition: RefCounted) -> Strin
 	return ""
 
 
+## 作用：解析技能冷却总量，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_skill_slot 调用；输入 definition（定义）；返回计算或读取的数值。
 func _resolve_skill_cooldown_total(definition: RefCounted) -> float:
 	if definition == null:
 		return 0.0
@@ -235,12 +262,16 @@ func _resolve_skill_cooldown_total(definition: RefCounted) -> float:
 	return maxf(float(base.get("cooldown", 0.0)), 0.0)
 
 
+## 作用：判断突进技能，返回布尔判断结果。
+## 使用：本文件由 _build_skill_slots、_build_skill_slot 调用；输入 skill_instance（技能实例）、definition（定义）。
 func _is_dash_skill(skill_instance: RefCounted, definition: RefCounted) -> bool:
 	if skill_instance != null and _string_from_value(skill_instance.get("skill_type")) == "dash":
 		return true
 	return definition != null and _string_from_value(definition.get("skill_type")) == "dash"
 
 
+## 作用：解析技能类型，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_skill_slot 调用；输入 skill_instance（技能实例）、definition（定义）；返回 String 文本/标识。
 func _resolve_skill_type(skill_instance: RefCounted, definition: RefCounted) -> String:
 	var instance_type: String = _string_from_value(skill_instance.get("skill_type")) if skill_instance != null else ""
 	if instance_type != "":
@@ -248,6 +279,8 @@ func _resolve_skill_type(skill_instance: RefCounted, definition: RefCounted) -> 
 	return _string_from_value(definition.get("skill_type")) if definition != null else ""
 
 
+## 作用：获取玩家浮点，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_skill_slot 调用；输入 player（玩家）、property_name（属性名称）、fallback（回退）；返回计算或读取的数值。
 func _get_player_float(player: Node, property_name: String, fallback: float = 0.0) -> float:
 	if not is_instance_valid(player):
 		return fallback
@@ -255,6 +288,8 @@ func _get_player_float(player: Node, property_name: String, fallback: float = 0.
 	return fallback if value == null else maxf(float(value), 0.0)
 
 
+## 作用：获取状态效果摘要，供当前模块后续逻辑使用。
+## 使用：本文件由 build 调用；输入 tree（场景树）；返回 String 文本/标识。
 func _get_status_summary(tree: SceneTree) -> String:
 	var enemy := _find_priority_enemy(tree)
 	if not is_instance_valid(enemy):
@@ -265,6 +300,8 @@ func _get_status_summary(tree: SceneTree) -> String:
 	return _format_count_dictionary(statuses)
 
 
+## 作用：查找Boss敌人，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_boss_state 调用；输入 tree（场景树）；返回 Node 对象/值。
 func _find_boss_enemy(tree: SceneTree) -> Node:
 	if not is_instance_valid(tree):
 		return null
@@ -276,6 +313,8 @@ func _find_boss_enemy(tree: SceneTree) -> Node:
 	return null
 
 
+## 作用：查找优先级敌人，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_status_summary 调用；输入 tree（场景树）；返回 Node 对象/值。
 func _find_priority_enemy(tree: SceneTree) -> Node:
 	if not is_instance_valid(tree):
 		return null
@@ -291,6 +330,8 @@ func _find_priority_enemy(tree: SceneTree) -> Node:
 	return fallback
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _get_status_summary、_find_priority_enemy 调用；输入 object（对象）、keys（keys）。
 func _get_dictionary(object: Object, keys: Array[String]) -> Dictionary:
 	for key: String in keys:
 		var value: Variant = object.get(key)
@@ -299,22 +340,30 @@ func _get_dictionary(object: Object, keys: Array[String]) -> Dictionary:
 	return {}
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _resolve_skill_icon_path、_resolve_skill_cooldown_total 调用；输入 value（值）。
 func _get_dictionary_from_value(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)
 	return {}
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _resolve_skill_cooldown_total 调用；输入 value（值）。
 func _get_array_from_value(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：字符串来源值，为界面/配置读取提供类型和回退处理。
+## 使用：本文件由 _build_skill_slots、_build_skill_slot、_resolve_skill_display_name 调用；输入 value（值）；返回 String 文本/标识。
 func _string_from_value(value: Variant) -> String:
 	return "" if value == null else String(value)
 
 
+## 作用：格式化数量字典。
+## 使用：本文件由 _get_status_summary 调用；输入 values（值列表）；返回 String 文本/标识。
 func _format_count_dictionary(values: Dictionary) -> String:
 	var parts: Array[String] = []
 	for key: Variant in values.keys():

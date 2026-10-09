@@ -1,3 +1,6 @@
+## 文件用途：集中声明各玩法 JSON 配置的 res:// 路径。
+## 使用方式：加载器和数据 owner 引用路径常量；新增数据域时在此登记。
+
 extends RefCounted
 class_name DataPaths
 

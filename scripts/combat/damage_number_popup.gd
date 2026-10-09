@@ -1,3 +1,5 @@
+## 文件用途：生成并池化伤害数字Label，按类型/元素着色并做上浮、漂移和淡出。
+## 使用方式：静态show(owner,amount,result,options)由玩家/敌人受击展示调用，Tween完成后回池。
 extends RefCounted
 class_name DamageNumberPopup
 
@@ -19,6 +21,8 @@ const COLOR_TRUE_DAMAGE: Color = Color(1.0, 1.0, 1.0, 1.0)
 const COLOR_INCOMING: Color = Color(1.0, 0.16, 0.18, 1.0)
 
 
+## 作用：取得父节点与Label池，重置样式、文本和偏移后创建动画；暴击扩大字号且省略前缀。
+## 使用：owner为位置来源，正amount才展示，options可控制字体/颜色/运动，结果不参与伤害计算。
 static func show(owner: Node2D, amount: int, damage_result: Dictionary = {}, options: Dictionary = {}) -> void:
 	if owner == null or amount <= 0:
 		return
@@ -59,11 +63,15 @@ static func show(owner: Node2D, amount: int, damage_result: Dictionary = {}, opt
 	tween.tween_property(label, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.set_parallel(false)
 	label.set_meta(&"damage_number_tween", tween)
+	## 作用：伤害数字动画结束时清理Label并回池或释放。
+	## 使用：Tween结束后调用，无参数，捕获本次label、pool_key和pool引用。
 	tween.tween_callback(func() -> void:
 		_release_label(label, pool_key, pool)
 	)
 
 
+## 作用：按玩家数字或普通数字池键获取Label，池缺失则直接创建挂父节点。
+## 使用：返回Label或null，不设置本次文本。
 static func _acquire_label(pool: Node, pool_key: StringName, parent: Node) -> Label:
 	if pool == null:
 		var fallback_label: Label = _create_label()
@@ -74,12 +82,16 @@ static func _acquire_label(pool: Node, pool_key: StringName, parent: Node) -> La
 	return pool.spawn(&"DamageNumber", Callable(DamageNumberPopup, "_create_label"), parent) as Label
 
 
+## 作用：创建忽略鼠标输入的Label。
+## 使用：作为对象池工厂，不挂父节点。
 static func _create_label() -> Label:
 	var label: Label = Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
+## 作用：杀死旧Tween并清样式状态，恢复显示、颜色、缩放和变换。
+## 使用：池复用时先调用，options可指定节点名。
 static func _reset_label(label: Label, options: Dictionary) -> void:
 	if label.has_meta(&"damage_number_tween"):
 		var tween_variant: Variant = label.get_meta(&"damage_number_tween")
@@ -97,6 +109,8 @@ static func _reset_label(label: Label, options: Dictionary) -> void:
 	label.size = Vector2.ZERO
 
 
+## 作用：清Tween元数据和文字/样式，存在池则回池，否则释放。
+## 使用：动画结束回调使用，先检查Label有效性。
 static func _release_label(label: Label, pool_key: StringName, pool: Node) -> void:
 	if label == null or not is_instance_valid(label):
 		return
@@ -111,6 +125,8 @@ static func _release_label(label: Label, pool_key: StringName, pool: Node) -> vo
 	pool.despawn(pool_key, label)
 
 
+## 作用：根据options.name区分PlayerDamageNumber与DamageNumber。
+## 使用：其余名称使用普通池键。
 static func _get_pool_key(options: Dictionary) -> StringName:
 	var configured_name: String = String(options.get("name", "DamageNumber"))
 	if configured_name == "PlayerDamageNumber":
@@ -118,6 +134,8 @@ static func _get_pool_key(options: Dictionary) -> StringName:
 	return &"DamageNumber"
 
 
+## 作用：优先用显式父节点，再用owner父节点/当前场景，最后owner自身。
+## 使用：返回可挂Label的节点。
 static func _get_popup_parent(owner: Node2D, options: Dictionary) -> Node:
 	var configured_parent: Node = options.get("parent") as Node
 	if configured_parent != null:
@@ -131,6 +149,8 @@ static func _get_popup_parent(owner: Node2D, options: Dictionary) -> Node:
 	return owner
 
 
+## 作用：从基础偏移和offset_index构造横向散布/竖向错层位置。
+## 使用：返回相对owner的Vector2，不修改节点。
 static func _get_start_position(options: Dictionary) -> Vector2:
 	var offset: Vector2 = Vector2(float(options.get("x", -38.0)), float(options.get("y", -78.0)))
 	var index: int = int(options.get("offset_index", 0))
@@ -139,6 +159,8 @@ static func _get_start_position(options: Dictionary) -> Vector2:
 	return offset
 
 
+## 作用：入伤优先红色，再按DOT/反应/陷阱/真伤类型及元素选颜色。
+## 使用：缺识别字段回退默认色。
 static func _get_damage_color(damage_result: Dictionary, options: Dictionary) -> Color:
 	if bool(options.get("incoming", false)):
 		return COLOR_INCOMING

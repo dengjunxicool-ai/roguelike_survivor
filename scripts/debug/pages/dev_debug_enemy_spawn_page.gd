@@ -1,13 +1,19 @@
+## 文件用途：构建敌人调试页，按配置生成敌人、覆写属性、切换强制状态并清理实体。
+## 使用方式：以 DevDebugPanel 宿主构造本页控制器；持有 WeakRef，宿主负责控件与回调装配，不能独立挂载到场景。
 extends RefCounted
 
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/enemy.tscn")
 
 var _host_ref: WeakRef
 
+## 作用：保存宿主弱引用，敌人页的控件与状态均由宿主持有。
+## 使用：创建页面控制器时传入 DevDebugPanel 宿主，保存弱引用。
 func _init(host: CanvasLayer) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：添加敌人类型、数量、血量、护甲、抗性和强制状态控件，并绑定宿主操作。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：page_root: VBoxContainer。
 func _build_enemy_spawn_page(page_root: VBoxContainer) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var enemy_spawn_page: VBoxContainer = host._add_category_page(page_root, "enemy_spawn", "Enemy Spawn")
@@ -28,6 +34,8 @@ func _build_enemy_spawn_page(page_root: VBoxContainer) -> void:
 	host._add_button(enemy_state_row, "Clear Enemy State", Callable(host, "_clear_enemy_state_override"), 148)
 
 
+## 作用：将 GameData 敌人池分成普通、精英和 Boss 选项，添加不可选组标题并选择首个可用项。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _populate_enemy_options() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._enemy_option.clear()
@@ -51,10 +59,14 @@ func _populate_enemy_options() -> void:
 	host._select_first_enabled_option(host._enemy_option)
 
 
+## 作用：读取 enemy_rank 作为选项分组标识，缺省为 normal。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：enemy: Dictionary。 返回 String；具体值及空输入行为见作用说明。
 func _get_enemy_option_group(enemy: Dictionary) -> String:
 	return String(enemy.get("enemy_rank", "normal"))
 
 
+## 作用：为非空敌人组添加禁用标题和带稳定 ID 的选项。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：group_label: String, enemies: Array[Dictionary]。
 func _add_enemy_group_options(group_label: String, enemies: Array[Dictionary]) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if enemies.is_empty():
@@ -66,6 +78,8 @@ func _add_enemy_group_options(group_label: String, enemies: Array[Dictionary]) -
 			host._add_option_item(host._enemy_option, host._display_name(enemy, id), id)
 
 
+## 作用：填充 Auto、Idle、Chase、Attack、Hurt、Death 强制状态选项并同步可用性。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _populate_enemy_state_options() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if host._enemy_state_option == null:
@@ -81,6 +95,8 @@ func _populate_enemy_state_options() -> void:
 	host._refresh_enemy_state_option_availability()
 
 
+## 作用：校验当前下拉状态，将强制状态写入宿主；Hurt/Death 仅在最近敌人为精英或 Boss 时允许。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _apply_enemy_state_override() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var state: String = String(host._get_selected_id(host._enemy_state_option))
@@ -96,6 +112,8 @@ func _apply_enemy_state_override() -> void:
 	host._log("Enemy forced state=%s." % ("auto" if state == "" else state))
 
 
+## 作用：清空强制状态元数据并把下拉选项恢复到 Auto。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _clear_enemy_state_override() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._set_enemy_state_override("")
@@ -103,6 +121,8 @@ func _clear_enemy_state_override() -> void:
 	host._log("Enemy forced state=auto.")
 
 
+## 作用：以玩家为圆心按输入数量生成所选敌人，应用面板属性，随后同步范围圈。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _spawn_configured_enemies() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node2D = host._get_player() as Node2D
@@ -126,6 +146,8 @@ func _spawn_configured_enemies() -> void:
 	host._log("Spawned %d x %s." % [spawned, String(enemy_id)])
 
 
+## 作用：遍历敌人配置池，各生成一个原始配置实体，环形摆放并标记 debug_spawn_all_types。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _spawn_all_enemy_types() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node2D = host._get_player() as Node2D
@@ -160,6 +182,8 @@ func _spawn_all_enemy_types() -> void:
 	host._log("Spawned %d enemy type(s)." % spawned)
 
 
+## 作用：实例化敌人场景，赋予 ID、位置和 debug_spawned 标记后挂到 spawn_parent；按开关覆写属性。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：enemy_id: StringName, position: Vector2, spawn_parent: Node, apply_panel_stats: bool。 返回 Node2D；具体值及空输入行为见作用说明。
 func _spawn_debug_enemy(enemy_id: StringName, position: Vector2, spawn_parent: Node, apply_panel_stats: bool) -> Node2D:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var enemy: Node2D = ENEMY_SCENE.instantiate() as Node2D
@@ -174,6 +198,8 @@ func _spawn_debug_enemy(enemy_id: StringName, position: Vector2, spawn_parent: N
 	return enemy
 
 
+## 作用：把 count 写入数量输入框后复用配置生成流程；数量至少为一。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：count: int。
 func _spawn_enemies(count: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if host._spawn_count_spin != null:
@@ -181,6 +207,8 @@ func _spawn_enemies(count: int) -> void:
 	host._spawn_configured_enemies()
 
 
+## 作用：取得距玩家最近的敌人，应用面板属性并打印结果。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _set_nearest_enemy_stats() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var enemy: Node = host._get_nearest_enemy()
@@ -191,6 +219,8 @@ func _set_nearest_enemy_stats() -> void:
 	host._log("Applied enemy stats to %s." % enemy.name)
 
 
+## 作用：以正数血量和护甲覆写敌人，按百分比统一各系抗性；发送 health_changed 刷新显示。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：enemy: Node。
 func _apply_enemy_panel_stats(enemy: Node) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var hp: int = roundi(float(host._enemy_health_spin.value))
@@ -218,6 +248,8 @@ func _apply_enemy_panel_stats(enemy: Node) -> void:
 		enemy.emit_signal(&"health_changed", int(enemy.get("current_health")), int(enemy.get("max_health")))
 
 
+## 作用：对 enemies 组全部实体 queue_free，清空范围圈索引并记录清理数量。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _clear_enemies() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var cleared: int = 0
@@ -228,6 +260,8 @@ func _clear_enemies() -> void:
 	host._log("Cleared %d enemies." % cleared)
 
 
+## 作用：按最近敌人分类启用或禁用 Hurt/Death 选项，不满足条件时撤销已有精英状态覆写。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _refresh_enemy_state_option_availability() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if host._enemy_state_option == null:
@@ -244,12 +278,16 @@ func _refresh_enemy_state_option_availability() -> void:
 		host._select_option_by_id(host._enemy_state_option, "")
 
 
+## 作用：判断最近敌人是否存在且支持精英专属状态。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 bool；具体值及空输入行为见作用说明。
 func _can_apply_elite_enemy_state_to_nearest() -> bool:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var enemy: Node = host._get_nearest_enemy()
 	return enemy != null and host._is_elite_state_debug_enemy(enemy)
 
 
+## 作用：根据 enemy_rank 元数据判断敌人是否为 elite 或 boss。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：enemy: Node。 返回 bool；具体值及空输入行为见作用说明。
 func _is_elite_state_debug_enemy(enemy: Node) -> bool:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if enemy == null:

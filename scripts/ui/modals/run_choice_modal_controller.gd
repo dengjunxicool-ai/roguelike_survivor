@@ -1,3 +1,6 @@
+## 文件用途：管理升级与奖励待办并构建、复用和绑定选择卡片。
+## 使用方式：先 setup 注入树与容器；reset_run 清理待办，refresh_* 打开对应选择，结果通过命令派发。
+
 extends RefCounted
 class_name RunChoiceModalController
 
@@ -45,6 +48,8 @@ var _choice_gap_spacers: Array[Control] = []
 var _choice_card_pools: Dictionary = {}
 
 
+## 作用：保存场景树、升级/诅咒/奖励选项容器并初始化独立随机流。
+## 使用：UI 页面构建完成后调用；tree 用于取得玩家，选项容器用于挂载和复用卡片。
 func setup(
 	tree: SceneTree,
 	level_up_options: BoxContainer,
@@ -58,6 +63,8 @@ func setup(
 	_rng.randomize()
 
 
+## 作用：提前创建升级与奖励卡片池并隐藏卡片。
+## 使用：setup 后调用，减少首次打开弹窗时的节点创建；不消费待办或应用选项。
 func prewarm_choice_card_pools() -> void:
 	_ensure_choice_card_pool(_level_up_options, LEVEL_UP_OPTION_COUNT)
 	_hide_choice_card_pool(_level_up_options)
@@ -65,30 +72,42 @@ func prewarm_choice_card_pools() -> void:
 	_hide_choice_card_pool(_reward_options)
 
 
+## 作用：清空本局待处理升级数量和奖励类型队列。
+## 使用：每次新局调用；保留已预热卡片池以供后续复用。
 func reset_run() -> void:
 	pending_level_up_count = 0
 	pending_reward_kinds.clear()
 
 
+## 作用：增加一个待处理升级并更新最近的玩家等级。
+## 使用：new_level 为升级信号给出的等级；先排队，进入升级状态后再生成选项。
 func add_pending_level(new_level: int) -> void:
 	pending_level_up_count += 1
 	pending_level = new_level
 
 
+## 作用：检查是否仍有待选择的升级次数。
+## 使用：返回 pending_level_up_count > 0，查询不会消费升级。
 func has_pending_level_up() -> bool:
 	return pending_level_up_count > 0
 
 
+## 作用：将非空奖励类型追加到待处理奖励队列。
+## 使用：reward_kind 通常为 elite 或 boss_blessing；不立即打开弹窗。
 func queue_reward(reward_kind: String) -> void:
 	if reward_kind == "":
 		return
 	pending_reward_kinds.append(reward_kind)
 
 
+## 作用：检查局内奖励类型队列是否非空。
+## 使用：供 ModalFlowController 查询下一个弹窗；不出队；返回是否满足条件或执行成功。
 func has_pending_reward() -> bool:
 	return not pending_reward_kinds.is_empty()
 
 
+## 作用：生成本次技能/升级候选并绑定升级卡片。
+## 使用：无可用选项时清空待办、隐藏卡片并延迟返回 RUNNING；有选项时等待玩家选择。
 func refresh_level_up_modal() -> void:
 	var options: Array[Dictionary] = _get_level_up_options_from_pool(LEVEL_UP_OPTION_COUNT)
 	if options.is_empty():
@@ -100,6 +119,8 @@ func refresh_level_up_modal() -> void:
 	_refresh_choice_card_modal(_level_up_options, options, STATE_RUNNING, true)
 
 
+## 作用：刷新诅咒选择弹窗。
+## 使用：供本模块调用者使用。
 func refresh_curse_choice_modal() -> void:
 	_clear_children(_curse_options)
 	for option: Dictionary in _pick_dictionary_items(GameData.get_curse_choice_pool(), 3):
@@ -107,6 +128,8 @@ func refresh_curse_choice_modal() -> void:
 
 
 
+## 作用：根据待处理奖励类型生成奖励候选并绑定卡片。
+## 使用：奖励实际应用在选择回调中完成；刷新本身不发放奖励。
 func refresh_reward_modal() -> void:
 	if pending_reward_kinds.is_empty():
 		_hide_choice_card_pool(_reward_options)
@@ -123,6 +146,8 @@ func refresh_reward_modal() -> void:
 	_refresh_choice_card_modal(_reward_options, options, STATE_RUNNING, false)
 
 
+## 作用：获取可用等级选项组，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；返回 Array[Dictionary] 列表。
 func _get_available_level_options() -> Array[Dictionary]:
 	var player: Node = _get_player()
 	if player != null:
@@ -131,6 +156,8 @@ func _get_available_level_options() -> Array[Dictionary]:
 	return []
 
 
+## 作用：获取升级选项组来源池，供当前模块后续逻辑使用。
+## 使用：本文件由 refresh_level_up_modal、_get_available_level_options 调用；输入 count（数量）；返回 Array[Dictionary] 列表。
 func _get_level_up_options_from_pool(count: int) -> Array[Dictionary]:
 	var player: Node = _get_player()
 	if player == null:
@@ -146,6 +173,8 @@ func _get_level_up_options_from_pool(count: int) -> Array[Dictionary]:
 	return options
 
 
+## 作用：升级选项转换字典。
+## 使用：本文件由 _get_level_up_options_from_pool 调用；输入 option_variant（选项变体）；返回结果字典。
 func _upgrade_option_to_dictionary(option_variant: Variant) -> Dictionary:
 	var option: RefCounted = option_variant as RefCounted
 	if option != null and option.has_method("to_dictionary"):
@@ -161,6 +190,8 @@ func _upgrade_option_to_dictionary(option_variant: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：添加升级选择按钮。
+## 使用：本文件由 refresh_curse_choice_modal 调用；输入 parent（父节点）、option（选项）、return_state（返回状态）、consumes_pending_level（consumes待处理等级）。
 func _add_upgrade_choice_button(parent: VBoxContainer, option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	var button: Button = _add_button(parent, "%s\n%s" % [
 		_get_option_title(option),
@@ -170,6 +201,8 @@ func _add_upgrade_choice_button(parent: VBoxContainer, option: Dictionary, retur
 	button.pressed.connect(Callable(self, "_select_upgrade_option").bind(option, return_state, consumes_pending_level))
 
 
+## 作用：添加升级选择卡片并配置节点/样式所需的属性。
+## 使用：内部辅助入口；输入 parent（父节点）、option（选项）、return_state（返回状态）、consumes_pending_level（consumes待处理等级）。
 func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	if _choice_card_buttons.is_empty():
 		_add_choice_edge_spacer(parent)
@@ -235,6 +268,8 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 	call_deferred("_update_choice_card_sizes", parent)
 
 
+## 作用：刷新选择卡片弹窗。
+## 使用：本文件由 refresh_level_up_modal、refresh_reward_modal 调用；输入 container（容器）、options（选项组）、return_state（返回状态）、consumes_pending_level（consumes待处理等级）。
 func _refresh_choice_card_modal(container: BoxContainer, options: Array[Dictionary], return_state: String, consumes_pending_level: bool) -> void:
 	if container == null:
 		return
@@ -251,6 +286,8 @@ func _refresh_choice_card_modal(container: BoxContainer, options: Array[Dictiona
 	call_deferred("_update_choice_card_sizes", container)
 
 
+## 作用：确保选择卡片池。
+## 使用：本文件由 prewarm_choice_card_pools、_refresh_choice_card_modal 调用；输入 container（容器）、count（数量）。
 func _ensure_choice_card_pool(container: BoxContainer, count: int) -> void:
 	if container == null:
 		return
@@ -281,6 +318,8 @@ func _ensure_choice_card_pool(container: BoxContainer, count: int) -> void:
 		container.resized.connect(resize_callable)
 
 
+## 作用：获取选择卡片池，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_choice_card_modal、_hide_choice_card_pool 调用；输入 container（容器）；返回 Array 列表。
 func _get_choice_card_pool(container: BoxContainer) -> Array:
 	if container == null:
 		return []
@@ -289,6 +328,8 @@ func _get_choice_card_pool(container: BoxContainer) -> Array:
 	return pool_data.get("slots", []) as Array
 
 
+## 作用：激活选择卡片池。
+## 使用：本文件由 _refresh_choice_card_modal 调用；输入 container（容器）。
 func _activate_choice_card_pool(container: BoxContainer) -> void:
 	var key: int = int(container.get_instance_id())
 	var pool_data: Dictionary = _get_dictionary(_choice_card_pools.get(key, {}))
@@ -306,12 +347,16 @@ func _activate_choice_card_pool(container: BoxContainer) -> void:
 		_choice_gap_spacers.append(spacer)
 
 
+## 作用：隐藏选择卡片池。
+## 使用：本文件由 prewarm_choice_card_pools、refresh_level_up_modal、refresh_reward_modal 调用；输入 container（容器）。
 func _hide_choice_card_pool(container: BoxContainer) -> void:
 	for slot_variant: Variant in _get_choice_card_pool(container):
 		if slot_variant is Dictionary:
 			_set_choice_card_slot_visible(slot_variant as Dictionary, false)
 
 
+## 作用：创建选择卡片槽位并配置节点/样式所需的属性。
+## 使用：本文件由 _ensure_choice_card_pool 调用；输入 parent（父节点）；返回字典包含 cell/button/background/title/icon/description/rarity/value_rows 等字段。
 func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
 	var label_start: int = _choice_card_labels.size()
 	var cell: CenterContainer = CenterContainer.new()
@@ -430,6 +475,8 @@ func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
 	}
 
 
+## 作用：创建卡片图标槽位并配置节点/样式所需的属性。
+## 使用：本文件由 _create_choice_card_slot 调用；输入 parent（父节点）；返回 Control 对象/值。
 func _create_card_icon_slot(parent: Node) -> Control:
 	var frame: Control = Control.new()
 	frame.name = "SkillCardIconFrame"
@@ -452,6 +499,8 @@ func _create_card_icon_slot(parent: Node) -> Control:
 	return frame
 
 
+## 作用：绑定选择卡片。
+## 使用：本文件由 _refresh_choice_card_modal 调用；输入 slot（槽位）、option（选项）、return_state（返回状态）、consumes_pending_level（consumes待处理等级）。
 func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	var button: Button = slot.get("button") as Button
 	if button == null:
@@ -484,6 +533,8 @@ func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: Strin
 	_set_choice_card_slot_visible(slot, true)
 
 
+## 作用：绑定值行列表。
+## 使用：本文件由 _bind_choice_card 调用；输入 slot（槽位）、option（选项）。
 func _bind_value_rows(slot: Dictionary, option: Dictionary) -> void:
 	var lines: Array[String] = _get_option_value_lines(option)
 	var rows: Array = slot.get("value_rows", []) as Array
@@ -509,6 +560,8 @@ func _bind_value_rows(slot: Dictionary, option: Dictionary) -> void:
 			icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
 
 
+## 作用：设置选择卡片槽位可见。
+## 使用：本文件由 _refresh_choice_card_modal、_hide_choice_card_pool、_bind_choice_card 调用；输入 slot（槽位）、visible（可见）。
 func _set_choice_card_slot_visible(slot: Dictionary, visible: bool) -> void:
 	var cell: Control = slot.get("cell") as Control
 	if cell != null:
@@ -518,6 +571,8 @@ func _set_choice_card_slot_visible(slot: Dictionary, visible: bool) -> void:
 		button.disabled = not visible
 
 
+## 作用：准备选择卡片布局。
+## 使用：本文件由 _refresh_choice_card_modal、_ensure_choice_card_pool 调用；输入 container（容器）。
 func _prepare_choice_card_layout(container: BoxContainer) -> void:
 	if container == null:
 		return
@@ -527,12 +582,16 @@ func _prepare_choice_card_layout(container: BoxContainer) -> void:
 	container.add_theme_constant_override("separation", 0)
 
 
+## 作用：完成选择卡片布局。
+## 使用：内部辅助入口；输入 parent（父节点）。
 func _finish_choice_card_layout(parent: BoxContainer) -> void:
 	if parent == null or _choice_card_buttons.is_empty():
 		return
 	_add_choice_edge_spacer(parent)
 
 
+## 作用：添加选择边缘占位并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card、_ensure_choice_card_pool、_finish_choice_card_layout 调用；输入 parent（父节点）。
 func _add_choice_edge_spacer(parent: BoxContainer) -> void:
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -541,6 +600,8 @@ func _add_choice_edge_spacer(parent: BoxContainer) -> void:
 	parent.add_child(spacer)
 
 
+## 作用：添加选择内侧间隔并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card、_ensure_choice_card_pool 调用；输入 parent（父节点）。
 func _add_choice_inner_gap(parent: BoxContainer) -> void:
 	var spacer: Control = Control.new()
 	spacer.custom_minimum_size = Vector2(CARD_INNER_GAP, 0)
@@ -550,6 +611,8 @@ func _add_choice_inner_gap(parent: BoxContainer) -> void:
 	_choice_gap_spacers.append(spacer)
 
 
+## 作用：添加卡片背景并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card 调用；输入 parent（父节点）、option（选项）。
 func _add_card_background(parent: Button, option: Dictionary) -> void:
 	var texture_path: String = _get_choice_card_background_texture(option)
 	var texture: Texture2D = _load_texture(texture_path)
@@ -565,6 +628,8 @@ func _add_card_background(parent: Button, option: Dictionary) -> void:
 	parent.add_child(texture_rect)
 
 
+## 作用：添加卡片图标并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card 调用；输入 parent（父节点）、option（选项）；返回 Control 对象/值。
 func _add_card_icon(parent: Node, option: Dictionary) -> Control:
 	var frame: Control = Control.new()
 	frame.name = "SkillCardIconFrame"
@@ -587,6 +652,8 @@ func _add_card_icon(parent: Node, option: Dictionary) -> Control:
 	return frame
 
 
+## 作用：添加卡片值行列表并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card 调用；输入 parent（父节点）、option（选项）；返回 VBoxContainer 对象/值。
 func _add_card_value_rows(parent: Node, option: Dictionary) -> VBoxContainer:
 	var values: VBoxContainer = VBoxContainer.new()
 	values.name = "SkillCardValues"
@@ -625,6 +692,8 @@ func _add_card_value_rows(parent: Node, option: Dictionary) -> VBoxContainer:
 	return values
 
 
+## 作用：获取选择卡片背景纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _bind_choice_card、_add_card_background 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_choice_card_background_texture(option: Dictionary) -> String:
 	for key: String in ["background_texture", "card_background_texture"]:
 		var option_path: String = String(option.get(key, ""))
@@ -634,6 +703,8 @@ func _get_choice_card_background_texture(option: Dictionary) -> String:
 	return UIThemeServiceScript.get_string(["choice_cards", "default_background_texture"], "")
 
 
+## 作用：添加卡片标签并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card、_create_choice_card_slot 调用；输入 parent（父节点）、text（文本）、font_size（字体尺寸）、vertical_alignment_value（verticalalignment值）；返回 Label 对象/值。
 func _add_card_label(parent: Node, text: String, font_size: int, vertical_alignment_value: VerticalAlignment) -> Label:
 	var label: Label = Label.new()
 	label.text = text
@@ -650,6 +721,8 @@ func _add_card_label(parent: Node, text: String, font_size: int, vertical_alignm
 	return label
 
 
+## 作用：添加值行标签并配置节点/样式所需的属性。
+## 使用：本文件由 _create_choice_card_slot、_add_card_value_rows 调用；输入 parent（父节点）、text（文本）、font_size（字体尺寸）、alignment（alignment）；返回 Label 对象/值。
 func _add_value_row_label(parent: Node, text: String, font_size: int, alignment: HorizontalAlignment) -> Label:
 	var label: Label = Label.new()
 	label.text = text
@@ -664,6 +737,8 @@ func _add_value_row_label(parent: Node, text: String, font_size: int, alignment:
 	return label
 
 
+## 作用：登记卡片标签。
+## 使用：本文件由 _add_card_label、_add_value_row_label 调用；输入 label（标签）、font_size（字体尺寸）、uses_line_spacing（是否使用行间距）。
 func _register_card_label(label: Label, font_size: int, uses_line_spacing: bool) -> void:
 	_choice_card_labels.append({
 		"label": label,
@@ -672,6 +747,8 @@ func _register_card_label(label: Label, font_size: int, uses_line_spacing: bool)
 	})
 
 
+## 作用：设置卡片槽位。
+## 使用：本文件由 _add_upgrade_choice_card、_create_choice_card_slot 调用；输入 control（控件）、left（left）、top（顶部）、right（right）、bottom（bottom）。
 func _set_card_slot(control: Control, left: float, top: float, right: float, bottom: float) -> void:
 	if control == null:
 		return
@@ -685,6 +762,8 @@ func _set_card_slot(control: Control, left: float, top: float, right: float, bot
 	control.offset_bottom = 0.0
 
 
+## 作用：更新选择卡片尺寸组。
+## 使用：本文件由 _add_upgrade_choice_card、_refresh_choice_card_modal、_ensure_choice_card_pool 调用；输入 container（容器）。
 func _update_choice_card_sizes(container: BoxContainer) -> void:
 	if container == null:
 		return
@@ -724,6 +803,8 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 			label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(scaled_font_size))
 
 
+## 作用：创建卡片样式并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_card、_create_choice_card_slot 调用；返回 StyleBoxFlat 对象/值。
 func _create_card_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color.TRANSPARENT
@@ -742,14 +823,20 @@ func _create_card_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：获取行间距对应字体尺寸，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_upgrade_choice_card、_create_choice_card_slot、_add_card_label 调用；输入 font_size（字体尺寸）；返回计算或读取的数值。
 func _get_line_spacing_for_font_size(font_size: int) -> int:
 	return ceili(float(font_size) * maxf(CARD_TEXT_LINE_HEIGHT_MULTIPLIER - 1.0, 0.0))
 
 
+## 作用：加载纹理。
+## 使用：本文件由 _create_choice_card_slot、_bind_choice_card、_bind_value_rows 调用；输入 path（路径）；返回 Texture2D 对象/值。
 func _load_texture(path: String) -> Texture2D:
 	return UIThemeServiceScript.load_texture(path)
 
 
+## 作用：派发选中卡片的命令、消费对应升级或奖励待办并请求返回状态。
+## 使用：option 为候选字典；实际效果通过 UICommandDispatcher 执行，避免卡片直接改战斗数据。
 func _select_upgrade_option(option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	var player: Node = _get_player()
 	var command_result_variant: Variant = _command_dispatcher.call("dispatch", UICommandScript.apply_choice_option(option), {
@@ -769,6 +856,8 @@ func _select_upgrade_option(option: Dictionary, return_state: String, consumes_p
 	transition_requested.emit(return_state)
 
 
+## 作用：添加选择按钮。
+## 使用：内部辅助入口；输入 parent（父节点）、option（选项）、return_state（返回状态）。
 func _add_choice_button(parent: VBoxContainer, option: Dictionary, return_state: String) -> void:
 	var button: Button = _add_button(parent, "%s\n%s" % [
 		_get_option_title(option),
@@ -778,20 +867,28 @@ func _add_choice_button(parent: VBoxContainer, option: Dictionary, return_state:
 	button.pressed.connect(Callable(self, "_emit_transition").bind(return_state))
 
 
+## 作用：发出转移并衔接对应的事件处理流程。
+## 使用：本文件由 refresh_level_up_modal、refresh_reward_modal、_add_choice_button 调用；输入 state（状态）。
 func _emit_transition(state: String) -> void:
 	transition_requested.emit(state)
 
 
+## 作用：获取选项标题，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_upgrade_choice_button、_add_upgrade_choice_card、_bind_choice_card 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_title(option: Dictionary) -> String:
 	if option.has("display_name"):
 		return String(option.get("display_name", "选项"))
 	return String(option.get("title", option.get("id", "选项")))
 
 
+## 作用：获取选项局外文本，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 option（选项）；返回 String 文本/标识。
 func _get_option_meta_text(option: Dictionary) -> String:
 	return _get_option_rarity_text(option)
 
 
+## 作用：获取选项稀有度文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_upgrade_choice_card、_bind_choice_card、_get_option_meta_text 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_rarity_text(option: Dictionary) -> String:
 	var rarity: String = _string_from_variant(option.get("rarity", "common")).to_lower()
 	match rarity:
@@ -807,6 +904,8 @@ func _get_option_rarity_text(option: Dictionary) -> String:
 			return rarity
 
 
+## 作用：获取选项描述文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _add_upgrade_choice_card、_bind_choice_card、_get_option_effect_text 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_description_text(option: Dictionary) -> String:
 	var description: String = _string_from_variant(option.get("description", ""))
 	if description != "":
@@ -818,11 +917,15 @@ func _get_option_description_text(option: Dictionary) -> String:
 	return _string_from_variant(skill.get("description", ""))
 
 
+## 作用：获取选项效果文本，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_option_value_lines 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_effect_text(option: Dictionary) -> String:
 	var summary: String = _string_from_variant(SkillEffectSummaryBuilderScript.build_for_option(option))
 	return summary if summary != "" else _get_option_description_text(option)
 
 
+## 作用：获取选项值行列表，供当前模块后续逻辑使用。
+## 使用：本文件由 _bind_value_rows、_add_card_value_rows 调用；输入 option（选项）；返回 Array[String] 列表。
 func _get_option_value_lines(option: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	for line: String in _get_option_effect_text(option).split("\n", false):
@@ -832,6 +935,8 @@ func _get_option_value_lines(option: Dictionary) -> Array[String]:
 	return _prioritize_card_value_lines(lines)
 
 
+## 作用：优先排序卡片值行列表。
+## 使用：本文件由 _get_option_value_lines 调用；输入 lines（行列表）；返回 Array[String] 列表。
 func _prioritize_card_value_lines(lines: Array[String]) -> Array[String]:
 	var picked: Array[String] = []
 	var before_damage_pick: int = picked.size()
@@ -848,6 +953,8 @@ func _prioritize_card_value_lines(lines: Array[String]) -> Array[String]:
 	return picked
 
 
+## 作用：选择首个匹配值行，供当前模块后续逻辑使用。
+## 使用：本文件由 _prioritize_card_value_lines 调用；输入 lines（行列表）、picked（picked）、tokens（tokens）。
 func _pick_first_matching_value_line(lines: Array[String], picked: Array[String], tokens: Array[String]) -> void:
 	if picked.size() >= SKILL_CARD_MAX_VALUE_ROWS:
 		return
@@ -860,6 +967,8 @@ func _pick_first_matching_value_line(lines: Array[String], picked: Array[String]
 				return
 
 
+## 作用：拆分值行。
+## 使用：本文件由 _bind_value_rows、_add_card_value_rows 调用；输入 line（行）；返回字典包含 name/value。
 func _split_value_line(line: String) -> Dictionary:
 	var status_parts: PackedStringArray = line.strip_edges().split(" ", false)
 	if status_parts.size() >= 3 and status_parts[0] == "施加":
@@ -884,6 +993,8 @@ func _split_value_line(line: String) -> Dictionary:
 	}
 
 
+## 作用：清理值名称。
+## 使用：本文件由 _split_value_line 调用；输入 name（名称）；返回 String 文本/标识。
 func _clean_value_name(name: String) -> String:
 	if name.contains("攻击伤害") or name == "伤害":
 		return "伤害"
@@ -896,6 +1007,8 @@ func _clean_value_name(name: String) -> String:
 	return name
 
 
+## 作用：获取选项图标纹理，供当前模块后续逻辑使用。
+## 使用：本文件由 _bind_choice_card、_add_card_icon 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_icon_texture(option: Dictionary) -> String:
 	var option_path: String = _first_texture_path(option)
 	if option_path != "":
@@ -910,6 +1023,8 @@ func _get_option_icon_texture(option: Dictionary) -> String:
 	return DEFAULT_SKILL_CARD_ICON_TEXTURE
 
 
+## 作用：获取选项技能ID，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_option_description_text、_get_option_icon_texture 调用；输入 option（选项）；返回 StringName 文本/标识。
 func _get_option_skill_id(option: Dictionary) -> StringName:
 	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
 	for key: String in ["learn_skill_id", "skill_id"]:
@@ -927,6 +1042,8 @@ func _get_option_skill_id(option: Dictionary) -> StringName:
 	return &""
 
 
+## 作用：首个纹理路径。
+## 使用：本文件由 _get_option_icon_texture 调用；输入 definition（定义）；返回 String 文本/标识。
 func _first_texture_path(definition: Dictionary) -> String:
 	for key: String in ["icon", "icon_texture", "texture"]:
 		var path: String = _string_from_variant(definition.get(key, ""))
@@ -940,6 +1057,8 @@ func _first_texture_path(definition: Dictionary) -> String:
 	return ""
 
 
+## 作用：选择字典条目，供当前模块后续逻辑使用。
+## 使用：本文件由 refresh_curse_choice_modal 调用；输入 source（来源）、count（数量）；返回 Array[Dictionary] 列表。
 func _pick_dictionary_items(source: Array[Dictionary], count: int) -> Array[Dictionary]:
 	var picked: Array[Dictionary] = []
 	var pool: Array = source.duplicate()
@@ -953,12 +1072,16 @@ func _pick_dictionary_items(source: Array[Dictionary], count: int) -> Array[Dict
 	return picked
 
 
+## 作用：获取玩家，供当前模块后续逻辑使用。
+## 使用：本文件由 refresh_reward_modal、_get_available_level_options、_get_level_up_options_from_pool 调用；返回 Node 对象/值。
 func _get_player() -> Node:
 	if _tree == null:
 		return null
 	return _tree.get_first_node_in_group(&"player")
 
 
+## 作用：从容器移除子节点并请求释放，供重建列表使用。
+## 使用：本文件由 refresh_curse_choice_modal 调用；输入 node（节点）。
 func _clear_children(node: Node) -> void:
 	if node == null:
 		return
@@ -966,6 +1089,8 @@ func _clear_children(node: Node) -> void:
 		child.queue_free()
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _get_choice_card_pool、_activate_choice_card_pool、_select_upgrade_option 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -973,12 +1098,16 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：字符串来源变体，为界面/配置读取提供类型和回退处理。
+## 使用：本文件由 _get_option_rarity_text、_get_option_description_text、_get_option_effect_text 调用；输入 value（值）；返回 String 文本/标识。
 func _string_from_variant(value: Variant) -> String:
 	if value == null:
 		return ""
 	return str(value)
 
 
+## 作用：获取字符串数组，为界面/配置读取提供类型和回退处理。
+## 使用：传入配置或 Variant；返回符合本函数声明的字符串视图；输入 value（值）。
 func _get_string_array(value: Variant) -> Array[String]:
 	var result: Array[String] = []
 	if value is Array:
@@ -987,6 +1116,8 @@ func _get_string_array(value: Variant) -> Array[String]:
 	return result
 
 
+## 作用：添加按钮并配置节点/样式所需的属性。
+## 使用：本文件由 _add_upgrade_choice_button、_add_choice_button 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	var button: Button = Button.new()
 	button.text = text

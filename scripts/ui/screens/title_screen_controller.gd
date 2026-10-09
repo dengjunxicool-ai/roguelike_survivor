@@ -1,3 +1,6 @@
+## 文件用途：构建标题背景、标题文字、操作菜单并适配视口。
+## 使用方式：build 创建根控件，reset 隐藏初始菜单，handle_input/reveal_actions 响应入口操作。
+
 extends RefCounted
 class_name TitleScreenController
 
@@ -46,6 +49,8 @@ var _menu_title_label: Label
 var _footer_label: Label
 
 
+## 作用：构建标题背景、标题文字、操作菜单并适配视口。
+## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；返回 Control 对象/值。
 func build() -> Control:
 	_screen = Control.new()
 	_screen.name = "TITLE"
@@ -61,6 +66,8 @@ func build() -> Control:
 	return _screen
 
 
+## 作用：重置。
+## 使用：供本模块调用者使用。
 func reset() -> void:
 	actions_revealed = false
 	if _prompt_label != null:
@@ -69,6 +76,8 @@ func reset() -> void:
 		_action_menu.visible = false
 
 
+## 作用：处理输入。
+## 使用：供本模块调用者使用；输入 event（事件）。
 func handle_input(event: InputEvent) -> void:
 	if actions_revealed:
 		return
@@ -80,6 +89,8 @@ func handle_input(event: InputEvent) -> void:
 		reveal_actions()
 
 
+## 作用：显形动作列表。
+## 使用：本文件由 handle_input 调用。
 func reveal_actions() -> void:
 	actions_revealed = true
 	if _prompt_label != null:
@@ -88,6 +99,8 @@ func reveal_actions() -> void:
 		_action_menu.visible = true
 
 
+## 作用：更新布局。
+## 使用：本文件由 build 调用；输入 viewport_size（视口尺寸）。
 func update_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
@@ -100,6 +113,8 @@ func update_layout(viewport_size: Vector2) -> void:
 	_update_footer_layout(viewport_size, compact, ui_scale)
 
 
+## 作用：构建背景并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）。
 func _build_background(parent: Control) -> void:
 	var base: ColorRect = ColorRect.new()
 	base.name = "BackgroundBase"
@@ -116,6 +131,8 @@ func _build_background(parent: Control) -> void:
 	parent.add_child(background)
 
 
+## 作用：构建标题叠层并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）。
 func _build_title_stack(parent: Control) -> void:
 	_title_panel = PanelContainer.new()
 	_title_panel.name = "TitlePanel"
@@ -177,6 +194,8 @@ func _build_title_stack(parent: Control) -> void:
 	_prompt_label.add_theme_constant_override("shadow_offset_y", 2)
 
 
+## 作用：构建动作菜单并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）。
 func _build_action_menu(parent: Control) -> void:
 	_action_menu = PanelContainer.new()
 	_action_menu.name = "ActionMenu"
@@ -220,6 +239,8 @@ func _build_action_menu(parent: Control) -> void:
 	_action_menu.visible = false
 
 
+## 作用：构建页脚并配置节点/样式所需的属性。
+## 使用：本文件由 build 调用；输入 parent（父节点）。
 func _build_footer(parent: Control) -> void:
 	_footer_label = Label.new()
 	_footer_label.name = "FooterLabel"
@@ -235,6 +256,8 @@ func _build_footer(parent: Control) -> void:
 	parent.add_child(_footer_label)
 
 
+## 作用：添加菜单按钮并配置节点/样式所需的属性。
+## 使用：本文件由 _build_action_menu 调用；输入 text（文本）、callable（callable）、enabled（启用）、tooltip（tooltip）。
 func _add_menu_button(text: String, callable: Callable, enabled: bool = true, tooltip: String = "") -> void:
 	var button: Button = Button.new()
 	button.text = text
@@ -249,6 +272,8 @@ func _add_menu_button(text: String, callable: Callable, enabled: bool = true, to
 	_action_list.add_child(button)
 
 
+## 作用：更新标题布局。
+## 使用：本文件由 update_layout 调用；输入 viewport_size（视口尺寸）、compact（紧凑）、ui_scale（UI缩放）。
 func _update_title_layout(viewport_size: Vector2, compact: bool, ui_scale: float) -> void:
 	if _title_panel == null:
 		return
@@ -277,6 +302,8 @@ func _update_title_layout(viewport_size: Vector2, compact: bool, ui_scale: float
 	_title_accent.custom_minimum_size = Vector2(maxf(260.0 * ui_scale, 190.0), maxf(3.0 * ui_scale, 2.0))
 
 
+## 作用：更新菜单布局。
+## 使用：本文件由 update_layout 调用；输入 viewport_size（视口尺寸）、compact（紧凑）、ui_scale（UI缩放）。
 func _update_menu_layout(viewport_size: Vector2, compact: bool, ui_scale: float) -> void:
 	if _action_menu == null:
 		return
@@ -311,6 +338,8 @@ func _update_menu_layout(viewport_size: Vector2, compact: bool, ui_scale: float)
 			button.add_theme_font_size_override("font_size", maxi(14, roundi(17.0 * ui_scale)))
 
 
+## 作用：更新页脚布局。
+## 使用：本文件由 update_layout 调用；输入 viewport_size（视口尺寸）、compact（紧凑）、ui_scale（UI缩放）。
 func _update_footer_layout(viewport_size: Vector2, compact: bool, ui_scale: float) -> void:
 	if _footer_label == null:
 		return
@@ -322,6 +351,8 @@ func _update_footer_layout(viewport_size: Vector2, compact: bool, ui_scale: floa
 	_set_label_font_size(_footer_label, maxi(11, roundi(13.0 * ui_scale)))
 
 
+## 作用：应用菜单按钮样式。
+## 使用：本文件由 _add_menu_button 调用；输入 button（按钮）。
 func _apply_menu_button_style(button: Button) -> void:
 	button.add_theme_color_override("font_color", Color(0.93, 0.88, 0.76, 1.0))
 	button.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.60, 1.0))
@@ -335,6 +366,8 @@ func _apply_menu_button_style(button: Button) -> void:
 	button.add_theme_stylebox_override("disabled", _create_button_style(Color(0.035, 0.038, 0.044, 0.62), Color(0.30, 0.30, 0.30, 0.44), 0))
 
 
+## 作用：创建菜单面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _build_action_menu 调用；返回 StyleBoxFlat 对象/值。
 func _create_menu_panel_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.030, 0.033, 0.041, 0.84)
@@ -351,6 +384,8 @@ func _create_menu_panel_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：创建标题面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _build_title_stack 调用；返回 StyleBoxFlat 对象/值。
 func _create_title_panel_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.055, 0.044, 0.032, 0.68)
@@ -367,6 +402,8 @@ func _create_title_panel_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：创建按钮样式并配置节点/样式所需的属性。
+## 使用：本文件由 _apply_menu_button_style 调用；输入 bg_color（bg颜色）、border_color（border颜色）、shadow_size（阴影尺寸）；返回 StyleBoxFlat 对象/值。
 func _create_button_style(bg_color: Color, border_color: Color, shadow_size: int) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = bg_color
@@ -383,6 +420,8 @@ func _create_button_style(bg_color: Color, border_color: Color, shadow_size: int
 	return style
 
 
+## 作用：加载背景纹理。
+## 使用：本文件由 _build_background 调用；返回 Texture2D 对象/值。
 func _load_background_texture() -> Texture2D:
 	var texture: Texture2D = load(TITLE_BACKGROUND_PATH) as Texture2D
 	if texture != null:
@@ -393,6 +432,8 @@ func _load_background_texture() -> Texture2D:
 	return load(MAP_FALLBACK_BACKGROUND_PATH) as Texture2D
 
 
+## 作用：设置控件矩形。
+## 使用：本文件由 _update_title_layout、_update_menu_layout、_update_footer_layout 调用；输入 control（控件）、rect（矩形）。
 func _set_control_rect(control: Control, rect: Rect2) -> void:
 	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	control.offset_left = rect.position.x
@@ -402,12 +443,16 @@ func _set_control_rect(control: Control, rect: Rect2) -> void:
 	control.custom_minimum_size = rect.size
 
 
+## 作用：获取布局视口尺寸，供当前模块后续逻辑使用。
+## 使用：本文件由 update_layout 调用；输入 viewport_size（视口尺寸）；返回 Vector2 对象/值。
 func _get_layout_viewport_size(viewport_size: Vector2) -> Vector2:
 	if viewport_size.x < MIN_LAYOUT_VIEWPORT_SIZE.x or viewport_size.y < MIN_LAYOUT_VIEWPORT_SIZE.y:
 		return DESIGN_VIEWPORT_SIZE
 	return viewport_size
 
 
+## 作用：获取UI字体，供当前模块后续逻辑使用。
+## 使用：本文件由 _build_footer、_add_menu_button、_add_label 调用；返回 Font 对象/值。
 func _get_ui_font() -> Font:
 	if _ui_font != null:
 		return _ui_font
@@ -417,6 +462,8 @@ func _get_ui_font() -> Font:
 	return _ui_font
 
 
+## 作用：设置标签字体尺寸。
+## 使用：本文件由 _build_title_stack、_build_action_menu、_build_footer 调用；输入 label（标签）、font_size（字体尺寸）。
 func _set_label_font_size(label: Label, font_size: int) -> void:
 	if label == null:
 		return
@@ -424,14 +471,20 @@ func _set_label_font_size(label: Label, font_size: int) -> void:
 	label.custom_minimum_size.y = ceilf(float(font_size) * 1.24)
 
 
+## 作用：发出状态并衔接对应的事件处理流程。
+## 使用：本文件由 _build_action_menu 调用；输入 state（状态）。
 func _emit_state(state: String) -> void:
 	state_requested.emit(state)
 
 
+## 作用：发出退出并衔接对应的事件处理流程。
+## 使用：本文件由 _build_action_menu 调用。
 func _emit_quit() -> void:
 	quit_requested.emit()
 
 
+## 作用：添加标签并配置节点/样式所需的属性。
+## 使用：本文件由 _build_title_stack、_build_action_menu 调用；输入 parent（父节点）、text（文本）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String) -> Label:
 	var label: Label = Label.new()
 	label.text = text
@@ -444,5 +497,7 @@ func _add_label(parent: Node, text: String) -> Label:
 	return label
 
 
+## 作用：本地化。
+## 使用：本文件由 _build_title_stack、_build_action_menu 调用；输入 key（键）、fallback（回退）；返回 String 文本/标识。
 func _tr(key: String, fallback: String) -> String:
 	return LocalizationServiceScript.translate(key, {}, fallback)

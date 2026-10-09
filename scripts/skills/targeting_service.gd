@@ -1,3 +1,5 @@
+## 文件用途：提供有效敌人筛选及距离、血量、状态、密度、随机等目标选择策略。
+## 使用方式：静态 find_target/find_targets 传施法者、模式和参数；敌人策略过滤死亡、待显形与活动视口之外目标，自体模式直接返回施法者。
 extends RefCounted
 class_name TargetingService
 
@@ -6,6 +8,8 @@ const ENEMY_GROUP: StringName = &"enemies"
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
 
+## 作用：按选择模式取得目标列表并返回首个 Node2D，无候选返回 null。
+## 使用：caster 为施法者节点；mode 为目标选择模式；params 为动作或状态参数；无法解析或创建时返回 null。
 static func find_target(caster: Node, mode: String, params: Dictionary = {}) -> Node2D:
 	var targets: Array = find_targets(caster, mode, params)
 	if targets.is_empty():
@@ -14,6 +18,8 @@ static func find_target(caster: Node, mode: String, params: Dictionary = {}) -> 
 	return targets[0] as Node2D
 
 
+## 作用：按模式分派自体、最近、强敌、血量、状态、密度或随机目标查询。
+## 使用：caster 为施法者节点；mode 为目标选择模式；params 为动作或状态参数；无匹配项时返回空数组。
 static func find_targets(caster: Node, mode: String, params: Dictionary = {}) -> Array:
 	var caster_node: Node2D = caster as Node2D
 	match mode:
@@ -64,6 +70,8 @@ static func find_targets(caster: Node, mode: String, params: Dictionary = {}) ->
 			return []
 
 
+## 作用：在范围内优先近期造成玩家伤害的敌人，否则按距离及 Boss 核心强敌加权选目标。
+## 使用：caster 为施法者节点；params 读取 range/radius；无法解析或创建时返回 null。
 static func _find_nearest_enemy(caster: Node2D, params: Dictionary) -> Node2D:
 	if caster == null:
 		return null
@@ -105,12 +113,16 @@ static func _find_nearest_enemy(caster: Node2D, params: Dictionary) -> Node2D:
 	return nearest_enemy
 
 
+## 作用：查询施法者对目标的近期受伤优先级，缺入口返回零。
+## 使用：caster 为施法者节点；enemy 为目标敌人。
 static func _get_recent_damage_priority(caster: Node2D, enemy: Node2D) -> float:
 	if caster == null or not caster.has_method("get_recent_enemy_damage_priority"):
 		return 0.0
 	return float(caster.call("get_recent_enemy_damage_priority", enemy))
 
 
+## 作用：在可选范围内按当前生命选目标，Boss 核心得到额外高优先级。
+## 使用：params 读取 range/origin。
 static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
 	var max_range: float = float(params.get("range", INF))
 	var origin: Node2D = params.get("origin") as Node2D
@@ -134,6 +146,8 @@ static func _find_highest_hp_enemy(params: Dictionary) -> Node2D:
 	return best_enemy
 
 
+## 作用：优先选择范围内最近强敌，无强敌时回退最高血量目标。
+## 使用：caster 为施法者节点；params 读取 range/origin。
 static func _find_nearest_elite_or_highest_hp(caster: Node2D, params: Dictionary) -> Node2D:
 	var max_range: float = float(params.get("range", INF))
 	var origin: Node2D = params.get("origin") as Node2D
@@ -155,6 +169,8 @@ static func _find_nearest_elite_or_highest_hp(caster: Node2D, params: Dictionary
 	return _find_highest_hp_enemy(params)
 
 
+## 作用：选周围敌人数最多的中心目标，同密度取最近，优先状态额外加权。
+## 使用：caster 为施法者节点；params 读取 range/origin/cluster_radius/radius。
 static func _find_densest_enemy_cluster_center(caster: Node2D, params: Dictionary) -> Node2D:
 	var max_range: float = float(params.get("range", INF))
 	var origin: Node2D = params.get("origin") as Node2D
@@ -179,12 +195,16 @@ static func _find_densest_enemy_cluster_center(caster: Node2D, params: Dictionar
 	return best_enemy
 
 
+## 作用：在范围候选中把带指定状态者排前，同组按距离选最近。
+## 使用：caster 为施法者节点；params 为动作或状态参数；status_id 为标准状态 ID；无法解析或创建时返回 null。
 static func _find_status_first_nearest(caster: Node2D, params: Dictionary, status_id: StringName) -> Node2D:
 	if caster == null:
 		return null
 	var candidates: Array = _find_enemies_around(caster, params)
 	if candidates.is_empty():
 		return null
+	## 作用：状态优先目标比较器：有指定状态的目标优先，同组按施法者距离升序。
+	## 使用：由 sort_custom 调用；读取捕获的 status_id 与 caster，返回 a 是否排在 b 前。
 	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
 		var a_has_status: bool = _has_any_status(a, [status_id])
 		var b_has_status: bool = _has_any_status(b, [status_id])
@@ -195,12 +215,16 @@ static func _find_status_first_nearest(caster: Node2D, params: Dictionary, statu
 	return candidates[0] as Node2D
 
 
+## 作用：优先范围内不带指定状态的目标，同组按距离选最近。
+## 使用：caster 为施法者节点；params 为动作或状态参数；status_id 为标准状态 ID；无法解析或创建时返回 null。
 static func _find_missing_status_first_nearest(caster: Node2D, params: Dictionary, status_id: StringName) -> Node2D:
 	if caster == null:
 		return null
 	var candidates: Array = _find_enemies_around(caster, params)
 	if candidates.is_empty():
 		return null
+	## 作用：缺状态优先比较器：未带指定状态的目标优先，同组按距离升序。
+	## 使用：由 sort_custom 调用；读取 status_id 与 caster，返回 a 是否排在 b 前。
 	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
 		var a_missing_status: bool = not _has_any_status(a, [status_id])
 		var b_missing_status: bool = not _has_any_status(b, [status_id])
@@ -211,12 +235,16 @@ static func _find_missing_status_first_nearest(caster: Node2D, params: Dictionar
 	return candidates[0] as Node2D
 
 
+## 作用：把范围目标按指定状态层数降序、距离升序排列，并按 count 截取。
+## 使用：caster 为施法者节点；params 读取 count；status_id 为标准状态 ID；无匹配项时返回空数组。
 static func _find_status_stack_highest(caster: Node2D, params: Dictionary, status_id: StringName) -> Array:
 	if caster == null:
 		return []
 	var candidates: Array = _find_enemies_around(caster, params)
 	if candidates.is_empty():
 		return []
+	## 作用：叠层优先比较器：指定状态层数较多者优先，同层数按距离升序。
+	## 使用：由 sort_custom 调用；读取 status_id 与 caster，返回 a 是否排在 b 前。
 	candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
 		var a_stacks: int = _get_status_stack(a, status_id)
 		var b_stacks: int = _get_status_stack(b, status_id)
@@ -230,17 +258,23 @@ static func _find_status_stack_highest(caster: Node2D, params: Dictionary, statu
 	return candidates
 
 
+## 作用：复制选择参数并增加 priority_status，供密度策略加权。
+## 使用：params 为动作或状态参数；status_id 为标准状态 ID。
 static func _with_status_priority(params: Dictionary, status_id: StringName) -> Dictionary:
 	var copy: Dictionary = params.duplicate(true)
 	copy["priority_status"] = status_id
 	return copy
 
 
+## 作用：筛出可选范围目标后使用全局随机流抽一名敌人。
+## 使用：params 读取 range/origin；无法解析或创建时返回 null。
 static func _find_random_enemy(params: Dictionary) -> Node2D:
 	var enemies: Array = _get_valid_enemies()
 	var max_range: float = float(params.get("range", INF))
 	var origin: Node2D = params.get("origin") as Node2D
 	if origin != null and max_range < INF:
+		## 作用：随机目标范围过滤器：只保留 origin 到目标距离不超过 max_range 的敌人。
+		## 使用：Array.filter 为每个候选调用；读取 origin 与 max_range，返回是否保留目标。
 		enemies = enemies.filter(func(enemy: Node2D) -> bool:
 			return origin.global_position.distance_squared_to(enemy.global_position) <= max_range * max_range
 		)
@@ -251,6 +285,8 @@ static func _find_random_enemy(params: Dictionary) -> Node2D:
 	return enemies[randi() % enemies.size()] as Node2D
 
 
+## 作用：查询圆心范围目标并随机洗牌，按 count 截取。
+## 使用：caster 为施法者节点；params 读取 count。
 static func _find_random_enemies_around(caster: Node2D, params: Dictionary) -> Array:
 	var enemies: Array = _find_enemies_around(caster, params)
 	enemies.shuffle()
@@ -262,6 +298,8 @@ static func _find_random_enemies_around(caster: Node2D, params: Dictionary) -> A
 	return enemies.slice(0, count)
 
 
+## 作用：从有效敌人中筛选施法者给定半径内目标。
+## 使用：caster 为施法者节点；params 读取 radius/range；无匹配项时返回空数组。
 static func _find_enemies_around(caster: Node2D, params: Dictionary) -> Array:
 	if caster == null:
 		return []
@@ -276,6 +314,8 @@ static func _find_enemies_around(caster: Node2D, params: Dictionary) -> Array:
 	return enemies
 
 
+## 作用：从战斗目标注册表查询 enemies，并过滤释放、死亡、显形与视口条件。
+## 使用：由本文件 _find_nearest_enemy/_find_highest_hp_enemy 调用。
 static func _get_valid_enemies() -> Array:
 	var enemies: Array = []
 	var registry: Node = CombatTargetRegistryScript.get_or_create(null)
@@ -288,10 +328,14 @@ static func _get_valid_enemies() -> Array:
 	return enemies
 
 
+## 作用：对外提供目标存活、显形和视口有效性判断。
+## 使用：enemy 为目标敌人。
 static func is_valid_target(enemy: Node2D) -> bool:
 	return _is_valid_enemy(enemy)
 
 
+## 作用：过滤空引用、待释放、待显形、死亡或不在活动相机视口中的敌人。
+## 使用：enemy 为目标敌人；返回布尔判断或执行是否成功。
 static func _is_valid_enemy(enemy: Node2D) -> bool:
 	if enemy == null or not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 		return false
@@ -315,6 +359,8 @@ static func _is_valid_enemy(enemy: Node2D) -> bool:
 	return true
 
 
+## 作用：把敌人全局位置投到活动相机可视区域，并按视口范围判断。
+## 使用：enemy 为目标敌人；返回布尔判断或执行是否成功。
 static func _is_enemy_inside_active_camera_view(enemy: Node2D) -> bool:
 	if enemy == null:
 		return false
@@ -342,6 +388,8 @@ static func _is_enemy_inside_active_camera_view(enemy: Node2D) -> bool:
 	return world_rect.has_point(enemy.global_position)
 
 
+## 作用：读取目标当前生命数值，供最高血量策略使用。
+## 使用：enemy 为目标敌人。
 static func _get_enemy_health(enemy: Node2D) -> int:
 	var current_health_variant: Variant = enemy.get("current_health")
 	if current_health_variant != null:
@@ -354,6 +402,8 @@ static func _get_enemy_health(enemy: Node2D) -> int:
 	return 0
 
 
+## 作用：统计给定位置半径内有效敌人数量，用于密度评分。
+## 使用：radius 为世界坐标半径。
 static func _nearby_enemy_count(center: Vector2, radius: float) -> int:
 	var radius_squared: float = radius * radius
 	var count: int = 0
@@ -367,6 +417,8 @@ static func _nearby_enemy_count(center: Vector2, radius: float) -> int:
 	return count
 
 
+## 作用：检查目标是否带列表内任一非空状态。
+## 使用：enemy 为目标敌人；返回布尔判断或执行是否成功。
 static func _has_any_status(enemy: Node, statuses: Array[StringName]) -> bool:
 	if enemy == null or not enemy.has_method("has_status"):
 		return false
@@ -376,6 +428,8 @@ static func _has_any_status(enemy: Node, statuses: Array[StringName]) -> bool:
 	return false
 
 
+## 作用：读取目标指定状态层数，缺查询接口时返回零。
+## 使用：enemy 为目标敌人；status_id 为标准状态 ID。
 static func _get_status_stack(enemy: Node, status_id: StringName) -> int:
 	if enemy == null or status_id == &"":
 		return 0
@@ -387,16 +441,22 @@ static func _get_status_stack(enemy: Node, status_id: StringName) -> int:
 	return 1 if _has_any_status(enemy, [status_id]) else 0
 
 
+## 作用：判断 enemy_rank 是否属于精英、Boss 或 Boss 核心。
+## 使用：enemy 为目标敌人。
 static func _is_strong_enemy(enemy: Node) -> bool:
 	var rank: String = str(enemy.get_meta("enemy_rank", ""))
 	return rank == "elite" or rank == "boss" or rank == "boss_core"
 
 
+## 作用：取得敌人护甲数值，供目标选择规则使用。
+## 使用：enemy 为目标敌人。
 static func _get_enemy_armor(enemy: Node) -> int:
 	var value: Variant = enemy.get("armor")
 	return int(value) if value != null else 0
 
 
+## 作用：检查敌人是否位于施法者二百二十像素内；当前实现只比较距离，不做遮挡或方向判定。
+## 使用：caster 为施法者节点；enemy 为目标敌人；返回布尔判断或执行是否成功。
 static func _is_between_player_and_enemy(caster: Node, enemy: Node2D) -> bool:
 	var caster_node: Node2D = caster as Node2D
 	if caster_node == null:

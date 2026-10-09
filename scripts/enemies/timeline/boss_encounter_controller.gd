@@ -1,3 +1,6 @@
+## 文件用途：处理 Boss 出场事件和 Boss 随从生成。
+## 使用方式：setup 注入 spawner；时间线按对应事件调用 Boss 和随从入口。
+
 extends RefCounted
 class_name BossEncounterController
 
@@ -7,10 +10,14 @@ const EnemySpawnRequestScript: Script = preload("res://scripts/enemies/spawning/
 var _owner: Node
 
 
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node) -> void:
 	_owner = owner
 
 
+## 作用：更新Boss事件。
+## 使用：供本模块调用者使用。
 func process_boss_event() -> void:
 	if _owner == null:
 		return
@@ -43,6 +50,8 @@ func process_boss_event() -> void:
 	_owner.emit_signal(&"timeline_event_started", "boss:%s" % String(enemy_id), String(boss_event.get("announcement", "")))
 
 
+## 作用：更新Boss随从生成。
+## 使用：供本模块调用者使用；输入 delta（delta）。
 func process_boss_minion_spawn(delta: float) -> void:
 	if _owner == null:
 		return
@@ -64,6 +73,8 @@ func process_boss_minion_spawn(delta: float) -> void:
 	_owner.set("_boss_minion_spawn_cooldown", maxf(float(minion_spawn.get("spawn_interval", _owner.get("_spawn_batch_interval"))), 0.05))
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 process_boss_minion_spawn 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value

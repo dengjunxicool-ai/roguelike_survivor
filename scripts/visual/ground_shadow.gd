@@ -1,3 +1,5 @@
+## 文件用途：为二维角色复用或创建32边椭圆地面阴影。
+## 使用方式：静态ensure传owner与半径/压扁/偏移/透明度；阴影作为GroundShadow子节点置于角色后方。
 extends RefCounted
 class_name GroundShadow
 
@@ -5,6 +7,8 @@ class_name GroundShadow
 const SHADOW_NODE_NAME: String = "GroundShadow"
 
 
+## 作用：复用同名Polygon2D或创建阴影并配置；同名异类型节点警告并拒绝。
+## 使用：owner不能为空，返回阴影节点或null。
 static func ensure(owner: Node2D, radius: float = 22.0, flatten: float = 0.36, offset: Vector2 = Vector2(0.0, 16.0), alpha: float = 0.42) -> Polygon2D:
 	if owner == null:
 		return null
@@ -26,6 +30,8 @@ static func ensure(owner: Node2D, radius: float = 22.0, flatten: float = 0.36, o
 	return shadow
 
 
+## 作用：生成椭圆顶点并设置位置、黑色透明度和背后层级。
+## 使用：radius至少1，flatten限制0.08至1，alpha限制0至1。
 static func _configure(shadow: Polygon2D, radius: float, flatten: float, offset: Vector2, alpha: float) -> void:
 	var safe_radius: float = maxf(radius, 1.0)
 	var safe_flatten: float = clampf(flatten, 0.08, 1.0)

@@ -1,3 +1,5 @@
+## 文件用途：连接技能订阅者、配置事件动作、拥有技能触发规则和火系被动运行时。
+## 使用方式：subscribe 绑定外部监听器，emit_skill_event 提供 context；执行适配动作时保留特殊规则处理顺序。
 extends Node
 class_name SkillEventBus
 
@@ -15,6 +17,8 @@ var _action_executor: RefCounted = SkillActionExecutorScript.new()
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 
 
+## 作用：按事件名登记回调，已登记的同一 Callable 不重复添加。
+## 使用：event_name 为统一技能事件名；listener 为订阅回调。
 func subscribe(event_name: StringName, listener: Callable) -> void:
 	if not _listeners.has(event_name):
 		_listeners[event_name] = []
@@ -25,6 +29,8 @@ func subscribe(event_name: StringName, listener: Callable) -> void:
 		_listeners[event_name] = listeners
 
 
+## 作用：仅把 on_cast 转为角色特性施法事件，其余技能事件忽略。
+## 使用：event_name 为统一技能事件名。
 func emit_skill_event(event_name: StringName, event_context: Dictionary = {}) -> Array:
 	var context: Dictionary = DamageTraceContextScript.normalize_event_context(event_context, get_tree().root if get_tree() != null else null)
 	context["event_name"] = event_name
@@ -50,6 +56,8 @@ func emit_skill_event(event_name: StringName, event_context: Dictionary = {}) ->
 	return results
 
 
+## 作用：从上下文或施法者解析技能管理器后运行拥有的火系被动。
+## 使用：event_name 为统一技能事件名；context 携带 skill_manager/caster。
 func _execute_fire_passive_runtime(event_name: StringName, context: Dictionary) -> void:
 	var skill_manager: Node = context.get("skill_manager") as Node
 	if skill_manager == null:
@@ -61,6 +69,8 @@ func _execute_fire_passive_runtime(event_name: StringName, context: Dictionary) 
 	FireSkillRuntimeScript.execute_passive_event(event_name, context, skill_manager, _action_executor)
 
 
+## 作用：先执行来源技能的定义与运行事件，再检查其余拥有技能的触发规则。
+## 使用：event_name 为统一技能事件名；context 携带 skill_instance。
 func _execute_skill_events(event_name: StringName, context: Dictionary) -> void:
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
 	if skill_instance != null:
@@ -70,12 +80,16 @@ func _execute_skill_events(event_name: StringName, context: Dictionary) -> void:
 	_execute_owned_trigger_rule_events(event_name, context, skill_instance)
 
 
+## 作用：归一追踪上下文后执行已适配动作列表。
+## 使用：actions 为依次执行的动作列表。
 func execute_adapted_actions(actions: Array, event_context: Dictionary = {}) -> void:
 	var context: Dictionary = DamageTraceContextScript.normalize_event_context(event_context, get_tree().root if get_tree() != null else null)
 	context["event_bus"] = self
 	_action_executor.call("execute_actions", actions, context)
 
 
+## 作用：按事件名、条件、计数和冷却筛选事件动作并执行。
+## 使用：event_name 为统一技能事件名；context 携带 source_id；skill_instance 为技能运行实例。
 func _execute_event_list(event_name: StringName, context: Dictionary, skill_instance: RefCounted, events: Array) -> void:
 	if skill_instance == null:
 		return
@@ -105,6 +119,8 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 		_action_executor.call("execute_actions", actions, event_context)
 
 
+## 作用：遍历拥有技能，把匹配当前事件的触发规则适配并执行。
+## 使用：event_name 为统一技能事件名；context 携带 skill_manager/caster。
 func _execute_owned_trigger_rule_events(event_name: StringName, context: Dictionary, skipped_skill_instance: RefCounted = null) -> void:
 	var skill_manager: Node = context.get("skill_manager") as Node
 	if skill_manager == null:
@@ -123,6 +139,8 @@ func _execute_owned_trigger_rule_events(event_name: StringName, context: Diction
 		_execute_event_list(event_name, context, skill_instance, SkillTriggerRuleAdapterScript.to_events(skill_instance, definition))
 
 
+## 作用：合并定义事件、实例运行事件和触发规则适配事件。
+## 使用：skill_instance 为技能运行实例；definition 为技能定义。
 func _get_skill_events(skill_instance: RefCounted, definition: RefCounted) -> Array:
 	var events: Array = []
 	var definition_events_variant: Variant = definition.get("events")
@@ -137,6 +155,8 @@ func _get_skill_events(skill_instance: RefCounted, definition: RefCounted) -> Ar
 	return events
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 _execute_event_list 调用；无匹配项时返回空数组。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

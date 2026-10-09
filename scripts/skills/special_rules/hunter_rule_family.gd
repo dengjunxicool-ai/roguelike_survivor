@@ -1,3 +1,5 @@
+## 文件用途：实现猎手飞刀、弓箭、标记、流血、回收及陷阱特殊规则。
+## 使用方式：宿主按投射物、陷阱命中或击杀调用；同目标窗口、来源冷却和 Boss 条件在族内校验。
 extends RefCounted
 
 const ReactionLimiterScript: Script = preload("res://scripts/combat/reaction_limiter.gd")
@@ -23,15 +25,21 @@ static var _decoy_trap_spawn_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：在陷阱伤害路径应用猎手标记与 Boss 核心相关加成。
+## 使用：packet 为待修饰伤害包视图；rules 为当前技能有效规则；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_trap_damage_packet_modifiers(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_hunter_trap_damage_bonus(packet, rules, target)
 
 
+## 作用：按周期施放计数触发额外飞刀投射。
+## 使用：rules 读取 extra_knife_every_n_casts；context 携带 skill_instance；需由仍存活的宿主创建并调度。
 func _prepare_extra_knife_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("extra_knife_every_n_casts"):
@@ -46,6 +54,8 @@ func _prepare_extra_knife_cast(rules: Dictionary, context: Dictionary) -> void:
 		SpecialDamageRuleHandlerScript.execute_extra_knife_throw(rules, context, host._get_skill_damage(context))
 
 
+## 作用：更新风步属性并预备风步双箭与周期云箭标记。
+## 使用：rules 读取 windstep_double_arrow/cloud_arrow_every_n_casts；context 携带 skill_instance；写入 hunter_cloud_arrow_active 元数据；需由仍存活的宿主创建并调度。
 func _prepare_hunter_bow_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var skill_instance: RefCounted = context.get("skill_instance") as RefCounted
@@ -72,6 +82,8 @@ func _prepare_hunter_bow_cast(rules: Dictionary, context: Dictionary) -> void:
 	host._set_dynamic_runtime_modifier(skill_instance, "hunter_cloud_arrow", "pierce_override", pierce_override_value)
 
 
+## 作用：按既定顺序执行飞刀标记、创伤回收与弓箭爆炸分裂等命中规则。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_hunter_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_execution_mark_on_strong_target(rules, context)
@@ -87,6 +99,8 @@ func _apply_hunter_projectile_hit_rules(rules: Dictionary, context: Dictionary) 
 	host._apply_eagle_shot_on_boss_mark_hits(rules, context)
 
 
+## 作用：依次执行猎手陷阱标记、伤害和控制规则。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _on_trap_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_hunter_trap_hit_rules(rules, context)
@@ -94,11 +108,15 @@ func _on_trap_hit(rules: Dictionary, context: Dictionary) -> void:
 	host._apply_trap_control_hit_rules(rules, context)
 
 
+## 作用：在陷阱命中时处理强敌猎物标记。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_hunter_trap_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_prey_mark_on_strong_trap_hit(rules, context)
 
 
+## 作用：在陷阱命中时顺序处理 Boss 核心增伤、爆炸及小陷阱。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_trap_damage_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_boss_core_trap_bonus_damage(rules, context)
@@ -106,18 +124,24 @@ func _apply_trap_damage_hit_rules(rules: Dictionary, context: Dictionary) -> voi
 	host._apply_small_trap_on_trigger(rules, context)
 
 
+## 作用：在陷阱命中时处理锁链定身及钳击反应。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_trap_control_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_chain_trap_root_on_hit(rules, context)
 	host._apply_pincer_reaction_on_root(rules, context)
 
 
+## 作用：陷阱到期时处理火油烟云和诱饵陷阱爆炸。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _on_trap_expired(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_smoke_cloud_on_oil_expire(rules, context)
 	host._execute_decoy_trap_expired(rules, context)
 
 
+## 作用：依据诱饵到期爆炸规则转入特殊伤害服务。
+## 使用：rules 读取 decoy_trap_explosion；context 携带 area；需由仍存活的宿主创建并调度。
 func _execute_decoy_trap_expired(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("decoy_trap_explosion"):
@@ -128,6 +152,8 @@ func _execute_decoy_trap_expired(rules: Dictionary, context: Dictionary) -> void
 	SpecialDamageRuleHandlerScript.execute_decoy_trap_explosion(rules, context)
 
 
+## 作用：击杀时更新下一刀增伤、普通怪飞刀回收、标记爆炸及陷阱碎片领域。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_hunter_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_next_knife_kill_bonus(rules, context)
@@ -136,6 +162,8 @@ func _apply_hunter_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> v
 	host._apply_trap_kill_fragment_field(rules, context)
 
 
+## 作用：对强敌命中写入飞刀处决标记供暴击收益使用。
+## 使用：rules 读取 execution_mark_on_strong_target；context 携带 target；写入 throwing_knife_execution_mark 元数据；需由仍存活的宿主创建并调度。
 func _apply_execution_mark_on_strong_target(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("execution_mark_on_strong_target"):
@@ -151,6 +179,8 @@ func _apply_execution_mark_on_strong_target(rules: Dictionary, context: Dictiona
 		target.set_meta("throwing_knife_execution_mark", true)
 
 
+## 作用：Boss 血量低于规则门槛且冷却允许时触发处决爆发。
+## 使用：rules 读取 boss_low_hp_execution_burst；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_boss_low_hp_execution_burst(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("boss_low_hp_execution_burst"):
@@ -168,6 +198,8 @@ func _apply_boss_low_hp_execution_burst(rules: Dictionary, context: Dictionary) 
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.execution_burst_intents(rules, context, maxi(int(rule.get("amount", 22)), 0)))
 
 
+## 作用：飞刀命中在冷却允许时按创伤调整规则施加 wound。
+## 使用：rules 读取 wound_on_throwing_knife_hit/wound_tuning；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_wound_on_throwing_knife_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("wound_on_throwing_knife_hit"):
@@ -190,6 +222,8 @@ func _apply_wound_on_throwing_knife_hit(rules: Dictionary, context: Dictionary) 
 	})
 
 
+## 作用：暴击命中带创伤目标时按冷却施加流血。
+## 使用：rules 读取 bleed_on_crit_wound；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_bleed_on_crit_wound(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("bleed_on_crit_wound") or not host._is_critical_hit_context(context):
@@ -211,6 +245,8 @@ func _apply_bleed_on_crit_wound(rules: Dictionary, context: Dictionary) -> void:
 	})
 
 
+## 作用：目标满创伤暴击命中在冷却允许时触发撕裂伤害。
+## 使用：rules 读取 rupture_on_full_wound_crit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_rupture_on_full_wound_crit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("rupture_on_full_wound_crit") or not host._is_critical_hit_context(context):
@@ -228,6 +264,8 @@ func _apply_rupture_on_full_wound_crit(rules: Dictionary, context: Dictionary) -
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.rupture_on_full_wound_crit_intents(rules, context, maxi(int(rule.get("amount", 18)), 0)))
 
 
+## 作用：累计 Boss 飞刀命中计数，达到门槛后授予回收冲刺增益。
+## 使用：rules 读取 recycle_dash_buff；context 携带 target/skill_instance；写入 recycle_boss_hit_count 元数据；需由仍存活的宿主创建并调度。
 func _apply_recycle_boss_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("recycle_dash_buff"):
@@ -246,6 +284,8 @@ func _apply_recycle_boss_hit(rules: Dictionary, context: Dictionary) -> void:
 		SpecialDamageRuleHandlerScript.apply_recycle_dash_buff(rules, context)
 
 
+## 作用：击杀后记录下一次飞刀额外伤害的待消费数值。
+## 使用：rules 读取 next_knife_damage_after_kill；context 携带 skill_instance；写入 next_knife_damage_after_kill_bonus 元数据；需由仍存活的宿主创建并调度。
 func _apply_next_knife_kill_bonus(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("next_knife_damage_after_kill"):
@@ -257,6 +297,8 @@ func _apply_next_knife_kill_bonus(rules: Dictionary, context: Dictionary) -> voi
 	skill_instance.set_meta("next_knife_damage_after_kill_bonus", float(rule.get("damage_multiplier_add", 0.2)))
 
 
+## 作用：普通怪击杀满足回收规则时生成回收飞刀。
+## 使用：rules 读取 recycle_knife_on_normal_kill；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_recycle_knife_on_normal_kill(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("recycle_knife_on_normal_kill"):
@@ -264,6 +306,8 @@ func _apply_recycle_knife_on_normal_kill(rules: Dictionary, context: Dictionary)
 	SpecialDamageRuleHandlerScript.execute_recycle_knife(rules, context, host._get_skill_damage(context))
 
 
+## 作用：强敌箭命中时按规则清理或累积鹰眼标记。
+## 使用：rules 读取 eagle_mark_on_strong_hit；context 携带 target/skill_instance；需由仍存活的宿主创建并调度。
 func _apply_eagle_mark_on_strong_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("eagle_mark_on_strong_hit"):
@@ -296,6 +340,8 @@ func _apply_eagle_mark_on_strong_hit(rules: Dictionary, context: Dictionary) -> 
 	})
 
 
+## 作用：弓箭命中时按规则生成命中爆炸。
+## 使用：rules 读取 hunter_arrow_hit_explosion；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_hunter_arrow_hit_explosion(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("hunter_arrow_hit_explosion"):
@@ -303,6 +349,8 @@ func _apply_hunter_arrow_hit_explosion(rules: Dictionary, context: Dictionary) -
 	SpecialDamageRuleHandlerScript.execute_hunter_arrow_hit_explosion(rules, context, host._get_skill_damage(context))
 
 
+## 作用：穿透命中次数满足条件且未生成过时，生成弓箭碎片。
+## 使用：rules 读取 hunter_arrow_shards_after_pierce_hits；context 携带 projectile；写入 hunter_arrow_shards_spawned 元数据；需由仍存活的宿主创建并调度。
 func _apply_hunter_arrow_shards(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("hunter_arrow_shards_after_pierce_hits"):
@@ -320,6 +368,8 @@ func _apply_hunter_arrow_shards(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_hunter_arrow_shards(rules, context)
 
 
+## 作用：箭命中带标记目标且冷却允许时返还技能冷却。
+## 使用：rules 读取 eagle_marked_hit_cooldown_refund/marked_hit_cooldown_refund；context 携带 target/skill_instance/skill_id；需由仍存活的宿主创建并调度。
 func _apply_marked_hit_cooldown_refund(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("eagle_marked_hit_cooldown_refund") and not rules.has("marked_hit_cooldown_refund"):
@@ -340,6 +390,8 @@ func _apply_marked_hit_cooldown_refund(rules: Dictionary, context: Dictionary) -
 	skill_instance.set("cooldown_remaining", 0.0)
 
 
+## 作用：累计 Boss 标记命中条件并触发鹰击额外伤害。
+## 使用：rules 读取 eagle_shot_on_boss_eagle_mark_hits/eagle_shot_on_boss_mark_hits；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_eagle_shot_on_boss_mark_hits(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("eagle_shot_on_boss_eagle_mark_hits") and not rules.has("eagle_shot_on_boss_mark_hits"):
@@ -357,6 +409,8 @@ func _apply_eagle_shot_on_boss_mark_hits(rules: Dictionary, context: Dictionary)
 		SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.eagle_shot_intents(rules, context, maxi(int(rule.get("amount", 36)), 0)))
 
 
+## 作用：带指定标记目标死亡在来源冷却允许时触发死亡爆炸。
+## 使用：rules 读取 burst_mark_death_explosion/marked_target_death_explosion；context 携带 enemy/source_key；需由仍存活的宿主创建并调度。
 func _apply_marked_target_death_explosion(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("burst_mark_death_explosion") and not rules.has("marked_target_death_explosion"):
@@ -376,6 +430,8 @@ func _apply_marked_target_death_explosion(rules: Dictionary, context: Dictionary
 	SpecialDamageRuleHandlerScript.execute_burst_mark_death_explosion(rules, context, host._get_skill_damage(context))
 
 
+## 作用：陷阱触发后按规则生成小型派生陷阱。
+## 使用：rules 读取 small_trap_on_trigger；context 携带 area；需由仍存活的宿主创建并调度。
 func _apply_small_trap_on_trigger(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("small_trap_on_trigger"):
@@ -386,6 +442,8 @@ func _apply_small_trap_on_trigger(rules: Dictionary, context: Dictionary) -> voi
 	SpecialDamageRuleHandlerScript.execute_small_trap_on_trigger(rules, context, host._get_skill_damage(context))
 
 
+## 作用：锁链陷阱命中时施加定身状态。
+## 使用：rules 读取 chain_trap_root_on_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_chain_trap_root_on_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("chain_trap_root_on_hit"):
@@ -410,6 +468,8 @@ func _apply_chain_trap_root_on_hit(rules: Dictionary, context: Dictionary) -> vo
 	})
 
 
+## 作用：命中带定身目标且冷却允许时触发钳击反应。
+## 使用：rules 读取 pincer_reaction_on_root；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_pincer_reaction_on_root(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("pincer_reaction_on_root"):
@@ -427,6 +487,8 @@ func _apply_pincer_reaction_on_root(rules: Dictionary, context: Dictionary) -> v
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.pincer_reaction_intents(rules, context, maxi(int(rule.get("amount", 16)), 0)))
 
 
+## 作用：陷阱命中强敌时施加猎物标记。
+## 使用：rules 读取 prey_mark_on_strong_trap_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_prey_mark_on_strong_trap_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("prey_mark_on_strong_trap_hit"):
@@ -442,6 +504,8 @@ func _apply_prey_mark_on_strong_trap_hit(rules: Dictionary, context: Dictionary)
 	})
 
 
+## 作用：Boss 核心陷阱命中在冷却允许时触发额外伤害。
+## 使用：rules 读取 boss_core_trap_bonus_damage；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_boss_core_trap_bonus_damage(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("boss_core_trap_bonus_damage"):
@@ -457,6 +521,8 @@ func _apply_boss_core_trap_bonus_damage(rules: Dictionary, context: Dictionary) 
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.boss_core_trap_bonus_intents(rules, context, maxi(int(rule.get("amount", 28)), 0)))
 
 
+## 作用：陷阱命中时按规则生成爆炸区域。
+## 使用：rules 读取 trap_hit_explosion；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_trap_hit_explosion(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("trap_hit_explosion"):
@@ -464,6 +530,8 @@ func _apply_trap_hit_explosion(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_trap_hit_explosion(rules, context, host._get_skill_damage(context))
 
 
+## 作用：陷阱击杀时生成碎片伤害领域。
+## 使用：rules 读取 trap_kill_fragment_field；context 携带 enemy；需由仍存活的宿主创建并调度。
 func _apply_trap_kill_fragment_field(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("trap_kill_fragment_field"):
@@ -474,6 +542,8 @@ func _apply_trap_kill_fragment_field(rules: Dictionary, context: Dictionary) -> 
 	SpecialDamageRuleHandlerScript.execute_trap_kill_fragment_field(rules, context)
 
 
+## 作用：规则冷却允许时创建诱饵陷阱。
+## 使用：rules 读取 decoy_trap_spawn；context 携带 caster；需由仍存活的宿主创建并调度。
 func _apply_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("decoy_trap_spawn"):
@@ -489,6 +559,8 @@ func _apply_decoy_trap_spawn(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.execute_decoy_trap_spawn(rules, context)
 
 
+## 作用：按猎手标记调整规则修饰状态参数。
+## 使用：params 读取 duration/max_stacks；context 为施放或命中上下文；会原地更新 params.duration/max_stacks；需由仍存活的宿主创建并调度。
 func _get_hunter_mark_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -502,6 +574,8 @@ func _get_hunter_mark_status_params(params: Dictionary, context: Dictionary) -> 
 	return params
 
 
+## 作用：按创伤调整规则修饰状态参数。
+## 使用：params 读取 duration；context 为施放或命中上下文；会原地更新 params.duration；需由仍存活的宿主创建并调度。
 func _get_wound_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -514,6 +588,8 @@ func _get_wound_status_params(params: Dictionary, context: Dictionary) -> Dictio
 	return params
 
 
+## 作用：根据目标移动状态和流血规则修饰流血参数。
+## 使用：params 读取 damage/tick_damage/boss_damage_multiplier；context 携带 target；会原地更新 params.damage；需由仍存活的宿主创建并调度。
 func _get_bleed_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -533,6 +609,8 @@ func _get_bleed_status_params(params: Dictionary, context: Dictionary) -> Dictio
 	return params
 
 
+## 作用：按目标血量条件给伤害包追加低血伤害收益。
+## 使用：packet 为待修饰伤害包视图；rules 读取 low_hp_damage_bonus；target 为本次命中目标；会原地更新 packet.direct_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_low_hp_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("low_hp_damage_bonus") or target == null:
@@ -542,6 +620,8 @@ func _apply_low_hp_damage_bonus(packet: Dictionary, rules: Dictionary, target: N
 		packet["direct_damage_multiplier_add"] = float(packet.get("direct_damage_multiplier_add", 0.0)) + float(rule.get("damage_multiplier_add", 0.15))
 
 
+## 作用：按来源和目标维护短时间命中记录，对重复命中应用衰减。
+## 使用：packet 为待修饰伤害包视图；rules 读取 same_target_short_window_decay；context 为施放或命中上下文；会原地更新 packet.special_final_modifier/special_final_modifier_source；需由仍存活的宿主创建并调度。
 func _apply_same_target_short_window_decay(packet: Dictionary, rules: Dictionary, context: Dictionary, packet_object: RefCounted, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("same_target_short_window_decay") or target == null:
@@ -557,6 +637,8 @@ func _apply_same_target_short_window_decay(packet: Dictionary, rules: Dictionary
 		packet["special_final_modifier_source"] = "target_passive"
 
 
+## 作用：目标具有处决标记时修改暴击伤害相关字段。
+## 使用：packet 为待修饰伤害包视图；rules 读取 execution_mark_crit_damage_taken；target 为本次命中目标；会原地更新 packet.crit_damage_add；需由仍存活的宿主创建并调度。
 func _apply_execution_mark_crit_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("execution_mark_crit_damage_taken") or target == null:
@@ -567,6 +649,8 @@ func _apply_execution_mark_crit_damage_bonus(packet: Dictionary, rules: Dictiona
 	packet["crit_damage_add"] = float(packet.get("crit_damage_add", 0.0)) + float(rule.get("crit_damage_taken_add", 0.25))
 
 
+## 作用：将击杀预留的下一刀增量加入伤害包并消费预留标记。
+## 使用：packet 为待修饰伤害包视图；rules 读取 next_knife_damage_after_kill；context 携带 skill_instance；会原地更新 packet.direct_damage_multiplier_add；写入 next_knife_damage_after_kill_bonus 元数据；需由仍存活的宿主创建并调度。
 func _apply_next_knife_damage_after_kill(packet: Dictionary, rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("next_knife_damage_after_kill"):
@@ -581,6 +665,8 @@ func _apply_next_knife_damage_after_kill(packet: Dictionary, rules: Dictionary, 
 	skill_instance.set_meta("next_knife_damage_after_kill_bonus", 0.0)
 
 
+## 作用：按箭命中序号与云箭标记修改本次穿透伤害系数。
+## 使用：packet 为待修饰伤害包视图；rules 读取 hunter_arrow_pierce_tuning/cloud_arrow_every_n_casts；context 携带 projectile/skill_instance；会原地更新 packet.special_final_modifier/special_final_modifier_source；写入 hunter_arrow_hit_count 元数据；需由仍存活的宿主创建并调度。
 func _apply_hunter_arrow_pierce_damage(packet: Dictionary, rules: Dictionary, context: Dictionary, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("hunter_arrow_pierce_tuning") and not rules.has("cloud_arrow_every_n_casts"):
@@ -606,6 +692,8 @@ func _apply_hunter_arrow_pierce_damage(packet: Dictionary, rules: Dictionary, co
 	packet["special_final_modifier_source"] = "target_passive"
 
 
+## 作用：带猎手或鹰眼标记的目标受到主攻击时应用规则易伤。
+## 使用：packet 为待修饰伤害包视图；rules 读取 eagle_mark_primary_damage_taken/hunter_mark_primary_damage_taken；target 为本次命中目标；会原地更新 packet.vulnerability_total；需由仍存活的宿主创建并调度。
 func _apply_hunter_mark_damage_taken(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("eagle_mark_primary_damage_taken") and not rules.has("hunter_mark_primary_damage_taken"):
@@ -618,6 +706,8 @@ func _apply_hunter_mark_damage_taken(packet: Dictionary, rules: Dictionary, targ
 	packet["vulnerability_total"] = float(packet.get("vulnerability_total", 0.0)) + float(rule.get("primary_attack_damage_taken_multiplier_add", 0.15))
 
 
+## 作用：按目标低血门槛修改战锤直接伤害。
+## 使用：packet 为待修饰伤害包视图；rules 读取 warhammer_low_hp_damage_bonus；target 为本次命中目标；会原地更新 packet.direct_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_warhammer_low_hp_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("warhammer_low_hp_damage_bonus") or target == null:
@@ -627,6 +717,8 @@ func _apply_warhammer_low_hp_damage_bonus(packet: Dictionary, rules: Dictionary,
 		packet["direct_damage_multiplier_add"] = float(packet.get("direct_damage_multiplier_add", 0.0)) + float(rule.get("damage_multiplier_add", 0.25))
 
 
+## 作用：根据猎物标记、强敌类型及 Boss 核心规则修改陷阱伤害。
+## 使用：packet 为待修饰伤害包视图；rules 读取 prey_mark_on_strong_trap_hit/boss_core_focus；target 为本次命中目标；会原地更新 packet.trap_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_hunter_trap_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null:

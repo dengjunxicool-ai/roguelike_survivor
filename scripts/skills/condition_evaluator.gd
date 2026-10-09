@@ -1,9 +1,13 @@
+## 文件用途：解释技能动作条件中的标签、血量、状态、元素、元数据及周围敌人数判断。
+## 使用方式：动作执行前用 evaluate_all 按全部条件判断，context 提供技能、来源、目标及场景树。
 extends RefCounted
 class_name ConditionEvaluator
 
 
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
 
+## 作用：按条件 type 解释目标状态、来源标签、元素、血量或概率判断，未知类型警告并返回 false。
+## 使用：context 携带 target/status_id/status/shield_overflowed；返回布尔判断或执行是否成功。
 static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 	var condition_type: String = str(condition.get("type", ""))
 	var params: Dictionary = _get_dictionary(condition.get("params", {}))
@@ -55,6 +59,8 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 			return false
 
 
+## 作用：按顺序判断字典条件，任一失败立即返回 false，非字典项跳过。
+## 使用：context 为施放或命中上下文；返回布尔判断或执行是否成功。
 static func evaluate_all(conditions: Array, context: Dictionary) -> bool:
 	for condition_variant: Variant in conditions:
 		if not (condition_variant is Dictionary):
@@ -66,6 +72,8 @@ static func evaluate_all(conditions: Array, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：检查技能定义是否含指定标签。
+## 使用：skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 static func _skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	if skill_instance == null:
 		return false
@@ -73,6 +81,8 @@ static func _skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	return definition != null and definition.has_method("has_tag") and bool(definition.call("has_tag", tag))
 
 
+## 作用：依次检查事件标签、来源节点分组与元数据，最后依据来源 ID 推断配置标签。
+## 使用：context 携带 source/area/source_id/source_key；返回布尔判断或执行是否成功。
 static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 	if tag == "":
 		return false
@@ -106,6 +116,8 @@ static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 			return source_id == tag or source_id.contains(tag)
 
 
+## 作用：读取目标当前血量比例，缺目标时按满血处理。
+## 使用：target 为本次命中目标。
 static func _target_hp_percent(target: Node) -> float:
 	if target == null:
 		return 1.0
@@ -113,6 +125,8 @@ static func _target_hp_percent(target: Node) -> float:
 	return clampf(float(target.get("current_health")) / max_health, 0.0, 1.0)
 
 
+## 作用：检查目标公开状态入口或 StatusEffectManager 是否含任一指定状态。
+## 使用：target 为本次命中目标；返回布尔判断或执行是否成功。
 static func _target_has_any_status(target: Node, statuses: Array) -> bool:
 	if target == null:
 		return false
@@ -128,6 +142,8 @@ static func _target_has_any_status(target: Node, statuses: Array) -> bool:
 	return false
 
 
+## 作用：判断目标元数据条件：布尔用原值、数字必须大于零、其他必须非 null。
+## 使用：target 为本次命中目标；返回布尔判断或执行是否成功。
 static func _target_has_meta(target: Node, key: String) -> bool:
 	if target == null or key == "":
 		return false
@@ -141,6 +157,8 @@ static func _target_has_meta(target: Node, key: String) -> bool:
 	return value != null
 
 
+## 作用：以事件目标或施法者为圆心从目标注册表查询并统计半径内敌人。
+## 使用：context 携带 target/caster；params 读取 radius。
 static func _enemy_count_in_radius(context: Dictionary, params: Dictionary) -> int:
 	var origin_node: Node2D = context.get("target") as Node2D
 	if origin_node == null:
@@ -161,6 +179,8 @@ static func _enemy_count_in_radius(context: Dictionary, params: Dictionary) -> i
 	return count
 
 
+## 作用：优先比较伤害包元素，再处理冰、闪电与奥术元素别名。
+## 使用：context 携带 damage_packet/element/damage_type；返回布尔判断或执行是否成功。
 static func _damage_element_is(context: Dictionary, expected: StringName) -> bool:
 	if expected == &"":
 		return false
@@ -180,6 +200,8 @@ static func _damage_element_is(context: Dictionary, expected: StringName) -> boo
 	return false
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 evaluate/_damage_element_is 调用；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -187,6 +209,8 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 evaluate/_source_has_tag 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

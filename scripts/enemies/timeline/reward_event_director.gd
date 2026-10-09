@@ -1,3 +1,6 @@
+## 文件用途：按时间与触发条件发布局内奖励事件。
+## 使用方式：setup 绑定 spawner；process_reward_events 扫描，start_reward_event 发布事件信号。
+
 extends RefCounted
 class_name RewardEventDirector
 
@@ -5,10 +8,14 @@ class_name RewardEventDirector
 var _owner: Node
 
 
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node) -> void:
 	_owner = owner
 
 
+## 作用：更新奖励事件组。
+## 使用：供本模块调用者使用。
 func process_reward_events() -> void:
 	if _owner == null:
 		return
@@ -39,6 +46,8 @@ func process_reward_events() -> void:
 		start_reward_event(event_index, event)
 
 
+## 作用：启动奖励事件。
+## 使用：本文件由 process_reward_events 调用；输入 event_index（事件索引）、event（事件）。
 func start_reward_event(event_index: int, event: Dictionary) -> void:
 	if _owner == null:
 		return
@@ -58,6 +67,8 @@ func start_reward_event(event_index: int, event: Dictionary) -> void:
 	)
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 process_reward_events 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

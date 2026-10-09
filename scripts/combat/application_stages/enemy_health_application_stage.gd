@@ -1,3 +1,5 @@
+## 文件用途：伤害应用管线的敌人生命应用阶段。
+## 使用方式：由DamageApplicationPipeline按固定顺序实例化调用；写context结果可短路后续阶段。
 extends RefCounted
 class_name EnemyHealthApplicationStage
 
@@ -8,6 +10,8 @@ const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_t
 var stage_name: StringName = &"enemy_health_apply"
 
 
+## 作用：扣血后记录来源/追踪/统计，发血量和命中事件，零生命进入死亡管线。
+## 使用：host提供统一结果构造，context保存目标/原包与阶段值；调用会更新受击状态。
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var enemy: Node = context.get("target") as Node
 	var packet: DamagePacket = context.get("packet")
@@ -33,6 +37,8 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	context.call("set_result", host.call("make_result", true, final_amount, damage_result, &"applied"))
 
 
+## 作用：在扣血后、死亡前向玩家技能总线发送post_damage_hit事件。
+## 使用：事件含深复制结果、typed包视图、来源和更新后目标血量；正伤害且可找到玩家才发送。
 func _emit_post_damage_hit(enemy: Node, packet: Variant, damage_result: Dictionary, final_amount: int, current_health: int) -> void:
 	if enemy == null or final_amount <= 0:
 		return
@@ -74,6 +80,8 @@ func _emit_post_damage_hit(enemy: Node, packet: Variant, damage_result: Dictiona
 	event_bus.call("emit_skill_event", &"post_damage_hit", event)
 
 
+## 作用：优先按攻击者player组或summon_owner找玩家，否则查询场景player组。
+## 使用：enemy提供场景树，packet保存攻击者，找不到返回null。
 func _resolve_player(enemy: Node, packet: Variant) -> Node:
 	var attacker: Node = _packet_value(packet, "attacker", null) as Node
 	if attacker != null:
@@ -89,15 +97,21 @@ func _resolve_player(enemy: Node, packet: Variant) -> Node:
 	return players[0] as Node if not players.is_empty() else null
 
 
+## 作用：从玩家SkillManager查来源技能实例。
+## 使用：manager/ID缺失或没有get_skill时返回null。
 func _resolve_skill_instance(skill_manager: Node, source_skill_id: StringName) -> RefCounted:
 	if skill_manager == null or source_skill_id == &"" or not skill_manager.has_method("get_skill"):
 		return null
 	return skill_manager.call("get_skill", source_skill_id) as RefCounted
 
 
+## 作用：读取typed伤害包的指定字段。
+## 使用：packet须为DamagePacket，key为字段名，缺失扩展返回fallback。
 func _packet_value(packet: DamagePacket, key: Variant, fallback: Variant = null) -> Variant:
 	return packet.get_value(key, fallback)
 
+## 作用：通过属性列表读取可选节点属性。
+## 使用：用于召唤物拥有者读取，缺失返回null。
 func _get_node_property(node: Node, property: String) -> Node:
 	if node == null:
 		return null
@@ -107,6 +121,8 @@ func _get_node_property(node: Node, property: String) -> Node:
 	return null
 
 
+## 作用：取得当前SceneTree根节点。
+## 使用：无场景主循环返回null，用于运行时追踪。
 func _get_root_node() -> Node:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	return tree.root if tree != null else null

@@ -1,3 +1,6 @@
+## 文件用途：把玩家状态效果和特质护盾整理为最多六段的状态标签。
+## 使用方式：setup 绑定玩家；状态展示脏标记触发后 update(snapshot)，不参与状态或伤害结算。
+
 extends RefCounted
 class_name PlayerStatusDisplayController
 
@@ -8,11 +11,15 @@ var _owner: Node2D
 var _status_label: Label
 
 
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node2D) -> void:
 	_owner = owner
 	_ensure_label()
 
 
+## 作用：把有效状态叠层与可用特质护盾整理为最多六段文字，并刷新玩家状态标签。
+## 使用：snapshot 为状态字典数组；空 ID 或非正层数跳过，无展示条目时隐藏标签。
 func update(snapshot: Array[Dictionary]) -> void:
 	if _owner == null:
 		return
@@ -37,6 +44,8 @@ func update(snapshot: Array[Dictionary]) -> void:
 	_status_label.visible = not fragments.is_empty()
 
 
+## 作用：在剩余展示空间内追加有效特质护盾点数。
+## 使用：fragments 为已有展示片段的共享数组；读取 CharacterRuntime 的护盾点数与剩余秒数，不消耗护盾。
 func _append_trait_state_fragments(fragments: Array[String]) -> void:
 	if _owner == null or fragments.size() >= 6:
 		return
@@ -53,6 +62,8 @@ func _append_trait_state_fragments(fragments: Array[String]) -> void:
 		fragments.append("Shd%d" % shield_points)
 
 
+## 作用：复用或创建玩家脚下的 PlayerStatusLabel 控件。
+## 使用：setup 和 update 调用；没有 owner 时跳过，新增标签默认隐藏并挂在玩家下。
 func _ensure_label() -> void:
 	if _owner == null or (_status_label != null and is_instance_valid(_status_label)):
 		return
@@ -77,5 +88,7 @@ func _ensure_label() -> void:
 	_owner.add_child(_status_label)
 
 
+## 作用：获取状态效果短名名称，供当前模块后续逻辑使用。
+## 使用：本文件由 update 调用；输入 status_id（状态效果ID）；返回 String 文本/标识。
 func _get_status_short_name(status_id: String) -> String:
 	return StatusShortNameFormatterScript.short_name(status_id)

@@ -1,3 +1,6 @@
+## 文件用途：编排普通波次、时间线事件、Boss、奖励事件与生成服务。
+## 使用方式：挂载主运行场景；reset_for_run 重开一局，物理更新驱动各 director，UI 监听波次和时间信号。
+
 extends Node2D
 class_name EnemySpawner
 
@@ -65,6 +68,8 @@ var _cleanup_service: RefCounted = EnemyCleanupServiceScript.new()
 var _reward_event_director: RefCounted = RewardEventDirectorScript.new()
 
 
+## 作用：在节点入树后完成组件初始化与信号登记。
+## 使用：由 Godot 自动调用；场景中的配置与依赖应在入树前设置。
 func _ready() -> void:
 	add_to_group(&"enemy_spawner")
 	_rng.randomize()
@@ -73,6 +78,8 @@ func _ready() -> void:
 	_apply_timeline_config()
 
 
+## 作用：重置对应单局。
+## 使用：供本模块调用者使用。
 func reset_for_run() -> void:
 	_normal_spawn_cooldown = 0.0
 	_boss_minion_spawn_cooldown = 0.0
@@ -95,6 +102,8 @@ func reset_for_run() -> void:
 	_apply_timeline_config()
 
 
+## 作用：应用单局属性修正。
+## 使用：供本模块调用者使用；输入 modifiers（属性修正）。
 func apply_run_modifiers(modifiers: Dictionary) -> void:
 	_spawn_count_multiplier_bonus = float(modifiers.get("enemy_spawn_count_multiplier_add", _spawn_count_multiplier_bonus))
 	var previous_boss_bonus: float = _boss_health_multiplier_bonus
@@ -103,12 +112,16 @@ func apply_run_modifiers(modifiers: Dictionary) -> void:
 		_apply_boss_health_bonus_to_alive_bosses(previous_boss_bonus, _boss_health_multiplier_bonus)
 
 
+## 作用：设置生成半径范围。
+## 使用：供本模块调用者使用；输入 min_radius（下限半径）、max_radius（上限半径）。
 func set_spawn_radius_range(min_radius: float, max_radius: float) -> void:
 	_spawn_radius_min = maxf(min_radius, 1.0)
 	_spawn_radius_max = maxf(max_radius, _spawn_radius_min)
 	_sync_spawn_service()
 
 
+## 作用：同步生成服务。
+## 使用：本文件由 _ready、reset_for_run、set_spawn_radius_range 调用。
 func _sync_spawn_service() -> void:
 	if _spawn_service == null:
 		_spawn_service = EnemySpawnServiceScript.new()
@@ -117,6 +130,8 @@ func _sync_spawn_service() -> void:
 	_spawn_service.call("set_visible_spawn_rules", true, _visible_spawn_margin, _spawn_player_safe_radius, _spawn_warning_duration)
 
 
+## 作用：同步时间线服务组。
+## 使用：本文件由 _ready、reset_for_run 调用。
 func _sync_timeline_services() -> void:
 	if _timeline_controller == null:
 		_timeline_controller = EnemyTimelineControllerScript.new()
@@ -138,6 +153,8 @@ func _sync_timeline_services() -> void:
 	_reward_event_director.call("setup", self)
 
 
+## 作用：生成地图敌人。
+## 使用：供本模块调用者使用；输入 enemy_id（敌人ID）、count（数量）、multipliers（倍率组）；返回计算或读取的数值。
 func spawn_map_enemy(enemy_id: Variant, count: int = 1, multipliers: Dictionary = {}) -> int:
 	var spawned_count: int = 0
 	var spawn_count: int = maxi(count, 0)
@@ -148,30 +165,42 @@ func spawn_map_enemy(enemy_id: Variant, count: int = 1, multipliers: Dictionary 
 	return spawned_count
 
 
+## 作用：推进本节点的物理帧更新流程。
+## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _physics_process(delta: float) -> void:
 	if _is_debug_manual_spawn_only():
 		return
 	_timeline_controller.call("process", delta)
 
 
+## 作用：更新离散波次；具体处理委托给 _wave_director.process_discrete_wave。
+## 使用：内部辅助入口；输入 delta（delta）。
 func _process_discrete_wave(delta: float) -> void:
 	_wave_director.call("process_discrete_wave", delta)
 
 
+## 作用：判断调试控件模式，返回布尔判断结果。
+## 使用：内部辅助入口。
 func _is_debug_control_mode() -> bool:
 	var tree: SceneTree = get_tree()
 	return tree != null and tree.root != null and bool(tree.root.get_meta("debug_control_mode", false))
 
 
+## 作用：判断调试手动生成仅，返回布尔判断结果。
+## 使用：本文件由 _physics_process 调用。
 func _is_debug_manual_spawn_only() -> bool:
 	var tree: SceneTree = get_tree()
 	return tree != null and tree.root != null and bool(tree.root.get_meta("debug_manual_spawn_only", false))
 
 
+## 作用：更新波次生成；具体处理委托给 _wave_director.process_wave_spawn。
+## 使用：内部辅助入口；输入 delta（delta）、wave（波次）。
 func _process_wave_spawn(delta: float, wave: Dictionary) -> void:
 	_wave_director.call("process_wave_spawn", delta, wave)
 
 
+## 作用：更新波次事件组。
+## 使用：内部辅助入口；输入 wave（波次）。
 func _process_wave_events(wave: Dictionary) -> void:
 	if _wave_spawned_count >= _wave_total_count:
 		return
@@ -197,6 +226,8 @@ func _process_wave_events(wave: Dictionary) -> void:
 		_start_wave_event(event_key, event)
 
 
+## 作用：启动波次事件。
+## 使用：本文件由 _process_wave_events 调用；输入 event_key（事件键）、event（事件）。
 func _start_wave_event(event_key: String, event: Dictionary) -> void:
 	var event_type: String = String(event.get("type", ""))
 	match event_type:
@@ -226,22 +257,32 @@ func _start_wave_event(event_key: String, event: Dictionary) -> void:
 			)
 
 
+## 作用：更新奖励事件组；具体处理委托给 _reward_event_director.process_reward_events。
+## 使用：内部辅助入口。
 func _process_reward_events() -> void:
 	_reward_event_director.call("process_reward_events")
 
 
+## 作用：启动奖励事件；具体处理委托给 _reward_event_director.start_reward_event。
+## 使用：内部辅助入口；输入 event_index（事件索引）、event（事件）。
 func _start_reward_event(event_index: int, event: Dictionary) -> void:
 	_reward_event_director.call("start_reward_event", event_index, event)
 
 
+## 作用：更新Boss事件；具体处理委托给 _boss_encounter_controller.process_boss_event。
+## 使用：内部辅助入口。
 func _process_boss_event() -> void:
 	_boss_encounter_controller.call("process_boss_event")
 
 
+## 作用：更新Boss随从生成；具体处理委托给 _boss_encounter_controller.process_boss_minion_spawn。
+## 使用：内部辅助入口；输入 delta（delta）。
 func _process_boss_minion_spawn(delta: float) -> void:
 	_boss_encounter_controller.call("process_boss_minion_spawn", delta)
 
 
+## 作用：生成来源分组配置。
+## 使用：本文件由 _spawn_batch_from_source 调用；输入 group_config（分组配置）、multipliers（倍率组）、source_type（来源类型）、limit（限制）；返回计算或读取的数值。
 func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary = {}, source_type: StringName = &"wave", limit: int = -1) -> int:
 	var count_min: int = int(group_config.get("count_min", 1))
 	var count_max: int = int(group_config.get("count_max", count_min))
@@ -261,6 +302,8 @@ func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary 
 	return spawned_count
 
 
+## 作用：生成批次来源来源。
+## 使用：内部辅助入口；输入 source（来源）、multipliers（倍率组）、source_type（来源类型）、limit（限制）；返回计算或读取的数值。
 func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, source_type: StringName = &"wave", limit: int = -1) -> int:
 	var remaining: int = maxi(limit, 0)
 	var spawned_count: int = 0
@@ -276,6 +319,8 @@ func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, 
 	return spawned_count
 
 
+## 作用：生成敌人；具体处理委托给 _spawn_service.spawn。
+## 使用：本文件由 _start_wave_event、_spawn_from_group_config 调用；输入 request（请求）；返回 Node2D 对象/值。
 func spawn_enemy(request: Dictionary) -> Node2D:
 	var source_type: String = String(request.get("source_type", "unknown"))
 	if source_type == "wave" or source_type == "boss_minion":
@@ -284,6 +329,8 @@ func spawn_enemy(request: Dictionary) -> Node2D:
 	return _spawn_service.call("spawn", request) as Node2D
 
 
+## 作用：响应Boss死亡并衔接对应的事件处理流程。
+## 使用：内部辅助入口。
 func _on_boss_died() -> void:
 	if not _boss_active:
 		return
@@ -292,6 +339,8 @@ func _on_boss_died() -> void:
 	boss_defeated.emit(_elapsed_time)
 
 
+## 作用：应用时间线配置。
+## 使用：本文件由 _ready、reset_for_run 调用。
 func _apply_timeline_config() -> void:
 	var wave_config: Dictionary = GameData.get_wave_config()
 
@@ -322,6 +371,8 @@ func _apply_timeline_config() -> void:
 	_sync_spawn_service()
 
 
+## 作用：获取当前波次，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_event_enemy_multipliers 调用；返回结果字典。
 func _get_current_wave() -> Dictionary:
 	if _current_wave_index >= 0:
 		return _get_wave_at_index(_current_wave_index)
@@ -340,6 +391,8 @@ func _get_current_wave() -> Dictionary:
 	return {}
 
 
+## 作用：获取波次指定位置索引，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_current_wave 调用；输入 wave_index（波次索引）；返回结果字典。
 func _get_wave_at_index(wave_index: int) -> Dictionary:
 	var waves: Array = _get_config_array("waves")
 	if wave_index < 0 or wave_index >= waves.size():
@@ -350,14 +403,20 @@ func _get_wave_at_index(wave_index: int) -> Dictionary:
 	return {}
 
 
+## 作用：启动波次；具体处理委托给 _wave_director.start_wave。
+## 使用：内部辅助入口；输入 wave_index（波次索引）。
 func _start_wave(wave_index: int) -> void:
 	_wave_director.call("start_wave", wave_index)
 
 
+## 作用：完成波次；具体处理委托给 _wave_director.finish_wave。
+## 使用：内部辅助入口；输入 cleared_early（通关early）。
 func _finish_wave(cleared_early: bool) -> void:
 	_wave_director.call("finish_wave", cleared_early)
 
 
+## 作用：完成普通阶段。
+## 使用：内部辅助入口。
 func _finish_normal_phase() -> void:
 	if _normal_phase_complete:
 		return
@@ -368,18 +427,26 @@ func _finish_normal_phase() -> void:
 	timeline_event_started.emit("normal_phase_complete", "普通阶段完成，Boss 即将登场")
 
 
+## 作用：收集全部经验晶体组；具体处理委托给 _cleanup_service.collect_all_experience_crystals。
+## 使用：本文件由 _finish_normal_phase 调用。
 func _collect_all_experience_crystals() -> void:
 	_cleanup_service.call("collect_all_experience_crystals")
 
 
+## 作用：获取波次总量数量，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 wave（波次）；返回计算或读取的数值。
 func _get_wave_total_count(wave: Dictionary) -> int:
 	return _scale_spawn_count(int(wave.get("total_count", 0)))
 
 
+## 作用：获取加权平均分组数量，供当前模块后续逻辑使用；具体处理委托给 _spawn_group_picker.weighted_average_group_count。
+## 使用：内部辅助入口；输入 source（来源）；返回计算或读取的数值。
 func _get_weighted_average_group_count(source: Dictionary) -> float:
 	return float(_spawn_group_picker.call("weighted_average_group_count", source))
 
 
+## 作用：发出波次变化按条件按需并衔接对应的事件处理流程。
+## 使用：内部辅助入口；输入 wave（波次）。
 func _emit_wave_changed_if_needed(wave: Dictionary) -> void:
 	var wave_id: String = String(wave.get("id", ""))
 	if wave_id == _current_wave_id:
@@ -393,67 +460,97 @@ func _emit_wave_changed_if_needed(wave: Dictionary) -> void:
 	)
 
 
+## 作用：选择敌人分组，供当前模块后续逻辑使用；具体处理委托给 _spawn_group_picker.pick_enemy_group。
+## 使用：本文件由 _spawn_batch_from_source 调用；输入 source（来源）；返回结果字典。
 func _pick_enemy_group(source: Dictionary) -> Dictionary:
 	return _spawn_group_picker.call("pick_enemy_group", source)
 
 
+## 作用：选择敌人ID来源分组，供当前模块后续逻辑使用；具体处理委托给 _spawn_group_picker.pick_enemy_id_from_group。
+## 使用：本文件由 _spawn_from_group_config 调用；输入 group_config（分组配置）；返回 StringName 文本/标识。
 func _pick_enemy_id_from_group(group_config: Dictionary) -> StringName:
 	return StringName(_spawn_group_picker.call("pick_enemy_id_from_group", group_config))
 
 
+## 作用：获取配置数组，供当前模块后续逻辑使用。
+## 使用：本文件由 _apply_timeline_config、_get_current_wave、_get_wave_at_index 调用；输入 key（键）；返回 Array 列表。
 func _get_config_array(key: String) -> Array:
 	var wave_config: Dictionary = GameData.get_wave_config()
 	return _get_array(wave_config.get(key, []))
 
 
+## 作用：获取配置字典，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 key（键）；返回结果字典。
 func _get_config_dictionary(key: String) -> Dictionary:
 	var wave_config: Dictionary = GameData.get_wave_config()
 	return _get_dictionary(wave_config.get(key, {}))
 
 
+## 作用：获取波次敌人倍率组，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_event_enemy_multipliers 调用；输入 wave（波次）；返回结果字典。
 func _get_wave_enemy_multipliers(wave: Dictionary) -> Dictionary:
 	return _get_dictionary(wave.get("enemy_multipliers", {}))
 
 
+## 作用：获取事件敌人倍率组，供当前模块后续逻辑使用。
+## 使用：本文件由 _start_wave_event 调用；输入 event（事件）；返回结果字典。
 func _get_event_enemy_multipliers(event: Dictionary) -> Dictionary:
 	return _get_dictionary(event.get("enemy_multipliers", _get_wave_enemy_multipliers(_get_current_wave())))
 
 
+## 作用：获取Boss敌人倍率组，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 boss_event（Boss事件）；返回结果字典。
 func _get_boss_enemy_multipliers(boss_event: Dictionary) -> Dictionary:
 	var multipliers: Dictionary = _get_dictionary(boss_event.get("boss_multipliers", {}))
 	multipliers["hp"] = _get_multiplier(multipliers, "hp", 1.0) * maxf(1.0 + _boss_health_multiplier_bonus, 0.01)
 	return multipliers
 
 
+## 作用：获取倍率，供当前模块后续逻辑使用。
+## 使用：本文件由 _get_boss_enemy_multipliers 调用；输入 multipliers（倍率组）、key（键）、fallback（回退）；返回计算或读取的数值。
 func _get_multiplier(multipliers: Dictionary, key: String, fallback: float) -> float:
 	return maxf(float(multipliers.get(key, fallback)), 0.01)
 
 
+## 作用：缩放生成数量。
+## 使用：本文件由 _spawn_from_group_config、_get_wave_total_count 调用；输入 base_count（基础数量）；返回计算或读取的数值。
 func _scale_spawn_count(base_count: int) -> int:
 	var multiplier: float = maxf(1.0 + _spawn_count_multiplier_bonus, 0.01)
 	return maxi(roundi(float(base_count) * multiplier), 1)
 
 
+## 作用：获取存活普通敌人数量，供当前模块后续逻辑使用；具体处理委托给 _cleanup_service.get_alive_normal_enemy_count。
+## 使用：内部辅助入口；返回计算或读取的数值。
 func _get_alive_normal_enemy_count() -> int:
 	return int(_cleanup_service.call("get_alive_normal_enemy_count"))
 
 
+## 作用：获取存活敌人数量，供当前模块后续逻辑使用；具体处理委托给 _cleanup_service.get_alive_enemy_count。
+## 使用：内部辅助入口；返回计算或读取的数值。
 func _get_alive_enemy_count() -> int:
 	return int(_cleanup_service.call("get_alive_enemy_count"))
 
 
+## 作用：获取存活Boss随从数量，供当前模块后续逻辑使用；具体处理委托给 _cleanup_service.get_alive_boss_minion_count。
+## 使用：内部辅助入口；返回计算或读取的数值。
 func _get_alive_boss_minion_count() -> int:
 	return int(_cleanup_service.call("get_alive_boss_minion_count"))
 
 
+## 作用：回收远处敌人组；具体处理委托给 _cleanup_service.despawn_far_enemies。
+## 使用：内部辅助入口。
 func _despawn_far_enemies() -> void:
 	_cleanup_service.call("despawn_far_enemies", _despawn_radius)
 
 
+## 作用：清除普通敌人组；具体处理委托给 _cleanup_service.clear_normal_enemies。
+## 使用：内部辅助入口。
 func _clear_normal_enemies() -> void:
 	_cleanup_service.call("clear_normal_enemies")
 
 
+## 作用：应用Boss生命值加成转换存活Boss列表。
+## 使用：本文件由 apply_run_modifiers 调用；输入 previous_bonus（previous加成）、new_bonus（新值加成）。
 func _apply_boss_health_bonus_to_alive_bosses(previous_bonus: float, new_bonus: float) -> void:
 	var previous_multiplier: float = maxf(1.0 + previous_bonus, 0.01)
 	var new_multiplier: float = maxf(1.0 + new_bonus, 0.01)
@@ -475,6 +572,8 @@ func _apply_boss_health_bonus_to_alive_bosses(previous_bonus: float, new_bonus: 
 			enemy.emit_signal(&"health_changed", int(enemy.get("current_health")), new_max_health)
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 _apply_timeline_config、_get_config_dictionary、_get_wave_enemy_multipliers 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -482,6 +581,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：安全取得数组值，类型不符时返回空数组。
+## 使用：本文件由 _process_wave_events、_get_config_array 调用；输入 value（值）。
 func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value

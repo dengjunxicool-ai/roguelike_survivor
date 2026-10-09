@@ -1,3 +1,5 @@
+## 文件用途：构建运行时调试页，控制暂停和手动攻击、编辑玩家及起始技能属性、浏览与复制伤害记录。
+## 使用方式：以 DevDebugPanel 宿主构造本页控制器；持有 WeakRef，宿主负责控件与回调装配，不能独立挂载到场景。
 extends RefCounted
 
 const SkillStatServiceScript: Script = preload("res://scripts/skills/skill_stat_service.gd")
@@ -6,10 +8,14 @@ const StatusShortNameFormatterScript: Script = preload("res://scripts/ui/status_
 
 var _host_ref: WeakRef
 
+## 作用：保存宿主弱引用，控件状态与游戏实体查询均经宿主。
+## 使用：创建页面控制器时传入 DevDebugPanel 宿主，保存弱引用。
 func _init(host: CanvasLayer) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：创建暂停、自动攻击和追踪按钮以及可滚动伤害卡，所有回调绑定宿主入口。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：page_root: VBoxContainer。
 func _build_runtime_page(page_root: VBoxContainer) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var runtime_page: VBoxContainer = host._add_category_page(page_root, "runtime", "Runtime")
@@ -42,12 +48,16 @@ func _build_runtime_page(page_root: VBoxContainer) -> void:
 	runtime_page.add_child(host._attack_damage_scroll)
 
 
+## 作用：反转 SceneTree.paused 并记录暂停状态，调试宿主继续常驻处理。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _toggle_tree_pause() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host.get_tree().paused = not host.get_tree().paused
 	host._log("Game paused=%s." % str(host.get_tree().paused))
 
 
+## 作用：反转 debug_control_mode；启用调试手控时解除树暂停，控制自动战斗编排。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _toggle_auto_combat() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var enabled: bool = not host._is_debug_control_mode()
@@ -57,6 +67,8 @@ func _toggle_auto_combat() -> void:
 	host._log("Auto combat paused by debug_control_mode=%s." % str(enabled))
 
 
+## 作用：反转玩家自动攻击禁用标志并记录结果。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _toggle_player_attack_disabled() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var disabled: bool = not host._is_player_attack_disabled()
@@ -64,6 +76,8 @@ func _toggle_player_attack_disabled() -> void:
 	host._log("Player auto attack disabled=%s." % str(disabled))
 
 
+## 作用：调用单次全技能调试施放入口，成功时记录施放技能数。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _manual_cast_player_skills() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var cast_count: int = host._cast_player_skills_once()
@@ -72,6 +86,8 @@ func _manual_cast_player_skills() -> void:
 	host._log("Manual attack cast %d skill(s)." % cast_count)
 
 
+## 作用：新建攻击 trace、重置伤害卡索引和滚动位置，施放全部技能并显示等待命中的提示。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _attack_once_player_skills() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var root: Node = host.get_tree().root if host.get_tree() != null else null
@@ -90,6 +106,8 @@ func _attack_once_player_skills() -> void:
 	host._log("Attack once trace #%d had no runtime skill cast." % trace_id)
 
 
+## 作用：清空攻击记录和爆炸位置覆盖层，重置当前卡片索引、滚动位置及提示。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _clear_attack_trace() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var root: Node = host.get_tree().root if host.get_tree() != null else null
@@ -101,6 +119,8 @@ func _clear_attack_trace() -> void:
 	host._log("Cleared attack trace and %d explosion site overlay(s)." % cleared)
 
 
+## 作用：循环选择上一条伤害卡，重置滚动并刷新显示；空记录恢复索引零。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _show_previous_attack_damage_card() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var record_count: int = host._get_attack_damage_record_count()
@@ -112,6 +132,8 @@ func _show_previous_attack_damage_card() -> void:
 	host._refresh_attack_damage_text()
 
 
+## 作用：循环选择下一条伤害卡，重置滚动并刷新显示；空记录恢复索引零。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _show_next_attack_damage_card() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var record_count: int = host._get_attack_damage_record_count()
@@ -123,6 +145,8 @@ func _show_next_attack_damage_card() -> void:
 	host._refresh_attack_damage_text()
 
 
+## 作用：格式化当前记录并写入系统剪贴板，同时缓存已复制文本；无记录返回 false。
+## 使用：由宿主 Copy Record 按钮调用；返回是否已写剪贴板，当前卡片文字同时保存在宿主缓存。
 func _copy_current_attack_damage_record() -> bool:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var record_text: String = host._get_current_attack_damage_record_text()
@@ -137,6 +161,8 @@ func _copy_current_attack_damage_record() -> bool:
 	return true
 
 
+## 作用：临时解除 debug_control_mode 调用 SkillExecutor.debug_cast_all_skills，再恢复旧标志；返回施放数，缺入口返回 -1。
+## 使用：trace_id 可为零表示未指定追踪；返回施放技能数或 -1，内部暂时解除调试手控后恢复原值。
 func _cast_player_skills_once(trace_id: int = 0) -> int:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -156,6 +182,8 @@ func _cast_player_skills_once(trace_id: int = 0) -> int:
 	return cast_count
 
 
+## 作用：构建计算后属性展示区和玩家属性 SpinBox，添加应用、同步按钮。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：parent: VBoxContainer。
 func _build_player_stats(parent: VBoxContainer) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._player_attributes_label = Label.new()
@@ -185,6 +213,8 @@ func _build_player_stats(parent: VBoxContainer) -> void:
 	host._add_button(row, "Sync Player Stats", Callable(host, "_sync_player_stat_controls"), 156)
 
 
+## 作用：按起始技能属性配置创建 SpinBox 并初始化活动属性索引，添加应用、同步按钮。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：parent: VBoxContainer。
 func _build_skill_stats(parent: VBoxContainer) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._skill_stat_spins.clear()
@@ -206,6 +236,8 @@ func _build_skill_stats(parent: VBoxContainer) -> void:
 	host._add_button(row, "Sync Attack Stats", Callable(host, "_sync_skill_stat_controls"), 156)
 
 
+## 作用：把玩家当前属性值同步到对应输入控件，玩家或控件缺失时跳过。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _sync_player_stat_controls() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -221,6 +253,8 @@ func _sync_player_stat_controls() -> void:
 			spin.value = float(value)
 
 
+## 作用：从 SkillStatService 同步起始技能有效属性，按 allow_new 决定缺失属性是否可编辑并调整透明度。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _sync_skill_stat_controls() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -253,6 +287,8 @@ func _sync_skill_stat_controls() -> void:
 		spin.value = float(value)
 
 
+## 作用：把输入框数值写回玩家，整数项取整并约束血量；发送血量、经验信号和刷新协同。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _apply_player_stats_from_panel() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -283,6 +319,8 @@ func _apply_player_stats_from_panel() -> void:
 	host._log("Applied player stats.")
 
 
+## 作用：将可编辑技能值写入 runtime_modifiers 的属性 override，保留其余修改并发出 skill_changed。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _apply_skill_stats_from_panel() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -314,6 +352,8 @@ func _apply_skill_stats_from_panel() -> void:
 	host._log("Applied %d primary attack stat override(s)." % applied)
 
 
+## 作用：返回玩家属性编辑项定义，包含字段名、标签、范围、步长和整数标记。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _get_player_stat_configs() -> Array[Dictionary]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	return [
@@ -354,6 +394,8 @@ func _get_player_stat_configs() -> Array[Dictionary]:
 	]
 
 
+## 作用：返回起始技能属性编辑项定义，包含范围、取整与允许新增属性标记。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _get_skill_stat_configs() -> Array[Dictionary]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	return [
@@ -374,6 +416,8 @@ func _get_skill_stat_configs() -> Array[Dictionary]:
 	]
 
 
+## 作用：重新构建伤害卡文本，保存宿主缓存并同步显示 Label。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _refresh_attack_damage_text() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._last_attack_damage_text = host._build_attack_damage_text()
@@ -381,6 +425,8 @@ func _refresh_attack_damage_text() -> void:
 		host._attack_damage_label.text = host._last_attack_damage_text
 
 
+## 作用：将伤害卡 ScrollContainer 的横向与纵向滚动位置重置为零。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _reset_attack_damage_scroll() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if host._attack_damage_scroll == null:
@@ -389,11 +435,15 @@ func _reset_attack_damage_scroll() -> void:
 	host._attack_damage_scroll.scroll_vertical = 0
 
 
+## 作用：统计当前可显示的 damage 类型追踪记录数量。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 int；具体值及空输入行为见作用说明。
 func _get_attack_damage_record_count() -> int:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	return host._get_attack_damage_records().size()
 
 
+## 作用：将当前卡片索引约束到记录范围后格式化记录；无记录返回空字符串。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 String；具体值及空输入行为见作用说明。
 func _get_current_attack_damage_record_text() -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var records: Array[Dictionary] = host._get_attack_damage_records()
@@ -404,6 +454,8 @@ func _get_current_attack_damage_record_text() -> String:
 	return host._format_record_dump(records[host._attack_damage_card_index])
 
 
+## 作用：从 DebugCombatTrace 的深拷贝记录中过滤 damage 条目，供伤害卡显示。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 Array[Dictionary]；具体值及空输入行为见作用说明。
 func _get_attack_damage_records() -> Array[Dictionary]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var root: Node = host.get_tree().root if host.get_tree() != null else null
@@ -419,6 +471,8 @@ func _get_attack_damage_records() -> Array[Dictionary]:
 	return damage_records
 
 
+## 作用：组合 trace、卡片编号、目标分组和伤害构成摘要，附上当前记录完整文本。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 String；具体值及空输入行为见作用说明。
 func _build_attack_damage_text() -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var root: Node = host.get_tree().root if host.get_tree() != null else null
@@ -454,6 +508,8 @@ func _build_attack_damage_text() -> String:
 	return "\n".join(lines)
 
 
+## 作用：统计记录数组内 type=explosion 的字典数量，忽略非字典条目。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：records: Array。 返回 int；具体值及空输入行为见作用说明。
 func _count_explosion_records(records: Array) -> int:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var explosion_count: int = 0
@@ -466,6 +522,8 @@ func _count_explosion_records(records: Array) -> int:
 	return explosion_count
 
 
+## 作用：按 target 名称分组 damage 记录并保留目标首次出现顺序。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：records: Array[Dictionary]。 返回 Dictionary；具体值及空输入行为见作用说明。
 func _group_damage_records_by_target(records: Array[Dictionary]) -> Dictionary:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var target_groups: Dictionary = {}
@@ -484,6 +542,8 @@ func _group_damage_records_by_target(records: Array[Dictionary]) -> Dictionary:
 	}
 
 
+## 作用：去重伤害类别标签，优先按爆炸、主攻击、区域、反应和持续伤害排序，再拼接摘要。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：records: Array, includes_explosion: bool = false。 返回 String；具体值及空输入行为见作用说明。
 func _build_damage_component_summary(records: Array, includes_explosion: bool = false) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var seen: Dictionary = {}
@@ -509,6 +569,8 @@ func _build_damage_component_summary(records: Array, includes_explosion: bool = 
 	return "+".join(ordered_labels) if not ordered_labels.is_empty() else "未知伤害"
 
 
+## 作用：结合特殊技能标识、source_type 和 damage_origin 判断一条记录的中文伤害类别。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：record: Dictionary。 返回 String；具体值及空输入行为见作用说明。
 func _damage_component_label(record: Dictionary) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var source_type: String = String(record.get("source_type", ""))
@@ -530,6 +592,8 @@ func _damage_component_label(record: Dictionary) -> String:
 	return "%s伤害" % source_type if not source_type.is_empty() else "未知伤害"
 
 
+## 作用：将已登记的特殊来源技能片段映射为中文组件名称，未匹配时返回空字符串。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：source_skill_id: String。 返回 String；具体值及空输入行为见作用说明。
 func _legacy_skill_damage_component_label(source_skill_id: String) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if source_skill_id.find("fireball_burning_death_explosion") >= 0:
@@ -601,6 +665,8 @@ func _legacy_skill_damage_component_label(source_skill_id: String) -> String:
 	return ""
 
 
+## 作用：将记录格式化为带 record 标题和递归缩进内容的多行文本。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：record: Dictionary。 返回 String；具体值及空输入行为见作用说明。
 func _format_record_dump(record: Dictionary) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var lines: Array[String] = ["record："]
@@ -608,6 +674,8 @@ func _format_record_dump(record: Dictionary) -> String:
 	return "\n".join(lines)
 
 
+## 作用：按排序后的字典键向 lines 追加递归记录文本，确保输出顺序稳定。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：lines: Array[String], dictionary: Dictionary, indent_level: int。
 func _append_dictionary_dump(lines: Array[String], dictionary: Dictionary, indent_level: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var keys: Array[String] = []
@@ -618,12 +686,16 @@ func _append_dictionary_dump(lines: Array[String], dictionary: Dictionary, inden
 		host._append_record_value_line(lines, key, dictionary.get(key), indent_level)
 
 
+## 作用：按数组顺序向 lines 追加带索引的递归记录条目。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：lines: Array[String], items: Array, indent_level: int。
 func _append_array_dump(lines: Array[String], items: Array, indent_level: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	for index in range(items.size()):
 		host._append_record_value_line(lines, "- %d" % index, items[index], indent_level)
 
 
+## 作用：按 value 类型递归展开字典或数组，标量直接格式化后追加到 lines。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：lines: Array[String], key: String, value: Variant, indent_level: int。
 func _append_record_value_line(lines: Array[String], key: String, value: Variant, indent_level: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var prefix: String = host._record_indent(indent_level)
@@ -642,6 +714,8 @@ func _append_record_value_line(lines: Array[String], key: String, value: Variant
 	lines.append("%s%s: %s" % [prefix, key, host._format_record_value(value)])
 
 
+## 作用：按非负层数生成每层两个空格的记录缩进字符串。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：indent_level: int。 返回 String；具体值及空输入行为见作用说明。
 func _record_indent(indent_level: int) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var text: String = ""
@@ -650,6 +724,8 @@ func _record_indent(indent_level: int) -> String:
 	return text
 
 
+## 作用：String 与 StringName 直接取字符串，其他 Variant 通过 str 格式化。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：value: Variant。 返回 String；具体值及空输入行为见作用说明。
 func _format_record_value(value: Variant) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if value is String or value is StringName:
@@ -657,6 +733,8 @@ func _format_record_value(value: Variant) -> String:
 	return str(value)
 
 
+## 作用：组合玩家基础有效属性、起始技能、特性和状态快照形成完整计算后属性文本。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 String；具体值及空输入行为见作用说明。
 func _build_player_attributes_text() -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -671,6 +749,8 @@ func _build_player_attributes_text() -> String:
 	return "\n".join(lines)
 
 
+## 作用：按玩家字段生成血量、成长、移动、暴击、抗伤、收益和各修正项的展示行。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_player_core_attribute_lines(player: Node) -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var effective_move_speed: float = host._get_player_effective_move_speed(player)
@@ -736,6 +816,8 @@ func _build_player_core_attribute_lines(player: Node) -> Array[String]:
 	]
 
 
+## 作用：合并角色及技能修正，展示起始技能最终攻速、冷却、暴击概率和弹速。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_starting_skill_attribute_lines(player: Node) -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var lines: Array[String] = []
@@ -762,6 +844,8 @@ func _build_starting_skill_attribute_lines(player: Node) -> Array[String]:
 	return lines
 
 
+## 作用：从 CharacterRuntime.trait_runtime_state 读取特性计数、移动计时和护盾字段形成展示行。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_trait_attribute_lines(player: Node) -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var lines: Array[String] = []
@@ -783,6 +867,8 @@ func _build_trait_attribute_lines(player: Node) -> Array[String]:
 	return lines
 
 
+## 作用：生成角色、暂停标志、敌人、主技能和玩家状态摘要；无玩家时显示开局选项。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 String；具体值及空输入行为见作用说明。
 func _build_state_text() -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -819,6 +905,8 @@ func _build_state_text() -> String:
 	return host._format_summary_fields(fields)
 
 
+## 作用：取得最近敌人 ID、状态、血量、护甲、攻击范围和状态快照的摘要字段。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_nearest_enemy_fields() -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var fields: Array[String] = []
@@ -835,6 +923,8 @@ func _build_nearest_enemy_fields() -> Array[String]:
 	return fields
 
 
+## 作用：比较所选角色与当前局角色，生成角色差异及当前所选地图字段。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：current_character_id: StringName。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_selected_setup_fields(current_character_id: StringName) -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var fields: Array[String] = []
@@ -849,6 +939,8 @@ func _build_selected_setup_fields(current_character_id: StringName) -> Array[Str
 	return fields
 
 
+## 作用：从技能实例及 SkillStatService 生成技能 ID、等级和有效攻击数值字段。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node, skill: RefCounted。 返回 Array[String]；具体值及空输入行为见作用说明。
 func _build_skill_fields(player: Node, skill: RefCounted) -> Array[String]:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var skill_manager: Node = host._get_skill_manager(player)
@@ -865,6 +957,8 @@ func _build_skill_fields(player: Node, skill: RefCounted) -> Array[String]:
 	return parts
 
 
+## 作用：优先调用玩家有效移动速度方法，缺少时读 move_speed；无玩家返回零。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node。 返回 float；具体值及空输入行为见作用说明。
 func _get_player_effective_move_speed(player: Node) -> float:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if player == null:
@@ -874,6 +968,8 @@ func _get_player_effective_move_speed(player: Node) -> float:
 	return float(player.get("move_speed"))
 
 
+## 作用：优先调用玩家有效拾取半径方法，缺少时读 pickup_radius；无玩家返回零。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：player: Node。 返回 float；具体值及空输入行为见作用说明。
 func _get_player_effective_pickup_radius(player: Node) -> float:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if player == null:
@@ -883,6 +979,8 @@ func _get_player_effective_pickup_radius(player: Node) -> float:
 	return float(player.get("pickup_radius"))
 
 
+## 作用：把摘要字段按每行三个分组，使用双空格间隔并换行返回。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：fields: Array[String]。 返回 String；具体值及空输入行为见作用说明。
 func _format_summary_fields(fields: Array[String]) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var lines: Array[String] = []
@@ -897,6 +995,8 @@ func _format_summary_fields(fields: Array[String]) -> String:
 	return "\n".join(lines)
 
 
+## 作用：将状态快照格式化为短名称、层数、总 tick 伤害及剩余时长，空数组显示 statuses:none。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：statuses: Array。 返回 String；具体值及空输入行为见作用说明。
 func _format_statuses(statuses: Array) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if statuses.is_empty():
@@ -920,11 +1020,15 @@ func _format_statuses(statuses: Array) -> String:
 	return "statuses:%s" % ",".join(parts)
 
 
+## 作用：委托 StatusShortNameFormatter.short_name 获取调试显示用状态短名称。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：status_id: String。 返回 String；具体值及空输入行为见作用说明。
 func _debug_status_short_name(status_id: String) -> String:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	return StatusShortNameFormatterScript.short_name(status_id, -1)
 
 
+## 作用：优先向 target 查询状态快照，否则查询其 StatusEffectManager，均不可用返回空数组。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：target: Node。 返回 Array；具体值及空输入行为见作用说明。
 func _get_status_snapshot(target: Node) -> Array:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	if target != null and target.has_method("get_status_snapshot"):

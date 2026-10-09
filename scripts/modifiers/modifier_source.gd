@@ -1,3 +1,5 @@
+## 文件用途：验证结构化 Modifier 配置并转换为战斗和属性系统消费的平铺快照。
+## 使用方式：配置输入使用效果列表，已聚合 Dictionary 可直接复制；flatten_effects 可按查询过滤 scope。
 extends RefCounted
 class_name ModifierSource
 
@@ -10,6 +12,8 @@ const SOURCE_RELIC: String = "relic"
 
 
 # Dictionary values here are already aggregated runtime snapshots.
+## 作用：把效果列表转换为快照，已聚合字典则深拷贝，其他输入返回空字典。
+## 使用：query 为携带作用域与过滤信息的属性查询；无适用数据时返回空字典。
 static func flatten(value: Variant, default_source: String = SOURCE_UNKNOWN, query: RefCounted = null) -> Dictionary:
 	if value is Array:
 		return flatten_effects(value, default_source, query)
@@ -18,6 +22,8 @@ static func flatten(value: Variant, default_source: String = SOURCE_UNKNOWN, que
 	return {}
 
 
+## 作用：逐项检查 Modifier 必需字段、操作类型、有限数值、作用域与来源，返回错误列表。
+## 使用：由本文件 flatten_effects 调用。
 static func validate_effects(value: Variant) -> Array[String]:
 	var errors: Array[String] = []
 	if not (value is Array):
@@ -44,6 +50,8 @@ static func validate_effects(value: Variant) -> Array[String]:
 	return errors
 
 
+## 作用：先验证效果列表，再按查询作用域过滤并转换属性键后合并。
+## 使用：effects 为配置效果列表；query 为携带作用域与过滤信息的属性查询；无适用数据时返回空字典。
 static func flatten_effects(effects: Array, _default_source: String = SOURCE_UNKNOWN, query: RefCounted = null) -> Dictionary:
 	var errors: Array[String] = validate_effects(effects)
 	if not errors.is_empty():
@@ -60,6 +68,8 @@ static func flatten_effects(effects: Array, _default_source: String = SOURCE_UNK
 	return flattened
 
 
+## 作用：原地合并快照：覆盖键替换、倍率键相乘、其余数值相加。
+## 使用：target 为本次命中目标；source 为来源数据或对象。
 static func merge_flat_values(target: Dictionary, source: Dictionary) -> Dictionary:
 	for source_key_variant: Variant in source.keys():
 		var key: String = String(source_key_variant)
@@ -78,6 +88,8 @@ static func merge_flat_values(target: Dictionary, source: Dictionary) -> Diction
 	return target
 
 
+## 作用：把配置操作 add、multiply、multiplier_add 或 override 转为对应属性键后缀。
+## 使用：由本文件 _get_effect_keys 调用。
 static func _get_operation_key(stat: String, op: String) -> String:
 	if stat == "":
 		return ""
@@ -92,6 +104,8 @@ static func _get_operation_key(stat: String, op: String) -> String:
 	return stat
 
 
+## 作用：按属性、操作和作用域映射效果键，包含伤害、区域、状态与 Boss 特例。
+## 使用：由本文件 flatten_effects 调用；无匹配项时返回空数组。
 static func _get_effect_keys(effect: Dictionary) -> Array[String]:
 	var stat: String = String(effect.get("stat", ""))
 	var op: String = String(effect.get("op", "add"))
@@ -152,6 +166,8 @@ static func _get_effect_keys(effect: Dictionary) -> Array[String]:
 	return [_get_operation_key(stat, op)]
 
 
+## 作用：把伤害作用域转换为元素、对象、强敌或伤害来源的加成键列表。
+## 使用：由本文件 _get_effect_keys 调用。
 static func _get_damage_effect_keys(scope: Dictionary) -> Array[String]:
 	var keys: Array[String] = []
 	var element: String = _first_scope_value(scope.get("element", ""))
@@ -182,6 +198,8 @@ static func _get_damage_effect_keys(scope: Dictionary) -> Array[String]:
 	return keys
 
 
+## 作用：依次检查效果 domain、技能身份、元素、对象、目标、状态和标签是否匹配查询。
+## 使用：query 为携带作用域与过滤信息的属性查询；返回布尔判断或执行是否成功。
 static func _effect_matches_query(effect: Dictionary, query: RefCounted = null) -> bool:
 	if query == null:
 		return true
@@ -198,6 +216,8 @@ static func _effect_matches_query(effect: Dictionary, query: RefCounted = null) 
 	return true
 
 
+## 作用：把配置 domain 对应到玩家、技能或伤害查询域。
+## 使用：query 为携带作用域与过滤信息的属性查询。
 static func _domain_matches(domain: String, query: RefCounted) -> bool:
 	var query_scope: String = String(query.get("scope"))
 	match domain:
@@ -210,6 +230,8 @@ static func _domain_matches(domain: String, query: RefCounted) -> bool:
 	return true
 
 
+## 作用：判断查询字段是否属于效果允许值集合，空集合不限制。
+## 使用：由本文件 _effect_matches_query 调用；返回布尔判断或执行是否成功。
 static func _scope_value_matches(scope_value: Variant, query_value: String) -> bool:
 	var values: Array[String] = _scope_values(scope_value)
 	if values.is_empty():
@@ -219,6 +241,8 @@ static func _scope_value_matches(scope_value: Variant, query_value: String) -> b
 	return values.has(query_value)
 
 
+## 作用：检查效果标签集合与技能查询标签是否至少存在一项交集。
+## 使用：由本文件 _effect_matches_query 调用；返回布尔判断或执行是否成功。
 static func _tag_scope_matches(scope_value: Variant, query_tags_variant: Variant) -> bool:
 	var values: Array[String] = _scope_values(scope_value)
 	if values.is_empty():
@@ -231,11 +255,15 @@ static func _tag_scope_matches(scope_value: Variant, query_tags_variant: Variant
 	return false
 
 
+## 作用：返回作用域值集合首项，供配置字段到运行键映射。
+## 使用：由本文件 _get_effect_keys/_get_damage_effect_keys 调用。
 static func _first_scope_value(scope_value: Variant) -> String:
 	var values: Array[String] = _scope_values(scope_value)
 	return values[0] if not values.is_empty() else ""
 
 
+## 作用：把单值或数组转为非空去重的字符串作用域值。
+## 使用：由本文件 _scope_value_matches/_tag_scope_matches 调用。
 static func _scope_values(scope_value: Variant) -> Array[String]:
 	var values: Array[String] = []
 	if scope_value is Array:
@@ -250,6 +278,8 @@ static func _scope_values(scope_value: Variant) -> Array[String]:
 	return values
 
 
+## 作用：仅接受 Dictionary；深拷贝输出以隔离调用方修改，其余类型返回空字典。
+## 使用：由本文件 _get_effect_keys/_effect_matches_query 调用；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -257,6 +287,8 @@ static func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：严格判断 Variant 是否为 int 或 float，不把布尔或字符串当数值。
+## 使用：由本文件 validate_effects/merge_flat_values 调用。
 static func _is_number(value: Variant) -> bool:
 	var value_type: int = typeof(value)
 	return value_type == TYPE_INT or value_type == TYPE_FLOAT

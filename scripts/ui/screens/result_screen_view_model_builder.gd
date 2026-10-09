@@ -1,3 +1,6 @@
+## 文件用途：格式化胜负结算、死亡原因、进度与伤害占比文本。
+## 使用方式：结果页创建实例后调用 build，不重复应用奖励或修改运行数据。
+
 extends RefCounted
 class_name ResultScreenViewModelBuilder
 
@@ -6,6 +9,8 @@ const STATE_RESULT_VICTORY: String = "RESULT_VICTORY"
 const RunDiagnosticServiceScript: Script = preload("res://scripts/game/run_diagnostic_service.gd")
 
 
+## 作用：整理上下文和配置为页面展示模型。
+## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；输入 state（状态）、run_state（单局状态）、unlocks（解锁组）；返回字典包含 diagnostic/labels/title/character/map/time/kill/progress 等字段。
 func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dictionary:
 	var selected_character_id: StringName = StringName(String(run_state.get("selected_character_id", "")))
 	var selected_map_id: StringName = StringName(String(run_state.get("selected_map_id", "")))
@@ -43,6 +48,8 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 	}
 
 
+## 作用：获取死亡原因，供当前模块后续逻辑使用。
+## 使用：本文件由 build 调用；输入 state（状态）、run_state（单局状态）、diagnostic（诊断）；返回 String 文本/标识。
 func _get_death_cause(state: String, run_state: Dictionary, diagnostic: Dictionary) -> String:
 	if state == STATE_RESULT_VICTORY:
 		return "未死亡"
@@ -54,11 +61,15 @@ func _get_death_cause(state: String, run_state: Dictionary, diagnostic: Dictiona
 	return String(diagnostic.get("death_cause", "未记录"))
 
 
+## 作用：获取进度文本，供当前模块后续逻辑使用。
+## 使用：本文件由 build 调用；输入 run_state（单局状态）；返回 String 文本/标识。
 func _get_progress_text(run_state: Dictionary) -> String:
 	var level: int = int(run_state.get("main_attack_level", 1))
 	return "主攻技能：Lv.%d" % level
 
 
+## 作用：格式化百分比字典。
+## 使用：本文件由 build 调用；输入 dictionary（字典）、empty_text（空值文本）；返回 String 文本/标识。
 func _format_percent_dictionary(dictionary: Dictionary, empty_text: String) -> String:
 	if dictionary.is_empty():
 		return empty_text
@@ -71,6 +82,8 @@ func _format_percent_dictionary(dictionary: Dictionary, empty_text: String) -> S
 	return "、".join(parts) if not parts.is_empty() else empty_text
 
 
+## 作用：标签对应键。
+## 使用：本文件由 _format_percent_dictionary 调用；输入 key（键）；返回 String 文本/标识。
 func _label_for_key(key: String) -> String:
 	match key:
 		"main_attack", "primary_attack":
@@ -103,11 +116,15 @@ func _label_for_key(key: String) -> String:
 			return key
 
 
+## 作用：格式化时间。
+## 使用：本文件由 build 调用；输入 seconds（秒）；返回 String 文本/标识。
 func _format_time(seconds: float) -> String:
 	var total_seconds: int = maxi(int(seconds), 0)
 	return "%02d:%02d" % [floori(float(total_seconds) / 60.0), total_seconds % 60]
 
 
+## 作用：安全取得字典值，类型不符时返回空字典。
+## 使用：本文件由 build 调用；输入 value（值）。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value

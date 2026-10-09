@@ -1,3 +1,5 @@
+## 文件用途：按玩家已损失生命比例计算叠层属性，并同时应用基础负面效果。
+## 使用方式：由特性控制器查询 get_modifiers；层数每次根据玩家实时血量和 hp_step_percent 重算。
 extends CharacterTrait
 class_name HpLostStackTrait
 
@@ -5,6 +7,8 @@ class_name HpLostStackTrait
 const SkillModifierCalculatorScript: Script = preload("res://scripts/skills/skill_modifier.gd")
 
 
+## 作用：先合并基础惩罚，再按玩家已失生命比例与每层步长重算有限叠层属性。
+## 使用：由特性控制器查询 get_modifiers；层数每次根据玩家实时血量和 hp_step_percent 重算。
 func get_modifiers(_query: RefCounted) -> Dictionary:
 	var modifiers: Dictionary = {}
 	var params: Dictionary = _get_params()
@@ -25,6 +29,8 @@ func get_modifiers(_query: RefCounted) -> Dictionary:
 	return modifiers
 
 
+## 作用：返回当前特性运行状态，包括 stack_count，供运行时与调试查询。
+## 使用：由特性控制器查询 get_modifiers；层数每次根据玩家实时血量和 hp_step_percent 重算。
 func get_debug_state() -> Dictionary:
 	var params: Dictionary = _get_params()
 	var owner: Node = null

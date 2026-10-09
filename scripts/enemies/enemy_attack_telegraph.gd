@@ -1,3 +1,6 @@
+## 文件用途：创建、展示和隐藏敌方攻击方向或范围预警。
+## 使用方式：setup 绑定敌人；攻击前 show，取消或结束时 hide。
+
 extends RefCounted
 class_name EnemyAttackTelegraph
 
@@ -10,6 +13,8 @@ var _line: Line2D
 ## - owner: Enemy node that owns the telegraph line.
 ## Returns:
 ## - Nothing.
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node2D) -> void:
 	_owner = owner
 
@@ -20,6 +25,8 @@ func setup(owner: Node2D) -> void:
 ## - fallback_range: Attack range used when behavior does not define a warning range.
 ## Returns:
 ## - Nothing.
+## 作用：显示。
+## 使用：供本模块调用者使用；输入 direction（方向）、behavior（行为）、fallback_range（回退范围）。
 func show(direction: Vector2, behavior: Dictionary, fallback_range: float) -> void:
 	var line: Line2D = _ensure_line(behavior)
 	var spawn_offset: float = float(behavior.get("projectile_spawn_offset", 20.0))
@@ -37,6 +44,8 @@ func show(direction: Vector2, behavior: Dictionary, fallback_range: float) -> vo
 ## - None.
 ## Returns:
 ## - Nothing.
+## 作用：隐藏。
+## 使用：供本模块调用者使用。
 func hide() -> void:
 	if _line != null and is_instance_valid(_line):
 		_line.visible = false
@@ -46,6 +55,8 @@ func hide() -> void:
 ## - behavior: Enemy behavior dictionary used to style a newly created line.
 ## Returns:
 ## - Existing or newly created Line2D.
+## 作用：确保行。
+## 使用：本文件由 show 调用；输入 behavior（行为）；返回 Line2D 对象/值。
 func _ensure_line(behavior: Dictionary) -> Line2D:
 	if _line != null and is_instance_valid(_line):
 		return _line
@@ -66,6 +77,8 @@ func _ensure_line(behavior: Dictionary) -> Line2D:
 ## - behavior: Enemy behavior dictionary that may contain color overrides.
 ## Returns:
 ## - Telegraph color.
+## 作用：获取颜色，供当前模块后续逻辑使用。
+## 使用：本文件由 show、_ensure_line 调用；输入 behavior（行为）；返回 Color 对象/值。
 func _get_color(behavior: Dictionary) -> Color:
 	var color_value: Variant = behavior.get("projectile_warning_color", [])
 	if color_value is Array:

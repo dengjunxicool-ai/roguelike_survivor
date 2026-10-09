@@ -1,3 +1,5 @@
+## 文件用途：实现闪电弹跳、电压、过载、感电及感电消耗反应。
+## 使用方式：宿主在投射物命中时调用；规则可消耗状态层数、生成衍生电击并用来源冷却限制重复触发。
 extends RefCounted
 
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
@@ -14,10 +16,14 @@ static var _voltage_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：依次执行闪电弹跳、电压、过载、感电与感电消耗反应。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_lightning_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_lightning_chain_bounce(rules, context)
@@ -27,6 +33,8 @@ func _apply_lightning_projectile_hit_rules(rules: Dictionary, context: Dictionar
 	host._apply_shock_consume_reaction(rules, context)
 
 
+## 作用：按连锁弹跳规则派生额外闪电命中。
+## 使用：rules 读取 lightning_chain_bounce；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_lightning_chain_bounce(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("lightning_chain_bounce"):
@@ -34,6 +42,8 @@ func _apply_lightning_chain_bounce(rules: Dictionary, context: Dictionary) -> vo
 	SpecialDamageRuleHandlerScript.execute_lightning_chain_bounce(rules, context, host._get_skill_damage(context))
 
 
+## 作用：强敌命中在同来源冷却允许时累积电压层数。
+## 使用：rules 读取 voltage_on_elite_boss_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_voltage_on_elite_boss_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("voltage_on_elite_boss_hit"):
@@ -55,6 +65,8 @@ func _apply_voltage_on_elite_boss_hit(rules: Dictionary, context: Dictionary) ->
 	})
 
 
+## 作用：电压满足门槛后消耗层数并触发过载伤害与感电相关效果。
+## 使用：rules 读取 overload_on_voltage/shock_upgrade；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_overload_on_voltage(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("overload_on_voltage"):
@@ -88,6 +100,8 @@ func _apply_overload_on_voltage(rules: Dictionary, context: Dictionary) -> void:
 		host._apply_overload_shock_lightning(rules, context)
 
 
+## 作用：过载与感电条件满足且冷却允许时生成衍生闪电伤害。
+## 使用：rules 读取 overload_shock_lightning；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_overload_shock_lightning(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("overload_shock_lightning"):
@@ -103,6 +117,8 @@ func _apply_overload_shock_lightning(rules: Dictionary, context: Dictionary) -> 
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.overload_shock_lightning_intents(rules, context, maxi(int(rule.get("amount", 26)), 0)))
 
 
+## 作用：闪电球命中在冷却允许时施加感电，包含感电升级修正。
+## 使用：rules 读取 shock_on_lightning_orb_hit/shock_upgrade；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_shock_on_lightning_orb_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("shock_on_lightning_orb_hit"):
@@ -126,6 +142,8 @@ func _apply_shock_on_lightning_orb_hit(rules: Dictionary, context: Dictionary) -
 	})
 
 
+## 作用：目标带感电时处理消耗反应、触发计数与磁暴追加效果。
+## 使用：rules 读取 shock_consume_reaction/shock_upgrade/magnetic_storm_on_shock_consume；context 携带 target/projectile/skill_id；写入 lightning_shock_trigger_count/lightning_magnetic_storm_checked 元数据；需由仍存活的宿主创建并调度。
 func _apply_shock_consume_reaction(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("shock_consume_reaction"):
@@ -161,6 +179,8 @@ func _apply_shock_consume_reaction(rules: Dictionary, context: Dictionary) -> vo
 	SpecialDamageRuleHandlerScript.execute_magnetic_storm_on_shock_consume(rules, context)
 
 
+## 作用：按感电升级规则修饰状态参数。
+## 使用：params 读取 duration；context 为施放或命中上下文；会原地更新 params.duration；需由仍存活的宿主创建并调度。
 func _get_shock_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)

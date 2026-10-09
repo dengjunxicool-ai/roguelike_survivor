@@ -1,3 +1,6 @@
+## 文件用途：计算 UI 缩放、断点和设计坐标并刷新登记面板。
+## 使用方式：创建实例后登记设计尺寸，视口变化时 update；通过 apply_design_rect/apply_design_margins 适配控件。
+
 extends RefCounted
 class_name UIResponsiveLayout
 
@@ -16,6 +19,8 @@ const MEDIUM_MAX_WIDTH: float = 1400.0
 var _panels: Array[Dictionary] = []
 
 
+## 作用：取视口宽高相对 1280×720 设计尺寸比例的较小值。
+## 使用：viewport_size 为像素；宽高非正时返回 1。
 func get_raw_scale(viewport_size: Vector2) -> float:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return 1.0
@@ -25,14 +30,20 @@ func get_raw_scale(viewport_size: Vector2) -> float:
 	)
 
 
+## 作用：将原始 UI 缩放限制到 0.65～1.15。
+## 使用：viewport_size 为像素；供设计矩形和字体布局适配；返回计算或读取的数值。
 func get_fit_scale(viewport_size: Vector2) -> float:
 	return clampf(get_raw_scale(viewport_size), UI_MIN_SCALE, UI_MAX_SCALE)
 
 
+## 作用：获取UI缩放，供当前模块后续逻辑使用。
+## 使用：供本模块调用者使用；输入 viewport_size（视口尺寸）；返回计算或读取的数值。
 func get_ui_scale(viewport_size: Vector2) -> float:
 	return get_fit_scale(viewport_size)
 
 
+## 作用：按视口宽高判定 compact/medium/desktop 布局档位。
+## 使用：返回 StringName；无效尺寸按 desktop，紧凑档优先判定。
 func get_breakpoint(viewport_size: Vector2) -> StringName:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return &"desktop"
@@ -43,10 +54,14 @@ func get_breakpoint(viewport_size: Vector2) -> StringName:
 	return &"desktop"
 
 
+## 作用：判断紧凑，返回布尔判断结果。
+## 使用：供本模块调用者使用；输入 viewport_size（视口尺寸）。
 func is_compact(viewport_size: Vector2) -> bool:
 	return get_breakpoint(viewport_size) == &"compact"
 
 
+## 作用：获取设计偏移，供当前模块后续逻辑使用。
+## 使用：本文件由 apply_design_rect 调用；输入 viewport_size（视口尺寸）；返回 Vector2 对象/值。
 func get_design_offset(viewport_size: Vector2) -> Vector2:
 	var scale: float = get_fit_scale(viewport_size)
 	var scaled_design_size: Vector2 = DESIGN_SIZE * scale
@@ -56,6 +71,8 @@ func get_design_offset(viewport_size: Vector2) -> Vector2:
 	)
 
 
+## 作用：按 UI 缩放和居中偏移将设计矩形应用到控件。
+## 使用：rect 为 1280×720 设计坐标，viewport_size 为实际像素；同时更新偏移和最小尺寸。
 func apply_design_rect(control: Control, rect: Rect2, viewport_size: Vector2) -> void:
 	if control == null:
 		return
@@ -71,6 +88,8 @@ func apply_design_rect(control: Control, rect: Rect2, viewport_size: Vector2) ->
 	control.custom_minimum_size = scaled_size
 
 
+## 作用：应用设计边距组。
+## 使用：供本模块调用者使用；输入 margin（边距）、left（left）、top（顶部）、right（right）、bottom（bottom）、viewport_size（视口尺寸）。
 func apply_design_margins(margin: MarginContainer, left: float, top: float, right: float, bottom: float, viewport_size: Vector2) -> void:
 	if margin == null:
 		return
@@ -81,6 +100,8 @@ func apply_design_margins(margin: MarginContainer, left: float, top: float, righ
 	margin.add_theme_constant_override("margin_bottom", roundi(bottom * scale))
 
 
+## 作用：登记面板、边距容器和设计尺寸并立即应用布局。
+## 使用：后续视口变化 update 会重算所有已登记面板。
 func register_panel(panel: Panel, margin: MarginContainer, design_size: Vector2, viewport_size: Vector2) -> void:
 	_panels.append({
 		"panel": panel,
@@ -90,6 +111,8 @@ func register_panel(panel: Panel, margin: MarginContainer, design_size: Vector2,
 	apply_panel_layout(panel, margin, design_size, viewport_size)
 
 
+## 作用：更新。
+## 使用：供本模块调用者使用；输入 viewport_size（视口尺寸）。
 func update(viewport_size: Vector2) -> void:
 	for panel_data: Dictionary in _panels:
 		var panel: Panel = panel_data.get("panel", null) as Panel
@@ -99,6 +122,8 @@ func update(viewport_size: Vector2) -> void:
 			apply_panel_layout(panel, margin, design_size, viewport_size)
 
 
+## 作用：应用面板布局。
+## 使用：本文件由 register_panel、update 调用；输入 panel（面板）、margin（边距）、design_size（设计尺寸）、viewport_size（视口尺寸）。
 func apply_panel_layout(panel: Panel, margin: MarginContainer, design_size: Vector2, viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return

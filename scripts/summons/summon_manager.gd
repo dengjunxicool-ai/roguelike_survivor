@@ -1,3 +1,5 @@
+## 文件用途：按召唤定义ID维护活跃数量并创建具有拥有者、Power和编队位置的召唤实例。
+## 使用方式：作为运行时管理节点由spawn_summon动作调用；spawn_summon接收定义对象/字典/ID及owner上下文。
 extends Node
 class_name SummonManager
 
@@ -9,6 +11,8 @@ const DEFAULT_SUMMON_SCENE: PackedScene = preload("res://scenes/summons/summon_c
 var _active_by_id: Dictionary = {}
 
 
+## 作用：解析定义并清失效记录，未达数量上限时实例化场景、设置编队位置并调用setup。
+## 使用：context必须有owner/caster和可用parent；返回节点或null，创建后登记活跃数组。
 func spawn_summon(definition_variant: Variant, context: Dictionary = {}) -> Node2D:
 	var definition: RefCounted = _resolve_definition(definition_variant)
 	if definition == null:
@@ -48,6 +52,8 @@ func spawn_summon(definition_variant: Variant, context: Dictionary = {}) -> Node
 	return summon
 
 
+## 作用：已有RefCounted直接使用，字典解析定义，其余按ID查询。
+## 使用：返回定义对象或null，调用方处理缺失。
 func _resolve_definition(value: Variant) -> RefCounted:
 	if value is RefCounted:
 		return value
@@ -56,6 +62,8 @@ func _resolve_definition(value: Variant) -> RefCounted:
 	return SummonDefinitionScript.from_id(value)
 
 
+## 作用：逆序移除同定义活跃列表中的失效/释放中召唤。
+## 使用：definition_id为表键，不主动释放仍有效节点。
 func _prune(definition_id: StringName) -> void:
 	var active: Array = _active_by_id.get(definition_id, [])
 	for index: int in range(active.size() - 1, -1, -1):
@@ -69,6 +77,8 @@ func _prune(definition_id: StringName) -> void:
 	_active_by_id[definition_id] = active
 
 
+## 作用：按attack_power、damage、base_damage顺序读取首个正值。
+## 使用：owner空或没有正值返回1。
 func _read_owner_power(node: Node) -> float:
 	if node == null:
 		return 1.0

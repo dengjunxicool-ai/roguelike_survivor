@@ -1,4 +1,7 @@
-﻿extends CanvasLayer
+﻿## 文件用途：编排页面状态、暂停、开局加载、局内事件与终局结算。
+## 使用方式：挂载启动场景；页面发状态/命令请求，transition_to 统一验证、准备、显隐和暂停。
+
+extends CanvasLayer
 class_name UIManager
 
 
@@ -107,6 +110,8 @@ var _run_loading_active: bool = false
 var _run_loading_elapsed: float = 0.0
 
 
+## 作用：组装状态机、页面宿主和界面，应用已存设置并进入启动状态。
+## 使用：Godot 自动调用；节点保持 PROCESS_MODE_ALWAYS，使暂停菜单仍能接收输入。
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 200
@@ -122,6 +127,8 @@ func _ready() -> void:
 	call_deferred("_finish_boot")
 
 
+## 作用：推进本节点的逐帧更新流程。
+## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _process(delta: float) -> void:
 	if _run_loading_active:
 		_update_run_loading(delta)
@@ -132,12 +139,16 @@ func _process(delta: float) -> void:
 	_update_hud_refresh_timer(delta)
 
 
+## 作用：更新公告计时器。
+## 使用：本文件由 _process 调用；输入 delta（delta）。
 func _update_announcement_timer(delta: float) -> void:
 	_announcement_timer = maxf(_announcement_timer - delta, 0.0)
 	if _announcement_timer <= 0.0:
 		_set_hud_label("announcement", "")
 
 
+## 作用：更新HUD刷新计时器。
+## 使用：本文件由 _process 调用；输入 delta（delta）。
 func _update_hud_refresh_timer(delta: float) -> void:
 	_hud_refresh_cooldown = maxf(_hud_refresh_cooldown - delta, 0.0)
 	if _hud_refresh_cooldown <= 0.0:
@@ -145,6 +156,8 @@ func _update_hud_refresh_timer(delta: float) -> void:
 		_hud_refresh_cooldown = 0.25
 
 
+## 作用：响应当前界面的输入事件。
+## 使用：由 Godot 输入分发调用；event 为输入事件，是否消费由函数内分支决定；输入 event（事件）。
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel") and not event.is_echo():
 		if current_state == STATE_RUNNING:
@@ -159,6 +172,8 @@ func _input(event: InputEvent) -> void:
 		_title_controller.call("handle_input", event)
 
 
+## 作用：校验目标页面和允许转移，再统一准备内容、显隐页面与应用暂停。
+## 使用：next_state 使用 STATE_* 常量；开发模式走独立开局入口，非法转移警告并返回。
 func transition_to(next_state: String) -> void:
 	if next_state == STATE_DEVELOPER_MODE:
 		_start_developer_mode()
@@ -181,10 +196,14 @@ func transition_to(next_state: String) -> void:
 	_apply_pause_for_state(next_state)
 
 
+## 作用：显示页面。
+## 使用：供本模块调用者使用；输入 next_state（下一个状态）。
 func show_screen(next_state: String) -> void:
 	transition_to(next_state)
 
 
+## 作用：启动开发者调试单局。
+## 使用：本文件由 _start_developer_mode 调用；输入 setup（初始化）。
 func start_developer_debug_run(setup: Dictionary = {}) -> void:
 	var tree: SceneTree = get_tree()
 	if tree != null and tree.root != null:
@@ -200,43 +219,61 @@ func start_developer_debug_run(setup: Dictionary = {}) -> void:
 	_allow_direct_running_transition = previous_allow_direct
 
 
+## 作用：退出游戏。
+## 使用：本文件由 _build_title 调用。
 func _quit_game() -> void:
 	get_tree().quit()
 
 
+## 作用：应用启动窗口模式。
+## 使用：本文件由 _ready 调用。
 func _apply_startup_window_mode() -> void:
 	UISettingsServiceScript.apply_saved_settings()
 
 
+## 作用：完成启动。
+## 使用：本文件由 _ready 调用。
 func _finish_boot() -> void:
 	if current_state == STATE_BOOT:
 		transition_to(STATE_TITLE)
 		_queue_responsive_layout_refresh()
 
 
+## 作用：检查状态转移是否允许，返回布尔判断结果；具体处理委托给 _state_registry.can_transition。
+## 使用：内部辅助入口；输入 from_state（来源状态）、to_state（转换状态）。
 func _can_transition(from_state: String, to_state: String) -> bool:
 	return bool(_state_registry.call("can_transition", from_state, to_state))
 
 
+## 作用：准备状态；具体处理委托给 _state_prepare_router.prepare。
+## 使用：本文件由 transition_to、_enter_running_state_with_direct 调用；输入 state（状态）。
 func _prepare_state(state: String) -> void:
 	_state_prepare_router.call("prepare", self, state, {
 		"modal_flow_controller": _modal_flow_controller,
 		"choice_modal": _run_choice_modal_controller
 	})
 
+## 作用：应用可见层级；具体处理委托给 _screen_host.apply_visible_hierarchy。
+## 使用：本文件由 transition_to、_enter_running_state_with_direct 调用；输入 state（状态）。
 func _apply_visible_hierarchy(state: String) -> void:
 	_screen_host.call("apply_visible_hierarchy", state)
 	_queue_responsive_layout_refresh()
 
 
+## 作用：应用暂停对应状态；具体处理委托给 _pause_policy.apply。
+## 使用：本文件由 transition_to、_enter_running_state_with_direct 调用；输入 state（状态）。
 func _apply_pause_for_state(state: String) -> void:
 	_pause_policy.call("apply", get_tree(), _state_registry, state)
 
 
+## 作用：进入运行状态。
+## 使用：内部辅助入口。
 func _enter_running_state() -> void:
 	_enter_running_state_with_direct(_allow_direct_running_transition)
 
 
+## 作用：进入运行状态结合直接。
+## 使用：本文件由 _enter_running_state、_start_run 调用；输入 allow_direct_transition（allow直接转移）。
 func _enter_running_state_with_direct(allow_direct_transition: bool) -> void:
 	if allow_direct_transition and not bool(_state_machine.call("can_transition", STATE_RUNNING)):
 		_state_machine.call("force_transition_to", STATE_RUNNING)
@@ -248,18 +285,26 @@ func _enter_running_state_with_direct(allow_direct_transition: bool) -> void:
 	transition_to(STATE_RUNNING)
 
 
+## 作用：判断运行子节点状态，返回布尔判断结果；具体处理委托给 _state_registry.is_running_child_state。
+## 使用：内部辅助入口；输入 state（状态）。
 func _is_running_child_state(state: String) -> bool:
 	return bool(_state_registry.call("is_running_child_state", state))
 
 
+## 作用：判断全屏选择状态，返回布尔判断结果；具体处理委托给 _state_registry.is_fullscreen_choice_state。
+## 使用：内部辅助入口；输入 state（状态）。
 func _is_fullscreen_choice_state(state: String) -> bool:
 	return bool(_state_registry.call("is_fullscreen_choice_state", state))
 
 
+## 作用：设置页面可见性；具体处理委托给 _screen_host.set_screen_visible。
+## 使用：内部辅助入口；输入 state（状态）、should_show（是否需要显示）。
 func _set_screen_visible(state: String, should_show: bool) -> void:
 	_screen_host.call("set_screen_visible", state, should_show)
 
 
+## 作用：构建页面组。
+## 使用：本文件由 _ready 调用。
 func _build_screens() -> void:
 	var build_order_variant: Variant = _state_registry.call("get_build_order")
 	var build_order: Array = build_order_variant if build_order_variant is Array else []
@@ -268,6 +313,8 @@ func _build_screens() -> void:
 	_setup_run_choice_modals()
 
 
+## 作用：构建页面对应状态。
+## 使用：本文件由 _build_screens 调用；输入 state（状态）。
 func _build_screen_for_state(state: String) -> void:
 	if state == STATE_RUNNING:
 		return
@@ -282,6 +329,8 @@ func _build_screen_for_state(state: String) -> void:
 		call(method_name)
 
 
+## 作用：构建启动并配置节点/样式所需的属性。
+## 使用：内部辅助入口。
 func _build_boot() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_BOOT, _tr("panel.boot", "BOOT"), Vector2(360, 220), 10)
 	_add_label(body, _tr("panel.loading", "正在加载"), 1)
@@ -291,6 +340,8 @@ func _build_boot() -> void:
 	body.add_child(bar)
 
 
+## 作用：构建标题并配置节点/样式所需的属性。
+## 使用：内部辅助入口。
 func _build_title() -> void:
 	_title_controller = TitleScreenControllerScript.new()
 	_title_controller.state_requested.connect(Callable(self, "transition_to"))
@@ -300,6 +351,8 @@ func _build_title() -> void:
 	_screen_registry.call("register_screen", STATE_TITLE, screen)
 
 
+## 作用：构建角色选择并配置节点/样式所需的属性。
+## 使用：内部辅助入口。
 func _build_character_select() -> void:
 	_character_loadout_controller = CharacterLoadoutControllerScript.new()
 	_character_loadout_controller.loadout_confirmed.connect(Callable(self, "_on_loadout_confirmed"))
@@ -309,6 +362,8 @@ func _build_character_select() -> void:
 	_screen_registry.call("register_screen", STATE_CHARACTER_SELECT, screen)
 
 
+## 作用：构建地图选择并配置节点/样式所需的属性。
+## 使用：内部辅助入口。
 func _build_map_select() -> void:
 	_map_select_controller = MapSelectControllerScript.new()
 	_map_select_controller.start_requested.connect(Callable(self, "_start_run"))
@@ -320,6 +375,8 @@ func _build_map_select() -> void:
 
 
 
+## 作用：构建局外升级并配置节点/样式所需的属性；具体处理委托给 _meta_upgrade_controller.build。
+## 使用：内部辅助入口。
 func _build_meta_upgrade() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_META_UPGRADE, _tr("panel.meta_upgrade", "局外升级"), Vector2(780, 620), 10)
 	_meta_upgrade_controller = MetaUpgradeControllerScript.new()
@@ -327,6 +384,8 @@ func _build_meta_upgrade() -> void:
 	_meta_upgrade_controller.call("build", body)
 
 
+## 作用：构建图鉴并配置节点/样式所需的属性；具体处理委托给 _codex_controller.build。
+## 使用：内部辅助入口。
 func _build_codex() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_CODEX, _tr("panel.codex", "Codex图鉴"), Vector2(700, 520), 10)
 	_codex_controller = CodexScreenControllerScript.new()
@@ -334,6 +393,8 @@ func _build_codex() -> void:
 	_codex_controller.call("build", body)
 
 
+## 作用：构建设置并配置节点/样式所需的属性；具体处理委托给 _settings_controller.build。
+## 使用：内部辅助入口。
 func _build_settings() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_SETTINGS, _tr("panel.settings", "设置"), Vector2(520, 420), 10)
 	_settings_controller = SettingsScreenControllerScript.new()
@@ -341,6 +402,8 @@ func _build_settings() -> void:
 	_settings_controller.call("build", body)
 
 
+## 作用：构建单局HUD并配置节点/样式所需的属性。
+## 使用：本文件由 _ensure_run_hud_built 调用。
 func _build_run_hud() -> void:
 	if bool(_screen_registry.call("has_screen", STATE_RUNNING)):
 		return
@@ -353,20 +416,28 @@ func _build_run_hud() -> void:
 	_screen_registry.call("register_screen", STATE_RUNNING, screen)
 
 
+## 作用：检查 RUNNING 页面是否存在，缺失时调用 _build_run_hud 构建并登记 HUD。
+## 使用：开局或需要 HUD 的流程调用；已构建时直接返回。
 func _ensure_run_hud_built() -> void:
 	if not bool(_screen_registry.call("has_screen", STATE_RUNNING)):
 		_build_run_hud()
 
 
 
+## 作用：构建升级弹窗。
+## 使用：内部辅助入口。
 func _build_level_up_modal() -> void:
 	_level_up_options = _create_choice_modal_screen(STATE_LEVEL_UP_MODAL, _tr("panel.level_up", "技能选择"), 20)
 
 
+## 作用：构建局内奖励弹窗。
+## 使用：内部辅助入口。
 func _build_run_reward_modal() -> void:
 	_reward_options = _create_choice_modal_screen(STATE_RUN_REWARD_MODAL, _tr("panel.reward", "战利品选择"), 20)
 
 
+## 作用：构建诅咒选择弹窗。
+## 使用：内部辅助入口。
 func _build_curse_choice_modal() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_CURSE_CHOICE_MODAL, _tr("panel.curse", "诅咒选择"), Vector2(720, 460), 20)
 	_add_label(body, _tr("panel.curse_hint", "选择一项高风险高收益强化"), 1)
@@ -374,6 +445,8 @@ func _build_curse_choice_modal() -> void:
 	_add_state_button(body, _tr("panel.skip", "跳过"), STATE_RUNNING)
 
 
+## 作用：初始化单局选择弹窗组。
+## 使用：本文件由 _build_screens 调用。
 func _setup_run_choice_modals() -> void:
 	_run_choice_modal_controller = RunChoiceModalControllerScript.new()
 	_run_choice_modal_controller.transition_requested.connect(Callable(self, "transition_to"))
@@ -387,6 +460,8 @@ func _setup_run_choice_modals() -> void:
 	_run_choice_modal_controller.call("prewarm_choice_card_pools")
 
 
+## 作用：构建暂停菜单。
+## 使用：内部辅助入口。
 func _build_pause_menu() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_PAUSE_MENU, _tr("panel.pause", "暂停游戏"), Vector2(420, 360), 30)
 	_add_state_button(body, _tr("panel.resume", "继续游戏"), STATE_RUNNING)
@@ -394,6 +469,8 @@ func _build_pause_menu() -> void:
 	_add_state_button(body, _tr("panel.back_to_title", "返回主菜单"), STATE_TITLE)
 
 
+## 作用：构建结果页面并配置节点/样式所需的属性；具体处理委托给 _result_controller.build。
+## 使用：本文件由 _build_screen_for_state 调用；输入 state（状态）、title（标题）。
 func _build_result_screen(state: String, title: String) -> void:
 	var body: VBoxContainer = _create_panel_screen(state, title, Vector2(560, 460), 30)
 	if _result_controller == null:
@@ -403,6 +480,8 @@ func _build_result_screen(state: String, title: String) -> void:
 	_result_controller.call("build", body, state)
 
 
+## 作用：获取页面字典，供当前模块后续逻辑使用；具体处理委托给 _screen_registry.get_screens。
+## 使用：本文件由 _create_panel_screen、_create_choice_modal_screen 调用；返回结果字典。
 func _get_screen_dictionary() -> Dictionary:
 	var screens_variant: Variant = _screen_registry.call("get_screens")
 	if screens_variant is Dictionary:
@@ -410,6 +489,8 @@ func _get_screen_dictionary() -> Dictionary:
 	return {}
 
 
+## 作用：创建面板页面。
+## 使用：本文件由 _build_boot、_build_meta_upgrade、_build_codex 调用；输入 state（状态）、title（标题）、min_size（最小尺寸）、z_index_value（z索引值）；返回 VBoxContainer 对象/值。
 func _create_panel_screen(state: String, title: String, min_size: Vector2, z_index_value: int) -> VBoxContainer:
 	return UIScreenFactoryScript.create_panel_screen(
 		self,
@@ -423,6 +504,8 @@ func _create_panel_screen(state: String, title: String, min_size: Vector2, z_ind
 	)
 
 
+## 作用：创建选择弹窗页面并配置节点/样式所需的属性。
+## 使用：本文件由 _build_level_up_modal、_build_run_reward_modal 调用；输入 state（状态）、title（标题）、z_index_value（z索引值）；返回 HBoxContainer 对象/值。
 func _create_choice_modal_screen(state: String, title: String, z_index_value: int) -> HBoxContainer:
 	var screen: Control = UIScreenFactoryScript.create_screen(self, _get_screen_dictionary(), state, z_index_value)
 	var background: ColorRect = ColorRect.new()
@@ -466,6 +549,8 @@ func _create_choice_modal_screen(state: String, title: String, z_index_value: in
 	return options
 
 
+## 作用：更新响应式布局组。
+## 使用：本文件由 _ready、_queue_responsive_layout_refresh、_update_responsive_layouts_next_frame 调用。
 func _update_responsive_layouts() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	_responsive_layout.call("update", viewport_size)
@@ -476,82 +561,116 @@ func _update_responsive_layouts() -> void:
 		_run_hud_controller.call("update_layout")
 
 
+## 作用：排队响应式布局刷新。
+## 使用：本文件由 _finish_boot、_apply_visible_hierarchy 调用。
 func _queue_responsive_layout_refresh() -> void:
 	call_deferred("_update_responsive_layouts")
 	call_deferred("_update_responsive_layouts_next_frame")
 
 
+## 作用：更新响应式布局组下一个帧。
+## 使用：本文件由 _queue_responsive_layout_refresh 调用；包含等待操作，需完成时使用 await 调用。
 func _update_responsive_layouts_next_frame() -> void:
 	await get_tree().process_frame
 	_update_responsive_layouts()
 
 
+## 作用：更新地图选择布局；具体处理委托给 _map_select_controller.update_layout。
+## 使用：本文件由 _update_responsive_layouts 调用。
 func _update_map_select_layout() -> void:
 	if _map_select_controller != null:
 		_map_select_controller.call("update_layout", get_viewport().get_visible_rect().size)
 
 
 
+## 作用：添加标签。
+## 使用：本文件由 _build_boot、_build_curse_choice_modal 调用；输入 parent（父节点）、text（文本）、alignment（alignment）、node_name（节点名称）；返回 Label 对象/值。
 func _add_label(parent: Node, text: String, alignment: int = 0, node_name: String = "") -> Label:
 	return UINodeFactoryScript.add_label(parent, text, alignment, node_name)
 
 
+## 作用：添加按钮。
+## 使用：本文件由 _add_state_button 调用；输入 parent（父节点）、text（文本）；返回 Button 对象/值。
 func _add_button(parent: Node, text: String) -> Button:
 	return UINodeFactoryScript.add_button(parent, text)
 
 
+## 作用：添加状态切换按钮。
+## 使用：本文件由 _build_curse_choice_modal、_build_pause_menu 调用；输入 parent（父节点）、text（文本）、state（状态）；返回 Button 对象/值。
 func _add_state_button(parent: Node, text: String, state: String) -> Button:
 	var button: Button = _add_button(parent, text)
 	button.pressed.connect(Callable(self, "transition_to").bind(state))
 	return button
 
 
+## 作用：添加滚动区。
+## 使用：内部辅助入口；输入 parent（父节点）；返回 ScrollContainer 对象/值。
 func _add_scroll(parent: Node) -> ScrollContainer:
 	return UINodeFactoryScript.add_scroll(parent)
 
 
+## 作用：添加纵向容器。
+## 使用：本文件由 _build_curse_choice_modal 调用；输入 parent（父节点）；返回 VBoxContainer 对象/值。
 func _add_vbox(parent: Node) -> VBoxContainer:
 	return UINodeFactoryScript.add_vbox(parent)
 
 
+## 作用：添加横向容器。
+## 使用：内部辅助入口；输入 parent（父节点）；返回 HBoxContainer 对象/值。
 func _add_hbox(parent: Node) -> HBoxContainer:
 	return UINodeFactoryScript.add_hbox(parent)
 
 
+## 作用：添加带标签进度。
+## 使用：内部辅助入口；输入 parent（父节点）、label_text（标签文本）、value（值）、max_value（上限值）；返回 ProgressBar 对象/值。
 func _add_labeled_progress(parent: Node, label_text: String, value: float, max_value: float) -> ProgressBar:
 	return UINodeFactoryScript.add_labeled_progress(parent, label_text, value, max_value)
 
 
+## 作用：更新标题布局；具体处理委托给 _title_controller.update_layout。
+## 使用：本文件由 _update_responsive_layouts 调用。
 func _update_title_layout() -> void:
 	if _title_controller != null:
 		_title_controller.call("update_layout", get_viewport().get_visible_rect().size)
 
 
+## 作用：重置标题页面；具体处理委托给 _title_controller.reset。
+## 使用：内部辅助入口。
 func _reset_title_screen() -> void:
 	if _title_controller != null:
 		_title_controller.call("reset")
 
 
+## 作用：刷新角色选择页面；具体处理委托给 _character_loadout_controller.refresh。
+## 使用：内部辅助入口。
 func _refresh_character_select_screen() -> void:
 	if _character_loadout_controller != null:
 		_character_loadout_controller.call("refresh", _selected_character_id)
 
 
+## 作用：更新角色选择布局；具体处理委托给 _character_loadout_controller.update_layout。
+## 使用：本文件由 _update_responsive_layouts 调用。
 func _update_character_select_layout() -> void:
 	if _character_loadout_controller != null:
 		_character_loadout_controller.call("update_layout", get_viewport().get_visible_rect().size)
 
 
+## 作用：获取技能展示名称，供当前模块后续逻辑使用。
+## 使用：内部辅助入口；输入 skill_id（技能ID）；返回 String 文本/标识。
 func _get_skill_display_name(skill_id: StringName) -> String:
 	var skill: Dictionary = GameData.get_skill(skill_id)
 	return String(skill.get("display_name", skill_id))
 
 
+## 作用：刷新地图选择页面；具体处理委托给 _map_select_controller.refresh。
+## 使用：内部辅助入口。
 func _refresh_map_select_screen() -> void:
 	if _map_select_controller != null:
 		_map_select_controller.call("refresh", _selected_character_id)
 
 
+## 作用：刷新局外升级页面；具体处理委托给 _meta_upgrade_controller.refresh。
+## 使用：内部辅助入口。
 func _refresh_meta_upgrade_screen() -> void:
 	if _meta_upgrade_controller != null:
 		_meta_upgrade_controller.call("refresh")
@@ -559,11 +678,15 @@ func _refresh_meta_upgrade_screen() -> void:
 
 
 
+## 作用：响应开局配置已确认并衔接对应的事件处理流程。
+## 使用：本文件由 _build_character_select 调用；输入 character_id（角色ID）。
 func _on_loadout_confirmed(character_id: StringName) -> void:
 	_selected_character_id = character_id
 	transition_to(STATE_MAP_SELECT)
 
 
+## 作用：绘制加载遮罩后构建合法 loadout，重置局内场景与统计并进入运行态。
+## 使用：map_id 为选中地图；协程需等待初始化帧，重复加载被拒绝，失败关闭遮罩。
 func _start_run(map_id: Variant) -> void:
 	if _run_loading_active:
 		return
@@ -620,6 +743,8 @@ func _start_run(map_id: Variant) -> void:
 		call_deferred("_open_developer_debug_panel")
 
 
+## 作用：显示单局加载叠层。
+## 使用：本文件由 _start_run 调用；输入 map_name（地图名称）。
 func _show_run_loading_overlay(map_name: String) -> void:
 	_ensure_run_loading_overlay()
 	_run_loading_active = true
@@ -632,6 +757,8 @@ func _show_run_loading_overlay(map_name: String) -> void:
 		_run_loading_tween.kill()
 
 
+## 作用：等待下一处理帧和可渲染模式的帧绘制完成。
+## 使用：开局耗时初始化前 await，确保遮罩已经显示；headless 只等处理帧。
 func _wait_for_run_loading_overlay_painted() -> void:
 	await get_tree().process_frame
 	if DisplayServer.get_name().to_lower() == "headless":
@@ -639,6 +766,8 @@ func _wait_for_run_loading_overlay_painted() -> void:
 	await RenderingServer.frame_post_draw
 
 
+## 作用：隐藏单局加载叠层。
+## 使用：本文件由 _start_run 调用；输入 immediate（immediate）。
 func _hide_run_loading_overlay(immediate: bool) -> void:
 	if _run_loading_overlay == null:
 		_run_loading_active = false
@@ -657,12 +786,16 @@ func _hide_run_loading_overlay(immediate: bool) -> void:
 	_run_loading_tween.tween_callback(Callable(self, "_finish_hide_run_loading_overlay"))
 
 
+## 作用：完成隐藏单局加载叠层。
+## 使用：本文件由 _hide_run_loading_overlay 调用。
 func _finish_hide_run_loading_overlay() -> void:
 	if _run_loading_overlay != null:
 		_run_loading_overlay.visible = false
 	_run_loading_active = false
 
 
+## 作用：更新单局加载。
+## 使用：本文件由 _process 调用；输入 delta（delta）。
 func _update_run_loading(delta: float) -> void:
 	_run_loading_elapsed += delta
 	if _run_loading_dots_label == null:
@@ -671,11 +804,15 @@ func _update_run_loading(delta: float) -> void:
 	_run_loading_dots_label.text = ".".repeat(dot_count)
 
 
+## 作用：设置单局加载状态效果。
+## 使用：本文件由 _start_run、_show_run_loading_overlay 调用；输入 text（文本）。
 func _set_run_loading_status(text: String) -> void:
 	if _run_loading_status_label != null:
 		_run_loading_status_label.text = text
 
 
+## 作用：确保单局加载叠层。
+## 使用：本文件由 _ready、_show_run_loading_overlay 调用。
 func _ensure_run_loading_overlay() -> void:
 	if _run_loading_overlay != null and is_instance_valid(_run_loading_overlay):
 		return
@@ -747,6 +884,8 @@ func _ensure_run_loading_overlay() -> void:
 	content.add_child(hint)
 
 
+## 作用：创建单局加载面板样式并配置节点/样式所需的属性。
+## 使用：本文件由 _ensure_run_loading_overlay 调用；返回 StyleBoxFlat 对象/值。
 func _create_run_loading_panel_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.095, 0.105, 0.125, 0.96)
@@ -758,6 +897,8 @@ func _create_run_loading_panel_style() -> StyleBoxFlat:
 	return style
 
 
+## 作用：启动开发者模式。
+## 使用：本文件由 transition_to 调用。
 func _start_developer_mode() -> void:
 	start_developer_debug_run({
 		"character_id": &"mage",
@@ -765,6 +906,8 @@ func _start_developer_mode() -> void:
 	})
 
 
+## 作用：打开开发者调试面板。
+## 使用：本文件由 _start_run 调用。
 func _open_developer_debug_panel() -> void:
 	var panel: Node = get_tree().root.find_child("DevDebugPanel", true, false)
 	if panel == null:
@@ -778,6 +921,8 @@ func _open_developer_debug_panel() -> void:
 		panel.call("open_developer_mode")
 
 
+## 作用：清除开发模式标记并释放单局场景、统计和信号桥接状态。
+## 使用：离开运行场景时调用；由 RunSceneCoordinator 处理各运行对象的清理。
 func _teardown_run_scene() -> void:
 	if get_tree() != null and get_tree().root != null:
 		get_tree().root.set_meta("developer_mode_enabled", false)
@@ -788,6 +933,8 @@ func _teardown_run_scene() -> void:
 	_run_scene_ui_bridge.call("reset")
 
 
+## 作用：补接敌人信号、刷新统计快照并向 HUD controller 提供展示状态。
+## 使用：运行态刷新计时器触发；附带 UI 热点性能采样。
 func _update_run_hud() -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_run_scene_ui_bridge.call("connect_enemy_death_signals", get_tree(), self)
@@ -797,6 +944,8 @@ func _update_run_hud() -> void:
 	HotPathProfilerScript.end(self, &"ui_update", hot_path_start)
 
 
+## 作用：获取单局HUD状态，供当前模块后续逻辑使用。
+## 使用：本文件由 _update_run_hud 调用；返回字典包含 tree/run_seconds/run_duration/wave_index/wave_id/wave_remaining_seconds/wave_duration_seconds/wave_spawned_count 等字段。
 func _get_run_hud_state() -> Dictionary:
 	var state_variant: Variant = _run_hud_state_provider.call("build", {
 		"tree": get_tree(),
@@ -816,27 +965,37 @@ func _get_run_hud_state() -> Dictionary:
 		return state
 	return {}
 
+## 作用：响应敌人死亡并衔接对应的事件处理流程；具体处理委托给 _run_stats_tracker.record_enemy_killed。
+## 使用：内部辅助入口；输入 _enemy（敌人）。
 func _on_enemy_died(_enemy: Node) -> void:
 	_kill_count += 1
 	if _run_stats_tracker != null and _run_stats_tracker.has_method("record_enemy_killed"):
 		_run_stats_tracker.call("record_enemy_killed", _enemy)
 
 
+## 作用：设置HUD标签；具体处理委托给 _run_hud_controller.set_label。
+## 使用：本文件由 _update_announcement_timer 调用；输入 key（键）、text（文本）。
 func _set_hud_label(key: String, text: String) -> void:
 	if _run_hud_controller != null:
 		_run_hud_controller.call("set_label", key, text)
 
 
+## 作用：显示公告；具体处理委托给 _run_hud_controller.show_announcement。
+## 使用：本文件由 _on_timeline_event_started、_on_wave_changed、_on_wave_cleared 调用；输入 text（文本）、duration（持续时间）。
 func _show_announcement(text: String, duration: float = 3.0) -> void:
 	if _run_hud_controller != null:
 		_run_hud_controller.call("show_announcement", text)
 	_announcement_timer = duration
 
 
+## 作用：连接运行时来源组；具体处理委托给 _run_scene_ui_bridge.connect_runtime_sources。
+## 使用：内部辅助入口。
 func _connect_runtime_sources() -> void:
 	_run_scene_ui_bridge.call("connect_runtime_sources", get_tree(), self)
 
 
+## 作用：响应局内时间变化并衔接对应的事件处理流程；具体处理委托给 _run_stats_tracker.set_run_time。
+## 使用：内部辅助入口；输入 elapsed_time（elapsed时间）、duration（持续时间）。
 func _on_run_time_changed(elapsed_time: float, duration: float) -> void:
 	_run_seconds = elapsed_time
 	_run_duration = duration
@@ -844,6 +1003,8 @@ func _on_run_time_changed(elapsed_time: float, duration: float) -> void:
 		_run_stats_tracker.call("set_run_time", elapsed_time)
 
 
+## 作用：记录待处理等级并在运行态打开技能选择弹窗。
+## 使用：玩家升级信号回调；非运行态先保留升级待办。
 func _on_player_leveled_up(new_level: int) -> void:
 	if _run_choice_modal_controller != null:
 		_run_choice_modal_controller.call("add_pending_level", new_level)
@@ -851,14 +1012,20 @@ func _on_player_leveled_up(new_level: int) -> void:
 		transition_to(STATE_LEVEL_UP_MODAL)
 
 
+## 作用：显示待处理升级按条件运行。
+## 使用：内部辅助入口。
 func _show_pending_level_up_if_running() -> void:
 	_show_pending_modal_if_running()
 
 
+## 作用：显示待处理奖励按条件运行。
+## 使用：本文件由 _on_timeline_event_started 调用。
 func _show_pending_reward_if_running() -> void:
 	_show_pending_modal_if_running()
 
 
+## 作用：仅在运行态查询下个奖励或升级弹窗并请求状态切换。
+## 使用：通常由延迟回调调用，避免弹窗叠加和战斗事件中同步抢占界面。
 func _show_pending_modal_if_running() -> void:
 	if current_state != STATE_RUNNING:
 		return
@@ -867,6 +1034,8 @@ func _show_pending_modal_if_running() -> void:
 		transition_to(pending_state)
 
 
+## 作用：正式局首次收到玩家死亡时进入失败结算。
+## 使用：信号回调；已进入任一终局或调试局时直接返回，避免覆盖已确定结果。
 func _on_player_died() -> void:
 	if current_state == STATE_RESULT_DEFEAT or current_state == STATE_RESULT_VICTORY:
 		return
@@ -876,16 +1045,22 @@ func _on_player_died() -> void:
 	transition_to(STATE_RESULT_DEFEAT)
 
 
+## 作用：判断当前单局调试，返回布尔判断结果；具体处理委托给 _run_scene_coordinator.get_run_scene_parent。
+## 使用：本文件由 _on_player_died 调用。
 func _is_current_run_debug() -> bool:
 	var run_scene: Node = _run_scene_coordinator.call("get_run_scene_parent", get_tree()) as Node
 	return run_scene != null and bool(run_scene.get_meta("debug", false))
 
 
+## 作用：响应玩家升级应用结果并衔接对应的事件处理流程；具体处理委托给 _run_stats_tracker.record_upgrade_applied。
+## 使用：内部辅助入口；输入 upgrade_id（升级ID）。
 func _on_player_upgrade_applied(upgrade_id: StringName) -> void:
 	if _run_stats_tracker != null and _run_stats_tracker.has_method("record_upgrade_applied"):
 		_run_stats_tracker.call("record_upgrade_applied", upgrade_id)
 
 
+## 作用：响应单局属性事件并衔接对应的事件处理流程；具体处理委托给 relic_manager.handle_combat_event。
+## 使用：本文件由 _start_run 调用；输入 event_name（事件名称）、payload（payload）。
 func _on_run_stat_event(event_name: StringName, payload: Dictionary) -> void:
 	var player: Node = get_tree().get_first_node_in_group(PLAYER_GROUP)
 	var relic_manager: Node = player.get_node_or_null("RelicManager") if player != null else null
@@ -893,6 +1068,8 @@ func _on_run_stat_event(event_name: StringName, payload: Dictionary) -> void:
 		relic_manager.call("handle_combat_event", event_name, payload)
 
 
+## 作用：展示时间线公告并按精英或最终祝福事件排队奖励。
+## 使用：最终祝福先收集全场经验；延迟打开待办弹窗以保持事件顺序。
 func _on_timeline_event_started(_event_id: String, announcement: String) -> void:
 	if announcement != "":
 		_show_announcement(announcement, 4.0)
@@ -906,6 +1083,8 @@ func _on_timeline_event_started(_event_id: String, announcement: String) -> void
 			call_deferred("_show_pending_reward_if_running")
 
 
+## 作用：收集全部经验经验晶体。
+## 使用：本文件由 _on_timeline_event_started 调用。
 func _collect_all_experience_gems() -> void:
 	var player: Node2D = get_tree().get_first_node_in_group(PLAYER_GROUP) as Node2D
 	if player == null:
@@ -917,11 +1096,15 @@ func _collect_all_experience_gems() -> void:
 		_run_stats_tracker.call("record_map_event", "pre_boss_full_screen_exp_magnet")
 
 
+## 作用：响应波次变化并衔接对应的事件处理流程。
+## 使用：内部辅助入口；输入 wave_id（波次ID）。
 func _on_wave_changed(wave_id: String) -> void:
 	if wave_id != "":
 		_show_announcement("波次开始：%s" % wave_id, 2.0)
 
 
+## 作用：响应波次计时器变化并衔接对应的事件处理流程。
+## 使用：内部辅助入口；输入 wave_index（波次索引）、wave_id（波次ID）、remaining_time（剩余时间）、duration（持续时间）、spawned_count（已生成数量）、total_count（总量数量）。
 func _on_wave_timer_changed(wave_index: int, wave_id: String, remaining_time: float, duration: float, spawned_count: int, total_count: int) -> void:
 	_wave_index = wave_index
 	_wave_id = wave_id
@@ -931,6 +1114,8 @@ func _on_wave_timer_changed(wave_index: int, wave_id: String, remaining_time: fl
 	_wave_total_count = total_count
 
 
+## 作用：响应波次通关并衔接对应的事件处理流程。
+## 使用：内部辅助入口；输入 wave_id（波次ID）、cleared_early（通关early）。
 func _on_wave_cleared(wave_id: String, cleared_early: bool) -> void:
 	if wave_id == "":
 		return
@@ -940,12 +1125,16 @@ func _on_wave_cleared(wave_id: String, cleared_early: bool) -> void:
 		_show_announcement("波次结束", 2.0)
 
 
+## 作用：首次收到 Boss 击败信号时进入胜利结算。
+## 使用：任一终局已锁定时忽略迟到信号；_elapsed_time 由信号传入但本函数不使用。
 func _on_boss_defeated(_elapsed_time: float) -> void:
 	if current_state == STATE_RESULT_DEFEAT or current_state == STATE_RESULT_VICTORY:
 		return
 	transition_to(STATE_RESULT_VICTORY)
 
 
+## 作用：刷新结果页面；具体处理委托给 _result_controller.refresh。
+## 使用：内部辅助入口；输入 state（状态）。
 func _refresh_result_screen(state: String) -> void:
 	_run_souls_earned = maxi(SaveManager.get_soul_stones() - _run_start_souls, 0)
 	_record_result_progression_once(state)
@@ -953,6 +1142,8 @@ func _refresh_result_screen(state: String) -> void:
 		_result_controller.call("refresh", state, _get_result_state())
 
 
+## 作用：将当前局结果持久化一次并缓存成长摘要。
+## 使用：结果页面刷新调用；重开局重置标志，重复刷新不会累计奖励或计数。
 func _record_result_progression_once(state: String) -> void:
 	if _result_progression_recorded:
 		return
@@ -960,6 +1151,8 @@ func _record_result_progression_once(state: String) -> void:
 	_result_progression_recorded = true
 
 
+## 作用：获取结果状态，供当前模块后续逻辑使用。
+## 使用：本文件由 _refresh_result_screen、_record_result_progression_once 调用；返回字典包含 tree/player_group/selected_character_id/selected_map_id/selected_map_name/run_seconds/kill_count/run_souls_earned 等字段。
 func _get_result_state() -> Dictionary:
 	return RunResultStateBuilderScript.build_result_state({
 		"tree": get_tree(),
@@ -975,6 +1168,8 @@ func _get_result_state() -> Dictionary:
 	})
 
 
+## 作用：更新局内统计快照组。
+## 使用：本文件由 _update_run_hud 调用。
 func _update_run_stats_snapshots() -> void:
 	if _run_stats_tracker == null:
 		return
@@ -988,6 +1183,8 @@ func _update_run_stats_snapshots() -> void:
 		_run_stats_tracker.call("update_wave_pressure", alive_normal, _wave_total_count, 0.25)
 
 
+## 作用：保存结算推荐角色和地图并进入地图选择页。
+## 使用：推荐信号回调；只修改下一局选择，开局仍由 _start_run 完成。
 func _apply_recommended_loadout(character_id: StringName, map_id: StringName) -> void:
 	_selected_character_id = character_id
 	_selected_map_id = map_id
@@ -998,5 +1195,7 @@ func _apply_recommended_loadout(character_id: StringName, map_id: StringName) ->
 	transition_to(STATE_MAP_SELECT)
 
 
+## 作用：本地化。
+## 使用：本文件由 _build_screen_for_state、_build_boot、_build_meta_upgrade 调用；输入 key（键）、fallback（回退）；返回 String 文本/标识。
 func _tr(key: String, fallback: String) -> String:
 	return LocalizationServiceScript.translate(key, {}, fallback)

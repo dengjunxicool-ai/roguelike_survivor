@@ -1,3 +1,5 @@
+## 文件用途：保存升级卡片展示字段和选择应用载荷。
+## 使用方式：构造时传入选项字典，to_dictionary 返回可用于 UI 或奖励流程的快照并复制载荷及标签。
 extends RefCounted
 class_name UpgradeOption
 
@@ -16,6 +18,8 @@ var recommended_reason: String = ""
 var level_text: String = ""
 
 
+## 作用：解析升级卡片展示字段与标签，并深拷贝选择应用载荷。
+## 使用：构造时传入选项字典，to_dictionary 返回可用于 UI 或奖励流程的快照并复制载荷及标签。
 func _init(data: Dictionary = {}) -> void:
 	id = StringName(String(data.get("id", "")))
 	type = String(data.get("type", ""))
@@ -37,6 +41,8 @@ func _init(data: Dictionary = {}) -> void:
 		payload = {}
 
 
+## 作用：导出完整卡片展示与载荷字典，payload 和 tags 复制后输出。
+## 使用：构造时传入选项字典，to_dictionary 返回可用于 UI 或奖励流程的快照并复制载荷及标签。
 func to_dictionary() -> Dictionary:
 	return {
 		"id": id,
@@ -54,6 +60,8 @@ func to_dictionary() -> Dictionary:
 	}
 
 
+## 作用：按输入数组顺序转换元素为字符串，返回独立的强类型数组。
+## 使用：由本文件 _init 调用。
 func _to_string_array(value: Variant) -> Array[String]:
 	var result: Array[String] = []
 	if value is Array:

@@ -1,3 +1,5 @@
+## 文件用途：组合召唤目标、移动和攻击组件，按跟随/追逐/攻击/返回/过期状态更新。
+## 使用方式：挂召唤Node2D场景，由SummonManager.setup传定义、owner和Power；主人失效或寿命结束释放。
 extends Node2D
 class_name SummonController
 
@@ -29,6 +31,8 @@ var _context: Dictionary = {}
 var _remaining_duration: float = 0.0
 
 
+## 作用：解析定义与拥有者，按技能成长缩放时长和攻击配置，再创建组件与视觉并启用物理处理。
+## 使用：setup_params含definition、owner、skill_instance、formation_index及事件上下文。
 func setup(setup_params: Dictionary) -> void:
 	definition = setup_params.get("definition") as RefCounted
 	summon_owner = setup_params.get("owner") as Node2D
@@ -50,6 +54,8 @@ func setup(setup_params: Dictionary) -> void:
 	set_physics_process(true)
 
 
+## 作用：复制攻击配置，按技能成长缩放damage_scale与attack_cooldown。
+## 使用：skill_instance空返回原配置副本，不修改定义。
 func _scaled_attack_config(config: Dictionary, skill_instance: RefCounted) -> Dictionary:
 	var scaled: Dictionary = config.duplicate(true)
 	if skill_instance == null:
@@ -61,12 +67,16 @@ func _scaled_attack_config(config: Dictionary, skill_instance: RefCounted) -> Di
 	return scaled
 
 
+## 作用：以性能采样包装召唤状态机更新。
+## 使用：引擎每物理帧传delta。
 func _physics_process(delta: float) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_physics_process_profiled(delta)
 	HotPathProfilerScript.end(self, &"summon_update", hot_path_start)
 
 
+## 作用：先处理过期/主人失效和超距传送/返回，再推进攻击冷却与选目标，最后跟随/攻击/追逐。
+## 使用：超过leash时提前返回，不执行当帧选目标和攻击。
 func _physics_process_profiled(delta: float) -> void:
 	if state == STATE_EXPIRED:
 		return
@@ -115,6 +125,8 @@ func _physics_process_profiled(delta: float) -> void:
 	_movement.move_chase(self, target, delta)
 
 
+## 作用：将现有SummonVisual旋转到目标方向并减90度对齐贴图。
+## 使用：目标空或重合不修改朝向。
 func _face_target(face_target: Node2D) -> void:
 	if face_target == null:
 		return
@@ -126,6 +138,8 @@ func _face_target(face_target: Node2D) -> void:
 		sprite.rotation = direction.angle() - PI * 0.5
 
 
+## 作用：过滤空、失效、待删除或已死亡的当前目标。
+## 使用：返回可用目标或null，牵引距离另由targeting判断。
 func _get_valid_target() -> Node2D:
 	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
 		return null
@@ -134,6 +148,8 @@ func _get_valid_target() -> Node2D:
 	return target
 
 
+## 作用：有效贴图配置时创建SummonVisual并应用统一缩放和层级。
+## 使用：texture必须存在，默认scale0.12，配置空不创建。
 func _apply_visual(visual: Dictionary) -> void:
 	var texture_path: String = String(visual.get("texture", ""))
 	if texture_path == "" or not ResourceLoader.exists(texture_path):
@@ -151,6 +167,8 @@ func _apply_visual(visual: Dictionary) -> void:
 	add_child(sprite)
 
 
+## 作用：按attack_power、damage、base_damage读取第一个正Power。
+## 使用：节点空或无正值返回1。
 func _read_owner_power(node: Node) -> float:
 	if node == null:
 		return 1.0

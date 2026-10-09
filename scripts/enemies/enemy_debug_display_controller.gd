@@ -1,3 +1,6 @@
+## 文件用途：显示开发模式血条、滞后血条和战斗伤害数字。
+## 使用方式：setup 注入 enemy；update_health 仅在调试构建且开启开发模式时显示血条，show_damage_number 独立创建伤害弹字。
+
 extends RefCounted
 class_name EnemyDebugDisplayController
 
@@ -11,10 +14,14 @@ var _hp_tween: Tween
 var _popup_offset_index: int = 0
 
 
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node2D) -> void:
 	_owner = owner
 
 
+## 作用：在开发模式下更新即时血条和滞后血条，仅显示受伤且存活敌人的血量。
+## 使用：current_health/max_health 为生命值；非调试构建或未启用开发模式时跳过。
 func update_health(current_health: int, max_health: int) -> void:
 	if not _debug_health_display_enabled() or _owner == null:
 		return
@@ -32,6 +39,8 @@ func update_health(current_health: int, max_health: int) -> void:
 		_tween_health_value(target_value, max_changed)
 
 
+## 作用：在敌人上方创建按伤害类型着色并错位的伤害数字。
+## 使用：amount 必须为正；damage_result_or_type 可传伤害结果字典或类型 ID，此入口不受开发模式血条开关限制。
 func show_damage_number(amount: int, damage_result_or_type: Variant = &"") -> void:
 	if _owner == null or amount <= 0:
 		return
@@ -48,6 +57,8 @@ func show_damage_number(amount: int, damage_result_or_type: Variant = &"") -> vo
 	_popup_offset_index += 1
 
 
+## 作用：检查调试构建、owner 与场景树及开发模式开关。
+## 使用：只在 root 的 developer_mode_enabled 元数据为真时返回 true。
 func _debug_health_display_enabled() -> bool:
 	if not OS.is_debug_build() or _owner == null:
 		return false
@@ -57,6 +68,8 @@ func _debug_health_display_enabled() -> bool:
 	return bool(tree.root.get_meta("developer_mode_enabled", false))
 
 
+## 作用：复用或创建即时与滞后血条，并移除旧的数值血量标签。
+## 使用：由 update_health 调用；新增控件挂在敌人 owner 下。
 func _ensure_health_display() -> void:
 	if _owner == null:
 		return
@@ -80,6 +93,8 @@ func _ensure_health_display() -> void:
 		stale_label.queue_free()
 
 
+## 作用：立即更新主血条，并让滞后血条通过补间追上降低后的血量。
+## 使用：force_instant 或首次更新直接同步；回复血量时立即同步，减少血量时播放滞后效果。
 func _tween_health_value(target_value: float, force_instant: bool) -> void:
 	if _hp_bar == null:
 		return
@@ -108,6 +123,8 @@ func _tween_health_value(target_value: float, force_instant: bool) -> void:
 	_hp_tween.tween_property(_hp_lag_bar, "value", target_value, 2.0)
 
 
+## 作用：配置进度条。
+## 使用：本文件由 _ensure_health_display 调用；输入 bar（进度条）、fill_color（填充颜色）、z（z）。
 func _configure_bar(bar: ProgressBar, fill_color: Color, z: int) -> void:
 	bar.position = Vector2(-38.0, -46.0)
 	bar.size = Vector2(76.0, 7.0)
@@ -117,6 +134,8 @@ func _configure_bar(bar: ProgressBar, fill_color: Color, z: int) -> void:
 	bar.add_theme_stylebox_override("fill", _make_bar_style(fill_color))
 
 
+## 作用：生成进度条样式并配置节点/样式所需的属性。
+## 使用：本文件由 _configure_bar 调用；输入 color（颜色）；返回 StyleBoxFlat 对象/值。
 func _make_bar_style(color: Color) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
@@ -131,6 +150,8 @@ func _make_bar_style(color: Color) -> StyleBoxFlat:
 	return style
 
 
+## 作用：获取伤害结果，供当前模块后续逻辑使用。
+## 使用：本文件由 show_damage_number 调用；输入 value（值）；返回字典包含 element/damage_type。
 func _get_damage_result(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return (value as Dictionary).duplicate(true)

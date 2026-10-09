@@ -1,3 +1,5 @@
+## 文件用途：为精英奖励或 Boss 前祝福编排资源、治疗、升级和遗物卡片。
+## 使用方式：generate_reward_options 传玩家及 reward_kind，洗牌和检查保证后返回最多三项；本文件只生成数据。
 extends RefCounted
 class_name RunRewardPool
 
@@ -9,10 +11,14 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _upgrade_pool: RefCounted = UpgradePoolScript.new()
 
 
+## 作用：随机化奖励池专属 RNG，供奖励洗牌与遗物抽取使用。
+## 使用：generate_reward_options 传玩家及 reward_kind，洗牌和检查保证后返回最多三项；本文件只生成数据。
 func _init() -> void:
 	_rng.randomize()
 
 
+## 作用：按奖励类别构建候选，洗牌和执行保证后返回最多三张卡。
+## 使用：player 为玩家节点；无匹配项时返回空数组。
 func generate_reward_options(player: Node, reward_kind: String) -> Array[Dictionary]:
 	if player == null:
 		return []
@@ -29,6 +35,8 @@ func generate_reward_options(player: Node, reward_kind: String) -> Array[Diction
 	return options.slice(0, mini(REWARD_COUNT, options.size()))
 
 
+## 作用：构建精英节点的经验、资源、治疗、升级和遗物候选，低血时增加生存项。
+## 使用：player 为玩家节点。
 func _build_elite_reward_options(player: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = [
 		_make_option("reward_main_exp", "主攻击经验", "立即获得 45 点经验，帮助主攻击更快达到 Lv5。", "rare", {"amount": 45, "reward_kind": "elite"}, ["主攻击", "成长"], "主攻击等级", "不直接提高当前伤害数值。", "精英节点后补经验能提高 Lv5 成型稳定性。"),
@@ -46,6 +54,8 @@ func _build_elite_reward_options(player: Node) -> Array[Dictionary]:
 	return options
 
 
+## 作用：构建 Boss 前的输出、生存、成长、状态、控制和风险奖励候选。
+## 使用：player 为玩家节点。
 func _build_boss_blessing_options(player: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = [
 		_make_option("boss_damage_blessing", "强敌压制", "Boss 战期间输出提高。", "rare", {"upgrade_id": &"boss_damage", "reward_kind": "boss_blessing"}, ["Boss", "输出"], "精英 / Boss", "不影响普通怪清场。", "Boss 即将出现，单体补强更容易转化为胜利。"),
@@ -62,6 +72,8 @@ func _build_boss_blessing_options(player: Node) -> Array[Dictionary]:
 	return options
 
 
+## 作用：把升级池选项导出为奖励字典，补充奖励描述及 reward_kind。
+## 使用：player 为玩家节点；count 为所需数量。
 func _upgrade_options(player: Node, count: int, reward_kind: String) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for option_variant: Variant in _upgrade_pool.call("generate_options", player, count):
@@ -78,6 +90,8 @@ func _upgrade_options(player: Node, count: int, reward_kind: String) -> Array[Di
 	return options
 
 
+## 作用：从遗物池均匀抽一个定义并构建遗物奖励卡，无有效遗物返回空字典。
+## 使用：由本文件 _build_elite_reward_options/_build_boss_blessing_options 调用；无适用数据时返回空字典。
 func _random_relic_option(reward_kind: String) -> Dictionary:
 	var relics: Array[Dictionary] = GameData.get_relic_pool()
 	if relics.is_empty():
@@ -99,6 +113,8 @@ func _random_relic_option(reward_kind: String) -> Dictionary:
 	)
 
 
+## 作用：用构建器的字典创建可被升级 UI 和选择流程消费的选项对象。
+## 使用：rarity 为目标稀有度；payload 为事件附加字段。
 func _make_option(id: String, title: String, description: String, rarity: String, payload: Dictionary, tags: Array[String] = [], affected_origin: String = "", does_not_affect: String = "", recommended_reason: String = "") -> Dictionary:
 	return {
 		"id": id,
@@ -115,6 +131,8 @@ func _make_option(id: String, title: String, description: String, rarity: String
 	}
 
 
+## 作用：检查精英低血生存或 Boss 标签保证，缺少时在列表头插入对应卡。
+## 使用：player 为玩家节点；options 为候选卡片列表。
 func _ensure_reward_guarantees(player: Node, reward_kind: String, options: Array[Dictionary]) -> void:
 	if reward_kind == "elite" and _health_percent(player) < 0.40 and not _has_tag(options, "生存"):
 		options.insert(0, _make_option("reward_heal_guarantee", "低血量补偿", "恢复 25% 最大生命。", "rare", {"heal_percent": 0.25, "reward_kind": "elite"}, ["生存", "治疗", "保底"], "生命值", "不直接提高输出。", "低血量时至少出现一个生存选项。"))
@@ -122,6 +140,8 @@ func _ensure_reward_guarantees(player: Node, reward_kind: String, options: Array
 		options.insert(0, _make_option("boss_damage_guarantee", "Boss 补强", "Boss 战期间输出提高。", "rare", {"upgrade_id": &"boss_damage", "reward_kind": "boss_blessing"}, ["Boss", "输出", "保底"], "精英 / Boss", "不影响普通怪清场。", "Boss 前祝福至少提供一个 Boss 相关选项。"))
 
 
+## 作用：检查奖励字典列表是否含给定标签。
+## 使用：options 为候选卡片列表；返回布尔判断或执行是否成功。
 func _has_tag(options: Array[Dictionary], tag: String) -> bool:
 	for option: Dictionary in options:
 		if _get_string_array(option.get("tags", [])).has(tag):
@@ -129,11 +149,15 @@ func _has_tag(options: Array[Dictionary], tag: String) -> bool:
 	return false
 
 
+## 作用：返回玩家生命比例并夹紧到零至一。
+## 使用：player 为玩家节点。
 func _health_percent(player: Node) -> float:
 	var max_health: float = maxf(float(player.get("max_health")), 1.0)
 	return clampf(float(player.get("current_health")) / max_health, 0.0, 1.0)
 
 
+## 作用：使用奖励池专属 RNG 原地洗牌候选列表。
+## 使用：options 为候选卡片列表。
 func _shuffle(options: Array[Dictionary]) -> void:
 	for option_index in range(options.size() - 1, 0, -1):
 		var swap_index: int = _rng.randi_range(0, option_index)
@@ -142,10 +166,14 @@ func _shuffle(options: Array[Dictionary]) -> void:
 		options[swap_index] = value
 
 
+## 作用：读取配置 display_name，缺字段用调用方备用值。
+## 使用：fallback 为缺值备用结果。
 func _display_name(data: Dictionary, fallback: Variant) -> String:
 	return String(data.get("display_name", fallback))
 
 
+## 作用：仅接受 Dictionary；深拷贝输出以隔离调用方修改，其余类型返回空字典。
+## 使用：由本文件 _upgrade_options 调用；无适用数据时返回空字典。
 func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		var dictionary: Dictionary = value
@@ -153,6 +181,8 @@ func _get_dictionary(value: Variant) -> Dictionary:
 	return {}
 
 
+## 作用：按输入数组顺序转换元素为字符串，返回独立的强类型数组。
+## 使用：由本文件 _random_relic_option/_has_tag 调用。
 func _get_string_array(value: Variant) -> Array[String]:
 	var result: Array[String] = []
 	if value is Array:

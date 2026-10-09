@@ -1,13 +1,19 @@
+## 文件用途：对状态运行字典提供存在、层数、快照、移动和易伤的纯查询。
+## 使用方式：StatusEffectManager委托查询；packet参数区分能触发下一次承伤/满层爆炸易伤的伤害。
 extends RefCounted
 class_name StatusEffectQuery
 
 const StatusEffectTickHelperScript: Script = preload("res://scripts/combat/status_effect_tick_helper.gd")
 
 
+## 作用：将状态ID规范为StringName并检查状态字典中存在。
+## 使用：只查键，不判断剩余时间；过期移除由管理器处理。
 static func has_status(statuses: Dictionary, status_id: Variant) -> bool:
 	return statuses.has(StringName(str(status_id)))
 
 
+## 作用：读取已存在状态的stacks，缺失返回0。
+## 使用：statuses为运行状态表。
 static func get_status_stack(statuses: Dictionary, status_id: Variant) -> int:
 	var id: StringName = StringName(str(status_id))
 	if not statuses.has(id):
@@ -16,6 +22,8 @@ static func get_status_stack(statuses: Dictionary, status_id: Variant) -> int:
 	return int(status.get("stacks", 0))
 
 
+## 作用：导出各状态ID、层数、时长、tick和元素信息。
+## 使用：返回新数组与简化字典，tick_damage_total包含叠层及Power效果。
 static func get_status_snapshot(statuses: Dictionary) -> Array[Dictionary]:
 	var snapshot: Array[Dictionary] = []
 	for status_variant: Variant in statuses.values():
@@ -35,6 +43,8 @@ static func get_status_snapshot(statuses: Dictionary) -> Array[Dictionary]:
 	return snapshot
 
 
+## 作用：合并状态固定减速和每层减速，非指定锁定状态可直接令速度为0。
+## 使用：Boss/精英减速上限35%，普通60%，正常倍率最少0.05。
 static func movement_speed_multiplier(statuses: Dictionary, movement_lock_status_ids: Array[StringName], is_boss: bool, is_elite: bool) -> float:
 	var slow_percent: float = 0.0
 	for id_variant: Variant in statuses.keys():
@@ -55,6 +65,8 @@ static func movement_speed_multiplier(statuses: Dictionary, movement_lock_status
 	return maxf(1.0 - clampf(slow_percent, 0.0, max_slow), 0.05)
 
 
+## 作用：合并通用、元素、类型、破甲、下一击和满层爆炸易伤并按阶级裁剪。
+## 使用：只查询加成；不会实际消费下一击状态。
 static func vulnerability_total(statuses: Dictionary, damage_type: Variant = &"", category: Variant = &"", packet: Variant = {}, is_boss: bool = false, is_elite: bool = false) -> float:
 	var type_name: String = str(damage_type)
 	var category_name: String = str(category)
@@ -89,6 +101,8 @@ static func vulnerability_total(statuses: Dictionary, damage_type: Variant = &""
 	return clampf(multiplier_add, floor_value, cap_add)
 
 
+## 作用：判断伤害是否可使用下一击承伤加成，排除DOT、场地与minor反应。
+## 使用：空字典视为允许，支持typed包和上下文。
 static func can_consume_next_damage_taken(packet: Variant) -> bool:
 	if packet is Dictionary and (packet as Dictionary).is_empty():
 		return true
@@ -101,6 +115,8 @@ static func can_consume_next_damage_taken(packet: Variant) -> bool:
 	return true
 
 
+## 作用：检查满层阈值与反应/爆炸来源是否同时符合。
+## 使用：status含required_stacks与加成，返回布尔值。
 static func is_full_stack_explosion_vulnerability_active(status: Dictionary, packet: Variant) -> bool:
 	if not status.has("full_stack_explosion_damage_taken_multiplier_add"):
 		return false
@@ -113,6 +129,8 @@ static func is_full_stack_explosion_vulnerability_active(status: Dictionary, pac
 	return damage_origin == "reaction" or damage_type == "reaction_damage" or source_type == "explosion"
 
 
+## 作用：读取字典、包或上下文的伤害字段。
+## 使用：不支持类型返回fallback。
 static func damage_packet_value(packet: Variant, key: Variant, fallback: Variant = null) -> Variant:
 	if packet is Dictionary:
 		return (packet as Dictionary).get(key, fallback)
@@ -123,16 +141,22 @@ static func damage_packet_value(packet: Variant, key: Variant, fallback: Variant
 	return fallback
 
 
+## 作用：读取状态定义 effect 下的浮点参数。
+## 使用：key 为效果字段，字段缺失或 effect 非字典时返回 fallback。
 static func _get_effect_value(definition: Dictionary, key: String, fallback: float) -> float:
 	var effect: Dictionary = _get_dictionary(definition.get("effect", {}))
 	return float(effect.get(key, fallback))
 
 
+## 作用：读取状态定义 effect 下的布尔参数。
+## 使用：key 为效果开关，字段缺失时使用 fallback。
 static func _get_effect_bool(definition: Dictionary, key: String, fallback: bool) -> bool:
 	var effect: Dictionary = _get_dictionary(definition.get("effect", {}))
 	return bool(effect.get(key, fallback))
 
 
+## 作用：读取字典配置，非字典输入返回空字典。
+## 使用：value为待检查配置；返回输入字典本身，调用方写入会影响原值。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value

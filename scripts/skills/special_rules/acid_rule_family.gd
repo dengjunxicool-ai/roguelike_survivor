@@ -1,3 +1,5 @@
+## 文件用途：实现酸液压力施放、酸痕残留、满层爆发及腐蚀薄膜防御规则。
+## 使用方式：宿主按酸液场 tick、施放及受击调用；对强敌的降甲与同目标爆发保留冷却限制。
 extends RefCounted
 
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
@@ -11,10 +13,14 @@ static var _corrosive_film_boss_hit_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：按酸液周期施放计数预留下一发压力强化标记。
+## 使用：rules 读取 acid_pressure_every_n_casts；context 携带 skill_instance；写入 acid_pressure_cast_count/acid_pressure_next_cast 元数据；需由仍存活的宿主创建并调度。
 func _prepare_acid_pressure_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_pressure_every_n_casts"):
@@ -29,6 +35,8 @@ func _prepare_acid_pressure_cast(rules: Dictionary, context: Dictionary) -> void
 	skill_instance.set_meta("acid_pressure_next_cast", cast_count % interval == 0)
 
 
+## 作用：在酸液喷射区域 tick 时依次处理酸痕、残留、护盾和满层爆发。
+## 使用：rules 读取 acid_sprayer_base；context 携带 source_id/target；需由仍存活的宿主创建并调度。
 func _apply_acid_spray_on_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_sprayer_base"):
@@ -45,6 +53,8 @@ func _apply_acid_spray_on_field_tick(rules: Dictionary, context: Dictionary) -> 
 	host._apply_acid_burst_on_full_status(rules, context, target)
 
 
+## 作用：在酸液 tick 命中强敌时施加酸痕状态。
+## 使用：rules 读取 acid_mark_on_strong_acid_tick；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_acid_mark_on_strong_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_mark_on_strong_acid_tick") or target == null or not target.has_method("apply_status"):
@@ -59,6 +69,8 @@ func _apply_acid_mark_on_strong_tick(rules: Dictionary, target: Node) -> void:
 	})
 
 
+## 作用：按酸液区域规则为命中目标施加残留层数。
+## 使用：rules 读取 acid_residue_on_acid_tick；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_acid_residue_on_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_residue_on_acid_tick") or target == null or not target.has_method("apply_status"):
@@ -71,6 +83,8 @@ func _apply_acid_residue_on_tick(rules: Dictionary, target: Node) -> void:
 	})
 
 
+## 作用：检查酸痕或残留满层条件及同目标冷却，触发对应酸爆。
+## 使用：rules 读取 acid_burst_on_full_acid_mark_hit/acid_burst_on_full_acid_residue_hit/acid_burst_cooldown_tuning；context 携带 source_instance_id；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_acid_burst_on_full_status(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not target.has_method("get_status_stack"):
@@ -93,6 +107,8 @@ func _apply_acid_burst_on_full_status(rules: Dictionary, context: Dictionary, ta
 	SpecialDamageRuleHandlerScript.execute_acid_burst(rules, context)
 
 
+## 作用：累计酸液命中次数，达到规则门槛后授予腐蚀薄膜护盾。
+## 使用：rules 读取 acid_hit_shield；context 携带 caster/skill_instance；写入 acid_hit_shield_count 元数据；需由仍存活的宿主创建并调度。
 func _apply_acid_hit_shield(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_hit_shield"):
@@ -111,6 +127,8 @@ func _apply_acid_hit_shield(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.grant_corrosive_film(rules, context, caster, int(rule.get("shield_value", 8)), float(rule.get("shield_duration", 4.0)))
 
 
+## 作用：按 Boss 酸痕层数触发限时降甲，并保存降甲数值和截止时间。
+## 使用：rules 读取 boss_acid_mark_armor_break_pulse；target 为本次命中目标；写入 acid_boss_defense_reduction/acid_boss_defense_reduction_until 元数据；需由仍存活的宿主创建并调度。
 func _apply_boss_acid_mark_armor_break_pulse(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("boss_acid_mark_armor_break_pulse") or not host._is_boss(target):
@@ -132,6 +150,8 @@ func _apply_boss_acid_mark_armor_break_pulse(rules: Dictionary, target: Node) ->
 	target.set_meta("acid_boss_defense_reduction_until", host._now_seconds() + maxf(float(rule.get("duration", 3.0)), 0.0))
 
 
+## 作用：更新腐蚀薄膜护盾状态，并按附近酸痕目标触发周期腐蚀。
+## 使用：rules 读取 corrosive_film_nearby_acid_mark；context 携带 caster/player；写入 corrosive_film_shield_points/corrosive_film_next_corrosion_at 元数据；需由仍存活的宿主创建并调度。
 func _update_corrosive_film(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("corrosive_film_nearby_acid_mark"):
@@ -167,6 +187,8 @@ func _update_corrosive_film(rules: Dictionary, context: Dictionary) -> void:
 		})
 
 
+## 作用：玩家被 Boss 来源技能击中时按冷却限制触发腐蚀薄膜效果。
+## 使用：rules 读取 corrosive_film_on_boss_skill_hit；context 携带 player/caster；需由仍存活的宿主创建并调度。
 func _apply_corrosive_film_on_boss_skill_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("corrosive_film_on_boss_skill_hit"):
@@ -184,6 +206,8 @@ func _apply_corrosive_film_on_boss_skill_hit(rules: Dictionary, context: Diction
 	SpecialDamageRuleHandlerScript.grant_corrosive_film(rules, context, player, int(rule.get("shield_value", 8)), float(rule.get("shield_duration", 4.0)))
 
 
+## 作用：按目标酸痕与规则修改伤害包易伤系数。
+## 使用：packet 为待修饰伤害包视图；rules 读取 acid_mark_vulnerability；target 为本次命中目标；会原地更新 packet.vulnerability_total；需由仍存活的宿主创建并调度。
 func _apply_acid_mark_vulnerability(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("acid_mark_vulnerability") or target == null or not target.has_method("get_status_stack"):
@@ -195,6 +219,8 @@ func _apply_acid_mark_vulnerability(packet: Dictionary, rules: Dictionary, targe
 	packet["vulnerability_total"] = float(packet.get("vulnerability_total", 0.0)) + float(rule.get("damage_taken_multiplier_add_per_stack", 0.005)) * float(stacks)
 
 
+## 作用：检查玩家受击来源是否具有 Boss 身份。
+## 使用：context 携带 source_packet/damage_result；需由仍存活的宿主创建并调度；返回布尔判断或执行是否成功。
 func _is_boss_damage_source(context: Dictionary) -> bool:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var source_packet: Variant = context.get("source_packet", {})

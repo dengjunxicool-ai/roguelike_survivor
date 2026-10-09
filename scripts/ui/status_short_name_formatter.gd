@@ -1,3 +1,6 @@
+## 文件用途：将状态 ID 映射为紧凑展示名。
+## 使用方式：HUD/Debug 的状态摘要静态调用 short_name，未知 ID 沿用回退文本。
+
 extends RefCounted
 class_name StatusShortNameFormatter
 
@@ -46,6 +49,8 @@ const STATUS_SHORT_NAMES: Dictionary = {
 }
 
 
+## 作用：短名名称。
+## 使用：供本模块调用者使用；输入 status_id（状态效果ID）、fallback_length（回退length）；返回 String 文本/标识。
 static func short_name(status_id: String, fallback_length: int = 4) -> String:
 	if STATUS_SHORT_NAMES.has(status_id):
 		return String(STATUS_SHORT_NAMES[status_id])

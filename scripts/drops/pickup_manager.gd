@@ -1,3 +1,6 @@
+## 文件用途：集中分桶扫描拾取物并限量批量发放经验奖励。
+## 使用方式：通过 get_or_create 获取场景树服务；拾取物注册并通知状态变化，奖励在物理帧末刷新。
+
 extends Node
 class_name PickupManager
 
@@ -26,6 +29,8 @@ var _player_valid: bool = false
 var _experience_rewards_by_player: Dictionary = {}
 
 
+## 作用：从场景树根获取全局拾取管理节点，不存在时创建。
+## 使用：context 可提供所属树；无场景树返回 null，首次成功会挂载节点。
 static func get_or_create(context: Node = null) -> Node:
 	var tree: SceneTree = null
 	if context != null and context.is_inside_tree():
@@ -46,10 +51,14 @@ static func get_or_create(context: Node = null) -> Node:
 	return manager
 
 
+## 作用：在节点入树后完成组件初始化与信号登记。
+## 使用：由 Godot 自动调用；场景中的配置与依赖应在入树前设置。
 func _ready() -> void:
 	_ensure_idle_buckets()
 
 
+## 作用：推进本节点的物理帧更新流程。
+## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _physics_process(delta: float) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
 	_cache_player_state()
@@ -65,6 +74,8 @@ func _physics_process(delta: float) -> void:
 	HotPathProfilerScript.end(self, &"pickup_reward_flush", reward_start)
 
 
+## 作用：登记拾取物。
+## 使用：本文件由 notify_state_changed 调用；输入 pickup（拾取物）。
 func register_pickup(pickup: Node) -> void:
 	if pickup == null:
 		return
@@ -76,6 +87,8 @@ func register_pickup(pickup: Node) -> void:
 	_add_to_state_bucket(pickup_id, state)
 
 
+## 作用：注销拾取物。
+## 使用：供本模块调用者使用；输入 pickup（拾取物）。
 func unregister_pickup(pickup: Node) -> void:
 	if pickup == null:
 		return
@@ -85,6 +98,8 @@ func unregister_pickup(pickup: Node) -> void:
 	_pickup_states.erase(pickup_id)
 
 
+## 作用：把拾取物从旧状态分桶转移到新状态分桶。
+## 使用：拾取物改变待机/吸附/收集状态时调用；尚未登记则先注册。
 func notify_state_changed(pickup: Node, old_state: StringName, new_state: StringName) -> void:
 	if pickup == null:
 		return
@@ -97,6 +112,8 @@ func notify_state_changed(pickup: Node, old_state: StringName, new_state: String
 	_add_to_state_bucket(pickup_id, new_state)
 
 
+## 作用：将经验数量按玩家弱引用加入待发奖励队列。
+## 使用：player/amount 必须有效；当前调用不立即升级，物理帧末统一发放。
 func queue_experience_reward(player: Node, amount: int) -> void:
 	if player == null or amount <= 0:
 		return
@@ -111,6 +128,8 @@ func queue_experience_reward(player: Node, amount: int) -> void:
 	_experience_rewards_by_player[player_id] = record
 
 
+## 作用：按每帧预算向有效玩家批量发放经验，剩余条目保留到下帧。
+## 使用：物理更新末调用；先交换队列避免回调重入覆盖新奖励，失效玩家奖励丢弃。
 func flush_rewards() -> void:
 	if _experience_rewards_by_player.is_empty():
 		return
@@ -141,6 +160,8 @@ func flush_rewards() -> void:
 				player.call("add_experience", int(amount_variant))
 
 
+## 作用：缓存玩家状态。
+## 使用：本文件由 _physics_process 调用。
 func _cache_player_state() -> void:
 	_player_valid = false
 	if _player == null or not is_instance_valid(_player) or _player.is_queued_for_deletion():
@@ -152,6 +173,8 @@ func _cache_player_state() -> void:
 	_player_valid = true
 
 
+## 作用：按累计时间轮转一个待机拾取物分桶进行距离检查。
+## 使用：delta 为秒；玩家不可用或未达到桶扫描间隔时不执行。
 func _process_idle_bucket(delta: float) -> void:
 	if not _player_valid:
 		return
@@ -163,6 +186,8 @@ func _process_idle_bucket(delta: float) -> void:
 	_idle_bucket_index = (_idle_bucket_index + 1) % IDLE_BUCKET_COUNT
 
 
+## 作用：驱动吸附/收集拾取物并剔除失效弱引用。
+## 使用：调用拾取物 manager_active_update，复用本帧缓存的玩家位置与拾取半径。
 func _process_active_pickups(delta: float) -> void:
 	if not _player_valid:
 		return
@@ -177,6 +202,8 @@ func _process_active_pickups(delta: float) -> void:
 			pickup.call("manager_active_update", delta, _player, _player_position, _player_pickup_radius)
 
 
+## 作用：更新待机分桶索引。
+## 使用：本文件由 _process_idle_bucket 调用；输入 bucket_index（分桶索引）。
 func _process_idle_bucket_index(bucket_index: int) -> void:
 	if bucket_index < 0 or bucket_index >= _idle_buckets.size():
 		return
@@ -192,6 +219,8 @@ func _process_idle_bucket_index(bucket_index: int) -> void:
 			pickup.call("manager_idle_check", _player, _player_position, _player_pickup_radius)
 
 
+## 作用：添加转换状态分桶。
+## 使用：本文件由 register_pickup、notify_state_changed 调用；输入 pickup_id（拾取物ID）、state（状态）。
 func _add_to_state_bucket(pickup_id: int, state: StringName) -> void:
 	if state == PICKUP_STATE_IDLE:
 		_idle_buckets[_bucket_index_for_id(pickup_id)][pickup_id] = true
@@ -199,18 +228,24 @@ func _add_to_state_bucket(pickup_id: int, state: StringName) -> void:
 		_active_pickup_ids[pickup_id] = true
 
 
+## 作用：移除来源状态分桶。
+## 使用：本文件由 unregister_pickup、notify_state_changed、_forget_pickup_id 调用；输入 pickup_id（拾取物ID）、state（状态）。
 func _remove_from_state_bucket(pickup_id: int, state: StringName) -> void:
 	if state == PICKUP_STATE_IDLE and not _idle_buckets.is_empty():
 		_idle_buckets[_bucket_index_for_id(pickup_id)].erase(pickup_id)
 	_active_pickup_ids.erase(pickup_id)
 
 
+## 作用：移除拾取物ID。
+## 使用：本文件由 _process_active_pickups、_process_idle_bucket_index 调用；输入 pickup_id（拾取物ID）。
 func _forget_pickup_id(pickup_id: int) -> void:
 	_remove_from_state_bucket(pickup_id, StringName(_pickup_states.get(pickup_id, PICKUP_STATE_IDLE)))
 	_pickup_refs.erase(pickup_id)
 	_pickup_states.erase(pickup_id)
 
 
+## 作用：拾取物来源ID。
+## 使用：本文件由 _process_active_pickups、_process_idle_bucket_index 调用；输入 pickup_id（拾取物ID）；返回 Node 对象/值。
 func _pickup_from_id(pickup_id: int) -> Node:
 	var pickup: Node = _target_from_ref(_pickup_refs.get(pickup_id))
 	if pickup == null or not is_instance_valid(pickup) or pickup.is_queued_for_deletion():
@@ -218,18 +253,24 @@ func _pickup_from_id(pickup_id: int) -> Node:
 	return pickup
 
 
+## 作用：目标来源弱引用。
+## 使用：本文件由 flush_rewards、_pickup_from_id 调用；输入 reference（reference）；返回 Node 对象/值。
 func _target_from_ref(reference: Variant) -> Node:
 	if reference is WeakRef:
 		return (reference as WeakRef).get_ref() as Node
 	return reference as Node
 
 
+## 作用：获取拾取物状态，供当前模块后续逻辑使用；具体处理委托给 pickup.get_pickup_state。
+## 使用：本文件由 register_pickup 调用；输入 pickup（拾取物）；返回 StringName 文本/标识。
 func _get_pickup_state(pickup: Node) -> StringName:
 	if pickup != null and pickup.has_method("get_pickup_state"):
 		return StringName(pickup.call("get_pickup_state"))
 	return PICKUP_STATE_IDLE
 
 
+## 作用：查找玩家，供当前模块后续逻辑使用。
+## 使用：本文件由 _cache_player_state 调用；返回 Node2D 对象/值。
 func _find_player() -> Node2D:
 	var tree: SceneTree = get_tree()
 	if tree == null:
@@ -239,6 +280,8 @@ func _find_player() -> Node2D:
 	return tree.get_first_node_in_group(PLAYER_GROUP) as Node2D
 
 
+## 作用：获取玩家拾取半径，供当前模块后续逻辑使用。
+## 使用：本文件由 _cache_player_state 调用；输入 player（玩家）；返回计算或读取的数值。
 func _get_player_pickup_radius(player: Node) -> float:
 	if player == null:
 		return 0.0
@@ -250,10 +293,14 @@ func _get_player_pickup_radius(player: Node) -> float:
 	return maxf(float(configured_radius), 0.0)
 
 
+## 作用：分桶索引对应ID。
+## 使用：本文件由 _add_to_state_bucket、_remove_from_state_bucket 调用；输入 pickup_id（拾取物ID）；返回计算或读取的数值。
 func _bucket_index_for_id(pickup_id: int) -> int:
 	return absi(pickup_id) % IDLE_BUCKET_COUNT
 
 
+## 作用：确保待机分桶组。
+## 使用：本文件由 _ready、register_pickup 调用。
 func _ensure_idle_buckets() -> void:
 	while _idle_buckets.size() < IDLE_BUCKET_COUNT:
 		_idle_buckets.append({})

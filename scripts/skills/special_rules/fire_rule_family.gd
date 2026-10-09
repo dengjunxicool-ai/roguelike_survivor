@@ -1,3 +1,5 @@
+## 文件用途：实现火系燃烧、魂烬、焰核、连发和衍生爆发规则。
+## 使用方式：由 SkillSpecialRuleExecutor 按事件调用；构造时保存宿主弱引用，通过宿主共享伤害、状态和冷却能力。
 extends RefCounted
 
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
@@ -12,10 +14,14 @@ static var _soul_ember_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：补齐燃烧强度，并应用火系时长、层数和伤害特殊规则。
+## 使用：params 读取 power/damage/tick_damage；context 携带 target；会原地更新 params.power；需由仍存活的宿主创建并调度。
 func _get_burn_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not params.has("power") and not params.has("damage") and not params.has("tick_damage"):
@@ -27,16 +33,22 @@ func _get_burn_status_params(params: Dictionary, context: Dictionary) -> Diction
 	return BurnStatusRuleHelperScript.apply(params, rules, target, host._get_burn_base_max_stacks(), host._get_burn_base_damage(), host._is_boss(target))
 
 
+## 作用：提供火系规则使用的基础燃烧层数上限。
+## 使用：需由仍存活的宿主创建并调度。
 func _get_burn_base_max_stacks() -> int:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	return 5
 
 
+## 作用：提供火系规则使用的基础燃烧伤害数值。
+## 使用：需由仍存活的宿主创建并调度。
 func _get_burn_base_damage() -> float:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	return 1.6
 
 
+## 作用：优先取事件 power，否则由 damage/amount 或基础燃烧值推导非负强度。
+## 使用：context 携带 power/damage/amount；需由仍存活的宿主创建并调度。
 func _get_burning_power_from_context(context: Dictionary) -> float:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if context.has("power"):
@@ -44,6 +56,8 @@ func _get_burning_power_from_context(context: Dictionary) -> float:
 	return maxf(float(context.get("damage", context.get("amount", host._get_burn_base_damage() / 0.18))), 0.0)
 
 
+## 作用：把本次热连发标记对应的暴击增量加入伤害包。
+## 使用：packet 为待修饰伤害包视图；context 携带 hot_rapid_fire_crit/hot_rapid_fire_crit_chance_add；packet_object 为用于读取包字段的伤害对象；会原地更新 packet.crit_chance_add；需由仍存活的宿主创建并调度。
 func _apply_hot_rapid_fire_crit_bonus(packet: Dictionary, context: Dictionary, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not bool(context.get("hot_rapid_fire_crit", false)):
@@ -51,6 +65,8 @@ func _apply_hot_rapid_fire_crit_bonus(packet: Dictionary, context: Dictionary, p
 	packet["crit_chance_add"] = float(packet_object.call("get_value", "crit_chance_add", 0.0)) + float(context.get("hot_rapid_fire_crit_chance_add", 0.0))
 
 
+## 作用：按施放身份与目标记录连发命中次数，并对第二次起命中应用规则衰减。
+## 使用：packet 为待修饰伤害包视图；rules 读取 same_target_multi_projectile_damage；context 携带 projectile；会原地更新 packet.special_final_modifier/special_final_modifier_source；写入 rapid_fireball_hits 元数据；需由仍存活的宿主创建并调度。
 func _apply_same_target_multi_projectile_damage(packet: Dictionary, rules: Dictionary, context: Dictionary, target: Node, packet_object: RefCounted) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("same_target_multi_projectile_damage"):
@@ -76,6 +92,8 @@ func _apply_same_target_multi_projectile_damage(packet: Dictionary, rules: Dicti
 	packet["special_final_modifier_source"] = "target_passive"
 
 
+## 作用：按火球施放次数间隔预留下一发热连发与暴击加成。
+## 使用：rules 读取 hot_rapid_fire；context 携带 skill_instance；写入 hot_rapid_fire_next_cast/hot_rapid_fire_crit_chance_add 元数据；需由仍存活的宿主创建并调度。
 func _prepare_hot_rapid_fire_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("hot_rapid_fire"):
@@ -91,6 +109,8 @@ func _prepare_hot_rapid_fire_cast(rules: Dictionary, context: Dictionary) -> voi
 		skill_instance.set_meta("hot_rapid_fire_crit_chance_add", float(rule.get("next_projectile_crit_chance_add", 0.4)))
 
 
+## 作用：顺序执行额外爆炸、燃烧、魂烬与焰核直接命中规则。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_fire_projectile_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_direct_hit_extra_explosion_bonus(rules, context)
@@ -100,12 +120,16 @@ func _apply_fire_projectile_hit_rules(rules: Dictionary, context: Dictionary) ->
 	host._apply_flame_core_on_direct_hit(rules, context)
 
 
+## 作用：在火系命中阶段处理魂燃和 Boss 焰核爆发。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_fire_reaction_hit_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	host._apply_soulburn_burst(rules, context)
 	host._apply_flame_core_boss_burst(rules, context)
 
 
+## 作用：将爆炸命中按强敌直接命中或普通多目标情况分别处理燃烧。
+## 使用：rules 为当前技能有效规则；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_explosion_burn_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var target: Node = context.get("target") as Node
@@ -115,6 +139,8 @@ func _apply_explosion_burn_rules(rules: Dictionary, context: Dictionary) -> void
 	host._apply_explosion_multi_hit_burn(rules, context, target)
 
 
+## 作用：对精英或 Boss 的爆炸直接命中按同目标冷却施加燃烧。
+## 使用：rules 读取 explosion_direct_hit_burn_on_elite_boss；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_explosion_direct_hit_burn(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var direct_rule: Dictionary = host._get_dictionary(rules.get("explosion_direct_hit_burn_on_elite_boss", {}))
@@ -134,6 +160,8 @@ func _apply_explosion_direct_hit_burn(rules: Dictionary, context: Dictionary, ta
 			target.call("apply_status", direct_status_id, direct_status_params)
 
 
+## 作用：普通目标在爆炸命中人数达到门槛时额外施加燃烧。
+## 使用：rules 读取 explosion_multi_hit_burn；context 携带 explosion_targets_hit；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_explosion_multi_hit_burn(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var multi_rule: Dictionary = host._get_dictionary(rules.get("explosion_multi_hit_burn", {}))
@@ -153,6 +181,8 @@ func _apply_explosion_multi_hit_burn(rules: Dictionary, context: Dictionary, tar
 	target.call("apply_status", multi_status_id, multi_status_params)
 
 
+## 作用：魂烬达到满层命中条件后消耗魂烬并转换为燃烧。
+## 使用：rules 读取 soul_ember_to_burn_on_full_stack_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_soul_ember_to_burn(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("soul_ember_to_burn_on_full_stack_hit"):
@@ -180,6 +210,8 @@ func _apply_soul_ember_to_burn(rules: Dictionary, context: Dictionary) -> void:
 		target.call("apply_status", &"burning", burn_params)
 
 
+## 作用：直接命中时按来源冷却为目标累积魂烬。
+## 使用：rules 读取 soul_ember_on_direct_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_soul_ember_on_direct_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("soul_ember_on_direct_hit"):
@@ -199,6 +231,8 @@ func _apply_soul_ember_on_direct_hit(rules: Dictionary, context: Dictionary) -> 
 	})
 
 
+## 作用：对强敌直接命中施加焰核，并配置满层爆炸易伤与持续时间。
+## 使用：rules 读取 flame_core_on_elite_boss_direct_hit/flame_core_duration_add/flame_core_full_stack_explosion_vulnerability；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_flame_core_on_direct_hit(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("flame_core_on_elite_boss_direct_hit"):
@@ -223,6 +257,8 @@ func _apply_flame_core_on_direct_hit(rules: Dictionary, context: Dictionary) -> 
 	target.call("apply_status", StringName(String(rule.get("status_id", "flame_core"))), params)
 
 
+## 作用：记录 Boss 满层焰核直接命中计数，达到要求后在冷却允许时触发爆发。
+## 使用：rules 读取 flame_core_boss_burst；context 携带 target；写入 flame_core_boss_direct_hits 元数据；需由仍存活的宿主创建并调度。
 func _apply_flame_core_boss_burst(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("flame_core_boss_burst"):
@@ -248,6 +284,8 @@ func _apply_flame_core_boss_burst(rules: Dictionary, context: Dictionary) -> voi
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.flame_core_burst_intents(rules, context, maxi(int(rule.get("amount", 32)), 0)))
 
 
+## 作用：燃烧满层直接命中满足冷却后消耗规则层数并触发魂燃爆发。
+## 使用：rules 读取 soulburn_burst_on_full_burn_direct_hit；context 携带 target；需由仍存活的宿主创建并调度。
 func _apply_soulburn_burst(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("soulburn_burst_on_full_burn_direct_hit"):
@@ -274,6 +312,8 @@ func _apply_soulburn_burst(rules: Dictionary, context: Dictionary) -> void:
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.soulburn_burst_intents(rules, context, amount))
 
 
+## 作用：按魂燃规则调用目标公开接口消耗燃烧层数。
+## 使用：target 为本次命中目标；rule 读取 consume_burn_stacks；需由仍存活的宿主创建并调度。
 func _consume_soulburn_burn_stacks(target: Node, rule: Dictionary, current_burn_stacks: int) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not target.has_method("consume_status_stack"):
@@ -285,11 +325,15 @@ func _consume_soulburn_burn_stacks(target: Node, rule: Dictionary, current_burn_
 		target.call("consume_status_stack", &"burning", maxi(int(rule.get("consume_burn_stacks", 0)), 0))
 
 
+## 作用：根据命中规则交给特殊伤害服务生成地火或熔岩区域。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _spawn_ground_fire_or_lava(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	SpecialDamageRuleHandlerScript.spawn_ground_fire_or_lava(rules, context, host._get_skill_damage(context))
 
 
+## 作用：按目标焰核层数给直接命中包增加规则伤害收益。
+## 使用：packet 为待修饰伤害包视图；rules 读取 flame_core_on_elite_boss_direct_hit；target 为本次命中目标；会原地更新 packet.direct_damage_multiplier_add；需由仍存活的宿主创建并调度。
 func _apply_flame_core_direct_damage_bonus(packet: Dictionary, rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if target == null or not target.has_method("get_status_stack"):

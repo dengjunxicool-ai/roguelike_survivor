@@ -1,3 +1,5 @@
+## 文件用途：伤害应用管线的玩家生命应用阶段。
+## 使用方式：由DamageApplicationPipeline按固定顺序实例化调用；写context结果可短路后续阶段。
 extends RefCounted
 class_name PlayerHealthApplicationStage
 
@@ -5,6 +7,8 @@ class_name PlayerHealthApplicationStage
 var stage_name: StringName = &"player_health_apply"
 
 
+## 作用：扣血并记录受伤后重新读取救命效果改写的血量，再展示并通知特性/死亡。
+## 使用：host提供统一结果构造，context保存目标/原包与阶段值；调用会更新受击状态。
 func apply_with_host(host: Object, context: RefCounted) -> void:
 	var player: Node = context.get("target") as Node
 	var packet: DamagePacket = context.get("packet")

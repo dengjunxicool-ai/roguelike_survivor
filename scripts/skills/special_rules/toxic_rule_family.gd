@@ -1,3 +1,5 @@
+## 文件用途：实现毒瓶毒云的状态转换、毒核、稳定场效与玩家解毒增益。
+## 使用方式：宿主按毒云 tick、施放及玩家更新调度；状态伤害与叠层上限根据普通和强敌目标分别计算。
 extends RefCounted
 
 const SpecialDamageRuleHandlerScript: Script = preload("res://scripts/skills/special_damage_rule_handler.gd")
@@ -10,16 +12,22 @@ static var _antidote_cloud_cooldowns: Dictionary = {}
 
 var _host_ref: WeakRef
 
+## 作用：弱引用保存特殊规则宿主，供本族复用共享伤害、状态与冷却入口。
+## 使用：host 为仍存活的规则宿主。
 func _init(host: RefCounted) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：按毒系死亡规则生成毒云或毒死亡爆炸。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；需由仍存活的宿主创建并调度。
 func _apply_toxic_enemy_kill_rules(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	SpecialDamageRuleHandlerScript.execute_toxic_vial_small_cloud(rules, context)
 	SpecialDamageRuleHandlerScript.execute_poison_death_explosion(rules, context)
 
 
+## 作用：毒瓶区域 tick 时依次施加毒种、毒核、中毒和稳定场效果并检查 Boss 脉冲。
+## 使用：rules 读取 toxic_vial_base；context 携带 source_id/target；需由仍存活的宿主创建并调度。
 func _apply_toxic_vial_on_field_tick(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("toxic_vial_base"):
@@ -38,6 +46,8 @@ func _apply_toxic_vial_on_field_tick(rules: Dictionary, context: Dictionary) -> 
 	host._apply_toxic_core_boss_pulse(rules, context, target)
 
 
+## 作用：毒云命中时按规则累积毒种状态。
+## 使用：rules 读取 toxin_seed_on_poison_cloud_tick；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_toxin_seed_on_poison_cloud_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("toxin_seed_on_poison_cloud_tick") or target == null or not target.has_method("apply_status"):
@@ -52,6 +62,8 @@ func _apply_toxin_seed_on_poison_cloud_tick(rules: Dictionary, target: Node) -> 
 	})
 
 
+## 作用：毒云命中强敌时按规则累积毒核。
+## 使用：rules 读取 toxic_core_on_strong_cloud_tick；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_toxic_core_on_poison_cloud_tick(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("toxic_core_on_strong_cloud_tick") or target == null or not target.has_method("apply_status"):
@@ -66,6 +78,8 @@ func _apply_toxic_core_on_poison_cloud_tick(rules: Dictionary, target: Node) -> 
 	})
 
 
+## 作用：满足源状态层数条件时消耗源状态并转换为中毒。
+## 使用：rules 为当前技能有效规则；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _convert_toxic_vial_status_to_poison(rules: Dictionary, context: Dictionary, target: Node, rule_key: String) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has(rule_key) or target == null or not target.has_method("get_status_stack") or not target.has_method("apply_status"):
@@ -81,6 +95,8 @@ func _convert_toxic_vial_status_to_poison(rules: Dictionary, context: Dictionary
 	host._apply_poison_status_from_toxic_vial(rules, context, target, maxi(int(rule.get("apply_stacks", 1)), 1))
 
 
+## 作用：毒云 tick 通过概率与冷却判断后施加中毒。
+## 使用：rules 读取 poison_on_cloud_tick_chance；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_poison_on_cloud_tick_chance(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("poison_on_cloud_tick_chance") or target == null or not target.has_method("apply_status"):
@@ -97,6 +113,8 @@ func _apply_poison_on_cloud_tick_chance(rules: Dictionary, context: Dictionary, 
 	host._apply_poison_status_from_toxic_vial(rules, context, target, maxi(int(rule.get("stacks", 1)), 1))
 
 
+## 作用：以毒瓶基础规则和目标分类构造中毒参数并施加到目标。
+## 使用：rules 读取 toxic_vial_base；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_poison_status_from_toxic_vial(rules: Dictionary, context: Dictionary, target: Node, stacks: int) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var base: Dictionary = host._get_dictionary(rules.get("toxic_vial_base", {}))
@@ -111,6 +129,8 @@ func _apply_poison_status_from_toxic_vial(rules: Dictionary, context: Dictionary
 	target.call("apply_status", &"poison", poison_params)
 
 
+## 作用：刷新毒云内敌人的限时伤害降低，并施加配置减速。
+## 使用：rules 读取 poison_cloud_enemy_damage_down/poison_cloud_slow；target 为本次命中目标；写入 toxic_vial_enemy_damage_down_until/toxic_vial_enemy_damage_multiplier_add 元数据；需由仍存活的宿主创建并调度。
 func _apply_poison_cloud_stable_effects(rules: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var now_seconds: float = host._now_seconds()
@@ -127,6 +147,8 @@ func _apply_poison_cloud_stable_effects(rules: Dictionary, target: Node) -> void
 		})
 
 
+## 作用：Boss 毒核层数满足条件且冷却允许时触发毒核脉冲。
+## 使用：rules 读取 toxic_core_boss_pulse；context 为施放或命中上下文；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _apply_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary, target: Node) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("toxic_core_boss_pulse") or not host._is_boss(target):
@@ -145,6 +167,8 @@ func _apply_toxic_core_boss_pulse(rules: Dictionary, context: Dictionary, target
 	SpecialDamageRuleHandlerScript.apply_intents(SpecialDamageRuleHandlerScript.execute_toxic_core_boss_pulse(rules, context, maxi(int(rule.get("amount", 20)), 0)))
 
 
+## 作用：玩家低血施放毒瓶满足冷却后生成解毒云并治疗。
+## 使用：rules 读取 antidote_cloud_on_low_hp；context 携带 caster；需由仍存活的宿主创建并调度。
 func _apply_toxic_vial_antidote_on_cast(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("antidote_cloud_on_low_hp"):
@@ -163,6 +187,8 @@ func _apply_toxic_vial_antidote_on_cast(rules: Dictionary, context: Dictionary) 
 	SpecialDamageRuleHandlerScript.execute_antidote_cloud(rules, context)
 
 
+## 作用：根据玩家毒云边缘增益窗口设置或移除移动属性来源。
+## 使用：rules 读取 poison_cloud_edge_speed_buff；context 携带 caster；写入 toxic_vial_edge_speed_until 元数据；需由仍存活的宿主创建并调度。
 func _update_toxic_vial_player_cloud(rules: Dictionary, context: Dictionary) -> void:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if not rules.has("poison_cloud_edge_speed_buff"):
@@ -199,6 +225,8 @@ func _update_toxic_vial_player_cloud(rules: Dictionary, context: Dictionary) -> 
 		player.call("clear_run_modifier_source", modifier_id)
 
 
+## 作用：结合毒瓶基础和强敌调整规则修饰中毒参数。
+## 使用：params 读取 duration/damage/tick_interval/damage_multiplier_add；context 携带 target；会原地更新 params.duration/damage/tick_interval；需由仍存活的宿主创建并调度。
 func _get_poison_status_params(params: Dictionary, context: Dictionary) -> Dictionary:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var rules: Dictionary = host._get_rules(context)
@@ -215,6 +243,8 @@ func _get_poison_status_params(params: Dictionary, context: Dictionary) -> Dicti
 	return params
 
 
+## 作用：按普通、精英与 Boss 分类计算中毒层数上限。
+## 使用：rules 读取 toxic_vial_base/poison_max_stack_tuning；target 为本次命中目标；需由仍存活的宿主创建并调度。
 func _poison_max_stacks_for_target(rules: Dictionary, target: Node) -> int:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	var base: Dictionary = host._get_dictionary(rules.get("toxic_vial_base", {}))

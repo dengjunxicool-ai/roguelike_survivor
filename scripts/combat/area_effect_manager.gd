@@ -1,3 +1,5 @@
+## 文件用途：将区域tick分配到四个物理帧桶，并限制全局每帧8次命中处理及记录采样。
+## 使用方式：AreaEffect注册后请求tick与命中预算；未消费命中由区域保存到后续帧继续处理。
 extends Node
 class_name AreaEffectManager
 
@@ -14,6 +16,8 @@ var _hit_budget_frame: int = -1
 var _hit_budget_used: int = 0
 
 
+## 作用：从根节点复用或创建区域调度管理器。
+## 使用：context提供树或使用主循环，无有效树返回null。
 static func get_or_create(context: Node) -> Node:
 	var tree: SceneTree = context.get_tree() if context != null and context.is_inside_tree() else Engine.get_main_loop() as SceneTree
 	if tree == null or tree.root == null:
@@ -28,6 +32,8 @@ static func get_or_create(context: Node) -> Node:
 	return manager
 
 
+## 作用：登记区域弱引用并轮流分配四个tick桶。
+## 使用：重复注册返回原桶；_tick_interval当前不参与分桶。
 func register_area(area: Node, _tick_interval: float) -> int:
 	if area == null or not is_instance_valid(area):
 		return 0
@@ -41,6 +47,8 @@ func register_area(area: Node, _tick_interval: float) -> int:
 	return tick_bucket
 
 
+## 作用：移除区域登记与桶信息。
+## 使用：结束伤害窗口或回池时调用。
 func unregister_area(area: Node) -> void:
 	if area == null:
 		return
@@ -49,6 +57,8 @@ func unregister_area(area: Node) -> void:
 	_tick_buckets.erase(area_instance_id)
 
 
+## 作用：确保区域登记并按当前物理帧与桶判断是否可发起tick。
+## 使用：返回布尔值，每区域四帧中分得一帧。
 func request_tick(area: Node) -> bool:
 	if area == null or not is_instance_valid(area):
 		return false
@@ -59,12 +69,16 @@ func request_tick(area: Node) -> bool:
 	return int(Engine.get_physics_frames() + tick_bucket) % TICK_BUCKET_COUNT == 0
 
 
+## 作用：读取区域分桶编号，缺失返回0。
+## 使用：用于诊断payload，不触发登记。
 func tick_bucket(area: Node) -> int:
 	if area == null:
 		return 0
 	return int(_tick_buckets.get(int(area.get_instance_id()), 0))
 
 
+## 作用：在每物理帧重置全局预算后分配剩余命中额度。
+## 使用：desired_count为请求数，返回0至剩余8点预算并消费额度。
 func request_hit_budget(_area: Node, desired_count: int) -> int:
 	if desired_count <= 0:
 		return 0
@@ -78,6 +92,8 @@ func request_hit_budget(_area: Node, desired_count: int) -> int:
 	return granted
 
 
+## 作用：复制区域统计并补对象、技能来源和桶号，再调用可选采样回调。
+## 使用：tick_stats含候选、命中和状态施加数。
 func record_tick(area: Node, tick_stats: Dictionary) -> void:
 	if area == null or not is_instance_valid(area):
 		return
@@ -98,6 +114,8 @@ func record_tick(area: Node, tick_stats: Dictionary) -> void:
 	_emit_profiler_tick_event(payload)
 
 
+## 作用：从根元数据取有效Callable并发送区域tick统计。
+## 使用：无回调时无操作，不依赖debug页面。
 func _emit_profiler_tick_event(payload: Dictionary) -> void:
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null or not tree.root.has_meta(PROFILER_AOE_TICK_EVENT_META):

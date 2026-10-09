@@ -1,12 +1,18 @@
+## 文件用途：构建调试开局页，选择角色地图、重启开发局并提升起始技能等级。
+## 使用方式：以 DevDebugPanel 宿主构造本页控制器；持有 WeakRef，宿主负责控件与回调装配，不能独立挂载到场景。
 extends RefCounted
 
 
 var _host_ref: WeakRef
 
+## 作用：保存宿主弱引用，供开局页操作宿主控件和游戏服务。
+## 使用：创建页面控制器时传入 DevDebugPanel 宿主，保存弱引用。
 func _init(host: CanvasLayer) -> void:
 	_host_ref = weakref(host)
 
 
+## 作用：添加角色、地图、重启与 Lv3 控件，将按钮和选择信号绑定到宿主入口。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：page_root: VBoxContainer。
 func _build_run_setup_page(page_root: VBoxContainer) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var run_setup_page: VBoxContainer = host._add_category_page(page_root, "run_setup", "Run Setup")
@@ -20,6 +26,8 @@ func _build_run_setup_page(page_root: VBoxContainer) -> void:
 	host._add_button(run_row, "Lv3", Callable(host, "_level_starting_skill_to").bind(3), 60)
 
 
+## 作用：从 GameData 角色池填充带稳定 ID 元数据的下拉选项，跳过空 ID。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _populate_character_options() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._character_option.clear()
@@ -30,6 +38,8 @@ func _populate_character_options() -> void:
 		host._add_option_item(host._character_option, host._display_name(character, id), id)
 
 
+## 作用：从 GameData 地图池填充地图下拉选项，跳过空 ID。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _populate_map_options() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._map_option.clear()
@@ -40,6 +50,8 @@ func _populate_map_options() -> void:
 		host._add_option_item(host._map_option, host._display_name(map_data, id), id)
 
 
+## 作用：响应角色下拉选择，重新同步玩家及技能属性控件并刷新摘要；不直接换角色。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：_index: int。
 func _on_character_selected(_index: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._sync_player_stat_controls()
@@ -47,11 +59,15 @@ func _on_character_selected(_index: int) -> void:
 	host._refresh_state()
 
 
+## 作用：响应地图等开局选项选择，仅刷新宿主摘要。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：_index: int。
 func _on_setup_option_selected(_index: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	host._refresh_state()
 
 
+## 作用：把当前玩家角色和 UIManager 已选地图同步到下拉框，并刷新属性输入。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _sync_options_from_runtime() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()
@@ -66,6 +82,8 @@ func _sync_options_from_runtime() -> void:
 	host._sync_skill_stat_controls()
 
 
+## 作用：把面板角色和地图 ID 交给 UIManager.start_developer_debug_run，随后延迟刷新宿主状态。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。
 func _restart_debug_run() -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var ui_manager: Node = host._get_ui_manager()
@@ -80,6 +98,8 @@ func _restart_debug_run() -> void:
 	host._log("Restarted debug run.")
 
 
+## 作用：反复调用玩家 _upgrade_skill 将起始技能提升到 target_level，升级拒绝时停止，再同步控件。
+## 使用：由 DevDebugPanel 对应页面入口或本页流程调用，宿主须仍有效。 入参：target_level: int。
 func _level_starting_skill_to(target_level: int) -> void:
 	var host: CanvasLayer = _host_ref.get_ref() as CanvasLayer
 	var player: Node = host._get_player()

@@ -1,7 +1,12 @@
+## 文件用途：实现预警、突进和突进冷却组成的敌人攻击流程。
+## 使用方式：通过 behavior 配置绑定到敌人；在物理更新 tick 中推进各阶段计时。
+
 extends EnemyBehavior
 class_name DashAttackBehavior
 
 
+## 作用：推进突进持续时间与预警，冷却到期可启动突进，空闲时追逐或近身攻击。
+## 使用：delta 用于突进/预警计时；突进冷却递减由 EnemyBase 处理，本方法仅在启动时重置冷却。
 func tick(delta: float) -> void:
 	var target: Node2D = _target()
 	if target == null:

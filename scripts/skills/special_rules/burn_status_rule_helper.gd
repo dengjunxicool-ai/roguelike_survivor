@@ -1,7 +1,11 @@
+## 文件用途：按火系规则修饰燃烧持续时间、普通与 Boss 叠层上限以及 power 或伤害数值。
+## 使用方式：FireRuleFamily 传基础参数、规则与 Boss 判定；apply 原地修改 params 并返回同一字典供目标状态入口使用。
 extends RefCounted
 class_name BurnStatusRuleHelper
 
 
+## 作用：原地按燃烧规则调整时长、普通或 Boss 层数上限及 power/伤害倍率，返回同一参数字典。
+## 使用：params 读取 duration/max_stacks/power/damage；rules 读取 burn_duration_add/burn_max_stacks_add/boss_burn_max_stacks_add/burn_damage_multiplier_add；target 为本次命中目标；会原地更新 params.duration/max_stacks/power。
 static func apply(params: Dictionary, rules: Dictionary, target: Node, base_max_stacks: int, base_damage: float, is_boss_target: bool) -> Dictionary:
 	if rules.has("burn_duration_add"):
 		params["duration"] = float(params.get("duration", 3.0)) + float(rules.get("burn_duration_add", 0.0))

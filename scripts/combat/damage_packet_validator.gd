@@ -1,3 +1,5 @@
+## 文件用途：提供可关闭、警告或报错的伤害包诊断，识别缺字段、不稳定小数来源和反应递归风险。
+## 使用方式：作为严格 DamagePacket.validate 之外的开发期诊断，由准备阶段调用。
 extends RefCounted
 class_name DamagePacketValidator
 
@@ -32,6 +34,8 @@ const REQUIRED_PACKET_FIELDS: Array[String] = [
 ]
 
 
+## 作用：检查字典包必需字段及小数来源、递归、敌人缩放和来源身份。
+## 使用：禁用模式无操作；其余按warning/error模式输出诊断，不改变包。
 static func validate(packet: Dictionary, target: Node = null) -> void:
 	if validation_mode == MODE_DISABLED:
 		return
@@ -45,6 +49,8 @@ static func validate(packet: Dictionary, target: Node = null) -> void:
 	_warn_missing_source_identity(packet, target)
 
 
+## 作用：按诊断模式检查 typed 包的严格错误与所需来源/规则字段。
+## 使用：禁用模式立即返回；target 仅用于诊断消息。
 static func validate_packet(packet: DamagePacket, target: Node = null) -> void:
 	if validation_mode == MODE_DISABLED:
 		return
@@ -52,6 +58,8 @@ static func validate_packet(packet: DamagePacket, target: Node = null) -> void:
 		_report(error)
 	_validate_packet_object(packet, target)
 
+## 作用：从计算上下文检查必需字段及小数来源、递归、敌人缩放与来源身份。
+## 使用：调用方已创建 DamageCalculationContext；报告级别由 validation_mode 决定。
 static func validate_for_context(calculation_context: DamageCalculationContext, target: Node = null) -> void:
 	if validation_mode == MODE_DISABLED:
 		return
@@ -65,6 +73,8 @@ static func validate_for_context(calculation_context: DamageCalculationContext, 
 	_warn_missing_source_identity_for_context(calculation_context, target)
 
 
+## 作用：通过包字段访问接口执行来源和规则诊断。
+## 使用：由 validate_packet 使用，不更改包。
 static func _validate_packet_object(packet_object: DamagePacket, target: Node = null) -> void:
 	for key: String in REQUIRED_PACKET_FIELDS:
 		if not bool(packet_object.call("has_value", key)):
@@ -76,6 +86,8 @@ static func _validate_packet_object(packet_object: DamagePacket, target: Node = 
 	_warn_missing_source_identity_for_packet_object(packet_object, target)
 
 
+## 作用：使用小数缓冲时检查稳定 source_instance_id，缺失时报告问题。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_unstable_fractional_source(packet: Dictionary) -> void:
 	if not DamageRuleRegistryScript.uses_fractional_buffer(packet):
 		return
@@ -85,6 +97,8 @@ static func _warn_unstable_fractional_source(packet: Dictionary) -> void:
 		_report("Fractional damage requires a stable source_instance_id.")
 
 
+## 作用：使用小数缓冲时检查稳定 source_instance_id，缺失时报告问题。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_unstable_fractional_source_for_context(calculation_context: DamageCalculationContext) -> void:
 	if not DamageRuleRegistryScript.uses_fractional_buffer_for_context(calculation_context):
 		return
@@ -94,6 +108,8 @@ static func _warn_unstable_fractional_source_for_context(calculation_context: Da
 		_report("Fractional damage requires a stable source_instance_id.")
 
 
+## 作用：使用小数缓冲时检查稳定 source_instance_id，缺失时报告问题。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_unstable_fractional_source_for_packet_object(packet_object: DamagePacket) -> void:
 	if not DamageRuleRegistryScript.uses_fractional_buffer_for_packet_object(packet_object):
 		return
@@ -103,6 +119,8 @@ static func _warn_unstable_fractional_source_for_packet_object(packet_object: Da
 		_report("Fractional damage requires a stable source_instance_id.")
 
 
+## 作用：检查反应来源或已有反应深度是否仍允许触发新反应，报告递归风险。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_reaction_recursion_risk(packet: Dictionary) -> void:
 	var origin: String = String(packet.get("damage_origin", ""))
 	var reaction_depth: int = int(packet.get("reaction_depth", 0))
@@ -112,6 +130,8 @@ static func _warn_reaction_recursion_risk(packet: Dictionary) -> void:
 		_report("Nested reaction packet should not trigger another reaction.")
 
 
+## 作用：检查反应来源或已有反应深度是否仍允许触发新反应，报告递归风险。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_reaction_recursion_risk_for_context(calculation_context: DamageCalculationContext) -> void:
 	var origin: String = String(calculation_context.call("packet_value", "damage_origin", ""))
 	var reaction_depth: int = int(calculation_context.call("packet_value", "reaction_depth", 0))
@@ -122,6 +142,8 @@ static func _warn_reaction_recursion_risk_for_context(calculation_context: Damag
 		_report("Nested reaction packet should not trigger another reaction.")
 
 
+## 作用：检查反应来源或已有反应深度是否仍允许触发新反应，报告递归风险。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_reaction_recursion_risk_for_packet_object(packet_object: DamagePacket) -> void:
 	var origin: String = String(packet_object.call("get_value", "damage_origin", ""))
 	var reaction_depth: int = int(packet_object.call("get_value", "reaction_depth", 0))
@@ -132,6 +154,8 @@ static func _warn_reaction_recursion_risk_for_packet_object(packet_object: Damag
 		_report("Nested reaction packet should not trigger another reaction.")
 
 
+## 作用：检查敌人攻击者的包是否错误启用玩家角色伤害倍率。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_enemy_packet_scaling(packet: Dictionary) -> void:
 	var attacker: Node = packet.get("attacker") as Node
 	if attacker == null:
@@ -142,6 +166,8 @@ static func _warn_enemy_packet_scaling(packet: Dictionary) -> void:
 		_report("Enemy damage packet should not use player character damage multiplier.")
 
 
+## 作用：检查敌人攻击者的包是否错误启用玩家角色伤害倍率。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_enemy_packet_scaling_for_context(calculation_context: DamageCalculationContext) -> void:
 	var attacker: Node = calculation_context.call("packet_value", "attacker", null) as Node
 	if attacker == null:
@@ -152,6 +178,8 @@ static func _warn_enemy_packet_scaling_for_context(calculation_context: DamageCa
 		_report("Enemy damage packet should not use player character damage multiplier.")
 
 
+## 作用：检查敌人攻击者的包是否错误启用玩家角色伤害倍率。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_enemy_packet_scaling_for_packet_object(packet_object: DamagePacket) -> void:
 	var attacker: Node = packet_object.call("get_value", "attacker", null) as Node
 	if attacker == null:
@@ -162,6 +190,8 @@ static func _warn_enemy_packet_scaling_for_packet_object(packet_object: DamagePa
 		_report("Enemy damage packet should not use player character damage multiplier.")
 
 
+## 作用：检查技能来源与原始来源ID是否同时缺失并报告目标ID。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_missing_source_identity(packet: Dictionary, target: Node) -> void:
 	var source_skill_id: String = String(packet.get("source_skill_id", ""))
 	var source_origin_id: String = String(packet.get("source_origin_id", ""))
@@ -170,6 +200,8 @@ static func _warn_missing_source_identity(packet: Dictionary, target: Node) -> v
 		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
+## 作用：检查技能来源与原始来源ID是否同时缺失并报告目标ID。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_missing_source_identity_for_context(calculation_context: DamageCalculationContext, target: Node) -> void:
 	var source_skill_id: String = String(calculation_context.call("packet_value", "source_skill_id", ""))
 	var source_origin_id: String = String(calculation_context.call("packet_value", "source_origin_id", ""))
@@ -178,6 +210,8 @@ static func _warn_missing_source_identity_for_context(calculation_context: Damag
 		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
+## 作用：检查技能来源与原始来源ID是否同时缺失并报告目标ID。
+## 使用：从对应字典、计算上下文或 typed 包读取；仅输出诊断，不修正输入。
 static func _warn_missing_source_identity_for_packet_object(packet_object: DamagePacket, target: Node) -> void:
 	var source_skill_id: String = String(packet_object.call("get_value", "source_skill_id", ""))
 	var source_origin_id: String = String(packet_object.call("get_value", "source_origin_id", ""))
@@ -186,6 +220,8 @@ static func _warn_missing_source_identity_for_packet_object(packet_object: Damag
 		_report("DamagePacket has no source_skill_id or source_origin_id. target=%s" % target_id)
 
 
+## 作用：按诊断模式输出错误或警告消息。
+## 使用：message 为校验问题，MODE_ERROR 用 push_error，其余用 push_warning。
 static func _report(message: String) -> void:
 	if validation_mode == MODE_ERROR:
 		push_error("[DamagePacketValidator] %s" % message)

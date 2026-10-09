@@ -1,3 +1,5 @@
+## 文件用途：将触发规则的事件、条件和 effects 转换为事件总线可执行动作。
+## 使用方式：SkillEventBus 按当前事件获取规则列表，再转换 context 和动作；适配器负责前置条件与目标集合语义。
 extends RefCounted
 class_name SkillTriggerRuleAdapter
 
@@ -27,6 +29,8 @@ const TRIGGER_ALIASES: Dictionary = {
 }
 
 
+## 作用：遍历定义 trigger_rules，适配有效规则并保持配置顺序。
+## 使用：skill_instance 为技能运行实例；definition 为技能定义。
 static func to_events(skill_instance: RefCounted, definition: RefCounted) -> Array:
 	var events: Array = []
 	if definition == null:
@@ -45,6 +49,8 @@ static func to_events(skill_instance: RefCounted, definition: RefCounted) -> Arr
 	return events
 
 
+## 作用：归一触发别名与条件，把 effects 转成动作并应用规则冷却成长。
+## 使用：rule 读取 trigger/conditions/effects；无适用数据时返回空字典。
 static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Dictionary:
 	var trigger_name: String = str(rule.get("trigger", ""))
 	var event_name: StringName = TRIGGER_ALIASES.get(trigger_name, StringName(trigger_name))
@@ -64,6 +70,8 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 	return event
 
 
+## 作用：先推进事件计数门槛，再检查并预留技能规则冷却。
+## 使用：event 为当前事件或规则载荷；context 为施放或命中上下文；skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 static func can_execute_rule_event(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
 	if not _passes_counter(event, skill_instance):
 		return false
@@ -72,6 +80,8 @@ static func can_execute_rule_event(event: Dictionary, context: Dictionary, skill
 	return true
 
 
+## 作用：把条件顶层别名整理到 params，并依据技能等级计算每级概率。
+## 使用：skill_instance 为技能运行实例。
 static func _normalize_conditions(value: Variant, skill_instance: RefCounted = null) -> Array:
 	var normalized: Array = []
 	for condition_variant: Variant in _get_array(value):
@@ -132,12 +142,16 @@ static func _normalize_conditions(value: Variant, skill_instance: RefCounted = n
 	return normalized
 
 
+## 作用：读取实例当前等级且至少为一，空实例按一处理。
+## 使用：skill_instance 为技能运行实例。
 static func _skill_level(skill_instance: RefCounted) -> int:
 	if skill_instance == null:
 		return 1
 	return maxi(int(skill_instance.get("current_level")), 1)
 
 
+## 作用：累积技能事件计数，达到 threshold 时清零并允许触发。
+## 使用：event 读取 counter_key/threshold；skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bool:
 	var counter_key: String = str(event.get("counter_key", ""))
 	if counter_key == "" or skill_instance == null:
@@ -152,6 +166,8 @@ static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bo
 	return false
 
 
+## 作用：按事件和 source_id 构造冷却键，到期时写入下一时间及上下文追踪键。
+## 使用：event 读取 cooldown/source_id/trigger；context 为施放或命中上下文；skill_instance 为技能运行实例；会原地更新 context.last_trigger_cooldown_key；返回布尔判断或执行是否成功。
 static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
 	if not event.has("cooldown") or skill_instance == null:
 		return true
@@ -174,6 +190,8 @@ static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_insta
 	return true
 
 
+## 作用：去除元数据 token 不允许的标点并避免以数字开头，空值使用 global。
+## 使用：由本文件 _passes_cooldown 调用。
 static func _metadata_token(value: String) -> String:
 	var token: String = value.strip_edges()
 	for character: String in [":", "-", ".", "/", " "]:
@@ -186,12 +204,16 @@ static func _metadata_token(value: String) -> String:
 	return token
 
 
+## 作用：仅接受 Array；直接返回原数组引用，其余类型返回空数组。
+## 使用：由本文件 to_event/_normalize_conditions 调用；无匹配项时返回空数组。
 static func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
 
 
+## 作用：仅接受 Dictionary；直接返回原字典引用，其余类型返回空字典。
+## 使用：由本文件 _normalize_conditions 调用；无适用数据时返回空字典。
 static func _get_dictionary(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value

@@ -1,7 +1,11 @@
+## 文件用途：执行区域、爆炸、陷阱、环绕物、击退、牵引和区域转换类动作。
+## 使用方式：由动作分派器调用；依共享上下文构建伤害包与工厂参数，维护活动区域上限、合并和元数据。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionAreaExecutor
 
 
+## 作用：同步查询范围内目标并执行命中动作，返回本次命中集合，同时安排瞬时范围表现。
+## 使用：params 读取 area_id/object_id/radius/area_radius；context 携带 target/target_group/skill_id；返回布尔判断或执行是否成功。
 func _instant_area_hit(params: Dictionary, context: Dictionary) -> bool:
 	context = _context_with_resolved_target(params, context)
 	var target: Node = context.get("target") as Node
@@ -34,6 +38,8 @@ func _instant_area_hit(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：根据配置创建或复用瞬时范围命中的视觉对象。
+## 使用：parent 为生成对象父节点；position 为生成世界坐标；radius 为世界坐标半径；写入 source_id/source_skill_id 元数据。
 func _play_instant_area_hit_visual(parent: Node, position: Vector2, radius: float, params: Dictionary, area_source_id: StringName, context: Dictionary) -> void:
 	if parent == null:
 		return
@@ -52,10 +58,14 @@ func _play_instant_area_hit_visual(parent: Node, position: Vector2, radius: floa
 		visual.call("setup", visual_params)
 
 
+## 作用：实例化瞬时范围表现节点并挂到指定父节点。
+## 使用：由动作分派器调用；依共享上下文构建伤害包与工厂参数，维护活动区域上限、合并和元数据。
 func _create_instant_area_hit_visual() -> Node:
 	return InstantAreaHitVisualScript.new()
 
 
+## 作用：构建瞬时范围表现使用的几何、颜色、位置与持续参数。
+## 使用：params 为动作或状态参数；radius 为世界坐标半径。
 func _instant_area_hit_visual_params(params: Dictionary, area_source_id: StringName, radius: float) -> Dictionary:
 	return SkillActionAreaBuilderScript.build_instant_hit_visual_params(
 		params,
@@ -64,6 +74,8 @@ func _instant_area_hit_visual_params(params: Dictionary, area_source_id: StringN
 	)
 
 
+## 作用：通过 GameData 查询指定战斗对象配置。
+## 使用：由本文件 _instant_area_hit_visual_params 调用；无适用数据时返回空字典。
 func _get_combat_object_definition(object_id: StringName) -> Dictionary:
 	if object_id == &"":
 		return {}
@@ -77,6 +89,8 @@ func _get_combat_object_definition(object_id: StringName) -> Dictionary:
 	return value.duplicate(true) if value is Dictionary else {}
 
 
+## 作用：构造区域或爆炸伤害、几何与 tick 参数，处理油区合并及活动上限后创建对象。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = "area") -> bool:
 	context = _context_with_resolved_target(params, context)
 	var parent: Node = _get_parent_node(context)
@@ -127,6 +141,8 @@ func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = 
 	return area_effect != null
 
 
+## 作用：构建区域来源伤害包并补充对象类型与规则数值。
+## 使用：context 为施放或命中上下文；会原地更新 area_params.source_instance_id。
 func _prepare_area_damage_packet(area_params: Dictionary, context: Dictionary, source_type: String, area_source_id: StringName, damage: int) -> Dictionary:
 	if not area_params.has("source_instance_id"):
 		var cast_instance_id: String = _cast_instance_id_for_area(context)
@@ -134,6 +150,8 @@ func _prepare_area_damage_packet(area_params: Dictionary, context: Dictionary, s
 	return _build_damage_packet(area_params, context, damage, source_type)
 
 
+## 作用：识别可合并的火油区域并尝试把新效果并入既有区域。
+## 使用：parent 为生成对象父节点；position 为生成世界坐标；radius 为世界坐标半径；返回布尔判断或执行是否成功。
 func _try_merge_fire_oil_area(area_source_id: StringName, special_rules: Dictionary, parent: Node, position: Vector2, radius: float, duration: float, damage: int) -> bool:
 	if area_source_id != &"fire_oil_area" or not special_rules.has("fire_oil_merge_zones"):
 		return false
@@ -141,6 +159,8 @@ func _try_merge_fire_oil_area(area_source_id: StringName, special_rules: Diction
 	return bool(fire_oil_merge.get("enabled", false)) and _merge_existing_fire_oil_area(parent, position, radius, duration, damage, fire_oil_merge)
 
 
+## 作用：为区域或爆炸生成记录技能攻击追踪信息。
+## 使用：parent 为生成对象父节点；position 为生成世界坐标；radius 为世界坐标半径。
 func _record_area_explosion_trace(parent: Node, position: Vector2, radius: float, area_params: Dictionary, context: Dictionary, debug_trace_id: int, damage_packet: Dictionary) -> void:
 	DebugCombatTraceScript.record_explosion(
 		_get_root_node(),
@@ -154,6 +174,8 @@ func _record_area_explosion_trace(parent: Node, position: Vector2, radius: float
 	)
 
 
+## 作用：把技能、来源、类型与后续事件所需信息写入区域运行元数据。
+## 使用：radius 为世界坐标半径；写入 source_type/source_id/source_instance_id 元数据。
 func _register_area_effect_runtime_metadata(area_effect: Node2D, area_source_id: StringName, area_params: Dictionary, source_type: String, radius: float) -> void:
 	area_effect.set_meta("source_type", source_type)
 	area_effect.set_meta("source_id", area_source_id)
@@ -178,6 +200,8 @@ func _register_area_effect_runtime_metadata(area_effect: Node2D, area_source_id:
 		area_effect.set_meta("fire_oil_smoke_radius", radius)
 
 
+## 作用：解析区域范围成长、形状、扇形方向与移动几何参数。
+## 使用：params 读取 radius/collision_radius；context 为施放或命中上下文；会原地更新 area_params.max_targets/boss_damage_multiplier_add/cone_width_degrees。
 func _prepare_area_radius_and_geometry_params(area_source_id: StringName, area_params: Dictionary, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> float:
 	var radius: float = maxf(float(ModifierResolverScript.resolve_value(context, "area_radius", params.get("radius", params.get("collision_radius", 48.0)))), 1.0)
 	if source_type == "explosion":
@@ -201,6 +225,8 @@ func _prepare_area_radius_and_geometry_params(area_source_id: StringName, area_p
 	return radius
 
 
+## 作用：从动作和技能属性中取得区域伤害，并应用配置缩放。
+## 使用：params 读取 damage_multiplier/damage；context 为施放或命中上下文。
 func _resolve_area_damage(area_source_id: StringName, params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
 	var damage_multiplier: float = float(params.get("damage_multiplier", 1.0))
 	if not holy_field_capacity.is_empty():
@@ -221,6 +247,8 @@ func _resolve_area_damage(area_source_id: StringName, params: Dictionary, contex
 	return damage
 
 
+## 作用：解析区域每次命中的目标数量上限。
+## 使用：context 携带 skill_instance；写入 acid_pressure_next_cast 元数据。
 func _resolve_area_max_targets(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary) -> int:
 	var max_targets_stat: String = "%s_max_targets" % source_type
 	var max_targets: int = maxi(int(ModifierResolverScript.resolve_value(context, max_targets_stat, area_params.get("max_targets", 0))), 0)
@@ -231,6 +259,8 @@ func _resolve_area_max_targets(area_source_id: StringName, area_params: Dictiona
 	return max_targets
 
 
+## 作用：解析同类技能区域的活动数量上限。
+## 使用：context 为施放或命中上下文。
 func _resolve_area_max_active(area_source_id: StringName, area_params: Dictionary, context: Dictionary, source_type: String, special_rules: Dictionary, holy_field_capacity: Dictionary) -> int:
 	if source_type == "trap":
 		return maxi(int(ModifierResolverScript.resolve_value(context, "max_active_traps", area_params.get("max_active", 0))), 0)
@@ -241,6 +271,8 @@ func _resolve_area_max_active(area_source_id: StringName, area_params: Dictionar
 	return maxi(int(area_params.get("max_active", 0)), 0)
 
 
+## 作用：通过技能成长和属性修饰求得区域存续秒数。
+## 使用：context 为施放或命中上下文。
 func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary, context: Dictionary, special_rules: Dictionary) -> float:
 	var duration: float = maxf(float(ModifierResolverScript.resolve_value(context, "duration", area_params.get("duration", 0.12))), 0.05)
 	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_duration_tuning"):
@@ -250,6 +282,8 @@ func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary,
 	return duration
 
 
+## 作用：把已解析的运行数值委托区域构建器生成工厂参数。
+## 使用：context 为施放或命中上下文；parent 为生成对象父节点；position 为生成世界坐标。
 func _build_area_effect_spawn_params(area_params: Dictionary, context: Dictionary, source_type: String, parent: Node, area_source_id: StringName, position: Vector2, damage: int, damage_packet: Dictionary, duration: float, radius: float, max_targets: int, statuses_on_hit: Array[StringName], special_rules: Dictionary) -> Dictionary:
 	return SkillActionAreaBuilderScript.build_effect_spawn_params({
 		"area_params": area_params,
@@ -271,6 +305,8 @@ func _build_area_effect_spawn_params(area_params: Dictionary, context: Dictionar
 	})
 
 
+## 作用：为陷阱动作补充陷阱对象语义后走区域创建路径。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _spawn_trap(params: Dictionary, context: Dictionary) -> bool:
 	var trap_params: Dictionary = params.duplicate(true)
 	if not trap_params.has("damage_origin"):
@@ -286,6 +322,8 @@ func _spawn_trap(params: Dictionary, context: Dictionary) -> bool:
 	return _spawn_area(trap_params, context, "trap")
 
 
+## 作用：按活动区域上限查找同来源对象并清理超额旧对象。
+## 使用：parent 为生成对象父节点；source_id 为稳定效果来源 ID；可能回收匹配节点。
 func _enforce_max_active_areas(parent: Node, source_type: String, source_id: StringName, max_active: int) -> void:
 	if parent == null or max_active <= 0:
 		return
@@ -304,6 +342,8 @@ func _enforce_max_active_areas(parent: Node, source_type: String, source_id: Str
 			oldest.queue_free()
 
 
+## 作用：更新命中的既有火油区域几何、时长及合并元数据。
+## 使用：parent 为生成对象父节点；position 为生成世界坐标；radius 为世界坐标半径；写入 fire_oil_radius/fire_oil_merged_area 元数据；返回布尔判断或执行是否成功。
 func _merge_existing_fire_oil_area(parent: Node, position: Vector2, radius: float, duration: float, damage: int, rule: Dictionary) -> bool:
 	if parent == null:
 		return false
@@ -327,6 +367,8 @@ func _merge_existing_fire_oil_area(parent: Node, position: Vector2, radius: floa
 	return false
 
 
+## 作用：创建单个环绕战斗对象并登记来源技能与环绕轨道。
+## 使用：params 读取 count/orbit_radius/collision_radius/object_id；context 携带 caster/skill_id；写入 owner_instance_id/skill_id/source_id 元数据；返回布尔判断或执行是否成功。
 func _spawn_orbit_object(params: Dictionary, context: Dictionary) -> bool:
 	var caster: Node2D = context.get("caster") as Node2D
 	if caster == null:
@@ -363,6 +405,8 @@ func _spawn_orbit_object(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：按数量、角度和轨道配置生成一组环绕对象。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _spawn_orbitals(params: Dictionary, context: Dictionary) -> bool:
 	var orbit_params: Dictionary = params.duplicate(true)
 	if not orbit_params.has("object_id"):
@@ -372,6 +416,8 @@ func _spawn_orbitals(params: Dictionary, context: Dictionary) -> bool:
 	return _spawn_orbit_object(orbit_params, context)
 
 
+## 作用：根据施法者、区域中心或配置方向给命中目标施加击退。
+## 使用：params 读取 force；context 携带 target/caster；返回布尔判断或执行是否成功。
 func _knockback(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node2D = context.get("target") as Node2D
 	var caster: Node2D = context.get("caster") as Node2D
@@ -386,6 +432,8 @@ func _knockback(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：把有效目标沿指定中心方向牵引。
+## 使用：params 读取 distance/strength/radius；context 携带 target/source/caster；返回布尔判断或执行是否成功。
 func _pull(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node2D = context.get("target") as Node2D
 	if target == null:
@@ -409,6 +457,8 @@ func _pull(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：按动作策略解析目标并交换对应位置。
+## 使用：params 读取 targeting/count/target_range/detect_range；context 携带 caster；返回布尔判断或执行是否成功。
 func _swap_targets(params: Dictionary, context: Dictionary) -> bool:
 	var caster: Node = context.get("caster") as Node
 	var targeting: String = str(params.get("targeting", "instability_stack_highest"))
@@ -470,6 +520,8 @@ func _swap_targets(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：查找符合条件的现有区域并改造为新区域效果。
+## 使用：params 读取 area_id/object_id/remove_source_area；context 携带 area；返回布尔判断或执行是否成功。
 func _transform_area(params: Dictionary, context: Dictionary) -> bool:
 	var area: Node = context.get("area") as Node
 	if area == null:
@@ -491,6 +543,8 @@ func _transform_area(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：补齐区域 ID 与持续时间，把路径重复动作转换为单个带 tick 动作的区域创建请求。
+## 使用：params 读取 source_area_tag/duration；context 为施放或命中上下文。
 func _repeat_area_path(params: Dictionary, context: Dictionary) -> bool:
 	var area_params: Dictionary = _prepare_area_tick_action_params(params)
 	if not area_params.has("area_id"):
@@ -500,6 +554,8 @@ func _repeat_area_path(params: Dictionary, context: Dictionary) -> bool:
 	return _spawn_area(area_params, context, "area")
 
 
+## 作用：读取既有区域位置和参数，为派生区域补齐上下文后创建。
+## 使用：params 为动作或状态参数；context 携带 area/source。
 func _spawn_area_from_existing_area(params: Dictionary, context: Dictionary) -> bool:
 	var source_area: Node2D = context.get("area") as Node2D
 	if source_area == null:
@@ -512,6 +568,8 @@ func _spawn_area_from_existing_area(params: Dictionary, context: Dictionary) -> 
 	return _spawn_area(area_params, context, "area")
 
 
+## 作用：把区域 tick 的配置效果适配为运行命中动作参数。
+## 使用：params 为动作或状态参数。
 func _prepare_area_tick_action_params(params: Dictionary) -> Dictionary:
 	var area_params: Dictionary = params.duplicate(true)
 	if area_params.has("effects_on_tick") and not area_params.has("actions_on_tick"):

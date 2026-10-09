@@ -1,3 +1,6 @@
+## 文件用途：执行敌人灵魂、经验、击杀事件与 Boss 核心统计。
+## 使用方式：setup 绑定 enemy；死亡流水线调用奖励入口，避免在行为策略内直接发奖。
+
 extends RefCounted
 class_name EnemyRewardController
 
@@ -12,6 +15,8 @@ var _owner: Node2D
 ## - owner: Enemy node that owns reward and kill-side effects.
 ## Returns:
 ## - Nothing.
+## 作用：绑定本服务运行所需的所属节点与配置依赖。
+## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node2D) -> void:
 	_owner = owner
 
@@ -20,6 +25,8 @@ func setup(owner: Node2D) -> void:
 ## - None.
 ## Returns:
 ## - Nothing.
+## 作用：读取敌人灵魂掉落并应用目标的灵魂收益倍率，将正数结果存入 SaveManager。
+## 使用：死亡奖励流水线调用；找不到目标时倍率为 1，零掉落或无 owner 跳过；可能写入 user:// 存档。
 func award_soul_stones() -> void:
 	if _owner == null:
 		return
@@ -47,6 +54,8 @@ func award_soul_stones() -> void:
 ## - damage_type: Damage type or element for synergy systems.
 ## Returns:
 ## - Damage amount after synergy adjustments.
+## 作用：把即将对敌人结算的伤害交给玩家协同服务调整。
+## 使用：amount 为正常计算后伤害；服务返回 amount 时取非负结果，没有服务或有效结果则返回原伤害。
 func apply_damage_synergies(amount: int, damage_type: Variant) -> int:
 	var synergy_manager: Node = _get_synergy_manager()
 	if synergy_manager == null or not synergy_manager.has_method("on_damage_dealt"):
@@ -68,6 +77,8 @@ func apply_damage_synergies(amount: int, damage_type: Variant) -> int:
 ## - amount: Damage after normal synergy adjustments.
 ## Returns:
 ## - Damage after boss-core protection reduction.
+## 作用：按存活核心数量降低 Boss 承伤，每个核心 10%，最多 20%。
+## 使用：仅 owner 等阶为 boss 且输入伤害为正时生效；结果取整后至少为 1；返回计算或读取的数值。
 func apply_boss_core_damage_reduction(amount: int) -> int:
 	if _owner == null or amount <= 0 or String(_owner.get_meta("enemy_rank", "")) != "boss":
 		return amount
@@ -87,6 +98,8 @@ func apply_boss_core_damage_reduction(amount: int) -> int:
 ## - source_packet: Original damage packet or amount.
 ## Returns:
 ## - Nothing.
+## 作用：记录输出伤害；具体处理委托给 tracker.record_damage_done。
+## 使用：供本模块调用者使用；输入 amount（数量）、damage_result（伤害结果）、source_packet（来源伤害包）。
 func record_damage_done(amount: int, damage_result: Dictionary, source_packet: DamagePacket) -> void:
 	if _owner == null:
 		return
@@ -99,6 +112,8 @@ func record_damage_done(amount: int, damage_result: Dictionary, source_packet: D
 ## - None.
 ## Returns:
 ## - Nothing.
+## 作用：记录Boss核心销毁；具体处理委托给 tracker.record_boss_core_destroyed。
+## 使用：供本模块调用者使用。
 func record_boss_core_destroyed() -> void:
 	if _owner == null or String(_owner.get_meta("enemy_rank", "")) != "boss_core":
 		return
@@ -111,6 +126,8 @@ func record_boss_core_destroyed() -> void:
 ## - None.
 ## Returns:
 ## - Nothing.
+## 作用：构建含死亡位置、等阶、生成来源及伤害溯源的击杀事件并通知协同、特质和技能。
+## 使用：死亡流水线调用一次；事件携带 enemy 与节点引用，当前局依赖失效时跳过对应分发。
 func notify_enemy_killed_synergies() -> void:
 	if _owner == null:
 		return
@@ -137,6 +154,8 @@ func notify_enemy_killed_synergies() -> void:
 	_emit_skill_enemy_killed(player, event)
 
 
+## 作用：发出技能敌人击杀并衔接对应的事件处理流程。
+## 使用：本文件由 notify_enemy_killed_synergies 调用；输入 player（玩家）、event（事件）。
 func _emit_skill_enemy_killed(player: Node, event: Dictionary) -> void:
 	if player == null:
 		return
@@ -166,6 +185,8 @@ func _emit_skill_enemy_killed(player: Node, event: Dictionary) -> void:
 ## - None.
 ## Returns:
 ## - Player synergy manager node when available.
+## 作用：获取协同管理服务，供当前模块后续逻辑使用。
+## 使用：本文件由 apply_damage_synergies、notify_enemy_killed_synergies 调用；返回 Node 对象/值。
 func _get_synergy_manager() -> Node:
 	var player: Node = _get_player()
 	if player == null:
@@ -177,6 +198,8 @@ func _get_synergy_manager() -> Node:
 ## - None.
 ## Returns:
 ## - Current target node resolved from the owner target group.
+## 作用：查找目标范围内分组，供当前模块后续逻辑使用。
+## 使用：本文件由 award_soul_stones 调用；返回 Node 对象/值。
 func _find_target_in_group() -> Node:
 	if _owner == null or _owner.get_tree() == null:
 		return null
@@ -187,6 +210,8 @@ func _find_target_in_group() -> Node:
 ## - None.
 ## Returns:
 ## - Player node when available.
+## 作用：获取玩家，供当前模块后续逻辑使用。
+## 使用：本文件由 notify_enemy_killed_synergies、_get_synergy_manager 调用；返回 Node 对象/值。
 func _get_player() -> Node:
 	if _owner == null or _owner.get_tree() == null:
 		return null

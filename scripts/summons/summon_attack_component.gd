@@ -1,3 +1,5 @@
+## 文件用途：实现召唤近战、投射物和区域脉冲攻击、冷却与命中状态。
+## 使用方式：由SummonController持有并配置；attack使用玩家Power乘damage_scale，严格伤害来源标记为summon。
 extends RefCounted
 class_name SummonAttackComponent
 
@@ -19,6 +21,8 @@ var on_hit_effects: Array = []
 var _cooldown_remaining: float = 0.0
 
 
+## 作用：读取攻击模式、距离、冷却、元素、伤害系数、弹体与脉冲配置。
+## 使用：复制on_hit_effects并清冷却使首次可攻击。
 func setup(config: Dictionary) -> void:
 	attack_type = str(config.get("attack_type", attack_type))
 	attack_range = maxf(float(config.get("attack_range", attack_range)), 1.0)
@@ -34,19 +38,27 @@ func setup(config: Dictionary) -> void:
 	_cooldown_remaining = 0.0
 
 
+## 作用：递减剩余攻击冷却并下限为0。
+## 使用：delta为有效运行秒数。
 func tick(delta: float) -> void:
 	_cooldown_remaining = maxf(_cooldown_remaining - delta, 0.0)
 
 
+## 作用：按攻击模式选择pulse_radius或attack_range检查目标距离。
+## 使用：双方非空才可返回true。
 func is_in_range(summon: Node2D, target: Node2D) -> bool:
 	var range: float = pulse_radius if attack_type == "area_pulse" else attack_range
 	return summon != null and target != null and summon.global_position.distance_to(target.global_position) <= range
 
 
+## 作用：判断剩余冷却是否已为0。
+## 使用：只查询，不执行攻击。
 func can_attack() -> bool:
 	return _cooldown_remaining <= 0.0
 
 
+## 作用：检查冷却与范围后分派弹体/区域/近战，最后重置冷却。
+## 使用：area_pulse不重复检查目标距离；返回是否发起，子动作失败仍会消耗冷却。
 func attack(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> bool:
 	if summon == null or target == null or not can_attack():
 		return false
@@ -64,6 +76,8 @@ func attack(summon: Node2D, target: Node2D, player_power: float, context: Dictio
 	return true
 
 
+## 作用：用Power系数取整构造special/summon_damage包并受击，然后施加命中效果。
+## 使用：正伤害量且目标支持take_damage才造成伤害，状态效果仍会尝试。
 func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
 	var amount: int = maxi(roundi(player_power * damage_scale), 0)
 	if amount > 0 and target.has_method("take_damage"):
@@ -82,6 +96,8 @@ func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: 
 	_apply_on_hit_effects(target)
 
 
+## 作用：区域场景不能生成时从注册表查询脉冲圆内目标并逐个用近战入口命中。
+## 使用：context.target_group决定索引，无死亡目标参与。
 func _apply_area_pulse(summon: Node2D, player_power: float, context: Dictionary) -> void:
 	if summon == null:
 		return
@@ -100,6 +116,8 @@ func _apply_area_pulse(summon: Node2D, player_power: float, context: Dictionary)
 		_apply_melee(summon, target, player_power, context)
 
 
+## 作用：通过action_executor生成配置的召唤脉冲区域。
+## 使用：无执行器/area_id返回false，供调用方回退直接范围伤害。
 func _spawn_area_pulse(summon: Node2D, player_power: float, context: Dictionary) -> bool:
 	var action_executor: RefCounted = context.get("action_executor") as RefCounted
 	if summon == null or action_executor == null or pulse_area_id == &"":
@@ -129,6 +147,8 @@ func _spawn_area_pulse(summon: Node2D, player_power: float, context: Dictionary)
 	return bool(action_executor.call("execute_action", {"type": "spawn_area", "params": area_params}, area_context))
 
 
+## 作用：把第一个apply_status效果转为区域状态参数。
+## 使用：area_params原地修改，多项状态只采用首个。
 func _apply_pulse_status_params(area_params: Dictionary) -> void:
 	for effect_variant: Variant in on_hit_effects:
 		if not (effect_variant is Dictionary):
@@ -142,6 +162,8 @@ func _apply_pulse_status_params(area_params: Dictionary) -> void:
 		return
 
 
+## 作用：用动作执行器生成召唤投射物，缺执行器回退近战。
+## 使用：context.owner作为caster，summon作为source，默认弹体thunder_arc_bolt。
 func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
 	var action_executor: RefCounted = context.get("action_executor") as RefCounted
 	if action_executor == null:
@@ -168,14 +190,20 @@ func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, conte
 	}, projectile_context)
 
 
+## 作用：读取上下文source_origin_id并转StringName。
+## 使用：缺失返回空ID。
 func _source_origin_id(context: Dictionary) -> StringName:
 	return StringName(String(context.get("source_origin_id", "")))
 
 
+## 作用：优先读取skill_id，否则source_skill_id。
+## 使用：返回StringName供召唤伤害归因。
 func _source_skill_id(context: Dictionary) -> StringName:
 	return StringName(String(context.get("skill_id", context.get("source_skill_id", ""))))
 
 
+## 作用：仅处理配置中的apply_status效果，向目标传层数和时长。
+## 使用：target应有效，非状态效果跳过。
 func _apply_on_hit_effects(target: Node2D) -> void:
 	for effect_variant: Variant in on_hit_effects:
 		if not (effect_variant is Dictionary):
@@ -188,6 +216,8 @@ func _apply_on_hit_effects(target: Node2D) -> void:
 			})
 
 
+## 作用：读取数组配置，非数组输入返回空数组。
+## 使用：value为待检查配置；返回深复制。
 func _array(value: Variant) -> Array:
 	if value is Array:
 		return (value as Array).duplicate(true)

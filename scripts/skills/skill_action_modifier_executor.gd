@@ -1,7 +1,11 @@
+## 文件用途：执行治疗、临时属性、状态易伤、护盾和技能重复施放动作。
+## 使用方式：由动作分派器传 params/context；需要的玩家能力通过 has_method 检查，临时属性入口当前只合并属性，不安排到期回收。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionModifierExecutor
 
 
+## 作用：按 amount 或最大生命比例直接增加施法者 current_health，限制到上限并发血量信号。
+## 使用：params 读取 amount/max_health_ratio；context 携带 caster；会发出对应变更信号；返回布尔判断或执行是否成功。
 func _heal_owner(params: Dictionary, context: Dictionary) -> bool:
 	var caster: Node = context.get("caster") as Node
 	if caster == null:
@@ -22,6 +26,8 @@ func _heal_owner(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：把动作属性合入技能运行快照或管理器被动列表；燃烧每层易伤使用单独状态字段路径。
+## 使用：params 读取 stat/scope；context 携带 skill_instance/skill_manager；返回布尔判断或执行是否成功。
 func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
 	var modifier: Dictionary = _build_modifier_from_params(params)
 	if modifier.is_empty():
@@ -47,6 +53,8 @@ func _add_temporary_modifier(params: Dictionary, context: Dictionary) -> bool:
 	return false
 
 
+## 作用：把目标状态相关承伤增量写入对应临时属性语义。
+## 使用：status_id 为标准状态 ID；params 读取 duration；context 携带 target；返回布尔判断或执行是否成功。
 func _add_status_damage_taken_modifier(status_id: StringName, modifier: Dictionary, params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null or status_id == &"":
@@ -66,6 +74,8 @@ func _add_status_damage_taken_modifier(status_id: StringName, modifier: Dictiona
 	return bool(manager.call("apply_status", status_id, status_params))
 
 
+## 作用：根据动作数值和目标拥有者授予配置护盾。
+## 使用：params 读取 amount/max_health_ratio/duration/shield_type；context 携带 owner/caster/event_bus；会原地更新 context.shield_overflowed/shield_overflow_amount/shield_gained_amount；写入 fire_passive_shield/fire_passive_shield_expires_at 元数据；返回布尔判断或执行是否成功。
 func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 	var owner: Node = context.get("owner") as Node
 	if owner == null:
@@ -119,6 +129,8 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：要求显式 actions 列表，按 times 或 count 至少执行一次，缺动作返回 false 并警告。
+## 使用：params 读取 actions/times/count；context 为施放或命中上下文；返回布尔判断或执行是否成功。
 func _repeat_skill(params: Dictionary, context: Dictionary) -> bool:
 	var actions: Array = _get_array(params.get("actions", []))
 	if actions.is_empty():

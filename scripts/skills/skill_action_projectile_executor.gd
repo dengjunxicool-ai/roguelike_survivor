@@ -1,7 +1,11 @@
+## 文件用途：执行单发、多目标、延时、连锁、弹幕及敌方弹体销毁动作。
+## 使用方式：经动作分派器调用；构建投射物伤害与命中动作，并按同目标规则和每帧预算控制生成。
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionProjectileExecutor
 
 
+## 作用：解析弹数、发射方式和目标后生成投射物，并补充运行伤害与命中动作。
+## 使用：params 读取 spread_angle；context 携带 caster/target；返回布尔判断或执行是否成功。
 func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	context = _context_with_resolved_target(params, context)
 	var caster: Node2D = context.get("caster") as Node2D
@@ -49,6 +53,8 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	return true
 
 
+## 作用：生成目标序列，按目标序号、同目标衰减与延时依次发射投射物。
+## 使用：params 读取 range/targeting_mode/targeting；context 携带 caster；返回布尔判断或执行是否成功。
 func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> bool:
 	params = _prepare_projectile_burst_params(params)
 	var caster: Node2D = context.get("caster") as Node2D
@@ -104,6 +110,8 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 	return spawned > 0
 
 
+## 作用：按指定方向创建非追踪投射物实例。
+## 使用：params 读取 trajectory_mode；context 为施放或命中上下文；caster 为施法者节点。
 func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Dictionary, context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int, forbidden_page_pending: bool, hot_rapid_fire_pending: bool, hot_rapid_fire_crit_chance_add: float) -> void:
 	var use_hot_rapid_fire: bool = hot_rapid_fire_pending and projectile_index == 0
 	var launch_data: Dictionary = _build_direct_projectile_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
@@ -139,6 +147,8 @@ func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Di
 	))
 
 
+## 作用：为指定目标选择即时或延时发射路径。
+## 使用：params 为动作或状态参数；caster 为施法者节点；target 为本次命中目标。
 func _spawn_targeted_projectile_instance(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int) -> void:
 	var spawn_delay: float = _same_target_projectile_spawn_delay(projectile_params, same_target_hit_index)
 	if spawn_delay > 0.0:
@@ -157,6 +167,8 @@ func _spawn_targeted_projectile_instance(params: Dictionary, projectile_params: 
 	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
 
 
+## 作用：等待配置秒数后复核目标与父节点有效性，再创建目标投射物。
+## 使用：params 为动作或状态参数；caster 为施法者节点；target 为本次命中目标。
 func _spawn_targeted_projectile_instance_after_delay(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int, spawn_delay: float) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if tree == null:
@@ -168,6 +180,8 @@ func _spawn_targeted_projectile_instance_after_delay(params: Dictionary, project
 	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
 
 
+## 作用：构建目标发射数据并立即调用战斗对象工厂创建弹体。
+## 使用：params 读取 trajectory_mode；caster 为施法者节点；target 为本次命中目标。
 func _spawn_targeted_projectile_instance_now(params: Dictionary, projectile_params: Dictionary, projectile_context: Dictionary, caster: Node2D, target: Node2D, runtime_data: Dictionary, source_context: Dictionary, same_target_hit_index: int) -> void:
 	var launch_data: Dictionary = _build_targeted_projectile_launch_data(params, caster.global_position, target.global_position, same_target_hit_index)
 	var visual_start_position: Vector2 = launch_data.get("position", caster.global_position)
@@ -200,18 +214,26 @@ func _spawn_targeted_projectile_instance_now(params: Dictionary, projectile_para
 	))
 
 
+## 作用：计算同一目标重复投射物之间的配置生成间隔。
+## 使用：params 为动作或状态参数。
 func _same_target_projectile_spawn_delay(params: Dictionary, same_target_hit_index: int) -> float:
 	return SkillActionProjectileBuilderScript.resolve_same_target_spawn_delay(params, same_target_hit_index)
 
 
+## 作用：为同目标重复命中生成带对应序号和衰减的动作参数。
+## 使用：params 为动作或状态参数。
 func _projectile_params_for_same_target_hit(params: Dictionary, same_target_hit_index: int) -> Dictionary:
 	return SkillActionProjectileBuilderScript.build_same_target_hit_params(params, same_target_hit_index)
 
 
+## 作用：筛选命中动作中的伤害项，供衰减或复制弹体使用。
+## 使用：actions 为依次执行的动作列表。
 func _damage_only_actions(actions: Array) -> Array:
 	return SkillActionProjectileBuilderScript.filter_damage_actions(actions)
 
 
+## 作用：解析并应用弹体伤害、弹数、速度与其他技能运行属性。
+## 使用：params 读取 count/speed/pierce/collision_radius；context 为施放或命中上下文。
 func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) -> Dictionary:
 	return {
 		"count": maxi(int(ModifierResolverScript.resolve_value(context, "projectile_count", params.get("count", 1))), 1),
@@ -224,6 +246,8 @@ func _resolve_projectile_runtime_stats(params: Dictionary, context: Dictionary) 
 	}
 
 
+## 作用：汇总弹体施放身份、伤害包、命中状态和动作的运行载荷。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _build_projectile_runtime_data(projectile_stats: Dictionary, params: Dictionary, context: Dictionary) -> Dictionary:
 	return SkillActionProjectileBuilderScript.build_runtime_data({
 		"speed": projectile_stats.get("speed", 420.0),
@@ -238,22 +262,32 @@ func _build_projectile_runtime_data(projectile_stats: Dictionary, params: Dictio
 	})
 
 
+## 作用：提取投射物命中施加状态及其参数列表。
+## 使用：由本文件 _spawn_direct_projectile_instance/_spawn_targeted_projectile_instance_now 调用。
 func _get_projectile_runtime_statuses_on_hit(runtime_data: Dictionary) -> Array[StringName]:
 	return SkillActionProjectileBuilderScript.normalize_status_ids(_get_array(runtime_data.get("statuses_on_hit", [])))
 
 
+## 作用：委托构建器计算指向目标的弹体位置、方向和生成参数。
+## 使用：params 为动作或状态参数。
 func _build_targeted_projectile_launch_data(params: Dictionary, caster_position: Vector2, target_position: Vector2, same_target_hit_index: int) -> Dictionary:
 	return SkillActionProjectileBuilderScript.build_targeted_launch_data(params, caster_position, target_position, same_target_hit_index)
 
 
+## 作用：委托构建器计算指定方向的弹体发射参数。
+## 使用：params 为动作或状态参数；caster 为施法者节点；target 为本次命中目标。
 func _build_direct_projectile_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
 	return SkillActionProjectileBuilderScript.build_direct_launch_data(params, caster, target, base_direction, start_angle, spread_angle, projectile_index)
 
 
+## 作用：按视觉起始偏移修正弹体表现位置，保留实际发射方向语义。
+## 使用：params 为动作或状态参数。
 func _apply_projectile_visual_start_offset(start_position: Vector2, target_position: Vector2, params: Dictionary) -> Vector2:
 	return SkillActionProjectileBuilderScript.apply_visual_start_offset(start_position, target_position, params)
 
 
+## 作用：委托投射物构建器组装战斗对象工厂参数。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文；parent 为生成对象父节点。
 func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dictionary, context: Dictionary, parent: Node, caster: Node2D, source_id: StringName, position: Vector2, direction: Vector2, damage: int, damage_packet: Dictionary, speed: float, pierce: int, radius: float, lifetime: float, statuses_on_hit: Array[StringName], cast_instance_id: String, trajectory_mode: String, curve_start_position: Vector2, curve_target_position: Vector2, extra_params: Dictionary = {}) -> Dictionary:
 	return SkillActionProjectileBuilderScript.build_spawn_params({
 		"params": params,
@@ -281,18 +315,26 @@ func _build_projectile_spawn_params(params: Dictionary, projectile_params: Dicti
 	})
 
 
+## 作用：按动作策略生成投射物目标序列，支持多目标和重复命中。
+## 使用：count 为所需数量。
 func _build_projectile_target_sequence(targets: Array, count: int) -> Array:
 	return SkillActionProjectileBuilderScript.build_target_sequence(targets, count)
 
 
+## 作用：解析投射物表现起点，可与实际伤害生成点区分。
+## 使用：params 为动作或状态参数。
 func _resolve_projectile_visual_start_position(start_position: Vector2, target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	return SkillActionProjectileBuilderScript.resolve_visual_start_position(start_position, target_position, same_target_hit_index, params)
 
 
+## 作用：解析投射物表现终点或目标位置。
+## 使用：params 为动作或状态参数。
 func _resolve_projectile_visual_target_position(target_position: Vector2, same_target_hit_index: int, params: Dictionary) -> Vector2:
 	return SkillActionProjectileBuilderScript.resolve_visual_target_position(target_position, same_target_hit_index, params)
 
 
+## 作用：将配置序列中的伤害系数应用到当前弹体发射参数。
+## 使用：packet 为待修饰伤害包视图；params 为动作或状态参数；context 为施放或命中上下文；会原地更新 packet.special_final_modifier/special_final_modifier_source。
 func _apply_projectile_damage_sequence(packet: Dictionary, params: Dictionary, same_target_hit_index: int, context: Dictionary) -> void:
 	var sequence: Array = _resolve_projectile_damage_sequence(params, context)
 	if sequence.is_empty():
@@ -304,6 +346,8 @@ func _apply_projectile_damage_sequence(packet: Dictionary, params: Dictionary, s
 		packet["special_final_modifier_source"] = "system_rule"
 
 
+## 作用：解析多发投射物使用的伤害倍率序列。
+## 使用：params 读取 damage_multiplier_sequence；context 为施放或命中上下文。
 func _resolve_projectile_damage_sequence(params: Dictionary, context: Dictionary) -> Array:
 	var sequence: Array = _get_array(params.get("damage_multiplier_sequence", [])).duplicate(true)
 	var hail_decay_rule: Dictionary = _get_hail_same_target_decay_rule(context)
@@ -318,6 +362,8 @@ func _resolve_projectile_damage_sequence(params: Dictionary, context: Dictionary
 	return sequence
 
 
+## 作用：读取冰雹对同目标重复命中的衰减规则。
+## 使用：context 为施放或命中上下文；无适用数据时返回空字典。
 func _get_hail_same_target_decay_rule(context: Dictionary) -> Dictionary:
 	var special_rules: Dictionary = _get_runtime_special_rules(context)
 	var rule_variant: Variant = special_rules.get("hail_same_target_decay", {})
@@ -326,6 +372,8 @@ func _get_hail_same_target_decay_rule(context: Dictionary) -> Dictionary:
 	return {}
 
 
+## 作用：按连锁数量查找后续目标，逐跳衰减动作数值并执行命中。
+## 使用：params 读取 radius/count/max_targets/target_group；context 携带 target/source/caster/target_group。
 func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 	var origin: Node2D = context.get("target") as Node2D
 	if origin == null:
@@ -343,6 +391,8 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 	var candidates: Array[Node2D] = _find_targets_around(origin.global_position, radius, target_group, context.get("target"))
 	var targeting_mode: String = str(params.get("targeting", ""))
 	if targeting_mode == "conductive_first_nearest":
+		## 作用：连锁目标比较器：带 conductive 状态者优先，同组按距离升序。
+		## 使用：由 sort_custom 调用；a、b 为候选目标，闭包读取 origin 世界位置。
 		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
 			var a_conductive: bool = _target_has_status(a, &"conductive")
 			var b_conductive: bool = _target_has_status(b, &"conductive")
@@ -351,6 +401,8 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 			return origin.global_position.distance_squared_to(a.global_position) < origin.global_position.distance_squared_to(b.global_position)
 		)
 	elif targeting_mode == "cursed_first_nearest":
+		## 作用：连锁目标比较器：带 cursed 状态者优先，同组按距离升序。
+		## 使用：由 sort_custom 调用；a、b 为候选目标，闭包读取 origin 世界位置。
 		candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
 			var a_cursed: bool = _target_has_status(a, &"cursed")
 			var b_cursed: bool = _target_has_status(b, &"cursed")
@@ -378,6 +430,8 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 	return affected
 
 
+## 作用：复制动作数组并给其中伤害动作应用当前连锁衰减。
+## 使用：actions 为依次执行的动作列表；params 读取 damage_decay。
 func _actions_with_chain_decay(actions: Array, chain_index: int, params: Dictionary) -> Array:
 	if actions.is_empty() or not params.has("damage_decay"):
 		return actions
@@ -395,6 +449,8 @@ func _actions_with_chain_decay(actions: Array, chain_index: int, params: Diction
 	return adjusted
 
 
+## 作用：复制伤害参数并按连锁步数调整伤害数值。
+## 使用：params 读取 damage_decay。
 func _params_with_chain_decay(params: Dictionary, chain_index: int) -> Dictionary:
 	if not params.has("damage_decay"):
 		return params
@@ -410,6 +466,8 @@ func _params_with_chain_decay(params: Dictionary, chain_index: int) -> Dictionar
 	return adjusted
 
 
+## 作用：查找动作范围内敌方弹体并按规则销毁。
+## 使用：params 读取 radius；context 携带 source/caster；可能回收匹配节点；返回布尔判断或执行是否成功。
 func _destroy_enemy_projectile(params: Dictionary, context: Dictionary) -> bool:
 	var origin: Node2D = context.get("source") as Node2D
 	if origin == null:
@@ -437,10 +495,14 @@ func _destroy_enemy_projectile(params: Dictionary, context: Dictionary) -> bool:
 	return destroyed_any
 
 
+## 作用：为弹幕动作准备参数，并进入每帧预算控制的生成路径。
+## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _spawn_projectile_burst(params: Dictionary, context: Dictionary) -> bool:
 	return _spawn_projectile_burst_with_budget(_prepare_projectile_burst_params(params), context)
 
 
+## 作用：按当前来源和帧预算生成允许的弹幕，剩余部分延后执行。
+## 使用：context 为施放或命中上下文。
 func _spawn_projectile_burst_with_budget(projectile_params: Dictionary, context: Dictionary) -> bool:
 	var budget_key: String = str(projectile_params.get("defer_budget_key", "")).strip_edges()
 	var max_per_frame: int = maxi(int(projectile_params.get("max_per_frame", projectile_params.get("per_frame_budget", 0))), 0)
@@ -460,6 +522,8 @@ func _spawn_projectile_burst_with_budget(projectile_params: Dictionary, context:
 	return _spawn_projectile(projectile_params, context)
 
 
+## 作用：安排下一预算时机继续发射尚未创建的弹幕。
+## 使用：context 为施放或命中上下文。
 func _defer_projectile_burst_to_budget(projectile_params: Dictionary, context: Dictionary) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if tree == null:
@@ -469,6 +533,8 @@ func _defer_projectile_burst_to_budget(projectile_params: Dictionary, context: D
 	_spawn_projectile_burst_with_budget(projectile_params, context)
 
 
+## 作用：按弹幕角度、数量和技能数值整理发射参数。
+## 使用：params 为动作或状态参数。
 func _prepare_projectile_burst_params(params: Dictionary) -> Dictionary:
 	var projectile_params: Dictionary = params.duplicate(true)
 	if projectile_params.has("damage") and projectile_params.get("damage") is Dictionary:
