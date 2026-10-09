@@ -48,6 +48,8 @@ func run() -> void:
 		bus.emit_skill_event(&"status_max_stack_reached",fission)
 		await process_frame
 	var bursts_before: int = burst_count()
+	await physics_frame
+	bus.process_pending_events()
 	expect(bus.chaos_state().pending == 1 and bursts_before == 0, "25 fissions start suction without simultaneous burst")
 	bus.update_skill_cycles()
 	expect(burst_count() == 0, "pause with zero combat time preserves delayed burst")
@@ -56,6 +58,7 @@ func run() -> void:
 	expect(burst_count() == 0, "singularity waits full two seconds")
 	advance(0.01)
 	bus.update_skill_cycles()
+	await process_frame
 	expect(burst_count() == 1 and bus.chaos_state().pending == 0, "singularity bursts exactly once at two seconds")
 	bus.reset_run_state()
 	expect(not bus.chaos_state().stability_ready and bus.chaos_state().entropy.is_empty(), "run reset clears chaos pending state")

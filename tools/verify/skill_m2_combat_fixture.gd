@@ -31,6 +31,10 @@ class Enemy:
 		return $StatusEffectManager.apply_status(id, params)
 	func get_status_stack(id: Variant) -> int:
 		return $StatusEffectManager.get_status_stack(id)
+	func interrupt_preparing_attack() -> bool:
+		if not bool(get_meta("preparing_attack",false)): return false
+		set_meta("preparing_attack",false)
+		return true
 	func is_dead() -> bool:
 		return current_health <= 0
 var player: Player

@@ -1225,12 +1225,15 @@
       "school": "fire",
       "fusion_school": "frost",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_fire_frost_steam_mist",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_fire_frost_shattered_ember",
@@ -1249,24 +1252,30 @@
       "school": "fire",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_fire_thunder_plasma_fire_path",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_fire_thunder_thunderburn_meteor",
       "school": "fire",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_fire_thunder_thunderburn_meteor",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_fire_curse_ash_curse_rune",
@@ -1333,12 +1342,15 @@
       "school": "fire",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_fire_chaos_molten_split",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_fire_crystalized_flame",
@@ -1357,24 +1369,30 @@
       "school": "frost",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_fire_frostburn_shards",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_thunder_lightning_ice_pillar",
       "school": "frost",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_thunder_lightning_ice_pillar",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_thunder_aurora_frost_channel",
@@ -1393,12 +1411,15 @@
       "school": "frost",
       "fusion_school": "curse",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_curse_ice_coffin_curse_burst",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_curse_cold_scythe_harvest",
@@ -1417,36 +1438,45 @@
       "school": "frost",
       "fusion_school": "holy",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_holy_holy_frost_anchor",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_holy_judgment_ice_lance",
       "school": "frost",
       "fusion_school": "holy",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_holy_judgment_ice_lance",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_chaos_rift_avalanche",
       "school": "frost",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_frost_chaos_rift_avalanche",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_frost_chaos_inverted_ice_shard",
@@ -1501,12 +1531,15 @@
       "school": "thunder",
       "fusion_school": "frost",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_thunder_frost_cryo_capacitor",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_thunder_curse_curse_lightning_rebound",
@@ -1537,36 +1570,45 @@
       "school": "thunder",
       "fusion_school": "holy",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_thunder_holy_judgment_wire",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_thunder_holy_shield_capacitor",
       "school": "thunder",
       "fusion_school": "holy",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_thunder_holy_shield_capacitor",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_thunder_chaos_fractal_arc",
       "school": "thunder",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_thunder_chaos_fractal_arc",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_thunder_chaos_rift_lightning_orb",
@@ -1585,24 +1627,30 @@
       "school": "curse",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_fire_ash_soul_pact",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_fire_burning_soul_minion",
       "school": "curse",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_fire_burning_soul_minion",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_frost_ice_coffin_contract",
@@ -1621,48 +1669,60 @@
       "school": "curse",
       "fusion_school": "frost",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_frost_cold_scythe_soul_chase",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_thunder_curse_lightning_backlash",
       "school": "curse",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_thunder_curse_lightning_backlash",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_thunder_black_serpent_conduction",
       "school": "curse",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_thunder_black_serpent_conduction",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_holy_confession_curse_seal",
       "school": "curse",
       "fusion_school": "holy",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_holy_confession_curse_seal",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_holy_absolution_harvest",
@@ -1681,12 +1741,15 @@
       "school": "curse",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_curse_chaos_paradox_curse_mark",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_curse_chaos_rift_funeral",
@@ -1705,24 +1768,30 @@
       "school": "holy",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_holy_fire_holy_flame_purification",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_holy_fire_solar_hammer",
       "school": "holy",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_holy_fire_solar_hammer",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_holy_frost_crystal_shelter",
@@ -1777,12 +1846,15 @@
       "school": "holy",
       "fusion_school": "curse",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_holy_curse_purifying_chain",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_holy_curse_penitence_barrier",
@@ -1801,24 +1873,30 @@
       "school": "holy",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_holy_chaos_divine_domain_rift",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_holy_chaos_judgment_echo",
       "school": "holy",
       "fusion_school": "chaos",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_holy_chaos_judgment_echo",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_chaos_fire_riftfire_fork",
@@ -1837,24 +1915,30 @@
       "school": "chaos",
       "fusion_school": "fire",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_chaos_fire_lava_refraction",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_chaos_frost_zero_rift",
       "school": "chaos",
       "fusion_school": "frost",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_chaos_frost_zero_rift",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_chaos_frost_shattered_ice_warp",
@@ -1885,24 +1969,30 @@
       "school": "chaos",
       "fusion_school": "thunder",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_chaos_thunder_warp_lightning_orb",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_chaos_curse_curse_rune_echo",
       "school": "chaos",
       "fusion_school": "curse",
       "skill_type": "fusion",
-      "task": "T12/T13",
-      "semantic_cases": [],
-      "legacy_assertions": [
-        "verify_fusion_skill_numeric_contract.js"
+      "task": "T12",
+      "semantic_cases": [
+        "tools/verify/verify_fusion_semantics_v2.gd#fusion_chaos_curse_curse_rune_echo",
+        "tools/verify/verify_fusion_spatial_runtime_v2.gd"
       ],
-      "status": "baseline"
+      "legacy_assertions": [
+        "verify_fusion_skill_numeric_contract.js: migrated to actual positive/negative behavior and per-second damage"
+      ],
+      "status": "accepted"
     },
     {
       "id": "fusion_chaos_curse_rift_curse_exchange",

@@ -343,6 +343,8 @@ func _start_ranged_attack_warning(direction: Vector2) -> void:
 	_ranged_warning_direction = direction.normalized() if direction != Vector2.ZERO else Vector2.RIGHT
 	_ranged_warning_timer = maxf(float(_behavior.get("projectile_warning_time", 0.0)), 0.0)
 	if _ranged_warning_timer > 0.0:
+		notify_preparing_attack()
+		if _ranged_warning_timer <= 0.0: return
 		_attack_telegraph.call("show", _ranged_warning_direction, _behavior, attack_range)
 
 
@@ -1315,3 +1317,15 @@ func _is_normal_enemy() -> bool:
 func _is_strong_enemy() -> bool:
 	var rank: String = String(get_meta("enemy_rank", "normal"))
 	return rank == "elite" or rank == "boss"
+
+func notify_preparing_attack() -> void:
+	var player: Node = get_tree().get_first_node_in_group(&"player")
+	var bus: Node = player.get_node_or_null("SkillEventBus") if player != null else null
+	if bus != null: bus.emit_skill_event(&"enemy_preparing_attack",{"caster":player,"owner":player,"target":self,"position":global_position,"skill_manager":player.get_node_or_null("SkillManager")})
+func interrupt_preparing_attack() -> bool:
+	if _ranged_warning_timer<=0.0 and _dash_warning_timer<=0.0: return false
+	_cancel_ranged_attack_warning()
+	_dash_warning_timer=0.0
+	_damage_cooldown=maxf(_damage_cooldown,0.5)
+	_hide_attack_telegraph()
+	return true

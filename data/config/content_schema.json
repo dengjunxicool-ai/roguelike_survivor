@@ -468,6 +468,9 @@
 				],
 				"level_overrides": [
 					"array"
+				],
+				"fusion_rules": [
+					"array"
 				]
 			},
 			"object_fields": {
@@ -1203,5 +1206,44 @@
 		"soul_gain",
 		"status_duration",
 		"trap_interval"
+	],
+	"fusion_events": [
+		"on_cast",
+		"post_damage_hit",
+		"area_tick",
+		"area_created",
+		"area_overlap",
+		"projectile_area_entered",
+		"status_tick",
+		"status_applied",
+		"status_expired",
+		"reaction_resolved",
+		"cursed_resolved",
+		"frozen_shattered",
+		"on_enemy_killed",
+		"shield_gained",
+		"shield_broken",
+		"enemy_preparing_attack",
+		"fusion_clock"
+	],
+	"fusion_operations": [
+		"effects",
+		"targets",
+		"resolve_targets",
+		"at_rift",
+		"retarget",
+		"curse_charge",
+		"curse_freeze",
+		"curse_thaw",
+		"interrupt",
+		"next_charge",
+		"consume_charge",
+		"copy_curse",
+		"curse_echo",
+		"reaction_echo",
+		"teleport",
+		"area_clone",
+		"wire",
+		"summon_one"
 	]
 }

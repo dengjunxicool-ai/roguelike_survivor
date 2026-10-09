@@ -31,6 +31,7 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 				if(section.id_key){const id=item[section.id_key];if(typeof id!=='string'||!id.trim())fail(where,'invalid ID');else if(indexes[section.domain].has(id))fail(where,'duplicate ID '+id);else indexes[section.domain].add(id);}
 				if(section.domain==='skills'){
                     validateMilestones(item,where,fail);
+                    validateFusions(item,where,fail,schema);
 					for(const cap of item.capabilities??[])if(typeof cap!=='string')fail(where+'.capabilities','expected string capability');
 					for(const cap of item.offer_rule?.required_capabilities??[])if(typeof cap!=='string')fail(where+'.offer_rule.required_capabilities','expected string capability');
 					if(!schema.skill_types.includes(item.skill_type))fail(where+'.skill_type','unknown skill type');
@@ -108,4 +109,18 @@ function validateMilestones(skill,where,fail){
  scan(skill.trigger_rules);scan(skill.effects);
  let previous=0;
  for(const m of skill.level_overrides??[]){if(![3,5].includes(m.level)||m.level<=previous)fail(where,'milestone levels must be ordered 3/5');previous=m.level;if(!Array.isArray(m.patches)||!m.patches.length)fail(where,'milestone patches required');else for(const patch of m.patches)if(!ids.has(patch.effect_id))fail(where,'unknown milestone effect_id '+patch.effect_id);}
+}
+
+function validateFusions(skill,where,fail,schema){
+ if(!skill.fusion_rules)return;
+ const ids=new Set();
+ for(const r of skill.fusion_rules){
+  if(!r||typeof r!=='object'){fail(where,'fusion rule must be an object');continue;}
+  if(!schema.fusion_events.includes(r.event))fail(where,'unknown fusion event');
+  if(!schema.fusion_operations.includes(r.operation))fail(where,'unknown fusion operation');
+  if(typeof r.rule_id!=='string'||!r.rule_id.startsWith(skill.id+':')||ids.has(r.rule_id))fail(where,'invalid or duplicate fusion rule ID');
+  ids.add(r.rule_id);
+  if(typeof r.cooldown!=='number'||r.cooldown<0)fail(where,'invalid fusion ICD');
+  if(!Array.isArray(r.effects))fail(where,'fusion effects must be an array');
+ }
 }

@@ -119,6 +119,7 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 						errors.append("%s.slot_category: unknown slot category" % where)
 				if domain == "skills":
 					_validate_milestones(item,where,errors)
+					_validate_fusions(item,where,errors,schema)
 					for capability: Variant in item.get("capabilities", []):
 						if not capability is String: errors.append("%s.capabilities: expected string capability" % where)
 					for capability: Variant in item.get("offer_rule", {}).get("required_capabilities", []):
@@ -259,3 +260,17 @@ static func _validate_milestones(skill: Dictionary, where: String, errors: Array
 		if not item.get("patches") is Array or item.patches.is_empty(): errors.append(where+": milestone patches required"); continue
 		for patch: Dictionary in item.patches:
 			if not ids.has(patch.get("effect_id","")): errors.append(where+": unknown milestone effect_id "+String(patch.get("effect_id","")))
+
+static func _validate_fusions(skill: Dictionary,where: String,errors: Array[String],schema: Dictionary) -> void:
+	if not skill.has("fusion_rules"): return
+	var ids: Dictionary={}
+	for value: Variant in skill.fusion_rules:
+		if not value is Dictionary: errors.append(where+": fusion rule must be an object");continue
+		var r: Dictionary=value
+		if not schema.get("fusion_events",[]).has(r.get("event")): errors.append(where+": unknown fusion event")
+		if not schema.get("fusion_operations",[]).has(r.get("operation")): errors.append(where+": unknown fusion operation")
+		var id: String=String(r.get("rule_id",""))
+		if not id.begins_with(String(skill.id)+":") or ids.has(id): errors.append(where+": invalid or duplicate fusion rule ID")
+		ids[id]=true
+		if not r.get("cooldown") is float and not r.get("cooldown") is int or float(r.get("cooldown",-1))<0: errors.append(where+": invalid fusion ICD")
+		if not r.get("effects") is Array: errors.append(where+": fusion effects must be an array")

@@ -130,6 +130,7 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 		var shield_context: Dictionary = context.duplicate(true)
 		shield_context["owner"] = owner
 		shield_context["shield_type"] = shield_type
+		shield_context["shield_source_skill_id"] = context.get("listener_skill_id", context.get("skill_id", &""))
 		shield_context["shield_amount"] = maxi(final_amount - current, 0)
 		shield_context["shield_overflowed"] = overflow > 0
 		shield_context["shield_overflow_amount"] = overflow

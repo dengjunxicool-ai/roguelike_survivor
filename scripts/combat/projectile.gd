@@ -35,6 +35,7 @@ var _geometry_done: bool = false
 var _return_once: bool = false
 var _return_multiplier: float = 1.0
 var _returned: bool = false
+var spawn_generation: int = 0
 var _age: float = 0.0
 var _hits_remaining: int = 1
 var _hit_bodies: Array[Object] = []
@@ -76,6 +77,7 @@ func _ready() -> void:
 ## 作用：清旧元数据后依次配置核心、payload、上下文、视觉、轨迹与追踪，最后重置运行状态。
 ## 使用：池复用须传完整params，附加视觉场景在状态重置后创建。
 func setup(params: Dictionary) -> void:
+	spawn_generation += 1
 	_clear_projectile_runtime_meta()
 	_apply_projectile_core_params(params)
 	_apply_projectile_payload_params(params)
@@ -102,6 +104,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：停止碰撞和动画、释放附加特效并清事件引用、命中列表与追踪目标。
 ## 使用：回池前隐藏节点，避免残留生命周期事件。
 func prepare_for_pool_despawn() -> void:
+	if event_bus != null: event_bus.clear_interaction_object(self)
 	_is_destroying = true
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
@@ -264,6 +267,7 @@ func _physics_process_profiled(delta: float) -> void:
 	if _is_destroying:
 		return
 
+	var interaction_from: Vector2 = global_position
 	_age += delta
 	if _age >= lifetime:
 		despawn_or_free()
@@ -279,6 +283,7 @@ func _physics_process_profiled(delta: float) -> void:
 		if homing_enabled and _resolve_swept_homing_hit(previous_position, next_position):
 			return
 		global_position = next_position
+	if event_bus != null: event_bus.observe_projectile(self,interaction_from,global_position,_collision_radius)
 	if _visual_style == "lightning_orb" or _visual_style == "meteor":
 		queue_redraw()
 

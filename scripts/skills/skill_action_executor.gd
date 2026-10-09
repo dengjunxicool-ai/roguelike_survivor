@@ -41,6 +41,17 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 	var action_type: String = str(action.get("type", ""))
 	var params: Dictionary = SkillRangeUnitScript.resolve_action_params(_get_dictionary(action.get("params", {})))
+	if params.has("every_n_hits") and int(context.get("area_hit_count",0))%int(params.every_n_hits)!=0: return false
+	if params.has("per_target_interval"):
+		var area: Node = context.get("area") as Node
+		var target: Node = context.get("target") as Node
+		if area == null or target == null: return false
+		var cooldowns: Dictionary = area.get_meta("fusion_action_cooldowns",{})
+		var key: String = "%d:%s" % [target.get_instance_id(),params.get("status_id",action_type)]
+		var now: float = float(context.event_bus.combat_seconds())
+		if float(cooldowns.get(key,-INF))>now: return false
+		cooldowns[key]=now+float(params.per_target_interval)
+		area.set_meta("fusion_action_cooldowns",cooldowns)
 	if bool(params.get("return_only",false)) and not bool(context.get("milestone_returning",false)): return false
 	params = preload("res://scripts/skills/skill_milestone_runtime.gd").prepare(params,context,action_type)
 	var conditions: Array = _get_array(action.get("conditions", params.get("conditions", [])))

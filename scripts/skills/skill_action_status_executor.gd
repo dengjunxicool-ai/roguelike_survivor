@@ -308,6 +308,7 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 		return false
 	if target.has_method("get_status_stack") and int(target.call("get_status_stack", &"frozen")) <= 0:
 		return false
+	context.event_bus.emit_skill_event(&"frozen_shattered",context) if context.get("event_bus") != null else false
 	_consume_status_stack_on_target(target, &"frozen", 1)
 
 	_deal_damage(_prepare_shatter_damage_params(params), context)

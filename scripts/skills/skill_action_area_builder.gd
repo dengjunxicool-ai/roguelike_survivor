@@ -11,7 +11,7 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 	var context: Dictionary = _get_dictionary(input.get("context", {}))
 	var damage_packet: Dictionary = _get_dictionary(input.get("damage_packet", {}))
 	var area_source_id: StringName = StringName(str(input.get("area_source_id", &"")))
-	var impact_target: Node = context.get("target") as Node
+	var impact_target: Node = null if bool(area_params.get("hit_all_targets",false)) else context.get("target") as Node
 	var dash_path_filter: bool = bool(area_params.get("dash_path_filter", false))
 	var area_effect_params: Dictionary = {
 		"parent": input.get("parent"),
@@ -29,6 +29,9 @@ static func build_effect_spawn_params(input: Dictionary) -> Dictionary:
 		"cone_direction": _get_vector2(input.get("cone_direction", Vector2.RIGHT), Vector2.RIGHT),
 		"move_direction": _get_vector2(input.get("move_direction", Vector2.ZERO), Vector2.ZERO),
 		"move_speed": maxf(float(area_params.get("move_speed", 0.0)), 0.0),
+		"shape":String(area_params.get("shape","line" if area_params.has("length") and area_params.has("width") else "circle")),
+		"length":float(area_params.get("length",0.0)),
+		"width":float(area_params.get("width",0.0)),
 		"return_once":bool(area_params.get("return_once",false)),
 		"return_damage_multiplier":float(area_params.get("return_damage_multiplier",1.0)),
 		"milestone_first_tick":bool(context.get("milestone_first_tick",false)),

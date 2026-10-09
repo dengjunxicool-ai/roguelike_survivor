@@ -73,7 +73,7 @@ func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
 	if String(params.get("position_mode", "")) == "event": return context.get("position", Vector2.ZERO)
 	if String(params.get("position_mode", "")) == "area_end":
 		var area: Node2D = context.get("area") as Node2D
-		return area.global_position+Vector2(area.cone_direction)*float(area.get_meta("line_length",area.radius*2.0))*0.5 if area != null else context.get("position",Vector2.ZERO)
+		return area.global_position+Vector2(area.cone_direction)*(float(area.effect_length) if area.effect_shape=="line" else float(area.radius)) if area != null else context.get("position",Vector2.ZERO)
 	if params.has("position"):
 		return _get_vector2(params["position"], Vector2.ZERO)
 

@@ -1,0 +1,870 @@
+[
+  {
+    "skill_id": "fusion_fire_frost_steam_mist",
+    "required_skills": [
+      "frost_cast_frost_field"
+    ],
+    "positive_fixture": {
+      "event": "area_tick",
+      "origin": "frost_cast_frost_field",
+      "statuses": [
+        "burning"
+      ],
+      "objects": "frost",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_fire_frostburn_shards",
+    "required_skills": [
+      "frost_cast_glacial_lance"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "frost_cast_glacial_lance",
+      "statuses": [
+        "burning",
+        "frozen"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 8,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_fire_thunder_plasma_fire_path",
+    "required_skills": [
+      "thunder_cast_emp_ring"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "thunder_cast_emp_ring",
+      "statuses": [],
+      "objects": "fire",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_fire_thunder_thunderburn_meteor",
+    "required_skills": [
+      "fire_cast_meteor_rain"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "fire_cast_meteor_rain",
+      "statuses": [
+        "conductive"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 135,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_fire_ash_soul_pact",
+    "required_skills": [
+      "fire_cast_meteor_rain"
+    ],
+    "positive_fixture": {
+      "event": "status_tick",
+      "origin": "fire_cast_meteor_rain",
+      "statuses": [
+        "cursed"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_fire_burning_soul_minion",
+    "required_skills": [
+      "fire_cast_meteor_rain"
+    ],
+    "positive_fixture": {
+      "event": "on_enemy_killed",
+      "origin": "fire_cast_meteor_rain",
+      "statuses": [
+        "cursed",
+        "burning"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_holy_fire_holy_flame_purification",
+    "required_skills": [
+      "holy_cast_holy_ray"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "holy_cast_holy_ray",
+      "statuses": [
+        "burning"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 40,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_holy_fire_solar_hammer",
+    "required_skills": [
+      "holy_cast_judgment_hammer"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "holy_cast_judgment_hammer",
+      "statuses": [
+        "burning"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_fire_chaos_molten_split",
+    "required_skills": [
+      "fire_cast_meteor_rain"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "fire_cast_meteor_rain",
+      "statuses": [
+        "instability"
+      ],
+      "objects": "projectile",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 2,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_chaos_fire_lava_refraction",
+    "required_skills": [
+      "fire_cast_lava_rift",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "area_overlap",
+      "origin": "fire_cast_lava_rift",
+      "statuses": [],
+      "objects": "lava+rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_thunder_lightning_ice_pillar",
+    "required_skills": [
+      "thunder_cast_emp_ring"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "thunder_cast_emp_ring",
+      "statuses": [
+        "frozen"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_thunder_frost_cryo_capacitor",
+    "required_skills": [
+      "thunder_cast_emp_ring"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "thunder_cast_emp_ring",
+      "statuses": [
+        "chilled"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_curse_ice_coffin_curse_burst",
+    "required_skills": [
+      "frost_cast_frost_field"
+    ],
+    "positive_fixture": {
+      "event": "status_applied",
+      "origin": "frost_cast_frost_field",
+      "statuses": [
+        "cursed",
+        "frozen"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "frozen"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_frost_cold_scythe_soul_chase",
+    "required_skills": [
+      "curse_cast_death_scythe"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "curse_cast_death_scythe",
+      "statuses": [
+        "frozen"
+      ],
+      "objects": "projectile",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_holy_holy_frost_anchor",
+    "required_skills": [
+      "frost_cast_frost_field"
+    ],
+    "positive_fixture": {
+      "event": "area_tick",
+      "origin": "frost_cast_frost_field",
+      "statuses": [
+        "judgment"
+      ],
+      "objects": "frost",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_holy_judgment_ice_lance",
+    "required_skills": [
+      "frost_cast_glacial_lance"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "frost_cast_glacial_lance",
+      "statuses": [
+        "frozen"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 90,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_frost_chaos_rift_avalanche",
+    "required_skills": [
+      "frost_cast_glacial_lance",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "frozen_shattered",
+      "origin": "frost_cast_glacial_lance",
+      "statuses": [],
+      "objects": "rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_chaos_frost_zero_rift",
+    "required_skills": [
+      "frost_cast_frost_field",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "area_created",
+      "origin": "frost_cast_frost_field",
+      "statuses": [],
+      "objects": "frost+rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_thunder_curse_lightning_backlash",
+    "required_skills": [
+      "thunder_power_overload_burst"
+    ],
+    "positive_fixture": {
+      "event": "reaction_resolved",
+      "origin": "thunder_power_overload_burst",
+      "statuses": [
+        "cursed"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "overload",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_thunder_black_serpent_conduction",
+    "required_skills": [
+      "curse_cast_black_serpent_hunt"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "curse_cast_black_serpent_hunt",
+      "statuses": [
+        "conductive"
+      ],
+      "objects": "projectile",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_thunder_holy_judgment_wire",
+    "required_skills": [
+      "thunder_cast_chain_lightning"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "thunder_cast_chain_lightning",
+      "statuses": [
+        "judgment"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_thunder_holy_shield_capacitor",
+    "required_skills": [
+      "holy_cast_divine_barrier"
+    ],
+    "positive_fixture": {
+      "event": "shield_gained",
+      "origin": "holy_cast_divine_barrier",
+      "statuses": [],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_thunder_chaos_fractal_arc",
+    "required_skills": [
+      "thunder_cast_chain_lightning",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "thunder_cast_chain_lightning",
+      "statuses": [
+        "instability"
+      ],
+      "objects": "rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 2,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_chaos_thunder_warp_lightning_orb",
+    "required_skills": [
+      "thunder_dash_ball_lightning",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "area_overlap",
+      "origin": "thunder_dash_ball_lightning",
+      "statuses": [],
+      "objects": "orb+rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_holy_curse_purifying_chain",
+    "required_skills": [
+      "holy_cast_holy_ray"
+    ],
+    "positive_fixture": {
+      "event": "post_damage_hit",
+      "origin": "holy_cast_holy_ray",
+      "statuses": [
+        "cursed"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 135,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_holy_confession_curse_seal",
+    "required_skills": [
+      "holy_cast_holy_ray"
+    ],
+    "positive_fixture": {
+      "event": "enemy_preparing_attack",
+      "origin": "holy_cast_holy_ray",
+      "statuses": [
+        "cursed",
+        "judgment"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_curse_chaos_paradox_curse_mark",
+    "required_skills": [
+      "chaos_power_fission_burst"
+    ],
+    "positive_fixture": {
+      "event": "reaction_resolved",
+      "origin": "chaos_power_fission_burst",
+      "statuses": [
+        "cursed"
+      ],
+      "objects": "",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "fission",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": 0,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_chaos_curse_curse_rune_echo",
+    "required_skills": [
+      "curse_cast_death_scythe",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "cursed_resolved",
+      "origin": "curse_cast_death_scythe",
+      "statuses": [
+        "instability"
+      ],
+      "objects": "rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 0,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_holy_chaos_divine_domain_rift",
+    "required_skills": [
+      "holy_cast_divine_barrier",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "area_overlap",
+      "origin": "holy_cast_divine_barrier",
+      "statuses": [],
+      "objects": "holy+rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  },
+  {
+    "skill_id": "fusion_holy_chaos_judgment_echo",
+    "required_skills": [
+      "holy_power_divine_punishment",
+      "chaos_cast_void_rift"
+    ],
+    "positive_fixture": {
+      "event": "reaction_resolved",
+      "origin": "holy_power_divine_punishment",
+      "statuses": [
+        "instability"
+      ],
+      "objects": "rift",
+      "position": [
+        30,
+        0
+      ],
+      "reaction": "judgment",
+      "event_status": "burning"
+    },
+    "negative_fixtures": [
+      "wrong_event",
+      "missing_status_or_resource",
+      "wrong_source_or_spatial_object"
+    ],
+    "expected_damage": null,
+    "expected_statuses": {},
+    "expected_spawn_count": 1,
+    "max_trigger_count": 1
+  }
+]

@@ -25,7 +25,7 @@ static func build_targeted_launch_data(params: Dictionary, caster_position: Vect
 static func build_direct_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
 	var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
 	var target_position: Vector2 = target.global_position
-	var position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
+	var position: Vector2 = _get_vector2(params.get("spawn_position",caster.global_position),caster.global_position) + direction * float(params.get("spawn_offset", 24.0))
 	position = apply_visual_start_offset(position, target_position, params)
 	if params.has("visual_start_offset"):
 		direction = position.direction_to(target_position)

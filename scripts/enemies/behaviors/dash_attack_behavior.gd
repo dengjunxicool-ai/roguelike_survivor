@@ -49,6 +49,7 @@ func tick(delta: float) -> void:
 		_set_property(&"_dash_direction", dash_direction)
 		var dash_warning_time: float = maxf(float(config.get("dash_warning_time", 0.8)), 0.0)
 		_set_property(&"_dash_warning_timer", dash_warning_time)
+		_call_enemy(&"notify_preparing_attack", [])
 		_set_property(&"_dash_cooldown", maxf(float(config.get("dash_cooldown", 4.5)), 0.1))
 		if dash_warning_time <= 0.0:
 			_set_property(&"_dash_timer", maxf(float(config.get("dash_duration", 0.35)), 0.05))
