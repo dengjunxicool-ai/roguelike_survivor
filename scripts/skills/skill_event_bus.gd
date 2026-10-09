@@ -15,6 +15,10 @@ const EventContext: Script = preload("res://scripts/skills/skill_event_context.g
 const ProcPolicy: Script = preload("res://scripts/skills/skill_proc_policy.gd")
 const Clock: Script = preload("res://scripts/runtime/run_combat_clock.gd")
 
+var _snapshots: RefCounted = preload("res://scripts/skills/skill_cast_snapshot_service.gd").new()
+var _replay: RefCounted = preload("res://scripts/skills/skill_replay_service.gd").new()
+var _chaos: RefCounted = preload("res://scripts/skills/chaos_cycle_runtime.gd").new()
+
 var _cycles: RefCounted = preload("res://scripts/skills/skill_cycle_runtime.gd").new()
 var _crowd_scan: float = 0.0
 
@@ -48,6 +52,8 @@ func combat_seconds() -> float:
 
 func reset_run_state() -> void:
 	_pending_events.clear()
+	_snapshots.clear()
+	_chaos.reset()
 	_clock.reset()
 	_budget_frame = -1
 	_frame_events = 0
@@ -111,12 +117,14 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 	if event_name == &"on_cast":
 		context["_cast_result"] = {"successful_outputs": 0}
 		_prepare_cast_charge(context)
+		_chaos.prepare(context)
 		_special_rule_executor.call("execute_event", event_name, context)
 		if not bool(context.get("skip_fire_passive_runtime", false)):
 			_execute_fire_passive_runtime(event_name, context)
 		_execute_skill_events(event_name, context)
 		if int(context["_cast_result"].successful_outputs) > 0:
 			_commit_cast_charge(context)
+			_snapshots.record(context,context["_cast_result"].get("actions",[]))
 			var succeeded: Dictionary = context.duplicate(true)
 			succeeded["parent_event_id"] = int(context.event_id)
 			emit_skill_event(&"skill_cast_succeeded", succeeded)
@@ -126,6 +134,7 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 			_execute_fire_passive_runtime(event_name, context)
 		_special_rule_executor.call("execute_event", event_name, context)
 
+	_chaos.handle(self,event_name,context)
 	var results: Array = []
 	var listeners: Array = _listeners.get(event_name, [])
 	for listener_variant: Variant in listeners:
@@ -282,6 +291,7 @@ func _get_array(value: Variant) -> Array:
 
 func update_skill_cycles() -> void:
 	_cycles.update(self)
+	_chaos.update(self)
 
 func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
 	_cycles.mark(target, context, duration, combat_seconds())
@@ -291,5 +301,17 @@ func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
 
 func clear_origin(skill_id: StringName) -> void:
 	_cycles.clear_origin(skill_id)
+	_snapshots.clear_origin(skill_id)
+	_chaos.clear_origin(skill_id)
 	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
 		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)
+
+func get_cast_snapshot(filter: Dictionary = {}) -> Dictionary:
+	return _snapshots.get_last(filter)
+func replay_cast(snapshot: Dictionary, context: Dictionary, damage_scale: float) -> bool:
+	return _replay.replay(snapshot,context,damage_scale)
+func chaos_state() -> Dictionary:
+	return _chaos.state()
+
+func prepare_geometry(params: Dictionary, context: Dictionary) -> Dictionary:
+	return _chaos.geometry(params,context)

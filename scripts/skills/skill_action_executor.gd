@@ -32,6 +32,8 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 			if bool(context.get("is_cast_source", false)) and context.has("_cast_result"):
 				if (result is bool and result) or ((result is int or result is float) and result > 0):
 					context["_cast_result"]["successful_outputs"] = int(context["_cast_result"].get("successful_outputs", 0)) + 1
+					if not context["_cast_result"].has("actions"): context["_cast_result"]["actions"] = []
+					context["_cast_result"]["actions"].append(action_variant.duplicate(true))
 
 
 ## 作用：检查动作条件后按 type 转入对应动作族并返回执行结果。

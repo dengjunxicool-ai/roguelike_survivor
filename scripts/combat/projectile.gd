@@ -30,6 +30,11 @@ const PROJECTILE_RETARGET_INTERVAL: float = 0.1
 @export_range(0.0, 5000.0, 10.0, "or_greater") var homing_seek_range: float = 0.0
 @export var visual_effect_scene: String = ""
 
+var _geometry_branch: int = -1
+var _geometry_done: bool = false
+var _return_once: bool = false
+var _return_multiplier: float = 1.0
+var _returned: bool = false
 var _age: float = 0.0
 var _hits_remaining: int = 1
 var _hit_bodies: Array[Object] = []
@@ -160,6 +165,11 @@ func _apply_projectile_payload_params(params: Dictionary) -> void:
 	_stabilize_damage_packet_source("projectile")
 	event_on_hit = StringName(String(params.get("event_on_hit", event_on_hit)))
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
+	_geometry_branch = int(params.get("chaos_geometry_branch",-1))
+	_geometry_done = false
+	_return_once = bool(params.get("return_once",false)) or _geometry_branch == 1
+	_return_multiplier = float(params.get("return_damage_multiplier",1.0))
+	_returned = false
 
 
 ## 作用：绑定事件总线、技能实例、caster、技能及遗物管理器。
@@ -259,6 +269,7 @@ func _physics_process_profiled(delta: float) -> void:
 		despawn_or_free()
 		return
 
+	if _return_once and not _returned and _age >= lifetime*0.5: _begin_return()
 	if _trajectory_mode == "curve":
 		_update_curve_trajectory(delta)
 	else:
@@ -337,6 +348,22 @@ func _emit_primary_attack_hit_event(event_context: Dictionary) -> void:
 ## 作用：扣一次命中次数并同步pierce，耗尽时停止飞行播放命中视觉。
 ## 使用：剩余次数初始化为pierce+1。
 func _consume_pierce() -> void:
+	if _geometry_branch == 0 and not _geometry_done and event_bus != null:
+		_geometry_done = true
+		var c: Dictionary = {"caster":caster,"owner":caster,"target":_hit_bodies.back(),"parent":get_parent(),"skill_manager":skill_manager,"event_bus":event_bus,"origin_skill_id":damage_packet.get("origin_skill_id",source_id),"skill_id":damage_packet.get("origin_skill_id",source_id),"can_generate_secondary_proc":false,"proc_depth":1}
+		event_bus.execute_adapted_actions([{"type":"spawn_projectile_burst","params":{"projectile_id":String(source_id),"count":2,"spread_angle":25,"damage":float(damage_packet.get("raw_amount",damage))*0.35,"damage_type":String(damage_type),"speed":speed,"range":speed*lifetime*0.4,"chaos_geometry_branch":-1}}],c)
+	if _return_once and not _returned:
+		_begin_return()
+		return
+	if _geometry_branch == 2 and not _geometry_done:
+		_geometry_done = true
+		var next: Node2D = null
+		for candidate: Node2D in TargetingServiceScript.find_targets(caster,"nearest_enemy",{"range":speed*lifetime,"count":32}):
+			if not _hit_bodies.has(candidate): next = candidate; break
+		if next != null:
+			direction = global_position.direction_to(next.global_position)
+			homing_enabled = true
+			return
 	_hits_remaining -= 1
 	pierce = maxi(_hits_remaining - 1, 0)
 	if _hits_remaining <= 0:
@@ -900,3 +927,15 @@ func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Arr
 		statuses.append(fallback_status)
 
 	return statuses
+
+func _begin_return() -> void:
+	_returned = true
+	_geometry_done = true
+	_trajectory_mode = "linear"
+	homing_enabled = false
+	direction = -direction
+	_hit_bodies.clear()
+	_hits_remaining = maxi(pierce+1,1)
+	damage = roundi(float(damage)*_return_multiplier)
+	for key: String in ["raw_amount","amount"]:
+		if damage_packet.has(key): damage_packet[key] = float(damage_packet[key])*_return_multiplier

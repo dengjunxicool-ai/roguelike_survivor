@@ -5579,42 +5579,15 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": []
 			},
-			"trigger_rules": [
-				{
-					"trigger": "status_max_stack_reached",
-					"conditions": [
-						{
-							"type": "event_status_is",
-							"status": "instability"
-						}
-					],
-					"effects": [
-						{
-							"type": "add_modifier",
-							"value": 0.12,
-							"duration": 5,
-							"stat": "chaos_entropy_damage",
-							"op": "multiplier_add",
-							"scope": {},
-							"source": "skill"
-						},
-						{
-							"type": "add_modifier",
-							"value": 0.12,
-							"duration": 5,
-							"stat": "chaos_entropy_range",
-							"op": "multiplier_add",
-							"scope": {},
-							"source": "skill"
-						}
-					]
-				}
-			],
+			"trigger_rules": [],
 			"effects": [],
-			"description": "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取",
+			"description": "裂变后按伤害、范围、冷却、速度轮换获得12%强化，持续5秒，最多保留最近两种。",
 			"skill_type": "passive",
 			"slot_category": "passive",
-			"capabilities": []
+			"capabilities": [],
+			"chaos_contract": {
+				"runtime": "bounded_cycle_v2"
+			}
 		},
 		{
 			"id": "chaos_passive_geometric_imbalance",
@@ -5639,28 +5612,14 @@
 				"blocked_by_exclusive_group": []
 			},
 			"trigger_rules": [],
-			"effects": [
-				{
-					"type": "add_modifier",
-					"value": 0.25,
-					"stat": "chaos_projectile_geometry_chance",
-					"op": "raw",
-					"scope": {},
-					"source": "skill"
-				},
-				{
-					"type": "add_modifier",
-					"value": -0.1,
-					"stat": "chaos_projectile_damage",
-					"op": "multiplier_add",
-					"scope": {},
-					"source": "skill"
-				}
-			],
-			"description": "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低",
+			"effects": [],
+			"description": "原始弹体伤害为90%，按分裂、回旋、弹跳轮换；最多两枚35%子弹，子代不再变化，回旋和弹跳各最多一次。",
 			"skill_type": "passive",
 			"slot_category": "passive",
-			"capabilities": []
+			"capabilities": [],
+			"chaos_contract": {
+				"runtime": "bounded_cycle_v2"
+			}
 		},
 		{
 			"id": "chaos_passive_anomalous_stability",
@@ -5684,20 +5643,14 @@
 				"blocked_by_exclusive_group": []
 			},
 			"trigger_rules": [],
-			"effects": [
-				{
-					"type": "add_modifier",
-					"value": 5,
-					"stat": "chaos_high_roll_after_triggers",
-					"op": "raw",
-					"scope": {},
-					"source": "skill"
-				}
-			],
-			"description": "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本",
+			"effects": [],
+			"description": "每5次成功的正常混沌施法后，下一次正常混沌施法伤害提高25%；失败不消耗。",
 			"skill_type": "passive",
 			"slot_category": "passive",
-			"capabilities": []
+			"capabilities": [],
+			"chaos_contract": {
+				"runtime": "bounded_cycle_v2"
+			}
 		},
 		{
 			"id": "chaos_power_fission_burst",
@@ -5813,49 +5766,17 @@
 					"apply_instability"
 				]
 			},
-			"trigger_rules": [
-				{
-					"trigger": "skill_cast_succeeded",
-					"counter_key": "chaos_echo_casts",
-					"threshold": 4,
-					"effects": [
-						{
-							"type": "repeat_skill",
-							"times": 1,
-							"damage_multiplier": 0.4,
-							"actions": [
-								{
-									"type": "spawn_projectile_burst",
-									"projectile_id": "chaos_orb",
-									"count": 2,
-									"spread_angle": 45,
-									"speed": 360,
-									"range_r": 4,
-									"damage": {
-										"damage_type": "arcane",
-										"power_scale": 0.2
-									},
-									"on_hit": [
-										{
-											"type": "apply_status",
-											"status": "instability",
-											"stacks": 1,
-											"duration": 6
-										}
-									]
-								}
-							]
-						}
-					]
-				}
-			],
+			"trigger_rules": [],
 			"effects": [],
-			"description": "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低",
+			"description": "每4次正常施法，以40%伤害重放最近一次可复制施法；没有快照时保留充能。",
 			"skill_type": "power",
 			"slot_category": "active",
 			"capabilities": [
 				"apply_instability"
-			]
+			],
+			"chaos_contract": {
+				"runtime": "bounded_cycle_v2"
+			}
 		},
 		{
 			"id": "chaos_power_chaos_exchange",
@@ -5927,69 +5848,7 @@
 				],
 				"min_player_level": 8
 			},
-			"trigger_rules": [
-				{
-					"trigger": "status_max_stack_reached",
-					"counter_key": "chaos_singularity_fissions",
-					"threshold": 25,
-					"conditions": [
-						{
-							"type": "event_status_is",
-							"status": "instability"
-						}
-					],
-					"effects": [
-						{
-							"type": "spawn_area",
-							"area_id": "chaos_singularity_field",
-							"position_mode": "caster",
-							"radius_r": 6,
-							"duration": 2,
-							"tick_interval": 1,
-							"effects_on_tick": [
-								{
-									"type": "pull",
-									"pull_radius_r": 6,
-									"strength": 0.32
-								}
-							]
-						},
-						{
-							"type": "spawn_area",
-							"area_id": "chaos_singularity_burst",
-							"position_mode": "caster",
-							"radius_r": 6,
-							"duration": 0.28,
-							"effects_on_apply": [
-								{
-									"type": "damage",
-									"damage_type": "arcane",
-									"source_type": "core",
-									"power_scale": 3
-								}
-							]
-						},
-						{
-							"type": "repeat_skill",
-							"times": 1,
-							"actions": [
-								{
-									"type": "spawn_projectile_burst",
-									"projectile_id": "chaos_orb",
-									"count": 5,
-									"spread_angle": 90,
-									"speed": 420,
-									"range_r": 5.5,
-									"damage": {
-										"damage_type": "arcane",
-										"power_scale": 0.25
-									}
-								}
-							]
-						}
-					]
-				}
-			],
+			"trigger_rules": [],
 			"effects": [
 				{
 					"type": "add_modifier",
@@ -6000,10 +5859,13 @@
 					"source": "skill"
 				}
 			],
-			"description": "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发",
+			"description": "每25次合格裂变生成奇点，吸附2秒后造成3P爆发，并以50%伤害复制最近一次非混沌施法。",
 			"skill_type": "core",
 			"slot_category": "active",
-			"capabilities": []
+			"capabilities": [],
+			"chaos_contract": {
+				"runtime": "bounded_cycle_v2"
+			}
 		},
 		{
 			"id": "fusion_fire_frost_steam_mist",

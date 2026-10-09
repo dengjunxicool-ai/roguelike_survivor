@@ -462,6 +462,9 @@
 				],
 				"offer_enabled": [
 					"boolean"
+				],
+				"chaos_contract": [
+					"object"
 				]
 			},
 			"object_fields": {
