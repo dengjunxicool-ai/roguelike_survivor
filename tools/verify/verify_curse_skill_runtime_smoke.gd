@@ -82,7 +82,7 @@ func _run() -> void:
 	var skill_ids: Array[StringName] = _load_curse_skill_ids()
 	_expect(skill_ids.size() == 14, "loads all 14 first-version curse skills", skill_ids.size())
 	for skill_id: StringName in skill_ids:
-		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % str(skill_id), "add_skill=false")
+		_expect(bool(preload("res://tools/verify/skill_rebalance_fixture.gd").install_runtime_skill(_skill_manager, skill_id)), "installs runtime fixture %s" % str(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 14, "SkillManager learned 14 curse skills", _skill_manager.call("get_all_skills").size())
 	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.18, "curse attack applies one primary attack modifier")
 

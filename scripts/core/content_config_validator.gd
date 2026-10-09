@@ -117,6 +117,11 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 						errors.append("%s.skill_type: unknown skill type" % where)
 					if not ["active", "passive"].has(item.get("slot_category")):
 						errors.append("%s.slot_category: unknown slot category" % where)
+				if domain == "skills":
+					for capability: Variant in item.get("capabilities", []):
+						if not capability is String: errors.append("%s.capabilities: expected string capability" % where)
+					for capability: Variant in item.get("offer_rule", {}).get("required_capabilities", []):
+						if not capability is String: errors.append("%s.offer_rule.required_capabilities: expected string capability" % where)
 				if domain == "enemies" and not schema.enemy_ranks.has(item.get("enemy_rank")):
 					errors.append("%s.enemy_rank: unknown rank" % where)
 	for path: String in documents:

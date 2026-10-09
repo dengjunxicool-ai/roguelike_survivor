@@ -176,7 +176,11 @@
 			],
 			"description": "攻击变强，命中施加 Burning 效果，并有概率在目标脚下生成火焰区域",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "fire_dash_blazing_run",
@@ -281,7 +285,10 @@
 			"effects": [],
 			"description": "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "fire_cast_meteor_rain",
@@ -375,7 +382,12 @@
 			"effects": [],
 			"description": "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning",
+				"copyable_cast",
+				"fire_ground"
+			]
 		},
 		{
 			"id": "fire_cast_lava_rift",
@@ -435,7 +447,12 @@
 			"effects": [],
 			"description": "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning",
+				"copyable_cast",
+				"fire_ground"
+			]
 		},
 		{
 			"id": "fire_cast_scorching_vortex",
@@ -497,7 +514,11 @@
 			"effects": [],
 			"description": "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "fire_summon_crimson_dragon",
@@ -557,7 +578,10 @@
 			"effects": [],
 			"description": "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "fire_summon_ember_fox_pack",
@@ -638,7 +662,10 @@
 			"effects": [],
 			"description": "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "fire_passive_burning_focus",
@@ -683,7 +710,8 @@
 			],
 			"description": "Burning 持续时间和伤害提高",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "fire_passive_overheated_casting",
@@ -791,7 +819,8 @@
 			"effects": [],
 			"description": "受到伤害或生命首次跌破35%时，cast伤害提高30%、范围提高15%，持续5秒；两个入口共享12秒冷却。",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "fire_passive_scorched_ground_affinity",
@@ -841,7 +870,8 @@
 			"effects": [],
 			"description": "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "fire_power_combustion_chain",
@@ -864,7 +894,10 @@
 					"fire"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_burning"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -897,7 +930,10 @@
 			"effects": [],
 			"description": "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "fire_power_ember_attachment",
@@ -920,7 +956,10 @@
 					"fire"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_burning"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -959,7 +998,10 @@
 			"effects": [],
 			"description": "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "fire_power_ignite_core",
@@ -982,7 +1024,10 @@
 					"fire"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_burning"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -1037,7 +1082,8 @@
 			"effects": [],
 			"description": "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "fire_core_inferno_cycle",
@@ -1062,7 +1108,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -1131,7 +1178,10 @@
 			"effects": [],
 			"description": "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			]
 		},
 		{
 			"id": "frost_attack_frostbite",
@@ -1201,7 +1251,11 @@
 			],
 			"description": "攻击变强，并施加 Chilled；对已 Chilled 敌人额外提高冻结效率",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "frost_dash_ice_shard_assault",
@@ -1258,7 +1312,10 @@
 			"effects": [],
 			"description": "冲刺时向周围投掷冰片，造成伤害并施加 Chilled",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_cast_frost_field",
@@ -1333,7 +1390,12 @@
 			"effects": [],
 			"description": "在敌人脚下生成冰霜区域，造成持续伤害，并留下冰霜路径，使经过敌人 Chilled",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled",
+				"copyable_cast",
+				"frost_area"
+			]
 		},
 		{
 			"id": "frost_cast_glacial_lance",
@@ -1404,7 +1466,11 @@
 			"effects": [],
 			"description": "向生命最高或最近精英发射穿透冰矛；命中 Frozen 敌人时产生碎冰溅射",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "frost_cast_blizzard_cloud",
@@ -1464,7 +1530,12 @@
 			"effects": [],
 			"description": "在怪物密集区域生成移动暴雪，持续施加 Chilled，并降低敌人移动速度",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled",
+				"copyable_cast",
+				"frost_area"
+			]
 		},
 		{
 			"id": "frost_summon_frost_wolf",
@@ -1504,7 +1575,10 @@
 			"effects": [],
 			"description": "冰狼协助作战，攻击命中敌人时施加 Chilled；优先扑击 Frozen 目标",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_summon_ice_crystal_guard",
@@ -1544,7 +1618,10 @@
 			"effects": [],
 			"description": "召唤固定冰晶守卫，周期性释放冰脉冲，减速附近敌人",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_power_shatter_execute",
@@ -1567,7 +1644,10 @@
 					"frost"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_chilled"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -1595,7 +1675,8 @@
 			"effects": [],
 			"description": "Chilled / Frozen 敌人低于一定生命阈值时，直接碎裂死亡",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "frost_passive_frozen_vulnerability",
@@ -1632,7 +1713,8 @@
 			],
 			"description": "被 Frozen、定身或强控的敌人受到更多伤害",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "frost_passive_chill_extension",
@@ -1686,7 +1768,8 @@
 			],
 			"description": "Chilled 和 Frozen 持续时间提高；冰霜区域持续时间提高",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "frost_power_frost_ring_counter",
@@ -1743,7 +1826,10 @@
 			"effects": [],
 			"description": "周围敌人数量过多或冲刺结束时，有概率从自身释放冰霜环，伤害并冻结敌人",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_power_ice_crack_chain",
@@ -1765,7 +1851,10 @@
 					"frost"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_chilled"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -1804,7 +1893,10 @@
 			"effects": [],
 			"description": "Frozen 敌人受到重击或技能伤害时，向周围发射碎冰片",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_power_ice_mist_guard",
@@ -1826,7 +1918,10 @@
 					"frost"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_chilled"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -1881,7 +1976,10 @@
 			"effects": [],
 			"description": "每冻结一定数量敌人，获得一层冰雾护盾；护盾破裂时冻结附近敌人",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "frost_core_absolute_zero",
@@ -1906,7 +2004,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -1971,7 +2070,10 @@
 			],
 			"description": "敌人被冻结所需的 Chilled 层数降低；每隔数秒，全场敌人获得一层 Chilled；Frozen 敌人碎裂时会在原地生成小型冰霜领域",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			]
 		},
 		{
 			"id": "thunder_attack_thundering",
@@ -2050,7 +2152,11 @@
 			],
 			"description": "攻击变强，命中施加 Conductive；每数次攻击额外向附近敌人弹射一道电弧",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "thunder_dash_ball_lightning",
@@ -2161,7 +2267,10 @@
 			"effects": [],
 			"description": "冲刺时化作短暂球状闪电，伤害经过敌人，并在终点留下一个放电雷球",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			]
 		},
 		{
 			"id": "thunder_cast_chain_lightning",
@@ -2238,7 +2347,11 @@
 			"effects": [],
 			"description": "周期性向最近敌人释放闪电，命中后弹射到多个 Conductive 敌人",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "thunder_cast_storm_circle",
@@ -2304,7 +2417,11 @@
 			"effects": [],
 			"description": "在怪物密集区域生成雷暴云，随机劈落闪电，优先攻击 Conductive 敌人",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "thunder_cast_emp_ring",
@@ -2374,7 +2491,10 @@
 			"effects": [],
 			"description": "从玩家周围释放扩散电环，造成伤害并短暂打断敌人行动；对 Conductive 敌人伤害更高",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "thunder_summon_storm_lynx",
@@ -2413,7 +2533,10 @@
 			"effects": [],
 			"description": "雷兽在敌人之间跳跃攻击，优先攻击 Conductive 目标，并补充导电层数",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			]
 		},
 		{
 			"id": "thunder_summon_storm_crow",
@@ -2452,7 +2575,10 @@
 			"effects": [],
 			"description": "乌鸦盘旋在玩家周围，周期性标记远处敌人并召唤落雷",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			]
 		},
 		{
 			"id": "thunder_passive_high_frequency_discharge",
@@ -2492,7 +2618,8 @@
 			],
 			"description": "雷电类技能触发间隔降低",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "thunder_passive_superconductor",
@@ -2538,7 +2665,8 @@
 			],
 			"description": "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "thunder_passive_static_charge",
@@ -2604,7 +2732,8 @@
 			"effects": [],
 			"description": "每次雷电命中获得静电层数；满层后短时间提高攻击速度和技能触发频率",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "thunder_power_overload_burst",
@@ -2627,7 +2756,10 @@
 					"thunder"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_conductive"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -2671,7 +2803,11 @@
 			"effects": [],
 			"description": "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive",
+				"overload"
+			]
 		},
 		{
 			"id": "thunder_power_double_strike",
@@ -2693,7 +2829,10 @@
 					"thunder"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_conductive"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -2734,7 +2873,10 @@
 			"effects": [],
 			"description": "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			]
 		},
 		{
 			"id": "thunder_power_magnetic_pull",
@@ -2757,7 +2899,10 @@
 					"thunder"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_conductive"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -2799,7 +2944,8 @@
 			"effects": [],
 			"description": "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "thunder_core_storm_center",
@@ -2824,7 +2970,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -2875,7 +3022,10 @@
 			],
 			"description": "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			]
 		},
 		{
 			"id": "curse_attack_cursing",
@@ -2943,7 +3093,11 @@
 			],
 			"description": "攻击变强，命中施加 Cursed；对低生命敌人施加额外诅咒伤害",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "curse_dash_soul_chain",
@@ -3004,7 +3158,8 @@
 			"effects": [],
 			"description": "冲刺时向附近 Cursed 敌人连接魂链，造成伤害并吸取少量生命",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "curse_cast_black_serpent_hunt",
@@ -3061,7 +3216,11 @@
 			"effects": [],
 			"description": "周期性召唤黑蛇追踪敌人，优先攻击未被诅咒的目标，命中施加 Cursed",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "curse_cast_death_scythe",
@@ -3125,7 +3284,10 @@
 			"effects": [],
 			"description": "召唤镰刀围绕玩家旋转后飞出并返回，对 Cursed 敌人造成额外伤害",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "curse_cast_doom_circle",
@@ -3192,7 +3354,10 @@
 			"effects": [],
 			"description": "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "curse_summon_bone_servant",
@@ -3238,7 +3403,10 @@
 			"effects": [],
 			"description": "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			]
 		},
 		{
 			"id": "curse_summon_soul_crow",
@@ -3302,7 +3470,10 @@
 			"effects": [],
 			"description": "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			]
 		},
 		{
 			"id": "curse_passive_vampiric_ritual",
@@ -3362,7 +3533,8 @@
 			"effects": [],
 			"description": "Cursed 造成伤害或击杀时，为玩家恢复少量生命",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "curse_passive_plague_spread",
@@ -3415,7 +3587,10 @@
 			"effects": [],
 			"description": "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": [
+				"apply_cursed"
+			]
 		},
 		{
 			"id": "curse_passive_deathbed_deepen",
@@ -3459,7 +3634,8 @@
 			],
 			"description": "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "curse_power_fear_whisper",
@@ -3533,7 +3709,8 @@
 			"effects": [],
 			"description": "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "curse_power_soul_harvest",
@@ -3554,7 +3731,10 @@
 					"curse"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_cursed"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -3587,7 +3767,8 @@
 			"effects": [],
 			"description": "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "curse_power_death_pact",
@@ -3660,7 +3841,10 @@
 			"effects": [],
 			"description": "周期性标记附近生命最高的敌人；若其在持续时间内死亡，则产生灵魂爆炸",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			]
 		},
 		{
 			"id": "curse_core_grand_coffin",
@@ -3684,7 +3868,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -3750,7 +3935,10 @@
 			"effects": [],
 			"description": "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			]
 		},
 		{
 			"id": "holy_attack_judgment",
@@ -3822,7 +4010,11 @@
 			],
 			"description": "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "holy_dash_heavenly_wings",
@@ -3914,7 +4106,10 @@
 			"effects": [],
 			"description": "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			]
 		},
 		{
 			"id": "holy_cast_holy_ray",
@@ -3971,7 +4166,11 @@
 			"effects": [],
 			"description": "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "holy_cast_divine_barrier",
@@ -4038,7 +4237,12 @@
 			"effects": [],
 			"description": "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment",
+				"copyable_cast",
+				"divine_barrier"
+			]
 		},
 		{
 			"id": "holy_cast_judgment_hammer",
@@ -4101,7 +4305,11 @@
 			"effects": [],
 			"description": "对生命最高的敌人降下圣锤，造成高额伤害并短暂眩晕",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "holy_summon_seraph",
@@ -4154,7 +4362,10 @@
 			"effects": [],
 			"description": "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			]
 		},
 		{
 			"id": "holy_summon_shield_guardian",
@@ -4221,7 +4432,10 @@
 			"effects": [],
 			"description": "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			]
 		},
 		{
 			"id": "holy_passive_sanctuary",
@@ -4275,7 +4489,8 @@
 			],
 			"description": "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "holy_passive_devotion",
@@ -4333,7 +4548,8 @@
 			"effects": [],
 			"description": "护盾溢出时，直接输出伤害提高20%，持续4秒；重复触发刷新持续时间。",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "holy_passive_weakening_judgment",
@@ -4378,7 +4594,8 @@
 			],
 			"description": "Judgment 敌人造成的伤害降低，并受到更多神圣伤害",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "holy_power_divine_punishment",
@@ -4400,7 +4617,10 @@
 					"holy"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_judgment"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -4444,7 +4664,10 @@
 			"effects": [],
 			"description": "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"divine_punishment"
+			]
 		},
 		{
 			"id": "holy_power_counter_seal",
@@ -4528,7 +4751,10 @@
 			"effects": [],
 			"description": "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			]
 		},
 		{
 			"id": "holy_power_absolution_light",
@@ -4550,7 +4776,10 @@
 					"holy"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_judgment"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -4595,7 +4824,8 @@
 			"effects": [],
 			"description": "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "holy_core_final_judgment_domain",
@@ -4620,7 +4850,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -4669,7 +4900,8 @@
 			],
 			"description": "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "chaos_attack_chaotic",
@@ -4765,7 +4997,11 @@
 			],
 			"description": "攻击变强，命中施加 Instability；命中时有概率使弹体分裂、偏转或追加一次弱化命中",
 			"skill_type": "attack",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability",
+				"copyable_attack"
+			]
 		},
 		{
 			"id": "chaos_dash_rift_step",
@@ -4851,7 +5087,10 @@
 			"effects": [],
 			"description": "冲刺时在起点和终点留下虚空裂隙，敌人经过裂隙时受到伤害并获得 Instability",
 			"skill_type": "dash",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability"
+			]
 		},
 		{
 			"id": "chaos_cast_void_rift",
@@ -4915,7 +5154,12 @@
 			"effects": [],
 			"description": "在怪物密集区域打开裂缝，持续吸附附近敌人并造成虚空伤害",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability",
+				"chaos_rift",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "chaos_cast_singularity_barrage",
@@ -4992,7 +5236,11 @@
 			"effects": [],
 			"description": "发射数个会弹跳的混沌球，命中 Instability 敌人时有概率分裂",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "chaos_cast_mutation_pulse",
@@ -5064,7 +5312,11 @@
 			"effects": [],
 			"description": "周期性释放脉冲，使敌人随机获得减速、易伤、缩小、沉默中的一种负面异变",
 			"skill_type": "cast",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability",
+				"copyable_cast"
+			]
 		},
 		{
 			"id": "chaos_summon_chaos_clone",
@@ -5106,7 +5358,10 @@
 			"effects": [],
 			"description": "召唤一个分身，模仿玩家最近一次普攻或技能，但伤害降低",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability"
+			]
 		},
 		{
 			"id": "chaos_summon_void_maw",
@@ -5149,7 +5404,10 @@
 			"effects": [],
 			"description": "召唤固定虚空巨口，持续吸附附近敌人，并吞噬低生命小怪",
 			"skill_type": "summon",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability"
+			]
 		},
 		{
 			"id": "chaos_passive_entropy_growth",
@@ -5207,7 +5465,8 @@
 			"effects": [],
 			"description": "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "chaos_passive_geometric_imbalance",
@@ -5252,7 +5511,8 @@
 			],
 			"description": "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "chaos_passive_anomalous_stability",
@@ -5288,7 +5548,8 @@
 			],
 			"description": "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本",
 			"skill_type": "passive",
-			"slot_category": "passive"
+			"slot_category": "passive",
+			"capabilities": []
 		},
 		{
 			"id": "chaos_power_fission_burst",
@@ -5311,7 +5572,10 @@
 					"chaos"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_instability"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -5370,7 +5634,11 @@
 			"effects": [],
 			"description": "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability",
+				"fission"
+			]
 		},
 		{
 			"id": "chaos_power_echo_cast",
@@ -5392,7 +5660,10 @@
 					"chaos"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_instability"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -5433,7 +5704,10 @@
 			"effects": [],
 			"description": "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_instability"
+			]
 		},
 		{
 			"id": "chaos_power_chaos_exchange",
@@ -5477,7 +5751,8 @@
 			"effects": [],
 			"description": "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害",
 			"skill_type": "power",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "chaos_core_chaos_singularity",
@@ -5501,7 +5776,8 @@
 				"required_skills": [],
 				"blocked_by_exclusive_group": [
 					"core_school"
-				]
+				],
+				"min_player_level": 8
 			},
 			"trigger_rules": [
 				{
@@ -5578,7 +5854,8 @@
 			],
 			"description": "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发",
 			"skill_type": "core",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": []
 		},
 		{
 			"id": "fusion_fire_frost_steam_mist",
@@ -5607,7 +5884,12 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"fire_ground",
+					"frost_area"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -5680,7 +5962,11 @@
 			"effects": [],
 			"description": "Burning 敌人进入冰霜区域时，在区域边缘生成蒸汽伤害区；区域内敌人持续受到火焰伤害，并被施加 Chilled",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_frost_shattered_ember",
@@ -5708,7 +5994,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -5796,7 +6084,9 @@
 			"effects": [],
 			"description": "Frozen 敌人被火焰技能击杀或碎裂时，向周围喷出碎冰与余烬；碎冰施加 Chilled，余烬施加 Burning",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_thunder_plasma_fire_path",
@@ -5823,7 +6113,11 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"fire_ground"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -5865,7 +6159,9 @@
 			"effects": [],
 			"description": "雷电技能经过火焰路径、燃烧地面或熔岩裂缝时，使该区域短暂放电；区域内敌人同时受到火焰伤害和雷电伤害",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_thunder_thunderburn_meteor",
@@ -5893,7 +6189,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -5953,7 +6251,9 @@
 			"effects": [],
 			"description": "流星、熔岩类技能命中 Conductive 敌人时，从落点向附近 Conductive 敌人释放电弧；电弧命中 Burning 敌人会延长 Burning 持续时间",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_curse_ash_curse_rune",
@@ -5981,7 +6281,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6036,7 +6338,9 @@
 			"effects": [],
 			"description": "Burning 每次造成伤害时，缩短目标身上 Cursed 的剩余结算时间；Cursed 结算时若目标仍在 Burning，则留下燃烧地面",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_curse_blackflame_serpents",
@@ -6061,12 +6365,16 @@
 					"fire",
 					"curse"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"curse_cast_black_serpent_hunt"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"fire": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6148,7 +6456,11 @@
 			"effects": [],
 			"description": "黑蛇、诅咒弹体类技能命中 Burning 敌人后，拖出黑焰路径；路径造成火焰伤害，并对经过敌人施加 Cursed",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_holy_holy_flame_absolution",
@@ -6178,7 +6490,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6235,7 +6549,9 @@
 			"effects": [],
 			"description": "Judgment 触发神罚时，若目标带有 Burning，则消耗部分 Burning 持续时间，为玩家生成护盾，并向前释放圣焰光束",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_holy_burning_light_barrier",
@@ -6264,7 +6580,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6318,7 +6636,9 @@
 			"effects": [],
 			"description": "神圣结界存在时，结界边缘会点燃敌人；Burning 敌人在结界内死亡时，为玩家恢复少量护盾",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_chaos_ember_echo",
@@ -6345,7 +6665,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6387,7 +6709,9 @@
 			"effects": [],
 			"description": "火焰路径穿过虚空裂隙时，裂隙记录路径轨迹；短暂延迟后，沿反方向重放一次火焰路径",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_fire_chaos_molten_split",
@@ -6416,7 +6740,9 @@
 				"required_min_skill_count": {
 					"fire": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6465,7 +6791,11 @@
 			"effects": [],
 			"description": "火焰弹体命中带有 Instability 的敌人时，弹体分裂成两个较小火弹，分别飞向附近不同敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_fire_crystalized_flame",
@@ -6493,7 +6823,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6568,7 +6900,11 @@
 			"effects": [],
 			"description": "冰霜区域覆盖火焰路径时，在交界处生成冰晶尖刺；尖刺造成伤害并施加 Chilled，同时保留原本火焰路径",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_fire_frostburn_shards",
@@ -6597,7 +6933,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6643,7 +6981,9 @@
 			"effects": [],
 			"description": "Burning 敌人被 Frozen 后，下一次受到冰系技能伤害时喷出霜燃碎片；碎片施加 Chilled，命中 Burning 敌人时造成额外火焰伤害",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_thunder_lightning_ice_pillar",
@@ -6672,7 +7012,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6745,7 +7087,11 @@
 			"effects": [],
 			"description": "雷电命中 Frozen 敌人时，在其位置生成短暂冰柱；冰柱阻挡小怪移动，并周期性对周围敌人施加 Chilled",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_thunder_aurora_frost_channel",
@@ -6774,7 +7120,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6832,7 +7180,11 @@
 			"effects": [],
 			"description": "Conductive 敌人站在冰霜区域内时，冰霜区域会向另一个 Conductive 敌人释放寒光脉冲，沿途敌人获得 Chilled",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_curse_ice_coffin_curse_burst",
@@ -6860,7 +7212,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6906,7 +7260,9 @@
 			"effects": [],
 			"description": "Cursed 敌人被冻结时，Cursed 的结算暂停；冻结结束时，Cursed 立即结算，并在目标位置释放冰霜冲击",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_curse_cold_scythe_harvest",
@@ -6935,7 +7291,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -6975,7 +7333,9 @@
 			"effects": [],
 			"description": "镰刀、黑蛇、诅咒弹体命中 Frozen 敌人时，额外释放一圈冰片；冰片优先飞向 Cursed 敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_holy_holy_frost_anchor",
@@ -7005,7 +7365,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7092,7 +7454,11 @@
 			"effects": [],
 			"description": "带有 Judgment 的敌人进入冰霜区域后，该区域以它为中心周期性扩散 Chilled；每次扩散命中敌人，玩家获得少量护盾",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_holy_judgment_ice_lance",
@@ -7115,12 +7481,16 @@
 					"frost",
 					"holy"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"frost_cast_glacial_lance"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"frost": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7149,7 +7519,9 @@
 			"effects": [],
 			"description": "极寒冰矛优先攻击 Judgment 层数最高的敌人；若目标被 Frozen，冰矛命中后额外降下一道圣光",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_chaos_rift_avalanche",
@@ -7179,7 +7551,12 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"frost_area",
+					"chaos_rift"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -7266,7 +7643,11 @@
 			"effects": [],
 			"description": "Frozen 敌人在虚空裂隙附近碎裂时，裂隙喷出一波冰雪，对扇形区域敌人施加 Chilled",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_frost_chaos_inverted_ice_shard",
@@ -7295,7 +7676,9 @@
 				"required_min_skill_count": {
 					"frost": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7369,7 +7752,11 @@
 			"effects": [],
 			"description": "冰片进入虚空裂隙后，会从另一个裂隙或远处敌人背后飞出；飞出后的冰片仍施加 Chilled",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_fire_arc_ignition",
@@ -7397,7 +7784,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7456,7 +7845,9 @@
 			"effects": [],
 			"description": "连锁闪电命中 Burning 敌人时，沿最近的火焰路径额外跳转一次；跳转目标优先为 Conductive 敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_fire_thunderfire_circuit",
@@ -7484,7 +7875,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7538,7 +7931,11 @@
 			"effects": [],
 			"description": "燃烧地面被雷电命中后，暂存一次放电；下一批敌人进入该地面时，立即受到雷电伤害并获得 Conductive",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_frost_shatter_thunder",
@@ -7566,7 +7963,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7623,7 +8022,9 @@
 			"effects": [],
 			"description": "Overload 在 Frozen 敌人身上触发时，直接碎裂目标，并把雷电跳转到附近 Chilled 敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_frost_cryo_capacitor",
@@ -7651,7 +8052,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7686,7 +8089,11 @@
 			"effects": [],
 			"description": "雷电命中 Chilled 敌人时，把 Conductive 传播给附近另一个 Chilled 敌人；同一目标短时间内只触发一次",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_curse_curse_lightning_rebound",
@@ -7708,12 +8115,16 @@
 					"thunder",
 					"curse"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"thunder_cast_chain_lightning"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"thunder": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7749,7 +8160,9 @@
 			"effects": [],
 			"description": "连锁闪电命中 Cursed 敌人后，下一跳优先寻找另一个 Cursed 敌人；若没有目标，则缩短当前 Cursed 的结算时间",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_curse_black_thunder_convergence",
@@ -7772,12 +8185,16 @@
 					"thunder",
 					"curse"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"thunder_cast_storm_circle"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"thunder": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7813,7 +8230,9 @@
 			"effects": [],
 			"description": "雷暴云每隔数次落雷，锁定一个 Cursed 敌人连续劈击；最后一次劈击会让 Cursed 立即结算",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_holy_judgment_wire",
@@ -7841,7 +8260,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7887,7 +8308,9 @@
 			"effects": [],
 			"description": "雷电命中 Judgment 敌人时，与另一个 Judgment 敌人之间生成短暂雷线；穿过雷线的敌人受到雷电伤害",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_holy_shield_capacitor",
@@ -7915,7 +8338,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -7980,7 +8405,11 @@
 			"effects": [],
 			"description": "玩家获得护盾时，下一次雷电技能附带额外一次小落雷；护盾破裂时，立即对最近 Conductive 敌人触发 Overload",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_chaos_fractal_arc",
@@ -8009,7 +8438,9 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8069,7 +8500,9 @@
 			"effects": [],
 			"description": "雷电弹射到带有 Instability 的敌人时，下一次弹射会从附近虚空裂隙重新出现，并分裂成两道较弱电弧",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_thunder_chaos_rift_lightning_orb",
@@ -8096,7 +8529,11 @@
 				"required_min_skill_count": {
 					"thunder": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"chaos_rift"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -8151,7 +8588,9 @@
 			"effects": [],
 			"description": "雷球进入虚空裂隙后，会在远处怪群中重新出现，并围绕该区域持续放电",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_fire_ash_soul_pact",
@@ -8179,7 +8618,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8219,7 +8660,9 @@
 			"effects": [],
 			"description": "Burning 每次造成伤害时，提高下一次 Cursed 结算伤害；该提升只作用于当前目标，不额外生成新状态",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_fire_burning_soul_minion",
@@ -8247,7 +8690,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8282,7 +8727,11 @@
 			"effects": [],
 			"description": "Cursed 且 Burning 的敌人死亡时，召唤物优先从该位置出现；亡骸仆从首次攻击附带 Burning",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_frost_ice_coffin_contract",
@@ -8310,7 +8759,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8348,7 +8799,9 @@
 			"effects": [],
 			"description": "Cursed 敌人被冻结期间不会结算；若其在 Frozen 中死亡，则 Cursed 转移给附近生命最高的敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_frost_cold_scythe_soul_chase",
@@ -8371,12 +8824,16 @@
 					"curse",
 					"frost"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"curse_cast_death_scythe"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"curse": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8409,7 +8866,9 @@
 			"effects": [],
 			"description": "死镰类技能命中 Frozen 敌人后，额外飞向最近的 Cursed 敌人；若没有 Cursed 目标，则对原目标施加 Cursed",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_thunder_curse_lightning_backlash",
@@ -8437,7 +8896,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8494,7 +8955,11 @@
 			"effects": [],
 			"description": "Overload 在 Cursed 敌人身上触发时，Cursed 立即结算；结算后雷电跳向最近未被 Cursed 的敌人并施加 Conductive",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_conductive"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_thunder_black_serpent_conduction",
@@ -8517,12 +8982,16 @@
 					"curse",
 					"thunder"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"curse_cast_black_serpent_hunt"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"curse": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8601,7 +9070,11 @@
 			"effects": [],
 			"description": "黑蛇优先沿 Conductive 敌人的方向移动；命中 Conductive 敌人时，额外向附近敌人传播 Cursed",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_holy_confession_curse_seal",
@@ -8630,7 +9103,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8667,7 +9142,9 @@
 			"effects": [],
 			"description": "同时带有 Judgment 和 Cursed 的敌人准备攻击玩家时，被短暂打断；打断结束时 Cursed 立即结算",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_holy_absolution_harvest",
@@ -8696,7 +9173,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8733,7 +9212,9 @@
 			"effects": [],
 			"description": "Cursed 且 Judgment 的敌人死亡时，玩家获得护盾；如果死亡来自 Cursed 结算，额外释放一道短距离圣光",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_chaos_paradox_curse_mark",
@@ -8761,7 +9242,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8807,7 +9290,9 @@
 			"effects": [],
 			"description": "Cursed 敌人触发 Instability 裂变时，Cursed 复制到远处一个敌人；复制版本持续时间更短，伤害较低",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_curse_chaos_rift_funeral",
@@ -8836,7 +9321,9 @@
 				"required_min_skill_count": {
 					"curse": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8914,7 +9401,11 @@
 			"effects": [],
 			"description": "Cursed 敌人在虚空裂隙附近死亡时，裂隙向远处敌人发射一枚诅咒弹体，命中后施加 Cursed",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_fire_holy_flame_purification",
@@ -8942,7 +9433,9 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -8984,7 +9477,9 @@
 			"effects": [],
 			"description": "圣光技能命中 Burning 敌人时，消耗部分 Burning 持续时间，并为玩家恢复护盾；被消耗的 Burning 不触发火焰爆炸",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_fire_solar_hammer",
@@ -9008,12 +9503,16 @@
 					"holy",
 					"fire"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"holy_cast_judgment_hammer"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"holy": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9083,7 +9582,12 @@
 			"effects": [],
 			"description": "审判圣锤命中 Burning 敌人时，在落点生成十字形圣焰路径；路径施加 Burning 和 Judgment",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_burning",
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_frost_crystal_shelter",
@@ -9113,7 +9617,9 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9167,7 +9673,9 @@
 			"effects": [],
 			"description": "Frozen 且带有 Judgment 的敌人死亡时，玩家获得护盾；若护盾已满，则在死亡位置生成小型冰霜区域",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_frost_holy_frost_beam",
@@ -9191,12 +9699,16 @@
 					"holy",
 					"frost"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"holy_cast_holy_ray"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"holy": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9246,7 +9758,9 @@
 			"effects": [],
 			"description": "圣光射线命中 Chilled 敌人时，沿射线轨迹留下短暂冰霜路径；命中 Frozen 敌人时，射线持续时间延长",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_thunder_thunder_shield_prayer",
@@ -9276,7 +9790,9 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9421,7 +9937,11 @@
 			"effects": [],
 			"description": "每次玩家获得护盾时，最近的 Conductive 敌人受到一次小落雷；护盾破裂时，附近敌人获得 Judgment",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_thunder_holy_thunder_judgment",
@@ -9449,7 +9969,9 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9496,7 +10018,11 @@
 			"effects": [],
 			"description": "神罚命中 Conductive 敌人时，额外引发一次 Overload；Overload 命中的敌人获得 Judgment",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_curse_purifying_chain",
@@ -9524,7 +10050,9 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9568,7 +10096,9 @@
 			"effects": [],
 			"description": "圣光技能命中 Cursed 敌人后，跳向另一个 Cursed 敌人；每次跳跃为玩家恢复少量护盾",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_curse_penitence_barrier",
@@ -9596,7 +10126,11 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"divine_barrier"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -9647,7 +10181,9 @@
 			"effects": [],
 			"description": "神圣结界内的 Cursed 敌人移动速度降低；它们死亡时，结界持续时间延长",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_chaos_divine_domain_rift",
@@ -9675,7 +10211,12 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"divine_barrier",
+					"chaos_rift"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -9729,7 +10270,11 @@
 			"effects": [],
 			"description": "神圣结界覆盖虚空裂隙时，裂隙周期性向外释放圣光脉冲，施加 Judgment",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_holy_chaos_judgment_echo",
@@ -9758,7 +10303,11 @@
 				"required_min_skill_count": {
 					"holy": 2,
 					"chaos": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"divine_punishment"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -9808,7 +10357,9 @@
 			"effects": [],
 			"description": "Judgment 在带有 Instability 的敌人身上触发神罚时，从最近裂隙处额外释放一次较弱神罚",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_fire_riftfire_fork",
@@ -9836,7 +10387,9 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9892,7 +10445,9 @@
 			"effects": [],
 			"description": "火焰弹体经过虚空裂隙时，分成两枚较小火弹，从裂隙两侧飞出；小火弹仍可施加 Burning",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_fire_lava_refraction",
@@ -9914,12 +10469,16 @@
 					"chaos",
 					"fire"
 				],
-				"required_skills": [],
+				"required_skills": [
+					"fire_cast_lava_rift"
+				],
 				"blocked_by_exclusive_group": [],
 				"required_min_skill_count": {
 					"chaos": 2,
 					"fire": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -9961,7 +10520,9 @@
 			"effects": [],
 			"description": "熔岩裂缝触碰虚空裂隙后，从裂隙另一侧反向延伸一段较短裂缝",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_frost_zero_rift",
@@ -9988,7 +10549,12 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"frost_area",
+					"chaos_rift"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -10049,7 +10615,9 @@
 			"effects": [],
 			"description": "冰霜区域生成在虚空裂隙附近时，裂隙把一部分冰霜区域复制到远处敌人脚下",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_frost_shattered_ice_warp",
@@ -10079,7 +10647,9 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"frost": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -10162,7 +10732,11 @@
 			"effects": [],
 			"description": "Frozen 敌人碎裂产生的冰片优先进入附近裂隙，并从远处敌群旁飞出",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_chilled"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_thunder_quantum_overload",
@@ -10190,7 +10764,11 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"overload"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -10257,7 +10835,9 @@
 			"effects": [],
 			"description": "带有 Instability 的敌人触发 Overload 时，在当前位置和远处敌群之间各释放一次雷电爆发",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_thunder_warp_lightning_orb",
@@ -10284,7 +10864,11 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"thunder": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"chaos_rift"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -10339,7 +10923,9 @@
 			"effects": [],
 			"description": "雷球接触虚空裂隙后，传送到远处怪群中心，并继续持续放电",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_curse_curse_rune_echo",
@@ -10368,7 +10954,9 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -10418,7 +11006,9 @@
 			"effects": [],
 			"description": "Cursed 结算时，如果目标带有 Instability，则从最近裂隙处重复一次较弱诅咒冲击",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_curse_rift_curse_exchange",
@@ -10446,7 +11036,9 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"curse": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -10529,7 +11121,11 @@
 			"effects": [],
 			"description": "虚空裂隙每隔一段时间寻找一个 Cursed 敌人，把它身上的 Cursed 复制给远处未被 Cursed 的敌人",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_cursed"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_holy_void_holy_shield",
@@ -10558,7 +11154,9 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": []
 			},
 			"trigger_rules": [
 				{
@@ -10612,7 +11210,11 @@
 			"effects": [],
 			"description": "玩家获得护盾时，最近虚空裂隙向外释放一次冲击，命中敌人施加 Judgment",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [
+				"apply_judgment"
+			],
+			"offer_enabled": false
 		},
 		{
 			"id": "fusion_chaos_holy_echoing_judgment",
@@ -10640,7 +11242,11 @@
 				"required_min_skill_count": {
 					"chaos": 2,
 					"holy": 1
-				}
+				},
+				"min_player_level": 6,
+				"required_capabilities": [
+					"divine_punishment"
+				]
 			},
 			"trigger_rules": [
 				{
@@ -10690,7 +11296,9 @@
 			"effects": [],
 			"description": "神罚命中带有 Instability 的敌人后，短暂延迟从另一个裂隙处再次降下较弱神罚",
 			"skill_type": "fusion",
-			"slot_category": "active"
+			"slot_category": "active",
+			"capabilities": [],
+			"offer_enabled": false
 		}
 	]
 }

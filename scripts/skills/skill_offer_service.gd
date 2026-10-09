@@ -22,6 +22,8 @@ func is_skill_available(player: Node, skill: Dictionary, allow_replacement: bool
 	var skill_manager: Node = _get_skill_manager(player)
 	if skill_manager == null:
 		return false
+	if not preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(player, skill).available:
+		return false
 	if _has_learned(skill_manager, skill_id):
 		return false
 	if _is_blocked_by_capacity(skill_manager, skill):

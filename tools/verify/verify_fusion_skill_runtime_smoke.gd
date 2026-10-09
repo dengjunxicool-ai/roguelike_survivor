@@ -73,7 +73,7 @@ func _run() -> void:
 	var fusion_ids: Array[StringName] = _load_fusion_skill_ids()
 	_expect(fusion_ids.size() == 60, "loads all 60 fusion skills", fusion_ids.size())
 	for skill_id: StringName in fusion_ids:
-		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % str(skill_id), "add_skill=false")
+		_expect(bool(preload("res://tools/verify/skill_rebalance_fixture.gd").install_runtime_skill(_skill_manager, skill_id)), "installs runtime fixture %s" % str(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 62, "SkillManager learned 60 fusion skills plus two prerequisite skills", _skill_manager.call("get_all_skills").size())
 	var runtime_skills: Dictionary = {}
 	var runtime_skill_ids: Array[StringName] = [

@@ -81,3 +81,16 @@ static func damage_total(target: Node) -> float:
 	for packet: Dictionary in target.packets:
 		result += float(packet.get("raw_amount", 0.0))
 	return result
+
+# Runtime-only fixture installation bypasses offers/capacity; learning contracts
+# are covered separately through the real add_skill and offer service entrypoints.
+static func install_runtime_skill(manager: Node, id: StringName, rarity: String = "") -> bool:
+	var data: Dictionary = GameData.get_skill(id)
+	if data.is_empty(): return false
+	var instance: RefCounted = Instance.new(Definition.new(data))
+	if rarity != "": instance.current_rarity = rarity
+	if data.get("slot_category", "") == "passive": manager.passive_skills[id] = instance
+	else: manager.active_skills[id] = instance
+	manager.mark_skill_learned(id)
+	manager.call("_refresh_skill_modifier_payload", instance)
+	return true

@@ -456,7 +456,35 @@
 				],
 				"learnable_from_pool": [
 					"boolean"
+				],
+				"capabilities": [
+					"array"
+				],
+				"offer_enabled": [
+					"boolean"
 				]
+			},
+			"object_fields": {
+				"offer_rule": {
+					"required_schools": [
+						"array"
+					],
+					"required_skills": [
+						"array"
+					],
+					"blocked_by_exclusive_group": [
+						"array"
+					],
+					"required_min_skill_count": [
+						"object"
+					],
+					"min_player_level": [
+						"number"
+					],
+					"required_capabilities": [
+						"array"
+					]
+				}
 			}
 		},
 		"gods": {

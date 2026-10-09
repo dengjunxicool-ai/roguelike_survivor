@@ -24,6 +24,8 @@ signal skill_changed
 var active_skills: Dictionary = {}
 var passive_skills: Dictionary = {}
 var learned_skill_ids: Dictionary = {}
+var _learned_god_school_ids: Array[StringName] = []
+var run_generation: int = 0
 var passive_modifiers: Array = []
 var _skill_effect_modifier_source_ids: Array[String] = []
 var _primary_attack_method: RefCounted = null
@@ -38,6 +40,8 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 
 	var definition_data: Dictionary = _get_skill_definition_data(id)
 	if definition_data.is_empty():
+		return false
+	if not preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(get_parent(), definition_data).available:
 		return false
 	if _is_starting_attack_method_definition(definition_data):
 		return false
@@ -77,6 +81,8 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 		active_skills[id] = skill_instance
 	_refresh_skill_modifier_payload(skill_instance)
 	learned_skill_ids[id] = true
+	var school_id: StringName = _get_skill_instance_primary_god_school(skill_instance)
+	if school_id != &"" and not _learned_god_school_ids.has(school_id): _learned_god_school_ids.append(school_id)
 	skill_added.emit(id)
 	skill_changed.emit()
 	return true
@@ -148,7 +154,7 @@ func get_primary_attack_id() -> StringName:
 ## 作用：遍历已拥有技能去重收集主要神系，不将融合定义计为新神系。
 ## 使用：由本文件 get_learned_god_school_count/_can_learn_god_school_definition 调用。
 func get_learned_god_schools() -> Array[StringName]:
-	var schools: Array[StringName] = []
+	var schools: Array[StringName] = _learned_god_school_ids.duplicate()
 	for skill_instance: RefCounted in get_all_skills():
 		var school: StringName = _get_skill_instance_primary_god_school(skill_instance)
 		if school != &"" and not schools.has(school):
@@ -358,9 +364,14 @@ func clear_skills() -> void:
 		bus.call("reset_run_state")
 	if owner != null:
 		owner.set_meta("ordinary_replacement_used", false)
+		owner.set_meta("core_offer_misses", 0)
+		owner.remove_meta("core_offer_level")
+		owner.remove_meta("core_offer_due")
 	active_skills.clear()
 	passive_skills.clear()
 	learned_skill_ids.clear()
+	_learned_god_school_ids.clear()
+	run_generation += 1
 	passive_modifiers.clear()
 	_primary_attack_method = null
 	_clear_skill_effect_modifier_sources()

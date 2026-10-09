@@ -39,5 +39,18 @@ func run() -> void:
 	check(not service.confirm(c.caster, str(tx.id), &"fire_cast_meteor_rain"), "stale transaction rejected")
 	m.clear_skills()
 	check(not bool(c.caster.get_meta("ordinary_replacement_used", false)), "restart resets opportunity")
+	for id in [&"fire_cast_meteor_rain", &"fire_cast_lava_rift", &"fire_cast_scorching_vortex", &"fire_summon_crimson_dragon", &"frost_cast_frost_field"]: m.add_skill(id)
+	tx = service.begin(c.caster, &"fire_summon_ember_fox_pack", "normal")
+	check(service.confirm(c.caster, str(tx.id), &"frost_cast_frost_field"), "replace last skill of secondary school")
+	check(m.get_learned_god_schools().has(&"frost"), "confirmed school lock persists after removal")
+	m.max_active_skills = 64
+	check(not m.add_skill(&"thunder_cast_chain_lightning"), "replacement cannot unlock third school")
+	m.clear_skills()
+	m.max_active_skills = 5
+	for id in [&"fire_cast_meteor_rain", &"fire_cast_lava_rift", &"fire_cast_scorching_vortex", &"fire_summon_crimson_dragon", &"fire_summon_ember_fox_pack"]: m.add_skill(id)
+	tx = service.begin(c.caster, &"frost_cast_glacial_lance", "normal")
+	m.clear_skills()
+	for id in [&"fire_cast_meteor_rain", &"fire_cast_lava_rift", &"fire_cast_scorching_vortex", &"fire_summon_crimson_dragon", &"fire_summon_ember_fox_pack"]: m.add_skill(id)
+	check(not service.confirm(c.caster, str(tx.id), &"fire_cast_lava_rift"), "previous run transaction rejected")
 	print("[replacement] PASS" if not failed else "[replacement] FAIL")
 	quit(1 if failed else 0)
