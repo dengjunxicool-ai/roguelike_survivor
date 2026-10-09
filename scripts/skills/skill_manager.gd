@@ -303,8 +303,7 @@ func upgrade_skill(skill_id: Variant, rarity: String = "") -> bool:
 
 	var id: StringName = StringName(skill_instance.get("skill_id"))
 	var new_level: int = int(skill_instance.get("current_level"))
-	if rarity != "":
-		skill_instance.set("current_rarity", rarity)
+	skill_instance.set("current_rarity", SkillGrowthScalingScript.keep_highest_rarity(String(skill_instance.get("current_rarity")), rarity))
 	_refresh_skill_modifier_payload(skill_instance)
 	skill_upgraded.emit(id, new_level)
 	skill_changed.emit()
@@ -462,6 +461,9 @@ func _scale_modifier_source_values(modifier: Dictionary, skill_instance: RefCoun
 func _scale_modifier_value(key: String, value: Variant, skill_instance: RefCounted) -> Variant:
 	if not _is_number(value):
 		return value
+	# Penalties and explicit cooldown/threshold/healing/shield rules do not grow with rarity.
+	if float(value) < 0.0 or key.contains("cooldown") or key.contains("threshold") or key.contains("heal") or key.contains("shield"):
+		return value
 	var stat_kind: String = _modifier_stat_kind(key, skill_instance)
 	var scaled: float = SkillGrowthScalingScript.apply_to_number(float(value), skill_instance, stat_kind)
 	return roundi(scaled) if typeof(value) == TYPE_INT else scaled
@@ -470,6 +472,8 @@ func _scale_modifier_value(key: String, value: Variant, skill_instance: RefCount
 ## 作用：按属性键中的冷却、范围、时长或伤害语义确定成长类别。
 ## 使用：skill_instance 为技能运行实例。
 func _modifier_stat_kind(key: String, skill_instance: RefCounted) -> String:
+	if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "passive":
+		return "modifier"
 	if key.contains("cooldown") or key.contains("interval"):
 		return "cooldown"
 	if key.contains("radius") or key.contains("area") or key.contains("range"):

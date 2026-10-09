@@ -43,12 +43,12 @@ func _run() -> void:
 		"skill_instance": skill,
 		"player_power": 10.0
 	})
-	_expect_close(float(summon.get("_remaining_duration")), 10.0 * 1.06 * 1.25, "summon duration scaled")
+	_expect_close(float(summon.get("_remaining_duration")), 10.0 * 1.06, "summon duration scaled")
 	var attack: RefCounted = summon.get("_attack") as RefCounted
 	_expect(attack != null, "summon attack component exists")
 	if attack != null:
-		_expect_close(float(attack.get("damage_scale")), 1.0 * 1.10 * 1.25, "summon damage_scale scaled")
-		_expect_close(float(attack.get("attack_cooldown")), 2.0 * 0.97 / 1.25, "summon attack cooldown scaled")
+		_expect_close(float(attack.get("damage_scale")), 1.0 * 1.10 * 1.15, "summon damage_scale scaled")
+		_expect_close(float(attack.get("attack_cooldown")), 2.0 * 0.97, "summon attack cooldown scaled")
 	if not _failed:
 		print("[verify_skill_growth_summon_runtime] PASS")
 	quit(1 if _failed else 0)

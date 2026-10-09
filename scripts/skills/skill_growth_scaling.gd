@@ -6,9 +6,9 @@ class_name SkillGrowthScaling
 
 const RARITY_MULTIPLIERS: Dictionary = {
 	"normal": 1.0,
-	"rare": 1.25,
-	"epic": 1.55,
-	"legendary": 1.95
+	"rare": 1.15,
+	"epic": 1.30,
+	"legendary": 1.50
 }
 
 const TYPE_GROWTH: Dictionary = {
@@ -30,15 +30,15 @@ static func stat_multiplier(skill_instance: RefCounted, stat_kind: String) -> fl
 		return 1.0
 	if _skill_type(skill_instance) == "core":
 		return 1.0
-	if stat_kind == "tick_damage" or stat_kind == "tick_interval":
+	if stat_kind == "tick_interval":
 		return 1.0
 
 	var growth: Dictionary = _growth_for(skill_instance)
 	var level: int = maxi(int(skill_instance.get("current_level")), 1)
 	var per_level: float = float(growth.get(_growth_key(stat_kind), 0.0))
-	var rarity: float = rarity_multiplier(_string_or(skill_instance.get("current_rarity"), _definition_rarity(skill_instance)))
+	var rarity: float = rarity_multiplier(_string_or(skill_instance.get("current_rarity"), _definition_rarity(skill_instance))) if rarity_applies_to(stat_kind) else 1.0
 	if _is_reduction_stat(stat_kind):
-		return maxf(1.0 - per_level * float(level - 1), 0.05) / rarity
+		return maxf(1.0 - per_level * float(level - 1), 0.35)
 	return maxf(1.0 + per_level * float(level - 1), 0.0) * rarity
 
 
@@ -51,7 +51,17 @@ static func apply_to_number(value: float, skill_instance: RefCounted, stat_kind:
 ## 作用：从固定稀有度表取得倍率，未知稀有度按一处理。
 ## 使用：rarity 为目标稀有度。
 static func rarity_multiplier(rarity: String) -> float:
-	return float(RARITY_MULTIPLIERS.get(rarity, 1.0))
+	var configured: Dictionary = GameData.get_skill_system_config().get("rarity_damage_multipliers", RARITY_MULTIPLIERS)
+	return float(configured.get(rarity, 1.0))
+
+static func rarity_applies_to(stat_kind: String) -> bool:
+	return stat_kind in ["damage", "tick_damage", "modifier", "passive"]
+
+static func keep_highest_rarity(current: String, requested: String) -> String:
+	var ranks: Array[String] = ["normal", "rare", "epic", "legendary"]
+	if not ranks.has(requested):
+		return current
+	return requested if ranks.find(requested) > ranks.find(current) else current
 
 
 ## 作用：根据技能最大等级返回可出现稀有度及其抽取权重。
@@ -60,8 +70,8 @@ static func rarity_weight_map_for_max_level(max_level: int) -> Dictionary:
 	if max_level <= 1:
 		return {"legendary": 1.0}
 	if max_level == 2:
-		return {"epic": 1.0, "legendary": 1.0}
-	return {"normal": 1.0, "rare": 2.0, "epic": 1.0, "legendary": 1.0}
+		return GameData.get_skill_system_config().get("fusion_rarity_weights", {"epic": 80.0, "legendary": 20.0}).duplicate()
+	return GameData.get_skill_system_config().get("first_learn_rarity_weights", {"normal": 60.0, "rare": 28.0, "epic": 10.0, "legendary": 2.0}).duplicate()
 
 
 ## 作用：使用传入随机流在最大等级对应稀有度权重中抽取一项。
@@ -93,6 +103,8 @@ static func _growth_for(skill_instance: RefCounted) -> Dictionary:
 ## 使用：由本文件 stat_multiplier 调用。
 static func _growth_key(stat_kind: String) -> String:
 	match stat_kind:
+		"tick_damage":
+			return "damage"
 		"area_radius", "radius", "projectile_radius", "explosion_radius", "orbit_radius":
 			return "radius"
 		"status_duration":

@@ -49,19 +49,19 @@ func _run() -> void:
 		quit(1)
 		return
 	var event: Dictionary = events[0]
-	_expect_close(float(event.get("cooldown", 0.0)), 10.0 * 0.96 / 1.25, "cast Lv2 rare cooldown")
+	_expect_close(float(event.get("cooldown", 0.0)), 10.0 * 0.96, "cast Lv2 rare cooldown")
 	var actions: Array = event.get("actions", [])
 	_expect(actions.size() == 1, "creates one action", actions.size())
 	if actions.is_empty():
 		quit(1)
 		return
 	var params: Dictionary = actions[0].get("params", {})
-	_expect_close(float(params.get("radius_r", 0.0)), 2.0 * 1.05 * 1.25, "area radius_r scaled")
-	_expect_close(float(params.get("duration", 0.0)), 5.0 * 1.06 * 1.25, "area duration scaled")
+	_expect_close(float(params.get("radius_r", 0.0)), 2.0 * 1.05, "area radius_r scaled")
+	_expect_close(float(params.get("duration", 0.0)), 5.0 * 1.06, "area duration scaled")
 	var apply_actions: Array = params.get("actions_on_apply", [])
 	var tick_actions: Array = params.get("actions_on_tick", [])
-	_expect_close(float(apply_actions[0].get("params", {}).get("power_scale", 0.0)), 1.0 * 1.12 * 1.25, "apply damage scaled")
-	_expect_close(float(tick_actions[0].get("params", {}).get("power_scale", 0.0)), 0.25, "tick damage not scaled")
+	_expect_close(float(apply_actions[0].get("params", {}).get("power_scale", 0.0)), 1.0 * 1.12 * 1.15, "apply damage scaled")
+	_expect_close(float(tick_actions[0].get("params", {}).get("power_scale", 0.0)), 0.25 * 1.12 * 1.15, "tick damage grows once")
 	_verify_random_chance_per_level()
 	if not _failed:
 		print("[verify_skill_growth_rule_adapter] PASS")

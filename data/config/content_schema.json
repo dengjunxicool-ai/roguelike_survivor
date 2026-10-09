@@ -339,13 +339,14 @@
 		{
 			"path": "res://data/config/skill_system_config.json",
 			"keys": [
-				"range_unit_px"
+				"range_unit_px", "rarity_damage_multipliers", "first_learn_rarity_weights", "fusion_rarity_weights"
 			],
 			"sections": [],
 			"root_fields": {
-				"range_unit_px": [
-					"number"
-				]
+				"range_unit_px": ["number"],
+				"rarity_damage_multipliers": ["object"],
+				"first_learn_rarity_weights": ["object"],
+				"fusion_rarity_weights": ["object"]
 			}
 		}
 	],

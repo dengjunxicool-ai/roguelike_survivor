@@ -35,7 +35,7 @@ func _run() -> void:
 	_expect(skill != null and int(skill.get("current_level")) == 2, "same skill_id reaches Lv2", skill.get("current_level") if skill != null else null)
 	_expect(skill != null and String(skill.get("current_rarity")) == "rare", "skill stores current rarity", skill.get("current_rarity") if skill != null else null)
 	_expect(_skill_manager.call("get_active_skills").size() == 1, "upgrade does not create another slot", _skill_manager.call("get_active_skills").size())
-	_expect_close(_modifier_value("skill:fire_attack_searing:effects", "primary_attack_damage_multiplier_add"), 0.2 * 1.08 * 1.25, "Lv2 rare attack modifier")
+	_expect_close(_modifier_value("skill:fire_attack_searing:effects", "primary_attack_damage_multiplier_add"), 0.2 * 1.08 * 1.15, "Lv2 rare attack modifier")
 	if not _failed:
 		print("[verify_skill_growth_skill_manager] PASS")
 	quit(1 if _failed else 0)

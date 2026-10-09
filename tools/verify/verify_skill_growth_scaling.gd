@@ -28,23 +28,23 @@ func _verify_attack_growth() -> void:
 	skill.set("current_rarity", "rare")
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "damage")),
-		1.08 * 1.25,
+		1.08 * 1.15,
 		"attack Lv2 rare damage multiplier"
 	)
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "radius")),
-		1.03 * 1.25,
+		1.03,
 		"attack Lv2 rare radius multiplier"
 	)
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "duration")),
-		1.05 * 1.25,
+		1.05,
 		"attack Lv2 rare duration multiplier"
 	)
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "tick_damage")),
-		1.0,
-		"attack tick damage remains unscaled"
+		1.08 * 1.15,
+		"attack tick damage grows once"
 	)
 
 
@@ -54,12 +54,12 @@ func _verify_fusion_growth() -> void:
 	skill.set("current_rarity", "legendary")
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "damage")),
-		1.15 * 1.95,
+		1.15 * 1.50,
 		"fusion Lv2 legendary damage multiplier"
 	)
 	_expect_close(
 		float(SkillGrowthScalingScript.stat_multiplier(skill, "cooldown")),
-		0.97 / 1.95,
+		0.97,
 		"fusion Lv2 legendary cooldown multiplier"
 	)
 
@@ -74,12 +74,12 @@ func _verify_core_growth_is_fixed() -> void:
 
 func _verify_rarity_pools() -> void:
 	_expect(
-		SkillGrowthScalingScript.rarity_weight_map_for_max_level(5) == {"normal": 1.0, "rare": 2.0, "epic": 1.0, "legendary": 1.0},
+		SkillGrowthScalingScript.rarity_weight_map_for_max_level(5) == {"normal": 60.0, "rare": 28.0, "epic": 10.0, "legendary": 2.0},
 		"max level 5 rarity weights",
 		SkillGrowthScalingScript.rarity_weight_map_for_max_level(5)
 	)
 	_expect(
-		SkillGrowthScalingScript.rarity_weight_map_for_max_level(2) == {"epic": 1.0, "legendary": 1.0},
+		SkillGrowthScalingScript.rarity_weight_map_for_max_level(2) == {"epic": 80.0, "legendary": 20.0},
 		"max level 2 rarity weights",
 		SkillGrowthScalingScript.rarity_weight_map_for_max_level(2)
 	)

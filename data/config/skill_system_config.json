@@ -1,3 +1,6 @@
 {
-  "range_unit_px": 84
+  "range_unit_px": 84,
+  "rarity_damage_multipliers": {"normal": 1.0, "rare": 1.15, "epic": 1.30, "legendary": 1.50},
+  "first_learn_rarity_weights": {"normal": 60, "rare": 28, "epic": 10, "legendary": 2},
+  "fusion_rarity_weights": {"epic": 80, "legendary": 20}
 }

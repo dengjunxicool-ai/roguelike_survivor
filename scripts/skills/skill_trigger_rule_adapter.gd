@@ -169,6 +169,9 @@ static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bo
 ## 作用：按事件和 source_id 构造冷却键，到期时写入下一时间及上下文追踪键。
 ## 使用：event 读取 cooldown/source_id/trigger；context 为施放或命中上下文；skill_instance 为技能运行实例；会原地更新 context.last_trigger_cooldown_key；返回布尔判断或执行是否成功。
 static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
+	# The runner already owns the same cast cooldown; do not reserve it a second time.
+	if event.get("trigger") == &"on_cast" and bool(context.get("scheduled_cast", false)):
+		return true
 	if not event.has("cooldown") or skill_instance == null:
 		return true
 

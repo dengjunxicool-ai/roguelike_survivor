@@ -13,3 +13,4 @@ Pre-flight: T3 时钟与 T2 计时均消费运行 delta；暂停不推进，重�
 
 T0: in progress；导入基线 PASS（exit=0, script_errors=0, engine_errors=0）。
 T0: fixture baseline observed rarity downgrade (0.574358974), permanent buff, Cursed refresh delay; growth legacy baseline 3/3 PASS. T1 RED: monotonic 11 assertions FAIL, growth 10 assertions FAIL (no script errors). Ruling: chain uses nested actions, not an unsupported direct damage field; corrected the test fixture before implementation.
+T1: complete; new monotonic/growth and four legacy growth tests PASS, exit=0, script_errors=0, engine_errors=0. Config validator PASS after adding the new schema root fields. T2 RED timed lifecycle: three expected behavior failures. Ruling: burst already had top-level growth; the defect was nested normalization, not missing top-level scaling.

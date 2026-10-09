@@ -72,7 +72,7 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 		"shatter_frozen":
 			return {"type": "shatter_frozen", "params": params}
 		"spawn_projectile_burst":
-			return {"type": "spawn_projectile_burst", "params": params}
+			return {"type": "spawn_projectile_burst", "params": _normalize_projectile_params(params)}
 		"repeat_area_path":
 			return {"type": "repeat_area_path", "params": params}
 		"spawn_area_from_existing_area":
@@ -174,8 +174,10 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 	params["_skill_instance"] = skill_instance
 	match effect_type:
 		"damage":
-			if effect_context != "tick":
-				_scale_damage_params(params, skill_instance)
+			_scale_damage_params(params, skill_instance)
+		"instant_area_hit", "damage_by_status_stack":
+			_scale_damage_params(params, skill_instance)
+			_scale_numeric_keys(params, skill_instance, ["power_scale_per_stack"], "damage")
 		"spawn_area", "create_explosion", "spawn_trap", "spawn_area_from_existing_area":
 			_scale_numeric_keys(params, skill_instance, ["radius", "radius_r", "collision_radius", "collision_radius_r", "area_radius", "area_radius_r", "pull_radius", "pull_radius_r"], "radius")
 			_scale_numeric_keys(params, skill_instance, ["duration"], "duration")
