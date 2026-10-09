@@ -4,7 +4,10 @@ const Registry = preload("res://scripts/combat/combat_target_registry.gd")
 var marks: Dictionary = {}
 var combustion_explosions: int = 0
 func mark(target: Node, context: Dictionary, duration: float, now: float) -> void:
-	marks[target.get_instance_id()] = {"target": weakref(target), "context": context.duplicate(true), "expires": now+duration}
+	var actions: Dictionary = {}
+	for mode: String in ["death", "expiry"]:
+		actions[mode] = preload("res://scripts/skills/skill_effect_adapter.gd").to_actions([{"type":"spawn_area", "area_id":"soul_explosion_area", "position_mode":"event", "radius":168.0, "duration":0.22, "effects_on_apply":[{"type":"damage", "damage_type":"curse", "source_type":"power", "power_scale":1.8 if mode == "death" else 0.9}]}], context.get("skill_instance") as RefCounted)
+	marks[target.get_instance_id()] = {"target": weakref(target), "context": context.duplicate(true), "expires": now+duration, "actions":actions}
 func update(bus: Node) -> void:
 	for id: Variant in marks.keys():
 		var item: Dictionary = marks[id]
@@ -17,13 +20,14 @@ func settle(bus: Node, target: Node, died: bool) -> void:
 	var id: int = target.get_instance_id()
 	if not marks.has(id): return
 	var context: Dictionary = marks[id].context
+	var actions: Array = marks[id].actions["death" if died else "expiry"]
 	marks.erase(id)
 	target.set_meta("death_pact", false)
 	if not died and target.has_method("is_dead") and target.is_dead(): return
 	context["position"] = target.global_position
 	context["target"] = null
 	context["enemy"] = null
-	bus.execute_adapted_actions(preload("res://scripts/skills/skill_effect_adapter.gd").to_actions([{"type":"spawn_area", "area_id":"soul_explosion_area", "position_mode":"event", "radius":168.0, "duration":0.22, "effects_on_apply":[{"type":"damage", "damage_type":"curse", "source_type":"cast", "power_scale":1.8 if died else 0.9}]}]), context)
+	bus.execute_adapted_actions(actions, context)
 func death(bus: Node, context: Dictionary) -> void:
 	var target: Node = context.get("target") as Node
 	if target == null: return

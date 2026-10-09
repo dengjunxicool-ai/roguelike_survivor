@@ -219,7 +219,7 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 		if event_name == &"post_damage_hit" and context.has("damage_amount") and float(context.damage_amount) <= 0.0:
 			continue
 		var proc_id: StringName = &"status_reaction" if event_name == &"status_max_stack_reached" else event_context.listener_skill_id
-		if not source_cast and not ProcPolicy.can_generate(context, proc_id):
+		if not source_cast and not event.has("resource_kind") and not ProcPolicy.can_generate(context, proc_id):
 			continue
 
 		var conditions: Array = _get_array(event.get("conditions", []))

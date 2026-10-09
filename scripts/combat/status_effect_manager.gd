@@ -822,9 +822,9 @@ func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
 		return
 	var status_id: StringName = StringName(String(status.get("id", "")))
 	var output_status: Dictionary = status
-	if status_id == &"burning" and effects_key == "on_tick_effects" and float(status.get("ground_bonus_until", 0.0)) > _status_time_seconds():
+	if status_id == &"burning" and effects_key == "on_tick_effects" and preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player()) > 0.0:
 		output_status = status.duplicate(true)
-		output_status["power"] = float(status.get("power", 0.0)) * (1.0+float(status.get("ground_bonus", 0.0)))
+		output_status["power"] = float(status.get("power", 0.0)) * (1.0+preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player()))
 	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, output_status))
 	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, output_status))
 
@@ -1096,7 +1096,7 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 				multiplier *= maxf(float(owner.get_meta("fire_oil_boss_burn_damage_multiplier", 0.7)), 0.0)
 			else:
 				multiplier *= maxf(1.0 + float(owner.get_meta("fire_oil_burn_damage_multiplier_add", 0.0)), 0.0)
-	if float(status.get("ground_bonus_until", 0.0)) > _status_time_seconds(): multiplier *= 1.0+float(status.get("ground_bonus", 0.0))
+	if StringName(String(status.get("id", ""))) == &"burning": multiplier *= 1.0+preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player())
 	return maxf(float(amount) * multiplier, 0.0)
 
 

@@ -23,12 +23,15 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 			var area: Node2D = context.get("area") as Node2D
 			var owner: Node2D = context.get("caster") as Node2D
 			return area != null and owner != null and String(area.get("source_id")) == "divine_barrier_field" and owner.global_position.distance_squared_to(area.global_position) <= pow(float(context.get("radius",area.get("radius"))),2)
+		"direct_hit":
+			var packet: Dictionary = context.get("damage_packet", {})
+			return String(packet.get("source_type", "")) != "status" and String(packet.get("damage_origin", "")) != "status_dot" and not context.has("status_id")
 		"origin_skill_type":
 			var origin: RefCounted = context.get("origin_skill_instance") as RefCounted
 			return origin != null and String(origin.get("skill_type")) == String(params.get("skill_type", ""))
 		"fire_ground":
 			var area: Node = context.get("area") as Node
-			return area != null and String(area.get("source_id")) in ["meteor_burning_ground", "lava_rift", "fire_ground", "inferno_fire_ground"]
+			return area != null and preload("res://scripts/skills/fire_ground_policy.gd").is_fire_ground(area)
 		"target_has_status":
 			var target: Node = context.get("target") as Node
 			if context.has("target_statuses"):

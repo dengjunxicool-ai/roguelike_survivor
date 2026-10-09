@@ -8,7 +8,7 @@ Pre-flight T3→T7/T9: counters use stable event_id; damage/resource eligibility
 Pre-flight T4→T8: reuse freeze immunity and effective Power; do not add a second freeze pipeline.
 Pre-flight T9→T14: minimal replacement UI and core/fusion HUD belong to M2; full card previews remain M4.
 Ruling T5→T10: no copy snapshot service exists until M3; source cleanup calls clear_origin only when present and clears existing runtime source objects now.
-Tasks: T5–T9 implemented and verified; final review pending. M3/M4 not authorized in this turn.
+Tasks: T5–T9 implementation and automated regression complete; final review fixes verified. M2 full-run gameplay acceptance remains open until the real-play results are assessed. M3/M4 not authorized in this turn.
 
 T5: complete; capacity RED4→GREEN, replacement missing→GREEN. Core/fusion separate, 12 HUD slots and source-cleaning atomic replacement with one opportunity per run; cancel preserves school/skill/upgrade state. New slots/replacement and legacy slots/HUD/attack PASS, exit0/script_errors0/engine_errors0. M2 baseline169/169 PASS. Migrated legacy full-slot offer rejection to opportunity-used case; HUD10→12 assertion now backed by real layout/render-node tests. Outputs T05-*.
 
@@ -21,3 +21,19 @@ T8: complete; control RED5→GREEN, execute RED5→GREEN. T08-control-final2 inc
 
 T9: complete; thunder and holy tests RED→GREEN. T09-thunder-final and T09-holy-final2 PASS (script/engine errors0). Initial positive thunder hits, bounded overload spread, actual cooldown modifiers, time-based barrier shield, shield cap/timed devotion, shared counterattack ICD and live guardian absorption through player damage pipeline. Full suite M2-pre-review: 179/179 PASS, exit0.
 Ruling T9: migrate six legacy text/structure contracts to approved M2 descriptions and events — old assertions encoded superseded behavior; real runtime tests retain output checks — cost if wrong: a text contract could miss behavior, covered by separate real damage/status/shield tests.
+
+Final review: one fresh-context read-only reviewer (gpt-6-astra), base c63688f..2a0e17f; 0 Critical, 8 Important. All eight entered one RED→GREEN fix pass in verify_m2_review_regressions.gd; final whole suite M2-final-suite 180/180 PASS, exit0. Script/engine errors0.
+Final: fixed delayed meteor origin cancellation and pause semantics — pending output pauses and removed source cannot spawn, RED→GREEN.
+Final: fixed pact settlement growth and fixed 5s mark — Lv2 legendary expiry151/death302 at100P, RED→GREEN.
+Final: fixed ignite cast-area exclusion — real spawned lava damage produces additional90, attack/summon/status/derived hits excluded, RED→GREEN.
+Final: fixed scorched coverage — real active-area registry (including deferred factory spawns), complete fire-ground IDs, tick-offset-independent35% and immediate exit, RED→GREEN.
+Final: fixed competing offer guarantees and low-HP typed-array runtime error — upgrade then survival retained, RED→GREEN.
+Final: fixed fear whisper dead admission — apply_cursed required in shared learning/offer evaluation, RED→GREEN.
+Final: fixed Sanctuary after natural shield expiry — one effective shield query uses combat clock; positive while active/zero after6.1s with no hit/grant, RED→GREEN.
+Final: fixed Boss resources from actual attack-applied Burning — five actual status ticks grant1 with source/copy/self-core eligibility independent of secondary-output gate, RED→GREEN.
+
+Final: Ruling: retain M3/M4 phase boundaries for real copy, cast milestones, 60 fusion interactions, full card previews and balance/performance matrix — user authorized M2 only; keep approved fusion offer migration gate — cost if wrong: cannot treat M2 as the complete skill-system delivery.
+Final: Ruling: resource_crossings action repetition remains per legal occurrence — no current M2 legal occurrence crosses multiple final resource thresholds, fractional counter API itself preserves crossings/remainder — cost if wrong: future long-duration/coalesced configurations could miss additional outputs.
+Final: Ruling: retain legacy offer-rule compatibility filtering alongside shared M2 capability policy — reviewer found no current nonredundant base-data divergence; no generalized migration in this phase — cost if wrong: future legacy rule fields could diverge between learning and offers; current M2 entry tests pass.
+Final: Ruling: retain E-drive worktree and verification evidence at the requested stage stop — the durable report/next phase still need them, no plan scratch workspace was created — cost if wrong: E-drive disk usage until later cleanup.
+Final: deferred minors: none identified by reviewer.

@@ -25,7 +25,7 @@ foreach ($property in $package.scripts.PSObject.Properties) {
     }
 }
 if (-not $LegacyOnly) {
-    foreach ($name in @('verify_skill_upgrade_monotonic','verify_skill_damage_growth_paths','verify_skill_timed_modifiers','verify_skill_modifier_consumption','verify_skill_event_provenance','verify_skill_proc_chain_limits','verify_skill_status_lifecycle_v2','verify_skill_status_race_conditions','verify_skill_slot_capacity_v2','verify_skill_replacement_transaction','verify_skill_requirements_v2','verify_skill_offer_progression_v2','verify_fire_curse_cycle_v2','verify_fire_curse_boss_cycle','verify_frost_control_v2','verify_frost_execute_tiers','verify_thunder_proc_v2','verify_holy_shield_time_v2')) {
+    foreach ($name in @('verify_skill_upgrade_monotonic','verify_skill_damage_growth_paths','verify_skill_timed_modifiers','verify_skill_modifier_consumption','verify_skill_event_provenance','verify_skill_proc_chain_limits','verify_skill_status_lifecycle_v2','verify_skill_status_race_conditions','verify_skill_slot_capacity_v2','verify_skill_replacement_transaction','verify_skill_requirements_v2','verify_skill_offer_progression_v2','verify_fire_curse_cycle_v2','verify_fire_curse_boss_cycle','verify_frost_control_v2','verify_frost_execute_tiers','verify_thunder_proc_v2','verify_holy_shield_time_v2','verify_m2_review_regressions')) {
         $cases += [pscustomobject]@{name=$name; kind='godot'; path="res://tools/verify/$name.gd"}
     }
     foreach ($name in @('verify_skill_rebalance_inventory','verify_skill_modifier_stat_validation')) {

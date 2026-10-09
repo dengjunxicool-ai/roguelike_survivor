@@ -174,7 +174,13 @@ func _spawn_targeted_projectile_instance_after_delay(params: Dictionary, project
 	if tree == null:
 		_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
 		return
-	await tree.create_timer(spawn_delay).timeout
+	var manager: Node = source_context.get("skill_manager") as Node
+	var generation: int = int(manager.get("run_generation")) if manager != null else -1
+	var origin_id: StringName = StringName(String(source_context.get("origin_skill_id", source_context.get("skill_id", ""))))
+	var origin: RefCounted = manager.get_skill(origin_id) if manager != null else null
+	await tree.create_timer(spawn_delay, false).timeout
+	if manager != null and (not is_instance_valid(manager) or int(manager.get("run_generation")) != generation or manager.get_skill(origin_id) != origin):
+		return
 	if caster == null or target == null or not is_instance_valid(caster) or not is_instance_valid(target) or target.is_queued_for_deletion():
 		return
 	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)

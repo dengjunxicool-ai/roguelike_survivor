@@ -1046,7 +1046,7 @@
 			},
 			"trigger_rules": [
 				{
-					"trigger": "projectile_hit",
+					"trigger": "post_damage_hit",
 					"cooldown": 0.4,
 					"conditions": [
 						{
@@ -1058,6 +1058,9 @@
 							"params": {
 								"skill_type": "cast"
 							}
+						},
+						{
+							"type": "direct_hit"
 						}
 					],
 					"effects": [
@@ -3753,7 +3756,10 @@
 					"curse"
 				],
 				"required_skills": [],
-				"blocked_by_exclusive_group": []
+				"blocked_by_exclusive_group": [],
+				"required_capabilities": [
+					"apply_cursed"
+				]
 			},
 			"trigger_rules": [
 				{

@@ -641,12 +641,14 @@ func stage_weight(player: Node, category: String, data: Dictionary) -> float:
 
 func _enforce_progression(player: Node, selected: Array, candidates: Array, count: int) -> void:
 	var protected: Dictionary = {}
-	# Ordered reservations protect upgrade -> survival -> state entrance -> core.
-	for option: RefCounted in selected:
-		if String(option.id).begins_with("skill_level_up:"): protected[String(option.id)] = true; break
+	# Rebuild reservations in priority order after all legacy guarantee passes.
+	_reserve_progression(selected, _build_skill_level_up_options(player), protected, count)
 	if _offer_policy.is_low_hp(player):
-		for option: RefCounted in selected:
-			if _offer_policy.option_has_any_tag(option, ["survival"]): protected[String(option.id)] = true; break
+		var survival: Array = []
+		var tags: Array[String] = ["survival"]
+		for option: RefCounted in _build_level_up_upgrade_options(player):
+			if _offer_policy.option_has_any_tag(option, tags): survival.append(option)
+		_reserve_progression(selected, survival, protected, count)
 	var manager: Node = player.get_node_or_null("SkillManager")
 	var status_candidates: Array = []
 	var core_candidates: Array = []

@@ -106,6 +106,7 @@ const SUPPORTED_TRIGGERS = new Set([
 const SUPPORTED_CONDITIONS = new Set([
   "fire_ground",
   "origin_skill_type",
+  "direct_hit",
   "target_has_status",
   "target_has_tag",
   "owner_has_skill",
@@ -414,7 +415,7 @@ function validateBaseFireRangePixels(skills) {
   assertClose(requireEffect(byId.get("fire_summon_ember_fox_pack"), 1, 1).radius, rangePx(1.2), "fire_summon_ember_fox_pack burst radius must be 1.2R");
   assertClose(requireEffect(byId.get("fire_power_combustion_chain"), 0, 0).radius, rangePx(2.2), "fire_power_combustion_chain radius must be 2.2R");
   assertClose(requireEffect(byId.get("fire_power_ignite_core"), 0, 1).radius, rangePx(1.2), "fire_power_ignite_core projectile hit radius must be 1.2R");
-  assert(byId.get("fire_power_ignite_core").trigger_rules.length === 1, "ignite must only use cast projectile hits");
+  assert(byId.get("fire_power_ignite_core").trigger_rules.length === 1 && byId.get("fire_power_ignite_core").trigger_rules[0].trigger === "post_damage_hit", "ignite must use actual positive cast damage hits");
   assertClose(requireEffect(byId.get("fire_core_inferno_cycle"), 0, 0).radius, rangePx(1.4), "fire_core_inferno_cycle burst radius must be 1.4R");
 }
 
