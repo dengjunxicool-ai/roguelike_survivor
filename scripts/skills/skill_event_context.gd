@@ -16,6 +16,10 @@ static func from_context(context: Dictionary, event_name: StringName) -> Diction
 	result["can_generate_secondary_proc"] = bool(result.get("can_generate_secondary_proc", result.proc_depth == 0 and not result.is_copy))
 	result["combat_seconds"] = float(result.get("combat_seconds", 0.0))
 	result["event_name"] = event_name
+	var target: Node = result.get("target") as Node
+	if not result.has("target_statuses") and target != null and event_name in [&"attack_hit", &"on_projectile_hit", &"area_tick", &"post_damage_hit"]:
+		var statuses: Node = target.get_node_or_null("StatusEffectManager")
+		if statuses != null: result["target_statuses"] = statuses.get_status_snapshot()
 	var manager: Node = context.get("skill_manager") as Node
 	var caster: Node = context.get("caster") as Node
 	if manager == null and caster != null:

@@ -31,6 +31,8 @@ var _processing_reaction_queue: bool = false
 var _pending_status_update_delta: float = 0.0
 var _freeze_immunity_remaining: float = 0.0
 var _resolution_nonce: int = 0
+var _boss_frost_weak_until: float = 0.0
+var _boss_frost_weak_ready: float = 0.0
 var _freeze_immunity_ready_at: float = 0.0
 var _status_elapsed_seconds: float = 0.0
 
@@ -50,6 +52,9 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	if id == &"":
 		return false
 	_freeze_immunity_remaining = maxf(_freeze_immunity_ready_at - _status_time_seconds(), 0.0)
+	if id == &"frozen" and _is_boss() and _status_time_seconds() >= _boss_frost_weak_ready:
+		_boss_frost_weak_until = _status_time_seconds() + 0.5
+		_boss_frost_weak_ready = _status_time_seconds() + 2.0
 	if id == &"frozen" and (_freeze_immunity_remaining > 0.0 or has_status(&"frozen")):
 		_emit_status_skill_event(&"freeze_attempted", id, {"id": id, "stacks": 0, "resisted": true})
 		return false
@@ -549,7 +554,8 @@ func get_damage_taken_multiplier(damage_type: Variant = &"", category: Variant =
 ## 作用：委托状态查询合并易伤并传入宿主阶级。
 ## 使用：packet区分下一击和爆炸易伤资格，返回加法总量。
 func get_vulnerability_total(damage_type: Variant = &"", category: Variant = &"", packet: Variant = {}) -> float:
-	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite())
+	var bonus: float = 0.1 if _is_boss() and _status_time_seconds() < _boss_frost_weak_until and (String(damage_type) == "frost" or String(category) == "frost") else 0.0
+	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite()) + bonus
 
 
 ## 作用：以性能采样包装单个状态的DOT处理。

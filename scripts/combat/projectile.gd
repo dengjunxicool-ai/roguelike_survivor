@@ -316,6 +316,8 @@ func _emit_hit_event(body: Node) -> bool:
 		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit")) if has_meta("hot_rapid_fire_crit") else false,
 		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add")) if has_meta("hot_rapid_fire_crit_chance_add") else 0.0
 	})
+	var status_manager: Node = body.get_node_or_null("StatusEffectManager")
+	if status_manager != null: event_context["target_statuses"] = status_manager.get_status_snapshot()
 	_emit_primary_attack_hit_event(event_context)
 	event_bus.call_deferred("emit_skill_event", event_on_hit, event_context)
 	_execute_adapted_actions(actions_on_hit, event_context)

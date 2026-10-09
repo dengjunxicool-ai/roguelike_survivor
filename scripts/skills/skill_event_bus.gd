@@ -34,6 +34,13 @@ func _ready() -> void:
 
 func _physics_process(_delta: float) -> void:
 	update_skill_cycles()
+	_crowd_scan -= _delta
+	if _crowd_scan <= 0.0:
+		_crowd_scan = 0.25
+		var caster: Node = get_parent()
+		var manager: Node = caster.get_node_or_null("SkillManager") if caster != null else null
+		if manager != null and manager.has_skill(&"frost_power_frost_ring_counter"):
+			emit_skill_event(&"crowd_check", {"caster":caster, "owner":caster, "skill_manager":manager})
 	process_pending_events()
 
 func combat_seconds() -> float:
