@@ -106,7 +106,7 @@ func _run() -> void:
 	_expect(skill_ids.size() == 34, "loads all 34 first-version fire skills", skill_ids.size())
 	_expect(bool(_skill_manager.call("add_skill", &"frost_cast_blizzard_cloud")), "seeds a second god school for fusion skill prerequisites", "add_skill=false")
 	for skill_id: StringName in skill_ids:
-		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % String(skill_id), "add_skill=false")
+		_expect(bool(preload("res://tools/verify/skill_rebalance_fixture.gd").install_runtime_skill(_skill_manager, skill_id)), "installs runtime fixture %s" % String(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 35, "SkillManager learned 34 fire/fusion skills plus one prerequisite skill", _skill_manager.call("get_all_skills").size())
 	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.2, "fire_attack_searing applies primary attack modifier")
 	_expect_skill_modifier("fire_damage_multiplier_add", 0.0, "fire_attack_searing does not also apply global fire damage")

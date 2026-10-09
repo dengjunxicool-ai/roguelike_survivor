@@ -26,11 +26,30 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 		if absorb_result != null:
 			absorbed_amount = int(absorb_result.get("amount"))
 	if absorbed_amount > 0:
+		var bus: Node = player.get_node_or_null("SkillEventBus")
+		var now: float = float(bus.combat_seconds()) if bus != null else 0.0
+		if now >= float(player.get_meta("holy_guard_ready_at",0.0)):
+			var live: Array = []
+			var guarded: bool = false
+			for reference: WeakRef in player.get_meta("holy_guardians",[]):
+				var guard: Node = reference.get_ref()
+				if guard == null or not is_instance_valid(guard) or not guard.can_guard(player): continue
+				live.append(reference)
+				guarded = true
+			player.set_meta("holy_guardians",live)
+			if guarded:
+				absorbed_amount -= mini(absorbed_amount, maxi(roundi(0.1*float(player.get("max_health"))),0))
+				player.set_meta("holy_guard_ready_at",now+2.0)
+	if absorbed_amount > 0:
 		var fire_shield: int = _get_live_fire_passive_shield(player)
 		if fire_shield > 0:
 			var fire_absorbed: int = mini(fire_shield, absorbed_amount)
 			player.set_meta("fire_passive_shield", maxi(fire_shield - fire_absorbed, 0))
 			absorbed_amount = maxi(absorbed_amount - fire_absorbed, 0)
+			if fire_absorbed >= fire_shield:
+				var bus: Node = player.get_node_or_null("SkillEventBus")
+				if bus != null:
+					bus.emit_skill_event(&"shield_broken", {"caster":player,"owner":player,"skill_manager":player.get_node_or_null("SkillManager"),"parent":player.get_parent()})
 	if absorbed_amount > 0:
 		var relic_shield: int = int(player.get_meta("cross_relic_shield_points", 0))
 		if relic_shield > 0:
@@ -54,7 +73,9 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 ## 使用：player为受击玩家；返回当前可消费整数盾量。
 func _get_live_fire_passive_shield(player: Node) -> int:
 	var expires_at: float = float(player.get_meta("fire_passive_shield_expires_at", 0.0))
-	if expires_at > 0.0 and Time.get_ticks_msec() / 1000.0 >= expires_at:
+	var bus: Node = player.get_node_or_null("SkillEventBus")
+	var now: float = float(bus.combat_seconds()) if bus != null else Time.get_ticks_msec()/1000.0
+	if expires_at > 0.0 and now >= expires_at:
 		player.set_meta("fire_passive_shield", 0)
 		player.set_meta("fire_passive_shield_expires_at", 0.0)
 		return 0

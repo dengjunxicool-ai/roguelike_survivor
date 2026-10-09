@@ -51,6 +51,10 @@ func setup(setup_params: Dictionary) -> void:
 	_attack.setup(_scaled_attack_config(definition.get("attack"), skill_instance))
 	_apply_visual(definition.get("visual"))
 	state = STATE_FOLLOW
+	if String(definition.get("id")) == "holy_shield_guardian" and summon_owner != null:
+		var guards: Array = summon_owner.get_meta("holy_guardians", [])
+		guards.append(weakref(self))
+		summon_owner.set_meta("holy_guardians",guards)
 	set_physics_process(true)
 
 
@@ -177,3 +181,6 @@ func _read_owner_power(node: Node) -> float:
 		if value != null and float(value) > 0.0:
 			return float(value)
 	return 1.0
+
+func can_guard(owner: Node) -> bool:
+	return summon_owner == owner and state != STATE_EXPIRED and _remaining_duration > 0.0 and not is_queued_for_deletion()

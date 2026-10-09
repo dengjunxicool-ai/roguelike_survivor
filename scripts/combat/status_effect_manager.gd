@@ -31,6 +31,8 @@ var _processing_reaction_queue: bool = false
 var _pending_status_update_delta: float = 0.0
 var _freeze_immunity_remaining: float = 0.0
 var _resolution_nonce: int = 0
+var _boss_frost_weak_until: float = 0.0
+var _boss_frost_weak_ready: float = 0.0
 var _freeze_immunity_ready_at: float = 0.0
 var _status_elapsed_seconds: float = 0.0
 
@@ -50,6 +52,9 @@ func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	if id == &"":
 		return false
 	_freeze_immunity_remaining = maxf(_freeze_immunity_ready_at - _status_time_seconds(), 0.0)
+	if id == &"frozen" and _is_boss() and _status_time_seconds() >= _boss_frost_weak_ready:
+		_boss_frost_weak_until = _status_time_seconds() + 0.5
+		_boss_frost_weak_ready = _status_time_seconds() + 2.0
 	if id == &"frozen" and (_freeze_immunity_remaining > 0.0 or has_status(&"frozen")):
 		_emit_status_skill_event(&"freeze_attempted", id, {"id": id, "stacks": 0, "resisted": true})
 		return false
@@ -353,6 +358,12 @@ func resolve_cursed(reason: StringName) -> bool:
 		return false
 	_resolution_nonce += 1
 	var before: float = float(target.get("current_health")) if target.get("current_health") != null else 0.0
+	if before > 0.0 and before <= float(target.get("max_health")) * 0.4:
+		var query: RefCounted = preload("res://scripts/modifiers/modifier_query.gd").for_skill(null, _get_player())
+		var values: Dictionary = preload("res://scripts/modifiers/modifier_aggregator.gd").collect(query)
+		var bonus: float = clampf(float(values.get("cursed_low_hp_damage_multiplier_add", 0.0)), 0.0, 0.4)
+		if _is_boss(): bonus *= 0.3
+		status["power"] = float(status.get("power", 0.0)) * (1.0+bonus)
 	_execute_status_effects(status, "on_expire_effects")
 	var after: float = float(target.get("current_health")) if is_instance_valid(target) and target.get("current_health") != null else 0.0
 	var context: Dictionary = _build_status_event_context(&"cursed", status)
@@ -543,7 +554,8 @@ func get_damage_taken_multiplier(damage_type: Variant = &"", category: Variant =
 ## 作用：委托状态查询合并易伤并传入宿主阶级。
 ## 使用：packet区分下一击和爆炸易伤资格，返回加法总量。
 func get_vulnerability_total(damage_type: Variant = &"", category: Variant = &"", packet: Variant = {}) -> float:
-	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite())
+	var bonus: float = 0.1 if _is_boss() and _status_time_seconds() < _boss_frost_weak_until and (String(damage_type) == "frost" or String(category) == "frost") else 0.0
+	return StatusEffectQueryScript.vulnerability_total(_statuses, damage_type, category, packet, _is_boss(), _is_elite()) + bonus
 
 
 ## 作用：以性能采样包装单个状态的DOT处理。
@@ -809,8 +821,12 @@ func _execute_status_effects(status: Dictionary, effects_key: String) -> void:
 	if event_bus == null or not event_bus.has_method("execute_adapted_actions"):
 		return
 	var status_id: StringName = StringName(String(status.get("id", "")))
-	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, status))
-	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, status))
+	var output_status: Dictionary = status
+	if status_id == &"burning" and effects_key == "on_tick_effects" and preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player()) > 0.0:
+		output_status = status.duplicate(true)
+		output_status["power"] = float(status.get("power", 0.0)) * (1.0+preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player()))
+	var actions: Array = SkillEffectAdapterScript.to_actions(_prepare_status_effects(effects, output_status))
+	event_bus.call("execute_adapted_actions", actions, _build_status_event_context(status_id, output_status))
 
 
 ## 作用：复制效果并将逐层Power系数换算为当前叠层的power_scale。
@@ -1080,6 +1096,7 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 				multiplier *= maxf(float(owner.get_meta("fire_oil_boss_burn_damage_multiplier", 0.7)), 0.0)
 			else:
 				multiplier *= maxf(1.0 + float(owner.get_meta("fire_oil_burn_damage_multiplier_add", 0.0)), 0.0)
+	if StringName(String(status.get("id", ""))) == &"burning": multiplier *= 1.0+preload("res://scripts/skills/fire_ground_policy.gd").burning_bonus(get_parent() as Node2D, _get_player())
 	return maxf(float(amount) * multiplier, 0.0)
 
 
@@ -1288,3 +1305,8 @@ func _get_array(value: Variant) -> Array:
 		var array: Array = value
 		return array.duplicate(true)
 	return []
+
+func clear_origin(skill_id: StringName) -> void:
+	for id: Variant in _statuses.keys():
+		if StringName(String(_statuses[id].get("source_skill_id", ""))) == skill_id:
+			consume_status_stack(id, get_status_stack(id))

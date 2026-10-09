@@ -33,7 +33,7 @@ func _run() -> void:
 	reward.setup(c.target)
 	reward.notify_enemy_killed_synergies()
 	_expect(death_events.size() == 1 and death_events[0].get("origin_skill_id", "") == "holy_cast_sacred_hammer" and death_events[0].get("is_copy", false), "actual death service keeps derived kill provenance")
-	c.skill_manager.add_skill(&"curse_power_soul_harvest")
+	F.install_runtime_skill(c.skill_manager, &"curse_power_soul_harvest")
 	await physics_frame
 	for index: int in range(12):
 		var victim := F.Target.new()

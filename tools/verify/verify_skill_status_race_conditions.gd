@@ -48,7 +48,7 @@ func _run() -> void:
 	c.statuses.apply_status(&"chilled", {"stacks": 7})
 	_expect(not c.statuses.has_status(&"frozen"), "forced freeze ending also starts immunity")
 	c.statuses.clear_statuses()
-	c.skill_manager.add_skill(&"frost_core_absolute_zero")
+	F.install_runtime_skill(c.skill_manager, &"frost_core_absolute_zero")
 	await physics_frame
 	c.statuses.apply_status(&"chilled", {"stacks": 5})
 	_expect(c.statuses.has_status(&"frozen"), "core lowers threshold to five")

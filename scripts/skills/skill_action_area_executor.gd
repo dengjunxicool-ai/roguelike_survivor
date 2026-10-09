@@ -92,7 +92,8 @@ func _get_combat_object_definition(object_id: StringName) -> Dictionary:
 ## 作用：构造区域或爆炸伤害、几何与 tick 参数，处理油区合并及活动上限后创建对象。
 ## 使用：params 为动作或状态参数；context 为施放或命中上下文。
 func _spawn_area(params: Dictionary, context: Dictionary, source_type: String = "area") -> bool:
-	context = _context_with_resolved_target(params, context)
+	if String(params.get("position_mode", "")) != "event":
+		context = _context_with_resolved_target(params, context)
 	var parent: Node = _get_parent_node(context)
 	var position: Vector2 = _resolve_position(params, context)
 	var area_params: Dictionary = params.duplicate(true)
@@ -438,6 +439,7 @@ func _pull(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node2D = context.get("target") as Node2D
 	if target == null:
 		return false
+	if bool(target.get_meta("immovable", false)) or String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(target).target_type) == "boss": return false
 	var origin_node: Node2D = context.get("source") as Node2D
 	if origin_node == null:
 		origin_node = context.get("caster") as Node2D
@@ -481,6 +483,7 @@ func _swap_targets(params: Dictionary, context: Dictionary) -> bool:
 			continue
 		if candidate.has_method("is_dead") and bool(candidate.call("is_dead")):
 			continue
+		if bool(candidate.get_meta("immovable",false)) or String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(candidate).target_type) == "boss": continue
 		if first == null:
 			first = candidate
 		elif second == null and candidate != first:

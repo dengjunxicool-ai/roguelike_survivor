@@ -10,7 +10,7 @@
 
 **Spec:** `../specs/2026-10-09-skill-system-rebalance-design.md`。数值、资格、槽位和技能语义以该规格为准；本文件中的新增接口是拟实施接口，当前源码不保证已有。
 
-**阶段状态（2026-10-09）：** M1（T0–T4）完成，169/169检查通过，按用户要求暂停；M2–M4未执行。工作树：`E:/codex/skill-rebalance/worktree`，分支：`codex/skill-rebalance-m1`；详情见`../../skills/skill_rebalance_m1_progress.md`。
+**阶段状态（2026-10-09）：** M1（T0–T4）完成；M2（T5–T9）实现及180/180自动检查完成，独立审查8项问题已修复，但五神系无辅助300秒完整局验收尚未通过，停在M2汇报。M3/M4未执行。工作树：`E:/codex/skill-rebalance/worktree`，分支：`codex/skill-rebalance-m2`；详情见`../../skills/skill_rebalance_m2_report.md`和`../../skills/skill_rebalance_m2_progress.md`。
 
 ## Global Constraints
 
@@ -156,10 +156,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillSlotPolicy.capacity_group(definition: Dictionary) -> StringName`返回attack/dash/ordinary/passive/core/fusion；`SkillReplacementService.begin(player: Node, new_skill_id: StringName, rarity: String) -> Dictionary`；`confirm(player: Node, transaction_id: String, old_skill_id: StringName) -> bool`；`cancel(transaction_id: String) -> void`。事务快照只暂存选项，不先删旧技能。
 
-- [ ] 测试5普通主动满仍可学1核心、1融合；第二核心/融合拒绝；总容量及HUD为12；attack/dash不占普通槽；主动执行列表包含新增独立类别。
-- [ ] 测试替换取消不消耗升级/机会/神系；确认移除旧状态、召唤、buff、复制快照的来源，原子新增新技能；新技能失效则回退；每局最多确认一次。
-- [ ] 接入升级选项和最小可用替换UI；核心/融合显示独立位置，避免等T14才出现看不见的技能。
-- [ ] 隔离测试，OutputRoot=`T05-slots`/`T05-replace`；跑`verify_skill_slot_capacity_rules.gd`、`verify_run_hud_skill_slots.gd`、`verify_attack_skill_replacement.gd`，提交。
+- [x] 测试5普通主动满仍可学1核心、1融合；第二核心/融合拒绝；总容量及HUD为12；attack/dash不占普通槽；主动执行列表包含新增独立类别。
+- [x] 测试替换取消不消耗升级/机会/神系；确认移除旧状态、召唤、buff、复制快照的来源，原子新增新技能；新技能失效则回退；每局最多确认一次。
+- [x] 接入升级选项和最小可用替换UI；核心/融合显示独立位置，避免等T14才出现看不见的技能。
+- [x] 隔离测试，OutputRoot=`T05-slots`/`T05-replace`；跑`verify_skill_slot_capacity_rules.gd`、`verify_run_hud_skill_slots.gd`、`verify_attack_skill_replacement.gd`，提交。
 
 ### T6：机制前置、阶段供给与保底
 
@@ -167,11 +167,11 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillRequirementPolicy.evaluate(player: Node, definition: Dictionary) -> Dictionary`返回`available: bool, missing_requirements: Array[String], capability_sources: Dictionary`；能力标签包括apply_burning/apply_chilled/apply_conductive/apply_cursed/apply_judgment/apply_instability/fire_ground/frost_area/chaos_rift/divine_barrier/overload/divine_punishment/fission/copyable_cast/copyable_attack。
 
-- [ ] 测试仅火攻击+冰被动不能开融合；火2技能+冰状态来源1技能且Lv6可开纯状态融合；专属冰矛融合缺冰矛不能开；核心Lv7拒绝、Lv8且3同系技能与必要反应准入。
-- [ ] 测试首次神系选择至少1张有即时收益；拥有两神系后第三系永不出现；已学可升级保底；核心连续3次未展示第4次展示；只有被动/满槽/无有效核心不制造死牌。
-- [ ] 用固定RNG种子测选项序列和权重统计；类别权重与品质概率分开，不要求随机卡顺序等于新概率表某一固定顺序。
-- [ ] 实现资格共享给Dev、学习入口和UI，禁止抽卡准入与实际学习入口各维护一套规则。新增字段经GDScript和Node双端validator校验；能力映射来自已验证行为而非名字猜测。迁移尚未完成的融合设offer_enabled=false，T12/T13逐张通过行为合同后启用；这是阶段迁移措施，不能用于最终验收绕过60张完整要求。
-- [ ] 跑新测试、`verify_god_school_learning_rules.gd`、`verify_upgrade_pool_active_skill_guarantee.gd`及现有学习选项测试，OutputRoot=`T06-requirements`/`T06-offers`，提交。
+- [x] 测试仅火攻击+冰被动不能开融合；火2技能+冰状态来源1技能且Lv6可开纯状态融合；专属冰矛融合缺冰矛不能开；核心Lv7拒绝、Lv8且3同系技能与必要反应准入。
+- [x] 测试首次神系选择至少1张有即时收益；拥有两神系后第三系永不出现；已学可升级保底；核心连续3次未展示第4次展示；只有被动/满槽/无有效核心不制造死牌。
+- [x] 用固定RNG种子测选项序列和权重统计；类别权重与品质概率分开，不要求随机卡顺序等于新概率表某一固定顺序。
+- [x] 实现资格共享给Dev、学习入口和UI，禁止抽卡准入与实际学习入口各维护一套规则。新增字段经GDScript和Node双端validator校验；能力映射来自已验证行为而非名字猜测。迁移尚未完成的融合设offer_enabled=false，T12/T13逐张通过行为合同后启用；这是阶段迁移措施，不能用于最终验收绕过60张完整要求。
+- [x] 跑新测试、`verify_god_school_learning_rules.gd`、`verify_upgrade_pool_active_skill_guarantee.gd`及现有学习选项测试，OutputRoot=`T06-requirements`/`T06-offers`，提交。
 
 ### T7：火焰/诅咒闭环与Boss充能
 
@@ -179,10 +179,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillResourceCounter.add(skill: RefCounted, key: StringName, amount: float, threshold: float) -> int`返回达到门槛次数并保留余量；`clear(skill: RefCounted) -> void`。死亡/状态结算计数由T3稳定event_id去重。
 
-- [ ] 测试5次Boss燃烧tick为火循环+1、12点燃爆/20点核心；死亡+1与同次tick不双计；诅咒Boss2次结算+1点；传播后的死亡不导致同尸体重复事件。
-- [ ] 测试引燃只消耗cast命中的1s燃烧；焦土仅真实火地提高燃烧；燃爆连锁最多初代+2派生；死亡契约死亡1.8P、到期0.9P且只爆一次。
-- [ ] 调整28张的描述/条件/属性；亡骸等击杀召唤保留短板，不能为每项收益都加Boss无条件补偿；只为核心资源和契约加规格规定的补偿。
-- [ ] 跑两项新测试和`verify_fire_skill_runtime_smoke.gd`、`verify_curse_skill_runtime_smoke.gd`，OutputRoot=`T07-cycle`/`T07-boss`；提交。
+- [x] 测试5次Boss燃烧tick为火循环+1、12点燃爆/20点核心；死亡+1与同次tick不双计；诅咒Boss2次结算+1点；传播后的死亡不导致同尸体重复事件。
+- [x] 测试引燃只消耗cast命中的1s燃烧；焦土仅真实火地提高燃烧；燃爆连锁最多初代+2派生；死亡契约死亡1.8P、到期0.9P且只爆一次。
+- [x] 调整28张的描述/条件/属性；亡骸等击杀召唤保留短板，不能为每项收益都加Boss无条件补偿；只为核心资源和契约加规格规定的补偿。
+- [x] 跑两项新测试和`verify_fire_skill_runtime_smoke.gd`、`verify_curse_skill_runtime_smoke.gd`，OutputRoot=`T07-cycle`/`T07-boss`；提交。
 
 ### T8：冰霜控制、处决与专项技能
 
@@ -190,10 +190,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `SkillActionStatusExecutor._execute_policy(target: Node, params: Dictionary, context: Dictionary) -> Dictionary`返回`mode, eligible, threshold, bonus_amount, cooldown`；阶级来自现有统一目标profile，不新增组名猜测。命中前状态保存在T3事件context中。
 
-- [ ] 测试寒霜攻击首次1层、已有Chilled后额外1层；冰矛未冻结无溅射、Frozen有溅射；霜环冲刺/8人拥挤共享6sICD；核心阈值5真正生效。
-- [ ] 测试普通10%/精英4%处决；Boss低于10%仅额外`min(0.8P,1%maxHP)`且5sICD，不直接杀死；不可移动Boss不被拉扯，仍受到合法伤害。
-- [ ] 测试Boss冻结破绽0.5s/10%、ICD2s、总减速≤30%，普通怪保持原冰冻反馈。
-- [ ] 实现并跑新测试、`verify_frost_skill_runtime_smoke.gd`、`verify_frost_frozen_vulnerability_runtime.gd`，OutputRoot=`T08-control`/`T08-execute`，提交。
+- [x] 测试寒霜攻击首次1层、已有Chilled后额外1层；冰矛未冻结无溅射、Frozen有溅射；霜环冲刺/8人拥挤共享6sICD；核心阈值5真正生效。
+- [x] 测试普通10%/精英4%处决；Boss低于10%仅额外`min(0.8P,1%maxHP)`且5sICD，不直接杀死；不可移动Boss不被拉扯，仍受到合法伤害。
+- [x] 测试Boss冻结破绽0.5s/10%、ICD2s、总减速≤30%，普通怪保持原冰冻反馈。
+- [x] 实现并跑新测试、`verify_frost_skill_runtime_smoke.gd`、`verify_frost_frozen_vulnerability_runtime.gd`，OutputRoot=`T08-control`/`T08-execute`，提交。
 
 ### T9：雷电反应和神圣防御时间契约
 
@@ -201,10 +201,10 @@ powershell -NoProfile -File .\tools\verify\run_isolated_godot.ps1 -ProjectPath E
 
 **Interfaces:** `area_step`含`area_instance_id, elapsed, origin_skill_id, position, radius`，不含虚构敌人target；反击通过同技能共享cooldown_key；卫士防御通过现有吸收伤害pipeline添加来源，不直接回补已扣掉的生命。
 
-- [ ] 测试二重落雷仅3次初代正雷伤命中触发；过载最多传播4邻居且排除原目标；高频/静电影响真实CD；派生落雷不会自我循环。
-- [ ] 测试神圣结界0/1/24敌人时补盾均每秒1%最大生命；玩家离区无补盾；护盾上限35%；溢出触发虔诚但不堆无限加成；破盾与同击受重伤只触发一次反击。
-- [ ] 测试卫士2s内只挡一次，最多10%最大生命；guard移除后不再挡；“短暂无敌或护盾”统一文案为护盾，不新增未设计的无敌。
-- [ ] 实现、跑新测试及雷/圣runtime_smoke和召唤system_behavior，OutputRoot=`T09-thunder`/`T09-holy`；验收M2。
+- [x] 测试二重落雷仅3次初代正雷伤命中触发；过载最多传播4邻居且排除原目标；高频/静电影响真实CD；派生落雷不会自我循环。
+- [x] 测试神圣结界0/1/24敌人时补盾均每秒1%最大生命；玩家离区无补盾；护盾上限35%；溢出触发虔诚但不堆无限加成；破盾与同击受重伤只触发一次反击。
+- [x] 测试卫士2s内只挡一次，最多10%最大生命；guard移除后不再挡；“短暂无敌或护盾”统一文案为护盾，不新增未设计的无敌。
+- [ ] 实现、新测试、雷/圣runtime_smoke及召唤system_behavior已通过（180/180）；阶段完整局实战验收未通过，M2暂不勾选整体验收。详见M2报告。
 
 ## M3：混沌、成长与融合
 

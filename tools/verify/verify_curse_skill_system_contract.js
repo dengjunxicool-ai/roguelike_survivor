@@ -39,13 +39,13 @@ const expected = [
   ["curse_cast_doom_circle", "终末法阵", "cast", "在精英或怪群脚下生成延迟法阵，数秒后爆发；目标身上 Cursed 层数越高，伤害越高"],
   ["curse_summon_bone_servant", "亡骸仆从", "summon", "Cursed 敌人死亡时有概率召唤骷髅仆从，持续一段时间"],
   ["curse_summon_soul_crow", "魂鸦", "summon", "魂鸦收集 Cursed 敌人死亡后的灵魂，并发射灵魂弹攻击远处敌人"],
-  ["curse_passive_vampiric_ritual", "吸血仪式", "passive", "Cursed 造成伤害或击杀时，为玩家恢复少量生命"],
+  ["curse_passive_vampiric_ritual", "吸血仪式", "passive", "诅咒完成结算或带诅咒敌人死亡时恢复少量生命；普通诅咒元素命中不触发。"],
   ["curse_passive_plague_spread", "疫咒扩散", "passive", "Cursed 敌人死亡时，将自身部分负面状态传播给附近敌人"],
-  ["curse_passive_deathbed_deepen", "临终加深", "passive", "敌人生命越低，受到的 Cursed 延迟伤害越高；Boss 效果降低"],
+  ["curse_passive_deathbed_deepen", "临终加深", "passive", "仅对生命不高于40%的目标提高诅咒结算伤害，最高40%；Boss取30%效果。"],
   ["curse_power_fear_whisper", "恐惧低语", "power", "Cursed 敌人靠近玩家时，有概率陷入恐惧并向外逃离"],
-  ["curse_power_soul_harvest", "灵魂收割", "power", "击杀 Cursed 敌人会储存灵魂；灵魂满时强化下一次技能类伤害"],
-  ["curse_power_death_pact", "死亡契约", "power", "周期性标记附近生命最高的敌人；若其在持续时间内死亡，则产生灵魂爆炸"],
-  ["curse_core_grand_coffin", "万咒归棺", "core", "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人"],
+  ["curse_power_soul_harvest", "灵魂收割", "power", "累计12点诅咒资源强化下一次施法伤害35%；死亡+1点，精英/Boss每次结算+0.5点。"],
+  ["curse_power_death_pact", "死亡契约", "power", "优先向精英或Boss施加诅咒并标记5秒；标记内死亡爆炸造成1.8P，到期仍存活则爆发0.9P。契约只结算一次。"],
+  ["curse_core_grand_coffin", "万咒归棺", "core", "Cursed 敌人死亡时必定传播负面状态，并将部分未结算诅咒伤害转化为灵魂债务。灵魂债务满时释放灵魂风暴，攻击全场低生命敌人 精英与Boss每次诅咒结算+0.5点。"],
 ];
 
 assert(curseSkills.length === 14, `expected 14 first-version curse skills, got ${curseSkills.length}`);
@@ -99,7 +99,7 @@ const plague = byId.get("curse_passive_plague_spread");
 assert((plague.trigger_rules || []).some((rule) => rule.trigger === "enemy_death" && (rule.conditions || []).some((condition) => condition.type === "target_has_status" && condition.status === "cursed")), "plague spread must react to Cursed enemy deaths");
 
 const ritual = byId.get("curse_passive_vampiric_ritual");
-assert((ritual.trigger_rules || []).some((rule) => rule.trigger === "post_damage_hit" && rule.cooldown === 0.5), "vampiric ritual must heal from Cursed damage through post_damage_hit with ICD");
+assert((ritual.trigger_rules || []).some((rule) => rule.trigger === "cursed_resolved" && rule.cooldown === 0.5), "vampiric ritual must heal from Cursed damage through cursed_resolved with ICD");
 assert((ritual.trigger_rules || []).some((rule) => rule.trigger === "enemy_death"), "vampiric ritual must heal from Cursed kills");
 
 const harvest = byId.get("curse_power_soul_harvest");

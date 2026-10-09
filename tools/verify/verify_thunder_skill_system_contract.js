@@ -37,8 +37,8 @@ const expected = [
   ["thunder_passive_high_frequency_discharge", "高频放电", "passive", "雷电类技能触发间隔降低"],
   ["thunder_passive_superconductor", "超导体", "passive", "Conductive 敌人受到更多雷电伤害，且雷电弹射距离提高"],
   ["thunder_passive_static_charge", "静电蓄能", "passive", "每次雷电命中获得静电层数；满层后短时间提高攻击速度和技能触发频率"],
-  ["thunder_power_overload_burst", "过载爆破", "power", "Conductive 达到满层时触发 Overload，造成范围雷爆，并向附近敌人传递 Conductive"],
-  ["thunder_power_double_strike", "二重落雷", "power", "雷电技能有概率在命中后追加一次较弱落雷，优先攻击未被命中的敌人"],
+  ["thunder_power_overload_burst", "过载爆破", "power", "导电满层触发过载伤害并消耗导电，最多向4名邻近敌人传播2层导电，排除原目标。"],
+  ["thunder_power_double_strike", "二重落雷", "power", "每3次初代正雷电伤害命中追加一次0.45P落雷；派生落雷不再积累次数。"],
   ["thunder_power_magnetic_pull", "雷磁牵引", "power", "雷电命中 Conductive 敌人时，小范围吸附附近轻型敌人，使后续连锁更集中"],
   ["thunder_core_storm_center", "雷暴中枢", "core", "所有雷电命中都会积累雷暴能量；能量满时触发全屏雷暴。Overload 不再完全清除 Conductive，而是保留部分层数继续连锁"],
 ];

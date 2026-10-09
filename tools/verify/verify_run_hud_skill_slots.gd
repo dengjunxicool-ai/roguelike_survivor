@@ -451,7 +451,7 @@ func _verify_hud_viewport_bounds() -> bool:
 			ok = _expect(skill_rect.is_equal_approx(Rect2(250, 578, 780, 112)), "desktop skill bar layout is preserved", skill_rect) and ok
 			ok = _expect(player_rect.is_equal_approx(Rect2(18, 18, 392, 118)), "desktop player panel layout is preserved", player_rect) and ok
 		var slots := skill_bar.get_children()
-		ok = _expect(slots.size() == 10, "resize preserves all ten skill slots", slots.size()) and ok
+		ok = _expect(slots.size() == 12, "resize preserves all twelve skill slots", slots.size()) and ok
 		for slot: Node in slots:
 			var slot_control := slot as Control
 			ok = _expect(slot_control != null and slot_control.visible, "resize keeps every skill slot visible", slot.name) and ok

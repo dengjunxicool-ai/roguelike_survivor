@@ -31,10 +31,13 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 		return false
 	var target_context: Dictionary = context.duplicate(true)
 	target_context["target"] = damage_target
-	var execute_triggered: bool = _should_execute_low_hp_target(params, damage_target)
-	if requires_low_hp_execute and not execute_triggered:
-		return false
+	var policy: Dictionary = _execute_policy(damage_target, params, target_context)
+	var execute_triggered: bool = requires_low_hp_execute and policy.mode == "execute" and policy.eligible
+	if requires_low_hp_execute and not policy.eligible: return false
 	var target_amount: int = _get_low_hp_execute_amount(damage_target, amount) if execute_triggered else amount
+	if requires_low_hp_execute and policy.mode == "bonus":
+		target_amount = roundi(policy.bonus_amount)
+		damage_target.set_meta("frost_execute_ready_at", float(target_context.get("event_bus").combat_seconds())+float(policy.cooldown) if target_context.get("event_bus") != null else float(policy.cooldown))
 	var packet: Dictionary = _build_damage_packet(params, target_context, target_amount, "skill")
 	_inherit_projectile_runtime_damage_packet(packet, target_context, damage_target)
 	if execute_triggered:
@@ -42,6 +45,20 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 	packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
 	damage_target.call("take_damage", DamagePacketScript.from_dictionary(packet))
 	return true
+
+
+func _execute_policy(target: Node, params: Dictionary, context: Dictionary) -> Dictionary:
+	var rank: String = String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(target).target_type)
+	var maximum: float = maxf(_get_float_property(target, "max_health", 1.0), 1.0)
+	var current: float = _get_float_property(target, "current_health", maximum)
+	var threshold: float = float(params.get("low_hp_execute_threshold", 0.0))
+	if rank == "elite": threshold = minf(threshold, 0.04)
+	var now: float = float(context.get("event_bus").combat_seconds()) if context.get("event_bus") != null else 0.0
+	var eligible: bool = threshold > 0.0 and current > 0.0 and current / maximum <= threshold
+	if rank == "boss":
+		var power: float = _resolve_scaled_amount({"stat":"power", "scale":1.0}, context, "damage")
+		return {"mode":"bonus", "eligible":eligible and now >= float(target.get_meta("frost_execute_ready_at",0.0)), "threshold":threshold, "bonus_amount":minf(0.8*power,0.01*maximum), "cooldown":5.0}
+	return {"mode":"execute", "eligible":eligible, "threshold":threshold, "bonus_amount":0.0, "cooldown":0.0}
 
 
 ## 作用：检查有效存活目标生命比例是否不高于 low_hp_execute_threshold，零门槛不触发。
@@ -330,8 +347,10 @@ func _mark_target(params: Dictionary, context: Dictionary) -> bool:
 	if mark == "":
 		return false
 
+	if mark == "death_pact" and context.get("event_bus") != null:
+		context.event_bus.register_death_pact(target, resolved_context, 5.0)
 	var mark_key: String = _metadata_identifier(mark)
 	target.set_meta(mark_key, true)
 	if params.has("duration"):
-		target.set_meta(_metadata_key(mark, "expires_at"), float(Time.get_ticks_msec()) / 1000.0 + maxf(float(params.get("duration", 0.0)), 0.0))
+		target.set_meta(_metadata_key(mark, "expires_at"), float(context.get("combat_seconds", 0.0)) + maxf(float(params.get("duration", 0.0)), 0.0))
 	return true

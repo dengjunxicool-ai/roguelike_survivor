@@ -53,7 +53,7 @@ func _run() -> void:
 
 	var offer_service: RefCounted = SkillOfferServiceScript.new()
 	_expect(not bool(offer_service.call("is_skill_available", player, GameData.get_skill(&"thunder_cast_chain_lightning"))), "offer service blocks third god school")
-	_expect(bool(offer_service.call("is_skill_available", player, GameData.get_skill(&"fusion_fire_frost_steam_mist"))), "fusion is available after two god schools")
+	_expect(not bool(offer_service.call("is_skill_available", player, GameData.get_skill(&"fusion_fire_frost_steam_mist"))), "fusion unavailable before level, mechanism and migration requirements")
 
 	var player_with_one_school := TestPlayer.new()
 	player_with_one_school.name = "PlayerWithOneSchool"

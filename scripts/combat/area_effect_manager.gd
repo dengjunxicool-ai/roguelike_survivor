@@ -125,3 +125,14 @@ func _emit_profiler_tick_event(payload: Dictionary) -> void:
 		var callback: Callable = callback_variant
 		if callback.is_valid():
 			callback.call(payload)
+
+# Authoritative live-area inventory, also valid for deferred factory spawns.
+func get_active_areas() -> Array[Node]:
+	var result: Array[Node] = []
+	for id: Variant in _active_area_ids.keys():
+		var area: Node = _active_area_ids[id].get_ref()
+		if area == null or area.is_queued_for_deletion():
+			_active_area_ids.erase(id)
+			_tick_buckets.erase(id)
+		else: result.append(area)
+	return result

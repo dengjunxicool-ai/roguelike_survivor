@@ -15,6 +15,9 @@ const EventContext: Script = preload("res://scripts/skills/skill_event_context.g
 const ProcPolicy: Script = preload("res://scripts/skills/skill_proc_policy.gd")
 const Clock: Script = preload("res://scripts/runtime/run_combat_clock.gd")
 
+var _cycles: RefCounted = preload("res://scripts/skills/skill_cycle_runtime.gd").new()
+var _crowd_scan: float = 0.0
+
 var _listeners: Dictionary = {}
 var _action_executor: RefCounted = SkillActionExecutorScript.new()
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
@@ -30,6 +33,14 @@ func _ready() -> void:
 	add_child(_clock)
 
 func _physics_process(_delta: float) -> void:
+	update_skill_cycles()
+	_crowd_scan -= _delta
+	if _crowd_scan <= 0.0:
+		_crowd_scan = 0.25
+		var caster: Node = get_parent()
+		var manager: Node = caster.get_node_or_null("SkillManager") if caster != null else null
+		if manager != null and manager.has_skill(&"frost_power_frost_ring_counter"):
+			emit_skill_event(&"crowd_check", {"caster":caster, "owner":caster, "skill_manager":manager})
 	process_pending_events()
 
 func combat_seconds() -> float:
@@ -96,6 +107,7 @@ func _dispatch_event(event_name: StringName, context: Dictionary) -> Array:
 	EventContext.purge_invalid_references(context)
 	context["event_name"] = event_name
 	context["event_bus"] = self
+	if event_name == &"on_enemy_killed": _cycles.death(self, context)
 	if event_name == &"on_cast":
 		context["_cast_result"] = {"successful_outputs": 0}
 		_prepare_cast_charge(context)
@@ -207,7 +219,7 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 		if event_name == &"post_damage_hit" and context.has("damage_amount") and float(context.damage_amount) <= 0.0:
 			continue
 		var proc_id: StringName = &"status_reaction" if event_name == &"status_max_stack_reached" else event_context.listener_skill_id
-		if not source_cast and not ProcPolicy.can_generate(context, proc_id):
+		if not source_cast and not event.has("resource_kind") and not ProcPolicy.can_generate(context, proc_id):
 			continue
 
 		var conditions: Array = _get_array(event.get("conditions", []))
@@ -267,3 +279,17 @@ func _get_array(value: Variant) -> Array:
 	if value is Array:
 		return value
 	return []
+
+func update_skill_cycles() -> void:
+	_cycles.update(self)
+
+func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
+	_cycles.mark(target, context, duration, combat_seconds())
+
+func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
+	return _cycles.start(self, context, params)
+
+func clear_origin(skill_id: StringName) -> void:
+	_cycles.clear_origin(skill_id)
+	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
+		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)

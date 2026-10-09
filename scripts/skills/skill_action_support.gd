@@ -70,6 +70,7 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 ## 作用：优先使用显式位置或事件位置，否则按位置模式解析施法者、目标及偏移。
 ## 使用：params 读取 position/position_mode；context 携带 position/caster/target。
 func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
+	if String(params.get("position_mode", "")) == "event": return context.get("position", Vector2.ZERO)
 	if params.has("position"):
 		return _get_vector2(params["position"], Vector2.ZERO)
 

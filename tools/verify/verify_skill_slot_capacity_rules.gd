@@ -120,10 +120,11 @@ func _verify_offer_service_hides_full_capacity_skills() -> void:
 	]:
 		skill_manager.call("add_skill", skill_id)
 
+	player.set_meta("ordinary_replacement_used", true)
 	var offer_service: RefCounted = SkillOfferServiceScript.new()
 	_expect(
 		not bool(offer_service.call("is_skill_available", player, GameData.get_skill(&"fire_power_combustion_chain"))),
-		"offer service hides sixth ordinary active skill",
+		"offer service hides sixth ordinary active after replacement opportunity used",
 		"available"
 	)
 	_expect(
