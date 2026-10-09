@@ -29,6 +29,14 @@ var _status_tick_scheduler: RefCounted = StatusTickSchedulerScript.new()
 var _reaction_queue: Array[Dictionary] = []
 var _processing_reaction_queue: bool = false
 var _pending_status_update_delta: float = 0.0
+var _freeze_immunity_remaining: float = 0.0
+var _resolution_nonce: int = 0
+var _freeze_immunity_ready_at: float = 0.0
+var _status_elapsed_seconds: float = 0.0
+
+func _status_time_seconds() -> float:
+	var bus: Node = _get_skill_event_bus()
+	return maxf(_status_elapsed_seconds, float(bus.call("combat_seconds"))) if bus != null and bus.has_method("combat_seconds") else _status_elapsed_seconds
 
 static var _status_definition_cache: Dictionary = {}
 static var _apply_coalesce_frame: int = -1
@@ -40,6 +48,10 @@ static var _apply_coalesce_keys: Dictionary = {}
 func apply_status(status_id: Variant, params: Dictionary = {}) -> bool:
 	var id: StringName = StringName(String(status_id))
 	if id == &"":
+		return false
+	_freeze_immunity_remaining = maxf(_freeze_immunity_ready_at - _status_time_seconds(), 0.0)
+	if id == &"frozen" and (_freeze_immunity_remaining > 0.0 or has_status(&"frozen")):
+		_emit_status_skill_event(&"freeze_attempted", id, {"id": id, "stacks": 0, "resisted": true})
 		return false
 	if _should_coalesce_status_apply(id):
 		return _merge_coalesced_status_apply(id, params)
@@ -89,7 +101,7 @@ func _apply_status_profiled(status_id: Variant, params: Dictionary = {}) -> bool
 		_queue_status_visual_refresh()
 
 	_notify_status_applied(id, status)
-	if new_stacks >= max_stacks and current_stacks < max_stacks:
+	if new_stacks >= max_stacks and (current_stacks < max_stacks or (id == &"chilled" and _freeze_immunity_remaining <= 0.0 and not has_status(&"frozen"))):
 		_handle_max_stack_reached(id, status)
 	_apply_poison_slow_synergy()
 	return true
@@ -145,7 +157,7 @@ func _merge_coalesced_status_apply(id: StringName, params: Dictionary) -> bool:
 	_mark_status_display_dirty()
 	if _status_visual_refresh_needed_after_apply(id, definition):
 		_queue_status_visual_refresh()
-	if new_stacks >= max_stacks and current_stacks < max_stacks:
+	if new_stacks >= max_stacks and (current_stacks < max_stacks or (id == &"chilled" and _freeze_immunity_remaining <= 0.0 and not has_status(&"frozen"))):
 		_handle_max_stack_reached(id, status)
 	_apply_poison_slow_synergy()
 	return true
@@ -157,13 +169,25 @@ func _resolve_status_stack_data(id: StringName, definition: Dictionary, params: 
 	var status: Dictionary = _statuses.get(id, {}).duplicate(true)
 	var stacks_to_add: int = maxi(int(params.get("stacks", params.get("stack", 1))), 1)
 	var max_stacks: int = maxi(int(params.get("max_stacks", definition.get("max_stacks", 1))), 1)
+	if id == &"chilled":
+		var player: Node = _get_player()
+		var query: RefCounted = preload("res://scripts/modifiers/modifier_query.gd").for_skill(null, player)
+		var values: Dictionary = preload("res://scripts/modifiers/modifier_aggregator.gd").collect(query)
+		max_stacks = maxi(int(values.get("chilled_freeze_threshold_override", max_stacks)), 1)
 	var current_stacks: int = int(status.get("stacks", 0))
+	var duration: float = float(definition.get("duration", 3.0)) if String(definition.get("refresh_rule", "")) == "keep_first_deadline" else maxf(float(params.get("duration", definition.get("duration", 1.0))), 0.0)
+	if id == &"frozen" and params.has("duration"):
+		duration *= 0.125 if _is_boss() else (0.5 / 1.2 if _is_elite() else 1.0)
+	if id in [&"chilled", &"frozen"]:
+		var query: RefCounted = preload("res://scripts/modifiers/modifier_query.gd").for_skill(null, _get_player())
+		var values: Dictionary = preload("res://scripts/modifiers/modifier_aggregator.gd").collect(query)
+		duration *= maxf(1.0 + float(values.get("%s_duration_multiplier_add" % id, 0.0)), 0.05)
 	return {
 		"status": status,
 		"current_stacks": current_stacks,
 		"new_stacks": mini(current_stacks + stacks_to_add, max_stacks),
 		"max_stacks": max_stacks,
-		"duration": maxf(float(params.get("duration", definition.get("duration", 1.0))), 0.05)
+		"duration": duration
 	}
 
 
@@ -175,7 +199,14 @@ func _build_status_runtime_data(id: StringName, definition: Dictionary, params: 
 	status["id"] = id
 	status["definition"] = definition
 	status["stacks"] = int(stack_data.get("new_stacks", 0))
-	status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), float(stack_data.get("duration", 1.0)))
+	var duration: float = float(stack_data.get("duration", 1.0))
+	var refresh_rule: String = String(definition.get("refresh_rule", "refresh_duration"))
+	if refresh_rule == "keep_first_deadline" and status.has("duration_remaining"):
+		pass
+	elif refresh_rule == "strongest_only":
+		status["duration_remaining"] = maxf(float(status.get("duration_remaining", 0.0)), duration)
+	else:
+		status["duration_remaining"] = duration
 	status["tick_interval"] = maxf(float(params.get("tick_interval", definition.get("tick_interval", 1.0))), 0.05)
 	var configured_tick_damage: float = maxf(float(params.get("tick_damage", params.get("damage", definition.get("damage", 0.0)))), 0.0)
 	configured_tick_damage = maxf(configured_tick_damage * maxf(1.0 + float(params.get("damage_multiplier_add", 0.0)), 0.0), 0.0)
@@ -213,6 +244,12 @@ func _build_status_runtime_data(id: StringName, definition: Dictionary, params: 
 ## 作用：状态非空时以性能采样包装推进全部状态。
 ## 使用：delta为待消费的累计秒数。
 func update_status_effects(delta: float) -> void:
+	var owner: Node = get_parent()
+	if owner != null and (owner.is_queued_for_deletion() or (owner.get("current_health") != null and float(owner.get("current_health")) <= 0.0)):
+		clear_statuses()
+		return
+	_status_elapsed_seconds += maxf(delta, 0.0)
+	_freeze_immunity_remaining = maxf(_freeze_immunity_ready_at - _status_time_seconds(), 0.0)
 	if _statuses.is_empty():
 		return
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
@@ -228,11 +265,19 @@ func _update_status_effects_profiled(delta: float) -> void:
 
 	var expired_statuses: Array[StringName] = []
 	var expired_snapshots: Dictionary = {}
+	var frozen_duration: float = float(_statuses.get(&"frozen", {}).get("duration_remaining", 0.0))
 	for id_variant: Variant in _statuses.keys():
 		var id: StringName = StringName(String(id_variant))
+		if not _statuses.has(id):
+			continue
 		var status: Dictionary = _statuses[id]
 		var previous_stacks: int = int(status.get("stacks", 0))
-		_advance_status_tick(status, delta)
+		var effective_delta: float = delta
+		if not _get_dictionary(status.get("pause_sources", {})).is_empty():
+			effective_delta = 0.0
+		elif id == &"cursed" and frozen_duration > 0.0:
+			effective_delta = maxf(delta - frozen_duration, 0.0)
+		_advance_status_tick(status, effective_delta)
 		if int(status.get("stacks", 0)) != previous_stacks:
 			_mark_status_display_dirty()
 
@@ -252,11 +297,12 @@ func _update_status_effects_profiled(delta: float) -> void:
 ## 作用：先扣持续时间，再为DOT推进调度并在到期时处理伤害。
 ## 使用：status原地更新；调度已扣delta，因此执行tick时传0。
 func _advance_status_tick(status: Dictionary, delta: float) -> void:
-	StatusEffectTickHelperScript.advance_duration(status, delta)
+	var active_delta: float = minf(maxf(delta, 0.0), maxf(float(status.get("duration_remaining", 0.0)), 0.0))
 	if _is_dot_status(status):
 		var status_id: StringName = StringName(String(status.get("id", "")))
-		if _status_tick_scheduler != null and _status_tick_scheduler.call("advance_and_is_due", self, status_id, status, delta):
+		if _status_tick_scheduler != null and _status_tick_scheduler.call("advance_and_is_due", self, status_id, status, active_delta):
 			_update_damage_over_time(status, 0.0)
+	StatusEffectTickHelperScript.advance_duration(status, delta)
 
 
 ## 作用：判断层数用尽或剩余时间非正。
@@ -269,20 +315,72 @@ func _is_status_expired(status: Dictionary) -> bool:
 ## 使用：expired_snapshots保存移除前内容；结束标记显示脏。
 func _expire_statuses(expired_statuses: Array[StringName], expired_snapshots: Dictionary) -> void:
 	for id: StringName in expired_statuses:
+		if id == &"cursed":
+			resolve_cursed(&"natural")
+			continue
 		_statuses.erase(id)
 		_unregister_status_tick(id)
 		var expired_status: Dictionary = _get_dictionary(expired_snapshots.get(id, {}))
+		if id == &"frozen":
+			_begin_freeze_immunity(maxf(-float(expired_status.get("duration_remaining", 0.0)), 0.0))
 		_execute_status_effects(expired_status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, expired_status)
 		_emit_profiler_status_event(&"status_expired", id, expired_status)
 	if not expired_statuses.is_empty():
 		_mark_status_display_dirty()
 
+func _begin_freeze_immunity(elapsed_after_ending: float = 0.0) -> void:
+	var duration: float = 2.0 if _is_boss() else (1.5 if _is_elite() else 0.8)
+	_freeze_immunity_remaining = maxf(duration - elapsed_after_ending, 0.0)
+	_freeze_immunity_ready_at = _status_time_seconds() + _freeze_immunity_remaining
+
 
 ## 作用：查询宿主运行表是否存在指定状态。
 ## 使用：status_id转换为StringName后查键；过期清理由更新时间处理。
 func has_status(status_id: Variant) -> bool:
 	return StatusEffectQueryScript.has_status(_statuses, status_id)
+
+## 先删除待结算诅咒，再执行输出及通知；重入/死亡均不重复结算。
+func resolve_cursed(reason: StringName) -> bool:
+	if not _statuses.has(&"cursed"):
+		return false
+	var status: Dictionary = _statuses[&"cursed"].duplicate(true)
+	_statuses.erase(&"cursed")
+	_unregister_status_tick(&"cursed")
+	_mark_status_display_dirty()
+	var target: Node = get_parent()
+	if target == null or target.is_queued_for_deletion() or (target.get("current_health") != null and float(target.get("current_health")) <= 0.0):
+		return false
+	_resolution_nonce += 1
+	var before: float = float(target.get("current_health")) if target.get("current_health") != null else 0.0
+	_execute_status_effects(status, "on_expire_effects")
+	var after: float = float(target.get("current_health")) if is_instance_valid(target) and target.get("current_health") != null else 0.0
+	var context: Dictionary = _build_status_event_context(&"cursed", status)
+	context["resolution_id"] = "%d:%d" % [get_instance_id(), _resolution_nonce]
+	context["resolution_reason"] = reason
+	context["stacks"] = int(status.get("stacks", 0))
+	context["resolved_damage"] = maxf(before - after, 0.0)
+	var bus: Node = _get_skill_event_bus()
+	if bus != null:
+		bus.call("emit_skill_event", &"cursed_resolved", context)
+	_emit_status_skill_event(&"status_expired", &"cursed", status)
+	_emit_profiler_status_event(&"status_expired", &"cursed", status)
+	_queue_status_visual_refresh()
+	return true
+
+func pause_status(status_id: StringName, source_id: StringName) -> void:
+	if not _statuses.has(status_id) or source_id == &"":
+		return
+	var status: Dictionary = _statuses[status_id]
+	var sources: Dictionary = status.get("pause_sources", {})
+	sources[source_id] = true
+	status["pause_sources"] = sources
+
+func resume_status(status_id: StringName, source_id: StringName) -> void:
+	if _statuses.has(status_id):
+		var status: Dictionary = _statuses[status_id]
+		var sources: Dictionary = status.get("pause_sources", {})
+		sources.erase(source_id)
 
 
 ## 作用：读取宿主指定状态的叠层数。
@@ -330,6 +428,7 @@ func consume_status_stack(status_id: Variant, stack_count: int = 1) -> bool:
 	if stacks <= 0:
 		_statuses.erase(id)
 		_unregister_status_tick(id)
+		if id == &"frozen": _begin_freeze_immunity()
 	else:
 		status["stacks"] = stacks
 		_statuses[id] = status
@@ -349,8 +448,11 @@ func consume_status_duration(status_id: Variant, seconds: float) -> bool:
 	var status: Dictionary = _statuses[id]
 	status["duration_remaining"] = float(status.get("duration_remaining", 0.0)) - maxf(seconds, 0.0)
 	if float(status.get("duration_remaining", 0.0)) <= 0.0:
+		if id == &"cursed":
+			return resolve_cursed(&"forced")
 		_statuses.erase(id)
 		_unregister_status_tick(id)
+		if id == &"frozen": _begin_freeze_immunity()
 		_execute_status_effects(status, "on_expire_effects")
 		_emit_status_skill_event(&"status_expired", id, status)
 		_emit_profiler_status_event(&"status_expired", id, status)
@@ -405,6 +507,11 @@ func consume_status_display_dirty() -> bool:
 ## 使用：重置或清状态时调用，不执行逐个过期效果。
 func clear_statuses() -> void:
 	_statuses.clear()
+	_reaction_queue.clear()
+	_freeze_immunity_remaining = 0.0
+	_freeze_immunity_ready_at = 0.0
+	_status_elapsed_seconds = 0.0
+	_pending_status_update_delta = 0.0
 	if _status_tick_scheduler != null:
 		_status_tick_scheduler.call("unregister_all_for_owner", self)
 	_status_visual_refresh_queued = false
@@ -671,12 +778,18 @@ func _process_status_reaction_queue() -> void:
 ## 作用：先发满层事件，再施加配置转换状态并发送配置专用事件。
 ## 使用：status为入队快照，事件使用当前宿主上下文。
 func _execute_status_reaction(status_id: StringName, status: Dictionary) -> void:
+	if status_id == &"chilled":
+		_emit_status_skill_event(&"freeze_attempted", status_id, status)
+		if _freeze_immunity_remaining > 0.0 or has_status(&"frozen"):
+			return
+		consume_status_stack(&"chilled", maxi(get_status_stack(&"chilled"), 1))
 	_emit_status_skill_event(&"status_max_stack_reached", status_id, status)
 	_emit_profiler_status_event(&"status_reaction_triggered", status_id, status, {"trigger": &"status_max_stack_reached"})
 	var definition: Dictionary = _get_dictionary(status.get("definition", {}))
 	var max_stack_status: StringName = StringName(String(definition.get("max_stack_status", "")))
 	if max_stack_status != &"" and max_stack_status != status_id:
-		apply_status(max_stack_status, {})
+		var conversion_params: Dictionary = DamageTraceContextScript.apply_to_status_params({}, status)
+		apply_status(max_stack_status, conversion_params)
 	var max_stack_event: StringName = StringName(String(definition.get("max_stack_event", "")))
 	if max_stack_event != &"":
 		var event_context: Dictionary = _build_status_event_context(status_id, status)
@@ -709,6 +822,8 @@ func _prepare_status_effects(effects: Array, status: Dictionary) -> Array:
 		if not (effect_variant is Dictionary):
 			continue
 		var effect: Dictionary = (effect_variant as Dictionary).duplicate(true)
+		if String(effect.get("type", "")) == "damage":
+			effect["uses_character_damage_multiplier"] = false
 		if effect.has("power_scale_per_stack") and not effect.has("power_scale"):
 			effect["power_scale"] = float(effect.get("power_scale_per_stack", 0.0)) * stacks
 		prepared.append(effect)
@@ -748,6 +863,12 @@ func _build_status_event_context(status_id: StringName, status: Dictionary) -> D
 		"source_skill_id": source_skill_id,
 		"source_instance_id": source_instance_id,
 		"power": float(status.get("power", status.get("tick_damage", 0.0))),
+		"status_power_snapshot": true,
+		"origin_skill_id": status.get("origin_skill_id", source_skill_id),
+		"parent_event_id": int(status.get("event_id", 0)),
+		"proc_depth": int(status.get("proc_depth", 0)),
+		"is_copy": bool(status.get("is_copy", false)),
+		"can_generate_secondary_proc": bool(status.get("can_generate_secondary_proc", true)),
 		"position": position,
 		"parent": target.get_parent() if target != null else null,
 		"event_bus": _get_skill_event_bus(),
@@ -966,6 +1087,12 @@ func _get_tier_scaled_dot_damage(status: Dictionary, amount: float) -> float:
 ## 使用：duration_multiplier非正表示免疫，返回空字典。
 func _apply_enemy_tier_rules(_status_id: StringName, definition: Dictionary) -> Dictionary:
 	var result: Dictionary = definition.duplicate(true)
+	if _status_id == &"frozen":
+		if _is_boss():
+			result["duration"] = float(definition.get("boss_duration", 0.15))
+		elif _is_elite():
+			result["duration"] = float(definition.get("elite_duration", 0.5))
+		return result
 	var boss_control_conversion: Dictionary = ReactionLimiterScript.apply_boss_control_conversion(get_parent(), _status_id)
 	if not boss_control_conversion.is_empty():
 		for key: Variant in boss_control_conversion.keys():
