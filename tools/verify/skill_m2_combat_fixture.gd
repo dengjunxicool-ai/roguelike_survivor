@@ -7,6 +7,7 @@ const Fixture = preload("res://tools/verify/skill_rebalance_fixture.gd")
 const Registry = preload("res://scripts/combat/combat_target_registry.gd")
 class Player:
 	extends Node2D
+	var dash_cooldown: float = 2.6
 	var attack_power: float = 100.0
 	var max_health: int = 1000
 	var current_health: int = 500

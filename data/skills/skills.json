@@ -397,7 +397,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "流星数量增至4枚",
 					"patches": [
 						{
 							"effect_id": "fire_cast_meteor_rain:0:effects:0:spawn_projectiles_at_targets",
@@ -409,7 +409,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中后燃烧地面的基础持续时间增至4秒",
 					"patches": [
 						{
 							"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:spawn_area",
@@ -491,7 +491,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "熔岩路径宽度增至80.64px",
 					"patches": [
 						{
 							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
@@ -503,7 +503,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "路径结束时在终点追加0.4P冲击",
 					"patches": [
 						{
 							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
@@ -602,7 +602,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "对燃烧目标的旋涡伤害额外提高15%",
 					"patches": [
 						{
 							"effect_id": "fire_cast_scorching_vortex:0:effects:0:effects_on_tick:0:damage",
@@ -615,7 +615,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "旋涡到期后返回一次，回程伤害为50%",
 					"patches": [
 						{
 							"effect_id": "fire_cast_scorching_vortex:0:effects:0:spawn_area",
@@ -1553,7 +1553,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "每个目标首次命中施加2层寒冷",
 					"patches": [
 						{
 							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_tick:1:apply_status",
@@ -1565,7 +1565,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "到期冰霜冲击的基础持续时间增至4秒",
 					"patches": [
 						{
 							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_expire:0:spawn_area",
@@ -1665,7 +1665,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "冰矛穿透次数增至8次",
 					"patches": [
 						{
 							"effect_id": "frost_cast_glacial_lance:0:effects:0:spawn_projectile",
@@ -1677,7 +1677,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中冻结目标产生的碎冰范围基础半径增至126px",
 					"patches": [
 						{
 							"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:spawn_area",
@@ -1759,7 +1759,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "暴雪云团基础持续时间增至6秒",
 					"patches": [
 						{
 							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:spawn_area",
@@ -1771,7 +1771,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "每个目标首次命中施加2层寒冷",
 					"patches": [
 						{
 							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:effects_on_tick:1:apply_status",
@@ -2656,7 +2656,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "连锁目标数增至5个",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
@@ -2668,7 +2668,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "最后一个连锁目标追加0.3P伤害",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
@@ -2756,7 +2756,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "首次落雷额外施加1层导电",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:1:apply_status",
@@ -2768,7 +2768,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "最后一次落雷伤害提高50%",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:0:damage",
@@ -2860,7 +2860,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "对导电目标的额外基础伤害增至0.8P",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:1:damage",
@@ -2872,7 +2872,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "命中至少5层导电目标时恢复自身0.5秒冷却，每次施放限一次",
 					"patches": [
 						{
 							"effect_id": "thunder_cast_emp_ring:0:effects:0:spawn_area",
@@ -3635,7 +3635,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "黑蛇数量增至3条",
 					"patches": [
 						{
 							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:spawn_projectile_burst",
@@ -3647,7 +3647,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "首次命中未受诅咒的目标施加2层诅咒",
 					"patches": [
 						{
 							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:on_hit:0:apply_status",
@@ -3731,7 +3731,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "镰刃返回一次，回程伤害为50%",
 					"patches": [
 						{
 							"effect_id": "curse_cast_death_scythe:0:effects:0:spawn_projectile_burst",
@@ -3744,7 +3744,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "附加命中伤害仅在回程阶段生效",
 					"patches": [
 						{
 							"effect_id": "curse_cast_death_scythe:0:effects:0:on_hit:0:damage",
@@ -3832,7 +3832,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "终末爆发的基础等待时间缩短至1秒",
 					"patches": [
 						{
 							"effect_id": "curse_cast_doom_circle:0:effects:0:spawn_area",
@@ -3844,7 +3844,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "对至少3层诅咒目标追加0.4P伤害",
 					"patches": [
 						{
 							"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:spawn_area",
@@ -4714,7 +4714,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "圣光数量增至4道",
 					"patches": [
 						{
 							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
@@ -4726,7 +4726,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "主目标至少5层审判时追加一道0.4P圣光",
 					"patches": [
 						{
 							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
@@ -4829,7 +4829,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "命中补盾提高至最大生命的1.25%",
 					"patches": [
 						{
 							"effect_id": "holy_cast_divine_barrier:1:effects:0:grant_shield",
@@ -4841,7 +4841,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "结界基础持续时间增至6秒",
 					"patches": [
 						{
 							"effect_id": "holy_cast_divine_barrier:0:effects:0:spawn_area",
@@ -4926,7 +4926,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "圣锤基础半径增至135.24px",
 					"patches": [
 						{
 							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
@@ -4938,7 +4938,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "对至少3层审判目标追加0.4P伤害",
 					"patches": [
 						{
 							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
@@ -5827,7 +5827,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "裂缝基础半径增至241.5px",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
@@ -5839,7 +5839,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "裂缝到期时追加一次0.5P冲击",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
@@ -5955,7 +5955,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "弹幕数量增至6枚",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_singularity_barrage:0:effects:0:spawn_projectile_burst",
@@ -5967,7 +5967,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "分裂弹基础伤害增至0.28P",
 					"patches": [
 						{
 							"effect_id": "chaos_barrage:split_damage",
@@ -6062,7 +6062,7 @@
 			"level_overrides": [
 				{
 					"level": 3,
-					"description": "三级机制强化",
+					"description": "脉冲施加的不稳定增至3层",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:1:apply_status",
@@ -6074,7 +6074,7 @@
 				},
 				{
 					"level": 5,
-					"description": "五级机制强化",
+					"description": "到期后延迟0.5秒追加一次0.3P脉冲，不追加不稳定",
 					"patches": [
 						{
 							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:spawn_area",

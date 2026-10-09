@@ -30,7 +30,11 @@ func open(player: Node, service: RefCounted, transaction: Dictionary, completed:
 		if not preload("res://scripts/skills/skill_slot_policy.gd").counts_active_capacity(old_data): continue
 		var button := Button.new()
 		button.text = "%s Lv%d %s — %s" % [old_data.get("display_name", ""), skill.current_level, preload("res://scripts/ui/skill_preview_service.gd").rarity_name(skill.current_rarity), old_data.get("description", "")]
-		button.custom_minimum_size.y = 60
+		var old_preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,skill.skill_id,skill.current_level,skill.current_rarity)
+		var comparison: String = "\n".join(old_preview.lines)
+		button.text += "\n"+comparison
+		button.tooltip_text = button.text
+		button.custom_minimum_size.y = 90
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		panel.add_child(button)
 		button.pressed.connect(func() -> void:

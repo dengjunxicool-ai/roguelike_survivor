@@ -930,7 +930,8 @@ func _get_option_description_text(option: Dictionary) -> String:
 		var payload: Dictionary = option.get("payload",{})
 		var preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,id,int(payload.get("level",1)),str(payload.get("target_rarity",option.get("rarity","normal"))))
 		if not preview.is_empty():
-			var text: String = "冷却 %.2fs · 品质保持%s" % [preview.cooldown,preload("res://scripts/ui/skill_preview_service.gd").rarity_name(preview.rarity)]
+			var text: String = "品质保持%s" % preload("res://scripts/ui/skill_preview_service.gd").rarity_name(preview.rarity)
+			if preview.cooldown > 0: text = "%s %.2fs · " % [preview.cooldown_label,preview.cooldown]+text
 			if not preview.next_milestone.is_empty(): text += "\nLv%d：%s" % [int(preview.next_milestone.level),preview.next_milestone.get("description","强化")]
 			return text + "\n" + str(GameData.get_skill(id).get("description",""))
 	var description: String = _string_from_variant(option.get("description", ""))
