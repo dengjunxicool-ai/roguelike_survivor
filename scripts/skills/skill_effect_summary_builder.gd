@@ -12,7 +12,14 @@ const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_gro
 
 ## 作用：解析选项学习或升级技能，以目标等级稀有度生成效果摘要；无技能定义时保留卡片说明。
 ## 使用：build_for_option 解析卡片目标技能与等级，build_for_skill 遍历触发和效果；数值使用成长系数和配置对象名称。
-static func build_for_option(option: Dictionary) -> String:
+static func build_for_option(option: Dictionary, player: Node = null) -> String:
+	if player != null:
+		var payload: Dictionary = option.get("payload",{})
+		var id: StringName = StringName(str(payload.get("skill_id",payload.get("learn_skill_id",""))))
+		var preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,id,int(payload.get("level",1)),str(payload.get("target_rarity",option.get("rarity","normal"))))
+		if not preview.is_empty():
+			var description: String = preload("res://scripts/ui/skill_preview_service.gd").localize(str(GameData.get_skill(id).get("description","")))
+			return "\n".join(preview.lines)
 	var skill_id: StringName = _option_skill_id(option)
 	if skill_id == &"":
 		return _string_or(option.get("description", ""), "")
@@ -298,9 +305,9 @@ static func _modifier_name(modifier: String) -> String:
 		"attack_damage_multiplier":
 			return "攻击伤害"
 		"chilled_duration_multiplier":
-			return "Chilled持续"
+			return "寒冷持续"
 		"frozen_duration_multiplier":
-			return "Frozen持续"
+			return "冻结持续"
 		"frost_area_duration_multiplier":
 			return "冰霜区域持续"
 	return modifier

@@ -193,7 +193,8 @@ func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 		"cooldown_remaining": cooldown_remaining,
 		"cooldown_total": cooldown_total,
 		"icon": _resolve_skill_icon_path(skill_id, definition),
-		"skill_type": _resolve_skill_type(skill_instance, definition)
+		"skill_type": _resolve_skill_type(skill_instance, definition),
+		"feedback": _skill_feedback(player,skill_instance)
 	}
 
 
@@ -386,3 +387,16 @@ func _format_count_dictionary(values: Dictionary) -> String:
 		if parts.size() >= 3:
 			break
 	return " / ".join(parts) if not parts.is_empty() else "-"
+
+## 读取资源余量和复制快照，不把内部计数键暴露给玩家。
+func _skill_feedback(player: Node, skill: RefCounted) -> String:
+	if skill == null: return ""
+	if _string_from_value(skill.get("skill_type")) == "core":
+		var definition: RefCounted = skill.get("definition")
+		for rule: Dictionary in definition.get("trigger_rules"):
+			if rule.has("counter_key") and rule.has("threshold"):
+				return "充能 %.0f/%.0f" % [float(skill.get_meta(str(rule.counter_key),0.0)),float(rule.threshold)]
+	if String(skill.get("skill_id")) == "chaos_power_echo_cast":
+		var bus: Node = player.get_node_or_null("SkillEventBus")
+		return "回声就绪" if bus != null and not bus.get_cast_snapshot().is_empty() else "等待施法"
+	return ""

@@ -63,7 +63,7 @@ func _run() -> void:
 
 
 func _verify_card(button: Button, context: String) -> void:
-	_expect(button.tooltip_text == "", "%s card does not store option tooltip text" % context, button.tooltip_text)
+	_expect(button.tooltip_text.contains("伤害"), "%s card exposes full quantitative preview on hover" % context, button.tooltip_text)
 	var title := button.find_child("SkillCardTitle", true, false) as Label
 	var icon := button.find_child("SkillCardIconTexture", true, false) as TextureRect
 	var description := button.find_child("SkillCardDescription", true, false) as Label

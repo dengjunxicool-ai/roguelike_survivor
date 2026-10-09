@@ -75,7 +75,7 @@ for (const [id, name, description, type, exclusiveGroup] of expectedSkills) {
   const skill = findById(skills, id, "skill");
   assert(skill.school === "frost", `${id} must belong to frost school`);
   assert(skill.display_name === name, `${id} name must be ${name}`);
-  assert(skill.description === description, `${id} description must match the design table`);
+  assert(skill.description === localizedDescription(description), `${id} description must match the design table`);
   assert(!Object.prototype.hasOwnProperty.call(skill, "effect_description"), `${id} must not use effect_description`);
   assert(skill.skill_type === type, `${id} type must be ${type}`);
   assert((skill.exclusive_group ?? null) === exclusiveGroup, `${id} exclusive_group must be ${exclusiveGroup}`);
@@ -99,3 +99,9 @@ for (const id of requiredCombatObjects) {
 }
 
 console.log("[verify_frost_skill_system_contract] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}
