@@ -647,9 +647,12 @@ func _resolve_scaled_amount(value: Variant, context: Dictionary, stat_name: Stri
 		var data: Dictionary = value
 		if str(data.get("stat", "")) == "power":
 			if context.has("power"):
-				return float(context.get("power", 0.0)) * float(data.get("scale", 1.0))
+				var explicit_power: float = float(context.get("power", 0.0))
+				if not bool(context.get("status_power_snapshot", false)):
+					explicit_power = float(ModifierResolverScript.resolve_value(context, stat_name, explicit_power))
+				return explicit_power * float(data.get("scale", 1.0)) * float(context.get("cast_damage_multiplier", 1.0))
 			var power: float = float(ModifierResolverScript.resolve_value(context, stat_name, ModifierResolverScript.get_stat(context, "power", _get_caster_attack_power(context))))
-			return power * float(data.get("scale", 1.0))
+			return power * float(data.get("scale", 1.0)) * float(context.get("cast_damage_multiplier", 1.0))
 	return float(ModifierResolverScript.resolve_value(context, stat_name, value))
 
 
@@ -674,17 +677,10 @@ func _get_caster_attack_power(context: Dictionary) -> float:
 ## 作用：从伤害包或技能上下文推导状态施加强度。
 ## 使用：context 携带 amount。
 func _get_status_power_from_context(context: Dictionary) -> float:
-	for packet_key: String in ["damage_packet", "source_packet", "packet"]:
-		var packet_variant: Variant = context.get(packet_key)
-		if packet_variant is Dictionary:
-			var packet: Dictionary = packet_variant
-			var amount: float = float(packet.get("raw_amount", packet.get("amount", 0.0)))
-			if amount > 0.0:
-				return amount
-	var amount: float = float(context.get("amount", 0.0))
-	if amount > 0.0:
-		return amount
-	return _get_caster_attack_power(context)
+	if context.has("power"):
+		return maxf(float(context.power), 0.0)
+	var caster: Node = context.get("caster") as Node
+	return _get_caster_attack_power(context) * maxf(_get_float_property(caster, "damage_multiplier", 1.0), 0.0)
 
 
 ## 作用：判断同帧同区域来源对同目标的状态施加是否应合并以避免重复。

@@ -125,7 +125,7 @@ func _build_skill_level_up_options(player: Node) -> Array:
 		if definition != null:
 			skill_name = _get_definition_string(definition, "display_name", skill_name)
 			max_level = int(definition.get("max_level"))
-			rarity = SkillGrowthScalingScript.pick_rarity_for_max_level(max_level, _rng)
+			rarity = current_rarity
 
 		options.append(_make_option(UpgradeOptionBuilderScript.build_skill_level_up_data(skill_id, next_level, skill_name, rarity, current_rarity, max_level)))
 

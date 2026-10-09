@@ -7,6 +7,8 @@ class_name DamagePacketExtensionRegistry
 # Numeric bonuses are snapshots, not input aliases; percent and caps have their
 # own units. Event-only fields preserve trace and reaction scheduling identity.
 const NUMERIC_FIELDS: Array[String] = [
+	"cast_damage_multiplier",
+	"combat_seconds",
 	"defense_reduction_cap", "character_damage_multiplier", "origin_bonus_total", "element_bonus_total",
 	"enemy_type_bonus_total", "special_final_modifier", "vulnerability_total",
 	"crit_chance_add", "crit_damage_add", "crit_multiplier", "percent",
@@ -22,14 +24,16 @@ const NUMERIC_FIELDS: Array[String] = [
 	"acid_damage_multiplier_add", "arcane_damage_multiplier_add", "neutral_damage_multiplier_add"
 ]
 const BOOLEAN_FIELDS: Array[String] = [
+	"is_copy", "can_generate_secondary_proc",
 	"critical_resolved", "is_critical", "low_hp_execute", "ignore_fractional_buffer",
 	"ignore_target_class_origin_modifier", "uses_fractional_buffer"
 ]
 const TEXT_FIELDS: Array[String] = [
+	"origin_skill_id", "listener_skill_id",
 	"source_id", "field_damage_model", "special_final_modifier_source", "reaction_type",
 	"reaction_tier", "object_type", "skill_id", "status_id", "target_type"
 ]
-const INTEGER_FIELDS: Array[String] = ["max_targets", "debug_attack_trace_id", "_rapid_same_target_hits"]
+const INTEGER_FIELDS: Array[String] = ["max_targets", "debug_attack_trace_id", "_rapid_same_target_hits", "event_id", "parent_event_id", "proc_depth"]
 
 ## 作用：逐项检查扩展是否登记并符合数值、布尔、文本、整数或技能实例类型。
 ## 使用：输入 extras 字典；返回所有错误，不修改输入也不静默接受未知字段。

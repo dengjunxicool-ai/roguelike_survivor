@@ -127,11 +127,13 @@ func _run() -> void:
 	_expect(_count_summons(&"seraph") > 0, "seraph spawns through Summon system", _count_summons(&"seraph"))
 	_expect(_count_summons(&"holy_shield_guardian") > 0, "holy shield guardian spawns through Summon system", _count_summons(&"holy_shield_guardian"))
 
-	for _index in range(5):
-		_enemy.call("apply_status", &"judgment", {"stacks": 1, "duration": 6.0, "power": 24.0})
-	await process_frame
-	_expect(_count_area_effects(&"divine_punishment_strike") > 0, "Judgment max stack triggers divine punishment strike", _count_area_effects(&"divine_punishment_strike"))
-	_expect(_enemy.call("get_status_stack", &"judgment") == 2, "final judgment domain retains 2 Judgment stacks after punishment", _enemy.call("get_status_stack", &"judgment"))
+	# Earlier beams, fields and summons can keep adding Judgment to the shared
+	# targets. Isolate this reaction and assert before another physics frame.
+	var punishment_enemy: SmokeEnemy = _create_enemy("PunishmentHolySmokeEnemy", Vector2(5000.0, 0.0))
+	var punishment_count_before: int = _count_area_effects(&"divine_punishment_strike")
+	punishment_enemy.call("apply_status", &"judgment", {"stacks": 5, "duration": 6.0, "power": 24.0})
+	_expect(_count_area_effects(&"divine_punishment_strike") > punishment_count_before, "Judgment max stack triggers divine punishment strike", _count_area_effects(&"divine_punishment_strike"))
+	_expect(punishment_enemy.call("get_status_stack", &"judgment") == 2, "final judgment domain retains 2 Judgment stacks after punishment", punishment_enemy.call("get_status_stack", &"judgment"))
 
 	_unregister_test_enemies()
 	if not _failed:

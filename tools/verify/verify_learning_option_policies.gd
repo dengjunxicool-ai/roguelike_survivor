@@ -56,12 +56,12 @@ func _verify_rng_and_order() -> void:
 	expected_rng.seed = 618
 	var expected_rarities: Array[String] = []
 	for skill_id: StringName in [&"fire_cast_meteor_rain", &"frost_cast_frost_field"]:
-		expected_rarities.append(Scaling.pick_rarity_for_max_level(int(GameData.get_skill(skill_id).max_level), expected_rng))
+		expected_rarities.append(String(manager.get_skill(skill_id).current_rarity))
 	var options: Array = pool._build_skill_level_up_options(player)
 	_expect(options.size() == 2, "both level-up cards are built")
 	if options.size() == 2:
 		_expect(String(options[0].id).begins_with("skill_level_up:fire_cast_meteor_rain:2:") and String(options[1].id).begins_with("skill_level_up:frost_cast_frost_field:2:"), "owned skill insertion order is preserved")
-		_expect(options[0].rarity == expected_rarities[0] and options[1].rarity == expected_rarities[1], "rarity draws remain in owned skill order")
+		_expect(options[0].rarity == expected_rarities[0] and options[1].rarity == expected_rarities[1], "upgrade cards preserve owned quality in insertion order")
 	_expect(rng.state == expected_rng.state, "pure construction consumes no extra random draws")
 	var state_before: int = rng.state
 	pool._build_level_up_upgrade_options(player)

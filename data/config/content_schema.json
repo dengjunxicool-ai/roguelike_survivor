@@ -339,12 +339,24 @@
 		{
 			"path": "res://data/config/skill_system_config.json",
 			"keys": [
-				"range_unit_px"
+				"range_unit_px",
+				"rarity_damage_multipliers",
+				"first_learn_rarity_weights",
+				"fusion_rarity_weights"
 			],
 			"sections": [],
 			"root_fields": {
 				"range_unit_px": [
 					"number"
+				],
+				"rarity_damage_multipliers": [
+					"object"
+				],
+				"first_learn_rarity_weights": [
+					"object"
+				],
+				"fusion_rarity_weights": [
+					"object"
 				]
 			}
 		}
@@ -1087,7 +1099,9 @@
 		"element",
 		"target_type",
 		"status_id",
-		"tag"
+		"tag",
+		"skill_type",
+		"owner_has_shield"
 	],
 	"modifier_domains": [
 		"player",
@@ -1107,5 +1121,53 @@
 		"visual_effect_scene",
 		"scene_path",
 		"background"
+	],
+	"modifier_stats": [
+		"armor",
+		"attack_speed",
+		"boss_hp",
+		"burning_damage_taken",
+		"chaos_entropy_damage",
+		"chaos_entropy_range",
+		"chaos_high_roll_after_triggers",
+		"chaos_mutation_vulnerability",
+		"chaos_projectile_damage",
+		"chaos_projectile_geometry_chance",
+		"chilled_duration",
+		"chilled_freeze_threshold",
+		"coin_gain",
+		"conductive_lightning_damage_taken",
+		"cooldown",
+		"crit_chance",
+		"cursed_low_hp_boss_effect",
+		"cursed_low_hp_damage",
+		"damage",
+		"damage_taken",
+		"divine_punishment_judgment_stacks_retained",
+		"dot_damage",
+		"enemy_spawn_count",
+		"frost_area_duration",
+		"frozen_damage_taken",
+		"frozen_duration",
+		"heal",
+		"holy_damage",
+		"holy_shield_cap",
+		"holy_shield_restore",
+		"instability_fission_stacks_retained",
+		"judgment_damage_dealt",
+		"judgment_holy_damage_taken",
+		"lightning_chain_range",
+		"luck",
+		"max_hp",
+		"move_speed",
+		"overload_conductive_stacks_retained",
+		"pickup_radius",
+		"pre_boss_blessing_options",
+		"primary_attack_damage",
+		"projectile_speed",
+		"radius",
+		"soul_gain",
+		"status_duration",
+		"trap_interval"
 	]
 }

@@ -7,6 +7,7 @@ class_name SkillComponentRunner
 const TargetingServiceScript: Script = preload("res://scripts/skills/targeting_service.gd")
 const ModifierResolverScript: Script = preload("res://scripts/skills/modifier_resolver.gd")
 const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
+const Growth: Script = preload("res://scripts/skills/skill_growth_scaling.gd")
 
 
 ## 作用：在技能有效时包裹性能采样并推进组件施放调度。
@@ -38,6 +39,7 @@ func _tick_profiled(skill_instance: RefCounted, delta: float, context: Dictionar
 		return true
 
 	var cast_context: Dictionary = context.duplicate(true)
+	cast_context["scheduled_cast"] = true
 	cast_context["target"] = _find_target(components, cast_context)
 	if cast_context.get("target") == null and _requires_target(components):
 		return true
@@ -62,6 +64,7 @@ func _tick_trigger_rule_cast_skill(skill_instance: RefCounted, delta: float, con
 		return true
 
 	var cast_context: Dictionary = context.duplicate(true)
+	cast_context["scheduled_cast"] = true
 	if cast_context.get("target") == null:
 		cast_context["target"] = _find_default_target(cast_context)
 
@@ -146,9 +149,11 @@ func _get_cooldown(_skill_instance: RefCounted, components: Array, context: Dict
 			continue
 
 		var params: Dictionary = _get_dictionary(component.get("params", {}))
-		return maxf(float(ModifierResolverScript.resolve_value(context, "cooldown", params.get("seconds", 1.0))), 0.05)
+		return _scaled_cooldown(float(params.get("seconds", 1.0)), _skill_instance, context)
 
-	return maxf(float(ModifierResolverScript.get_stat(context, "cooldown", 1.0)), 0.05)
+	if _has_cast_skill_trigger_rule(_skill_instance):
+		return _get_cast_skill_trigger_cooldown(_skill_instance, context)
+	return _scaled_cooldown(float(ModifierResolverScript.get_stat(context, "cooldown", 1.0)), _skill_instance, context, true)
 
 
 ## 作用：从施放触发规则计算冷却间隔。
@@ -163,8 +168,12 @@ func _get_cast_skill_trigger_cooldown(skill_instance: RefCounted, context: Dicti
 			continue
 		var rule: Dictionary = rule_variant
 		if String(rule.get("trigger", "")) == "cast_skill" and rule.has("cooldown"):
-			return maxf(float(ModifierResolverScript.resolve_value(context, "cooldown", rule.get("cooldown"))), 0.05)
+			return _scaled_cooldown(float(rule.get("cooldown")), skill_instance, context)
 	return maxf(fallback, 0.05)
+
+func _scaled_cooldown(base: float, skill: RefCounted, context: Dictionary, already_resolved: bool = false) -> float:
+	var adjusted: float = base if already_resolved else float(ModifierResolverScript.resolve_value(context, "cooldown", base))
+	return maxf(maxf(adjusted * Growth.stat_multiplier(skill, "cooldown"), base * 0.35), 0.05)
 
 
 ## 作用：判断技能组件施放是否必须有有效目标。

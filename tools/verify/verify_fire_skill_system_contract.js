@@ -82,6 +82,8 @@ const ALLOWED_TYPES = new Set(["attack", "dash", "cast", "summon", "passive", "p
 const ALLOWED_SCHOOLS = new Set(["fire", "frost", "thunder", "curse", "holy", "chaos"]);
 const ALLOWED_RARITIES = new Set(["normal", "rare", "epic", "legendary"]);
 const SUPPORTED_TRIGGERS = new Set([
+  "player_health_crossed_below",
+  "skill_cast_succeeded",
   "attack_hit",
   "dash_start",
   "dash_tick",

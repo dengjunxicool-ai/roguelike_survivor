@@ -14,6 +14,7 @@ var scope: StringName = SCOPE_PLAYER
 var owner: Node
 var skill_instance: RefCounted
 var skill_id: StringName = &""
+var skill_type: StringName = &""
 var source_origin_id: StringName = &""
 var damage_origin: StringName = &""
 var element: StringName = &""
@@ -44,6 +45,7 @@ static func for_skill(skill: RefCounted, player: Node = null) -> ModifierQuery:
 		var definition: RefCounted = skill.get("definition") as RefCounted
 		if definition != null:
 			query.tags = _parse_string_name_array(definition.get("tags"))
+			query.skill_type = StringName(String(definition.get("skill_type")))
 	return query
 
 

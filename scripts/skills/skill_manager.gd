@@ -263,6 +263,7 @@ func _get_primary_starting_skill_data() -> Dictionary:
 func _remove_active_skill(skill_id: StringName) -> void:
 	if skill_id == &"":
 		return
+	_clear_temporary_skill_sources(skill_id)
 	active_skills.erase(skill_id)
 	_remove_skill_effect_modifier_source(skill_id)
 	_remove_passive_modifiers_for_skill(skill_id)
@@ -287,6 +288,12 @@ func _remove_skill_effect_modifier_source(skill_id: StringName) -> void:
 		owner.call("clear_run_modifier_source", source_id)
 	_skill_effect_modifier_source_ids.erase(source_id)
 
+func _clear_temporary_skill_sources(skill_id: StringName) -> void:
+	var owner: Node = get_parent()
+	var store: Node = owner.get_node_or_null("ModifierStore") if owner != null else null
+	if store != null:
+		store.call("clear_skill_sources", skill_id)
+
 
 ## 作用：把 Variant 转为字符串，null时使用默认文字。
 ## 使用：default_value 为缺值备用结果。
@@ -303,8 +310,7 @@ func upgrade_skill(skill_id: Variant, rarity: String = "") -> bool:
 
 	var id: StringName = StringName(skill_instance.get("skill_id"))
 	var new_level: int = int(skill_instance.get("current_level"))
-	if rarity != "":
-		skill_instance.set("current_rarity", rarity)
+	skill_instance.set("current_rarity", SkillGrowthScalingScript.keep_highest_rarity(String(skill_instance.get("current_rarity")), rarity))
 	_refresh_skill_modifier_payload(skill_instance)
 	skill_upgraded.emit(id, new_level)
 	skill_changed.emit()
@@ -339,6 +345,13 @@ func get_passive_skills() -> Array:
 ## 作用：清空主动、被动、学习历史、主攻击和技能效果来源，并发变更信号。
 ## 使用：会发出对应变更信号。
 func clear_skills() -> void:
+	var owner: Node = get_parent()
+	var store: Node = owner.get_node_or_null("ModifierStore") if owner != null else null
+	if store != null:
+		store.call("clear_timed_sources")
+	var bus: Node = owner.get_node_or_null("SkillEventBus") if owner != null else null
+	if bus != null and bus.has_method("reset_run_state"):
+		bus.call("reset_run_state")
 	active_skills.clear()
 	passive_skills.clear()
 	learned_skill_ids.clear()
@@ -462,14 +475,20 @@ func _scale_modifier_source_values(modifier: Dictionary, skill_instance: RefCoun
 func _scale_modifier_value(key: String, value: Variant, skill_instance: RefCounted) -> Variant:
 	if not _is_number(value):
 		return value
+	# Penalties and explicit cooldown/threshold/healing/shield rules do not grow with rarity.
+	if float(value) < 0.0 or key.contains("cooldown") or key.contains("threshold") or key.contains("heal") or key.contains("shield"):
+		return value
 	var stat_kind: String = _modifier_stat_kind(key, skill_instance)
-	var scaled: float = SkillGrowthScalingScript.apply_to_number(float(value), skill_instance, stat_kind)
+	var affects_geometry_or_time: bool = not key.contains("damage") and (key.contains("duration") or key.contains("radius") or key.contains("area") or key.contains("range") or key.contains("interval"))
+	var scaled: float = float(value) * SkillGrowthScalingScript.stat_multiplier(skill_instance, stat_kind, not affects_geometry_or_time)
 	return roundi(scaled) if typeof(value) == TYPE_INT else scaled
 
 
 ## 作用：按属性键中的冷却、范围、时长或伤害语义确定成长类别。
 ## 使用：skill_instance 为技能运行实例。
 func _modifier_stat_kind(key: String, skill_instance: RefCounted) -> String:
+	if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "passive":
+		return "modifier"
 	if key.contains("cooldown") or key.contains("interval"):
 		return "cooldown"
 	if key.contains("radius") or key.contains("area") or key.contains("range"):
@@ -478,8 +497,6 @@ func _modifier_stat_kind(key: String, skill_instance: RefCounted) -> String:
 		return "duration"
 	if key.contains("damage") or key.contains("attack"):
 		return "damage"
-	if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "passive":
-		return "modifier"
 	return "damage"
 
 

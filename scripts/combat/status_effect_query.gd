@@ -58,7 +58,7 @@ static func movement_speed_multiplier(statuses: Dictionary, movement_lock_status
 
 	var max_slow: float = 0.60
 	if is_boss:
-		max_slow = 0.35
+		max_slow = 0.30
 	elif is_elite:
 		max_slow = 0.35
 

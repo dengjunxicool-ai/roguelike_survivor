@@ -47,7 +47,7 @@ func _run() -> void:
 		var effect_text: String = String(controller.call("_get_option_effect_text", option_dictionary))
 		_expect(meta_text == "稀有", "meta text shows only the localized card rarity", meta_text)
 		_expect(not meta_text.contains("当前") and not meta_text.contains("normal"), "meta text omits extra rarity words", meta_text)
-		_expect(effect_text.contains("27%"), "effect text shows scaled Lv2 rare attack damage", effect_text)
+		_expect(effect_text.contains("24.84%"), "effect text shows scaled Lv2 rare attack damage (20% × 1.08 × 1.15)", effect_text)
 
 	player.queue_free()
 	await process_frame

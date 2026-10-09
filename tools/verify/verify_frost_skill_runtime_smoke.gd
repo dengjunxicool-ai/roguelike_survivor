@@ -138,6 +138,7 @@ func _run() -> void:
 	_expect(_enemy.current_health == 0, "frost shatter execute kills Chilled enemies after primary attack leaves them at 10% HP", _enemy.current_health)
 
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_frost_wolf") as RefCounted)
+	_enemy.current_health = _enemy.max_health
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_ice_crystal_guard") as RefCounted)
 	await process_frame
 	_expect(_count_summons(&"summon_frost_wolf") > 0, "frost wolf spawns through Summon system", _count_summons(&"summon_frost_wolf"))

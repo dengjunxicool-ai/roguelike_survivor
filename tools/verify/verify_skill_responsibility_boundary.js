@@ -11,5 +11,5 @@ const pool = read('scripts/upgrades/upgrade_pool.gd');
 for (const method of ['build_skill_level_up_data', 'build_upgrade_data', 'build_debug_data']) assert(pool.includes('UpgradeOptionBuilderScript.' + method), 'pool delegates ' + method);
 const manager = read('scripts/skills/skill_manager.gd');
 for (const method of ['can_current_character_learn', 'can_learn_god_school']) assert(manager.includes('SkillLearningPolicyScript.' + method), 'manager delegates ' + method);
-assert(pool.indexOf('pick_rarity_for_max_level(max_level, _rng)') < pool.indexOf('UpgradeOptionBuilderScript.build_skill_level_up_data'), 'level rarity is sampled before pure data construction');
+assert(pool.includes('rarity = current_rarity'), 'level cards preserve instance quality before pure data construction');
 console.log('[verify_skill_responsibility_boundary] PASS');

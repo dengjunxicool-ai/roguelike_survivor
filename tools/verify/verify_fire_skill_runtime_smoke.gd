@@ -21,6 +21,7 @@ const SKILLS_DATA_PATH: String = "res://data/skills/skills.json"
 class SmokePlayer:
 	extends Node2D
 
+	var attack_power: float = 24.0
 	var max_health: int = 160
 	var current_health: int = 160
 	var selected_character_id: StringName = &""

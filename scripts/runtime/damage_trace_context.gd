@@ -20,6 +20,10 @@ static func current_trace_id(root: Node) -> int:
 ## 使用：通过预加载脚本的 normalize_event_context(...) 静态入口调用。 入参：event_context: Dictionary, root: Node = null, allow_current_trace: bool = false。 返回 Dictionary；具体值及空输入行为见作用说明。
 static func normalize_event_context(event_context: Dictionary, root: Node = null, allow_current_trace: bool = false) -> Dictionary:
 	var context: Dictionary = event_context.duplicate(true)
+	for field: String in ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds", "cast_damage_multiplier"]:
+		if not context.has(field):
+			var value: Variant = _value_from_context(event_context, field, null)
+			if value != null: context[field] = value
 	var trace_id: int = get_trace_id(context, root, allow_current_trace)
 	if trace_id > 0:
 		context[TRACE_ID_KEY] = trace_id
@@ -30,6 +34,10 @@ static func normalize_event_context(event_context: Dictionary, root: Node = null
 ## 使用：packet 是显式字典视图，context 是原事件/包/节点；返回带 trace 的深拷贝，不修改输入。仅 allow_current_trace=true 时采用 root 当前 trace。
 static func apply_to_packet(packet: Dictionary, context: Variant, root: Node = null, allow_current_trace: bool = false) -> Dictionary:
 	var result: Dictionary = packet.duplicate(true)
+	for field: String in ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds", "cast_damage_multiplier"]:
+		var value: Variant = _value_from_context(context, field, null)
+		if value != null:
+			result[field] = value
 	var trace_id: int = get_trace_id(context, root, allow_current_trace)
 	if trace_id > 0:
 		result[TRACE_ID_KEY] = trace_id
@@ -43,11 +51,11 @@ static func apply_to_status_params(status_params: Dictionary, context: Variant, 
 	var trace_id: int = get_trace_id(context, root, allow_current_trace)
 	if trace_id > 0:
 		result[TRACE_ID_KEY] = trace_id
-	for key: String in ["source_origin_id", "source_skill_id", "source_instance_id", "attacker_id"]:
-		if result.has(key) and String(result.get(key, "")) != "":
+	for key: String in ["source_origin_id", "source_skill_id", "source_instance_id", "attacker_id", "origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds"]:
+		if result.has(key) and result[key] != null and str(result[key]) != "":
 			continue
 		var source_value: Variant = _value_from_context(context, key, null)
-		if source_value != null and String(source_value) != "":
+		if source_value != null and str(source_value) != "":
 			result[key] = source_value
 	return result
 
@@ -81,6 +89,9 @@ static func persist_last_damage_trace(target: Node, amount_or_packet: Variant, d
 		"damage_type": String(damage_result.get("damage_type", _value_from_source(amount_or_packet, "damage_type", ""))),
 		"element": String(damage_result.get("element", _value_from_source(amount_or_packet, "element", "")))
 	}
+	for field: String in ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds"]:
+		var value: Variant = _value_from_source(amount_or_packet, field, damage_result.get(field))
+		if value != null: trace_context[field] = value
 	target.set_meta(LAST_TRACE_CONTEXT_META, trace_context)
 
 
@@ -164,6 +175,6 @@ static func _value_from_context(context: Variant, key: Variant, fallback: Varian
 		return dictionary.get(key)
 	for packet_key: String in ["damage_packet", "packet", "source_packet", "amount_or_packet", "status"]:
 		var value: Variant = _value_from_source(dictionary.get(packet_key), key, null)
-		if value != null and String(value) != "":
+		if value != null and str(value) != "":
 			return value
 	return fallback

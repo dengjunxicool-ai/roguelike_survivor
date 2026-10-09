@@ -75,6 +75,7 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
     for(const f of ['stat','op','value','scope','source'])if(!Object.hasOwn(effect,f))fail(loc+'.'+f,'required modifier field');
     for(const f of ['stat','source'])if(typeof effect[f]!=='string'||!effect[f].trim())fail(loc+'.'+f,'must be a nonempty string');
     if(!schema.modifier_operations.includes(effect.op))fail(loc+'.op','unknown modifier operation');
+    if(!schema.modifier_stats.includes(effect.stat))fail(loc+'.stat','unknown modifier stat');
     if(typeof effect.value!=='number'||!Number.isFinite(effect.value))fail(loc+'.value','modifier value must be finite');
     if(kind(effect.scope)!=='object')fail(loc+'.scope','scope must be an object');
     else for(const[f,filter]of Object.entries(effect.scope)){

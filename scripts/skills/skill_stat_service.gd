@@ -91,6 +91,9 @@ static func skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 ## 使用：stat_name 为待查询属性键。
 static func _apply_alias_modifiers(value: Variant, stat_name: String, modifiers: Dictionary) -> Variant:
 	var adjusted_value: float = float(value)
+	if stat_name == "cooldown":
+		adjusted_value *= maxf(1.0 + float(modifiers.get("cooldown_multiplier_add", 0.0)), 0.05)
+		adjusted_value *= maxf(float(modifiers.get("cooldown_multiplier", 1.0)), 0.05)
 	if stat_name == "area_radius":
 		adjusted_value *= float(modifiers.get("area_multiplier", 1.0))
 		adjusted_value *= maxf(1.0 + float(modifiers.get("area_multiplier_add", 0.0)), 0.05)

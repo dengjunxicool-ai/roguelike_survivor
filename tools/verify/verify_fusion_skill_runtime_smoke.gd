@@ -91,6 +91,8 @@ func _run() -> void:
 
 	_enemy.call("apply_status", &"burning", {"stacks": 1, "duration": 4.0, "power": 24.0})
 	_emit(&"area_tick", runtime_skills.get(&"fusion_fire_frost_steam_mist") as RefCounted, {"target": _enemy, "source_id": &"frost_field"})
+	_expect(_count_area_effects(&"fusion_fire_frost_steam_mist_area") == 0, "source name alone does not fabricate a frost area", _count_area_effects(&"fusion_fire_frost_steam_mist_area"))
+	_emit(&"area_tick", runtime_skills.get(&"fusion_fire_frost_steam_mist") as RefCounted, {"target": _enemy, "source_id": &"frost_field", "source_tags": ["frost_area"]})
 	await process_frame
 	_expect(_count_area_effects(&"fusion_fire_frost_steam_mist_area") > 0, "fire frost steam mist reacts to area_tick", _count_area_effects(&"fusion_fire_frost_steam_mist_area"))
 	_expect(_close(_area_float(&"fusion_fire_frost_steam_mist_area", "radius"), 168.0), "steam mist runtime radius uses R2.0", _area_float(&"fusion_fire_frost_steam_mist_area", "radius"))
