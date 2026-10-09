@@ -60,7 +60,7 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 	var event: Dictionary = {
 		"trigger": event_name,
 		"conditions": _normalize_conditions(rule.get("conditions", []), _skill_instance),
-		"actions": SkillEffectAdapterScript.to_actions(_get_array(rule.get("effects", [])), _skill_instance)
+		"actions": SkillEffectAdapterScript.to_actions(preload("res://scripts/skills/skill_growth_profile.gd").resolve_effects(_get_array(rule.get("effects", [])),_skill_instance.definition.level_overrides if _skill_instance != null else [],_skill_level(_skill_instance)), _skill_instance)
 	}
 	for optional_key: String in ["source_id", "counter_key", "threshold", "cooldown", "cooldown_scope", "cooldown_key", "max_triggers_per_second", "resource_kind"]:
 		if rule.has(optional_key):

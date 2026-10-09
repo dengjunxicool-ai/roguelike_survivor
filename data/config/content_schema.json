@@ -465,6 +465,9 @@
 				],
 				"chaos_contract": [
 					"object"
+				],
+				"level_overrides": [
+					"array"
 				]
 			},
 			"object_fields": {

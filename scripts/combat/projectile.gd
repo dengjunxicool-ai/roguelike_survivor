@@ -323,6 +323,8 @@ func _emit_hit_event(body: Node) -> bool:
 		"parent": get_parent(),
 		"target_group": target_group,
 		"damage_packet": damage_packet,
+		"milestone_returning":_returned,
+		"milestone_hit_index":_hit_bodies.size()-1,
 		"damage_type": damage_type,
 		"hot_rapid_fire_crit": bool(get_meta("hot_rapid_fire_crit")) if has_meta("hot_rapid_fire_crit") else false,
 		"hot_rapid_fire_crit_chance_add": float(get_meta("hot_rapid_fire_crit_chance_add")) if has_meta("hot_rapid_fire_crit_chance_add") else 0.0

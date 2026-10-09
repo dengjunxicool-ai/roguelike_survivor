@@ -30,6 +30,7 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 				for(const[field,keys]of Object.entries(rule.object_required??{}))if(kind(item[field])==='object')for(const k of keys)if(!Object.hasOwn(item[field],k))fail(where+'.'+field+'.'+k,'required nested field');
 				if(section.id_key){const id=item[section.id_key];if(typeof id!=='string'||!id.trim())fail(where,'invalid ID');else if(indexes[section.domain].has(id))fail(where,'duplicate ID '+id);else indexes[section.domain].add(id);}
 				if(section.domain==='skills'){
+                    validateMilestones(item,where,fail);
 					for(const cap of item.capabilities??[])if(typeof cap!=='string')fail(where+'.capabilities','expected string capability');
 					for(const cap of item.offer_rule?.required_capabilities??[])if(typeof cap!=='string')fail(where+'.offer_rule.required_capabilities','expected string capability');
 					if(!schema.skill_types.includes(item.skill_type))fail(where+'.skill_type','unknown skill type');
@@ -99,3 +100,12 @@ function loadAndValidate(projectRoot=root){
 }
 if(require.main===module){const {errors}=loadAndValidate();if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}else console.log('Content configuration schema, IDs, references and resources passed.');}
 module.exports={validateDocuments,loadAndValidate};
+
+function validateMilestones(skill,where,fail){
+ if(!skill.level_overrides)return;
+ const ids=new Set();
+ function scan(v){if(Array.isArray(v))v.forEach(scan);else if(v&&typeof v==='object'){if(v.effect_id){if(ids.has(v.effect_id))fail(where,'duplicate effect_id '+v.effect_id);ids.add(v.effect_id);}Object.values(v).forEach(scan);}}
+ scan(skill.trigger_rules);scan(skill.effects);
+ let previous=0;
+ for(const m of skill.level_overrides??[]){if(![3,5].includes(m.level)||m.level<=previous)fail(where,'milestone levels must be ordered 3/5');previous=m.level;if(!Array.isArray(m.patches)||!m.patches.length)fail(where,'milestone patches required');else for(const patch of m.patches)if(!ids.has(patch.effect_id))fail(where,'unknown milestone effect_id '+patch.effect_id);}
+}

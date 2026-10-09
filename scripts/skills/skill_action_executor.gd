@@ -41,11 +41,17 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 	var action_type: String = str(action.get("type", ""))
 	var params: Dictionary = SkillRangeUnitScript.resolve_action_params(_get_dictionary(action.get("params", {})))
+	if bool(params.get("return_only",false)) and not bool(context.get("milestone_returning",false)): return false
+	params = preload("res://scripts/skills/skill_milestone_runtime.gd").prepare(params,context,action_type)
 	var conditions: Array = _get_array(action.get("conditions", params.get("conditions", [])))
 	if not conditions.is_empty() and not ConditionEvaluatorScript.evaluate_all(conditions, context):
 		return null
 
 	match action_type:
+		"restore_cooldown":
+			return preload("res://scripts/skills/skill_milestone_runtime.gd").restore_cooldown(params,context)
+		"delayed_output":
+			return context.event_bus.schedule_output(params.get("actions",[]),context,float(params.get("delay",0.5))) if context.get("event_bus") != null else false
 		"combustion_explosion":
 			return context.event_bus.start_combustion(context,params) if context.get("event_bus") != null else false
 		"deal_damage":

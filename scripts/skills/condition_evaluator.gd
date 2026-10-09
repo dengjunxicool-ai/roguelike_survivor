@@ -16,6 +16,8 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 		params.erase("type")
 
 	match condition_type:
+		"target_status_stacks_at_least":
+			return preload("res://scripts/skills/skill_milestone_runtime.gd").status_stacks(context,String(params.get("status",""))) >= int(params.get("stacks",1))
 		"heavy_player_hit":
 			var owner: Node = context.get("owner",context.get("caster")) as Node
 			return owner != null and float(context.get("amount",0.0)) >= 0.1*float(owner.get("max_health"))

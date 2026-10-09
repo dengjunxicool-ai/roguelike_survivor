@@ -81,6 +81,7 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
 	_mark_storm_hail_cast(context, cast_instance_id)
 
+	var main_extra: bool = not targets.is_empty() and preload("res://scripts/skills/skill_milestone_runtime.gd").status_stacks({"target":targets[0]},String(params.get("extra_main_status",""))) >= int(params.get("extra_main_stacks",999))
 	var spawned: int = 0
 	var target_hit_counts: Dictionary = {}
 	for target_variant: Variant in targets:
@@ -109,6 +110,15 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		)
 		spawned += 1
 
+	if main_extra:
+		var extra: Dictionary = params.duplicate(true)
+		extra.erase("extra_main_status")
+		extra["count"] = 1
+		extra["damage"] = {"stat":"power","scale":float(params.get("extra_main_power",0.4))}
+		extra["actions_on_hit"] = []
+		var extra_context: Dictionary = context.duplicate(true)
+		extra_context["target"] = targets[0]
+		_spawn_projectile(extra,extra_context)
 	return spawned > 0
 
 
@@ -437,6 +447,12 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 			execute_actions(chain_actions, chained_context)
 		affected += 1
 
+	if params.has("last_target_bonus_power") and affected < max_targets:
+		var last: Node2D = candidates[affected-1] if affected > 0 else context.get("target") as Node2D
+		if last != null:
+			var final_context: Dictionary = context.duplicate(true)
+			final_context.target = last
+			_deal_damage({"amount":{"stat":"power","scale":params.last_target_bonus_power},"damage_type":"thunder","source_type":"cast"},final_context)
 	return affected
 
 

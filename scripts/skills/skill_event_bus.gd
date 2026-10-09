@@ -27,6 +27,7 @@ var _action_executor: RefCounted = SkillActionExecutorScript.new()
 var _special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 var _clock: Node = Clock.new()
 var _pending_events: Array[Dictionary] = []
+var _delayed_outputs: Array[Dictionary] = []
 var _dispatching: bool = false
 var _budget_frame: int = -1
 var _frame_events: int = 0
@@ -53,6 +54,7 @@ func combat_seconds() -> float:
 func reset_run_state() -> void:
 	_pending_events.clear()
 	_snapshots.clear()
+	_delayed_outputs.clear()
 	_chaos.reset()
 	_clock.reset()
 	_budget_frame = -1
@@ -292,6 +294,11 @@ func _get_array(value: Variant) -> Array:
 func update_skill_cycles() -> void:
 	_cycles.update(self)
 	_chaos.update(self)
+	for item: Dictionary in _delayed_outputs.duplicate():
+		if item.at > combat_seconds(): continue
+		_delayed_outputs.erase(item)
+		var manager: Node = item.context.get("skill_manager") as Node
+		if manager != null and is_instance_valid(manager) and int(manager.run_generation) == item.generation and manager.has_skill(item.origin): execute_adapted_actions(item.actions,item.context)
 
 func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
 	_cycles.mark(target, context, duration, combat_seconds())
@@ -302,6 +309,7 @@ func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
 func clear_origin(skill_id: StringName) -> void:
 	_cycles.clear_origin(skill_id)
 	_snapshots.clear_origin(skill_id)
+	_delayed_outputs = _delayed_outputs.filter(func(x: Dictionary) -> bool: return x.origin != skill_id)
 	_chaos.clear_origin(skill_id)
 	_pending_events = _pending_events.filter(func(item: Dictionary) -> bool:
 		return StringName(String(item.context.get("origin_skill_id", ""))) != skill_id)
@@ -315,3 +323,15 @@ func chaos_state() -> Dictionary:
 
 func prepare_geometry(params: Dictionary, context: Dictionary) -> Dictionary:
 	return _chaos.geometry(params,context)
+
+func schedule_output(actions: Array, context: Dictionary, delay: float) -> bool:
+	if actions.is_empty(): return false
+	var manager: Node = context.get("skill_manager") as Node
+	if manager == null: return false
+	var child: Dictionary = context.duplicate(true)
+	child.erase("_cast_result")
+	child.erase("is_cast_source")
+	child["can_generate_secondary_proc"] = false
+	child["proc_depth"] = mini(int(child.get("proc_depth",0))+1,2)
+	_delayed_outputs.append({"at":combat_seconds()+maxf(delay,0.0),"actions":actions.duplicate(true),"context":child,"generation":manager.run_generation,"origin":StringName(context.get("origin_skill_id",context.get("skill_id","")))})
+	return true

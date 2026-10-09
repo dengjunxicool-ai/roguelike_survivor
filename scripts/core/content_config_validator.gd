@@ -118,6 +118,7 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 					if not ["active", "passive"].has(item.get("slot_category")):
 						errors.append("%s.slot_category: unknown slot category" % where)
 				if domain == "skills":
+					_validate_milestones(item,where,errors)
 					for capability: Variant in item.get("capabilities", []):
 						if not capability is String: errors.append("%s.capabilities: expected string capability" % where)
 					for capability: Variant in item.get("offer_rule", {}).get("required_capabilities", []):
@@ -236,3 +237,25 @@ static func _kind(value: Variant) -> String:
 		TYPE_ARRAY: return "array"
 		TYPE_DICTIONARY: return "object"
 		_: return "unsupported"
+
+static func _collect_effect_ids(value: Variant, ids: Dictionary, where: String, errors: Array[String]) -> void:
+	if value is Array:
+		for item: Variant in value: _collect_effect_ids(item,ids,where,errors)
+	elif value is Dictionary:
+		if value.has("effect_id"):
+			if ids.has(value.effect_id): errors.append(where+": duplicate effect_id "+String(value.effect_id))
+			ids[value.effect_id] = true
+		for child: Variant in value.values(): _collect_effect_ids(child,ids,where,errors)
+static func _validate_milestones(skill: Dictionary, where: String, errors: Array[String]) -> void:
+	if not skill.has("level_overrides"): return
+	var ids: Dictionary = {}
+	_collect_effect_ids(skill.get("trigger_rules",[]),ids,where,errors)
+	_collect_effect_ids(skill.get("effects",[]),ids,where,errors)
+	var previous: int = 0
+	for item: Dictionary in skill.get("level_overrides",[]):
+		var level: int = int(item.get("level",0))
+		if level not in [3,5] or level <= previous: errors.append(where+": milestone levels must be ordered 3/5")
+		previous = level
+		if not item.get("patches") is Array or item.patches.is_empty(): errors.append(where+": milestone patches required"); continue
+		for patch: Dictionary in item.patches:
+			if not ids.has(patch.get("effect_id","")): errors.append(where+": unknown milestone effect_id "+String(patch.get("effect_id","")))

@@ -343,13 +343,15 @@
 									"damage_type": "fire",
 									"source_type": "cast",
 									"power_scale": 2.2,
-									"radius": 134.4
+									"radius": 134.4,
+									"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "burning",
 									"stacks": 1,
-									"duration": 4
+									"duration": 4,
+									"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:1:apply_status"
 								},
 								{
 									"type": "spawn_area",
@@ -364,17 +366,21 @@
 											"type": "damage",
 											"damage_type": "fire",
 											"source_type": "area",
-											"power_scale": 0.28
+											"power_scale": 0.28,
+											"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:effects_on_tick:0:damage"
 										},
 										{
 											"type": "apply_status",
 											"status": "burning",
 											"stacks": 1,
-											"duration": 4
+											"duration": 4,
+											"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:effects_on_tick:1:apply_status"
 										}
-									]
+									],
+									"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:spawn_area"
 								}
-							]
+							],
+							"effect_id": "fire_cast_meteor_rain:0:effects:0:spawn_projectiles_at_targets"
 						}
 					]
 				}
@@ -387,6 +393,32 @@
 				"apply_burning",
 				"copyable_cast",
 				"fire_ground"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_meteor_rain:0:effects:0:spawn_projectiles_at_targets",
+							"set": {
+								"count": 4
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_meteor_rain:0:effects:0:on_hit:2:spawn_area",
+							"set": {
+								"duration": 4
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -431,15 +463,18 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "cast",
-									"power_scale": 1.066666
+									"power_scale": 1.066666,
+									"effect_id": "fire_cast_lava_rift:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "burning",
 									"stacks": 1,
-									"duration": 4
+									"duration": 4,
+									"effect_id": "fire_cast_lava_rift:0:effects:0:effects_on_tick:1:apply_status"
 								}
-							]
+							],
+							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -452,6 +487,48 @@
 				"apply_burning",
 				"copyable_cast",
 				"fire_ground"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
+							"set": {
+								"width": 80.64
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_lava_rift:0:effects:0:spawn_area",
+							"append": {
+								"effects_on_expire": [
+									{
+										"type": "spawn_area",
+										"area_id": "lava_rift_end_burst",
+										"radius_r": 1.2,
+										"duration": 0.2,
+										"effects_on_apply": [
+											{
+												"type": "damage",
+												"damage_type": "arcane",
+												"source_type": "cast",
+												"power_scale": 0.4
+											}
+										],
+										"position_mode": "area_end"
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -498,15 +575,18 @@
 									"type": "damage",
 									"damage_type": "fire",
 									"source_type": "area",
-									"power_scale": 0.5
+									"power_scale": 0.5,
+									"effect_id": "fire_cast_scorching_vortex:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "burning",
 									"stacks": 1,
-									"duration": 4
+									"duration": 4,
+									"effect_id": "fire_cast_scorching_vortex:0:effects:0:effects_on_tick:1:apply_status"
 								}
-							]
+							],
+							"effect_id": "fire_cast_scorching_vortex:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -518,6 +598,34 @@
 			"capabilities": [
 				"apply_burning",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_scorching_vortex:0:effects:0:effects_on_tick:0:damage",
+							"set": {
+								"bonus_status": "burning",
+								"bonus_multiplier": 1.15
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "fire_cast_scorching_vortex:0:effects:0:spawn_area",
+							"set": {
+								"return_once": true,
+								"return_damage_multiplier": 0.5
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -1398,13 +1506,15 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "area",
-									"power_scale": 0.44
+									"power_scale": 0.44,
+									"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_tick:1:apply_status"
 								}
 							],
 							"effects_on_expire": [
@@ -1419,11 +1529,14 @@
 											"type": "apply_status",
 											"status": "chilled",
 											"stacks": 1,
-											"duration": 6
+											"duration": 6,
+											"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_expire:0:effects_on_tick:0:apply_status"
 										}
-									]
+									],
+									"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_expire:0:spawn_area"
 								}
-							]
+							],
+							"effect_id": "frost_cast_frost_field:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -1436,6 +1549,32 @@
 				"apply_chilled",
 				"copyable_cast",
 				"frost_area"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_tick:1:apply_status",
+							"set": {
+								"first_hit_stacks": 2
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_frost_field:0:effects:0:effects_on_expire:0:spawn_area",
+							"set": {
+								"duration": 4
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -1483,7 +1622,8 @@
 									"type": "apply_status",
 									"status": "chilled",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:0:apply_status"
 								},
 								{
 									"type": "spawn_area",
@@ -1495,17 +1635,21 @@
 											"type": "damage",
 											"damage_type": "frost",
 											"source_type": "cast",
-											"power_scale": 0.45
+											"power_scale": 0.45,
+											"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:effects_on_apply:0:damage"
 										}
 									],
 									"conditions": [
 										{
 											"type": "target_has_status",
-											"status": "frozen"
+											"status": "frozen",
+											"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:conditions:0:target_has_status"
 										}
-									]
+									],
+									"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:spawn_area"
 								}
-							]
+							],
+							"effect_id": "frost_cast_glacial_lance:0:effects:0:spawn_projectile"
 						}
 					]
 				}
@@ -1517,6 +1661,32 @@
 			"capabilities": [
 				"apply_chilled",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_glacial_lance:0:effects:0:spawn_projectile",
+							"set": {
+								"pierce": 8
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_glacial_lance:0:effects:0:on_hit:1:spawn_area",
+							"set": {
+								"radius": 126.0
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -1561,15 +1731,18 @@
 									"type": "damage",
 									"damage_type": "frost",
 									"source_type": "area",
-									"power_scale": 0.32
+									"power_scale": 0.32,
+									"effect_id": "frost_cast_blizzard_cloud:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "chilled",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "frost_cast_blizzard_cloud:0:effects:0:effects_on_tick:1:apply_status"
 								}
-							]
+							],
+							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -1582,6 +1755,32 @@
 				"apply_chilled",
 				"copyable_cast",
 				"frost_area"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:spawn_area",
+							"set": {
+								"duration": 6
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "frost_cast_blizzard_cloud:0:effects:0:effects_on_tick:1:apply_status",
+							"set": {
+								"first_hit_stacks": 2
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -2413,7 +2612,8 @@
 									"type": "apply_status",
 									"status": "conductive",
 									"stacks": 1,
-									"duration": 5
+									"duration": 5,
+									"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:0:apply_status"
 								},
 								{
 									"type": "chain_to_targets",
@@ -2426,17 +2626,21 @@
 											"type": "damage",
 											"damage_type": "thunder",
 											"source_type": "cast",
-											"power_scale": 0.85
+											"power_scale": 0.85,
+											"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:actions:0:damage"
 										},
 										{
 											"type": "apply_status",
 											"status": "conductive",
 											"stacks": 1,
-											"duration": 5
+											"duration": 5,
+											"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:actions:1:apply_status"
 										}
-									]
+									],
+									"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets"
 								}
-							]
+							],
+							"effect_id": "thunder_cast_chain_lightning:0:effects:0:spawn_projectile"
 						}
 					]
 				}
@@ -2448,6 +2652,32 @@
 			"capabilities": [
 				"apply_conductive",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
+							"set": {
+								"count": 5
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_chain_lightning:0:effects:0:on_hit:1:chain_to_targets",
+							"set": {
+								"last_target_bonus_power": 0.3
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -2496,17 +2726,21 @@
 											"type": "damage",
 											"damage_type": "thunder",
 											"source_type": "cast",
-											"power_scale": 0.8
+											"power_scale": 0.8,
+											"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:0:damage"
 										},
 										{
 											"type": "apply_status",
 											"status": "conductive",
 											"stacks": 1,
-											"duration": 5
+											"duration": 5,
+											"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:1:apply_status"
 										}
-									]
+									],
+									"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:spawn_area"
 								}
-							]
+							],
+							"effect_id": "thunder_cast_storm_circle:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -2518,6 +2752,32 @@
 			"capabilities": [
 				"apply_conductive",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:1:apply_status",
+							"set": {
+								"first_tick_extra_stacks": 1
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_storm_circle:0:effects:0:effects_on_tick:0:effects_on_apply:0:damage",
+							"set": {
+								"last_tick_multiplier": 1.5
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -2560,7 +2820,8 @@
 									"type": "damage",
 									"damage_type": "thunder",
 									"source_type": "cast",
-									"power_scale": 1.2
+									"power_scale": 1.2,
+									"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:0:damage"
 								},
 								{
 									"type": "damage",
@@ -2570,17 +2831,21 @@
 									"conditions": [
 										{
 											"type": "target_has_status",
-											"status": "conductive"
+											"status": "conductive",
+											"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:1:conditions:0:target_has_status"
 										}
-									]
+									],
+									"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:1:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "stun",
 									"stacks": 1,
-									"duration": 0.2
+									"duration": 0.2,
+									"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:2:apply_status"
 								}
-							]
+							],
+							"effect_id": "thunder_cast_emp_ring:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -2591,6 +2856,45 @@
 			"slot_category": "active",
 			"capabilities": [
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_emp_ring:0:effects:0:effects_on_apply:1:damage",
+							"set": {
+								"power_scale": 0.8
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "thunder_cast_emp_ring:0:effects:0:spawn_area",
+							"append": {
+								"effects_on_apply": [
+									{
+										"type": "restore_cooldown",
+										"seconds": 0.5,
+										"once_per_cast": true,
+										"conditions": [
+											{
+												"type": "target_status_stacks_at_least",
+												"status": "conductive",
+												"stacks": 5
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -3310,9 +3614,11 @@
 									"type": "apply_status",
 									"status": "cursed",
 									"stacks": 1,
-									"duration": 3
+									"duration": 3,
+									"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:on_hit:0:apply_status"
 								}
-							]
+							],
+							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:spawn_projectile_burst"
 						}
 					]
 				}
@@ -3324,6 +3630,32 @@
 			"capabilities": [
 				"apply_cursed",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:spawn_projectile_burst",
+							"set": {
+								"count": 3
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_black_serpent_hunt:0:effects:0:on_hit:0:apply_status",
+							"set": {
+								"first_uncursed_stacks": 2
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -3376,11 +3708,14 @@
 									"conditions": [
 										{
 											"type": "target_has_status",
-											"status": "cursed"
+											"status": "cursed",
+											"effect_id": "curse_cast_death_scythe:0:effects:0:on_hit:0:conditions:0:target_has_status"
 										}
-									]
+									],
+									"effect_id": "curse_cast_death_scythe:0:effects:0:on_hit:0:damage"
 								}
-							]
+							],
+							"effect_id": "curse_cast_death_scythe:0:effects:0:spawn_projectile_burst"
 						}
 					]
 				}
@@ -3391,6 +3726,33 @@
 			"slot_category": "active",
 			"capabilities": [
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_death_scythe:0:effects:0:spawn_projectile_burst",
+							"set": {
+								"return_once": true,
+								"return_damage_multiplier": 0.5
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_death_scythe:0:effects:0:on_hit:0:damage",
+							"set": {
+								"return_only": true
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -3437,7 +3799,8 @@
 											"type": "damage",
 											"damage_type": "curse",
 											"source_type": "cast",
-											"power_scale": 2
+											"power_scale": 2,
+											"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:effects_on_apply:0:damage"
 										},
 										{
 											"type": "damage_by_status_stack",
@@ -3446,11 +3809,14 @@
 											],
 											"power_scale_per_stack": 0.6,
 											"consume": true,
-											"consume_stacks": 3
+											"consume_stacks": 3,
+											"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:effects_on_apply:1:damage_by_status_stack"
 										}
-									]
+									],
+									"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:spawn_area"
 								}
-							]
+							],
+							"effect_id": "curse_cast_doom_circle:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -3461,6 +3827,46 @@
 			"slot_category": "active",
 			"capabilities": [
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_doom_circle:0:effects:0:spawn_area",
+							"set": {
+								"duration": 1.0
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "curse_cast_doom_circle:0:effects:0:effects_on_expire:0:spawn_area",
+							"append": {
+								"effects_on_apply": [
+									{
+										"type": "damage",
+										"damage_type": "curse",
+										"source_type": "cast",
+										"power_scale": 0.4,
+										"conditions": [
+											{
+												"type": "target_status_stacks_at_least",
+												"status": "cursed",
+												"stacks": 3
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -4287,9 +4693,11 @@
 									"type": "apply_status",
 									"status": "judgment",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "holy_cast_holy_ray:0:effects:0:on_hit:0:apply_status"
 								}
-							]
+							],
+							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets"
 						}
 					]
 				}
@@ -4301,6 +4709,34 @@
 			"capabilities": [
 				"apply_judgment",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
+							"set": {
+								"count": 4
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_holy_ray:0:effects:0:spawn_projectiles_at_targets",
+							"set": {
+								"extra_main_status": "judgment",
+								"extra_main_stacks": 5,
+								"extra_main_power": 0.4
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -4344,15 +4780,18 @@
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "area",
-									"power_scale": 0.36
+									"power_scale": 0.36,
+									"effect_id": "holy_cast_divine_barrier:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "judgment",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "holy_cast_divine_barrier:0:effects:0:effects_on_tick:1:apply_status"
 								}
-							]
+							],
+							"effect_id": "holy_cast_divine_barrier:0:effects:0:spawn_area"
 						}
 					]
 				},
@@ -4360,7 +4799,8 @@
 					"trigger": "area_step",
 					"conditions": [
 						{
-							"type": "player_inside_area"
+							"type": "player_inside_area",
+							"effect_id": "holy_cast_divine_barrier:1:conditions:0:player_inside_area"
 						}
 					],
 					"effects": [
@@ -4370,7 +4810,8 @@
 							"max_health_ratio": 0.01,
 							"duration": 6,
 							"respect_shield_cap": true,
-							"shield_cap_health_ratio": 0.35
+							"shield_cap_health_ratio": 0.35,
+							"effect_id": "holy_cast_divine_barrier:1:effects:0:grant_shield"
 						}
 					]
 				}
@@ -4383,6 +4824,32 @@
 				"apply_judgment",
 				"copyable_cast",
 				"divine_barrier"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_divine_barrier:1:effects:0:grant_shield",
+							"set": {
+								"max_health_ratio": 0.0125
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_divine_barrier:0:effects:0:spawn_area",
+							"set": {
+								"duration": 6
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -4424,21 +4891,25 @@
 									"type": "damage",
 									"damage_type": "holy",
 									"source_type": "cast",
-									"power_scale": 2.4
+									"power_scale": 2.4,
+									"effect_id": "holy_cast_judgment_hammer:0:effects:0:effects_on_apply:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "judgment",
 									"stacks": 2,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "holy_cast_judgment_hammer:0:effects:0:effects_on_apply:1:apply_status"
 								},
 								{
 									"type": "apply_status",
 									"status": "stun",
 									"stacks": 1,
-									"duration": 0.25
+									"duration": 0.25,
+									"effect_id": "holy_cast_judgment_hammer:0:effects:0:effects_on_apply:2:apply_status"
 								}
-							]
+							],
+							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -4450,6 +4921,46 @@
 			"capabilities": [
 				"apply_judgment",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
+							"set": {
+								"radius_r": 1.6099999999999999
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "holy_cast_judgment_hammer:0:effects:0:spawn_area",
+							"append": {
+								"effects_on_apply": [
+									{
+										"type": "damage",
+										"damage_type": "holy",
+										"source_type": "cast",
+										"power_scale": 0.4,
+										"conditions": [
+											{
+												"type": "target_status_stacks_at_least",
+												"status": "judgment",
+												"stacks": 3
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -5280,21 +5791,25 @@
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "cast",
-									"power_scale": 0.32
+									"power_scale": 0.32,
+									"effect_id": "chaos_cast_void_rift:0:effects:0:effects_on_tick:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "instability",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "chaos_cast_void_rift:0:effects:0:effects_on_tick:1:apply_status"
 								},
 								{
 									"type": "pull",
 									"pull_radius_r": 2.5,
-									"strength": 0.24
+									"strength": 0.24,
+									"effect_id": "chaos_cast_void_rift:0:effects:0:effects_on_tick:2:pull"
 								}
 							],
-							"cluster_radius": 90
+							"cluster_radius": 90,
+							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -5307,6 +5822,48 @@
 				"apply_instability",
 				"chaos_rift",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
+							"set": {
+								"radius_r": 2.875
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_cast_void_rift:0:effects:0:spawn_area",
+							"append": {
+								"effects_on_expire": [
+									{
+										"type": "spawn_area",
+										"area_id": "void_rift_expire_burst",
+										"radius_r": 1.2,
+										"duration": 0.2,
+										"effects_on_apply": [
+											{
+												"type": "damage",
+												"damage_type": "arcane",
+												"source_type": "cast",
+												"power_scale": 0.5
+											}
+										],
+										"position_mode": "event"
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -5354,7 +5911,8 @@
 									"type": "apply_status",
 									"status": "instability",
 									"stacks": 1,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "chaos_cast_singularity_barrage:0:effects:0:on_hit:0:apply_status"
 								},
 								{
 									"type": "spawn_projectile_burst",
@@ -5367,16 +5925,20 @@
 									"range_r": 2.5,
 									"damage": {
 										"damage_type": "arcane",
-										"power_scale": 0.22
+										"power_scale": 0.22,
+										"effect_id": "chaos_barrage:split_damage"
 									},
 									"conditions": [
 										{
 											"type": "target_has_status",
-											"status": "instability"
+											"status": "instability",
+											"effect_id": "chaos_cast_singularity_barrage:0:effects:0:on_hit:1:conditions:0:target_has_status"
 										}
-									]
+									],
+									"effect_id": "chaos_cast_singularity_barrage:0:effects:0:on_hit:1:spawn_projectile_burst"
 								}
-							]
+							],
+							"effect_id": "chaos_cast_singularity_barrage:0:effects:0:spawn_projectile_burst"
 						}
 					]
 				}
@@ -5388,6 +5950,32 @@
 			"capabilities": [
 				"apply_instability",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_cast_singularity_barrage:0:effects:0:spawn_projectile_burst",
+							"set": {
+								"count": 6
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_barrage:split_damage",
+							"set": {
+								"power_scale": 0.28
+							}
+						}
+					]
+				}
 			]
 		},
 		{
@@ -5429,19 +6017,22 @@
 									"type": "damage",
 									"damage_type": "arcane",
 									"source_type": "cast",
-									"power_scale": 0.9
+									"power_scale": 0.9,
+									"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:0:damage"
 								},
 								{
 									"type": "apply_status",
 									"status": "instability",
 									"stacks": 2,
-									"duration": 6
+									"duration": 6,
+									"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:1:apply_status"
 								},
 								{
 									"type": "apply_status",
 									"status": "slow",
 									"stacks": 1,
-									"duration": 1.2
+									"duration": 1.2,
+									"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:2:apply_status"
 								},
 								{
 									"type": "add_modifier",
@@ -5450,9 +6041,11 @@
 									"stat": "chaos_mutation_vulnerability",
 									"op": "raw",
 									"scope": {},
-									"source": "skill"
+									"source": "skill",
+									"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:3:add_modifier"
 								}
-							]
+							],
+							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:spawn_area"
 						}
 					]
 				}
@@ -5464,6 +6057,54 @@
 			"capabilities": [
 				"apply_instability",
 				"copyable_cast"
+			],
+			"level_overrides": [
+				{
+					"level": 3,
+					"description": "三级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:effects_on_apply:1:apply_status",
+							"set": {
+								"stacks": 3
+							}
+						}
+					]
+				},
+				{
+					"level": 5,
+					"description": "五级机制强化",
+					"patches": [
+						{
+							"effect_id": "chaos_cast_mutation_pulse:0:effects:0:spawn_area",
+							"append": {
+								"effects_on_expire": [
+									{
+										"type": "delayed_output",
+										"delay": 0.5,
+										"effects": [
+											{
+												"type": "spawn_area",
+												"area_id": "mutation_pulse_echo",
+												"radius_r": 3,
+												"duration": 0.2,
+												"effects_on_apply": [
+													{
+														"type": "damage",
+														"damage_type": "arcane",
+														"source_type": "cast",
+														"power_scale": 0.3
+													}
+												],
+												"position_mode": "event"
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
 			]
 		},
 		{

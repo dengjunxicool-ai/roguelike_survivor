@@ -25,6 +25,14 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 	params.erase("type")
 	_apply_growth_to_params(params, effect_type, skill_instance, effect_context)
 	match effect_type:
+		"restore_cooldown":
+			params.erase("_skill_instance")
+			return {"type":"restore_cooldown","params":params}
+		"delayed_output":
+			params["actions"] = to_actions(effect.get("effects",[]),skill_instance)
+			params.erase("effects")
+			params.erase("_skill_instance")
+			return {"type":"delayed_output","params":params}
 		"combustion_explosion":
 			return {"type": "combustion_explosion", "params": params}
 		"damage":
@@ -175,6 +183,8 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 		return
 	params["_skill_instance"] = skill_instance
 	match effect_type:
+		"chain_to_targets":
+			_scale_damage_params(params,skill_instance)
 		"damage":
 			_scale_damage_params(params, skill_instance)
 		"instant_area_hit", "damage_by_status_stack":
@@ -197,6 +207,8 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 ## 作用：对伤害动作的 amount 或 damage 配置施加伤害成长。
 ## 使用：params 读取 power_scale/scale/amount/damage；skill_instance 为技能运行实例；会原地更新 params.power_scale/scale/amount。
 static func _scale_damage_params(params: Dictionary, skill_instance: RefCounted) -> void:
+	for key: String in ["extra_main_power","last_target_bonus_power"]:
+		if params.has(key): params[key] = SkillGrowthScalingScript.apply_to_number(float(params[key]),skill_instance,"damage")
 	if params.has("power_scale"):
 		params["power_scale"] = SkillGrowthScalingScript.apply_to_number(float(params.get("power_scale", 0.0)), skill_instance, "damage")
 	if params.has("scale"):

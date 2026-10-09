@@ -38,6 +38,14 @@ const MAX_TICK_HITS_PER_AREA_FRAME: int = 2
 @export var impact_target_id: String = ""
 @export var impact_target_damage_multiplier: float = 1.0
 
+var _milestone_hits: Dictionary = {}
+var _milestone_tick: int = 0
+var _milestone_statuses: Array = []
+var _milestone_parent_first: bool = false
+var _milestone_parent_last: bool = false
+var _return_once: bool = false
+var _returned: bool = false
+var _return_multiplier: float = 1.0
 var _age: float = 0.0
 var _area_step_second: int = 0
 var _tick_timer: float = 0.0
@@ -200,6 +208,13 @@ func _apply_area_payload_params(params: Dictionary) -> void:
 ## 作用：复制各生命周期action并配置一次命中、触发结束、主目标加成与冲刺路径过滤。
 ## 使用：params用于spawn，路径坐标是世界坐标。
 func _apply_area_action_params(params: Dictionary) -> void:
+	_milestone_hits.clear()
+	_milestone_tick = 0
+	_milestone_parent_first = bool(params.get("milestone_first_tick",false))
+	_milestone_parent_last = bool(params.get("milestone_last_tick",false))
+	_return_once = bool(params.get("return_once",false))
+	_returned = false
+	_return_multiplier = float(params.get("return_damage_multiplier",1.0))
 	actions_on_apply = _get_array(params.get("actions_on_apply", []))
 	actions_on_tick = _get_array(params.get("actions_on_tick", []))
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
@@ -519,7 +534,12 @@ func _physics_process_profiled(delta: float) -> void:
 		_apply_tick_damage()
 
 	if _age >= duration:
-		_finish_damage_window()
+		if _return_once and not _returned:
+			_returned = true
+			_age = 0.0
+			move_direction = -move_direction
+			preload("res://scripts/skills/skill_replay_service.gd").scale_damage(actions_on_tick,_return_multiplier)
+		else: _finish_damage_window()
 
 
 ## 作用：以0.08秒间隔合并程序化重绘。
@@ -599,6 +619,7 @@ func _apply_tick_damage_profiled() -> void:
 
 	_pending_tick_stats = _new_tick_stats()
 	_current_tick_stats = _pending_tick_stats
+	_milestone_tick += 1
 	var targets: Array[Node] = _collect_tick_damage_targets()
 	_pending_tick_target_ids = _get_target_instance_ids(targets)
 	_pending_tick_index = 0
@@ -744,6 +765,8 @@ func _damage_body(body: Node) -> bool:
 	if not _can_damage_body(body):
 		return false
 	var body_id: int = body.get_instance_id()
+	var status_manager: Node = body.get_node_or_null("StatusEffectManager")
+	_milestone_statuses = status_manager.get_status_snapshot() if status_manager != null else []
 
 	if damage > 0 and body.has_method("take_damage"):
 		body.call(&"take_damage", _get_damage_payload(body))
@@ -752,6 +775,7 @@ func _damage_body(body: Node) -> bool:
 	_emit_area_event(event_on_hit, body)
 	_execute_adapted_actions(actions_on_tick, body)
 	_execute_adapted_actions(actions_on_hit, body)
+	_milestone_hits[body_id] = int(_milestone_hits.get(body_id,0))+1
 	if body.has_method("is_dead") and bool(body.call("is_dead")):
 		_execute_adapted_actions(actions_on_death, body)
 	if damage_once_per_body:
@@ -1372,6 +1396,11 @@ func _execute_adapted_actions(actions: Array, target: Node) -> void:
 		"damage_type": damage_type,
 		"damage_packet": damage_packet,
 		"area_tick_stats": _current_tick_stats,
+		"milestone_hit_index":int(_milestone_hits.get(target.get_instance_id(),0)) if target != null else 0,
+		"milestone_first_tick":_milestone_parent_first or _milestone_tick <= 1,
+		"milestone_last_tick":_milestone_parent_last or _age+tick_interval >= duration,
+		"milestone_returning":_returned,
+		"target_statuses":_milestone_statuses,
 		"position": global_position
 	}))
 

@@ -71,6 +71,9 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 ## 使用：params 读取 position/position_mode；context 携带 position/caster/target。
 func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
 	if String(params.get("position_mode", "")) == "event": return context.get("position", Vector2.ZERO)
+	if String(params.get("position_mode", "")) == "area_end":
+		var area: Node2D = context.get("area") as Node2D
+		return area.global_position+Vector2(area.cone_direction)*float(area.get_meta("line_length",area.radius*2.0))*0.5 if area != null else context.get("position",Vector2.ZERO)
 	if params.has("position"):
 		return _get_vector2(params["position"], Vector2.ZERO)
 
