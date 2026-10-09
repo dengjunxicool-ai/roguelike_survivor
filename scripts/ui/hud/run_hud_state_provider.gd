@@ -181,6 +181,8 @@ func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 	var definition := skill_instance.get("definition") as RefCounted
 	var cooldown_remaining: float = maxf(float(skill_instance.get("cooldown_remaining")), 0.0)
 	var cooldown_total: float = _resolve_skill_cooldown_total(definition)
+	if definition != null and skill_instance is SkillInstance:
+		cooldown_total = preload("res://scripts/skills/skill_component_runner.gd").new().get_cooldown(skill_instance,{"caster":player,"owner":player,"skill_instance":skill_instance})
 	if _is_dash_skill(skill_instance, definition):
 		cooldown_remaining = _get_player_float(player, "_dash_cooldown_remaining", cooldown_remaining)
 		cooldown_total = _get_player_float(player, "dash_cooldown", cooldown_total)
@@ -398,5 +400,8 @@ func _skill_feedback(player: Node, skill: RefCounted) -> String:
 				return "充能 %.0f/%.0f" % [float(skill.get_meta(str(rule.counter_key),0.0)),float(rule.threshold)]
 	if String(skill.get("skill_id")) == "chaos_power_echo_cast":
 		var bus: Node = player.get_node_or_null("SkillEventBus")
-		return "回声就绪" if bus != null and not bus.get_cast_snapshot().is_empty() else "等待施法"
+		if bus == null: return "等待施法"
+		var charge: int = int(bus.chaos_state().echo_count)
+		if charge >= 4: return "回声就绪" if not bus.get_cast_snapshot({"skill_type":"cast"}).is_empty() else "等待施法"
+		return "回声充能 %d/4" % charge
 	return ""
