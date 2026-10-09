@@ -1,5 +1,6 @@
 param(
     [string]$Script = '',
+    [string]$Scene = '',
     [Parameter(Mandatory = $true)][string]$OutputRoot,
     [string]$ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path,
     [switch]$Rendered,
@@ -21,8 +22,9 @@ New-Item -ItemType Directory -Force -Path $outputPath,$env:APPDATA,$env:LOCALAPP
 $godotArguments = @('--path', $ProjectPath)
 if ($Import) { $godotArguments += @('--headless','--editor','--quit') }
 else {
-    if ($Script -eq '') { throw 'A script is required outside import mode' }
-    $godotArguments += @('--script', $Script)
+    if ($Script -eq '' -and $Scene -eq '') { throw 'A script or scene is required outside import mode' }
+    if ($Scene -ne '') { $godotArguments += $Scene }
+    else { $godotArguments += @('--script', $Script) }
     if ($Rendered) { $godotArguments += @('--resolution','1280x720','--disable-vsync','--rendering-method','mobile') }
     else { $godotArguments += '--headless' }
     if ($UserArguments.Count -gt 0) { $godotArguments += '--'; $godotArguments += $UserArguments }

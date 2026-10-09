@@ -40,7 +40,7 @@ const expected = [
   ["holy_summon_seraph", "炽天使", "summon", "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾"],
   ["holy_summon_shield_guardian", "圣盾卫士", "summon", "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者"],
   ["holy_passive_sanctuary", "庇护", "passive", "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高"],
-  ["holy_passive_devotion", "虔诚", "passive", "治疗和护盾溢出会转化为短时间伤害加成"],
+  ["holy_passive_devotion", "虔诚", "passive", "护盾溢出时，直接输出伤害提高20%，持续4秒；重复触发刷新持续时间。"],
   ["holy_passive_weakening_judgment", "弱化审判", "passive", "Judgment 敌人造成的伤害降低，并受到更多神圣伤害"],
   ["holy_power_divine_punishment", "神罚", "power", "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标"],
   ["holy_power_counter_seal", "反击圣印", "power", "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment"],

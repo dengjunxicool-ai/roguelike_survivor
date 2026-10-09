@@ -37,7 +37,7 @@ const fireEffectDescriptions = {
   fire_summon_crimson_dragon: "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning",
   fire_summon_ember_fox_pack: "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花",
   fire_passive_burning_focus: "Burning 持续时间和伤害提高",
-  fire_passive_overheated_casting: "受到伤害或生命值降低时，短时间提高技能类伤害和范围",
+  fire_passive_overheated_casting: "受到伤害或生命首次跌破35%时，cast伤害提高30%、范围提高15%，持续5秒；两个入口共享12秒冷却。",
   fire_passive_scorched_ground_affinity: "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高",
   fire_power_combustion_chain: "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆",
   fire_power_ember_attachment: "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
