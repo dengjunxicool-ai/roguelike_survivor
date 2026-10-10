@@ -18,6 +18,9 @@ var boss_hp_at_30s: float = -1.0
 var boss_damage_done: int = 0
 var kill_count: int = 0
 var elite_kill_count: int = 0
+var enemy_kill_counts: Dictionary = {}
+var pierce_hit_count: int = 0
+var bounce_hit_count: int = 0
 var boss_defeated: bool = false
 var highest_alive_normal_enemies: int = 0
 var seconds_near_alive_cap: float = 0.0
@@ -120,6 +123,9 @@ func reset_run(character_id: Variant, map_id: Variant, map_name: String = "") ->
 	boss_damage_done = 0
 	kill_count = 0
 	elite_kill_count = 0
+	enemy_kill_counts.clear()
+	pierce_hit_count = 0
+	bounce_hit_count = 0
 	boss_defeated = false
 	highest_alive_normal_enemies = 0
 	seconds_near_alive_cap = 0.0
@@ -217,7 +223,12 @@ func record_status_applied(status_id: Variant, target: Node = null) -> void:
 ## 作用：累计普通、精英及 Boss 击杀，并记录击杀时的暴击和特定状态信息。
 ## 使用：enemy 应保留等阶、最近伤害与状态信息；死亡奖励入口调用一次，随后发出 enemy_killed。
 func record_enemy_killed(enemy: Node) -> void:
+	if not is_instance_valid(enemy):
+		return
 	kill_count += 1
+	var enemy_id: String = String(enemy.get("enemy_id"))
+	if not enemy_id.is_empty():
+		_add_number(enemy_kill_counts, enemy_id, 1)
 	var rank: String = _get_enemy_rank(enemy)
 	if rank == "elite":
 		elite_kill_count += 1
@@ -274,6 +285,15 @@ func record_reward_taken(kind: String) -> void:
 func record_healing(amount: int) -> void:
 	if amount > 0:
 		healing_used += amount
+
+
+## 作用：累计真实穿透额外目标或弹射命中；仅命中执行入口调用，装备和状态不计。
+func record_projectile_hit(kind: StringName) -> void:
+	match kind:
+		&"pierce":
+			pierce_hit_count += 1
+		&"bounce":
+			bounce_hit_count += 1
 
 
 ## 作用：累计地图危险命中，并为熔岩裂隙或毒雾累加对应承伤次数。
@@ -357,6 +377,9 @@ func get_summary() -> Dictionary:
 		"boss_dps": boss_damage_done / maxf(run_seconds - boss_phase_started_at, 1.0) if boss_phase_started_at >= 0.0 else 0.0,
 		"kill_count": kill_count,
 		"elite_kill_count": elite_kill_count,
+		"enemy_kill_counts": enemy_kill_counts.duplicate(true),
+		"pierce_hit_count": pierce_hit_count,
+		"bounce_hit_count": bounce_hit_count,
 		"boss_defeated": boss_defeated,
 		"highest_alive_normal_enemies": highest_alive_normal_enemies,
 		"seconds_near_alive_cap": seconds_near_alive_cap,

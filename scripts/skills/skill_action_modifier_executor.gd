@@ -18,11 +18,7 @@ func _heal_owner(params: Dictionary, context: Dictionary) -> bool:
 	if amount <= 0:
 		return false
 
-	var max_health: int = int(caster.get("max_health"))
-	var current_health: int = int(caster.get("current_health"))
-	caster.set("current_health", mini(current_health + amount, max_health))
-	if caster.has_signal("health_changed"):
-		caster.emit_signal("health_changed", int(caster.get("current_health")), max_health)
+	preload("res://scripts/player/player_healing.gd").apply(caster, amount)
 	return true
 
 

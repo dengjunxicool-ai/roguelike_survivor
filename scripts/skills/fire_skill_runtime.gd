@@ -534,9 +534,7 @@ static func _apply_revive_once(rules: Dictionary, context: Dictionary, executor:
 		return
 	passive_skill.set_meta("fire_runtime_revive_used", true)
 	var max_health: int = maxi(int(player.get("max_health")), 1)
-	player.set("current_health", maxi(roundi(float(max_health) * float(rules.get("revive_health_ratio", 0.45))), 1))
-	if player.has_signal("health_changed"):
-		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
+	preload("res://scripts/player/player_healing.gd").apply(player, maxi(roundi(float(max_health) * float(rules.get("revive_health_ratio", 0.45))), 1))
 	_deal_rule_damage(context, executor, int(rules.get("explosion_damage", 0)))
 	var fire_damage_add: float = float(rules.get("post_revive_fire_damage_multiplier_add", 0.0))
 	if not is_zero_approx(fire_damage_add) and player.has_method("set_run_modifier_source"):

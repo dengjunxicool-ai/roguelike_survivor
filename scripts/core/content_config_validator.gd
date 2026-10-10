@@ -87,6 +87,14 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 				for field: String in rule.required:
 					if not item.has(field) or item[field] == null or item[field] is String and item[field].is_empty():
 						errors.append("%s.%s: required nonempty field" % [where, field])
+				for field: String in section.get("required", []):
+					if not item.has(field):
+						errors.append("%s.%s: required section field" % [where, field])
+				for field: String in section.get("numeric_minimums", {}):
+					var value: Variant = item.get(field)
+					var minimum: float = float(section.numeric_minimums[field])
+					if not (value is int or value is float) or not is_finite(float(value)) or float(value) < minimum:
+						errors.append("%s.%s: required finite number >= %s" % [where, field, minimum])
 				for field: String in item:
 					if not rule.fields.has(field):
 						errors.append("%s.%s: unknown definition field" % [where, field])

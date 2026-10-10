@@ -144,6 +144,8 @@
 			"base_weight": 100,
 			"weight_decay": 0.85,
 			"max_level": 20,
+			"cost_base": 100,
+			"cost_growth": 1.15,
 			"modifiers": [
 				{
 					"stat": "max_hp",
@@ -182,11 +184,13 @@
 			"exclude_tags": [],
 			"id": "meta_pickup",
 			"display_name": "拾取强化",
-			"description": "拾取范围+40%",
+			"description": "拾取范围+4%",
 			"enabled": true,
 			"base_weight": 90,
 			"weight_decay": 0.85,
 			"max_level": 40,
+			"cost_base": 50,
+			"cost_growth": 1.1,
 			"modifiers": [
 				{
 					"stat": "pickup_radius",
@@ -230,6 +234,8 @@
 			"base_weight": 50,
 			"weight_decay": 0.85,
 			"max_level": 10,
+			"cost_base": 150,
+			"cost_growth": 1.2,
 			"modifiers": [
 				{
 					"stat": "luck",
@@ -268,11 +274,13 @@
 			"exclude_tags": [],
 			"id": "meta_combat_intuition",
 			"display_name": "战斗直觉",
-			"description": "BOSS增伤1",
+			"description": "Boss 战前祝福额外提供1个选项",
 			"enabled": true,
 			"base_weight": 30,
 			"weight_decay": 0.85,
 			"max_level": 1,
+			"cost_base": 500,
+			"cost_growth": 1,
 			"modifiers": [
 				{
 					"stat": "pre_boss_blessing_options",

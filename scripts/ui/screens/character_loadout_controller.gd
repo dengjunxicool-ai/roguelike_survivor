@@ -12,6 +12,7 @@ signal back_requested
 const UIDisplayHelperScript: Script = preload("res://scripts/ui/ui_display_helper.gd")
 const UICommandDispatcherScript: Script = preload("res://scripts/ui/ui_command_dispatcher.gd")
 const UICommandScript: Script = preload("res://scripts/ui/ui_command.gd")
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 const NAV_HEIGHT: float = 64.0
 const LIST_MIN_WIDTH: float = 260.0
@@ -140,17 +141,19 @@ func _build_nav_bar(root: VBoxContainer) -> void:
 	nav_bar.add_theme_constant_override("separation", 16)
 	root.add_child(nav_bar)
 
-	var back_button: Button = _add_button(nav_bar, "返回")
+	var back_button: Button = _add_button(nav_bar, "")
+	Locale.bind_text(back_button, "character.back")
 	back_button.name = "CharacterBackButton"
 	back_button.custom_minimum_size = Vector2(128, 56)
 	back_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	back_button.pressed.connect(Callable(self, "_emit_back_requested"))
 
-	var title_label: Label = _add_label(nav_bar, "选择角色", HORIZONTAL_ALIGNMENT_CENTER, "CharacterTitleLabel")
+	var title_label: Label = _add_label(nav_bar, "", HORIZONTAL_ALIGNMENT_CENTER, "CharacterTitleLabel")
+	Locale.bind_text(title_label, "character.select")
 	title_label.add_theme_font_size_override("font_size", 30)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var soul_label: Label = _add_label(nav_bar, "灵魂石：0", HORIZONTAL_ALIGNMENT_RIGHT, "CharacterSoulLabel")
+	var soul_label: Label = _add_label(nav_bar, "", HORIZONTAL_ALIGNMENT_RIGHT, "CharacterSoulLabel")
 	soul_label.custom_minimum_size = Vector2(150, 0)
 	soul_label.size_flags_horizontal = Control.SIZE_SHRINK_END
 
@@ -203,7 +206,8 @@ func _build_character_list(parent: BoxContainer) -> void:
 	layout.add_theme_constant_override("separation", 10)
 	margin.add_child(layout)
 
-	var title: Label = _add_detail_label(layout, "角色")
+	var title: Label = _add_detail_label(layout, "")
+	Locale.bind_text(title, "codex.characters")
 	title.add_theme_font_size_override("font_size", 20)
 
 	_character_list = VBoxContainer.new()
@@ -273,7 +277,8 @@ func _build_detail_panel(parent: BoxContainer) -> void:
 	layout.add_theme_constant_override("separation", 10)
 	margin.add_child(layout)
 
-	var stats_title: Label = _add_detail_label(layout, "基础属性")
+	var stats_title: Label = _add_detail_label(layout, "")
+	Locale.bind_text(stats_title, "character.base_stats")
 	stats_title.add_theme_font_size_override("font_size", 19)
 
 	_stats_list = GridContainer.new()
@@ -310,11 +315,12 @@ func _build_confirm_panel(parent: VBoxContainer) -> void:
 	row.add_theme_constant_override("separation", 16)
 	margin.add_child(row)
 
-	var hint_label: Label = _add_detail_label(row, "当前角色会携带自己的初始技能进入地图选择。")
+	var hint_label: Label = _add_detail_label(row, "")
+	Locale.bind_text(hint_label, "character.confirm_hint")
 	hint_label.name = "CharacterConfirmHintLabel"
 	hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	_confirm_button = _add_button(row, "确认")
+	_confirm_button = _add_button(row, Locale.translate("character.confirm"))
 	_confirm_button.name = "CharacterConfirmButton"
 	_confirm_button.custom_minimum_size = Vector2(220, 58)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -342,7 +348,7 @@ func _refresh_character_cards() -> void:
 	_clear_children(_character_list)
 	var characters: Array = GameData.get_character_pool()
 	if characters.is_empty():
-		_add_detail_label(_character_list, "暂无角色数据")
+		_add_detail_label(_character_list, Locale.translate("character.empty"))
 		return
 	for character_variant: Variant in characters:
 		var character: Dictionary = _get_dictionary(character_variant)
@@ -360,7 +366,7 @@ func _add_character_card(character: Dictionary, character_id: StringName) -> voi
 	button.name = "CharacterCard_%s" % str(character_id)
 	var lock_text: String = ""
 	if not is_unlocked:
-		lock_text = "\n未解锁"
+		lock_text = "\n" + Locale.translate("character.locked")
 	button.text = "%s\n%s%s" % [
 		_get_character_display_name(character, character_id),
 		_get_character_role(character, character_id),
@@ -385,14 +391,14 @@ func _refresh_selected_character() -> void:
 	var character: Dictionary = GameData.get_character(selected_character_id)
 	var is_configured: bool = not character.is_empty()
 	if not is_configured:
-		_name_label.text = "请选择角色"
+		_name_label.text = Locale.translate("character.select_prompt")
 		_role_label.text = ""
 		_description_label.text = ""
 		_portrait_texture.texture = null
 		_clear_children(_stats_list)
 		_trait_label.text = ""
 		_starting_skill_label.text = ""
-		_confirm_button.text = "请选择角色"
+		_confirm_button.text = Locale.translate("character.select_prompt")
 		_confirm_button.disabled = true
 		return
 
@@ -416,14 +422,14 @@ func _refresh_selected_character() -> void:
 ## 使用：本文件由 _refresh_selected_character 调用；输入 stats（属性统计）。
 func _refresh_stats(stats: Dictionary) -> void:
 	_clear_children(_stats_list)
-	_add_stat_row("生命", _format_number(stats.get("max_hp", 0)))
-	_add_stat_row("移速", _format_number(stats.get("move_speed", 0)))
-	_add_stat_row("伤害", _format_multiplier(stats.get("damage_multiplier", 1.0)))
-	_add_stat_row("攻速", _format_multiplier(stats.get("attack_speed_multiplier", 1.0)))
-	_add_stat_row("暴击", _format_percent(stats.get("crit_chance", 0.0)))
-	_add_stat_row("暴伤", _format_multiplier(stats.get("crit_damage", 1.0)))
-	_add_stat_row("护甲", _format_number(stats.get("armor", 0)))
-	_add_stat_row("拾取", _format_number(stats.get("pickup_radius", 0)))
+	_add_stat_row(Locale.translate("character.stat.health"), _format_number(stats.get("max_hp", 0)))
+	_add_stat_row(Locale.translate("character.stat.move_speed"), _format_number(stats.get("move_speed", 0)))
+	_add_stat_row(Locale.translate("character.stat.damage"), _format_multiplier(stats.get("damage_multiplier", 1.0)))
+	_add_stat_row(Locale.translate("character.stat.attack_speed"), _format_multiplier(stats.get("attack_speed_multiplier", 1.0)))
+	_add_stat_row(Locale.translate("character.stat.crit_chance"), _format_percent(stats.get("crit_chance", 0.0)))
+	_add_stat_row(Locale.translate("character.stat.crit_damage"), _format_multiplier(stats.get("crit_damage", 1.0)))
+	_add_stat_row(Locale.translate("character.stat.armor"), _format_number(stats.get("armor", 0)))
+	_add_stat_row(Locale.translate("character.stat.pickup"), _format_number(stats.get("pickup_radius", 0)))
 
 
 ## 作用：添加属性行。
@@ -440,9 +446,9 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 ## 使用：本文件由 _refresh_selected_character 调用；输入 character（角色）。
 func _refresh_trait(character: Dictionary) -> void:
 	var trait_data: Dictionary = _get_dictionary(character.get("trait", {}))
-	var trait_name: String = str(trait_data.get("display_name", trait_data.get("id", "未配置")))
+	var trait_name: String = str(trait_data.get("display_name", trait_data.get("id", Locale.translate("character.unconfigured"))))
 	var trait_description: String = str(trait_data.get("description", ""))
-	_trait_label.text = "角色特质\n%s\n%s" % [trait_name, trait_description]
+	_trait_label.text = "%s\n%s\n%s" % [Locale.translate("character.trait"), trait_name, trait_description]
 
 
 ## 作用：刷新起始技能。
@@ -451,9 +457,10 @@ func _refresh_starting_skill(character: Dictionary) -> void:
 	var starting_skill_id: StringName = StringName(str(character.get("starting_skill_id", "")))
 	var skill: Dictionary = GameData.get_skill(starting_skill_id)
 	if starting_skill_id == &"" or skill.is_empty():
-		_starting_skill_label.text = "初始技能\n未配置"
+		_starting_skill_label.text = "%s\n%s" % [Locale.translate("character.starting_skill"), Locale.translate("character.unconfigured")]
 		return
-	_starting_skill_label.text = "初始技能\n%s\n%s" % [
+	_starting_skill_label.text = "%s\n%s\n%s" % [
+		Locale.translate("character.starting_skill"),
 		str(skill.get("display_name", starting_skill_id)),
 		str(skill.get("description", ""))
 	]
@@ -467,9 +474,9 @@ func _refresh_confirm_button(character: Dictionary) -> void:
 	var is_unlocked: bool = SaveManager.is_character_unlocked(selected_character_id)
 	_confirm_button.disabled = not has_skill
 	if not has_skill:
-		_confirm_button.text = "缺少初始技能"
+		_confirm_button.text = Locale.translate("character.missing_skill")
 	elif is_unlocked:
-		_confirm_button.text = "确认"
+		_confirm_button.text = Locale.translate("character.confirm")
 	else:
 		_confirm_button.text = _get_unlock_button_text(character)
 
@@ -479,7 +486,7 @@ func _refresh_confirm_button(character: Dictionary) -> void:
 func _refresh_soul_label() -> void:
 	var soul_label: Label = _screen.find_child("CharacterSoulLabel", true, false) as Label
 	if soul_label != null:
-		soul_label.text = "灵魂石：%d" % SaveManager.get_soul_stones()
+		soul_label.text = Locale.translate("currency.soul_stones", {"count": str(SaveManager.get_soul_stones())})
 
 
 ## 作用：选择角色。
@@ -511,8 +518,8 @@ func _get_unlock_button_text(character: Dictionary) -> String:
 	var unlock: Dictionary = _get_dictionary(character.get("unlock", {}))
 	var cost: int = int(unlock.get("cost", 0))
 	if cost > 0:
-		return "解锁（%d 灵魂石）" % cost
-	return "解锁"
+		return Locale.translate("character.unlock_cost", {"cost": str(cost)})
+	return Locale.translate("character.unlock")
 
 
 ## 作用：获取角色展示名称，供当前模块后续逻辑使用。
@@ -541,7 +548,7 @@ func _format_multiplier(value: Variant) -> String:
 	var multiplier: float = float(value)
 	var delta_percent: int = roundi((multiplier - 1.0) * 100.0)
 	if delta_percent == 0:
-		return "标准"
+		return Locale.translate("character.standard")
 	if delta_percent > 0:
 		return "+%d%%" % delta_percent
 	return "%d%%" % delta_percent

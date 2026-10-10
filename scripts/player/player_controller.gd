@@ -130,6 +130,11 @@ func _ready() -> void:
 		push_error("[Player] Could not build initial RunLoadout for %s." % String(selected_character_id))
 
 
+## 作用：恢复生命并返回实际恢复量，统一记录本局治疗；生命上限成长另行处理。
+func heal(amount: int) -> int:
+	return preload("res://scripts/player/player_healing.gd").restore(self, amount)
+
+
 ## 作用：确保调试叠层。
 ## 使用：本文件由 _ready 调用。
 func _ensure_debug_overlay() -> void:

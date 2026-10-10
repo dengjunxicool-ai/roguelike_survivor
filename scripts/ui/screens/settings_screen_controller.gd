@@ -18,6 +18,8 @@ var _language_button: OptionButton
 var _fullscreen_button: CheckBox
 var _master_slider: HSlider
 var _body: VBoxContainer
+var _applied_master_volume: float = 70.0
+var _applied_fullscreen: bool = false
 
 
 ## 作用：构建并处理全屏、主音量和语言设置控件。
@@ -30,6 +32,7 @@ func build(body: VBoxContainer) -> void:
 	_master_slider.min_value = 0.0
 	_master_slider.max_value = 100.0
 	_master_slider.value = SaveManager.get_master_volume_percent()
+	_applied_master_volume = _master_slider.value
 	_master_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UISettingsServiceScript.apply_master_volume(_master_slider.value)
 	_master_slider.value_changed.connect(Callable(self, "_on_master_volume_changed"))
@@ -39,6 +42,7 @@ func build(body: VBoxContainer) -> void:
 	_fullscreen_button = CheckBox.new()
 	LocalizationServiceScript.bind_text(_fullscreen_button, "settings.fullscreen", "全屏")
 	_fullscreen_button.button_pressed = SaveManager.get_fullscreen_enabled()
+	_applied_fullscreen = _fullscreen_button.button_pressed
 	UIButtonSkin.apply(_fullscreen_button)
 	_fullscreen_button.toggled.connect(Callable(self, "_set_fullscreen"))
 	body.add_child(_fullscreen_button)
@@ -64,15 +68,21 @@ func _add_localized_label(body: Node, key: String, fallback: String, alignment: 
 ## 作用：设置全屏。
 ## 使用：本文件由 build 调用；输入 enabled（启用）；可能写入 user:// 存档。
 func _set_fullscreen(enabled: bool) -> void:
-	SaveManager.set_fullscreen_enabled(enabled)
+	if not SaveManager.set_fullscreen_enabled(enabled):
+		_fullscreen_button.set_pressed_no_signal(_applied_fullscreen)
+		return
 	UISettingsServiceScript.apply_window_mode(enabled)
+	_applied_fullscreen = enabled
 
 
 ## 作用：响应主音量变化并衔接对应的事件处理流程。
 ## 使用：本文件由 build 调用；输入 value（值）；可能写入 user:// 存档。
 func _on_master_volume_changed(value: float) -> void:
-	SaveManager.set_master_volume_percent(value)
+	if not SaveManager.set_master_volume_percent(value):
+		_master_slider.set_value_no_signal(_applied_master_volume)
+		return
 	UISettingsServiceScript.apply_master_volume(value)
+	_applied_master_volume = value
 
 
 ## 作用：响应语言当前选择并衔接对应的事件处理流程。
@@ -81,7 +91,9 @@ func _on_language_selected(index: int) -> void:
 	if index < 0 or index >= _languages.size():
 		return
 	var language_id: String = String(_languages[index].get("id", "zh"))
-	SaveManager.set_language_id(language_id)
+	if not SaveManager.set_language_id(language_id):
+		_language_button.select(_get_language_index(LocalizationServiceScript.get_language_id()))
+		return
 	UISettingsServiceScript.apply_language(language_id)
 	_language_button.select(index)
 	LocalizationServiceScript.refresh_tree(_body)

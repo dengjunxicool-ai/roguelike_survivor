@@ -1,23 +1,24 @@
 ## 文件用途：为精英奖励或 Boss 前祝福编排资源、治疗、升级和遗物卡片。
-## 使用方式：generate_reward_options 传玩家及 reward_kind，洗牌和检查保证后返回最多三项；本文件只生成数据。
+## 使用方式：generate_reward_options 传玩家及 reward_kind；Boss 候选数量包含本局永久升级属性，本文件只生成数据。
 extends RefCounted
 class_name RunRewardPool
 
 
 const REWARD_COUNT: int = 3
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
+const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_query.gd")
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _upgrade_pool: RefCounted = UpgradePoolScript.new()
 
 
 ## 作用：随机化奖励池专属 RNG，供奖励洗牌与遗物抽取使用。
-## 使用：generate_reward_options 传玩家及 reward_kind，洗牌和检查保证后返回最多三项；本文件只生成数据。
+## 使用：generate_reward_options 传玩家及 reward_kind；精英三项，Boss 项数包含永久升级加值。
 func _init() -> void:
 	_rng.randomize()
 
 
-## 作用：按奖励类别构建候选，洗牌和执行保证后返回最多三张卡。
+## 作用：按奖励类别构建候选，洗牌、裁切并执行最终列表保证。
 ## 使用：player 为玩家节点；无匹配项时返回空数组。
 func generate_reward_options(player: Node, reward_kind: String) -> Array[Dictionary]:
 	if player == null:
@@ -31,9 +32,18 @@ func generate_reward_options(player: Node, reward_kind: String) -> Array[Diction
 			options = _build_elite_reward_options(player)
 
 	_shuffle(options)
-	options = options.slice(0, mini(REWARD_COUNT, options.size()))
+	var count: int = _get_reward_count(player, reward_kind)
+	options = options.slice(0, mini(count, options.size()))
 	_ensure_reward_guarantees(player, reward_kind, options)
-	return options.slice(0, mini(REWARD_COUNT, options.size()))
+	return options.slice(0, mini(count, options.size()))
+
+
+func _get_reward_count(player: Node, reward_kind: String) -> int:
+	if reward_kind != "boss_blessing": return REWARD_COUNT
+	var store: Node = player.get_node_or_null("ModifierStore")
+	if store == null or not store.has_method("collect"): return REWARD_COUNT
+	var modifiers: Dictionary = store.call("collect", ModifierQueryScript.for_player(player))
+	return REWARD_COUNT + maxi(0, int(modifiers.get("pre_boss_blessing_options_add", 0)))
 
 
 ## 作用：构建精英节点的经验、资源、治疗、升级和遗物候选，低血时增加生存项。
@@ -45,7 +55,7 @@ func _build_elite_reward_options(player: Node) -> Array[Dictionary]:
 		_make_option("reward_heal", "应急治疗", "恢复 25% 最大生命。", "rare", {"heal_percent": 0.25, "reward_kind": "elite"}, ["生存", "治疗"], "生命值", "不直接提高输出。", "补足血量可以降低下一波或 Boss 前暴毙风险。")
 	]
 	options.append_array(_upgrade_options(player, 2, "elite"))
-	var relic_option: Dictionary = _random_relic_option("elite")
+	var relic_option: Dictionary = _random_relic_option(player, "elite")
 	if not relic_option.is_empty():
 		options.append(relic_option)
 	if _health_percent(player) < 0.40:
@@ -63,11 +73,11 @@ func _build_boss_blessing_options(player: Node) -> Array[Dictionary]:
 		_make_option("boss_survival_blessing", "稳固防线", "恢复 20% 最大生命，并获得防御补强。", "rare", {"heal_percent": 0.20, "upgrade_id": &"survival_defense", "reward_kind": "boss_blessing"}, ["Boss", "生存"], "Boss 阶段承伤", "不直接提高输出。", "适合对 Boss 技能读条不熟或血量偏低的局。"),
 		_make_option("boss_growth_blessing", "临战熟练", "立即获得 60 点经验，补齐未完成的主攻击成长。", "rare", {"amount": 60, "reward_kind": "boss_blessing"}, ["成长", "主攻击"], "主攻击等级", "不直接提高未拥有技能。", "若 Boss 前未完成 Lv5，该选项能补齐构筑闭环。"),
 		_make_option("boss_status_blessing", "状态共鸣", "本局对 Boss 的 DOT 与反应伤害提高 15%。", "rare", {"upgrade_id": &"boss_status_damage", "reward_kind": "boss_blessing"}, ["Boss", "状态", "反应"], "DOT / 反应 Boss 表现", "不影响直接伤害、百分比真伤或普通怪。", "适合冰、毒、闪电等依赖状态链的构筑。"),
-		_make_option("boss_control_blessing", "破势训练", "Boss 战中控制路线更容易转化为有效输出窗口。", "rare", {"upgrade_id": &"survival_defense", "reward_kind": "boss_blessing"}, ["Boss", "控制", "生存"], "Boss 韧性 / 生存", "不直接提高普通怪伤害。", "适合冰杖、战锤、陷阱等控制构筑。"),
+		_make_option("boss_control_blessing", "临战护甲", "本局护甲增加 2 点，降低受到的伤害。", "rare", {"upgrade_id": &"survival_defense", "reward_kind": "boss_blessing"}, ["Boss", "护甲", "生存"], "护甲", "不改变 Boss 韧性、控制时长或伤害。", "适合需要降低 Boss 战承伤的构筑。"),
 		_make_option("boss_risk_reward", "危险悬赏", "Boss 生命提高，但本局胜利收益提高。", "epic", {"upgrade_id": &"curse_boss_bounty", "reward_kind": "boss_blessing"}, ["Boss", "风险奖励"], "Boss 难度 / 胜利收益", "不提高生存，且会增加 Boss 血量。", "适合输出已经成型、想换取更高胜利收益的局。")
 	]
 	options.append_array(_upgrade_options(player, 2, "boss_blessing"))
-	var relic_option: Dictionary = _random_relic_option("boss_blessing")
+	var relic_option: Dictionary = _random_relic_option(player, "boss_blessing")
 	if not relic_option.is_empty():
 		options.append(relic_option)
 	return _filter_capped_upgrades(player, options)
@@ -106,8 +116,15 @@ func _upgrade_options(player: Node, count: int, reward_kind: String) -> Array[Di
 
 ## 作用：从遗物池均匀抽一个定义并构建遗物奖励卡，无有效遗物返回空字典。
 ## 使用：由本文件 _build_elite_reward_options/_build_boss_blessing_options 调用；无适用数据时返回空字典。
-func _random_relic_option(reward_kind: String) -> Dictionary:
-	var relics: Array[Dictionary] = GameData.get_relic_pool()
+func _random_relic_option(player: Node, reward_kind: String) -> Dictionary:
+	var manager: Node = player.get_node_or_null("RelicManager")
+	if manager == null or not manager.has_method("can_add_relic") or not manager.call("can_add_relic"):
+		return {}
+	var relics: Array[Dictionary] = []
+	for candidate: Dictionary in GameData.get_relic_pool():
+		var id: StringName = StringName(candidate.get("id", ""))
+		if id != &"" and not manager.call("has_relic", id) and not manager.call("get_relic_definition", id).is_empty():
+			relics.append(candidate)
 	if relics.is_empty():
 		return {}
 	var relic: Dictionary = relics[_rng.randi_range(0, relics.size() - 1)]

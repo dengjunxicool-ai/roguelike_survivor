@@ -1,5 +1,12 @@
 {
   "scripts": {
+    "verify:qa2-rewards": "godot --headless --path . --script res://tools/verify/verify_qa2_rewards.gd",
+    "verify:qa2-economy-save": "godot --headless --path . --script res://tools/verify/verify_qa_economy_save.gd",
+    "verify:qa2-permanent-prices": "node tools/verify/verify_qa_permanent_prices.js",
+    "verify:qa2-stats": "godot --headless --path . --script res://tools/verify/verify_qa_round2_stats.gd",
+    "verify:qa2-ui": "godot --headless --path . --script res://tools/verify/verify_qa_round2_ui.gd",
+    "verify:qa2-settings-write-failure": "godot --headless --path . --script res://tools/verify/verify_qa_round2_settings_write_failure.gd",
+    "verify:qa2-reward-commit": "godot --headless --path . --script res://tools/verify/verify_qa_round2_reward_commit.gd",
     "verify:qa-boss-arrival": "godot --headless --path . --script res://tools/verify/verify_qa_boss_arrival.gd",
     "verify:verify-qa-event-lifetime": "godot --headless --path . --script res://tools/verify/verify_qa_event_lifetime.gd",
     "verify:verify-qa-choice-transactions": "godot --headless --path . --script res://tools/verify/verify_qa_choice_transactions.gd",

@@ -3,6 +3,7 @@
 
 extends RefCounted
 class_name CodexViewModelBuilder
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 
 ## 作用：整理上下文和配置为页面展示模型。
@@ -10,11 +11,11 @@ class_name CodexViewModelBuilder
 func build() -> Dictionary:
 	return {
 		"tabs": [
-			{"title": "角色", "rows": _build_character_rows()},
-			{"title": "技能", "rows": _build_skill_rows()},
-			{"title": "怪物", "rows": _build_enemy_rows()},
-			{"title": "状态", "rows": _build_status_rows()},
-			{"title": "遗物", "rows": _build_relic_rows()},
+			{"title": Locale.translate("codex.characters"), "rows": _build_character_rows()},
+			{"title": Locale.translate("codex.skills"), "rows": _build_skill_rows()},
+			{"title": Locale.translate("codex.enemies"), "rows": _build_enemy_rows()},
+			{"title": Locale.translate("codex.statuses"), "rows": _build_status_rows()},
+			{"title": Locale.translate("codex.relics"), "rows": _build_relic_rows()},
 		]
 	}
 
