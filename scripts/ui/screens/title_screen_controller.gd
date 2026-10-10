@@ -178,6 +178,7 @@ func _build_title_stack(parent: Control) -> void:
 	_title_stack.add_child(_title_accent)
 
 	_subtitle_label = _add_label(_title_stack, _tr("title.subtitle", "暗黑俯瞰幸存者冒险"))
+	LocalizationServiceScript.bind_text(_subtitle_label,"title.subtitle","暗黑俯瞰幸存者冒险")
 	_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_set_label_font_size(_subtitle_label, 23)
 	_subtitle_label.add_theme_color_override("font_color", Color(0.70, 0.90, 0.93, 1.0))
@@ -186,6 +187,7 @@ func _build_title_stack(parent: Control) -> void:
 	_subtitle_label.add_theme_constant_override("shadow_offset_y", 2)
 
 	_prompt_label = _add_label(_title_stack, _tr("title.prompt", "按任意键继续"))
+	LocalizationServiceScript.bind_text(_prompt_label,"title.prompt","按任意键继续")
 	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_set_label_font_size(_prompt_label, 19)
 	_prompt_label.add_theme_color_override("font_color", Color(0.97, 0.70, 0.33, 1.0))
@@ -222,6 +224,7 @@ func _build_action_menu(parent: Control) -> void:
 	_menu_scroll.add_child(_action_list)
 
 	_menu_title_label = _add_label(_action_list, _tr("title.menu", "主菜单"))
+	LocalizationServiceScript.bind_text(_menu_title_label,"title.menu","主菜单")
 	_menu_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_set_label_font_size(_menu_title_label, 18)
 	_menu_title_label.add_theme_color_override("font_color", Color(0.88, 0.75, 0.48, 1.0))
@@ -229,13 +232,14 @@ func _build_action_menu(parent: Control) -> void:
 	_menu_title_label.add_theme_constant_override("shadow_offset_x", 1)
 	_menu_title_label.add_theme_constant_override("shadow_offset_y", 2)
 
-	_add_menu_button(_tr("title.developer_mode", "开发者模式"), Callable(self, "_emit_state").bind(STATE_DEVELOPER_MODE))
-	_add_menu_button(_tr("title.continue", "继续游戏"), Callable(self, "_emit_state").bind(STATE_CHARACTER_SELECT), false, _tr("title.continue.tooltip", "当前版本直接进入角色选择"))
-	_add_menu_button(_tr("title.start", "开始冒险"), Callable(self, "_emit_state").bind(STATE_CHARACTER_SELECT))
-	_add_menu_button(_tr("title.meta_upgrade", "局外强化"), Callable(self, "_emit_state").bind(STATE_META_UPGRADE))
-	_add_menu_button(_tr("title.codex", "图鉴"), Callable(self, "_emit_state").bind(STATE_CODEX))
-	_add_menu_button(_tr("title.settings", "设置"), Callable(self, "_emit_state").bind(STATE_SETTINGS))
-	_add_menu_button(_tr("title.quit", "退出游戏"), Callable(self, "_emit_quit"))
+	_add_localized_menu_button("title.developer_mode", "开发者模式", Callable(self, "_emit_state").bind(STATE_DEVELOPER_MODE))
+	var continue_button: Button = _add_localized_menu_button("title.continue", "继续游戏", Callable(self, "_emit_state").bind(STATE_CHARACTER_SELECT), false)
+	LocalizationServiceScript.bind_text(continue_button,"title.continue.tooltip","当前版本直接进入角色选择","tooltip_text")
+	_add_localized_menu_button("title.start", "开始冒险", Callable(self, "_emit_state").bind(STATE_CHARACTER_SELECT))
+	_add_localized_menu_button("title.meta_upgrade", "局外强化", Callable(self, "_emit_state").bind(STATE_META_UPGRADE))
+	_add_localized_menu_button("title.codex", "图鉴", Callable(self, "_emit_state").bind(STATE_CODEX))
+	_add_localized_menu_button("title.settings", "设置", Callable(self, "_emit_state").bind(STATE_SETTINGS))
+	_add_localized_menu_button("title.quit", "退出游戏", Callable(self, "_emit_quit"))
 	_action_menu.visible = false
 
 
@@ -258,7 +262,12 @@ func _build_footer(parent: Control) -> void:
 
 ## 作用：添加菜单按钮并配置节点/样式所需的属性。
 ## 使用：本文件由 _build_action_menu 调用；输入 text（文本）、callable（callable）、enabled（启用）、tooltip（tooltip）。
-func _add_menu_button(text: String, callable: Callable, enabled: bool = true, tooltip: String = "") -> void:
+func _add_localized_menu_button(key: String, fallback: String, callable: Callable, enabled: bool = true) -> Button:
+	var button: Button = _add_menu_button("",callable,enabled)
+	LocalizationServiceScript.bind_text(button,key,fallback)
+	return button
+
+func _add_menu_button(text: String, callable: Callable, enabled: bool = true, tooltip: String = "") -> Button:
 	var button: Button = Button.new()
 	button.text = text
 	button.disabled = not enabled
@@ -270,6 +279,7 @@ func _add_menu_button(text: String, callable: Callable, enabled: bool = true, to
 	_apply_menu_button_style(button)
 	button.pressed.connect(callable)
 	_action_list.add_child(button)
+	return button
 
 
 ## 作用：更新标题布局。

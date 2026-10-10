@@ -6,6 +6,7 @@ class_name RunProgressionService
 
 
 const STATE_RESULT_VICTORY: String = "RESULT_VICTORY"
+const DamageOrigins: Script = preload("res://scripts/combat/damage_rule_registry.gd")
 
 
 ## 作用：从终局快照计算并保存全局计数、角色专精、地图及固定挑战进度。
@@ -24,11 +25,12 @@ static func record_run_result(state: String, run_state: Dictionary) -> Dictionar
 	return summary
 
 
-## 作用：整理终局结果、角色地图、时间、击杀、灵魂、240 秒达成情况及挑战信息。
+## 作用：整理终局结果、角色地图、时间、击杀、灵魂、实际 Boss 到达及挑战信息。
 ## 使用：context 为运行上下文；返回包含 main_attack_level 和 run_stats 的成长摘要。
 static func _build_summary(state: String, run_state: Dictionary) -> Dictionary:
 	var run_seconds: float = float(run_state.get("run_seconds", 0.0))
 	var kill_count: int = maxi(int(run_state.get("kill_count", 0)), 0)
+	var stats: Dictionary = _get_dictionary(run_state.get("run_stats", {}))
 	return {
 		"result_state": state,
 		"victory": state == STATE_RESULT_VICTORY,
@@ -38,10 +40,10 @@ static func _build_summary(state: String, run_state: Dictionary) -> Dictionary:
 		"run_seconds": run_seconds,
 		"kill_count": kill_count,
 		"run_souls_earned": maxi(int(run_state.get("run_souls_earned", 0)), 0),
-		"reached_boss": run_seconds >= 240.0,
+		"reached_boss": state == STATE_RESULT_VICTORY or float(stats.get("boss_phase_started_at", -1.0)) >= 0.0,
 		"challenge_id": StringName(String(run_state.get("challenge_id", ""))),
 		"main_attack_level": int(run_state.get("main_attack_level", 1)),
-		"run_stats": _get_dictionary(run_state.get("run_stats", {}))
+		"run_stats": stats
 	}
 
 
@@ -163,7 +165,7 @@ static func _map_objective_met(objective_id: StringName, summary: Dictionary) ->
 		"avoid_toxic_fog_overdamage", "clear_all_toxic_fog_events":
 			return victory and int(stats.get("poison_instances_taken", 0)) < 5
 		"clear_with_dot_damage":
-			return victory and _damage_origin_share_at_least(stats, "dot", 0.35)
+			return victory and _damage_origin_share_at_least(stats, DamageOrigins.ORIGIN_STATUS_DOT, 0.35)
 		"survive_lava_fissures":
 			return victory and int(stats.get("lava_hits_taken", 0)) <= 0
 		"clear_with_control_status":
@@ -201,7 +203,9 @@ static func _character_goal_met(character_id: StringName, _goal_id: StringName, 
 static func _damage_origin_share_at_least(stats: Dictionary, origin: String, threshold: float) -> bool:
 	var damage_by_origin: Dictionary = _get_dictionary(stats.get("damage_done_by_origin", {}))
 	var total: float = maxf(float(stats.get("damage_done_total", _sum_dictionary(damage_by_origin))), 1.0)
-	return float(damage_by_origin.get(origin, 0)) / total >= threshold
+	# Old snapshots used "dot"; prefer the current key if both exist.
+	var key: String = "dot" if origin == DamageOrigins.ORIGIN_STATUS_DOT and not damage_by_origin.has(origin) else origin
+	return float(damage_by_origin.get(key, 0)) / total >= threshold
 
 
 ## 作用：是否包含状态效果数量，返回布尔判断结果。

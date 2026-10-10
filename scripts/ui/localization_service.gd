@@ -21,6 +21,20 @@ static func apply_language(language_id: String) -> void:
 	_ensure_config_loaded()
 	_language_id = _normalize_language_id(language_id)
 
+## Store keys rather than reverse-matching translated strings on locale changes.
+static func bind_text(control: Control, key: String, fallback: String = "", property: String = "text") -> void:
+	var bindings: Dictionary = control.get_meta("localized_properties", {})
+	bindings[property] = {"key":key,"fallback":fallback}
+	control.set_meta("localized_properties", bindings)
+	control.set(property, translate(key, {}, fallback))
+
+static func refresh_tree(node: Node) -> void:
+	var bindings: Dictionary = node.get_meta("localized_properties", {})
+	for property: String in bindings:
+		var binding: Dictionary = bindings[property]
+		node.set(property, translate(binding.key, {}, binding.fallback))
+	for child: Node in node.get_children(): refresh_tree(child)
+
 
 ## 作用：返回当前语言，首次查询时从 SaveManager 读取并规范化。
 ## 使用：静态查询；尚未显式选择语言时使用存档值。

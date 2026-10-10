@@ -20,6 +20,7 @@ signal run_time_changed(elapsed_time: float, duration: float)
 signal wave_timer_changed(wave_index: int, wave_id: String, remaining_time: float, duration: float, spawned_count: int, total_count: int)
 signal wave_cleared(wave_id: String, cleared_early: bool)
 signal boss_defeated(elapsed_time: float)
+signal boss_started(elapsed_time: float)
 
 
 @export var enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
@@ -359,6 +360,7 @@ func _sync_spawn_context() -> void:
 func _on_spawn_activated(request: Dictionary,_enemy: Node2D) -> void:
 	if int(request.get("run_generation",-1))==_run_generation and request.get("source_type","")=="boss":
 		_wave_director.call("activate_boss")
+		boss_started.emit(_elapsed_time)
 
 func _on_spawn_created(request: Dictionary,_enemy: Node2D) -> void:
 	if int(request.get("run_generation",-1)) != _run_generation:

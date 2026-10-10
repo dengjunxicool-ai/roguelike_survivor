@@ -191,6 +191,8 @@ func transition_to(next_state: String) -> void:
 		push_warning("Blocked UI transition: %s -> %s" % [current_state, next_state])
 		return
 	current_state = String(_state_machine.call("get_current_state"))
+	if next_state not in [STATE_LEVEL_UP_MODAL, STATE_RUN_REWARD_MODAL] and _run_choice_modal_controller != null:
+		_run_choice_modal_controller.call("cancel_replacement")
 	_prepare_state(next_state)
 	_apply_visible_hierarchy(next_state)
 	_apply_pause_for_state(next_state)
@@ -333,7 +335,7 @@ func _build_screen_for_state(state: String) -> void:
 ## 使用：内部辅助入口。
 func _build_boot() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_BOOT, _tr("panel.boot", "BOOT"), Vector2(360, 220), 10)
-	_add_label(body, _tr("panel.loading", "正在加载"), 1)
+	LocalizationServiceScript.bind_text(_add_label(body, _tr("panel.loading", "正在加载"), 1), "panel.loading", "正在加载")
 	var bar: ProgressBar = ProgressBar.new()
 	bar.max_value = 100.0
 	bar.value = 100.0
@@ -399,6 +401,7 @@ func _build_settings() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_SETTINGS, _tr("panel.settings", "设置"), Vector2(520, 420), 10)
 	_settings_controller = SettingsScreenControllerScript.new()
 	_settings_controller.state_requested.connect(Callable(self, "transition_to"))
+	_settings_controller.language_changed.connect(func() -> void: LocalizationServiceScript.refresh_tree(self))
 	_settings_controller.call("build", body)
 
 
@@ -440,9 +443,9 @@ func _build_run_reward_modal() -> void:
 ## 使用：内部辅助入口。
 func _build_curse_choice_modal() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_CURSE_CHOICE_MODAL, _tr("panel.curse", "诅咒选择"), Vector2(720, 460), 20)
-	_add_label(body, _tr("panel.curse_hint", "选择一项高风险高收益强化"), 1)
+	LocalizationServiceScript.bind_text(_add_label(body, _tr("panel.curse_hint", "选择一项高风险高收益强化"), 1), "panel.curse_hint", "选择一项高风险高收益强化")
 	_curse_options = _add_vbox(body)
-	_add_state_button(body, _tr("panel.skip", "跳过"), STATE_RUNNING)
+	_add_localized_state_button(body, "panel.skip", "跳过", STATE_RUNNING)
 
 
 ## 作用：初始化单局选择弹窗组。
@@ -464,9 +467,9 @@ func _setup_run_choice_modals() -> void:
 ## 使用：内部辅助入口。
 func _build_pause_menu() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_PAUSE_MENU, _tr("panel.pause", "暂停游戏"), Vector2(420, 360), 30)
-	_add_state_button(body, _tr("panel.resume", "继续游戏"), STATE_RUNNING)
-	_add_state_button(body, _tr("panel.give_up", "放弃战斗"), STATE_RESULT_DEFEAT)
-	_add_state_button(body, _tr("panel.back_to_title", "返回主菜单"), STATE_TITLE)
+	_add_localized_state_button(body, "panel.resume", "继续游戏", STATE_RUNNING)
+	_add_localized_state_button(body, "panel.give_up", "放弃战斗", STATE_RESULT_DEFEAT)
+	_add_localized_state_button(body, "panel.back_to_title", "返回主菜单", STATE_TITLE)
 
 
 ## 作用：构建结果页面并配置节点/样式所需的属性；具体处理委托给 _result_controller.build。
@@ -492,7 +495,7 @@ func _get_screen_dictionary() -> Dictionary:
 ## 作用：创建面板页面。
 ## 使用：本文件由 _build_boot、_build_meta_upgrade、_build_codex 调用；输入 state（状态）、title（标题）、min_size（最小尺寸）、z_index_value（z索引值）；返回 VBoxContainer 对象/值。
 func _create_panel_screen(state: String, title: String, min_size: Vector2, z_index_value: int) -> VBoxContainer:
-	return UIScreenFactoryScript.create_panel_screen(
+	var body: VBoxContainer = UIScreenFactoryScript.create_panel_screen(
 		self,
 		_get_screen_dictionary(),
 		_responsive_layout,
@@ -502,6 +505,9 @@ func _create_panel_screen(state: String, title: String, min_size: Vector2, z_ind
 		z_index_value,
 		get_viewport().get_visible_rect().size
 	)
+	var title_keys: Dictionary = {STATE_BOOT:"panel.boot",STATE_META_UPGRADE:"panel.meta_upgrade",STATE_CODEX:"panel.codex",STATE_SETTINGS:"panel.settings",STATE_CURSE_CHOICE_MODAL:"panel.curse",STATE_PAUSE_MENU:"panel.pause",STATE_RESULT_DEFEAT:"panel.defeat",STATE_RESULT_VICTORY:"panel.victory"}
+	if title_keys.has(state): LocalizationServiceScript.bind_text(body.get_child(0), title_keys[state], title)
+	return body
 
 
 ## 作用：创建选择弹窗页面并配置节点/样式所需的属性。
@@ -514,7 +520,7 @@ func _create_choice_modal_screen(state: String, title: String, z_index_value: in
 	screen.add_child(background)
 
 	var title_label: Label = Label.new()
-	title_label.text = title
+	LocalizationServiceScript.bind_text(title_label, "panel.level_up" if state == STATE_LEVEL_UP_MODAL else "panel.reward", title)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_size_override("font_size", 34)
@@ -600,6 +606,11 @@ func _add_button(parent: Node, text: String) -> Button:
 func _add_state_button(parent: Node, text: String, state: String) -> Button:
 	var button: Button = _add_button(parent, text)
 	button.pressed.connect(Callable(self, "transition_to").bind(state))
+	return button
+
+func _add_localized_state_button(parent: Node, key: String, fallback: String, state: String) -> Button:
+	var button: Button = _add_state_button(parent, _tr(key, fallback), state)
+	LocalizationServiceScript.bind_text(button, key, fallback)
 	return button
 
 
@@ -924,6 +935,8 @@ func _open_developer_debug_panel() -> void:
 ## 作用：清除开发模式标记并释放单局场景、统计和信号桥接状态。
 ## 使用：离开运行场景时调用；由 RunSceneCoordinator 处理各运行对象的清理。
 func _teardown_run_scene() -> void:
+	if _run_choice_modal_controller != null:
+		_run_choice_modal_controller.call("reset_run")
 	if get_tree() != null and get_tree().root != null:
 		get_tree().root.set_meta("developer_mode_enabled", false)
 		get_tree().root.set_meta("debug_control_mode", false)
@@ -1036,6 +1049,10 @@ func _show_pending_modal_if_running() -> void:
 
 ## 作用：正式局首次收到玩家死亡时进入失败结算。
 ## 使用：信号回调；已进入任一终局或调试局时直接返回，避免覆盖已确定结果。
+func _on_boss_started(elapsed_time: float) -> void:
+	if is_instance_valid(_run_stats_tracker):
+		_run_stats_tracker.call("record_boss_started",elapsed_time)
+
 func _on_player_died() -> void:
 	if current_state == STATE_RESULT_DEFEAT or current_state == STATE_RESULT_VICTORY:
 		return

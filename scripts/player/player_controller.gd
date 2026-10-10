@@ -1043,27 +1043,31 @@ func _apply_experience_total(final_amount: int) -> void:
 
 ## 作用：根据选项 ID 前缀分派技能升级、局内升级或通用升级。
 ## 使用：接收 skill_level_up:/level_up_upgrade: 或配置 ID；成功后发送 upgrade_applied 并刷新对应状态。
-func apply_upgrade(upgrade_id: StringName) -> void:
+func apply_upgrade(upgrade_id: StringName) -> bool:
 	var upgrade_id_text: String = String(upgrade_id)
 	var dev_enabled: bool = _is_dev_run()
 	if upgrade_id_text.begins_with(SKILL_LEVEL_UP_OPTION_PREFIX):
-		if _apply_skill_level_up_upgrade(upgrade_id_text, dev_enabled):
+		var applied: bool = _apply_skill_level_up_upgrade(upgrade_id_text, dev_enabled)
+		if applied:
 			upgrade_applied.emit(upgrade_id)
-		return
+		return applied
 
 	if upgrade_id_text.begins_with(LEVEL_UP_UPGRADE_PREFIX):
 		var upgrade_parts: PackedStringArray = upgrade_id_text.split(":")
 		var level_up_upgrade_id: StringName = StringName(upgrade_parts[1] if upgrade_parts.size() > 1 else "")
 		var rarity: String = String(upgrade_parts[2] if upgrade_parts.size() > 2 else "")
-		if _apply_level_up_upgrade(level_up_upgrade_id, rarity):
+		var applied: bool = _apply_level_up_upgrade(level_up_upgrade_id, rarity)
+		if applied:
 			upgrade_applied.emit(upgrade_id)
 			_refresh_skill_configs()
 			_refresh_synergies()
-		return
+		return applied
 
 	var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 	if not upgrade.is_empty():
 		_apply_upgrade_data(upgrade_id, upgrade_id, upgrade)
+		return true
+	return false
 
 
 ## 作用：应用升级数据。

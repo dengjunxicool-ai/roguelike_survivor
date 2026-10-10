@@ -6,6 +6,7 @@ class_name SettingsScreenController
 
 
 signal state_requested(state: String)
+signal language_changed
 
 
 const STATE_TITLE: String = "TITLE"
@@ -16,13 +17,15 @@ var _languages: Array[Dictionary] = []
 var _language_button: OptionButton
 var _fullscreen_button: CheckBox
 var _master_slider: HSlider
+var _body: VBoxContainer
 
 
 ## 作用：构建并处理全屏、主音量和语言设置控件。
 ## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；输入 body（主体）。
 func build(body: VBoxContainer) -> void:
+	_body = body
 	_languages = LocalizationServiceScript.get_language_options()
-	_add_label(body, _tr("settings.audio", "音频"), 1)
+	_add_localized_label(body, "settings.audio", "音频", 1)
 	_master_slider = HSlider.new()
 	_master_slider.min_value = 0.0
 	_master_slider.max_value = 100.0
@@ -32,15 +35,15 @@ func build(body: VBoxContainer) -> void:
 	_master_slider.value_changed.connect(Callable(self, "_on_master_volume_changed"))
 	body.add_child(_master_slider)
 
-	_add_label(body, _tr("settings.video", "画面"), 1)
+	_add_localized_label(body, "settings.video", "画面", 1)
 	_fullscreen_button = CheckBox.new()
-	_fullscreen_button.text = _tr("settings.fullscreen", "全屏")
+	LocalizationServiceScript.bind_text(_fullscreen_button, "settings.fullscreen", "全屏")
 	_fullscreen_button.button_pressed = SaveManager.get_fullscreen_enabled()
 	UIButtonSkin.apply(_fullscreen_button)
 	_fullscreen_button.toggled.connect(Callable(self, "_set_fullscreen"))
 	body.add_child(_fullscreen_button)
 
-	_add_label(body, _tr("settings.language", "语言"), 1)
+	_add_localized_label(body, "settings.language", "语言", 1)
 	_language_button = OptionButton.new()
 	for language: Dictionary in _languages:
 		_language_button.add_item(String(language.get("label", "")))
@@ -49,8 +52,13 @@ func build(body: VBoxContainer) -> void:
 	_language_button.item_selected.connect(Callable(self, "_on_language_selected"))
 	body.add_child(_language_button)
 
-	_add_label(body, _tr("settings.controls", "控制：WASD / 方向键移动，鼠标和键盘用于菜单。"))
-	_add_state_button(body, _tr("settings.back", "返回主菜单"), STATE_TITLE)
+	_add_localized_label(body, "settings.controls", "控制：WASD / 方向键移动，鼠标和键盘用于菜单。")
+	var back: Button = _add_state_button(body, "", STATE_TITLE)
+	LocalizationServiceScript.bind_text(back, "settings.back", "返回主菜单")
+
+func _add_localized_label(body: Node, key: String, fallback: String, alignment: int = 0) -> void:
+	var label: Label = _add_label(body, "", alignment)
+	LocalizationServiceScript.bind_text(label, key, fallback)
 
 
 ## 作用：设置全屏。
@@ -75,6 +83,9 @@ func _on_language_selected(index: int) -> void:
 	var language_id: String = String(_languages[index].get("id", "zh"))
 	SaveManager.set_language_id(language_id)
 	UISettingsServiceScript.apply_language(language_id)
+	_language_button.select(index)
+	LocalizationServiceScript.refresh_tree(_body)
+	language_changed.emit()
 
 
 ## 作用：获取语言索引，供当前模块后续逻辑使用。

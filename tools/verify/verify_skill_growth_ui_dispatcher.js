@@ -9,10 +9,11 @@ function assert(condition, message) {
 }
 
 const optionIdIndex = source.indexOf('var option_id: String = String(option.get("id", ""))');
-const payloadUpgradeIndex = source.indexOf('var upgrade_id: StringName = StringName(String(payload.get("upgrade_id", "")))');
+const payloadUpgradeIndex = source.indexOf('String(payload.get("upgrade_id", ""))', optionIdIndex);
 assert(optionIdIndex >= 0, "dispatcher must read option id");
 assert(payloadUpgradeIndex >= 0, "dispatcher must still support payload upgrade_id");
 assert(optionIdIndex < payloadUpgradeIndex, "dispatcher must prefer option id so skill-card rarity suffix is preserved");
-assert(source.includes('player.call("apply_upgrade", StringName(option_id))'), "dispatcher must pass full option id to player.apply_upgrade");
+assert(source.includes('return StringName(option_id)'), "dispatcher must preserve full option id including rarity");
+assert(source.includes('player.call(&"apply_upgrade", upgrade_id)'), "dispatcher must apply the resolved full upgrade id");
 
 console.log("[verify_skill_growth_ui_dispatcher] PASS");

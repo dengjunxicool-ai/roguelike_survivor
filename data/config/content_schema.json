@@ -1185,6 +1185,7 @@
 	"modifier_stats": [
 		"armor",
 		"attack_speed",
+		"boss_damage",
 		"boss_hp",
 		"burning_damage_taken",
 		"chaos_entropy_damage",

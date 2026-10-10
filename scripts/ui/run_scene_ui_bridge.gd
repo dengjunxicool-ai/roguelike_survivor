@@ -77,6 +77,7 @@ func _connect_spawner(spawner: Node, target: Object) -> void:
 
 	_connect_if_available(spawner, &"run_time_changed", Callable(target, "_on_run_time_changed"))
 	_connect_if_available(spawner, &"boss_defeated", Callable(target, "_on_boss_defeated"))
+	_connect_if_available(spawner, &"boss_started", Callable(target, "_on_boss_started"))
 
 
 ## 作用：连接按条件可用。

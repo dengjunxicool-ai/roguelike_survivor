@@ -304,6 +304,26 @@
 	],
 	"level_up_upgrades": [
 		{
+			"id": "boss_damage",
+			"display_name": "强敌压制",
+			"description": "Boss 奖励专用：本局对 Boss 的伤害提高 15%。",
+			"enabled": false,
+			"rarity": "rare",
+			"tags": ["boss"],
+			"max_level": 1,
+			"modifiers": [{"stat": "boss_damage", "op": "multiplier_add", "value": 0.15, "scope": {"domain": "damage", "target_type": "boss"}, "source": "upgrade"}]
+		},
+		{
+			"id": "boss_status_damage",
+			"display_name": "状态共鸣",
+			"description": "Boss 奖励专用：本局对 Boss 的 DOT 与反应伤害提高 15%。",
+			"enabled": false,
+			"rarity": "rare",
+			"tags": ["boss", "status"],
+			"max_level": 1,
+			"modifiers": [{"stat": "boss_damage", "op": "multiplier_add", "value": 0.15, "scope": {"domain": "damage", "target_type": "boss", "damage_origin": ["status_dot", "reaction"]}, "source": "upgrade"}]
+		},
+		{
 			"rarity": "common",
 			"tags": [
 				"survival"

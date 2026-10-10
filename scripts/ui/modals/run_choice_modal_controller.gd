@@ -46,6 +46,7 @@ var _choice_card_buttons: Array[Button] = []
 var _choice_card_labels: Array[Dictionary] = []
 var _choice_gap_spacers: Array[Control] = []
 var _choice_card_pools: Dictionary = {}
+var _replacement_view: CanvasLayer
 
 
 ## 作用：保存场景树、升级/诅咒/奖励选项容器并初始化独立随机流。
@@ -75,8 +76,14 @@ func prewarm_choice_card_pools() -> void:
 ## 作用：清空本局待处理升级数量和奖励类型队列。
 ## 使用：每次新局调用；保留已预热卡片池以供后续复用。
 func reset_run() -> void:
+	cancel_replacement()
 	pending_level_up_count = 0
 	pending_reward_kinds.clear()
+
+func cancel_replacement() -> void:
+	if is_instance_valid(_replacement_view):
+		_replacement_view.cancel()
+	_replacement_view = null
 
 
 ## 作用：增加一个待处理升级并更新最近的玩家等级。
@@ -844,6 +851,7 @@ func _load_texture(path: String) -> Texture2D:
 ## 作用：派发选中卡片的命令、消费对应升级或奖励待办并请求返回状态。
 ## 使用：option 为候选字典；实际效果通过 UICommandDispatcher 执行，避免卡片直接改战斗数据。
 func _select_upgrade_option(option: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
+	if is_instance_valid(_replacement_view): return
 	var player: Node = _get_player()
 	var command_result_variant: Variant = _command_dispatcher.call("dispatch", UICommandScript.apply_choice_option(option), {
 		"player": player,
@@ -853,14 +861,18 @@ func _select_upgrade_option(option: Dictionary, return_state: String, consumes_p
 	if not bool(command_result.get("handled", false)): return
 	if bool(command_result.get("replacement_pending", false)):
 		var view: CanvasLayer = preload("res://scripts/ui/skill_replacement_view.gd").new()
-		_tree.root.add_child(view)
+		_replacement_view = view
+		var host: Node = _tree.get_first_node_in_group(&"ui_manager")
+		(host if host != null else _tree.root).add_child(view)
 		view.open(player, command_result.service, command_result.transaction, func() -> void:
 			player.complete_skill_replacement(command_result.applied_upgrade_id)
-			_finish_upgrade_choice(command_result, return_state, consumes_pending_level))
+			var committed: Dictionary = _command_dispatcher.complete_replacement_reward(command_result, {"player":player,"tree":_tree})
+			_finish_upgrade_choice(committed, return_state, consumes_pending_level))
 		return
 	_finish_upgrade_choice(command_result, return_state, consumes_pending_level)
 
 func _finish_upgrade_choice(command_result: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
+	if not bool(command_result.get("handled", false)): return
 	if bool(command_result.get("consumed_reward", false)) and pending_reward_kinds.size() > 0:
 		pending_reward_kinds.remove_at(0)
 
