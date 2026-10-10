@@ -19,6 +19,8 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 				const where=`${entry.path}.${section.key}[${item?.[section.id_key]??i}]`;
 				if(kind(item)!=='object'){fail(where,'definition must be an object');continue;}
 				for(const field of rule.required)if(!Object.hasOwn(item,field)||item[field]===''||item[field]===null)fail(where+'.'+field,'required nonempty field');
+				for(const field of section.required??[])if(!Object.hasOwn(item,field))fail(where+'.'+field,'required section field');
+				for(const[field,minimum]of Object.entries(section.numeric_minimums??{}))if(typeof item[field]!=='number'||!Number.isFinite(item[field])||item[field]<minimum)fail(where+'.'+field,`required finite number >= ${minimum}`);
 				for(const[key,value]of Object.entries(item)){
 					if(!Object.hasOwn(rule.fields,key))fail(where+'.'+key,'unknown definition field');
 					else if(!rule.fields[key].includes(kind(value)))fail(where+'.'+key,'invalid type '+kind(value));

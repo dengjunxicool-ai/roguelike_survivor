@@ -12,6 +12,7 @@ const STATE_TITLE: String = "TITLE"
 const UICommandDispatcherScript: Script = preload("res://scripts/ui/ui_command_dispatcher.gd")
 const UICommandScript: Script = preload("res://scripts/ui/ui_command.gd")
 const MetaUpgradeViewModelBuilderScript: Script = preload("res://scripts/ui/screens/meta_upgrade_view_model_builder.gd")
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 var _soul_label: Label
 var _upgrade_list: VBoxContainer
@@ -22,13 +23,15 @@ var _view_model_builder: RefCounted = MetaUpgradeViewModelBuilderScript.new()
 ## 作用：构建永久升级列表并派发购买命令。
 ## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；输入 body（主体）。
 func build(body: VBoxContainer) -> void:
-	_soul_label = _add_label(body, "灵魂石：0", 1)
+	_soul_label = _add_label(body, Locale.translate("currency.soul_stones", {"count": "0"}), 1)
 	if OS.is_debug_build():
-		var add_souls_button: Button = _add_button(body, "DEV：获得 100 灵魂石")
+		var add_souls_button: Button = _add_button(body, "")
+		Locale.bind_text(add_souls_button, "meta.dev_add_souls")
 		add_souls_button.pressed.connect(Callable(self, "_on_add_test_souls_pressed"))
 	var scroll: ScrollContainer = _add_scroll(body)
 	_upgrade_list = _add_vbox(scroll)
-	_add_state_button(body, "返回欢迎页", STATE_TITLE)
+	Locale.bind_text(_add_state_button(body, "", STATE_TITLE), "meta.back")
+	refresh()
 
 
 ## 作用：读取永久升级展示模型并重建货币、等级、费用和购买按钮列表。
@@ -36,7 +39,7 @@ func build(body: VBoxContainer) -> void:
 func refresh() -> void:
 	var view_model: Dictionary = _view_model_builder.call("build")
 	if _soul_label != null:
-		_soul_label.text = "灵魂石：%d" % int(view_model.get("souls", 0))
+		_soul_label.text = Locale.translate("currency.soul_stones", {"count": str(int(view_model.get("souls", 0)))})
 
 	_clear_children(_upgrade_list)
 	var upgrades: Array = view_model.get("upgrades", [])

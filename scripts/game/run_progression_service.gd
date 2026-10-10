@@ -173,9 +173,10 @@ static func _map_objective_met(objective_id: StringName, summary: Dictionary) ->
 		"survive_encirclement":
 			return victory and int(stats.get("highest_alive_normal_enemies", 0)) < 120
 		"clear_with_pierce_or_bounce":
-			return victory and _has_status_count(stats, ["shock", "overload"], 20)
+			return victory and (int(stats.get("pierce_hit_count", 0)) > 0 or int(stats.get("bounce_hit_count", 0)) > 0)
 		"defeat_toxic_matriarch", "defeat_lava_golem", "defeat_shadow_hunter":
-			return victory and int(stats.get("elite_kill_count", 0)) > 0
+			var enemy_id: String = String(objective_id).trim_prefix("defeat_")
+			return victory and int(_get_dictionary(stats.get("enemy_kill_counts", {})).get(enemy_id, 0)) > 0
 		_:
 			return false
 

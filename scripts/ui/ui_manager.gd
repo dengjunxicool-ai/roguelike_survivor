@@ -401,8 +401,19 @@ func _build_settings() -> void:
 	var body: VBoxContainer = _create_panel_screen(STATE_SETTINGS, _tr("panel.settings", "设置"), Vector2(520, 420), 10)
 	_settings_controller = SettingsScreenControllerScript.new()
 	_settings_controller.state_requested.connect(Callable(self, "transition_to"))
-	_settings_controller.language_changed.connect(func() -> void: LocalizationServiceScript.refresh_tree(self))
+	_settings_controller.language_changed.connect(Callable(self, "_on_language_changed"))
 	_settings_controller.call("build", body)
+
+## Existing pages retain selection and scroll state while refreshing translated controls and dynamic values.
+func _on_language_changed() -> void:
+	LocalizationServiceScript.refresh_tree(self)
+	if _codex_controller != null:
+		_codex_controller.call("refresh")
+	if _meta_upgrade_controller != null:
+		_meta_upgrade_controller.call("refresh")
+	if _character_loadout_controller != null:
+		_character_loadout_controller.call("refresh")
+	_update_responsive_layouts()
 
 
 ## 作用：构建单局HUD并配置节点/样式所需的属性。

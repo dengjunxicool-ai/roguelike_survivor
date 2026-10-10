@@ -502,11 +502,7 @@ static func execute_holy_shield_expire(rules: Dictionary, context: Dictionary) -
 	var amount: int = maxi(int(rule.get("amount", 5)), 0)
 	if amount <= 0:
 		return
-	var max_health: int = int(player.get("max_health"))
-	var current_health: int = int(player.get("current_health"))
-	player.set("current_health", mini(current_health + amount, max_health))
-	if player.has_signal("health_changed"):
-		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
+	preload("res://scripts/player/player_healing.gd").apply(player, amount)
 
 
 ## 作用：圣盾脉冲数达到配置周期时生成额外神圣冲击波。
@@ -1750,7 +1746,12 @@ static func execute_lightning_chain_bounce(rules: Dictionary, context: Dictionar
 		_apply_context_source_identity(packet, context, projectile)
 		packet = DamageTraceContextScript.apply_to_packet(packet, context)
 		_spawn_lightning_chain_path_visual(parent, current_origin.global_position, next_target.global_position)
-		DamageIntentScript.create(next_target, DamagePacketScript.from_dictionary(packet)).call("apply")
+		var hit_result: RefCounted = DamageIntentScript.create(next_target, DamagePacketScript.from_dictionary(packet)).call("apply")
+		var owner: Node = context.get("caster", context.get("owner")) as Node
+		if bool(hit_result.get("applied")) and is_instance_valid(owner) and owner.is_in_group(&"player"):
+			var tracker: Node = preload("res://scripts/game/run_stats_tracker.gd").get_active(parent.get_tree())
+			if tracker != null:
+				tracker.record_projectile_hit(&"bounce")
 		if next_target.has_method("apply_status"):
 			next_target.call("apply_status", &"charge", {"stacks": 1, "max_stacks": 4, "duration": 4.0})
 		current_origin = next_target

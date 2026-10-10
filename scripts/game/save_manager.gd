@@ -25,12 +25,31 @@ const KEY_LANGUAGE: String = "language"
 
 
 ## 作用：读取现有 ConfigFile 后更新指定 section/key 并写回存档。
-## 使用：value 为待保存值；写入 user://save.cfg，保留其他已有键。
-static func save_value(section: String, key: String, value: Variant) -> void:
+## 使用：value 为待保存值；保留其他已有键，只有完整写入成功才返回 true。
+static func save_value(section: String, key: String, value: Variant) -> bool:
 	var config: ConfigFile = ConfigFile.new()
-	config.load(SAVE_PATH)
+	if not _load_for_write(config):
+		return false
 	config.set_value(section, key, value)
-	config.save(SAVE_PATH)
+	return _commit_config(config)
+
+
+## 作用：只允许有效旧档或不存在的新档进入写入流程，拒绝覆盖不可读文件。
+static func _load_for_write(config: ConfigFile) -> bool:
+	var error: int = config.load(SAVE_PATH)
+	return error == OK or (error == ERR_FILE_NOT_FOUND and not FileAccess.file_exists(SAVE_PATH))
+
+
+## 作用：先完整保存临时文件，再原子替换旧档；失败保留旧档并返回 false。
+static func _commit_config(config: ConfigFile) -> bool:
+	var temporary_path: String = SAVE_PATH + ".tmp"
+	if config.save(temporary_path) != OK:
+		return false
+	var error: int = DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary_path), ProjectSettings.globalize_path(SAVE_PATH))
+	if error != OK:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(temporary_path))
+		return false
+	return true
 
 
 ## 作用：从存档读取指定 section/key。
@@ -58,8 +77,8 @@ static func get_master_volume_percent() -> float:
 
 ## 作用：设置主音量百分比。
 ## 使用：供本模块调用者使用；输入 value（值）；可能写入 user:// 存档。
-static func set_master_volume_percent(value: float) -> void:
-	save_value(SECTION_SETTINGS, KEY_MASTER_VOLUME, clampf(value, 0.0, 100.0))
+static func set_master_volume_percent(value: float) -> bool:
+	return save_value(SECTION_SETTINGS, KEY_MASTER_VOLUME, clampf(value, 0.0, 100.0))
 
 
 ## 作用：获取全屏启用，供当前模块后续逻辑使用。
@@ -70,8 +89,8 @@ static func get_fullscreen_enabled() -> bool:
 
 ## 作用：设置全屏启用。
 ## 使用：供本模块调用者使用；输入 enabled（启用）；可能写入 user:// 存档。
-static func set_fullscreen_enabled(enabled: bool) -> void:
-	save_value(SECTION_SETTINGS, KEY_FULLSCREEN, enabled)
+static func set_fullscreen_enabled(enabled: bool) -> bool:
+	return save_value(SECTION_SETTINGS, KEY_FULLSCREEN, enabled)
 
 
 ## 作用：获取语言ID，供当前模块后续逻辑使用。
@@ -82,21 +101,20 @@ static func get_language_id() -> String:
 
 ## 作用：设置语言ID。
 ## 使用：供本模块调用者使用；输入 language_id（语言ID）；可能写入 user:// 存档。
-static func set_language_id(language_id: String) -> void:
+static func set_language_id(language_id: String) -> bool:
 	if language_id == "":
-		return
-	save_value(SECTION_SETTINGS, KEY_LANGUAGE, language_id)
+		return false
+	return save_value(SECTION_SETTINGS, KEY_LANGUAGE, language_id)
 
 
 ## 作用：添加灵魂石。
-## 使用：供本模块调用者使用；输入 amount（数量）；可能写入 user:// 存档；返回计算或读取的数值。
+## 使用：amount 为增量；成功返回新余额，写入失败返回 -1。
 static func add_soul_stones(amount: int) -> int:
 	if amount <= 0:
 		return get_soul_stones()
 
 	var new_amount: int = get_soul_stones() + amount
-	save_value(SECTION_CURRENCY, KEY_SOUL_STONES, new_amount)
-	return new_amount
+	return new_amount if save_value(SECTION_CURRENCY, KEY_SOUL_STONES, new_amount) else -1
 
 
 ## 作用：获取计数器，供当前模块后续逻辑使用。
@@ -106,36 +124,35 @@ static func get_counter(counter_id: StringName) -> int:
 
 
 ## 作用：累加计数器。
-## 使用：供本模块调用者使用；输入 counter_id（计数器ID）、amount（数量）；可能写入 user:// 存档；返回计算或读取的数值。
+## 使用：counter_id/amount 指定计数增量；成功返回新值，写入失败返回 -1。
 static func increment_counter(counter_id: StringName, amount: int = 1) -> int:
 	if counter_id == &"" or amount == 0:
 		return get_counter(counter_id)
 	var new_value: int = maxi(get_counter(counter_id) + amount, 0)
-	save_value(SECTION_RUN_COUNTERS, String(counter_id), new_value)
-	return new_value
+	return new_value if save_value(SECTION_RUN_COUNTERS, String(counter_id), new_value) else -1
 
 
 ## 作用：设置计数器上限。
-## 使用：供本模块调用者使用；输入 counter_id（计数器ID）、value（值）；可能写入 user:// 存档；返回计算或读取的数值。
+## 使用：counter_id/value 指定计数下限；返回实际保存值，写入失败返回 -1。
 static func set_counter_max(counter_id: StringName, value: int) -> int:
 	if counter_id == &"":
 		return 0
 	var current_value: int = get_counter(counter_id)
 	var new_value: int = maxi(current_value, value)
 	if new_value != current_value:
-		save_value(SECTION_RUN_COUNTERS, String(counter_id), new_value)
+		if not save_value(SECTION_RUN_COUNTERS, String(counter_id), new_value):
+			return -1
 	return new_value
 
 
 ## 作用：累加角色专精。
-## 使用：供本模块调用者使用；输入 character_id（角色ID）、goal_id（目标ID）、amount（数量）；可能写入 user:// 存档；返回计算或读取的数值。
+## 使用：character_id/goal_id/amount 指定进度增量；返回新值，写入失败返回 -1。
 static func increment_character_specialization(character_id: StringName, goal_id: StringName, amount: int = 1) -> int:
 	if character_id == &"" or goal_id == &"":
 		return 0
 	var key: String = "%s:%s" % [String(character_id), String(goal_id)]
 	var new_value: int = maxi(int(load_value(SECTION_CHARACTER_SPECIALIZATION, key, 0)) + amount, 0)
-	save_value(SECTION_CHARACTER_SPECIALIZATION, key, new_value)
-	return new_value
+	return new_value if save_value(SECTION_CHARACTER_SPECIALIZATION, key, new_value) else -1
 
 
 ## 作用：获取角色专精进度，供当前模块后续逻辑使用。
@@ -152,8 +169,7 @@ static func mark_map_challenge_completed(map_id: StringName, objective_id: Strin
 	var key: String = "%s:%s" % [String(map_id), String(objective_id)]
 	if bool(load_value(SECTION_MAP_CHALLENGES, key, false)):
 		return false
-	save_value(SECTION_MAP_CHALLENGES, key, true)
-	return true
+	return save_value(SECTION_MAP_CHALLENGES, key, true)
 
 
 ## 作用：判断地图挑战已完成，返回布尔判断结果。
@@ -169,8 +185,7 @@ static func mark_challenge_completed(challenge_id: StringName) -> bool:
 		return false
 	if bool(load_value(SECTION_CHALLENGES, String(challenge_id), false)):
 		return false
-	save_value(SECTION_CHALLENGES, String(challenge_id), true)
-	return true
+	return save_value(SECTION_CHALLENGES, String(challenge_id), true)
 
 
 ## 作用：判断挑战已完成，返回布尔判断结果。
@@ -181,8 +196,8 @@ static func is_challenge_completed(challenge_id: StringName) -> bool:
 
 ## 作用：存档上次单局摘要。
 ## 使用：供本模块调用者使用；输入 summary（摘要）；可能写入 user:// 存档。
-static func save_last_run_summary(summary: Dictionary) -> void:
-	save_value(SECTION_RUN_HISTORY, KEY_LAST_RUN_SUMMARY, summary.duplicate(true))
+static func save_last_run_summary(summary: Dictionary) -> bool:
+	return save_value(SECTION_RUN_HISTORY, KEY_LAST_RUN_SUMMARY, summary.duplicate(true))
 
 
 ## 作用：获取上次单局摘要，供当前模块后续逻辑使用。
@@ -205,8 +220,7 @@ static func spend_soul_stones(amount: int) -> bool:
 	if current_amount < amount:
 		return false
 
-	save_value(SECTION_CURRENCY, KEY_SOUL_STONES, current_amount - amount)
-	return true
+	return save_value(SECTION_CURRENCY, KEY_SOUL_STONES, current_amount - amount)
 
 
 ## 作用：获取永久升级等级，供当前模块后续逻辑使用。
@@ -242,8 +256,7 @@ static func mark_map_cleared(map_id: StringName) -> bool:
 	if map_id == &"" or is_map_cleared(map_id):
 		return false
 
-	save_value(SECTION_MAP_CLEAR_RECORDS, String(map_id), true)
-	return true
+	return save_value(SECTION_MAP_CLEAR_RECORDS, String(map_id), true)
 
 
 ## 作用：获取通关地图ID列表，供当前模块后续逻辑使用。
@@ -263,7 +276,7 @@ static func get_cleared_map_ids() -> Array[StringName]:
 
 
 ## 作用：按基础费用和成长倍率计算当前等级的升级费用。
-## 使用：不存在或达到最高等级返回 0；费用取整并限制为非负。
+## 使用：不存在或达到最高等级返回 0；无效价格返回 -1，禁止隐式免费购买。
 static func get_permanent_upgrade_cost(upgrade_id: StringName) -> int:
 	var upgrade: Dictionary = GameData.get_permanent_upgrade(upgrade_id)
 	if upgrade.is_empty():
@@ -274,9 +287,21 @@ static func get_permanent_upgrade_cost(upgrade_id: StringName) -> int:
 	if current_level >= max_level:
 		return 0
 
-	var cost_base: float = float(upgrade.get("cost_base", 0.0))
-	var cost_growth: float = float(upgrade.get("cost_growth", 1.0))
-	return maxi(roundi(cost_base * pow(cost_growth, current_level)), 0)
+	return _permanent_upgrade_cost_at_level(upgrade, current_level)
+
+
+## 作用：校验显式价格并按等级计算费用；缺失、非法或溢出返回 -1。
+static func _permanent_upgrade_cost_at_level(upgrade: Dictionary, level: int) -> int:
+	var base: Variant = upgrade.get("cost_base")
+	var growth: Variant = upgrade.get("cost_growth")
+	if not (base is int or base is float) or not (growth is int or growth is float):
+		return -1
+	if not is_finite(float(base)) or not is_finite(float(growth)) or float(base) < 1.0 or float(growth) < 1.0:
+		return -1
+	var cost: float = float(base) * pow(float(growth), level)
+	if not is_finite(cost) or cost >= float(9223372036854775807):
+		return -1
+	return roundi(cost)
 
 
 ## 作用：可否购买永久升级，返回布尔判断结果。
@@ -291,22 +316,30 @@ static func can_purchase_permanent_upgrade(upgrade_id: StringName) -> bool:
 	if current_level >= max_level:
 		return false
 
-	return get_soul_stones() >= get_permanent_upgrade_cost(upgrade_id)
+	var cost: int = get_permanent_upgrade_cost(upgrade_id)
+	var config: ConfigFile = ConfigFile.new()
+	return cost > 0 and _load_for_write(config) and get_soul_stones() >= cost
 
 
 ## 作用：检查可购买条件、扣费并将永久升级等级加一。
 ## 使用：upgrade_id 必须对应配置；返回购买成功标志，成功会写入存档。
 static func purchase_permanent_upgrade(upgrade_id: StringName) -> bool:
-	if not can_purchase_permanent_upgrade(upgrade_id):
+	var upgrade: Dictionary = GameData.get_permanent_upgrade(upgrade_id)
+	if upgrade.is_empty():
 		return false
-
-	var cost: int = get_permanent_upgrade_cost(upgrade_id)
-	if not spend_soul_stones(cost):
+	var config: ConfigFile = ConfigFile.new()
+	if not _load_for_write(config):
 		return false
-
-	var new_level: int = get_permanent_upgrade_level(upgrade_id) + 1
-	save_value(SECTION_PERMANENT_UPGRADES, String(upgrade_id), new_level)
-	return true
+	var level: int = maxi(int(config.get_value(SECTION_PERMANENT_UPGRADES, String(upgrade_id), 0)), 0)
+	if level >= int(upgrade.get("max_level", 1)):
+		return false
+	var cost: int = _permanent_upgrade_cost_at_level(upgrade, level)
+	var balance: int = maxi(int(config.get_value(SECTION_CURRENCY, KEY_SOUL_STONES, 0)), 0)
+	if cost <= 0 or balance < cost:
+		return false
+	config.set_value(SECTION_CURRENCY, KEY_SOUL_STONES, balance - cost)
+	config.set_value(SECTION_PERMANENT_UPGRADES, String(upgrade_id), level + 1)
+	return _commit_config(config)
 
 
 ## 作用：获取角色解锁费用，供当前模块后续逻辑使用。
@@ -372,12 +405,16 @@ static func purchase_character(character_id: StringName) -> bool:
 	if not can_purchase_character(character_id):
 		return false
 
-	var cost: int = get_character_unlock_cost(character_id)
-	if not spend_soul_stones(cost):
+	var config: ConfigFile = ConfigFile.new()
+	if not _load_for_write(config):
 		return false
-
-	set_unlocked("character", character_id)
-	return true
+	var cost: int = get_character_unlock_cost(character_id)
+	var balance: int = maxi(int(config.get_value(SECTION_CURRENCY, KEY_SOUL_STONES, 0)), 0)
+	if balance < cost:
+		return false
+	config.set_value(SECTION_CURRENCY, KEY_SOUL_STONES, balance - cost)
+	config.set_value(SECTION_UNLOCKS, "character:%s" % String(character_id), true)
+	return _commit_config(config)
 
 
 ## 作用：按已购等级累计所有永久升级的属性修正。
@@ -409,12 +446,12 @@ static func is_unlocked(kind: String, item_id: StringName) -> bool:
 
 ## 作用：设置已解锁。
 ## 使用：本文件由 purchase_character 调用；输入 kind（类型）、item_id（itemID）、is_item_unlocked（判断item已解锁）；可能写入 user:// 存档。
-static func set_unlocked(kind: String, item_id: StringName, is_item_unlocked: bool = true) -> void:
-	save_value(SECTION_UNLOCKS, "%s:%s" % [kind, String(item_id)], is_item_unlocked)
+static func set_unlocked(kind: String, item_id: StringName, is_item_unlocked: bool = true) -> bool:
+	return save_value(SECTION_UNLOCKS, "%s:%s" % [kind, String(item_id)], is_item_unlocked)
 
 
 ## 作用：以空 ConfigFile 覆盖存档并清空全部持久化进度。
 ## 使用：仅在明确需要重置时调用；影响 user://save.cfg 中的设置、货币和成长记录。
-static func reset_progress() -> void:
+static func reset_progress() -> bool:
 	var config: ConfigFile = ConfigFile.new()
-	config.save(SAVE_PATH)
+	return _commit_config(config)

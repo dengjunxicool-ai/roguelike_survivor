@@ -42,6 +42,8 @@ var spawn_generation: int = 0
 var _age: float = 0.0
 var _hits_remaining: int = 1
 var _hit_bodies: Array[Object] = []
+var _pierce_hit_pending: bool = false
+var _bounce_hit_pending: bool = false
 var event_bus: Node
 var skill_instance: RefCounted
 var caster: Node
@@ -257,6 +259,8 @@ func _clear_projectile_runtime_meta() -> void:
 ## 使用：碰撞开关deferred写入，params可覆盖radius。
 func _reset_projectile_runtime_state(params: Dictionary) -> void:
 	_hit_bodies.clear()
+	_pierce_hit_pending = false
+	_bounce_hit_pending = false
 	_is_destroying = false
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
@@ -314,6 +318,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	_hit_bodies.append(body)
+	_record_extra_target_hit(body)
 	if _emit_hit_event(body):
 		_consume_pierce()
 		return
@@ -322,6 +327,22 @@ func _on_body_entered(body: Node) -> void:
 		body.call(&"take_damage", _get_damage_payload(body))
 	_apply_status(body)
 	_consume_pierce()
+
+
+## 作用：记录飞过上一目标或弹向新目标后的真实命中，仅累计玩家投射物。
+func _record_extra_target_hit(body: Node) -> void:
+	if not _pierce_hit_pending and not _bounce_hit_pending:
+		return
+	var live_target: bool = body.get("current_health") == null or int(body.get("current_health")) > 0
+	if live_target and is_instance_valid(caster) and caster.is_in_group(&"player") and body.has_method("take_damage"):
+		var tracker: Node = preload("res://scripts/game/run_stats_tracker.gd").get_active(get_tree())
+		if tracker != null:
+			if _bounce_hit_pending:
+				tracker.record_projectile_hit(&"bounce")
+			elif _pierce_hit_pending:
+				tracker.record_projectile_hit(&"pierce")
+	_pierce_hit_pending = false
+	_bounce_hit_pending = false
 
 
 ## 作用：构造规范上下文，deferred发送主攻击/配置命中事件并执行on_hit动作。
@@ -391,8 +412,10 @@ func _consume_pierce() -> void:
 		if next != null:
 			direction = global_position.direction_to(next.global_position)
 			homing_enabled = true
+			_bounce_hit_pending = true
 			return
 	_hits_remaining -= 1
+	_pierce_hit_pending = _hits_remaining > 0
 	pierce = maxi(_hits_remaining - 1, 0)
 	if _hits_remaining <= 0:
 		_play_hit_visual_then_free()
@@ -962,6 +985,8 @@ func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Arr
 
 func _begin_return() -> void:
 	if _returned: return
+	_pierce_hit_pending = false
+	_bounce_hit_pending = false
 	_returned = true
 	_geometry_done = true
 	_trajectory_mode = "linear"

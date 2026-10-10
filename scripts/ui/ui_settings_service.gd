@@ -17,15 +17,11 @@ static func apply_saved_settings() -> void:
 
 
 ## 作用：根据全屏请求切换窗口显示模式。
-## 使用：fullscreen_enabled 为 true 时全屏；false 时从窗口态最大化、从其他状态切回窗口态。
+## 使用：true 明确应用全屏，false 明确应用窗口态；重复应用保持状态和窗口尺寸。
 static func apply_window_mode(fullscreen_enabled: bool) -> void:
-	if fullscreen_enabled:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-		return
-	if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var target_mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen_enabled else DisplayServer.WINDOW_MODE_WINDOWED
+	if DisplayServer.window_get_mode() != target_mode:
+		DisplayServer.window_set_mode(target_mode)
 
 
 ## 作用：把 0～100 百分比转换为主声道音量，零音量时静音。

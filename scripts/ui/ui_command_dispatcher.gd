@@ -66,6 +66,9 @@ func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: N
 		return {"handled": false}
 	# Apply/validate the fallible upgrade before committing any other reward.
 	var upgrade_id: StringName = _reward_upgrade_id(option, payload)
+	# Soul cards have one fallible persistent effect; mixed upgrades/relics need a transaction.
+	if String(option.get("id", "")) == "reward_soul_stones" and (upgrade_id != &"" or String(payload.get("relic_id", "")) != ""):
+		return {"handled": false}
 	if upgrade_id != &"":
 		var result: Dictionary = _apply_upgrade_choice(upgrade_id, player)
 		if not bool(result.get("handled", false)):
@@ -93,18 +96,17 @@ func complete_replacement_reward(result: Dictionary, context: Dictionary) -> Dic
 func _commit_reward(option: Dictionary, payload: Dictionary, player: Node, tree: SceneTree) -> Dictionary:
 	if not is_instance_valid(player):
 		return {"handled": false}
+	var soul_reward: bool = String(option.get("id", "")) == "reward_soul_stones"
+	if soul_reward and payload.has("amount") and SaveManager.add_soul_stones(int(payload.get("amount", 0))) < 0:
+		return {"handled": false}
 	var relic_id: StringName = StringName(String(payload.get("relic_id", "")))
 	if relic_id != &"" and not _apply_relic_reward(relic_id, player, tree):
 		return {"handled": false}
 
-	if payload.has("amount"):
+	if payload.has("amount") and not soul_reward:
 		var amount: int = int(payload.get("amount", 0))
-		match String(option.get("id", "")):
-			"reward_soul_stones":
-				SaveManager.add_soul_stones(amount)
-			_:
-				if player.has_method("add_experience"):
-					player.call("add_experience", amount)
+		if player.has_method("add_experience"):
+			player.call("add_experience", amount)
 
 	if payload.has("heal_percent"):
 		_apply_healing_reward(payload, player, tree)
@@ -117,18 +119,12 @@ func _commit_reward(option: Dictionary, payload: Dictionary, player: Node, tree:
 
 ## 作用：按玩家生命上限和治疗比例回复血量并记录治疗。
 ## 使用：payload.heal_percent 为比例；不超过上限，生效后发 health_changed。
-func _apply_healing_reward(payload: Dictionary, player: Node, tree: SceneTree) -> void:
+func _apply_healing_reward(payload: Dictionary, player: Node, _tree: SceneTree) -> void:
 	var max_health: int = int(player.get("max_health"))
 	var heal_amount: int = maxi(roundi(float(max_health) * float(payload.get("heal_percent", 0.0))), 0)
 	if heal_amount <= 0:
 		return
-	var current_health: int = mini(int(player.get("current_health")) + heal_amount, max_health)
-	player.set("current_health", current_health)
-	if player.has_signal("health_changed"):
-		player.emit_signal("health_changed", current_health, max_health)
-	var tracker: Node = RunStatsTrackerScript.get_active(tree)
-	if tracker != null and tracker.has_method("record_healing"):
-		tracker.call("record_healing", heal_amount)
+	preload("res://scripts/player/player_healing.gd").apply(player, heal_amount)
 
 
 ## 作用：经玩家 RelicManager 添加遗物，成功后记录获取事件。
@@ -177,6 +173,8 @@ func _add_soul_stones(amount: int) -> Dictionary:
 	if amount <= 0:
 		return {"handled": false, "added": 0, "total": SaveManager.get_soul_stones()}
 	var total: int = SaveManager.add_soul_stones(amount)
+	if total < 0:
+		return {"handled": false, "added": 0, "total": SaveManager.get_soul_stones()}
 	return {
 		"handled": true,
 		"added": amount,

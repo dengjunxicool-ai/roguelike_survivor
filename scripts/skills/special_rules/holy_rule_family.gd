@@ -531,14 +531,9 @@ func _grant_cross_relic_shield(player: Node, amount: int, rules: Dictionary) -> 
 ## 作用：在玩家治疗接口存在时恢复指定正数生命。
 ## 使用：player 为玩家节点；amount 为本次伤害或动作数值；会发出对应变更信号；需由仍存活的宿主创建并调度。
 func _heal_player(player: Node, amount: int) -> void:
-	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if player == null or amount <= 0:
 		return
-	var max_health: int = int(player.get("max_health"))
-	var current_health: int = int(player.get("current_health"))
-	player.set("current_health", mini(current_health + amount, max_health))
-	if player.has_signal("health_changed"):
-		player.emit_signal("health_changed", int(player.get("current_health")), max_health)
+	preload("res://scripts/player/player_healing.gd").apply(player, amount)
 
 
 ## 作用：读取玩家当前生命比例并夹紧到零至一，缺玩家视作满血。

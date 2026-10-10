@@ -10,23 +10,35 @@ signal state_requested(state: String)
 
 const STATE_TITLE: String = "TITLE"
 const CodexViewModelBuilderScript: Script = preload("res://scripts/ui/screens/codex_view_model_builder.gd")
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 var _view_model_builder: RefCounted = CodexViewModelBuilderScript.new()
+var _tabs: TabContainer
 
 
 ## 作用：构建角色、技能、敌人、状态和遗物的图鉴页。
 ## 使用：由页面或局内编排的构建流程调用；构建前应提供有效父容器；输入 body（主体）。
 func build(body: VBoxContainer) -> void:
-	_add_label(body, "图鉴", 1)
+	Locale.bind_text(_add_label(body, "", 1), "panel.codex")
 	var tabs: TabContainer = TabContainer.new()
 	tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(tabs)
+	_tabs = tabs
 
 	var view_model: Dictionary = _view_model_builder.call("build")
 	for tab: Dictionary in view_model.get("tabs", []):
 		_add_tab(tabs, String(tab.get("title", "")), _get_string_array(tab.get("rows", [])))
-	_add_state_button(body, "返回主菜单", STATE_TITLE)
+	Locale.bind_text(_add_state_button(body, "", STATE_TITLE), "panel.back_to_title")
+
+## Refresh tab titles separately: they are TabContainer properties, not label text.
+func refresh() -> void:
+	if _tabs == null:
+		return
+	var view_model: Dictionary = _view_model_builder.call("build")
+	var tabs: Array = view_model.get("tabs", [])
+	for index: int in mini(_tabs.get_tab_count(), tabs.size()):
+		_tabs.set_tab_title(index, String(tabs[index].get("title", "")))
 
 
 ## 作用：添加页签并配置节点/样式所需的属性。

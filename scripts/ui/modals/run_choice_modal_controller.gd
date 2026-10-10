@@ -284,7 +284,7 @@ func _refresh_choice_card_modal(container: BoxContainer, options: Array[Dictiona
 	if container == null:
 		return
 	_prepare_choice_card_layout(container)
-	_ensure_choice_card_pool(container, LEVEL_UP_OPTION_COUNT)
+	_ensure_choice_card_pool(container, options.size())
 	_activate_choice_card_pool(container)
 	var pool: Array = _get_choice_card_pool(container)
 	for index: int in range(pool.size()):
@@ -303,7 +303,13 @@ func _ensure_choice_card_pool(container: BoxContainer, count: int) -> void:
 		return
 	var key: int = int(container.get_instance_id())
 	if _choice_card_pools.has(key):
-		return
+		if _get_choice_card_pool(container).size() == count:
+			return
+		# Rebuild when the permanent bonus changes the count; detach old slots before layout.
+		for child: Node in container.get_children():
+			container.remove_child(child)
+			child.queue_free()
+		_choice_card_pools.erase(key)
 	_choice_card_cells.clear()
 	_choice_card_buttons.clear()
 	_choice_card_labels.clear()
@@ -780,6 +786,7 @@ func _set_card_slot(control: Control, left: float, top: float, right: float, bot
 func _update_choice_card_sizes(container: BoxContainer) -> void:
 	if container == null:
 		return
+	_activate_choice_card_pool(container)
 
 	var card_count: int = maxi(_choice_card_buttons.size(), 1)
 	var viewport_size: Vector2 = container.get_viewport().get_visible_rect().size
@@ -788,7 +795,16 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 	var base_size: Vector2 = CARD_COMPACT_SIZE if compact else CARD_DESIGN_SIZE
 	var inner_gap: float = (CARD_COMPACT_INNER_GAP if compact else CARD_INNER_GAP) * ui_scale
 	var fixed_gap_width: float = inner_gap * float(maxi(card_count - 1, 0))
-	var max_card_width: float = maxf((container.size.x - fixed_gap_width) / float(card_count), 1.0)
+	# Newly created cards can temporarily enlarge the container's minimum size.
+	# Use the screen's available width too, so four cards can shrink back into view.
+	var screen_width: float = viewport_size.x
+	var ancestor: Node = container.get_parent()
+	while ancestor != null:
+		if ancestor is MarginContainer:
+			screen_width -= ancestor.get_theme_constant("margin_left") + ancestor.get_theme_constant("margin_right")
+		ancestor = ancestor.get_parent()
+	var available_width: float = minf(container.size.x, maxf(screen_width, 1.0))
+	var max_card_width: float = maxf((available_width - fixed_gap_width) / float(card_count), 1.0)
 	var card_size: Vector2 = base_size * ui_scale
 	if card_size.x > max_card_width:
 		card_size.x = max_card_width
@@ -805,12 +821,24 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 		if is_instance_valid(button):
 			button.custom_minimum_size = card_size
 			button.size = card_size
+	var content_scale: float = minf(ui_scale, card_size.x / base_size.x)
+	for slot: Dictionary in _get_choice_card_pool(container):
+		var icon: TextureRect = slot.get("icon") as TextureRect
+		if icon != null:
+			var icon_size: float = floor(minf(card_size.x * 0.43, card_size.y * 0.24))
+			icon.custom_minimum_size = Vector2(icon_size, icon_size)
+		for value_icon: TextureRect in slot.get("value_icons", []):
+			value_icon.custom_minimum_size = Vector2.ONE * maxi(10, floori(22 * content_scale))
+		for amount: Label in slot.get("value_amounts", []):
+			amount.custom_minimum_size.x = floor(64 * content_scale)
+		for row: HBoxContainer in slot.get("value_rows", []):
+			row.add_theme_constant_override("separation", maxi(2, floori(8 * content_scale)))
 	for item: Dictionary in _choice_card_labels:
 		var label := item.get("label", null) as Label
 		if label == null:
 			continue
 		var base_font_size: int = int(item.get("font_size", 14))
-		var scaled_font_size: int = maxi(10, roundi(float(base_font_size) * ui_scale))
+		var scaled_font_size: int = maxi(10, roundi(float(base_font_size) * content_scale))
 		label.add_theme_font_size_override("font_size", scaled_font_size)
 		if bool(item.get("line_spacing", false)):
 			label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(scaled_font_size))

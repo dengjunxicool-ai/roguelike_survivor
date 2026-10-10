@@ -230,7 +230,9 @@
 				{
 					"key": "permanent_upgrades",
 					"domain": "upgrades",
-					"id_key": "id"
+					"id_key": "id",
+					"required": ["cost_base", "cost_growth", "max_level"],
+					"numeric_minimums": {"cost_base": 1, "cost_growth": 1, "max_level": 1}
 				}
 			],
 			"root_fields": {
@@ -958,6 +960,8 @@
 				"id"
 			],
 			"fields": {
+				"cost_base": ["number"],
+				"cost_growth": ["number"],
 				"rarity": [
 					"string"
 				],

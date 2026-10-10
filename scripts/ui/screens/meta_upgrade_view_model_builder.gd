@@ -3,6 +3,7 @@
 
 extends RefCounted
 class_name MetaUpgradeViewModelBuilder
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 
 ## 作用：整理上下文和配置为页面展示模型。
@@ -25,7 +26,7 @@ func build() -> Dictionary:
 			"cost": cost,
 			"is_maxed": is_maxed,
 			"can_purchase": not is_maxed and SaveManager.can_purchase_permanent_upgrade(upgrade_id),
-			"button_text": "已满级" if is_maxed else "强化 %d" % cost
+			"button_text": Locale.translate("meta.max_level") if is_maxed else Locale.translate("meta.upgrade_cost", {"cost": str(cost)})
 		})
 	return {
 		"souls": SaveManager.get_soul_stones(),

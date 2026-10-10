@@ -85,10 +85,7 @@ func _apply_health_modifiers(player: Node, modifiers: Dictionary) -> void:
 	if modifiers.has("heal_percent_max"):
 		heal += roundi(float(player.get("max_health")) * float(modifiers.get("heal_percent_max", 0.0)))
 	if heal > 0:
-		var max_health: int = int(player.get("max_health"))
-		var current_health: int = mini(int(player.get("current_health")) + heal, max_health)
-		player.set("current_health", current_health)
-		player.emit_signal("health_changed", current_health, max_health)
+		preload("res://scripts/player/player_healing.gd").apply(player, heal)
 
 
 ## 作用：将非零 amount 加到指定浮点属性。
