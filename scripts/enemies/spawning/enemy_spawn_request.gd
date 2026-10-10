@@ -36,7 +36,8 @@ static func summon(enemy_id: Variant, position: Vector2, multipliers: Dictionary
 		"position": position,
 		"multipliers": multipliers,
 		"reward_policy": {
-			"award_soul": false
+			"award_soul": false,
+			"drop_experience": false
 		}
 	})
 

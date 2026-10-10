@@ -8,6 +8,7 @@ class_name EnemyBase
 const DamageSystemScript: Script = preload("res://scripts/combat/damage_system.gd")
 const DamageApplicationServiceScript: Script = preload("res://scripts/combat/damage_application_service.gd")
 const EnemyAttackTelegraphScript: Script = preload("res://scripts/enemies/enemy_attack_telegraph.gd")
+const EnemyAreaTelegraphScript: Script = preload("res://scripts/enemies/combat/enemy_attack_telegraph.gd")
 const EnemyVisualControllerScript: Script = preload("res://scripts/enemies/enemy_visual_controller.gd")
 const EnemyDebugDisplayControllerScript: Script = preload("res://scripts/enemies/enemy_debug_display_controller.gd")
 const EnemyStatusDisplayControllerScript: Script = preload("res://scripts/enemies/enemy_status_display_controller.gd")
@@ -24,6 +25,7 @@ const EnemyConfigHelperScript: Script = preload("res://scripts/enemies/enemy_con
 const HotPathProfilerScript: Script = preload("res://scripts/runtime/hot_path_profiler.gd")
 const RuntimePoolRegistryScript: Script = preload("res://scripts/runtime/runtime_pool_registry.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+const EnemyMapBoundaryScript: Script = preload("res://scripts/enemies/enemy_map_boundary.gd")
 const NEARBY_ENEMY_CELL_SIZE: float = 128.0
 const MOTION_LIMIT_EXTRA_RADIUS: float = 96.0
 const CROWDED_ENEMY_LOD_THRESHOLD: int = 60
@@ -48,7 +50,7 @@ signal died
 @export_range(0.0, 1000.0, 10.0, "or_greater") var move_speed: float = 120.0
 @export_range(1, 1000, 1, "or_greater") var max_health: int = 30
 @export_range(0, 1000, 1, "or_greater") var contact_damage: int = 10
-@export_range(1.0, 2000.0, 1.0, "or_greater") var attack_range: float = 32.0
+@export_range(0.0, 2000.0, 1.0, "or_greater") var attack_range: float = 32.0
 @export_range(0.05, 10.0, 0.05, "or_greater") var damage_interval: float = 0.5
 @export_range(0, 10000, 1, "or_greater") var dropped_experience: int = 25
 @export_range(0, 10000, 1, "or_greater") var soul_drop: int = 0
@@ -86,6 +88,10 @@ var _dash_cooldown: float = 0.0
 var _dash_warning_timer: float = 0.0
 var _dash_timer: float = 0.0
 var _dash_direction: Vector2 = Vector2.ZERO
+var _special_attack_contact_blocked := false
+var _special_attack_passes_target := false
+var _dash_hit_targets: Dictionary = {}
+var _attack_generation := 0
 var _boss_skill_cooldowns: Dictionary = {}
 var _visual_controller: RefCounted = EnemyVisualControllerScript.new()
 var _debug_display_controller: RefCounted = EnemyDebugDisplayControllerScript.new()
@@ -97,6 +103,9 @@ var _status_facade: RefCounted = EnemyStatusFacadeScript.new()
 var _death_pipeline: RefCounted = EnemyDeathPipelineScript.new()
 var _behavior_controller: RefCounted = EnemyBehaviorControllerScript.new()
 var _skill_controller: RefCounted = EnemySkillControllerScript.new()
+var _support_buff_controller: RefCounted = preload("res://scripts/enemies/enemy_support_buff_controller.gd").new()
+var _boss_mechanic_scheduler: RefCounted = preload("res://scripts/enemies/skills/boss_mechanic_scheduler.gd").new()
+var _boss_ring_rng := RandomNumberGenerator.new()
 var _state_controller: RefCounted = EnemyStateControllerScript.new()
 var _visual_update_timer: float = 0.0
 var _neighbor_check_timer: float = 0.0
@@ -127,6 +136,10 @@ func _ready() -> void:
 		_apply_enemy_config()
 	_behavior_controller.call("setup", self, _behavior)
 	_skill_controller.call("setup", self, _enemy_skill_refs, _behavior)
+	_support_buff_controller.call("setup", self)
+	_boss_mechanic_scheduler.call("setup", self)
+	if String(_behavior.get("type", "")) == "boss_dungeon_heart":
+		_boss_ring_rng.seed = randi()
 	_visual_update_timer = float(int(get_instance_id()) % 7) * 0.01
 	_neighbor_check_timer = _neighbor_check_initial_offset()
 
@@ -140,6 +153,11 @@ func _ready() -> void:
 ## 作用：在节点离树时清理其注册关系。
 ## 使用：由 Godot 自动调用，避免服务继续持有已移除节点。
 func _exit_tree() -> void:
+	if not _is_dead:
+		var tracker := RunStatsTracker.get_active(get_tree())
+		if tracker!=null:
+			tracker.record_monster_lifecycle(self,&"natural_escape" if String(get_meta("spawn_recycle_reason",""))=="natural_escape" else &"recycle",get_meta("spawn_request",{}))
+	_boss_mechanic_scheduler.call("reset")
 	_unregister_combat_target()
 
 
@@ -156,6 +174,13 @@ func _physics_process(delta: float) -> void:
 func _physics_process_profiled(delta: float) -> void:
 	if _is_dead:
 		return
+	if has_meta("treasure_lifetime") and not bool(get_meta("spawn_reveal_pending",false)):
+		var remaining := float(get_meta("treasure_lifetime"))-delta
+		set_meta("treasure_lifetime",remaining)
+		if remaining<=0.00001:
+			set_meta("spawn_recycle_reason",&"natural_escape")
+			queue_free()
+			return
 
 	var profile_start: int = _profile_start()
 	_update_enemy_runtime_tick(delta)
@@ -194,7 +219,11 @@ func _physics_process_profiled(delta: float) -> void:
 
 	profile_start = _profile_start()
 	if not _resolve_current_target():
-		_stop_motion()
+		_behavior_controller.call("cancel_pending_attack")
+		if _is_fusing and String(_behavior.get("type", "")) == "explode_near_player":
+			_update_behavior(delta)
+		else:
+			_stop_motion()
 		_profile_add("resolve_target_missing", profile_start)
 		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		return
@@ -203,6 +232,7 @@ func _physics_process_profiled(delta: float) -> void:
 	if _should_skip_crowded_runtime_frame():
 		HotPathProfilerScript.end(self, &"enemy_ai_update", ai_hot_path_start)
 		var skipped_movement_start: int = HotPathProfilerScript.begin(self)
+		velocity=EnemyMapBoundaryScript.limit_velocity(self,velocity,delta,_get_collision_radius(self,24.0))
 		move_and_slide()
 		HotPathProfilerScript.end(self, &"enemy_movement", skipped_movement_start)
 		return
@@ -217,6 +247,7 @@ func _physics_process_profiled(delta: float) -> void:
 	if should_limit_motion:
 		_limit_actor_motion(delta, true, _should_run_neighbor_check(delta))
 	_profile_add("motion_limit", profile_start)
+	velocity=EnemyMapBoundaryScript.limit_velocity(self,velocity,delta,_get_collision_radius(self,24.0))
 	var movement_hot_path_start: int = HotPathProfilerScript.begin(self)
 	profile_start = _profile_start()
 	move_and_slide()
@@ -239,6 +270,7 @@ func _physics_process_profiled(delta: float) -> void:
 ## 作用：更新敌人运行时周期。
 ## 使用：本文件由 _physics_process_profiled 调用；输入 delta（delta）。
 func _update_enemy_runtime_tick(delta: float) -> void:
+	_support_buff_controller.call("tick", delta)
 	_update_status_effects(delta)
 	var status_visual_hot_path_start: int = HotPathProfilerScript.begin(self)
 	_update_status_label()
@@ -340,6 +372,7 @@ func _apply_debug_chase_movement() -> void:
 ## 作用：启动远程攻击预警；具体处理委托给 _attack_telegraph.show。
 ## 使用：内部辅助入口；输入 direction（方向）。
 func _start_ranged_attack_warning(direction: Vector2) -> void:
+	_record_attack_metric(&"ranged_warning",&"warning")
 	_ranged_warning_direction = direction.normalized() if direction != Vector2.ZERO else Vector2.RIGHT
 	_ranged_warning_timer = maxf(float(_behavior.get("projectile_warning_time", 0.0)), 0.0)
 	if _ranged_warning_timer > 0.0:
@@ -366,7 +399,10 @@ func _show_ranged_attack_warning() -> void:
 ## 作用：显示突进攻击预警；具体处理委托给 _attack_telegraph.show。
 ## 使用：内部辅助入口。
 func _show_dash_attack_warning() -> void:
-	_attack_telegraph.call("show", _dash_direction, _behavior, attack_range)
+	var warning_config := _behavior.duplicate(true)
+	warning_config["projectile_warning_range"] = float(_behavior.get("dash_speed", 360.0)) * float(_behavior.get("dash_duration", 0.4))
+	warning_config["projectile_warning_width"] = _get_collision_radius(self, 24.0) * 2.0
+	_attack_telegraph.call("show", _dash_direction, warning_config, attack_range)
 
 
 ## 作用：隐藏攻击攻击预警；具体处理委托给 _attack_telegraph.hide。
@@ -439,13 +475,14 @@ func _is_movement_frozen() -> bool:
 ## 作用：获取生效移动速度，供当前模块后续逻辑使用；具体处理委托给 _status_facade.get_effective_move_speed。
 ## 使用：本文件由 _apply_debug_chase_movement 调用；返回计算或读取的数值。
 func _get_effective_move_speed() -> float:
-	return float(_status_facade.call("get_effective_move_speed", move_speed))
+	return float(_status_facade.call("get_effective_move_speed", move_speed)) * float(_support_buff_controller.call("get_move_speed_multiplier"))
 
 
 ## 作用：接触半径内按冷却伤害目标，并执行接触状态动作。
 ## 使用：在敌人物理更新末调用；突进期间可使用 dash_damage，成功发起攻击后重置接触冷却。
 func _apply_contact_damage() -> void:
-	if _damage_cooldown > 0.0:
+	if String(_behavior.get("type",""))=="flee_player": return
+	if _is_dead or _special_attack_contact_blocked or _damage_cooldown > 0.0 or (_is_fusing and String(_behavior.get("type", "")) == "explode_near_player"):
 		return
 
 	var contact_target: Object = null
@@ -453,9 +490,16 @@ func _apply_contact_damage() -> void:
 		contact_target = target
 	if contact_target == null or not contact_target.has_method("take_damage"):
 		return
+	if _dash_timer > 0.0:
+		var target_id: int = contact_target.get_instance_id()
+		if _dash_hit_targets.has(target_id):
+			return
+		_dash_hit_targets[target_id] = _attack_generation
 
 	var applied_damage: int = int(_behavior.get("dash_damage", contact_damage)) if _dash_timer > 0.0 else contact_damage
-	contact_target.call(&"take_damage", _get_enemy_damage_packet(applied_damage, "contact"))
+	var attack_kind := "charge" if _dash_timer>0.0 else "contact"
+	_record_attack_metric(StringName(attack_kind),&"attempt")
+	contact_target.call(&"take_damage", _get_enemy_damage_packet(applied_damage, attack_kind))
 	_execute_enemy_skill_action("contact_status", {"target": contact_target})
 	_mark_runtime_state("attack", 0.2)
 	_damage_cooldown = damage_interval
@@ -466,11 +510,13 @@ func _apply_contact_damage() -> void:
 func _is_target_touching_contact_radius() -> bool:
 	if target == null or not is_instance_valid(target):
 		return false
-	var contact_radius: float = maxf(
-		attack_range,
-		_get_collision_radius(self, 24.0) + _get_collision_radius(target, 24.0) + 2.0
-	)
+	var contact_radius: float = _get_contact_radius()
 	return global_position.distance_squared_to(target.global_position) <= contact_radius * contact_radius
+
+
+## 作用：接触只按双方碰撞半径计算，不使用攻击或施法距离。
+func _get_contact_radius() -> float:
+	return _get_collision_radius(self, 24.0) + _get_collision_radius(target, 24.0) + 2.0
 
 
 ## 作用：应用范围攻击伤害；具体处理委托给 target.take_damage。
@@ -575,7 +621,9 @@ func _get_enemy_damage_packet(amount: int, source_kind: String) -> DamagePacket:
 func _run_self_explosion_action() -> bool:
 	if _is_dead:
 		return false
-	if not bool(_action_executor.call("explode", _behavior)):
+	var explosion := _behavior.duplicate(true)
+	explosion["source_skill_id"]=_skill_controller.call("get_skill_id_for_action","self_explode",&"bug_explosion")
+	if not bool(_action_executor.call("explode", explosion)):
 		return false
 	_finish_death("self_explosion")
 	return true
@@ -584,10 +632,17 @@ func _run_self_explosion_action() -> bool:
 ## 作用：注销战斗目标并按原因构建死亡上下文，交给死亡流水线。
 ## 使用：已死亡时直接返回；cause 为 damage 或 self_explosion 等原因。
 func _finish_death(cause: String = "damage") -> void:
+	_support_buff_controller.call("clear")
+	_behavior_controller.call("cancel_pending_attack")
+	_boss_mechanic_scheduler.call("reset")
 	if _is_dead:
 		return
 
 	_unregister_combat_target()
+	var tracker := RunStatsTracker.get_active(get_tree())
+	if tracker!=null:
+		tracker.record_monster_lifecycle(self,&"death",get_meta("spawn_request",{}))
+		tracker.record_enemy_attack_event(enemy_id,StringName(cause),&"death_cause",false)
 	var context: Dictionary = EnemyDeathContextScript.create(cause, _get_death_policy(cause), {
 		"enemy_id": String(enemy_id),
 		"spawn_source_type": String(get_meta("spawn_source_type", "unknown")),
@@ -604,6 +659,10 @@ func _get_death_policy(cause: String) -> Dictionary:
 	_merge_death_policy(policy, _get_dictionary(_death_policy.get("default", {})))
 	_merge_death_policy(policy, _get_dictionary(_death_policy.get(cause, {})))
 	return policy
+
+func _record_attack_metric(skill_id: StringName,phase: StringName) -> void:
+	var tracker := RunStatsTracker.get_active(get_tree())
+	if tracker!=null: tracker.record_enemy_attack_event(enemy_id,skill_id,phase,false)
 
 
 ## 作用：获取默认死亡策略，供当前模块后续逻辑使用。
@@ -645,8 +704,15 @@ func _apply_death_effect() -> void:
 
 ## 作用：生成敌人组周围；具体处理委托给 _action_executor.spawn_enemies_around。
 ## 使用：内部辅助入口；输入 spawn_enemy_id（生成敌人ID）、count（数量）、center（中心）、radius（半径）。
-func _spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector2, radius: float = 48.0) -> void:
-	_action_executor.call("spawn_enemies_around", spawn_enemy_id, count, center, radius)
+func _spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector2, radius: float = 48.0) -> int:
+	return int(_action_executor.call("spawn_enemies_around", spawn_enemy_id, count, center, radius))
+
+func _get_owned_summon_count() -> int:
+	var count := int(_action_executor.call("get_pending_summon_count"))
+	for child: Node in get_tree().get_nodes_in_group(&"enemies"):
+		if child.get_meta("summoner_instance_id", 0) == get_instance_id() and not child.is_queued_for_deletion() and child.get("_is_dead") != true:
+			count += 1
+	return count
 
 
 ## 作用：生成腐化核心列表；具体处理委托给 _action_executor.spawn_corrupted_cores。
@@ -658,6 +724,7 @@ func _spawn_corrupted_cores(count: int, hp: int) -> bool:
 ## 作用：更新Boss技能冷却计时。
 ## 使用：内部辅助入口；输入 delta（delta）。
 func _update_boss_skill_cooldowns(delta: float) -> void:
+	_boss_mechanic_scheduler.call("tick", delta)
 	for key: Variant in _boss_skill_cooldowns.keys():
 		_boss_skill_cooldowns[key] = maxf(float(_boss_skill_cooldowns[key]) - delta, 0.0)
 
@@ -667,23 +734,26 @@ func _update_boss_skill_cooldowns(delta: float) -> void:
 func _process_boss_phase_skills() -> void:
 	var phase: Dictionary = _get_active_boss_phase()
 	var skills: Array = _get_array(phase.get("skills", []))
-	var active_count: int = 0
 	var active_cap: int = maxi(int(phase.get("max_concurrent_skills", 1)), 1)
 	for skill_index in range(skills.size()):
-		if active_count >= active_cap:
-			return
 		var skill_variant: Variant = skills[skill_index]
 		if not (skill_variant is Dictionary):
 			continue
 
 		var skill: Dictionary = skill_variant
-		var cooldown_key: String = "%s:%d" % [str(phase.get("_phase_index", 0)), skill_index]
+		var cooldown_key: String = String(skill.get("skill_id", ""))
 		if float(_boss_skill_cooldowns.get(cooldown_key, 0.0)) > 0.0:
 			continue
 
-		if _execute_boss_skill(skill):
+		var group: StringName = &"area_denial" if String(skill.get("type", "")) in ["delayed_area_blast", "corruption_gaze", "shockwave", "damage_area"] else &"projectiles"
+		var token: int = _boss_mechanic_scheduler.call("try_reserve", StringName(cooldown_key), group, active_cap)
+		if token < 0:
+			continue
+		if _execute_boss_skill(skill, token):
+			_boss_mechanic_scheduler.call("commit", token)
 			_boss_skill_cooldowns[cooldown_key] = maxf(float(skill.get("cooldown", 5.0)), 0.1)
-			active_count += 1
+		else:
+			_boss_mechanic_scheduler.call("cancel", token)
 
 
 ## 作用：按当前生命值比例选取首个包含该比例的阶段。
@@ -712,14 +782,16 @@ func _get_active_boss_phase() -> Dictionary:
 
 ## 作用：执行Boss技能。
 ## 使用：本文件由 _process_boss_phase_skills 调用；输入 skill（技能）；返回是否满足条件或执行成功。
-func _execute_boss_skill(skill: Dictionary) -> bool:
+func _execute_boss_skill(skill: Dictionary, mechanic_token: int = -1) -> bool:
 	var skill_id: StringName = StringName(String(skill.get("skill_id", "")))
 	if skill_id == &"":
 		push_warning("[EnemyBase] Boss phase skill is missing skill_id for enemy '%s'" % String(enemy_id))
 		return false
 	var runtime_params: Dictionary = {
 		"boss_skill": skill,
-		"position": _get_boss_skill_target_position(skill)
+		"position": _get_boss_skill_target_position(skill),
+		"mechanic_scheduler": _boss_mechanic_scheduler,
+		"mechanic_token": mechanic_token
 	}
 	var executed: bool = bool(_skill_controller.call("execute_skill_id", skill_id, runtime_params))
 	if executed:
@@ -749,12 +821,21 @@ func _get_array(value: Variant) -> Array:
 ## 作用：更新引信视觉。
 ## 使用：内部辅助入口。
 func _update_fuse_visual() -> void:
-	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
+	var sprite: CanvasItem = get_node_or_null("AnimatedSprite2D") as CanvasItem
+	if sprite == null or not sprite.visible:
+		sprite = get_node_or_null("Sprite2D") as CanvasItem
 	if sprite == null:
 		return
 
 	var pulse: float = 0.65 + absf(sin(_fuse_timer * 18.0)) * 0.45
 	sprite.modulate = Color(1.0, pulse, 0.18, 1.0)
+	var warning: Node2D = get_node_or_null("FuseTelegraph") as Node2D
+	if warning == null:
+		warning = EnemyAreaTelegraphScript.new()
+		warning.name = "FuseTelegraph"
+		add_child(warning)
+		warning.call("configure", &"circle", {"radius": float(_behavior.get("explosion_radius", 76.0))})
+	warning.call("set_progress", _fuse_timer / maxf(float(_behavior.get("fuse_time", 0.8)), 0.05))
 
 
 ## 作用：掉落经验晶体。
@@ -946,7 +1027,7 @@ func _limit_actor_motion(delta: float, include_player: bool = false, include_ene
 
 	var motion: Vector2 = velocity * delta
 	var scale: float = 1.0
-	if include_player and target != null and is_instance_valid(target):
+	if include_player and not _special_attack_passes_target and target != null and is_instance_valid(target):
 		scale = minf(scale, _get_actor_motion_scale(motion, target))
 	if not include_enemy_neighbors or _should_skip_enemy_neighbor_motion_limit():
 		if scale < 1.0:

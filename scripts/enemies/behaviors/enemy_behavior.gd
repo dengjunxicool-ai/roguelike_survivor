@@ -22,6 +22,9 @@ func setup(owner: Node, behavior_config: Dictionary = {}) -> void:
 func tick(_delta: float) -> void:
 	pass
 
+func cancel_pending_attack() -> void:
+	pass
+
 
 ## 作用：获取调试状态，供当前模块后续逻辑使用。
 ## 使用：供本模块调用者使用；返回字典包含 type。
@@ -50,7 +53,8 @@ func _body() -> CharacterBody2D:
 func _target() -> Node2D:
 	if enemy == null:
 		return null
-	return enemy.get("target") as Node2D
+	var candidate: Variant = enemy.get("target")
+	return candidate as Node2D if is_instance_valid(candidate) else null
 
 
 ## 作用：设置速度。

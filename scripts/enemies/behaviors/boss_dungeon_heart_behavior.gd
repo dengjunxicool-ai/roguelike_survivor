@@ -16,6 +16,3 @@ func tick(delta: float) -> void:
 
 	_set_velocity(Vector2.ZERO)
 	_call_enemy(&"_process_boss_phase_skills")
-	if _is_target_in_attack_range():
-		_set_velocity(Vector2.ZERO)
-		_apply_range_attack_damage()

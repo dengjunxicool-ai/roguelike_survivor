@@ -3,12 +3,18 @@
 
 extends EnemyBehavior
 class_name ChaseAndCastPoolBehavior
+var _recovery := 0.0
 
 
 ## 作用：范围外追逐，范围内停下，冷却到期施放地面伤害池并可处理近身攻击。
 ## 使用：显式请求 damage_area 动作；_delta 未用于冷却递减，冷却更新在 EnemyBase。
 func tick(_delta: float) -> void:
 	_cancel_ranged_attack_warning()
+	if _recovery > 0.0:
+		_recovery = maxf(_recovery - _delta, 0.0)
+		_set_velocity(Vector2.ZERO)
+		_set_property(&"_special_attack_contact_blocked", _recovery > 0.0)
+		return
 	var target: Node2D = _target()
 	if target == null:
 		return
@@ -22,15 +28,20 @@ func tick(_delta: float) -> void:
 		var pool_damage: int = int(config.get("pool_damage", enemy.get("contact_damage")))
 		if pool_tick_interval >= 0.99:
 			pool_damage *= 2
-		_execute_required_action("damage_area", {
+		var created := bool(_call_enemy(&"_execute_enemy_skill_action", ["damage_area", {
 			"position": target.global_position,
 			"damage": pool_damage,
 			"duration": float(config.get("pool_duration", 3.0)),
 			"tick_interval": pool_tick_interval,
 			"radius": float(config.get("pool_radius", 72.0)),
 			"visual_color": Color(0.35, 0.95, 0.2, 0.32)
-		})
-		_set_property(&"_cast_cooldown", float(_call_enemy(&"_get_enemy_skill_cooldown", ["damage_area", float(config.get("cast_cooldown", 4.0))])))
-
-	if _is_target_in_attack_range():
-		_apply_range_attack_damage()
+		}]))
+		if created:
+			_set_property(&"_cast_cooldown", float(_call_enemy(&"_get_enemy_skill_cooldown", ["damage_area", float(config.get("cast_cooldown", 4.0))])))
+			_recovery = float(config.get("recovery_time",0.0))
+			if _recovery > 0.0:
+				var area_ref: WeakRef = enemy.get_meta("active_enemy_area",{}).get("node")
+				var area: Node = area_ref.get_ref() as Node if area_ref != null else null
+				if area != null:
+					_recovery += float(area.get("_warning_time"))
+			_set_property(&"_special_attack_contact_blocked", _recovery > 0.0)

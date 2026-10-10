@@ -213,6 +213,7 @@ func _build_top_center() -> void:
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_create_art_rect(panel, "TimerPlaqueArt", Rect2(-8, -4, 142, 54), HUD_TIMER_PLAQUE_TEXTURE)
 	_labels.timer = _create_label(panel, "Timer", "00:00", Rect2(0, 0, 126, 44), 24, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
+	_labels.boss_notice = _create_label(_root,"BossNotice","第 8 波后 Boss 登场",Rect2(0,130,360,28),14,HORIZONTAL_ALIGNMENT_CENTER,VERTICAL_ALIGNMENT_CENTER,COLOR_GOLD,"top_center")
 	_labels.center_warning = _create_label(_root, "CenterWarning", "", Rect2(0, 100, 360, 38), 18, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_WARN, "top_center")
 
 
@@ -627,9 +628,7 @@ func _update_player_bars(run_state: Dictionary) -> void:
 ## 作用：更新运行时标签组。
 ## 使用：本文件由 update 调用；输入 run_state（单局状态）、current_wave（当前波次）、wave_time_remaining（波次时间剩余）、run_seconds（单局秒）。
 func _update_runtime_labels(run_state: Dictionary, current_wave: int, wave_time_remaining: float, run_seconds: float) -> void:
-	var duration: float = float(run_state.get("run_duration", 0.0))
-	var remaining: float = maxf(0.0, duration - run_seconds) if duration > 0.0 else maxf(0.0, wave_time_remaining)
-	_labels.timer.text = _format_time(remaining)
+	_labels.timer.text = _format_time(float(run_state.get("run_seconds",run_seconds)))
 	var status_summary := String(run_state.get("status_summary", "-"))
 	_labels.status.text = status_summary
 

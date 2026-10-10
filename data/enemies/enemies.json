@@ -137,9 +137,14 @@
 			},
 			"behavior": {
 				"type": "keep_distance_and_shoot",
+				"preferred_distance": 420,
 				"projectile_warning_time": 0.45,
 				"projectile_warning_width": 8,
-				"projectile_warning_range": 420
+				"projectile_warning_range": 420,
+				"retreat_start_distance": 220,
+				"retreat_end_distance": 280,
+				"chase_resume_distance": 460,
+				"shoot_cooldown": 2.2
 			},
 			"skills": [
 				{
@@ -303,7 +308,13 @@
 				"contact_interval": 1.1
 			},
 			"behavior": {
-				"type": "summon_and_chase"
+				"type": "summon_and_chase",
+				"summon_range": 400,
+				"summon_warning_time": 0.8,
+				"summon_count": 2,
+				"summon_limit": 4,
+				"summon_radius": 72,
+				"summon_cooldown": 5
 			},
 			"skills": [
 				{
@@ -347,7 +358,11 @@
 				"contact_interval": 1
 			},
 			"behavior": {
-				"type": "chase_and_cast_pool"
+				"type": "support_aura",
+				"aura_radius": 220,
+				"refresh_interval": 0.5,
+				"buff_duration": 0.6,
+				"preferred_distance": 320
 			},
 			"skills": [
 				{
@@ -381,7 +396,7 @@
 			"base_stats": {
 				"max_hp": 80,
 				"move_speed": 55,
-				"contact_damage": 8,
+				"contact_damage": 0,
 				"armor": 1,
 				"resistances": {},
 				"attack_range": 48,
@@ -391,7 +406,7 @@
 				"contact_interval": 0.8
 			},
 			"behavior": {
-				"type": "chase_player"
+				"type": "flee_player"
 			},
 			"skills": [],
 			"visual": {
@@ -433,7 +448,10 @@
 			"behavior": {
 				"type": "dash_attack",
 				"dash_trigger_range": 180,
-				"dash_stop_distance": 44
+				"dash_warning_time": 0.6,
+				"dash_speed": 360,
+				"dash_duration": 0.4,
+				"dash_cooldown": 4.5
 			},
 			"skills": [
 				{
@@ -459,9 +477,19 @@
 				"contact_interval": 1.1
 			},
 			"behavior": {
-				"type": "chase_player"
+				"type": "leap_and_slam",
+				"leap_trigger_range": 220,
+				"leap_warning_time": 1,
+				"leap_speed": 280,
+				"leap_duration": 0.6,
+				"recovery_time": 0.8,
+				"leap_cooldown": 5
 			},
-			"skills": [],
+			"skills": [
+				{
+					"skill_id": "slime_slam"
+				}
+			],
 			"visual": {
 				"texture": "res://assets/enemies/giant_slime/1.png",
 				"sprite_frames": "res://assets/enemies/giant_slime/giant_slime.tres",
@@ -487,7 +515,12 @@
 					}
 				}
 			},
-			"enemy_rank": "elite"
+			"enemy_rank": "elite",
+			"death_effect": {
+				"type": "spawn_enemies",
+				"enemy_id": "small_slime",
+				"count": 3
+			}
 		},
 		{
 			"id": "skeleton_captain",
@@ -505,7 +538,13 @@
 				"contact_interval": 1
 			},
 			"behavior": {
-				"type": "dash_attack"
+				"type": "dash_attack",
+				"dash_trigger_range": 260,
+				"dash_warning_time": 0.9,
+				"dash_speed": 420,
+				"dash_duration": 0.6,
+				"recovery_time": 0.7,
+				"dash_cooldown": 6
 			},
 			"skills": [
 				{
@@ -554,7 +593,12 @@
 				"contact_interval": 1
 			},
 			"behavior": {
-				"type": "chase_and_cast_pool"
+				"type": "chase_and_cast_pool",
+				"cast_range": 360,
+				"pool_radius": 96,
+				"pool_duration": 4,
+				"pool_tick_interval": 1,
+				"cast_cooldown": 7
 			},
 			"skills": [
 				{
@@ -580,7 +624,13 @@
 				"contact_interval": 1.1
 			},
 			"behavior": {
-				"type": "chase_and_cast_pool"
+				"type": "chase_and_cast_pool",
+				"cast_range": 280,
+				"pool_radius": 110,
+				"pool_duration": 0.15,
+				"pool_tick_interval": 1,
+				"cast_cooldown": 6,
+				"recovery_time": 0.8
 			},
 			"skills": [
 				{
@@ -605,7 +655,7 @@
 					"acid": 0.1,
 					"holy": 0
 				},
-				"attack_range": 760,
+				"attack_range": 0,
 				"exp_drop": 0,
 				"soul_drop": 200,
 				"collision_radius": 62,
@@ -626,8 +676,8 @@
 								"type": "delayed_area_blast",
 								"radius": 78,
 								"damage": 22,
-								"delay": 0.9,
-								"cooldown": 5
+								"cooldown": 5,
+								"warning_time": 0.9
 							},
 							{
 								"skill_id": "ring_bullets",
@@ -636,7 +686,8 @@
 								"speed": 230,
 								"damage": 12,
 								"safe_gap_count": 2,
-								"cooldown": 7
+								"cooldown": 7,
+								"warning_time": 0.6
 							}
 						]
 					},
@@ -650,8 +701,8 @@
 								"type": "delayed_area_blast",
 								"radius": 86,
 								"damage": 24,
-								"delay": 0.85,
-								"cooldown": 4.4
+								"cooldown": 4.4,
+								"warning_time": 0.85
 							},
 							{
 								"skill_id": "corrupted_cores",
@@ -665,10 +716,10 @@
 								"type": "corruption_gaze",
 								"radius": 52,
 								"damage": 14,
-								"delay": 1.2,
 								"duration": 2.5,
 								"tick_interval": 1,
-								"cooldown": 10
+								"cooldown": 10,
+								"warning_time": 1.2
 							}
 						]
 					},
@@ -682,8 +733,8 @@
 								"type": "delayed_area_blast",
 								"radius": 94,
 								"damage": 28,
-								"delay": 0.8,
-								"cooldown": 3.8
+								"cooldown": 3.8,
+								"warning_time": 0.8
 							},
 							{
 								"skill_id": "ring_bullets",
@@ -692,7 +743,8 @@
 								"speed": 290,
 								"damage": 16,
 								"safe_gap_count": 3,
-								"cooldown": 6
+								"cooldown": 6,
+								"warning_time": 0.6
 							},
 							{
 								"skill_id": "shockwave",
@@ -707,10 +759,10 @@
 								"type": "corruption_gaze",
 								"radius": 52,
 								"damage": 14,
-								"delay": 1.2,
 								"duration": 2.5,
 								"tick_interval": 1,
-								"cooldown": 9
+								"cooldown": 9,
+								"warning_time": 1.2
 							}
 						]
 					}

@@ -34,6 +34,10 @@ func tick(delta: float) -> void:
 	if _behavior != null:
 		_behavior.tick(delta)
 
+func cancel_pending_attack() -> void:
+	if _behavior != null:
+		_behavior.cancel_pending_attack()
+
 
 ## 作用：获取调试状态，供当前模块后续逻辑使用。
 ## 使用：供本模块调用者使用；返回结果字典。

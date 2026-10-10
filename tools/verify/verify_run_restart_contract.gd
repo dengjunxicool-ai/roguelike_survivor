@@ -20,6 +20,8 @@ func _init() -> void:
 
 
 func _run() -> void:
+	if DisplayServer.get_name()=="headless":
+		root.size=Vector2i(1280,720)
 	_save_path = ProjectSettings.globalize_path("user://save.cfg").replace("\\", "/")
 	if not _expect(_save_path.to_lower().begins_with("e:/codex/"), "save directory is isolated under E:/codex", _save_path):
 		quit(1)
@@ -94,9 +96,11 @@ func _run() -> void:
 		var config: Dictionary = _enemy_for_rank(rank)
 		if not _expect(not config.is_empty(), "owner defines " + rank + " enemy"):
 			continue
-		var enemy: Node2D = spawner.call("spawn_enemy", Request.create(config.id, {"parent": main, "position": Vector2(1400, 1400), "spawn_clearance": 0.0}))
+		var enemy: Node2D = spawner.call("spawn_enemy", Request.create(config.id, {"parent": main, "spawn_clearance": 0.0}))
 		if not _expect(enemy != null, "real spawn creates " + rank):
 			continue
+		var warning: Node2D = enemy.get_meta("spawn_warning_node").get_ref()
+		spawner.get("_spawn_service").call("_finish_spawn_reveal",weakref(enemy),weakref(warning))
 		_expect(String(enemy.get_meta("enemy_rank", "")) == rank, "spawn derives canonical " + rank + " classification")
 		ui.call("_update_run_hud")
 		var previous_kills: int = int(ui.get("_kill_count"))

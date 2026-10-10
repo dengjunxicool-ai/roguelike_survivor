@@ -8,14 +8,19 @@
 				{
 					"type": "projectile",
 					"params": {
-						"speed": 280.0,
+						"speed": 280,
 						"pierce": 0,
-						"radius": 8.0,
-						"lifetime": 3.0,
-						"spawn_offset": 20.0,
+						"radius": 8,
+						"lifetime": 3,
+						"spawn_offset": 20,
 						"element": "physical",
 						"damage_type": "direct_physical",
-						"visual_color": [1.0, 0.9, 0.08, 1.0]
+						"visual_color": [
+							1,
+							0.9,
+							0.08,
+							1
+						]
 					}
 				}
 			]
@@ -23,14 +28,14 @@
 		{
 			"id": "minor_summon",
 			"display_name": "Minor Summon",
-			"cooldown": 5.0,
+			"cooldown": 5,
 			"actions": [
 				{
 					"type": "summon",
 					"params": {
 						"enemy_id": "small_slime",
-						"count": 1,
-						"radius": 72.0
+						"count": 2,
+						"radius": 72
 					}
 				}
 			]
@@ -38,17 +43,24 @@
 		{
 			"id": "war_drum",
 			"display_name": "War Drum",
-			"cooldown": 4.0,
+			"cooldown": 4,
 			"actions": [
 				{
-					"type": "damage_area",
+					"type": "ally_buff",
 					"params": {
-						"duration": 3.0,
-						"tick_interval": 1.0,
-						"radius": 72.0,
-						"element": "physical",
-						"damage_type": "area_direct",
-						"visual_color": [0.95, 0.75, 0.18, 0.28]
+						"radius": 220,
+						"duration": 0.6,
+						"buff_effects": [
+							{
+								"stat": "move_speed",
+								"op": "multiply",
+								"value": 1.15,
+								"scope": {
+									"tag": "movement"
+								},
+								"source": "war_drum"
+							}
+						]
 					}
 				}
 			]
@@ -56,17 +68,24 @@
 		{
 			"id": "toxic_pool",
 			"display_name": "Toxic Pool",
-			"cooldown": 4.0,
+			"cooldown": 7,
 			"actions": [
 				{
 					"type": "damage_area",
 					"params": {
-						"duration": 3.0,
-						"tick_interval": 1.0,
-						"radius": 72.0,
+						"warning_time": 0.9,
+						"duration": 4,
+						"tick_interval": 1,
+						"radius": 96,
 						"element": "poison",
 						"damage_type": "area_direct",
-						"visual_color": [0.35, 0.95, 0.2, 0.32]
+						"visual_color": [
+							0.35,
+							0.95,
+							0.2,
+							0.32
+						],
+						"activation_mode": "periodic"
 					}
 				}
 			]
@@ -74,17 +93,24 @@
 		{
 			"id": "lava_pool",
 			"display_name": "Lava Pool",
-			"cooldown": 4.0,
+			"cooldown": 6,
 			"actions": [
 				{
 					"type": "damage_area",
 					"params": {
-						"duration": 3.0,
-						"tick_interval": 1.0,
-						"radius": 72.0,
+						"warning_time": 1.1,
+						"duration": 0.15,
+						"tick_interval": 1,
+						"radius": 110,
 						"element": "fire",
 						"damage_type": "area_direct",
-						"visual_color": [1.0, 0.28, 0.05, 0.34]
+						"visual_color": [
+							1,
+							0.28,
+							0.05,
+							0.34
+						],
+						"activation_mode": "single"
 					}
 				}
 			]
@@ -97,9 +123,9 @@
 					"type": "contact_status",
 					"params": {
 						"status_id": "poison",
-						"duration": 3.0,
+						"duration": 3,
 						"damage": 6,
-						"tick_interval": 1.0,
+						"tick_interval": 1,
 						"stack": 1
 					}
 				}
@@ -143,9 +169,15 @@
 				{
 					"type": "delayed_area_blast",
 					"params": {
+						"warning_time": 0.8,
 						"element": "arcane",
 						"damage_type": "area_direct",
-						"visual_color": [0.9, 0.12, 0.8, 0.35]
+						"visual_color": [
+							0.9,
+							0.12,
+							0.8,
+							0.35
+						]
 					}
 				}
 			]
@@ -158,9 +190,15 @@
 				{
 					"type": "ring_projectiles",
 					"params": {
+						"warning_time": 0.6,
 						"element": "arcane",
 						"damage_type": "direct_magic",
-						"visual_color": [0.72, 0.05, 0.86, 1.0]
+						"visual_color": [
+							0.72,
+							0.05,
+							0.86,
+							1
+						]
 					}
 				}
 			]
@@ -175,7 +213,7 @@
 					"params": {
 						"enemy_id": "skeleton",
 						"count": 3,
-						"radius": 112.0
+						"radius": 112
 					}
 				}
 			]
@@ -188,9 +226,15 @@
 				{
 					"type": "shockwave",
 					"params": {
+						"warning_time": 0.8,
 						"element": "arcane",
 						"damage_type": "area_direct",
-						"visual_color": [0.85, 0.08, 0.95, 0.28]
+						"visual_color": [
+							0.85,
+							0.08,
+							0.95,
+							0.28
+						]
 					}
 				}
 			]
@@ -203,9 +247,15 @@
 				{
 					"type": "corruption_gaze",
 					"params": {
+						"warning_time": 0.8,
 						"element": "arcane",
 						"damage_type": "area_direct",
-						"visual_color": [0.72, 0.05, 0.86, 0.24]
+						"visual_color": [
+							0.72,
+							0.05,
+							0.86,
+							0.24
+						]
 					}
 				}
 			]
@@ -220,6 +270,31 @@
 					"params": {
 						"count": 2,
 						"hp": 120
+					}
+				}
+			]
+		},
+		{
+			"id": "slime_slam",
+			"display_name": "Slime Slam",
+			"cooldown": 5,
+			"actions": [
+				{
+					"type": "damage_area",
+					"params": {
+						"warning_time": 1,
+						"radius": 110,
+						"duration": 0.15,
+						"tick_interval": 1,
+						"activation_mode": "single",
+						"element": "physical",
+						"damage_type": "area_direct",
+						"visual_color": [
+							1,
+							0.45,
+							0.1,
+							0.4
+						]
 					}
 				}
 			]

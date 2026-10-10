@@ -14,6 +14,9 @@ const DashAttackBehaviorScript: Script = preload("res://scripts/enemies/behavior
 const BossDungeonHeartBehaviorScript: Script = preload("res://scripts/enemies/behaviors/boss_dungeon_heart_behavior.gd")
 
 var _types: Dictionary = {
+	"flee_player": preload("res://scripts/enemies/behaviors/flee_player_behavior.gd"),
+	"leap_and_slam": preload("res://scripts/enemies/behaviors/leap_slam_behavior.gd"),
+	"support_aura": preload("res://scripts/enemies/behaviors/support_aura_behavior.gd"),
 	"chase_player": ChasePlayerBehaviorScript,
 	"keep_distance_and_shoot": KeepDistanceShootBehaviorScript,
 	"explode_near_player": ExplodeNearPlayerBehaviorScript,

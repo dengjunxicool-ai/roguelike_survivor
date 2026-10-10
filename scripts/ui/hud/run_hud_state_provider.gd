@@ -27,6 +27,10 @@ func build(context: Dictionary) -> Dictionary:
 		"run_stats": RunResultStateBuilderScript.get_run_stats_summary(context.get("run_stats_tracker", null) as Node)
 	}
 	state["kills"] = int(state.get("kill_count", 0))
+	var spawner: Node = tree.get_first_node_in_group(&"enemy_spawner") if tree!=null else null
+	if spawner!=null and spawner.has_method("_get_wave_progress_snapshot"):
+		state["wave_progress"]=spawner.call("_get_wave_progress_snapshot")
+	state["boss_notice"]="第 8 波后 Boss 登场"
 	state["souls"] = SaveManager.get_soul_stones()
 
 	var player: Node = tree.get_first_node_in_group(&"player") if is_instance_valid(tree) else null

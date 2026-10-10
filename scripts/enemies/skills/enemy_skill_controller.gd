@@ -65,6 +65,7 @@ func execute_action_type(action_type: String, runtime_params: Dictionary = {}) -
 			)
 			executed = bool(_action_registry.call("execute", context)) or executed
 		if executed:
+			_record_cast(entry,action_type)
 			return true
 	return false
 
@@ -92,8 +93,18 @@ func execute_skill_id(skill_id: Variant, runtime_params: Dictionary = {}) -> boo
 				_build_runtime_params(entry, runtime_params)
 			)
 			executed = bool(_action_registry.call("execute", context)) or executed
+		if executed: _record_cast(entry,"cast")
 		return executed
 	return false
+
+func _record_cast(entry: Dictionary,action_type: String) -> void:
+	if _owner!=null and _owner.has_method("_record_attack_metric"):
+		_owner.call("_record_attack_metric",StringName(String(entry.id)),StringName(action_type))
+
+func get_skill_id_for_action(action_type: String, fallback: StringName) -> StringName:
+	for entry: Dictionary in _skill_entries:
+		if entry.definition.call("has_action_type",action_type): return StringName(entry.id)
+	return fallback
 
 
 ## 作用：读取对应动作的引用冷却、定义冷却或回退值。

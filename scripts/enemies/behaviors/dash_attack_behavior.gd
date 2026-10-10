@@ -1,63 +1,70 @@
-## 文件用途：实现预警、突进和突进冷却组成的敌人攻击流程。
-## 使用方式：通过 behavior 配置绑定到敌人；在物理更新 tick 中推进各阶段计时。
-
+## 锁定方向的预警、突进和恢复；按实际移动时间截断末帧。
 extends EnemyBehavior
 class_name DashAttackBehavior
+var _phase: StringName = &"idle"
+var _remaining := 0.0
 
-
-## 作用：推进突进持续时间与预警，冷却到期可启动突进，空闲时追逐或近身攻击。
-## 使用：delta 用于突进/预警计时；突进冷却递减由 EnemyBase 处理，本方法仅在启动时重置冷却。
 func tick(delta: float) -> void:
-	var target: Node2D = _target()
-	if target == null:
-		return
-
-	var dash_timer: float = _float_property(&"_dash_timer")
-	if dash_timer > 0.0:
-		_call_enemy(&"_hide_attack_telegraph")
-		var body: CharacterBody2D = _body()
-		var stop_distance: float = float(config.get("dash_stop_distance", 0.0))
-		if body != null and stop_distance > 0.0 and body.global_position.distance_squared_to(target.global_position) <= stop_distance * stop_distance:
+	if _phase == &"dash":
+		if _remaining <= 0.0:
 			_set_property(&"_dash_timer", 0.0)
+			_phase = &"recovery"
+			_set_property(&"_special_attack_passes_target",false)
+			_remaining = float(config.get("recovery_time", 0.0))
+			_set_property(&"_special_attack_contact_blocked", true)
 			_set_velocity(Vector2.ZERO)
 			return
-		dash_timer = maxf(dash_timer - delta, 0.0)
-		_set_property(&"_dash_timer", dash_timer)
+		var step := minf(delta, _remaining)
+		_remaining = maxf(_remaining - delta, 0.0)
 		var direction: Vector2 = enemy.get("_dash_direction")
-		_set_velocity(direction * float(config.get("dash_speed", 360.0)))
+		_set_velocity(direction * float(config.get("dash_speed", 360.0)) * step / maxf(delta, 0.000001))
 		return
-
-	var warning_timer: float = _float_property(&"_dash_warning_timer")
-	if warning_timer > 0.0:
-		warning_timer = maxf(warning_timer - delta, 0.0)
-		_set_property(&"_dash_warning_timer", warning_timer)
-		_call_enemy(&"_show_dash_attack_warning")
+	if _phase == &"recovery":
+		_remaining = maxf(_remaining - delta, 0.0)
 		_set_velocity(Vector2.ZERO)
-		if warning_timer <= 0.0:
+		if _remaining <= 0.0:
+			_phase = &"idle"
+			_set_property(&"_special_attack_contact_blocked", false)
+		return
+	if _phase == &"warning":
+		_remaining = maxf(_remaining - delta, 0.0)
+		_set_property(&"_dash_warning_timer", _remaining)
+		_set_velocity(Vector2.ZERO)
+		if _remaining <= 0.0:
 			_call_enemy(&"_hide_attack_telegraph")
-			_set_property(&"_dash_timer", maxf(float(config.get("dash_duration", 0.35)), 0.05))
+			_phase = &"dash"
+			_call_enemy(&"_record_attack_metric",[&"charge",&"start"])
+			_set_property(&"_special_attack_passes_target",true)
+			_remaining = float(config.get("dash_duration", 0.4))
+			_set_property(&"_dash_timer", _remaining)
+			_set_property(&"_special_attack_contact_blocked", false)
 			_set_property(&"_damage_cooldown", 0.0)
 		return
-
-	var body: CharacterBody2D = _body()
-	if body == null:
+	var target := _target()
+	var body := _body()
+	if target == null or body == null:
 		return
-	var to_target: Vector2 = target.global_position - body.global_position
-	var distance: float = to_target.length()
-	if _float_property(&"_dash_cooldown") <= 0.0 and _is_target_in_behavior_attack_range(distance):
-		var dash_direction: Vector2 = to_target.normalized() if distance > 0.0 else Vector2.RIGHT
-		_set_property(&"_dash_direction", dash_direction)
-		var dash_warning_time: float = maxf(float(config.get("dash_warning_time", 0.8)), 0.0)
-		_set_property(&"_dash_warning_timer", dash_warning_time)
-		_set_property(&"_dash_cooldown", maxf(float(config.get("dash_cooldown", 4.5)), 0.1))
-		if dash_warning_time <= 0.0:
-			_set_property(&"_dash_timer", maxf(float(config.get("dash_duration", 0.35)), 0.05))
-		else:
-			_call_enemy(&"_show_dash_attack_warning")
-		return
-
-	if _is_target_in_attack_range(distance):
+	if _float_property(&"_dash_cooldown") <= 0.0 and _is_target_in_behavior_attack_range():
+		var direction := body.global_position.direction_to(target.global_position)
+		_set_property(&"_dash_direction", direction if direction != Vector2.ZERO else Vector2.RIGHT)
+		_set_property(&"_attack_generation", int(enemy.get("_attack_generation")) + 1)
+		_set_property(&"_dash_hit_targets", {})
+		_remaining = float(config.get("dash_warning_time", 0.6))
+		_phase = &"warning"
+		_set_property(&"_dash_warning_timer", _remaining)
+		_set_property(&"_dash_cooldown", float(config.get("dash_cooldown", 4.5)))
+		_set_property(&"_special_attack_contact_blocked", true)
 		_set_velocity(Vector2.ZERO)
-		_apply_range_attack_damage()
+		_call_enemy(&"_show_dash_attack_warning")
 	else:
 		_apply_chase_movement()
+
+func cancel_pending_attack() -> void:
+	_phase = &"idle"
+	_set_property(&"_special_attack_passes_target",false)
+	_remaining = 0.0
+	_set_property(&"_dash_timer", 0.0)
+	_set_property(&"_dash_warning_timer", 0.0)
+	_set_property(&"_special_attack_contact_blocked", false)
+	_set_velocity(Vector2.ZERO)
+	_call_enemy(&"_hide_attack_telegraph")

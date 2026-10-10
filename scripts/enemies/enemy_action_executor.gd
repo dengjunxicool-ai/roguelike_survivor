@@ -30,7 +30,7 @@ func explode(behavior: Dictionary) -> bool:
 	var explosion_damage: int = int(behavior.get("explosion_damage", _get_int("contact_damage")))
 	var explosion_radius: float = float(behavior.get("explosion_radius", 76.0))
 	spawn_damage_area(0, 0.12, 0.1, explosion_radius, Color(1.0, 0.35, 0.08, 0.45))
-	damage_targets_in_radius(explosion_damage, explosion_radius)
+	damage_targets_in_radius(explosion_damage, explosion_radius, "explosion",StringName(behavior.get("source_skill_id","bug_explosion")))
 	return true
 
 
@@ -145,7 +145,7 @@ func spawn_damage_area_at(
 
 ## 作用：筛选目标组中处于敌人半径内的节点，并分别提交物理区域伤害包。
 ## 使用：area_damage 必须为正，area_radius 为世界距离；只调用具有 take_damage 的 Node2D。
-func damage_targets_in_radius(area_damage: int, area_radius: float) -> void:
+func damage_targets_in_radius(area_damage: int, area_radius: float, source_type: String = "area", skill_id: StringName = &"enemy_area") -> void:
 	if _owner == null or area_damage <= 0:
 		return
 
@@ -157,7 +157,7 @@ func damage_targets_in_radius(area_damage: int, area_radius: float) -> void:
 		if _owner.global_position.distance_squared_to(target_body.global_position) > radius_squared:
 			continue
 		if target_body.has_method("take_damage"):
-			target_body.call(&"take_damage", EnemyDamagePacketBuilderScript.build(_owner, area_damage, "area", &"enemy_area", {
+			target_body.call(&"take_damage", EnemyDamagePacketBuilderScript.build(_owner, area_damage, source_type, skill_id, {
 				"target": target_body,
 				"damage_origin": "field",
 				"damage_type": "area_direct",
@@ -169,26 +169,32 @@ func damage_targets_in_radius(area_damage: int, area_radius: float) -> void:
 ## 使用：spawn_enemy_id 为配置 ID；使用 28 像素圆周半径，统一经 spawn_enemies_around。
 func spawn_death_enemies(spawn_enemy_id: StringName, count: int) -> void:
 	if _owner != null:
-		spawn_enemies_around(spawn_enemy_id, count, _owner.global_position, 28.0)
+		spawn_enemies_around(spawn_enemy_id, count, _owner.global_position, 28.0, &"death_split")
 
 
 ## 作用：沿中心圆周均匀创建召唤敌人，并继承 owner 的血量、伤害和速度倍率。
 ## 使用：center 为世界坐标，radius 为世界距离；经验倍率固定 0.25，生成经 EnemySpawnService。
-func spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector2, radius: float = 48.0) -> void:
+func spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector2, radius: float = 48.0, source_type: StringName = &"summon") -> int:
 	if _owner == null or spawn_enemy_id == &"" or count <= 0 or _owner.get_parent() == null:
-		return
+		return 0
 
 	_sync_spawn_service()
+	var created := 0
 	for spawn_index in range(count):
 		var position: Vector2 = center + Vector2.RIGHT.rotated(TAU * float(spawn_index) / float(count)) * radius
 		var request: Dictionary = EnemySpawnRequestScript.summon(spawn_enemy_id, position, {
 			"hp": float(_owner.get("health_multiplier")),
 			"damage": float(_owner.get("damage_multiplier")),
 			"move_speed": float(_owner.get("move_speed_multiplier")) if _owner.get("move_speed_multiplier") != null else 1.0,
-			"exp": 0.25
+			"exp": 0.0
 		}, String(_owner.get("enemy_id")))
 		request["parent"] = _owner.get_parent()
-		_spawn_service.call("spawn", request)
+		request["source_type"] = String(source_type)
+		request["source_owner"] = weakref(_owner)
+		request["summoner_instance_id"] = _owner.get_instance_id()
+		if _spawn_service.call("spawn", request) != null:
+			created += 1
+	return created
 
 
 ## 作用：以 skeleton 场景沿 150 像素圆周生成指定血量的 Boss 核心并记录统计。
@@ -196,6 +202,14 @@ func spawn_enemies_around(spawn_enemy_id: StringName, count: int, center: Vector
 func spawn_corrupted_cores(count: int, hp: int) -> bool:
 	if _owner == null or count <= 0 or _owner.get_parent() == null:
 		return false
+	var living := int(_spawn_service.call("get_pending_count","boss_core"))
+	for core: Node in _owner.get_tree().get_nodes_in_group(&"boss_cores"):
+		if not core.is_queued_for_deletion() and core.get("_is_dead") != true:
+			living += 1
+	count = mini(count, maxi(2 - living, 0))
+	if count == 0:
+		return false
+	var spawned := 0
 	_sync_spawn_service()
 	for spawn_index in range(count):
 		var owner_resistances: Variant = _owner.get("resistances")
@@ -203,13 +217,12 @@ func spawn_corrupted_cores(count: int, hp: int) -> bool:
 		var position: Vector2 = _owner.global_position + Vector2.RIGHT.rotated(TAU * float(spawn_index) / float(count)) * 150.0
 		var request: Dictionary = EnemySpawnRequestScript.boss_core(&"skeleton", position, hp, int(_owner.get("armor")), resistances)
 		request["parent"] = _owner.get_parent()
+		request["source_owner"] = weakref(_owner)
 		var core: Node2D = _spawn_service.call("spawn", request) as Node2D
 		if core == null:
 			continue
-		var tracker: Node = RunStatsTracker.get_active(_owner.get_tree()) if _owner.get_tree() != null else null
-		if tracker != null and tracker.has_method("record_boss_core_spawned"):
-			tracker.call("record_boss_core_spawned", core)
-	return true
+		spawned += 1
+	return spawned > 0
 
 
 ## 作用：获取整数，供当前模块后续逻辑使用。
@@ -235,7 +248,11 @@ func _sync_spawn_service() -> void:
 	if _spawn_service == null:
 		_spawn_service = EnemySpawnServiceScript.new()
 	var enemy_scene: PackedScene = load("res://scenes/enemies/enemy.tscn") as PackedScene
-	_spawn_service.call("setup", _owner, enemy_scene, null, StringName(String(_owner.get("target_group"))) if _owner != null else &"player")
+	_spawn_service.call("setup", _owner.get_parent() if is_instance_valid(_owner) and _owner.get_parent()!=null else _owner, enemy_scene, null, StringName(String(_owner.get("target_group"))) if _owner != null else &"player")
+	_spawn_service.call("set_visible_spawn_rules",true,32.0,120.0,1.5)
+
+func get_pending_summon_count() -> int:
+	return int(_spawn_service.call("get_pending_count","summon"))
 
 
 ## 作用：构建敌人伤害包。
