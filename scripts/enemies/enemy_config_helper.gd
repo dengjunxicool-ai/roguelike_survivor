@@ -65,17 +65,23 @@ static func behavior_attack_range_fallback(behavior: Dictionary, attack_range: f
 			return attack_range
 
 
-## 作用：为召唤、伤害池、突进和 Boss 行为解析专用射程。
+## 作用：为射手、召唤、伤害池、突进和 Boss 行为解析专用射程。
 ## 使用：behavior 为行为字典，attack_range 为基础值；其他行为类型直接使用基础范围；返回计算或读取的数值。
 static func behavior_attack_range(behavior: Dictionary, attack_range: float) -> float:
 	match String(behavior.get("type", "")):
+		"leap_and_slam":
+			return float(behavior.get("leap_trigger_range", 0.0))
+		"support_aura":
+			return float(behavior.get("aura_radius", 0.0))
+		"keep_distance_and_shoot":
+			return float(behavior.get("preferred_distance", 0.0))
 		"summon_and_chase":
-			return float(behavior.get("summon_range", behavior.get("attack_range", attack_range)))
+			return float(behavior.get("summon_range", 0.0))
 		"chase_and_cast_pool":
-			return float(behavior.get("cast_range", behavior.get("attack_range", attack_range)))
+			return float(behavior.get("cast_range", 0.0))
 		"dash_attack":
-			return float(behavior.get("dash_trigger_range", behavior.get("attack_range", attack_range)))
+			return float(behavior.get("dash_trigger_range", 0.0))
 		"boss_dungeon_heart":
-			return float(behavior.get("skill_range", behavior.get("attack_range", attack_range)))
+			return float(behavior.get("skill_range", 0.0))
 		_:
 			return attack_range

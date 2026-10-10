@@ -3,6 +3,9 @@
 extends Area2D
 class_name Projectile
 
+signal enemy_attack_finished(generation: int)
+var _generation_finished := true
+
 
 const VisualConfigApplierScript: Script = preload("res://scripts/visual/visual_config_applier.gd")
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
@@ -78,7 +81,9 @@ func _ready() -> void:
 ## 作用：清旧元数据后依次配置核心、payload、上下文、视觉、轨迹与追踪，最后重置运行状态。
 ## 使用：池复用须传完整params，附加视觉场景在状态重置后创建。
 func setup(params: Dictionary) -> void:
+	_finish_generation()
 	spawn_generation += 1
+	_generation_finished = false
 	_clear_projectile_runtime_meta()
 	_apply_projectile_core_params(params)
 	_apply_projectile_payload_params(params)
@@ -105,6 +110,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：停止碰撞和动画、释放附加特效并清事件引用、命中列表与追踪目标。
 ## 使用：回池前隐藏节点，避免残留生命周期事件。
 func prepare_for_pool_despawn() -> void:
+	_finish_generation()
 	if event_bus != null: event_bus.clear_interaction_object(self)
 	_is_destroying = true
 	set_deferred("monitoring", false)
@@ -133,6 +139,7 @@ func prepare_for_pool_despawn() -> void:
 ## 作用：有有效runtime池元数据时清理并回池，否则queue_free释放。
 ## 使用：生命周期结束入口；池路径会调用prepare_for_pool_despawn。
 func despawn_or_free() -> void:
+	_finish_generation()
 	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
 		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
 		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
@@ -141,6 +148,16 @@ func despawn_or_free() -> void:
 			(pool_variant as Node).call("despawn", key, self)
 			return
 	queue_free()
+
+
+func _finish_generation() -> void:
+	if not _generation_finished:
+		_generation_finished = true
+		enemy_attack_finished.emit(spawn_generation)
+
+
+func _exit_tree() -> void:
+	_finish_generation()
 
 
 ## 作用：读取伤害量、速度、方向、穿透、寿命、来源与追踪参数并裁剪边界。

@@ -1,359 +1,667 @@
 {
-  "run": {
-	"duration_seconds": 300,
-	"boss_spawn_time": 240,
-	"starting_level": 1,
-	"experience_formula": {
-	  "type": "table",
-	  "values": [
-		14,
-		24,
-		36,
-		52,
-		72,
-		96,
-		124,
-		156,
-		192,
-		232,
-		276,
-		324,
-		376,
-		432,
-		492
-	  ]
-	}
-  },
-  "spawn_rules": {
-	"spawn_batch_interval_seconds": 3.0,
-	"max_spawn_batch_size": 15,
-	"spawn_warning_duration_seconds": 1.5,
-	"visible_spawn_margin": 64.0,
-	"spawn_player_safe_radius": 120.0,
-	"first_level_up_choice": {
-	  "option_count": 3
+	"run": {
+		"duration_seconds": 300,
+		"boss_spawn_time": 240,
+		"starting_level": 1,
+		"experience_formula": {
+			"type": "table",
+			"values": [
+				14,
+				24,
+				36,
+				52,
+				72,
+				96,
+				124,
+				156,
+				192,
+				232,
+				276,
+				324,
+				376,
+				432,
+				492
+			]
+		}
 	},
-	"upgrade_phase_weights": [
-	  {
-		"phase_id": "before_main_lv3",
-		"condition": {
-		  "main_level_max": 2
+	"spawn_rules": {
+		"spawn_batch_interval_seconds": 3,
+		"max_spawn_batch_size": 15,
+		"spawn_warning_duration_seconds": 1.5,
+		"visible_spawn_margin": 64,
+		"spawn_player_safe_radius": 120,
+		"first_level_up_choice": {
+			"option_count": 3
 		},
-		"weights": {
-		  "main_progression": 45,
-		  "adaptive": 30,
-		  "survival": 20,
-		  "boss": 0,
-		  "rare": 5
-		}
-	  },
-	  {
-		"phase_id": "main_lv3_to_lv5",
-		"condition": {
-		  "main_level_min": 3,
-		  "main_level_max": 5
+		"upgrade_phase_weights": [
+			{
+				"phase_id": "before_main_lv3",
+				"condition": {
+					"main_level_max": 2
+				},
+				"weights": {
+					"main_progression": 45,
+					"adaptive": 30,
+					"survival": 20,
+					"boss": 0,
+					"rare": 5
+				}
+			},
+			{
+				"phase_id": "main_lv3_to_lv5",
+				"condition": {
+					"main_level_min": 3,
+					"main_level_max": 5
+				},
+				"weights": {
+					"main_progression": 35,
+					"adaptive": 35,
+					"survival": 20,
+					"boss": 5,
+					"rare": 5
+				}
+			},
+			{
+				"phase_id": "after_lv5",
+				"condition": {
+					"main_level_min": 6
+				},
+				"weights": {
+					"main_progression": 0,
+					"adaptive": 35,
+					"survival": 20,
+					"boss": 25,
+					"rare": 5
+				}
+			},
+			{
+				"phase_id": "after_220s",
+				"condition": {
+					"elapsed_time_min": 220
+				},
+				"weights": {
+					"main_progression": 0,
+					"adaptive": 25,
+					"survival": 20,
+					"boss": 45,
+					"rare": 10
+				}
+			}
+		],
+		"low_hp_rule": {
+			"threshold_percent": 0.35,
+			"guarantee_tags": [
+				"survival",
+				"heal"
+			]
 		},
-		"weights": {
-		  "main_progression": 35,
-		  "adaptive": 35,
-		  "survival": 20,
-		  "boss": 5,
-		  "rare": 5
+		"main_progression_pity": {
+			"missing_choices_before_guarantee": 2
 		}
-	  },
-	  {
-		"phase_id": "after_lv5",
-		"condition": {
-		  "main_level_min": 6
+	},
+	"waves": [
+		{
+			"start_time": 0,
+			"end_time": 23,
+			"total_count": 35,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 1,
+				"defense_add": 0,
+				"damage": 0.9,
+				"speed": 1,
+				"exp": 1.25
+			},
+			"groups": [
+				{
+					"id": "slime",
+					"role": "filler",
+					"enemy_ids": [
+						"small_slime"
+					],
+					"weight": 100
+				}
+			],
+			"id": "wave_1",
+			"display_name": "史莱姆苏醒",
+			"duration_seconds": 23,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
 		},
-		"weights": {
-		  "main_progression": 0,
-		  "adaptive": 35,
-		  "survival": 20,
-		  "boss": 25,
-		  "rare": 5
-		}
-	  },
-	  {
-		"phase_id": "after_220s",
-		"condition": {
-		  "elapsed_time_min": 220
+		{
+			"start_time": 23,
+			"end_time": 51,
+			"total_count": 50,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 1.15,
+				"defense_add": 0,
+				"damage": 1,
+				"speed": 1,
+				"exp": 1.15
+			},
+			"groups": [
+				{
+					"id": "slime",
+					"role": "filler",
+					"enemy_ids": [
+						"small_slime"
+					],
+					"weight": 55
+				},
+				{
+					"id": "skeleton",
+					"role": "filler",
+					"enemy_ids": [
+						"skeleton"
+					],
+					"weight": 45
+				}
+			],
+			"id": "wave_2",
+			"display_name": "骷髅靠近",
+			"duration_seconds": 28,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
 		},
-		"weights": {
-		  "main_progression": 0,
-		  "adaptive": 25,
-		  "survival": 20,
-		  "boss": 45,
-		  "rare": 10
+		{
+			"start_time": 51,
+			"end_time": 79,
+			"total_count": 65,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 1.3,
+				"defense_add": 1,
+				"damage": 1.12,
+				"speed": 1.05,
+				"exp": 1.05
+			},
+			"groups": [
+				{
+					"id": "skeleton",
+					"role": "filler",
+					"enemy_ids": [
+						"skeleton"
+					],
+					"weight": 70
+				},
+				{
+					"id": "bat",
+					"role": "pursuit",
+					"enemy_ids": [
+						"bat"
+					],
+					"weight": 30
+				}
+			],
+			"id": "wave_3",
+			"display_name": "蝙蝠群",
+			"duration_seconds": 28,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
+		},
+		{
+			"start_time": 79,
+			"end_time": 107,
+			"total_count": 80,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 1.55,
+				"defense_add": 1,
+				"damage": 1.28,
+				"speed": 1,
+				"exp": 1
+			},
+			"groups": [
+				{
+					"id": "slime",
+					"role": "filler",
+					"enemy_ids": [
+						"small_slime"
+					],
+					"weight": 35
+				},
+				{
+					"id": "armored",
+					"role": "filler",
+					"enemy_ids": [
+						"armored_skeleton"
+					],
+					"weight": 50
+				},
+				{
+					"id": "archer",
+					"role": "ranged",
+					"enemy_ids": [
+						"archer_skeleton"
+					],
+					"weight": 15
+				}
+			],
+			"id": "wave_4",
+			"display_name": "第一精英",
+			"duration_seconds": 28,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			],
+			"events": [
+				{
+					"type": "spawn_elite",
+					"wave_time": 5,
+					"mandatory": true,
+					"enemy_id": "giant_slime",
+					"announcement": "精英怪物出现"
+				}
+			]
+		},
+		{
+			"start_time": 107,
+			"end_time": 140,
+			"total_count": 95,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 1.85,
+				"defense_add": 2,
+				"damage": 1.45,
+				"speed": 1.05,
+				"exp": 1
+			},
+			"groups": [
+				{
+					"id": "skeleton",
+					"role": "filler",
+					"enemy_ids": [
+						"skeleton"
+					],
+					"weight": 55
+				},
+				{
+					"id": "toxic",
+					"role": "pursuit",
+					"enemy_ids": [
+						"toxic_bug"
+					],
+					"weight": 15
+				},
+				{
+					"id": "bomb",
+					"role": "pursuit",
+					"enemy_ids": [
+						"bomber"
+					],
+					"weight": 15
+				},
+				{
+					"id": "archer",
+					"role": "ranged",
+					"enemy_ids": [
+						"archer_skeleton"
+					],
+					"weight": 15
+				}
+			],
+			"id": "wave_5",
+			"display_name": "远程压制",
+			"duration_seconds": 33,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
+		},
+		{
+			"start_time": 140,
+			"end_time": 173,
+			"total_count": 110,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 2.2,
+				"defense_add": 2,
+				"damage": 1.65,
+				"speed": 1.06,
+				"exp": 1.05
+			},
+			"groups": [
+				{
+					"id": "skeleton",
+					"role": "filler",
+					"enemy_ids": [
+						"skeleton"
+					],
+					"weight": 55
+				},
+				{
+					"id": "toxic",
+					"role": "pursuit",
+					"enemy_ids": [
+						"toxic_bug"
+					],
+					"weight": 10
+				},
+				{
+					"id": "bomb",
+					"role": "pursuit",
+					"enemy_ids": [
+						"bomber"
+					],
+					"weight": 10
+				},
+				{
+					"id": "priest",
+					"role": "ranged",
+					"enemy_ids": [
+						"skeleton_priest"
+					],
+					"weight": 15
+				},
+				{
+					"id": "drum",
+					"role": "support",
+					"enemy_ids": [
+						"war_drum_goblin"
+					],
+					"weight": 10
+				}
+			],
+			"id": "wave_6",
+			"display_name": "第二精英",
+			"duration_seconds": 33,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			],
+			"events": [
+				{
+					"type": "spawn_elite",
+					"wave_time": 5,
+					"mandatory": true,
+					"enemy_id": "skeleton_captain",
+					"announcement": "精英怪物出现"
+				}
+			]
+		},
+		{
+			"start_time": 173,
+			"end_time": 206,
+			"total_count": 125,
+			"spawn_batch_interval_seconds": 3,
+			"enemy_multipliers": {
+				"hp": 2.5,
+				"defense_add": 3,
+				"damage": 1.82,
+				"speed": 1.08,
+				"exp": 1.1
+			},
+			"groups": [
+				{
+					"id": "armored",
+					"role": "filler",
+					"enemy_ids": [
+						"armored_skeleton"
+					],
+					"weight": 55
+				},
+				{
+					"id": "hunter",
+					"role": "charge",
+					"enemy_ids": [
+						"shadow_hunter"
+					],
+					"weight": 20
+				},
+				{
+					"id": "archer",
+					"role": "ranged",
+					"enemy_ids": [
+						"archer_skeleton"
+					],
+					"weight": 15
+				},
+				{
+					"id": "drum",
+					"role": "support",
+					"enemy_ids": [
+						"war_drum_goblin"
+					],
+					"weight": 10
+				}
+			],
+			"id": "wave_7",
+			"display_name": "怪潮压境",
+			"duration_seconds": 33,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
+		},
+		{
+			"start_time": 206,
+			"end_time": 226,
+			"total_count": 140,
+			"spawn_batch_interval_seconds": 2,
+			"enemy_multipliers": {
+				"hp": 2.75,
+				"defense_add": 3,
+				"damage": 2,
+				"speed": 1.1,
+				"exp": 1.3
+			},
+			"groups": [
+				{
+					"id": "skeleton",
+					"role": "filler",
+					"enemy_ids": [
+						"skeleton"
+					],
+					"weight": 35
+				},
+				{
+					"id": "armored",
+					"role": "filler",
+					"enemy_ids": [
+						"armored_skeleton"
+					],
+					"weight": 20
+				},
+				{
+					"id": "hunter",
+					"role": "charge",
+					"enemy_ids": [
+						"shadow_hunter"
+					],
+					"weight": 20
+				},
+				{
+					"id": "priest",
+					"role": "ranged",
+					"enemy_ids": [
+						"skeleton_priest"
+					],
+					"weight": 15
+				},
+				{
+					"id": "drum",
+					"role": "support",
+					"enemy_ids": [
+						"war_drum_goblin"
+					],
+					"weight": 10
+				}
+			],
+			"id": "wave_8",
+			"display_name": "最终怪潮",
+			"duration_seconds": 20,
+			"spawn_stages": [
+				{
+					"start_ratio": 0,
+					"end_ratio": 0.25,
+					"budget_ratio": 0.25
+				},
+				{
+					"start_ratio": 0.25,
+					"end_ratio": 0.65,
+					"budget_ratio": 0.5
+				},
+				{
+					"start_ratio": 0.65,
+					"end_ratio": 1,
+					"budget_ratio": 0.25
+				}
+			]
 		}
-	  }
 	],
-	"low_hp_rule": {
-	  "threshold_percent": 0.35,
-	  "guarantee_tags": [
-		"survival",
-        "heal"
-	  ]
+	"boss_event": {
+		"boss_id": "dungeon_heart",
+		"spawn_time": 240,
+		"souls_reward": 200,
+		"gold_reward": 120,
+		"fairness": {
+			"warning_required": true,
+			"max_concurrent_major_mechanics": 2,
+			"overlap_damage_protection_seconds": 0.3
+		},
+		"minion_spawn": {
+			"enabled": true,
+			"spawn_interval": 15,
+			"enemy_multipliers": {
+				"hp": 2.1,
+				"defense_add": 2,
+				"damage": 1.65,
+				"speed": 1.05,
+				"exp": 0.5
+			},
+			"groups": [
+				{
+					"enemy_ids": [
+						"small_slime",
+						"skeleton",
+						"toxic_bug"
+					],
+					"weight": 100
+				}
+			]
+		}
 	},
-	"main_progression_pity": {
-	  "missing_choices_before_guarantee": 2
+	"rewards": {
+		"base_gold": 0,
+		"boss_gold": 120,
+		"boss_souls": 200,
+		"treasure_events": [
+			{
+				"type": "spawn_treasure",
+				"wave_id": "wave_3",
+				"wave_time": 5,
+				"chance": 0.35,
+				"enemy_id": "gem_slime",
+				"max_per_run": 2,
+				"lifetime": 12
+			},
+			{
+				"type": "spawn_treasure",
+				"wave_id": "wave_7",
+				"wave_time": 5,
+				"chance": 0.35,
+				"enemy_id": "gem_slime",
+				"max_per_run": 2,
+				"lifetime": 12
+			}
+		]
 	}
-  },
-  "waves": [
-	{
-	  "start_time": 0,
-	  "end_time": 25,
-	  "total_count": 35,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 1,
-		"defense_add": 0,
-		"damage": 0.9,
-		"speed": 1,
-		"exp": 1.25
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-            "small_slime"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_1",
-	  "display_name": "史莱姆苏醒",
-	  "duration_seconds": 25
-	},
-	{
-	  "start_time": 25,
-	  "end_time": 55,
-	  "total_count": 50,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 1.15,
-		"defense_add": 0,
-		"damage": 1,
-		"speed": 1,
-		"exp": 1.15
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"small_slime",
-            "skeleton"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_2",
-	  "display_name": "骷髅靠近",
-	  "duration_seconds": 30
-	},
-	{
-	  "start_time": 55,
-	  "end_time": 85,
-	  "total_count": 65,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 1.3,
-		"defense_add": 1,
-		"damage": 1.12,
-		"speed": 1.05,
-		"exp": 1.05
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"bat",
-            "skeleton"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_3",
-	  "display_name": "蝙蝠群",
-	  "duration_seconds": 30
-	},
-	{
-	  "start_time": 85,
-	  "end_time": 115,
-	  "total_count": 80,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 1.55,
-		"defense_add": 1,
-		"damage": 1.28,
-		"speed": 1,
-		"exp": 1
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"archer_skeleton",
-            "armored_skeleton"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "events": [
-		{
-		  "time": 90,
-		  "type": "spawn_elite",
-		  "enemy_id": "giant_slime"
-		}
-	  ],
-	  "id": "wave_4",
-	  "display_name": "第一精英",
-	  "duration_seconds": 30
-	},
-	{
-	  "start_time": 115,
-	  "end_time": 150,
-	  "total_count": 95,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 1.85,
-		"defense_add": 2,
-		"damage": 1.45,
-		"speed": 1.05,
-		"exp": 1
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"archer_skeleton",
-			"toxic_bug",
-            "bomber"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_5",
-	  "display_name": "远程压制",
-	  "duration_seconds": 35
-	},
-	{
-	  "start_time": 150,
-	  "end_time": 185,
-	  "total_count": 110,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 2.2,
-		"defense_add": 2,
-		"damage": 1.65,
-		"speed": 1.06,
-		"exp": 1.05
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"toxic_bug",
-			"bomber",
-            "skeleton_priest"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_6",
-	  "display_name": "第二精英",
-	  "duration_seconds": 35
-	},
-	{
-	  "start_time": 185,
-	  "end_time": 220,
-	  "total_count": 125,
-	  "spawn_batch_interval_seconds": 3,
-	  "enemy_multipliers": {
-		"hp": 2.5,
-		"defense_add": 3,
-		"damage": 1.82,
-		"speed": 1.08,
-		"exp": 1.1
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"armored_skeleton",
-			"war_drum_goblin",
-            "shadow_hunter"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "events": [
-		{
-		  "time": 190,
-		  "type": "spawn_elite",
-		  "enemy_id": "skeleton_captain"
-		}
-	  ],
-	  "id": "wave_7",
-	  "display_name": "怪潮压境",
-	  "duration_seconds": 35
-	},
-	{
-	  "start_time": 220,
-	  "end_time": 240,
-	  "total_count": 140,
-	  "spawn_batch_interval_seconds": 2,
-	  "enemy_multipliers": {
-		"hp": 2.75,
-		"defense_add": 3,
-		"damage": 2,
-		"speed": 1.1,
-		"exp": 1.3
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"shadow_hunter",
-			"skeleton_priest",
-			"war_drum_goblin",
-            "gem_slime"
-		  ],
-		  "weight": 100
-		}
-	  ],
-	  "id": "wave_8",
-	  "display_name": "最终怪潮",
-	  "duration_seconds": 20
-	}
-  ],
-  "boss_event": {
-	"boss_id": "dungeon_heart",
-	"spawn_time": 240,
-	"souls_reward": 200,
-	"gold_reward": 120,
-	"fairness": {
-	  "warning_required": true,
-	  "max_concurrent_major_mechanics": 2,
-	  "overlap_damage_protection_seconds": 0.3
-	},
-	"minion_spawn": {
-	  "enabled": true,
-	  "spawn_interval": 15,
-	  "enemy_multipliers": {
-		"hp": 2.1,
-		"defense_add": 2,
-		"damage": 1.65,
-		"speed": 1.05,
-		"exp": 0.5
-	  },
-	  "groups": [
-		{
-		  "enemy_ids": [
-			"small_slime",
-			"skeleton",
-            "toxic_bug"
-		  ],
-		  "weight": 100
-		}
-	  ]
-	}
-  },
-  "rewards": {
-	"base_gold": 0,
-	"boss_gold": 120,
-	"boss_souls": 200
-  }
 }

@@ -48,6 +48,7 @@ func _run_checks_impl() -> void:
 	await physics_frame
 	# These checks drive wave transitions explicitly, not by wall-clock timing.
 	spawner.set_process(false)
+	spawner.set_physics_process(false)
 	player.set_physics_process(false)
 
 	await _check_player_bounds(main, player)
@@ -219,9 +220,16 @@ func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 	var enemy: Node2D = enemy_scene.instantiate() as Node2D
 	main.add_child(enemy)
 	enemy.set_meta("enemy_rank", "normal")
-	enemy.global_position = Vector2(768, 512)
+	# Camera-limit checks leave the player at a map corner; keep this actor nearby
+	# so distance cleanup cannot race the timeout assertion on a physics frame.
+	var player: Node2D = get_first_node_in_group(&"player") as Node2D
+	enemy.global_position = player.global_position + Vector2(80,-20)
+	# Keep real player attacks from killing the residual fixture during this timing assertion.
+	enemy.max_health=1000000
+	enemy.current_health=1000000
 	await process_frame
 
+	spawner.set("_wave_spawned_count",int(spawner.get("_wave_total_count")))
 	spawner.set("_wave_elapsed_time", float(spawner.get("_wave_duration")) + 0.1)
 	spawner.call("_process_discrete_wave", 0.1)
 	await process_frame
@@ -231,6 +239,7 @@ func _check_wave_timeout_keeps_enemies(main: Node, spawner: Node) -> void:
 		if String(node.get_meta("enemy_rank", "normal")) == "normal":
 			normal_count += 1
 	_expect(normal_count > 0, "wave timeout keeps normal enemies")
+	_expect(is_instance_valid(enemy) and not enemy.is_queued_for_deletion(),"timeout preserves the actual residual actor")
 
 
 ## 作用：condition 为真输出 PASS，否则记录检查失败。

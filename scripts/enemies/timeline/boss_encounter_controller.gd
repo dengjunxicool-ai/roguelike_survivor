@@ -42,12 +42,20 @@ func process_boss_event() -> void:
 	})
 	var boss: Node2D = _owner.call("spawn_enemy", request) as Node2D
 	_owner.set("_triggered_boss_event", true)
-	_owner.set("_boss_active", boss != null)
-	_owner.set("_boss_minion_spawn_cooldown", maxf(float(_owner.get("_normal_spawn_cooldown")), 0.0))
-	if boss != null and boss.has_signal(&"died"):
-		boss.connect(&"died", Callable(_owner, "_on_boss_died"))
+	if boss != null:
+		on_boss_spawned(boss)
 
 	_owner.emit_signal(&"timeline_event_started", "boss:%s" % String(enemy_id), String(boss_event.get("announcement", "")))
+
+## 同步创建和排队重试共用完成入口；重复通知不会重复绑定胜利信号。
+func on_boss_spawned(boss: Node2D) -> void:
+	if not is_instance_valid(_owner) or not is_instance_valid(boss):
+		return
+	_owner.set("_boss_active",true)
+	_owner.set("_boss_minion_spawn_cooldown",maxf(float(_owner.get("_normal_spawn_cooldown")),0.0))
+	var callback := Callable(_owner,"_on_boss_died")
+	if boss.has_signal(&"died") and not boss.is_connected(&"died",callback):
+		boss.connect(&"died",callback)
 
 
 ## 作用：更新Boss随从生成。

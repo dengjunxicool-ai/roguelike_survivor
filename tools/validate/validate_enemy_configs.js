@@ -2,12 +2,17 @@ const path = require("path");
 const { readJsonFile } = require("../lib/json_file");
 
 const root = path.resolve(__dirname, "../..");
+const BEHAVIOR_RANGE_FIELDS = require("../../data/config/content_schema.json").enemy_behavior_range_fields;
+const WARNING_ACTION_TYPES = require("../../data/config/content_schema.json").enemy_warning_action_types;
 const enemiesPath = path.join(root, "data", "enemies", "enemies.json");
 const enemySkillsPath = path.join(root, "data", "enemies", "enemy_skills.json");
 const wavesPath = path.join(root, "data", "waves", "waves.json");
 
 const VALID_ENEMY_TYPES = new Set(["normal", "elite", "boss"]);
 const VALID_BEHAVIOR_TYPES = new Set([
+  "flee_player",
+  "leap_and_slam",
+  "support_aura",
   "chase_player",
   "keep_distance_and_shoot",
   "explode_near_player",
@@ -21,6 +26,7 @@ const VALID_WAVE_EVENT_TYPES = new Set(["spawn_elite", "final_blessing"]);
 const VALID_REWARD_EVENT_TYPES = new Set(["force_level_up"]);
 const VALID_ENEMY_SKILL_RUNTIMES = new Set(["active", "boss_phase"]);
 const VALID_ENEMY_ACTION_TYPES = new Set([
+  "ally_buff",
   "projectile",
   "damage_area",
   "summon",
@@ -34,6 +40,8 @@ const VALID_ENEMY_ACTION_TYPES = new Set([
   "contact_status",
 ]);
 const REQUIRED_ACTIONS_BY_BEHAVIOR = {
+  leap_and_slam: ["damage_area"],
+  support_aura: ["ally_buff"],
   keep_distance_and_shoot: ["projectile"],
   explode_near_player: ["self_explode"],
   summon_and_chase: ["summon"],
@@ -51,6 +59,7 @@ const VALID_DEATH_POLICY_KEYS = new Set([
   "drop_experience",
 ]);
 const ENEMY_ACTION_PARAM_SCHEMAS = {
+  ally_buff: {required:["radius","duration","buff_effects"],number:["radius","duration"],array:["buff_effects"]},
   projectile: {
     required: ["element", "damage_type"],
     string: ["element", "damage_type"],
@@ -259,6 +268,10 @@ function checkEnemyDefinitions(enemies, enemySkillById) {
     if (behavior && behaviorType === "boss_dungeon_heart") {
       checkBossBehaviorConfig(`${enemyWhere}.behavior`, behavior, enemySkillById);
     }
+    const rangeField = BEHAVIOR_RANGE_FIELDS[behaviorType];
+    if (rangeField && (!behavior || typeof behavior[rangeField] !== "number" || !Number.isFinite(behavior[rangeField]) || behavior[rangeField] <= 0)) {
+      error(`${enemyWhere}.behavior.${rangeField}`, "required positive finite range");
+    }
 
     const deathEffect = enemy.death_effect;
     if (deathEffect !== undefined) {
@@ -449,6 +462,12 @@ function checkEnemyActions(where, actionsValue) {
 }
 
 function checkEnemyActionParams(where, type, params) {
+  if (WARNING_ACTION_TYPES.includes(type)) {
+    if (!Number.isFinite(params.warning_time) || params.warning_time <= 0) {
+      error(`${where}.params.warning_time`, "requires positive finite warning time");
+    }
+    if (Object.hasOwn(params, "delay")) error(`${where}.params.delay`, "use warning_time");
+  }
   const schema = ENEMY_ACTION_PARAM_SCHEMAS[type] || {};
   for (const key of schema.required || []) {
     if (!Object.prototype.hasOwnProperty.call(params, key)) {

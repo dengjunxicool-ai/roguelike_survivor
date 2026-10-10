@@ -3,6 +3,7 @@
 
 extends EnemyBehavior
 class_name KeepDistanceShootBehavior
+var _spacing_state: StringName = &"chase"
 
 
 ## 作用：射程外追逐，射程内停下并在预警结束后射击。
@@ -11,6 +12,7 @@ func tick(delta: float) -> void:
 	var body: CharacterBody2D = _body()
 	var target: Node2D = _target()
 	if body == null or target == null:
+		_cancel_ranged_attack_warning()
 		_set_velocity(Vector2.ZERO)
 		return
 
@@ -18,14 +20,26 @@ func tick(delta: float) -> void:
 	var distance: float = to_target.length()
 	var direction_to_target: Vector2 = to_target.normalized() if distance > 0.0 else Vector2.RIGHT
 
-	if not _is_target_in_attack_range(distance):
+	if distance < float(config.get("retreat_start_distance", 220.0)):
+		_spacing_state = &"retreat"
+	if _spacing_state == &"retreat":
+		_cancel_ranged_attack_warning()
+		if distance < float(config.get("retreat_end_distance", 280.0)):
+			_set_velocity(-direction_to_target * float(_call_enemy(&"_get_effective_move_speed")))
+			return
+		_spacing_state = &"hold"
+	if distance > float(config.get("chase_resume_distance", 460.0)):
+		_spacing_state = &"chase"
+	if _spacing_state == &"chase" and not _is_target_in_behavior_attack_range(distance):
 		_cancel_ranged_attack_warning()
 		_apply_chase_movement()
 		return
+	_spacing_state = &"hold"
 
 	_set_velocity(Vector2.ZERO)
 	var warning_timer: float = _float_property(&"_ranged_warning_timer")
 	if warning_timer > 0.0:
+		_spacing_state = &"warning"
 		warning_timer = maxf(warning_timer - delta, 0.0)
 		_set_property(&"_ranged_warning_timer", warning_timer)
 		_call_enemy(&"_show_ranged_attack_warning")
@@ -43,6 +57,7 @@ func tick(delta: float) -> void:
 ## 使用：本文件由 tick 调用。
 func _fire_projectile() -> void:
 	var direction: Vector2 = enemy.get("_ranged_warning_direction") if enemy != null else Vector2.RIGHT
-	_execute_required_action("projectile", {"direction": direction})
+	var executed: bool = _execute_required_action("projectile", {"direction": direction})
 	_call_enemy(&"_hide_attack_telegraph")
-	_set_property(&"_shoot_cooldown", float(_call_enemy(&"_get_enemy_skill_cooldown", ["projectile", float(config.get("shoot_cooldown", 2.2))])))
+	if executed:
+		_set_property(&"_shoot_cooldown", float(_call_enemy(&"_get_enemy_skill_cooldown", ["projectile", float(config.get("shoot_cooldown", 2.2))])))

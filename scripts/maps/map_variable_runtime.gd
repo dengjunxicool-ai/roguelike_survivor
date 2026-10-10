@@ -30,6 +30,8 @@ func setup(map_data: Dictionary, target_group: StringName = &"player") -> void:
 	_target_group = target_group
 	_hazard_timer = _get_interval()
 	_map_enemy_timer = 6.0
+	var spawner: Node = get_tree().get_first_node_in_group(&"enemy_spawner") if get_tree()!=null else null
+	if spawner!=null: spawner.call("set_map_encounter",map_data)
 	_apply_spawn_pressure()
 
 
@@ -46,6 +48,9 @@ func reset() -> void:
 ## 使用：由 Godot 自动调用；delta 为自上一帧经过的秒数。
 func _physics_process(delta: float) -> void:
 	if _variable_type == "open" or get_tree() == null or get_tree().paused:
+		return
+	var spawner: Node = get_tree().get_first_node_in_group(&"enemy_spawner")
+	if spawner!=null and String(spawner.call("_get_wave_progress_snapshot").get("transition_kind","")) in ["clear_rest","boss_prepare","boss_reveal"]:
 		return
 
 	match _variable_type:
@@ -125,8 +130,6 @@ func _apply_spawn_pressure() -> void:
 	spawner.set("spawn_radius", 520.0)
 	if spawner.has_method("set_spawn_radius_range"):
 		spawner.call("set_spawn_radius_range", 360.0, 560.0)
-	if spawner.has_method("apply_run_modifiers"):
-		spawner.call("apply_run_modifiers", {"enemy_spawn_count_multiplier_add": 0.12})
 
 
 ## 作用：生成地图压力敌人；具体处理委托给 spawner.spawn_map_enemy。

@@ -4,12 +4,8 @@
 			"map_variable": {
 				"type": "open"
 			},
-			"difficulty": 1.0,
+			"difficulty": 1,
 			"boss_id": "dungeon_heart",
-			"elite_preview_ids": [
-				"giant_slime",
-				"skeleton_captain"
-			],
 			"visual": {
 				"background": "res://assets/ui/maps/abandoned_dungeon.png"
 			},
@@ -18,17 +14,33 @@
 			"description": "无强机制，标准开阔地图。",
 			"unlock": {
 				"type": "default"
+			},
+			"encounter": {
+				"group_weight_overrides": {},
+				"elite_events": [
+					{
+						"wave_id": "wave_4",
+						"wave_time": 5,
+						"enemy_id": "giant_slime",
+						"announcement": "精英怪物出现"
+					},
+					{
+						"wave_id": "wave_6",
+						"wave_time": 5,
+						"enemy_id": "skeleton_captain",
+						"announcement": "精英怪物出现"
+					}
+				],
+				"spawn_pattern": "uniform",
+				"avoid_map_hazards": false
 			}
 		},
 		{
 			"map_variable": {
 				"type": "toxic_fog"
 			},
-			"difficulty": 2.0,
+			"difficulty": 2,
 			"boss_id": "dungeon_heart",
-			"elite_preview_ids": [
-				"toxic_matriarch"
-			],
 			"visual": {
 				"background": "res://assets/ui/maps/poison_graveyard.png"
 			},
@@ -38,17 +50,36 @@
 			"unlock": {
 				"type": "clear_map",
 				"map_id": "abandoned_dungeon"
+			},
+			"encounter": {
+				"group_weight_overrides": {
+					"toxic": 1.5,
+					"priest": 1.5
+				},
+				"elite_events": [
+					{
+						"wave_id": "wave_4",
+						"wave_time": 5,
+						"enemy_id": "giant_slime",
+						"announcement": "精英怪物出现"
+					},
+					{
+						"wave_id": "wave_6",
+						"wave_time": 5,
+						"enemy_id": "toxic_matriarch",
+						"announcement": "精英怪物出现"
+					}
+				],
+				"spawn_pattern": "uniform",
+				"avoid_map_hazards": true
 			}
 		},
 		{
 			"map_variable": {
 				"type": "lava_fissure"
 			},
-			"difficulty": 3.0,
+			"difficulty": 3,
 			"boss_id": "dungeon_heart",
-			"elite_preview_ids": [
-				"lava_golem"
-			],
 			"visual": {
 				"background": "res://assets/ui/maps/lava_temple.png"
 			},
@@ -58,17 +89,36 @@
 			"unlock": {
 				"type": "clear_map",
 				"map_id": "toxic_fog_graveyard"
+			},
+			"encounter": {
+				"group_weight_overrides": {
+					"bomb": 1.5,
+					"armored": 1.5
+				},
+				"elite_events": [
+					{
+						"wave_id": "wave_4",
+						"wave_time": 5,
+						"enemy_id": "skeleton_captain",
+						"announcement": "精英怪物出现"
+					},
+					{
+						"wave_id": "wave_6",
+						"wave_time": 5,
+						"enemy_id": "lava_golem",
+						"announcement": "精英怪物出现"
+					}
+				],
+				"spawn_pattern": "uniform",
+				"avoid_map_hazards": true
 			}
 		},
 		{
 			"map_variable": {
 				"type": "narrow_corridor"
 			},
-			"difficulty": 4.0,
+			"difficulty": 4,
 			"boss_id": "dungeon_heart",
-			"elite_preview_ids": [
-				"shadow_hunter"
-			],
 			"visual": {
 				"background": "res://assets/ui/maps/abyss_corridor.png"
 			},
@@ -78,6 +128,28 @@
 			"unlock": {
 				"type": "clear_map",
 				"map_id": "lava_temple"
+			},
+			"encounter": {
+				"group_weight_overrides": {
+					"hunter": 1.5,
+					"bat": 1.5
+				},
+				"elite_events": [
+					{
+						"wave_id": "wave_4",
+						"wave_time": 5,
+						"enemy_id": "skeleton_captain",
+						"announcement": "精英怪物出现"
+					},
+					{
+						"wave_id": "wave_6",
+						"wave_time": 5,
+						"enemy_id": "skeleton_captain",
+						"announcement": "精英怪物出现"
+					}
+				],
+				"spawn_pattern": "alternating_sides",
+				"avoid_map_hazards": false
 			}
 		}
 	]

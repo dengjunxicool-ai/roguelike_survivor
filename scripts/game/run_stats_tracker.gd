@@ -45,6 +45,67 @@ var overload_full_stack_boss_kill: bool = false
 var boss_core_spawned_count: int = 0
 var boss_core_destroyed_count: int = 0
 var boss_core_total_lifetime: float = 0.0
+var monster_metrics: Dictionary = {}
+var wave_metrics: Dictionary = {}
+var boss_phase_metrics: Dictionary = {}
+var _boss_phase_id := ""
+var _boss_phase_started := 0.0
+var _metrics_generation := 0
+
+func record_enemy_attack_event(enemy_id: StringName, skill_id: StringName, phase: StringName, hit: bool) -> void:
+	var monster := _monster_metric(String(enemy_id))
+	var attacks: Dictionary = monster.attacks
+	var skill := String(skill_id)
+	if not attacks.has(skill): attacks[skill]={}
+	if not attacks[skill].has(String(phase)): attacks[skill][String(phase)]={"events":0,"hits":0,"damage":0}
+	var record: Dictionary = attacks[skill][String(phase)]
+	record.events+=1
+	if hit: record.hits+=1
+
+func _monster_metric(id: String) -> Dictionary:
+	if not monster_metrics.has(id): monster_metrics[id]={"attacks":{},"lifecycle":{},"elite_kill_seconds":[]}
+	return monster_metrics[id]
+
+func record_wave_snapshot(snapshot: Dictionary) -> void:
+	var id := String(snapshot.get("wave_id",""))
+	if id.is_empty(): return
+	if not wave_metrics.has(id): wave_metrics[id]={"peak_alive":0,"created":0,"activated":0,"cancelled":0,"roles":{}}
+	var record: Dictionary = wave_metrics[id]
+	record["snapshot"]=snapshot.duplicate(true)
+	record.peak_alive=maxi(int(record.peak_alive),int(snapshot.get("alive_blocking",0)))
+
+func record_monster_lifecycle(enemy: Node, phase: StringName, request: Dictionary = {}) -> void:
+	if is_instance_valid(enemy):
+		if phase==&"created":
+			enemy.set_meta("metrics_tracker_id",get_instance_id())
+			enemy.set_meta("metrics_generation",_metrics_generation)
+		elif int(enemy.get_meta("metrics_tracker_id",get_instance_id()))!=get_instance_id() or int(enemy.get_meta("metrics_generation",_metrics_generation))!=_metrics_generation:
+			return
+	var id := String(enemy.get("enemy_id")) if is_instance_valid(enemy) else String(request.get("enemy_id","unknown"))
+	var record := _monster_metric(id)
+	_add_number(record.lifecycle,String(phase),1)
+	var wave_id := String(request.get("wave_id",""))
+	if not wave_id.is_empty() and String(request.get("source_type",""))=="wave":
+		if not wave_metrics.has(wave_id): record_wave_snapshot({"wave_id":wave_id})
+		if phase in [&"created",&"activated",&"cancelled"]:
+			_add_number(wave_metrics[wave_id],String(phase),1)
+		if phase==&"created": _add_number(wave_metrics[wave_id].roles,String(request.get("spawn_role","filler")),1)
+	if phase==&"created" and is_instance_valid(enemy): enemy.set_meta("monster_spawn_seconds",run_seconds)
+	if phase==&"death" and is_instance_valid(enemy) and String(enemy.get_meta("enemy_rank",""))=="elite":
+		record.elite_kill_seconds.append(maxf(run_seconds-float(enemy.get_meta("monster_spawn_seconds",run_seconds)),0))
+
+func _update_boss_phase_metrics(boss: Node) -> void:
+	if not boss.has_method("_get_active_boss_phase"): return
+	var phase: Dictionary = boss.call("_get_active_boss_phase")
+	if phase.is_empty(): return
+	var id := str(int(phase.get("_phase_index",0))+1)
+	if id!=_boss_phase_id:
+		if not _boss_phase_id.is_empty(): boss_phase_metrics[_boss_phase_id].seconds+=maxf(run_seconds-_boss_phase_started,0)
+		_boss_phase_id=id
+		_boss_phase_started=run_seconds
+		if not boss_phase_metrics.has(id): boss_phase_metrics[id]={"seconds":0.0,"peak_mechanisms":0}
+	var scheduler: RefCounted = boss.get("_boss_mechanic_scheduler")
+	boss_phase_metrics[id].peak_mechanisms=maxi(int(boss_phase_metrics[id].peak_mechanisms),scheduler.get("_tokens").size())
 
 
 ## 作用：清空上一局全部累计值、分类字典、遗物与 Boss 采样状态，并登记本局角色和地图。
@@ -85,6 +146,12 @@ func reset_run(character_id: Variant, map_id: Variant, map_name: String = "") ->
 	boss_core_spawned_count = 0
 	boss_core_destroyed_count = 0
 	boss_core_total_lifetime = 0.0
+	monster_metrics.clear()
+	_metrics_generation+=1
+	wave_metrics.clear()
+	boss_phase_metrics.clear()
+	_boss_phase_id=""
+	_boss_phase_started=0.0
 
 
 ## 作用：把局内经过秒数更新为非负值。
@@ -117,6 +184,12 @@ func record_damage_taken(amount: int, result: Dictionary, packet: Variant = {}) 
 	var source: String = _extract_taken_source(packet, result)
 	_add_number(damage_taken_by_source, source, amount)
 	last_damage_source = source
+	var enemy_id := _packet_string_value(packet,"source_origin_id")
+	var skill_id := _packet_string_value(packet,"source_skill_id")
+	var source_type := _packet_string_value(packet,"source_type")
+	if not enemy_id.is_empty() and source_type in ["contact","projectile","area","enemy","boss","explosion","charge","leap"]:
+		record_enemy_attack_event(StringName(enemy_id),StringName(skill_id),&"hit",true)
+		monster_metrics[enemy_id].attacks[skill_id].hit.damage+=amount
 	if source == "poison":
 		poison_instances_taken += 1
 	if source == "lava" or source == "map_lava":
@@ -253,6 +326,7 @@ func update_wave_pressure(alive_count: int, max_alive: int, delta: float) -> voi
 func update_boss_snapshot(boss: Node) -> void:
 	if boss == null:
 		return
+	_update_boss_phase_metrics(boss)
 	if boss_phase_started_at < 0.0:
 		boss_phase_started_at = run_seconds
 	var elapsed_boss: float = run_seconds - boss_phase_started_at
@@ -268,6 +342,9 @@ func get_summary() -> Dictionary:
 	var total_taken: int = _sum_dictionary(damage_taken_by_source)
 	return {
 		"selected_character_id": selected_character_id,
+		"monster_metrics":monster_metrics.duplicate(true),
+		"wave_metrics":wave_metrics.duplicate(true),
+		"boss_phase_metrics":_boss_phase_summary(),
 		"selected_map_id": selected_map_id,
 		"selected_map_name": selected_map_name,
 		"run_seconds": run_seconds,
@@ -315,6 +392,11 @@ static func get_active(tree: SceneTree = null) -> RunStatsTracker:
 	if active_tree == null:
 		return null
 	return active_tree.get_first_node_in_group(&"run_stats_tracker") as RunStatsTracker
+
+func _boss_phase_summary() -> Dictionary:
+	var result := boss_phase_metrics.duplicate(true)
+	if not _boss_phase_id.is_empty(): result[_boss_phase_id].seconds+=maxf(run_seconds-_boss_phase_started,0)
+	return result
 
 
 ## 作用：把本节点登记进 run_stats_tracker 分组。

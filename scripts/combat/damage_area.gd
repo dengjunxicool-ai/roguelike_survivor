@@ -6,6 +6,9 @@ class_name DamageArea
 
 const DamagePacketBuilderScript: Script = preload("res://scripts/combat/damage_packet_builder.gd")
 const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
+const EnemyTelegraphScript: Script = preload("res://scripts/enemies/combat/enemy_attack_telegraph.gd")
+
+signal enemy_attack_finished(generation: int)
 
 @export_range(0, 10000, 1, "or_greater") var damage: int = 4
 @export_range(0.05, 30.0, 0.05, "or_greater") var duration: float = 3.0
@@ -19,6 +22,15 @@ const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_t
 var _age: float = 0.0
 var _tick_timer: float = 0.0
 var _one_shot: bool = false
+var spawn_generation: int = 0
+var _use_enemy_lifecycle := false
+var _warning_time := 0.0
+var _warning_elapsed := 0.0
+var _attack_active := false
+var _attack_finished := true
+var _activation_mode: StringName = &"single"
+var _attack_owner: WeakRef
+var _enemy_telegraph: Node2D
 
 
 ## 作用：将导出area_radius应用到圆形碰撞。
@@ -39,6 +51,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：关闭监测和碰撞，清模板、年龄、tick与一次性标记并隐藏。
 ## 使用：回池前调用，保持下次spawn状态干净。
 func prepare_for_pool_despawn() -> void:
+	_finish_generation()
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
@@ -48,12 +61,17 @@ func prepare_for_pool_despawn() -> void:
 	_age = 0.0
 	_tick_timer = 0.0
 	_one_shot = false
+	_use_enemy_lifecycle = false
+	_attack_owner = null
+	if is_instance_valid(_enemy_telegraph):
+		_enemy_telegraph.visible = false
 	visible = false
 
 
 ## 作用：有有效runtime池元数据时清理并回池，否则queue_free释放。
 ## 使用：生命周期结束入口；池路径会调用prepare_for_pool_despawn。
 func despawn_or_free() -> void:
+	_finish_generation()
 	if has_meta(&"runtime_pool_owner") and has_meta(&"runtime_pool_key"):
 		var pool_variant: Variant = get_meta(&"runtime_pool_owner")
 		var key: StringName = StringName(String(get_meta(&"runtime_pool_key")))
@@ -79,6 +97,7 @@ func setup(
 	if new_damage is Dictionary:
 		_setup_from_dictionary(new_damage)
 		return
+	_configure_enemy_lifecycle({})
 
 	damage = maxi(int(new_damage), 0)
 	duration = maxf(new_duration, 0.05)
@@ -99,6 +118,7 @@ func setup(
 ## 作用：解析危险区域参数与模板追踪，重置计时并启用监测。
 ## 使用：params支持radius/area_radius及damage_packet模板。
 func _setup_from_dictionary(params: Dictionary) -> void:
+	_configure_enemy_lifecycle(params)
 	damage = maxi(int(params.get("damage", damage)), 0)
 	duration = maxf(float(params.get("duration", duration)), 0.05)
 	tick_interval = maxf(float(params.get("tick_interval", tick_interval)), 0.05)
@@ -115,6 +135,9 @@ func _setup_from_dictionary(params: Dictionary) -> void:
 	_apply_area_radius(area_radius)
 	_enable_area_monitoring()
 	_apply_visual_color(_get_color(params.get("visual_color", Color(0.35, 0.95, 0.2, 0.32))))
+	if _use_enemy_lifecycle:
+		_enemy_telegraph.call("configure", &"circle", {"radius": area_radius, "color": _get_color(params.get("visual_color", Color(1.0, 0.25, 0.08, 0.9)))})
+		_enemy_telegraph.visible = true
 
 
 ## 作用：给现有Sprite2D设置颜色和按area_radius缩放。
@@ -122,6 +145,7 @@ func _setup_from_dictionary(params: Dictionary) -> void:
 func _apply_visual_color(visual_color: Color) -> void:
 	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 	if sprite != null:
+		sprite.visible = not _use_enemy_lifecycle
 		sprite.modulate = visual_color
 		sprite.scale = Vector2.ONE * (area_radius / 64.0)
 
@@ -129,6 +153,9 @@ func _apply_visual_color(visual_color: Color) -> void:
 ## 作用：一次性区域当帧命中后结束，持续区域按间隔命中并在duration到期结束。
 ## 使用：delta推进年龄与tick，不补偿多次积压tick。
 func _physics_process(delta: float) -> void:
+	if _use_enemy_lifecycle:
+		_advance_enemy_attack(delta)
+		return
 	_age += delta
 	if _one_shot:
 		_apply_damage_to_overlaps()
@@ -142,6 +169,73 @@ func _physics_process(delta: float) -> void:
 
 	if _age >= duration:
 		despawn_or_free()
+
+
+## 作用：每次配置创建新代次；旧代次结束通知与复用后的计时隔离。
+func _configure_enemy_lifecycle(params: Dictionary) -> void:
+	_finish_generation()
+	spawn_generation += 1
+	_attack_finished = false
+	_use_enemy_lifecycle = bool(params.get("use_enemy_lifecycle", false))
+	if _use_enemy_lifecycle:
+		add_to_group(&"enemy_damage_area")
+	elif is_in_group(&"enemy_damage_area"):
+		remove_from_group(&"enemy_damage_area")
+	_warning_time = maxf(float(params.get("warning_time", 0.0)), 0.0)
+	_warning_elapsed = 0.0
+	_attack_active = false
+	_activation_mode = StringName(String(params.get("activation_mode", "single")))
+	var owner: Node = params.get("attack_owner") as Node
+	_attack_owner = weakref(owner) if owner != null else null
+	if _use_enemy_lifecycle and not is_instance_valid(_enemy_telegraph):
+		_enemy_telegraph = EnemyTelegraphScript.new()
+		_enemy_telegraph.name = "EnemyAreaTelegraph"
+		add_child(_enemy_telegraph)
+	if is_instance_valid(_enemy_telegraph):
+		_enemy_telegraph.visible = false
+
+
+## 作用：预警无伤害，激活后从零计时；结束边界不追加伤害。
+func _advance_enemy_attack(delta: float) -> void:
+	if _attack_finished:
+		return
+	var active_delta := delta
+	if not _attack_active:
+		if _attack_owner != null:
+			var owner: Node = _attack_owner.get_ref() as Node
+			if owner == null or owner.is_queued_for_deletion() or owner.get("_is_dead") == true:
+				despawn_or_free()
+				return
+		_warning_elapsed += delta
+		_enemy_telegraph.call("set_progress", _warning_elapsed / maxf(_warning_time, 0.001))
+		if _warning_elapsed + 0.000001 < _warning_time:
+			return
+		_attack_active = true
+		_enemy_telegraph.call("set_active", true)
+		_apply_damage_to_overlaps()
+		if _activation_mode == &"single":
+			despawn_or_free()
+			return
+		active_delta = maxf(_warning_elapsed - _warning_time, 0.0)
+	_age += active_delta
+	if _age + 0.000001 >= duration:
+		despawn_or_free()
+		return
+	_tick_timer -= active_delta
+	if _tick_timer <= 0.000001:
+		_tick_timer = tick_interval
+		_apply_damage_to_overlaps()
+
+
+func _finish_generation() -> void:
+	if _attack_finished:
+		return
+	_attack_finished = true
+	enemy_attack_finished.emit(spawn_generation)
+
+
+func _exit_tree() -> void:
+	_finish_generation()
 
 
 ## 作用：遍历重叠体，对匹配目标组且支持受击的目标应用typed伤害。

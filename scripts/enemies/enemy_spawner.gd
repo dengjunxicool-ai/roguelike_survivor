@@ -66,6 +66,13 @@ var _boss_encounter_controller: RefCounted = BossEncounterControllerScript.new()
 var _spawn_group_picker: RefCounted = SpawnGroupPickerScript.new()
 var _cleanup_service: RefCounted = EnemyCleanupServiceScript.new()
 var _reward_event_director: RefCounted = RewardEventDirectorScript.new()
+var _run_generation := 0
+var _counted_spawn_requests: Dictionary = {}
+var _map_data: Dictionary = {}
+const MapEncounterResolver = preload("res://scripts/maps/map_encounter_resolver.gd")
+
+func set_map_encounter(map_data: Dictionary) -> void:
+	_map_data=map_data.duplicate(true)
 
 
 ## 作用：在节点入树后完成组件初始化与信号登记。
@@ -81,6 +88,8 @@ func _ready() -> void:
 ## 作用：重置对应单局。
 ## 使用：供本模块调用者使用。
 func reset_for_run() -> void:
+	_run_generation += 1
+	_counted_spawn_requests.clear()
 	_normal_spawn_cooldown = 0.0
 	_boss_minion_spawn_cooldown = 0.0
 	_elapsed_time = 0.0
@@ -97,6 +106,7 @@ func reset_for_run() -> void:
 	_boss_active = false
 	_spawn_count_multiplier_bonus = 0.0
 	_boss_health_multiplier_bonus = 0.0
+	_wave_director.call("reset")
 	_sync_spawn_service()
 	_sync_timeline_services()
 	_apply_timeline_config()
@@ -128,6 +138,12 @@ func _sync_spawn_service() -> void:
 	_spawn_service.call("setup", self, enemy_scene, boss_scene, target_group, _rng)
 	_spawn_service.call("set_spawn_radius_range", _spawn_radius_min, _spawn_radius_max)
 	_spawn_service.call("set_visible_spawn_rules", true, _visible_spawn_margin, _spawn_player_safe_radius, _spawn_warning_duration)
+	if not _spawn_service.is_connected("spawn_created",Callable(self,"_on_spawn_created")):
+		_spawn_service.connect("spawn_created",Callable(self,"_on_spawn_created"))
+		_spawn_service.connect("spawn_cancelled",Callable(self,"_on_spawn_cancelled"))
+	if not _spawn_service.is_connected("spawn_activated",Callable(self,"_on_spawn_activated")):
+		_spawn_service.connect("spawn_activated",Callable(self,"_on_spawn_activated"))
+	_sync_spawn_context()
 
 
 ## 作用：同步时间线服务组。
@@ -202,9 +218,6 @@ func _process_wave_spawn(delta: float, wave: Dictionary) -> void:
 ## 作用：更新波次事件组。
 ## 使用：内部辅助入口；输入 wave（波次）。
 func _process_wave_events(wave: Dictionary) -> void:
-	if _wave_spawned_count >= _wave_total_count:
-		return
-
 	var events: Array = _get_array(wave.get("events", []))
 	for event_index in range(events.size()):
 		var event_variant: Variant = events[event_index]
@@ -232,15 +245,11 @@ func _start_wave_event(event_key: String, event: Dictionary) -> void:
 	var event_type: String = String(event.get("type", ""))
 	match event_type:
 		"spawn_elite":
-			if _wave_spawned_count >= _wave_total_count:
-				return
 			var enemy_id: StringName = StringName(String(event.get("enemy_id", "")))
 			if enemy_id != &"":
 				var enemy: Node2D = spawn_enemy(EnemySpawnRequestScript.create(enemy_id, {
-					"multipliers": _get_event_enemy_multipliers(event), "enemy_rank": "elite", "source_type": "elite_event"
+					"multipliers": _get_event_enemy_multipliers(event), "enemy_rank": "elite", "source_type": "elite_event", "event_key":event_key
 				}))
-				if enemy != null:
-					_wave_spawned_count += 1
 			timeline_event_started.emit(
 				"elite:%s" % String(enemy_id),
 				String(event.get("announcement", ""))
@@ -290,13 +299,15 @@ func _spawn_from_group_config(group_config: Dictionary, multipliers: Dictionary 
 	spawn_count = _scale_spawn_count(spawn_count)
 	if limit >= 0:
 		spawn_count = mini(spawn_count, limit)
+	if source_type==&"wave":
+		spawn_count=mini(spawn_count,_role_slots(String(group_config.get("role","filler"))))
 	if spawn_count <= 0:
 		return 0
 
 	var enemy_id: StringName = _pick_enemy_id_from_group(group_config)
 	var spawned_count: int = 0
 	for _spawn_index in range(spawn_count):
-		var request: Dictionary = EnemySpawnRequestScript.create(enemy_id, {"multipliers": multipliers, "source_type": String(source_type)})
+		var request: Dictionary = EnemySpawnRequestScript.create(enemy_id, {"multipliers": multipliers, "source_type": String(source_type),"spawn_role":String(group_config.get("role","filler"))})
 		if spawn_enemy(request) != null:
 			spawned_count += 1
 	return spawned_count
@@ -311,22 +322,65 @@ func _spawn_batch_from_source(source: Dictionary, multipliers: Dictionary = {}, 
 		var group_config: Dictionary = _pick_enemy_group(source)
 		if group_config.is_empty():
 			break
+		var pending_before := int(_spawn_service.call("get_pending_count",String(source_type)))
 		var spawned: int = _spawn_from_group_config(group_config, multipliers, source_type, remaining)
-		if spawned <= 0:
+		var accepted := spawned + int(_spawn_service.call("get_pending_count",String(source_type))) - pending_before
+		if accepted <= 0:
 			break
 		spawned_count += spawned
-		remaining -= spawned
+		remaining -= accepted
 	return spawned_count
 
 
 ## 作用：生成敌人；具体处理委托给 _spawn_service.spawn。
 ## 使用：本文件由 _start_wave_event、_spawn_from_group_config 调用；输入 request（请求）；返回 Node2D 对象/值。
 func spawn_enemy(request: Dictionary) -> Node2D:
-	var source_type: String = String(request.get("source_type", "unknown"))
-	if source_type == "wave" or source_type == "boss_minion":
-		request["visible_spawn_warning"] = true
-		request["spawn_warning_duration"] = _spawn_warning_duration
+	request=request.duplicate(true)
+	request["spawn_request_id"]=_spawn_service.call("allocate_request_id")
+	request["run_generation"]=_run_generation
+	request["wave_id"]=_current_wave_id
+	request["wave_bound"]=String(request.get("source_type","")) in ["wave","elite_event","treasure_event"]
+	var encounter: Dictionary = _map_data.get("encounter",{})
+	if String(request.get("source_type",""))=="wave":
+		request["spawn_pattern"]=String(encounter.get("spawn_pattern","uniform"))
+	request["avoid_map_hazards"]=bool(encounter.get("avoid_map_hazards",false))
+	request["visible_spawn_warning"]=true
 	return _spawn_service.call("spawn", request) as Node2D
+
+func uses_spawn_callbacks() -> bool:
+	return true
+
+func _get_pending_wave_spawn_count() -> int:
+	return int(_spawn_service.call("get_pending_count","wave"))
+
+func _sync_spawn_context() -> void:
+	_spawn_service.call("set_context",_run_generation,_current_wave_id)
+
+func _on_spawn_activated(request: Dictionary,_enemy: Node2D) -> void:
+	if int(request.get("run_generation",-1))==_run_generation and request.get("source_type","")=="boss":
+		_wave_director.call("activate_boss")
+
+func _on_spawn_created(request: Dictionary,_enemy: Node2D) -> void:
+	if int(request.get("run_generation",-1)) != _run_generation:
+		return
+	if request.get("source_type","") == "boss":
+		_boss_encounter_controller.call("on_boss_spawned",_enemy)
+		return
+	if request.get("source_type","") != "wave" or request.get("wave_id","") != _current_wave_id:
+		return
+	var id := int(request.get("spawn_request_id",0))
+	if _counted_spawn_requests.has(id):
+		return
+	_counted_spawn_requests[id]=true
+	_wave_spawned_count+=1
+
+func _on_spawn_cancelled(request: Dictionary,_reason: StringName) -> void:
+	if request.get("source_type","") != "wave" or int(request.get("run_generation",-1)) != _run_generation or request.get("wave_id","") != _current_wave_id:
+		return
+	var id := int(request.get("spawn_request_id",0))
+	if _counted_spawn_requests.has(id):
+		_counted_spawn_requests.erase(id)
+		_wave_spawned_count=maxi(_wave_spawned_count-1,0)
 
 
 ## 作用：响应Boss死亡并衔接对应的事件处理流程。
@@ -399,7 +453,7 @@ func _get_wave_at_index(wave_index: int) -> Dictionary:
 		return {}
 	if waves[wave_index] is Dictionary:
 		var wave: Dictionary = waves[wave_index]
-		return wave
+		return MapEncounterResolver.resolve_wave(_map_data,wave)
 	return {}
 
 
@@ -418,11 +472,13 @@ func _finish_wave(cleared_early: bool) -> void:
 ## 作用：完成普通阶段。
 ## 使用：内部辅助入口。
 func _finish_normal_phase() -> void:
-	if _normal_phase_complete:
+	if _normal_phase_complete or String(_wave_director.call("get_snapshot").get("transition_kind",""))=="boss_prepare":
 		return
-	_normal_phase_complete = true
+	_spawn_service.call("set_context",_run_generation,"")
+	_cleanup_service.call("clear_combat_for_transition",true)
 	_current_wave_id = ""
-	_wave_transition_timer = 0.0
+	_wave_director.call("prepare_boss")
+	_reward_event_director.call("process_reward_events")
 	_collect_all_experience_crystals()
 	timeline_event_started.emit("normal_phase_complete", "普通阶段完成，Boss 即将登场")
 
@@ -463,7 +519,39 @@ func _emit_wave_changed_if_needed(wave: Dictionary) -> void:
 ## 作用：选择敌人分组，供当前模块后续逻辑使用；具体处理委托给 _spawn_group_picker.pick_enemy_group。
 ## 使用：本文件由 _spawn_batch_from_source 调用；输入 source（来源）；返回结果字典。
 func _pick_enemy_group(source: Dictionary) -> Dictionary:
-	return _spawn_group_picker.call("pick_enemy_group", source)
+	var legal := source.duplicate(true)
+	var groups: Array = []
+	for group: Dictionary in source.get("groups",[]):
+		if _role_slots(String(group.get("role","filler")))>0: groups.append(group)
+	legal["groups"]=groups
+	return _spawn_group_picker.call("pick_enemy_group", legal)
+
+func _role_slots(role: String) -> int:
+	var caps := {"ranged":6,"support":3,"charge":4}
+	if not caps.has(role): return 2147483647
+	var count := int(_spawn_service.call("get_pending_role_count",role))
+	for enemy: Node in get_tree().get_nodes_in_group(&"enemy"):
+		if not enemy.is_queued_for_deletion() and enemy.get("_is_dead")!=true and String(enemy.get_meta("spawn_role",""))==role: count+=1
+	return maxi(int(caps[role])-count,0)
+
+func _get_wave_progress_snapshot() -> Dictionary:
+	return _wave_director.call("get_snapshot")
+
+func _get_mandatory_events_remaining() -> int:
+	var count := int(_spawn_service.call("get_pending_count","elite_event"))
+	var wave := _get_wave_at_index(_current_wave_index)
+	var events: Array = wave.get("events",[])
+	for index in range(events.size()):
+		if String(events[index].get("type",""))=="spawn_elite" and not _triggered_wave_events.has("%s:%d" % [String(wave.get("id",_current_wave_index)),index]): count+=1
+	return count
+
+func _get_wave_blocking_enemy_count() -> int:
+	var count := 0
+	for enemy: Node in get_tree().get_nodes_in_group(&"enemy"):
+		if enemy.is_queued_for_deletion() or enemy.get("_is_dead")==true: continue
+		if String(enemy.get_meta("spawn_source_type","")) in ["summon","death_split","treasure_event"]: continue
+		count+=1
+	return count
 
 
 ## 作用：选择敌人ID来源分组，供当前模块后续逻辑使用；具体处理委托给 _spawn_group_picker.pick_enemy_id_from_group。
@@ -515,7 +603,8 @@ func _get_multiplier(multipliers: Dictionary, key: String, fallback: float) -> f
 ## 作用：缩放生成数量。
 ## 使用：本文件由 _spawn_from_group_config、_get_wave_total_count 调用；输入 base_count（基础数量）；返回计算或读取的数值。
 func _scale_spawn_count(base_count: int) -> int:
-	var multiplier: float = maxf(1.0 + _spawn_count_multiplier_bonus, 0.01)
+	var map_bonus := 0.12 if String(_map_data.get("map_variable",{}).get("type",""))=="narrow_corridor" else 0.0
+	var multiplier: float = maxf(1.0 + _spawn_count_multiplier_bonus + map_bonus, 0.01)
 	return maxi(roundi(float(base_count) * multiplier), 1)
 
 

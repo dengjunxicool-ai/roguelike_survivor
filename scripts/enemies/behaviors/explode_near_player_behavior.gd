@@ -10,11 +10,10 @@ class_name ExplodeNearPlayerBehavior
 func tick(delta: float) -> void:
 	var body: CharacterBody2D = _body()
 	var target: Node2D = _target()
-	if body == null or target == null:
+	if body == null or bool(enemy.get("_is_dead")):
 		return
 
-	var distance: float = body.global_position.distance_to(target.global_position)
-	if _is_target_in_attack_range(distance):
+	if is_instance_valid(target) and _is_target_in_attack_range(body.global_position.distance_to(target.global_position)):
 		_set_property(&"_is_fusing", true)
 
 	if bool(enemy.get("_is_fusing")):
@@ -26,4 +25,5 @@ func tick(delta: float) -> void:
 			_execute_required_action("self_explode")
 		return
 
-	_apply_melee_chase_movement()
+	if is_instance_valid(target):
+		_apply_melee_chase_movement()

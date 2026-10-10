@@ -63,8 +63,8 @@ func _get_alive_enemy_count(boss_minions: bool) -> int:
 	return count
 
 
-## 作用：回收远处敌人组。
-## 使用：供本模块调用者使用；输入 despawn_radius（回收半径）。
+## 作用：回收已显形、远离玩家且离开当前视口的普通敌人。
+## 使用：despawn_radius 为世界距离；可见敌人不回收，兼容大视野及偏移相机。
 func despawn_far_enemies(despawn_radius: float) -> void:
 	var tree: SceneTree = _get_tree()
 	if tree == null:
@@ -75,6 +75,9 @@ func despawn_far_enemies(despawn_radius: float) -> void:
 		return
 
 	var despawn_radius_squared: float = despawn_radius * despawn_radius
+	var viewport: Viewport = _owner.get_viewport()
+	var visible_rect: Rect2 = viewport.get_visible_rect()
+	var canvas_transform: Transform2D = viewport.get_canvas_transform()
 	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
 		var enemy_node: Node2D = enemy as Node2D
 		if enemy_node == null or not _is_alive(enemy_node) or bool(enemy_node.get_meta("spawn_reveal_pending", false)):
@@ -84,6 +87,9 @@ func despawn_far_enemies(despawn_radius: float) -> void:
 			continue
 
 		if enemy_node.global_position.distance_squared_to(target.global_position) > despawn_radius_squared:
+			if visible_rect.has_point(canvas_transform * enemy_node.global_position):
+				continue
+			enemy_node.set_meta("spawn_recycle_reason",&"offscreen_distance")
 			enemy_node.queue_free()
 
 
@@ -100,7 +106,30 @@ func clear_normal_enemies() -> void:
 			continue
 
 		if String(enemy_node.get_meta("enemy_rank", "normal")) == "normal":
+			enemy_node.set_meta("spawn_recycle_reason",&"clear_normal_enemies")
 			enemy_node.queue_free()
+
+## 休息和 Boss 准备无奖励回收；敌方战斗对象按自身池接口结束。
+func clear_combat_for_transition(include_elites: bool) -> void:
+	var tree := _get_tree()
+	if tree==null: return
+	var stack: Array[Node] = [tree.root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		var script: Script = node.get_script() as Script
+		if script!=null and script.resource_path.ends_with("/enemy_spawn_pump.gd"):
+			node.get("service").call("cancel_all",&"boss_prepare" if include_elites else &"clear_rest",true)
+		for child: Node in node.get_children(): stack.append(child)
+	for enemy: Node in tree.get_nodes_in_group(&"enemy"):
+		if not _is_alive(enemy): continue
+		if include_elites or String(enemy.get_meta("spawn_source_type","")) in ["summon","death_split","treasure_event"]:
+			enemy.set_meta("spawn_recycle_reason",&"boss_prepare" if include_elites else &"clear_rest")
+			enemy.queue_free()
+	for group: String in ["enemy_projectile","enemy_damage_area","map_hazard"]:
+		for object: Node in tree.get_nodes_in_group(group):
+			if object.is_queued_for_deletion(): continue
+			if object.has_method("despawn_or_free"): object.call("despawn_or_free")
+			else: object.queue_free()
 
 
 ## 作用：收集全部经验晶体组。

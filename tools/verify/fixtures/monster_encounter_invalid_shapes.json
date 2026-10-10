@@ -1,0 +1,5 @@
+[
+  {"document":"res://data/waves/waves.json","path":["waves",0,"groups"],"value":[null],"field":"groups"},
+  {"document":"res://data/maps/maps.json","path":["maps",0,"encounter","elite_events"],"value":[null],"field":"elite_events"},
+  {"document":"res://data/maps/maps.json","path":["maps",0,"encounter","group_weight_overrides"],"value":[],"field":"group_weight_overrides"}
+]

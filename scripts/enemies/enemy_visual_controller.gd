@@ -13,6 +13,7 @@ var _owner: Node2D
 var _visual_config: Dictionary = {}
 var _visual_state: String = ""
 var _last_move_state: String = "move_right"
+var _move_state_cache: Dictionary = {}
 var _hurt_flash_item: CanvasItem
 var _hurt_flash_modulate: Color = Color.WHITE
 
@@ -32,6 +33,7 @@ func apply_enemy_config(enemy_config: Dictionary) -> void:
 
 	var visual: Dictionary = visual_variant
 	_visual_config = visual.duplicate(true)
+	_move_state_cache.clear()
 	play_state("idle", true)
 
 
@@ -140,7 +142,10 @@ func _get_move_state(state: Dictionary) -> String:
 		preferred_state = "move_down" if direction.y > 0.0 else "move_up"
 	else:
 		preferred_state = "move_right" if direction.x > 0.0 else "move_left"
-	_last_move_state = _first_available_state([preferred_state, "move_right", "move_left", "idle"])
+	# Configuration is owned by this controller and changes only through apply_enemy_config.
+	if not _move_state_cache.has(preferred_state):
+		_move_state_cache[preferred_state] = _first_available_state([preferred_state, "move_right", "move_left", "idle"])
+	_last_move_state = String(_move_state_cache[preferred_state])
 	return _last_move_state
 
 

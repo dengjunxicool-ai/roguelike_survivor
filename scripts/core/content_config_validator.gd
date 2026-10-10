@@ -126,14 +126,36 @@ static func validate_documents(documents: Dictionary, schema: Dictionary) -> Arr
 						if not capability is String: errors.append("%s.offer_rule.required_capabilities: expected string capability" % where)
 				if domain == "enemies" and not schema.enemy_ranks.has(item.get("enemy_rank")):
 					errors.append("%s.enemy_rank: unknown rank" % where)
+				if domain == "enemies":
+					_validate_enemy_behavior(item, where, schema, errors)
 	for path: String in documents:
 		_visit(documents[path], path, "", indexes, schema, errors)
+	errors.append_array(preload("res://scripts/core/monster_encounter_validator.gd").validate(documents))
 	return errors
+
+
+## 作用：拒绝缺失或非法的行为专用射程，错误携带怪物 ID。
+static func _validate_enemy_behavior(item: Dictionary, where: String, schema: Dictionary, errors: Array[String]) -> void:
+	var behavior: Dictionary = item.get("behavior", {}) if item.get("behavior") is Dictionary else {}
+	var field: String = schema.get("enemy_behavior_range_fields", {}).get(behavior.get("type", ""), "")
+	if field.is_empty():
+		return
+	var value: Variant = behavior.get(field)
+	if not (value is int or value is float) or not is_finite(float(value)) or float(value) <= 0.0:
+		errors.append("%s(%s).behavior.%s: required positive finite range" % [where, item.get("id", ""), field])
 
 
 ## 作用：递归检查配置中的引用、资源路径、数值和 Modifier 字段。
 ## 使用：where 用于定位错误，key 为当前字段名；错误追加至 errors。
 static func _visit(value: Variant, where: String, key: String, indexes: Dictionary, schema: Dictionary, errors: Array[String]) -> void:
+	if value is Dictionary and where.begins_with("res://data/enemies/") and schema.get("enemy_warning_action_types", []).has(value.get("type", "")):
+		var raw_params: Variant = value.get("params", value)
+		var params: Dictionary = raw_params if raw_params is Dictionary else {}
+		var warning: Variant = params.get("warning_time")
+		if not (warning is int or warning is float) or not is_finite(float(warning)) or float(warning) <= 0.0:
+			errors.append("%s.warning_time: required positive finite warning" % where)
+		if params.has("delay"):
+			errors.append("%s.delay: use warning_time for enemy attacks" % where)
 	if REFERENCES.has(key) and (not value is String or value.strip_edges().is_empty()):
 		errors.append("%s: reference must be a nonempty string" % where)
 	if key == "fusion_school" and value != null and (not value is String or not indexes.get("gods", {}).has(value)):

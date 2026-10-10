@@ -39,6 +39,10 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 					if(item.runtime_rules!=null&&kind(item.runtime_rules)!=='object')fail(where+'.runtime_rules','must be an object');
 				}
 				if(section.domain==='enemies'&&!schema.enemy_ranks.includes(item.enemy_rank))fail(where+'.enemy_rank','unknown rank');
+				if(section.domain==='enemies'){
+					const field=schema.enemy_behavior_range_fields?.[item.behavior?.type];
+					if(field&&(typeof item.behavior[field]!=='number'||!Number.isFinite(item.behavior[field])||item.behavior[field]<=0))fail(where+'.behavior.'+field,'required positive finite range');
+				}
 			}
 		}
 	}
@@ -46,6 +50,11 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 	// summon_id names a transient summon node; only summon_definition_id is a catalog reference.
 	const refs={starting_skill_id:'skills',replaces_skill:'skills',summon_definition_id:'summons',status_id:'statuses',status:'statuses',max_stack_status:'statuses',boss_id:'enemies',enemy_id:'enemies',character_id:'characters',map_id:'maps',target_status:'statuses',required_status:'statuses',boss_status_id:'statuses',school:'gods'};
 	function visit(value,where,key='',domain=''){
+		if(kind(value)==='object'&&where.startsWith('res://data/enemies/')&&schema.enemy_warning_action_types?.includes(value.type)){
+			const params=value.params??value;
+			if(typeof params.warning_time!=='number'||!Number.isFinite(params.warning_time)||params.warning_time<=0)fail(where+'.warning_time','required positive finite warning');
+			if(Object.hasOwn(params,'delay'))fail(where+'.delay','use warning_time for enemy attacks');
+		}
 		if(refs[key]&&(typeof value!=='string'||!value.trim()))fail(where,'reference must be a nonempty string');
 		if(key==='fusion_school'&&value!==null&&(typeof value!=='string'||!indexes.gods?.has(value)))fail(where,'unknown fusion school');
 		if(schema.resource_fields.includes(key)&&(typeof value!=='string'||value&&!value.startsWith('res://')))fail(where,'resource path must use res://');
@@ -90,6 +99,7 @@ function validateDocuments(documents,schema,exists=p=>fs.existsSync(path.join(ro
 			}
 	}
 	for(const [p,doc]of Object.entries(documents))visit(doc,p);
+	errors.push(...require('./monster_encounter_validator').validate(documents));
 	return errors;
 }
 function loadAndValidate(projectRoot=root){

@@ -555,6 +555,9 @@
 				],
 				"death_policy": [
 					"object"
+				],
+				"death_effect": [
+					"object"
 				]
 			},
 			"object_fields": {
@@ -855,7 +858,8 @@
 		},
 		"maps": {
 			"required": [
-				"id"
+				"id",
+				"encounter"
 			],
 			"fields": {
 				"map_variable": [
@@ -866,9 +870,6 @@
 				],
 				"boss_id": [
 					"string"
-				],
-				"elite_preview_ids": [
-					"array"
 				],
 				"visual": [
 					"object"
@@ -883,6 +884,9 @@
 					"string"
 				],
 				"unlock": [
+					"object"
+				],
+				"encounter": [
 					"object"
 				]
 			}
@@ -1034,6 +1038,9 @@
 				],
 				"events": [
 					"array"
+				],
+				"spawn_stages": [
+					"array"
 				]
 			}
 		},
@@ -1125,7 +1132,8 @@
 		"penalty_modifiers",
 		"base_modifiers",
 		"shield_active_modifiers",
-		"runtime_modifiers"
+		"runtime_modifiers",
+		"buff_effects"
 	],
 	"modifier_scope_keys": [
 		"domain",
@@ -1158,6 +1166,21 @@
 		"visual_effect_scene",
 		"scene_path",
 		"background"
+	],
+	"enemy_behavior_range_fields": {
+		"keep_distance_and_shoot": "preferred_distance",
+		"summon_and_chase": "summon_range",
+		"chase_and_cast_pool": "cast_range",
+		"dash_attack": "dash_trigger_range",
+		"boss_dungeon_heart": "skill_range",
+		"support_aura": "aura_radius",
+		"leap_and_slam": "leap_trigger_range"
+	},
+	"enemy_warning_action_types": [
+		"damage_area",
+		"corruption_gaze",
+		"delayed_area_blast",
+		"shockwave"
 	],
 	"modifier_stats": [
 		"armor",

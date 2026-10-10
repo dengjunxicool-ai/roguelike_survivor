@@ -25,7 +25,7 @@ func process(delta: float) -> void:
 	if bool(_owner.call("_is_debug_control_mode")):
 		return
 
-	_owner.set("_elapsed_time", minf(float(_owner.get("_elapsed_time")) + delta, float(_owner.get("_hard_time_limit"))))
+	_owner.set("_elapsed_time",float(_owner.get("_elapsed_time"))+delta)
 
 	_process_despawn_scan(delta)
 	_owner.call("_process_reward_events")
@@ -36,6 +36,9 @@ func process(delta: float) -> void:
 		_owner.call("_process_discrete_wave", delta)
 
 	_owner.emit_signal(&"run_time_changed", float(_owner.get("_elapsed_time")), float(_owner.get("_run_duration")))
+	var tracker := RunStatsTracker.get_active(_owner.get_tree())
+	if tracker!=null:
+		tracker.record_wave_snapshot(_owner.call("_get_wave_progress_snapshot"))
 
 
 ## 作用：更新回收扫描；具体处理委托给 _owner._despawn_far_enemies。

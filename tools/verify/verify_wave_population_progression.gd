@@ -82,6 +82,7 @@ func _test_empty_field_and_unlimited_population() -> void:
 	await process_frame
 
 func _test_real_growth_and_pending_reveal() -> void:
+	root.size=Vector2i(1920,1080)
 	root.set_meta("debug_manual_spawn_only", true)
 	var player := Node2D.new()
 	player.position = Vector2(1000, 1000)

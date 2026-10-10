@@ -401,7 +401,7 @@ func _refresh_loadout() -> void:
 func _refresh_enemy_previews(map_data: Dictionary) -> void:
 	_clear_children(_enemy_preview_list)
 	_add_enemy_preview_group("怪物", _get_map_enemy_preview_ids(map_data))
-	_add_enemy_preview_group("精英", map_data.get("elite_preview_ids", []))
+	_add_enemy_preview_group("精英", preload("res://scripts/maps/map_encounter_resolver.gd").get_elite_preview_ids(map_data))
 	_add_enemy_preview_group("Boss", [map_data.get("boss_id", "")])
 
 

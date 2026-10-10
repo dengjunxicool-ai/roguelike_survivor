@@ -42,7 +42,9 @@ func _run() -> void:
 			child.queue_free()
 	await process_frame
 	await process_frame
-	_expect(_warning_count(owner) == 0 and not cancelled_tween.is_valid() and bool(enemy.get_meta("spawn_reveal_pending")), "removed warning cancels outstanding reveal work")
+	await create_timer(0.05).timeout
+	_expect(_warning_count(owner) == 0 and not cancelled_tween.is_valid() and (not is_instance_valid(enemy) or enemy.is_queued_for_deletion()), "removed warning cancels reveal and removes disabled orphan")
+	_expect(not bool(service.call("has_work")) and int(service.get("statistics").cancelled)>=1, "reveal cancellation is recorded and leaves no outstanding work")
 	owner.queue_free()
 	await process_frame
 	service = null

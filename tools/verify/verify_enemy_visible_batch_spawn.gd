@@ -68,11 +68,12 @@ func _init() -> void:
 
 
 func _run() -> void:
+	root.size=Vector2i(1280,720)
 	_test_wave_batch_limit_and_interval()
 	_test_boss_minion_batch_limit_and_interval()
 	_test_wave_total_is_not_truncated()
 	await _test_visible_spawn_and_reveal()
-	await _test_special_sources_remain_immediate()
+	await _test_special_sources_warn()
 	if not _failed:
 		print("[verify_enemy_visible_batch_spawn] PASS")
 	quit(1 if _failed else 0)
@@ -179,7 +180,9 @@ func _test_visible_spawn_and_reveal() -> void:
 	owner.queue_free()
 
 
-func _test_special_sources_remain_immediate() -> void:
+func _test_special_sources_warn() -> void:
+	await process_frame
+	root.canvas_transform=Transform2D.IDENTITY
 	root.set_meta("debug_manual_spawn_only", true)
 	var player := Node2D.new()
 	player.add_to_group(&"player")
@@ -190,15 +193,15 @@ func _test_special_sources_remain_immediate() -> void:
 	_expect(is_equal_approx(float(spawner.get("_spawn_warning_duration")), 1.5), "configured warning reveal lasts 1.5 seconds", spawner.get("_spawn_warning_duration"))
 	for source_type: StringName in [&"boss", &"elite_event", &"map_event"]:
 		var enemy: Node2D = spawner.call("spawn_enemy", EnemySpawnRequest.create(&"small_slime", {"enemy_rank": "normal", "source_type": String(source_type)})) as Node2D
-		_expect(enemy != null and not bool(enemy.get_meta("spawn_reveal_pending", false)), "%s source remains immediate" % String(source_type))
+		_expect(enemy != null and bool(enemy.get_meta("spawn_reveal_pending", false)), "%s source has birth warning" % String(source_type))
 		if enemy != null:
 			enemy.queue_free()
 	var summon: Node2D = spawner.get("_spawn_service").call("spawn", {
 		"enemy_id": &"small_slime",
 		"source_type": "summon",
-		"position": Vector2.ZERO
+		"position": Vector2(300,200)
 	}) as Node2D
-	_expect(summon != null and not bool(summon.get_meta("spawn_reveal_pending", false)), "skill summon source remains immediate")
+	_expect(summon != null and bool(summon.get_meta("spawn_reveal_pending", false)), "skill summon source has birth warning")
 	if summon != null:
 		summon.queue_free()
 	spawner.queue_free()
