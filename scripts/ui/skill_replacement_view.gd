@@ -1,8 +1,15 @@
 extends CanvasLayer
 class_name SkillReplacementView
+var _closed: bool = false
+
+func cancel() -> void:
+	_closed = true
+	queue_free()
+
 func open(player: Node, service: RefCounted, transaction: Dictionary, completed: Callable) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	layer = 120
+	var host: CanvasLayer = get_parent() as CanvasLayer
+	layer = host.layer + 1 if host != null else 201
 	var backdrop := ColorRect.new()
 	backdrop.name = "ReplacementBackdrop"
 	backdrop.color = Color(0, 0, 0, 0.92)
@@ -38,7 +45,9 @@ func open(player: Node, service: RefCounted, transaction: Dictionary, completed:
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		panel.add_child(button)
 		button.pressed.connect(func() -> void:
+			if _closed or not is_instance_valid(player): return
 			if service.confirm(player, str(transaction.id), skill.skill_id):
+				_closed = true
 				completed.call()
 				queue_free())
 	var cancel_button := Button.new()
@@ -46,4 +55,5 @@ func open(player: Node, service: RefCounted, transaction: Dictionary, completed:
 	panel.add_child(cancel_button)
 	cancel_button.pressed.connect(func() -> void:
 		service.cancel(str(transaction.id))
-		queue_free())
+		cancel())
+	tree_exiting.connect(func() -> void: service.cancel(str(transaction.id)), CONNECT_ONE_SHOT)

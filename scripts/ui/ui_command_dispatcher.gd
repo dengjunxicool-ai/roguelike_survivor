@@ -38,14 +38,11 @@ func _apply_choice_option(option: Dictionary, context: Dictionary) -> Dictionary
 	var tree: SceneTree = context.get("tree", null) as SceneTree
 	var payload: Dictionary = _get_dictionary(option.get("payload", {}))
 	if payload.has("reward_kind"):
-		_apply_run_reward_option(option, payload, player, tree)
-		return {
-			"handled": true,
-			"consumed_reward": true,
-			"reward_kind": String(payload.get("reward_kind", "elite"))
-		}
+		return _apply_run_reward_option(option, payload, player, tree)
 
-	var upgrade_id: StringName = StringName(String(option.get("id", "")))
+	return _apply_upgrade_choice(StringName(String(option.get("id", ""))), player)
+
+func _apply_upgrade_choice(upgrade_id: StringName, player: Node) -> Dictionary:
 	if player != null and player.has_method("apply_upgrade") and upgrade_id != &"":
 		var parts: PackedStringArray = String(upgrade_id).split(":")
 		if parts.size() >= 2 and parts[0] == "level_up_upgrade":
@@ -57,16 +54,48 @@ func _apply_choice_option(option: Dictionary, context: Dictionary) -> Dictionary
 				var tx: Dictionary = service.begin(player, StringName(String(data.id)), parts[2] if parts.size() > 2 else "normal")
 				if tx.is_empty(): return {"handled": false}
 				return {"handled": true, "replacement_pending": true, "transaction": tx, "service": service, "applied_upgrade_id": upgrade_id}
-		player.call(&"apply_upgrade", upgrade_id)
-		return {"handled": true, "applied_upgrade_id": upgrade_id}
+		if bool(player.call(&"apply_upgrade", upgrade_id)):
+			return {"handled": true, "applied_upgrade_id": upgrade_id}
 	return {"handled": false}
 
 
 ## 作用：按 payload 依次应用货币/经验、治疗、遗物和升级奖励并记录统计。
 ## 使用：player 有效后执行；reward_kind 提供事件来源，升级经 Player.apply_upgrade；可能写入 user:// 存档。
-func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: Node, tree: SceneTree) -> void:
+func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: Node, tree: SceneTree) -> Dictionary:
 	if player == null:
-		return
+		return {"handled": false}
+	# Apply/validate the fallible upgrade before committing any other reward.
+	var upgrade_id: StringName = _reward_upgrade_id(option, payload)
+	if upgrade_id != &"":
+		var result: Dictionary = _apply_upgrade_choice(upgrade_id, player)
+		if not bool(result.get("handled", false)):
+			return result
+		if bool(result.get("replacement_pending", false)):
+			result["reward_option"] = option.duplicate(true)
+			result["consumed_reward"] = false
+			return result
+	return _commit_reward(option, payload, player, tree)
+
+func _reward_upgrade_id(option: Dictionary, payload: Dictionary) -> StringName:
+	var option_id: String = String(option.get("id", ""))
+	if option_id.begins_with("level_up_upgrade:") or option_id.begins_with("skill_level_up:"):
+		return StringName(option_id)
+	var id: String = String(payload.get("upgrade_id", ""))
+	return StringName("level_up_upgrade:%s" % id) if id != "" else &""
+
+## Called only after the replacement transaction successfully committed.
+func complete_replacement_reward(result: Dictionary, context: Dictionary) -> Dictionary:
+	var option: Dictionary = _get_dictionary(result.get("reward_option", {}))
+	if option.is_empty():
+		return result
+	return _commit_reward(option, _get_dictionary(option.get("payload", {})), context.get("player") as Node, context.get("tree") as SceneTree)
+
+func _commit_reward(option: Dictionary, payload: Dictionary, player: Node, tree: SceneTree) -> Dictionary:
+	if not is_instance_valid(player):
+		return {"handled": false}
+	var relic_id: StringName = StringName(String(payload.get("relic_id", "")))
+	if relic_id != &"" and not _apply_relic_reward(relic_id, player, tree):
+		return {"handled": false}
 
 	if payload.has("amount"):
 		var amount: int = int(payload.get("amount", 0))
@@ -80,21 +109,10 @@ func _apply_run_reward_option(option: Dictionary, payload: Dictionary, player: N
 	if payload.has("heal_percent"):
 		_apply_healing_reward(payload, player, tree)
 
-	var relic_id: StringName = StringName(String(payload.get("relic_id", "")))
-	if relic_id != &"":
-		_apply_relic_reward(relic_id, player, tree)
-
-	var option_id: String = String(option.get("id", ""))
-	if player.has_method("apply_upgrade") and (option_id.begins_with("level_up_upgrade:") or option_id.begins_with("skill_level_up:")):
-		player.call("apply_upgrade", StringName(option_id))
-	else:
-		var upgrade_id: StringName = StringName(String(payload.get("upgrade_id", "")))
-		if upgrade_id != &"" and player.has_method("apply_upgrade"):
-			player.call("apply_upgrade", StringName("level_up_upgrade:%s" % String(upgrade_id)))
-
 	var tracker: Node = RunStatsTrackerScript.get_active(tree)
 	if tracker != null and tracker.has_method("record_reward_taken"):
 		tracker.call("record_reward_taken", String(payload.get("reward_kind", "elite")))
+	return {"handled": true, "consumed_reward": true, "reward_kind": String(payload.get("reward_kind", "elite"))}
 
 
 ## 作用：按玩家生命上限和治疗比例回复血量并记录治疗。
@@ -115,15 +133,16 @@ func _apply_healing_reward(payload: Dictionary, player: Node, tree: SceneTree) -
 
 ## 作用：经玩家 RelicManager 添加遗物，成功后记录获取事件。
 ## 使用：relic_id 为配置 ID；缺管理器或添加失败时不统计。
-func _apply_relic_reward(relic_id: StringName, player: Node, tree: SceneTree) -> void:
+func _apply_relic_reward(relic_id: StringName, player: Node, tree: SceneTree) -> bool:
 	var relic_manager: Node = player.get_node_or_null("RelicManager")
 	if relic_manager == null or not relic_manager.has_method("add_relic"):
-		return
+		return false
 	if not bool(relic_manager.call("add_relic", relic_id)):
-		return
+		return false
 	var tracker: Node = RunStatsTrackerScript.get_active(tree)
 	if tracker != null and tracker.has_method("record_relic_gained"):
 		tracker.call("record_relic_gained", relic_id)
+	return true
 
 
 ## 作用：购买局外升级。

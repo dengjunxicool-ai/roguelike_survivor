@@ -4,6 +4,7 @@ param(
     [Parameter(Mandatory = $true)][string]$OutputRoot,
     [string]$ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path,
     [switch]$Rendered,
+    [ValidateSet('mobile','gl_compatibility','forward_plus')][string]$RenderingMethod = 'mobile',
     [switch]$Import,
     [string[]]$UserArguments = @(),
     [string[]]$EngineArguments = @()
@@ -26,7 +27,7 @@ else {
     if ($Script -eq '' -and $Scene -eq '') { throw 'A script or scene is required outside import mode' }
     if ($Scene -ne '') { $godotArguments += $Scene }
     else { $godotArguments += @('--script', $Script) }
-    if ($Rendered) { $godotArguments += @('--resolution','1280x720','--disable-vsync','--rendering-method','mobile') }
+    if ($Rendered) { $godotArguments += @('--resolution','1280x720','--disable-vsync','--rendering-method',$RenderingMethod) }
     else { $godotArguments += '--headless' }
     if ($UserArguments.Count -gt 0) { $godotArguments += '--'; $godotArguments += $UserArguments }
 }

@@ -323,12 +323,15 @@ func update_wave_pressure(alive_count: int, max_alive: int, delta: float) -> voi
 
 ## 作用：首次登记 Boss 阶段起始时刻，经过 30 秒后保存剩余血量比例。
 ## 使用：boss 为当前 Boss 节点；调用频率由编排控制，已采样后不覆盖结果。
+func record_boss_started(elapsed_time: float) -> void:
+	if boss_phase_started_at < 0.0:
+		boss_phase_started_at = maxf(elapsed_time,0.0)
+
 func update_boss_snapshot(boss: Node) -> void:
 	if boss == null:
 		return
 	_update_boss_phase_metrics(boss)
-	if boss_phase_started_at < 0.0:
-		boss_phase_started_at = run_seconds
+	record_boss_started(run_seconds)
 	var elapsed_boss: float = run_seconds - boss_phase_started_at
 	if boss_hp_at_30s < 0.0 and elapsed_boss >= 30.0:
 		var max_hp: float = maxf(float(boss.get("max_health")), 1.0)

@@ -4,7 +4,9 @@ class_name SkillEventContext
 const PROC_FIELDS: Array[String] = ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds"]
 static func from_context(context: Dictionary, event_name: StringName) -> Dictionary:
 	var result: Dictionary = context.duplicate(true)
-	var packet: Dictionary = context.get("damage_packet", {}) if context.get("damage_packet", {}) is Dictionary else {}
+	# Residual objects can outlive their owner before the event is queued.
+	purge_invalid_references(result)
+	var packet: Dictionary = result.get("damage_packet", {}) if result.get("damage_packet", {}) is Dictionary else {}
 	for field: String in PROC_FIELDS:
 		if not result.has(field) and packet.has(field):
 			result[field] = packet[field]
@@ -26,13 +28,13 @@ static func from_context(context: Dictionary, event_name: StringName) -> Diction
 		if object!=null and not object.is_queued_for_deletion() and int(object.get("spawn_generation"))==int(packet.get("source_generation",-1)):
 			var kind: String = String(packet.get("source_object_kind",""))
 			if kind in ["projectile","area"] and not result.has(kind): result[kind]=object;result["source"]=object;result["source_id"]=object.source_id
-	var manager: Node = context.get("skill_manager") as Node
-	var caster: Node = context.get("caster") as Node
+	var manager: Node = result.get("skill_manager") as Node
+	var caster: Node = result.get("caster") as Node
 	if manager == null and caster != null:
 		manager = caster.get_node_or_null("SkillManager")
 	var origin: RefCounted = manager.call("get_skill", result.origin_skill_id) as RefCounted if manager != null else null
 	if origin == null:
-		var candidate: RefCounted = context.get("skill_instance") as RefCounted
+		var candidate: RefCounted = result.get("skill_instance") as RefCounted
 		if candidate != null and StringName(String(candidate.get("skill_id"))) == result.origin_skill_id:
 			origin = candidate
 	result["origin_skill_instance"] = origin
@@ -41,7 +43,7 @@ static func from_context(context: Dictionary, event_name: StringName) -> Diction
 		var definition: RefCounted = origin.get("definition") as RefCounted if origin != null else null
 		if definition != null:
 			tags.append_array(definition.get("tags"))
-			if context.get("area") is Node:
+			if result.get("area") is Node:
 				tags.append("%s_area" % definition.get("school"))
 		result["source_tags"] = tags
 	return result
@@ -55,6 +57,14 @@ static func purge_invalid_references(context: Dictionary) -> void:
 		elif value is Dictionary:
 			purge_invalid_references(value)
 		elif value is Array:
-			for index: int in value.size():
-				if typeof(value[index]) == TYPE_OBJECT and not is_instance_valid(value[index]): value[index] = null
-				elif value[index] is Dictionary: purge_invalid_references(value[index])
+			_purge_array(value)
+
+static func _purge_array(values: Array) -> void:
+	for index: int in values.size():
+		var value: Variant = values[index]
+		if typeof(value) == TYPE_OBJECT and not is_instance_valid(value):
+			values[index] = null
+		elif value is Dictionary:
+			purge_invalid_references(value)
+		elif value is Array:
+			_purge_array(value)
