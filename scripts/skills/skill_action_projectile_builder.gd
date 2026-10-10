@@ -25,7 +25,7 @@ static func build_targeted_launch_data(params: Dictionary, caster_position: Vect
 static func build_direct_launch_data(params: Dictionary, caster: Node2D, target: Node2D, base_direction: Vector2, start_angle: float, spread_angle: float, projectile_index: int) -> Dictionary:
 	var direction: Vector2 = base_direction.rotated(start_angle + spread_angle * float(projectile_index)).normalized()
 	var target_position: Vector2 = target.global_position
-	var position: Vector2 = caster.global_position + direction * float(params.get("spawn_offset", 24.0))
+	var position: Vector2 = _get_vector2(params.get("spawn_position",caster.global_position),caster.global_position) + direction * float(params.get("spawn_offset", 24.0))
 	position = apply_visual_start_offset(position, target_position, params)
 	if params.has("visual_start_offset"):
 		direction = position.direction_to(target_position)
@@ -91,9 +91,13 @@ static func build_spawn_params(input: Dictionary) -> Dictionary:
 		"relic_manager": context.get("relic_manager"),
 		"source_id": source_id,
 		"event_on_hit": &"on_projectile_hit",
+		"apply_direct_damage_on_hit": projectile_params.has("damage"),
 		"actions_on_hit": _get_array(projectile_params.get("actions_on_hit", [])),
 		"cast_instance_id": str(input.get("cast_instance_id", "")),
 		"trajectory_mode": str(input.get("trajectory_mode", "linear")),
+		"chaos_geometry_branch": int(projectile_params.get("chaos_geometry_branch",-1)),
+		"return_once": bool(projectile_params.get("return_once",false)),
+		"return_damage_multiplier": float(projectile_params.get("return_damage_multiplier",1.0)),
 		"curve_start_position": _get_vector2(input.get("curve_start_position", Vector2.ZERO), Vector2.ZERO),
 		"curve_target_position": _get_vector2(input.get("curve_target_position", Vector2.ZERO), Vector2.ZERO),
 		"curve_height": float(params.get("curve_height", 64.0)),

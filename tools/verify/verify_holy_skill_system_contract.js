@@ -33,17 +33,17 @@ const holySkills = (skillsData.skills || []).filter(
 
 const expected = [
   ["holy_attack_judgment", "裁决攻击", "attack", "攻击变强，命中施加 Judgment；攻击带有 Judgment 的敌人时，额外获得少量护盾值"],
-  ["holy_dash_heavenly_wings", "天翼冲刺", "dash", "冲刺时获得短暂无敌或护盾，并对路径敌人造成神圣伤害，施加 Judgment"],
+  ["holy_dash_heavenly_wings", "天翼冲刺", "dash", "冲刺时获得短时护盾，对路径敌人造成神圣伤害并施加审判。"],
   ["holy_cast_holy_ray", "圣光射线", "cast", "周期性从天而降数道圣光，优先攻击 Judgment 层数高的敌人"],
-  ["holy_cast_divine_barrier", "神圣结界", "cast", "在玩家周围生成结界，伤害敌人并为玩家提供持续护盾恢复"],
+  ["holy_cast_divine_barrier", "神圣结界", "cast", "在施放点建立R2.3结界，持续5秒、冷却10秒；玩家在区域内每秒恢复1%最大生命护盾，与敌人数无关。"],
   ["holy_cast_judgment_hammer", "审判圣锤", "cast", "对生命最高的敌人降下圣锤，造成高额伤害并短暂眩晕"],
   ["holy_summon_seraph", "炽天使", "summon", "炽天使协助作战，发射圣光弹，并周期性为玩家恢复护盾"],
-  ["holy_summon_shield_guardian", "圣盾卫士", "summon", "召唤卫士守护玩家，格挡部分近身伤害，并反击攻击者"],
+  ["holy_summon_shield_guardian", "圣盾卫士", "summon", "圣盾卫士存活时每2秒挡伤一次，最多吸收10%最大生命；反击造成神圣伤害，不授予无敌。"],
   ["holy_passive_sanctuary", "庇护", "passive", "护盾上限和护盾恢复提高；拥有护盾时神圣伤害提高"],
-  ["holy_passive_devotion", "虔诚", "passive", "治疗和护盾溢出会转化为短时间伤害加成"],
+  ["holy_passive_devotion", "虔诚", "passive", "护盾溢出时，直接输出伤害提高20%，持续4秒；重复触发刷新持续时间。"],
   ["holy_passive_weakening_judgment", "弱化审判", "passive", "Judgment 敌人造成的伤害降低，并受到更多神圣伤害"],
   ["holy_power_divine_punishment", "神罚", "power", "Judgment 达到满层时触发落雷式圣光打击，造成伤害并眩晕目标"],
-  ["holy_power_counter_seal", "反击圣印", "power", "护盾破裂或受到重击时，释放圣光冲击波，并给附近敌人施加 Judgment"],
+  ["holy_power_counter_seal", "反击圣印", "power", "护盾破裂或单次生命损失至少10%最大生命时反击，两个入口共享8秒冷却。"],
   ["holy_power_absolution_light", "赦免之光", "power", "击杀 Judgment 敌人时恢复护盾；若护盾已满，则产生一次小型圣光爆炸"],
   ["holy_core_final_judgment_domain", "终裁神域", "core", "Judgment 触发神罚时不再完全清空层数，而是保留部分层数；每次神罚都会为玩家生成护盾，并使附近敌人进入短暂虚弱"],
 ];
@@ -56,7 +56,7 @@ for (const [id, name, type, description] of expected) {
   assert(skill, `missing holy skill ${id}`);
   assert(skill.display_name === name, `${id} name mismatch`);
   assert(skill.skill_type === type, `${id} type mismatch`);
-  assert(skill.description === description, `${id} description must use the requested description field`);
+  assert(skill.description === localizedDescription(description), `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("holy"), `${id} must be tagged holy`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
   assert(skill.offer_rule.required_schools.includes("holy"), `${id} must require holy school`);
@@ -129,3 +129,9 @@ for (const summonId of ["seraph", "holy_shield_guardian"]) {
 }
 
 console.log("[verify_holy_skill_system_contract] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

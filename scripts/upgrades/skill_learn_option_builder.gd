@@ -22,7 +22,7 @@ static func build_option_data(skill: Dictionary, upgrade: Dictionary, rarity: St
 		"tags": _get_array(upgrade.get("tags", [])).duplicate(true),
 		"affected_origin": "神系技能",
 		"does_not_affect": "不替换角色初始技能。",
-		"recommended_reason": "从神系技能池学习一个新技能。",
+		"recommended_reason": "首次学习确定品质，后续升级保持品质。",
 		"level_text": "Lv1 / %d" % max_level,
 		"payload": {
 			"upgrade_id": upgrade_id,

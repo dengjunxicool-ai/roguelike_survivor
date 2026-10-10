@@ -70,6 +70,10 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 ## 作用：优先使用显式位置或事件位置，否则按位置模式解析施法者、目标及偏移。
 ## 使用：params 读取 position/position_mode；context 携带 position/caster/target。
 func _resolve_position(params: Dictionary, context: Dictionary) -> Vector2:
+	if String(params.get("position_mode", "")) == "event": return context.get("position", Vector2.ZERO)
+	if String(params.get("position_mode", "")) == "area_end":
+		var area: Node2D = context.get("area") as Node2D
+		return area.global_position+Vector2(area.cone_direction)*(float(area.effect_length) if area.effect_shape=="line" else float(area.radius)) if area != null else context.get("position",Vector2.ZERO)
 	if params.has("position"):
 		return _get_vector2(params["position"], Vector2.ZERO)
 
@@ -333,6 +337,12 @@ func _build_damage_packet(params: Dictionary, context: Dictionary, amount: int, 
 		"element": element,
 		"skill_level_coefficient": _get_skill_level_coefficient(context) if uses_skill_level else 1.0
 	})
+	var object: Node = context.get("projectile",context.get("area")) as Node
+	if object!=null and is_instance_valid(object) and (object.has_method("_begin_return") or object.has_method("geometry_shape")):
+		packet["source_object_id"]=object.get_instance_id()
+		packet["source_generation"]=int(object.get("spawn_generation"))
+		packet["source_object_kind"]="projectile" if object.has_method("_begin_return") else "area"
+	if source_type=="status" and context.has("status_id"): packet["status_id"]=String(context.status_id)
 	_apply_damage_packet_modifiers(packet, params, context)
 	_apply_shared_primary_attack_crit(packet, params, context, caster)
 	return packet
@@ -647,9 +657,12 @@ func _resolve_scaled_amount(value: Variant, context: Dictionary, stat_name: Stri
 		var data: Dictionary = value
 		if str(data.get("stat", "")) == "power":
 			if context.has("power"):
-				return float(context.get("power", 0.0)) * float(data.get("scale", 1.0))
+				var explicit_power: float = float(context.get("power", 0.0))
+				if not bool(context.get("status_power_snapshot", false)):
+					explicit_power = float(ModifierResolverScript.resolve_value(context, stat_name, explicit_power))
+				return explicit_power * float(data.get("scale", 1.0)) * float(context.get("cast_damage_multiplier", 1.0))
 			var power: float = float(ModifierResolverScript.resolve_value(context, stat_name, ModifierResolverScript.get_stat(context, "power", _get_caster_attack_power(context))))
-			return power * float(data.get("scale", 1.0))
+			return power * float(data.get("scale", 1.0)) * float(context.get("cast_damage_multiplier", 1.0))
 	return float(ModifierResolverScript.resolve_value(context, stat_name, value))
 
 
@@ -674,17 +687,10 @@ func _get_caster_attack_power(context: Dictionary) -> float:
 ## 作用：从伤害包或技能上下文推导状态施加强度。
 ## 使用：context 携带 amount。
 func _get_status_power_from_context(context: Dictionary) -> float:
-	for packet_key: String in ["damage_packet", "source_packet", "packet"]:
-		var packet_variant: Variant = context.get(packet_key)
-		if packet_variant is Dictionary:
-			var packet: Dictionary = packet_variant
-			var amount: float = float(packet.get("raw_amount", packet.get("amount", 0.0)))
-			if amount > 0.0:
-				return amount
-	var amount: float = float(context.get("amount", 0.0))
-	if amount > 0.0:
-		return amount
-	return _get_caster_attack_power(context)
+	if context.has("power"):
+		return maxf(float(context.power), 0.0)
+	var caster: Node = context.get("caster") as Node
+	return _get_caster_attack_power(context) * maxf(_get_float_property(caster, "damage_multiplier", 1.0), 0.0)
 
 
 ## 作用：判断同帧同区域来源对同目标的状态施加是否应合并以避免重复。

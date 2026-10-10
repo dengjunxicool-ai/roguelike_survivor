@@ -66,6 +66,8 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	state["dash_skill"] = skill_slots.get("dash_skill", {})
 	state["active_skills"] = skill_slots.get("active_skills", [])
 	state["passive_skills"] = skill_slots.get("passive_skills", [])
+	state["core_skill"] = skill_slots.get("core_skill", {})
+	state["fusion_skill"] = skill_slots.get("fusion_skill", {})
 	state["skills"] = state["active_skills"]
 
 
@@ -153,9 +155,16 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 		elif String(slot.get("skill_type", "")) == "passive":
 			if passive_slots.size() < MAX_HUD_PASSIVE_SKILLS:
 				passive_slots.append(slot)
+		elif String(slot.get("skill_type", "")) in ["core", "fusion"]:
+			continue
 		elif active_slots.size() < MAX_HUD_ACTIVE_SKILLS:
 			active_slots.append(slot)
-	return _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+	var result: Dictionary = _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
+	for instance: RefCounted in skill_manager.get_all_skills():
+		var slot: Dictionary = _build_skill_slot(player, instance)
+		var type: String = String(slot.get("skill_type", ""))
+		if type in ["core", "fusion"]: result[type + "_skill"] = slot
+	return result
 
 
 ## 作用：技能槽位结果。
@@ -176,6 +185,8 @@ func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 	var definition := skill_instance.get("definition") as RefCounted
 	var cooldown_remaining: float = maxf(float(skill_instance.get("cooldown_remaining")), 0.0)
 	var cooldown_total: float = _resolve_skill_cooldown_total(definition)
+	if definition != null and skill_instance is SkillInstance:
+		cooldown_total = preload("res://scripts/skills/skill_component_runner.gd").new().get_cooldown(skill_instance,{"caster":player,"owner":player,"skill_instance":skill_instance})
 	if _is_dash_skill(skill_instance, definition):
 		cooldown_remaining = _get_player_float(player, "_dash_cooldown_remaining", cooldown_remaining)
 		cooldown_total = _get_player_float(player, "dash_cooldown", cooldown_total)
@@ -188,7 +199,8 @@ func _build_skill_slot(player: Node, skill_instance: RefCounted) -> Dictionary:
 		"cooldown_remaining": cooldown_remaining,
 		"cooldown_total": cooldown_total,
 		"icon": _resolve_skill_icon_path(skill_id, definition),
-		"skill_type": _resolve_skill_type(skill_instance, definition)
+		"skill_type": _resolve_skill_type(skill_instance, definition),
+		"feedback": _skill_feedback(player,skill_instance)
 	}
 
 
@@ -381,3 +393,19 @@ func _format_count_dictionary(values: Dictionary) -> String:
 		if parts.size() >= 3:
 			break
 	return " / ".join(parts) if not parts.is_empty() else "-"
+
+## 读取资源余量和复制快照，不把内部计数键暴露给玩家。
+func _skill_feedback(player: Node, skill: RefCounted) -> String:
+	if skill == null: return ""
+	if _string_from_value(skill.get("skill_type")) == "core":
+		var definition: RefCounted = skill.get("definition")
+		for rule: Dictionary in definition.get("trigger_rules"):
+			if rule.has("counter_key") and rule.has("threshold"):
+				return "充能 %.0f/%.0f" % [float(skill.get_meta(str(rule.counter_key),0.0)),float(rule.threshold)]
+	if String(skill.get("skill_id")) == "chaos_power_echo_cast":
+		var bus: Node = player.get_node_or_null("SkillEventBus")
+		if bus == null: return "等待施法"
+		var charge: int = int(bus.chaos_state().echo_count)
+		if charge >= 4: return "回声就绪" if not bus.get_cast_snapshot({"skill_type":"cast"}).is_empty() else "等待施法"
+		return "回声充能 %d/4" % charge
+	return ""

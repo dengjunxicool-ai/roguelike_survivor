@@ -183,3 +183,11 @@
 - 原始报告的生存辅助标签错误已修复驱动；已有样本另存 normalized_samples.json，附来源 SHA256 与修订原因，原文件和测量值不改。
 - 最终功能回归：E:/codex/canonical-refactor/monster-stage-d-final2/results.json，180/180、0 脚本/engine 错误。配置与 C 同版，产品代码未改，不新增玩法或调整数值。
 - 16 局真人记录和 Boss 正常生命战斗仍开放，记录表 monster_system_human_playtest.md；不标记发布候选。按用户要求在本阶段完成后停止。
+
+## PR #18 与 main 集成（2026-10-10）
+
+- 用户授权解决冲突并合并 PR，冲突以当前怪物系统改动为主。集成 main 713ec96（技能 M1–M4），保留当前冲锋状态机与投射物攻击完成信号，接入必要的技能准备事件、对象交互清理及配置校验。
+- 六个文件的冲突已解决。同名技能计划和规格采用 main 已记录的实施状态，避免将完成项恢复为未实施；不拼接两套运行时行为。
+- 集成回归发现技能打断只清除公开冲锋计时、内部状态仍继续的问题。实际敌人和 SkillEventBus 的新断言先得到四项预期失败（无脚本错误），补齐行为取消及同步事件检查后通过；日志 pr18-interrupt-red/green 保存在 E:/codex/monster-system。
+- Godot 导入通过，脚本/引擎错误均 0；补齐生成的 GDScript UID 元数据。完整套件 E:/codex/monster-system/pr18-integration-suite/results.json：231/231，通过旧回归、怪物回归及技能 M1–M4 新回归；独立 verify_monster_combat_batch.ps1 通过，总计 232 项。
+- 180/180 与先前采样、性能记录属于集成前历史版本。此次未重新采集战斗平衡或渲染性能，不能据此声称合并后的平衡已通过；16 局真人、Boss 正常生命完整战斗及其他开放项继续保留。

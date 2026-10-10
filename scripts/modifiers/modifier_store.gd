@@ -11,6 +11,62 @@ const ModifierQueryScript: Script = preload("res://scripts/modifiers/modifier_qu
 const LIFETIME_RUN: StringName = &"run"
 
 var _sources: Dictionary = {}
+var _cast_charges: Dictionary = {}
+
+func _ready() -> void:
+	var owner: Node = get_parent()
+	if owner != null and owner.has_signal("died"):
+		owner.connect("died", clear_timed_sources)
+
+func _physics_process(delta: float) -> void:
+	tick_timed_sources(delta)
+
+func set_timed_source(source_id: Variant, effects: Array, scopes: Array, duration: float, refresh: StringName = &"replace") -> void:
+	var id: String = String(source_id)
+	if duration <= 0.0:
+		clear_source(id)
+		return
+	var remaining: float = float(_sources.get(id, {}).get("remaining", 0.0))
+	set_source(id, effects, scopes, &"timed")
+	if _sources.has(id):
+		_sources[id]["remaining"] = maxf(duration, remaining) if refresh == &"extend" else duration
+
+func tick_timed_sources(delta: float) -> void:
+	if delta <= 0.0:
+		return
+	for id: String in _sources.keys():
+		var source: Dictionary = _sources[id]
+		if not source.has("remaining"):
+			continue
+		source["remaining"] = maxf(float(source.remaining) - delta, 0.0)
+		if source.remaining <= 0.0:
+			_sources.erase(id)
+
+func clear_skill_sources(skill_id: StringName) -> void:
+	var prefix: String = "skill:%s:" % skill_id
+	for id: String in _sources.keys():
+		if id.begins_with(prefix):
+			_sources.erase(id)
+	for id: String in _cast_charges.keys():
+		if id.begins_with(prefix):
+			_cast_charges.erase(id)
+
+func clear_timed_sources() -> void:
+	clear_lifetime(&"timed")
+	_cast_charges.clear()
+
+func set_cast_charge(source_id: String, multiplier_add: float) -> void:
+	_cast_charges[source_id] = maxf(multiplier_add, 0.0)
+
+func get_cast_charge_snapshot() -> Dictionary:
+	var bonus: float = 0.0
+	for value: Variant in _cast_charges.values():
+		bonus += float(value)
+	return {"multiplier": 1.0 + bonus, "sources": _cast_charges.keys()}
+
+func consume_cast_charges(source_ids: Array) -> void:
+	for id: Variant in source_ids:
+		_cast_charges.erase(String(id))
 
 
 ## 作用：按稳定来源 ID 覆盖属性条目、作用域与生命周期，空输入移除来源。
@@ -66,6 +122,7 @@ func clear_lifetime(lifetime: StringName) -> void:
 ## 使用：挂在玩家下；set_source 覆盖、merge_source 累积，collect 根据 ModifierQuery 过滤并聚合。
 func clear_all() -> void:
 	_sources.clear()
+	_cast_charges.clear()
 
 
 ## 作用：按查询作用域汇总匹配属性来源，返回平铺属性快照。

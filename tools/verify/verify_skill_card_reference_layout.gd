@@ -63,7 +63,7 @@ func _run() -> void:
 
 
 func _verify_card(button: Button, context: String) -> void:
-	_expect(button.tooltip_text == "", "%s card does not store option tooltip text" % context, button.tooltip_text)
+	_expect(button.tooltip_text.contains("伤害"), "%s card exposes full quantitative preview on hover" % context, button.tooltip_text)
 	var title := button.find_child("SkillCardTitle", true, false) as Label
 	var icon := button.find_child("SkillCardIconTexture", true, false) as TextureRect
 	var description := button.find_child("SkillCardDescription", true, false) as Label
@@ -80,7 +80,7 @@ func _verify_card(button: Button, context: String) -> void:
 	_expect(rarity != null and rarity.text == "稀有", "%s rarity section shows only rarity name" % context, rarity.text if rarity != null else "")
 	_expect(values != null and _value_rows(values).size() > 0, "%s values section has value rows" % context)
 	_expect(values != null and _value_rows(values).size() <= 3, "%s values section matches prepared rows" % context, _value_rows(values).size() if values != null else 0)
-	_expect(values != null and _joined_value_text(values).contains("27%"), "%s values section shows scaled numeric summary" % context, _joined_value_text(values) if values != null else "")
+	_expect(values != null and _joined_value_text(values).contains("24.84%"), "%s values section shows scaled numeric summary" % context, _joined_value_text(values) if values != null else "")
 	_expect(values != null and not _joined_value_text(values).contains("searing_fire_path"), "%s values section does not expose internal ids" % context, _joined_value_text(values) if values != null else "")
 
 	button.mouse_entered.emit()

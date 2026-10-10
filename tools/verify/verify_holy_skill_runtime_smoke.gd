@@ -82,7 +82,7 @@ func _run() -> void:
 	var skill_ids: Array[StringName] = _load_holy_skill_ids()
 	_expect(skill_ids.size() == 14, "loads all 14 first-version holy skills", skill_ids.size())
 	for skill_id: StringName in skill_ids:
-		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % str(skill_id), "add_skill=false")
+		_expect(bool(preload("res://tools/verify/skill_rebalance_fixture.gd").install_runtime_skill(_skill_manager, skill_id)), "installs runtime fixture %s" % str(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 14, "SkillManager learned 14 holy skills", _skill_manager.call("get_all_skills").size())
 	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.16, "holy attack applies one primary attack modifier")
 
@@ -127,11 +127,13 @@ func _run() -> void:
 	_expect(_count_summons(&"seraph") > 0, "seraph spawns through Summon system", _count_summons(&"seraph"))
 	_expect(_count_summons(&"holy_shield_guardian") > 0, "holy shield guardian spawns through Summon system", _count_summons(&"holy_shield_guardian"))
 
-	for _index in range(5):
-		_enemy.call("apply_status", &"judgment", {"stacks": 1, "duration": 6.0, "power": 24.0})
-	await process_frame
-	_expect(_count_area_effects(&"divine_punishment_strike") > 0, "Judgment max stack triggers divine punishment strike", _count_area_effects(&"divine_punishment_strike"))
-	_expect(_enemy.call("get_status_stack", &"judgment") == 2, "final judgment domain retains 2 Judgment stacks after punishment", _enemy.call("get_status_stack", &"judgment"))
+	# Earlier beams, fields and summons can keep adding Judgment to the shared
+	# targets. Isolate this reaction and assert before another physics frame.
+	var punishment_enemy: SmokeEnemy = _create_enemy("PunishmentHolySmokeEnemy", Vector2(5000.0, 0.0))
+	var punishment_count_before: int = _count_area_effects(&"divine_punishment_strike")
+	punishment_enemy.call("apply_status", &"judgment", {"stacks": 5, "duration": 6.0, "power": 24.0})
+	_expect(_count_area_effects(&"divine_punishment_strike") > punishment_count_before, "Judgment max stack triggers divine punishment strike", _count_area_effects(&"divine_punishment_strike"))
+	_expect(punishment_enemy.call("get_status_stack", &"judgment") == 2, "final judgment domain retains 2 Judgment stacks after punishment", punishment_enemy.call("get_status_stack", &"judgment"))
 
 	_unregister_test_enemies()
 	if not _failed:

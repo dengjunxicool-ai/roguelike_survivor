@@ -106,7 +106,42 @@ func run() -> void:
 	await process_frame
 	await test_map_boundary()
 	await test_frozen_actions()
+	await test_attack_interrupt()
 	quit(1 if failed else 0)
+
+func test_attack_interrupt() -> void:
+	var world := Node2D.new()
+	root.add_child(world)
+	var player := Receiver.new()
+	world.add_child(player)
+	player.add_to_group("player")
+	player.position = Vector2(240,0)
+	var captain := make_enemy(world,player,"skeleton_captain")
+	captain.call("_update_behavior",0.01)
+	expect(bool(captain.call("interrupt_preparing_attack")), "skill interrupt accepts a charge warning")
+	captain.call("_update_behavior",1.0)
+	captain.call("_update_behavior",0.1)
+	expect(float(captain.get("_dash_timer")) == 0.0 and not bool(captain.get("_special_attack_passes_target")), "interrupted charge cannot resume from private behavior state")
+	captain.queue_free()
+	await process_frame
+	var bus: Node = preload("res://scripts/skills/skill_event_bus.gd").new()
+	bus.name = "SkillEventBus"
+	player.add_child(bus)
+	bus.set_physics_process(false)
+	var notifications := [0]
+	bus.call("subscribe", &"enemy_preparing_attack", func(context: Dictionary) -> void:
+		notifications[0] += 1
+		context.target.call("interrupt_preparing_attack")
+	)
+	captain = make_enemy(world,player,"skeleton_captain")
+	captain.call("_update_behavior",0.01)
+	expect(notifications[0] == 1, "charge preparation reaches the real skill event bus")
+	expect(float(captain.get("_dash_warning_timer")) == 0.0, "synchronous skill interruption cancels charge preparation")
+	captain.call("_update_behavior",1.0)
+	captain.call("_update_behavior",0.1)
+	expect(float(captain.get("_dash_timer")) == 0.0 and not bool(captain.get("_special_attack_passes_target")), "synchronous interruption leaves no deferred charge")
+	world.queue_free()
+	await process_frame
 func make_enemy(world: Node, player: Node2D, id: String, multiplier: float = 1.0) -> CharacterBody2D:
 	var enemy: CharacterBody2D = EnemyScene.instantiate()
 	enemy.set("enemy_id",StringName(id))

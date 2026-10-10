@@ -134,6 +134,7 @@ func notify_enemy_killed_synergies() -> void:
 
 	var event: Dictionary = {
 		"enemy": _owner,
+		"target": _owner,
 		"position": _owner.global_position,
 		"parent": _owner.get_parent(),
 		"target_group": &"enemies",
@@ -142,6 +143,12 @@ func notify_enemy_killed_synergies() -> void:
 		"source_key": String(_owner.get_meta("last_damage_source_key", "unknown")),
 		"debug_attack_trace_id": DamageTraceContextScript.get_last_damage_trace_id(_owner)
 	}
+	var death_source: Dictionary = DamageTraceContextScript.get_last_damage_trace_context(_owner)
+	var statuses: Node = _owner.get_node_or_null("StatusEffectManager")
+	event["target_statuses"] = statuses.call("get_death_status_snapshot") if statuses != null else []
+	event["cursed_snapshot"] = statuses.call("death_curse_snapshot") if statuses != null else {}
+	for key: Variant in death_source:
+		if not event.has(key): event[key] = death_source[key]
 
 	var synergy_manager: Node = _get_synergy_manager()
 	if synergy_manager != null and synergy_manager.has_method("on_enemy_killed"):
@@ -164,12 +171,11 @@ func _emit_skill_enemy_killed(player: Node, event: Dictionary) -> void:
 		return
 	var runtime: Node = player.get_node_or_null("CharacterRuntime")
 	var skill_manager: Node = player.get_node_or_null("SkillManager")
-	if runtime == null or skill_manager == null or not skill_manager.has_method("get_skill"):
+	if skill_manager == null or not skill_manager.has_method("get_skill"):
 		return
-	var skill_id: StringName = StringName(String(runtime.call("get_starting_skill_id")))
+	var skill_id: StringName = StringName(String(event.get("origin_skill_id", event.get("source_skill_id", ""))))
+	if skill_id == &"" and runtime != null: skill_id = StringName(String(runtime.call("get_starting_skill_id")))
 	var skill_instance: RefCounted = skill_manager.call("get_skill", skill_id) as RefCounted
-	if skill_instance == null:
-		return
 	var skill_event: Dictionary = event.duplicate(true)
 	skill_event["caster"] = player
 	skill_event["owner"] = player

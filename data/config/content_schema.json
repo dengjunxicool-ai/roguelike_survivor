@@ -339,12 +339,24 @@
 		{
 			"path": "res://data/config/skill_system_config.json",
 			"keys": [
-				"range_unit_px"
+				"range_unit_px",
+				"rarity_damage_multipliers",
+				"first_learn_rarity_weights",
+				"fusion_rarity_weights"
 			],
 			"sections": [],
 			"root_fields": {
 				"range_unit_px": [
 					"number"
+				],
+				"rarity_damage_multipliers": [
+					"object"
+				],
+				"first_learn_rarity_weights": [
+					"object"
+				],
+				"fusion_rarity_weights": [
+					"object"
 				]
 			}
 		}
@@ -444,7 +456,44 @@
 				],
 				"learnable_from_pool": [
 					"boolean"
+				],
+				"capabilities": [
+					"array"
+				],
+				"offer_enabled": [
+					"boolean"
+				],
+				"chaos_contract": [
+					"object"
+				],
+				"level_overrides": [
+					"array"
+				],
+				"fusion_rules": [
+					"array"
 				]
+			},
+			"object_fields": {
+				"offer_rule": {
+					"required_schools": [
+						"array"
+					],
+					"required_skills": [
+						"array"
+					],
+					"blocked_by_exclusive_group": [
+						"array"
+					],
+					"required_min_skill_count": [
+						"object"
+					],
+					"min_player_level": [
+						"number"
+					],
+					"required_capabilities": [
+						"array"
+					]
+				}
 			}
 		},
 		"gods": {
@@ -1095,7 +1144,9 @@
 		"element",
 		"target_type",
 		"status_id",
-		"tag"
+		"tag",
+		"skill_type",
+		"owner_has_shield"
 	],
 	"modifier_domains": [
 		"player",
@@ -1130,5 +1181,121 @@
 		"corruption_gaze",
 		"delayed_area_blast",
 		"shockwave"
+	],
+	"modifier_stats": [
+		"armor",
+		"attack_speed",
+		"boss_hp",
+		"burning_damage_taken",
+		"chaos_entropy_damage",
+		"chaos_entropy_range",
+		"chaos_high_roll_after_triggers",
+		"chaos_mutation_vulnerability",
+		"chaos_projectile_damage",
+		"chaos_projectile_geometry_chance",
+		"chilled_duration",
+		"chilled_freeze_threshold",
+		"coin_gain",
+		"conductive_lightning_damage_taken",
+		"cooldown",
+		"crit_chance",
+		"cursed_low_hp_boss_effect",
+		"cursed_low_hp_damage",
+		"damage",
+		"damage_taken",
+		"divine_punishment_judgment_stacks_retained",
+		"dot_damage",
+		"enemy_spawn_count",
+		"frost_area_duration",
+		"frozen_damage_taken",
+		"frozen_duration",
+		"heal",
+		"holy_damage",
+		"holy_shield_cap",
+		"holy_shield_restore",
+		"instability_fission_stacks_retained",
+		"judgment_damage_dealt",
+		"judgment_holy_damage_taken",
+		"lightning_chain_range",
+		"luck",
+		"max_hp",
+		"move_speed",
+		"overload_conductive_stacks_retained",
+		"pickup_radius",
+		"pre_boss_blessing_options",
+		"primary_attack_damage",
+		"projectile_speed",
+		"radius",
+		"soul_gain",
+		"status_duration",
+		"trap_interval"
+	],
+	"fusion_events": [
+		"on_cast",
+		"post_damage_hit",
+		"area_tick",
+		"area_created",
+		"area_overlap",
+		"projectile_area_entered",
+		"status_tick",
+		"status_applied",
+		"status_expired",
+		"reaction_resolved",
+		"cursed_resolved",
+		"frozen_shattered",
+		"on_enemy_killed",
+		"shield_gained",
+		"shield_broken",
+		"enemy_preparing_attack",
+		"fusion_clock",
+		"area_pulse",
+		"chain_select",
+		"storm_strike"
+	],
+	"fusion_operations": [
+		"effects",
+		"targets",
+		"resolve_targets",
+		"at_rift",
+		"retarget",
+		"curse_charge",
+		"curse_freeze",
+		"curse_thaw",
+		"interrupt",
+		"next_charge",
+		"consume_charge",
+		"copy_curse",
+		"curse_echo",
+		"reaction_echo",
+		"teleport",
+		"area_clone",
+		"wire",
+		"summon_one",
+		"curse_shorten_mark",
+		"marked_effects",
+		"consume_effects",
+		"area_edge",
+		"reverse_echo",
+		"beam",
+		"preferred_projectiles",
+		"teleport_shard",
+		"path_jump",
+		"store_area_charge",
+		"consume_area_charge",
+		"shatter_targets",
+		"chain_priority",
+		"count_targets",
+		"curse_resume",
+		"transfer_curse",
+		"death_effects",
+		"rift_projectile",
+		"full_shield_effects",
+		"projectile_path",
+		"caster_effects",
+		"holy_overload",
+		"area_curse_shorten",
+		"extend_area",
+		"dual_burst",
+		"area_curse_exchange"
 	]
 }

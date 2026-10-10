@@ -24,6 +24,8 @@ signal skill_changed
 var active_skills: Dictionary = {}
 var passive_skills: Dictionary = {}
 var learned_skill_ids: Dictionary = {}
+var _learned_god_school_ids: Array[StringName] = []
+var run_generation: int = 0
 var passive_modifiers: Array = []
 var _skill_effect_modifier_source_ids: Array[String] = []
 var _primary_attack_method: RefCounted = null
@@ -39,6 +41,8 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 	var definition_data: Dictionary = _get_skill_definition_data(id)
 	if definition_data.is_empty():
 		return false
+	if not preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(get_parent(), definition_data).available:
+		return false
 	if _is_starting_attack_method_definition(definition_data):
 		return false
 	var category: String = _category_from_skill_type(definition_data)
@@ -48,6 +52,10 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 		return false
 	if not _can_learn_god_school_definition(definition_data):
 		return false
+	var capacity: StringName = SkillSlotPolicyScript.capacity_group(definition_data)
+	if capacity in [&"core", &"fusion"]:
+		for owned: RefCounted in get_all_skills():
+			if StringName(String(owned.skill_type)) == capacity: return false
 	var replaced_active_skill_id: StringName = &""
 	if category == "active":
 		replaced_active_skill_id = _find_replaced_active_skill_id(id, definition_data)
@@ -73,6 +81,8 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 		active_skills[id] = skill_instance
 	_refresh_skill_modifier_payload(skill_instance)
 	learned_skill_ids[id] = true
+	var school_id: StringName = _get_skill_instance_primary_god_school(skill_instance)
+	if school_id != &"" and not _learned_god_school_ids.has(school_id): _learned_god_school_ids.append(school_id)
 	skill_added.emit(id)
 	skill_changed.emit()
 	return true
@@ -144,7 +154,7 @@ func get_primary_attack_id() -> StringName:
 ## 作用：遍历已拥有技能去重收集主要神系，不将融合定义计为新神系。
 ## 使用：由本文件 get_learned_god_school_count/_can_learn_god_school_definition 调用。
 func get_learned_god_schools() -> Array[StringName]:
-	var schools: Array[StringName] = []
+	var schools: Array[StringName] = _learned_god_school_ids.duplicate()
 	for skill_instance: RefCounted in get_all_skills():
 		var school: StringName = _get_skill_instance_primary_god_school(skill_instance)
 		if school != &"" and not schools.has(school):
@@ -263,6 +273,7 @@ func _get_primary_starting_skill_data() -> Dictionary:
 func _remove_active_skill(skill_id: StringName) -> void:
 	if skill_id == &"":
 		return
+	_clear_temporary_skill_sources(skill_id)
 	active_skills.erase(skill_id)
 	_remove_skill_effect_modifier_source(skill_id)
 	_remove_passive_modifiers_for_skill(skill_id)
@@ -287,6 +298,12 @@ func _remove_skill_effect_modifier_source(skill_id: StringName) -> void:
 		owner.call("clear_run_modifier_source", source_id)
 	_skill_effect_modifier_source_ids.erase(source_id)
 
+func _clear_temporary_skill_sources(skill_id: StringName) -> void:
+	var owner: Node = get_parent()
+	var store: Node = owner.get_node_or_null("ModifierStore") if owner != null else null
+	if store != null:
+		store.call("clear_skill_sources", skill_id)
+
 
 ## 作用：把 Variant 转为字符串，null时使用默认文字。
 ## 使用：default_value 为缺值备用结果。
@@ -303,8 +320,7 @@ func upgrade_skill(skill_id: Variant, rarity: String = "") -> bool:
 
 	var id: StringName = StringName(skill_instance.get("skill_id"))
 	var new_level: int = int(skill_instance.get("current_level"))
-	if rarity != "":
-		skill_instance.set("current_rarity", rarity)
+	skill_instance.set("current_rarity", SkillGrowthScalingScript.keep_highest_rarity(String(skill_instance.get("current_rarity")), rarity))
 	_refresh_skill_modifier_payload(skill_instance)
 	skill_upgraded.emit(id, new_level)
 	skill_changed.emit()
@@ -339,9 +355,29 @@ func get_passive_skills() -> Array:
 ## 作用：清空主动、被动、学习历史、主攻击和技能效果来源，并发变更信号。
 ## 使用：会发出对应变更信号。
 func clear_skills() -> void:
+	if get_tree() != null:
+		for skill: RefCounted in get_all_skills(): _clear_origin_runtime(get_tree().root, StringName(String(skill.get("skill_id"))))
+	var owner: Node = get_parent()
+	var store: Node = owner.get_node_or_null("ModifierStore") if owner != null else null
+	if store != null:
+		store.call("clear_timed_sources")
+	var bus: Node = owner.get_node_or_null("SkillEventBus") if owner != null else null
+	if bus != null and bus.has_method("reset_run_state"):
+		bus.call("reset_run_state")
+	if owner != null:
+		owner.set_meta("holy_guard_ready_at",0.0)
+		owner.set_meta("holy_guardians",[])
+		owner.set_meta("fire_passive_shield",0)
+		owner.set_meta("fire_passive_shield_expires_at",0.0)
+		owner.set_meta("ordinary_replacement_used", false)
+		owner.set_meta("core_offer_misses", 0)
+		owner.remove_meta("core_offer_level")
+		owner.remove_meta("core_offer_due")
 	active_skills.clear()
 	passive_skills.clear()
 	learned_skill_ids.clear()
+	_learned_god_school_ids.clear()
+	run_generation += 1
 	passive_modifiers.clear()
 	_primary_attack_method = null
 	_clear_skill_effect_modifier_sources()
@@ -462,14 +498,20 @@ func _scale_modifier_source_values(modifier: Dictionary, skill_instance: RefCoun
 func _scale_modifier_value(key: String, value: Variant, skill_instance: RefCounted) -> Variant:
 	if not _is_number(value):
 		return value
+	# Penalties and explicit cooldown/threshold/healing/shield rules do not grow with rarity.
+	if float(value) < 0.0 or key.contains("cooldown") or key.contains("threshold") or key.contains("heal") or key.contains("shield"):
+		return value
 	var stat_kind: String = _modifier_stat_kind(key, skill_instance)
-	var scaled: float = SkillGrowthScalingScript.apply_to_number(float(value), skill_instance, stat_kind)
+	var affects_geometry_or_time: bool = not key.contains("damage") and (key.contains("duration") or key.contains("radius") or key.contains("area") or key.contains("range") or key.contains("interval"))
+	var scaled: float = float(value) * SkillGrowthScalingScript.stat_multiplier(skill_instance, stat_kind, not affects_geometry_or_time)
 	return roundi(scaled) if typeof(value) == TYPE_INT else scaled
 
 
 ## 作用：按属性键中的冷却、范围、时长或伤害语义确定成长类别。
 ## 使用：skill_instance 为技能运行实例。
 func _modifier_stat_kind(key: String, skill_instance: RefCounted) -> String:
+	if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "passive":
+		return "modifier"
 	if key.contains("cooldown") or key.contains("interval"):
 		return "cooldown"
 	if key.contains("radius") or key.contains("area") or key.contains("range"):
@@ -478,8 +520,6 @@ func _modifier_stat_kind(key: String, skill_instance: RefCounted) -> String:
 		return "duration"
 	if key.contains("damage") or key.contains("attack"):
 		return "damage"
-	if skill_instance != null and _string_or(skill_instance.get("skill_type"), "") == "passive":
-		return "modifier"
 	return "damage"
 
 
@@ -572,3 +612,39 @@ func _is_number(value: Variant) -> bool:
 ## 使用：skill_id 为标准技能 ID。
 func _to_skill_id(skill_id: Variant) -> StringName:
 	return StringName(String(skill_id))
+
+# Only commit removal after add_skill has accepted the replacement. Signals are
+# blocked until both collections and source cleanup represent the new build.
+func replace_ordinary_skill(old_id: StringName, new_id: StringName, rarity: String) -> bool:
+	var old: RefCounted = get_skill(old_id)
+	if old == null or not SkillSlotPolicyScript.counts_active_capacity(_get_skill_definition_data(old_id)):
+		return false
+	var data: Dictionary = _get_skill_definition_data(new_id)
+	if data.is_empty() or not SkillSlotPolicyScript.counts_active_capacity(data) or has_learned_skill(new_id): return false
+	var was_blocked: bool = is_blocking_signals()
+	set_block_signals(true)
+	active_skills.erase(old_id)
+	var accepted: bool = add_skill(new_id, rarity)
+	if not accepted:
+		active_skills[old_id] = old
+		set_block_signals(was_blocked)
+		return false
+	_clear_temporary_skill_sources(old_id)
+	_remove_skill_effect_modifier_source(old_id)
+	_remove_passive_modifiers_for_skill(old_id)
+	_clear_origin_runtime(get_tree().root, old_id)
+	set_block_signals(was_blocked)
+	skill_added.emit(new_id)
+	skill_changed.emit()
+	return true
+
+func _clear_origin_runtime(node: Node, id: StringName) -> void:
+	if node.has_method("clear_origin"): node.call("clear_origin", id)
+	for property: Dictionary in node.get_property_list():
+		if String(property.name) not in ["_context", "damage_packet"]: continue
+		var value: Variant = node.get(property.name)
+		if value is Dictionary and StringName(String(value.get("source_skill_id", value.get("origin_skill_id", value.get("skill_id", ""))))) == id:
+			node.get_parent().remove_child(node)
+			node.queue_free()
+			return
+	for child: Node in node.get_children(): _clear_origin_runtime(child, id)

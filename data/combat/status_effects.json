@@ -188,7 +188,7 @@
 		{
 			"duration": 3.0,
 			"tick_interval": 0.0,
-			"refresh_rule": "refresh_duration",
+			"refresh_rule": "keep_first_deadline",
 			"boss_conversion_rule": "none",
 			"id": "cursed",
 			"display_name": "Cursed",
@@ -268,7 +268,7 @@
 			"display_name": "Burning",
 			"type": "dot",
 			"max_stacks": 5,
-			"consume_stack_on_tick": true,
+			"consume_stack_on_tick": false,
 			"effect": {
 				"dot": true
 			},
@@ -277,7 +277,7 @@
 					"type": "damage",
 					"damage_type": "fire",
 					"source_type": "status",
-					"power_scale": 0.36
+					"power_scale_per_stack": 0.36
 				}
 			],
 			"damage_type": "status_dot",

@@ -16,8 +16,30 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 		params.erase("type")
 
 	match condition_type:
+		"target_status_stacks_at_least":
+			return preload("res://scripts/skills/skill_milestone_runtime.gd").status_stacks(context,String(params.get("status",""))) >= int(params.get("stacks",1))
+		"heavy_player_hit":
+			var owner: Node = context.get("owner",context.get("caster")) as Node
+			return owner != null and float(context.get("amount",0.0)) >= 0.1*float(owner.get("max_health"))
+		"player_inside_area":
+			var area: Node2D = context.get("area") as Node2D
+			var owner: Node2D = context.get("caster") as Node2D
+			return area != null and owner != null and String(area.get("source_id")) == "divine_barrier_field" and owner.global_position.distance_squared_to(area.global_position) <= pow(float(context.get("radius",area.get("radius"))),2)
+		"direct_hit":
+			var packet: Dictionary = context.get("damage_packet", {})
+			return String(packet.get("source_type", "")) != "status" and String(packet.get("damage_origin", "")) != "status_dot" and not context.has("status_id")
+		"origin_skill_type":
+			var origin: RefCounted = context.get("origin_skill_instance") as RefCounted
+			return origin != null and String(origin.get("skill_type")) == String(params.get("skill_type", ""))
+		"fire_ground":
+			var area: Node = context.get("area") as Node
+			return area != null and preload("res://scripts/skills/fire_ground_policy.gd").is_fire_ground(area)
 		"target_has_status":
 			var target: Node = context.get("target") as Node
+			if context.has("target_statuses"):
+				for status: Dictionary in context.target_statuses:
+					if String(status.get("id", "")) == String(params.get("status_id", params.get("status", ""))): return true
+				return false
 			return target != null and target.has_method("has_status") and bool(target.call("has_status", params.get("status_id", params.get("status", ""))))
 		"target_missing_status":
 			return not _target_has_any_status(context.get("target") as Node, [params.get("status_id", params.get("status", ""))])
@@ -41,7 +63,7 @@ static func evaluate(condition: Dictionary, context: Dictionary) -> bool:
 			var relic_manager: Node = context.get("relic_manager") as Node
 			return relic_manager != null and relic_manager.has_method("has_relic") and bool(relic_manager.call("has_relic", params.get("relic_id", "")))
 		"skill_has_tag":
-			return _skill_has_tag(context.get("skill_instance") as RefCounted, str(params.get("tag", "")))
+			return _skill_has_tag(context.get("origin_skill_instance", context.get("skill_instance")) as RefCounted, str(params.get("tag", "")))
 		"source_has_tag":
 			return _source_has_tag(context, str(params.get("tag", "")))
 		"random_chance":
@@ -81,7 +103,7 @@ static func _skill_has_tag(skill_instance: RefCounted, tag: String) -> bool:
 	return definition != null and definition.has_method("has_tag") and bool(definition.call("has_tag", tag))
 
 
-## 作用：依次检查事件标签、来源节点分组与元数据，最后依据来源 ID 推断配置标签。
+## 作用：依次检查事件显式标签、来源节点分组与元数据，来源名称不用于推断标签。
 ## 使用：context 携带 source/area/source_id/source_key；返回布尔判断或执行是否成功。
 static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 	if tag == "":
@@ -98,22 +120,7 @@ static func _source_has_tag(context: Dictionary, tag: String) -> bool:
 			return true
 		if source.has_meta(tag) and bool(source.get_meta(tag)):
 			return true
-	var source_id: String = str(context.get("source_id", context.get("source_key", "")))
-	match tag:
-		"fire_area":
-			return source_id.contains("fire") or source_id.contains("burn") or source_id.contains("lava") or source_id.contains("ember") or source_id.contains("flame")
-		"frost_area":
-			return source_id.contains("frost") or source_id.contains("ice") or source_id.contains("blizzard") or source_id.contains("snow")
-		"thunder_area":
-			return source_id.contains("thunder") or source_id.contains("lightning") or source_id.contains("storm") or source_id.contains("conductive")
-		"curse_area":
-			return source_id.contains("curse") or source_id.contains("cursed") or source_id.contains("soul") or source_id.contains("black")
-		"holy_area":
-			return source_id.contains("holy") or source_id.contains("judgment") or source_id.contains("divine") or source_id.contains("barrier")
-		"chaos_area":
-			return source_id.contains("chaos") or source_id.contains("rift") or source_id.contains("void") or source_id.contains("instability")
-		_:
-			return source_id == tag or source_id.contains(tag)
+	return false
 
 
 ## 作用：读取目标当前血量比例，缺目标时按满血处理。

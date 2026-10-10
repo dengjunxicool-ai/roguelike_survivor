@@ -93,7 +93,7 @@ for (const [id, name, school, fusionSchool, description] of expected) {
   assert(skill.fusion_school === fusionSchool, `${id} fusion_school mismatch`);
   assert(skill.skill_type === "fusion", `${id} type must be fusion`);
   assert(skill.max_level === 2, `${id} max_level must be 2`);
-  assert(skill.description === description, `${id} description mismatch`);
+  assert(skill.description === localizedDescription(description), `${id} description mismatch`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("fusion"), `${id} tags must include fusion`);
   assert(skill.tags.includes(school) && skill.tags.includes(fusionSchool), `${id} tags must include both schools`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have required_schools`);
@@ -101,7 +101,7 @@ for (const [id, name, school, fusionSchool, description] of expected) {
   const minCount = skill.offer_rule.required_min_skill_count || {};
   assert(minCount[school] === 2, `${id} main school required_min_skill_count must be 2`);
   assert(minCount[fusionSchool] === 1, `${id} fusion school required_min_skill_count must be 1`);
-  assert(Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0, `${id} must have runtime trigger rules`);
+  assert((Array.isArray(skill.trigger_rules) && skill.trigger_rules.length > 0) || skill.fusion_rules?.length > 0, `${id} must have runtime trigger rules`);
   assert(Array.isArray(skill.effects), `${id} must have effects array`);
 }
 
@@ -146,3 +146,9 @@ function collectReferences(value) {
 }
 
 console.log("[verify_fusion_skill_system_contract] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

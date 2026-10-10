@@ -1492,3 +1492,12 @@ func _is_dev_run() -> bool:
 		node = node.get_parent()
 	var tree: SceneTree = get_tree()
 	return tree != null and tree.root != null and bool(tree.root.get_meta("developer_mode_enabled", false))
+
+func complete_skill_replacement(upgrade_id: StringName) -> void:
+	var parts: PackedStringArray = String(upgrade_id).split(":")
+	if parts.size() < 2: return
+	var id: StringName = StringName(parts[1])
+	_set_level_up_upgrade_level(id, _get_level_up_upgrade_level(id) + 1)
+	upgrade_applied.emit(upgrade_id)
+	_refresh_skill_configs()
+	_refresh_synergies()

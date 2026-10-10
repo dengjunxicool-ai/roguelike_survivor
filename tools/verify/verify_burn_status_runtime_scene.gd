@@ -35,14 +35,15 @@ func _run() -> void:
 	_expect(not boss_record.is_empty(), "records Boss burning tick")
 	if not normal_record.is_empty():
 		_lines.append("normal_raw=%.2f normal_final=%d" % [float(normal_record.get("raw_amount", 0.0)), int(normal_record.get("final_amount", 0))])
-		_expect(_approx(float(normal_record.get("raw_amount", 0.0)), 36.0), "normal burning raw tick is 36.0 at 100 power")
-		_expect(int(normal_record.get("final_amount", 0)) == 36, "normal burning final tick is 36")
+		_expect(_approx(float(normal_record.get("raw_amount", 0.0)), 180.0), "five-stack burning raw tick is 180.0 at 100 power")
+		_expect(int(normal_record.get("final_amount", 0)) == 180, "normal burning final tick is 180")
 	if not boss_record.is_empty():
 		_lines.append("boss_raw=%.2f boss_final=%d" % [float(boss_record.get("raw_amount", 0.0)), int(boss_record.get("final_amount", 0))])
-		_expect(_approx(float(boss_record.get("raw_amount", 0.0)), 36.0), "Boss burning raw tick is 36.0 at 100 power")
-		_expect(int(boss_record.get("final_amount", 0)) == 23, "Boss burning final tick includes Boss target mitigation")
+		_expect(_approx(float(boss_record.get("raw_amount", 0.0)), 180.0), "Boss five-stack burning raw tick is 180.0 at 100 power")
+		_expect(int(boss_record.get("final_amount", 0)) == 117, "Boss burning final tick includes Boss target mitigation")
 
 	_write_result()
+	if not _failed: print("[verify_burn_status_runtime_scene] PASS")
 	quit(1 if _failed else 0)
 
 

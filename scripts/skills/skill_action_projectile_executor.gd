@@ -7,6 +7,7 @@ class_name SkillActionProjectileExecutor
 ## 作用：解析弹数、发射方式和目标后生成投射物，并补充运行伤害与命中动作。
 ## 使用：params 读取 spread_angle；context 携带 caster/target；返回布尔判断或执行是否成功。
 func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
+	if context.get("event_bus") != null: params = context.event_bus.prepare_geometry(params,context)
 	context = _context_with_resolved_target(params, context)
 	var caster: Node2D = context.get("caster") as Node2D
 	var target: Node2D = context.get("target") as Node2D
@@ -56,6 +57,7 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 ## 作用：生成目标序列，按目标序号、同目标衰减与延时依次发射投射物。
 ## 使用：params 读取 range/targeting_mode/targeting；context 携带 caster；返回布尔判断或执行是否成功。
 func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> bool:
+	if context.get("event_bus") != null: params = context.event_bus.prepare_geometry(params,context)
 	params = _prepare_projectile_burst_params(params)
 	var caster: Node2D = context.get("caster") as Node2D
 	if caster == null:
@@ -79,6 +81,7 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
 	_mark_storm_hail_cast(context, cast_instance_id)
 
+	var main_extra: bool = not targets.is_empty() and preload("res://scripts/skills/skill_milestone_runtime.gd").status_stacks({"target":targets[0]},String(params.get("extra_main_status",""))) >= int(params.get("extra_main_stacks",999))
 	var spawned: int = 0
 	var target_hit_counts: Dictionary = {}
 	for target_variant: Variant in targets:
@@ -107,6 +110,15 @@ func _spawn_projectiles_at_targets(params: Dictionary, context: Dictionary) -> b
 		)
 		spawned += 1
 
+	if main_extra:
+		var extra: Dictionary = params.duplicate(true)
+		extra.erase("extra_main_status")
+		extra["count"] = 1
+		extra["damage"] = {"stat":"power","scale":float(params.get("extra_main_power",0.4))}
+		extra["actions_on_hit"] = []
+		var extra_context: Dictionary = context.duplicate(true)
+		extra_context["target"] = targets[0]
+		_spawn_projectile(extra,extra_context)
 	return spawned > 0
 
 
@@ -174,7 +186,15 @@ func _spawn_targeted_projectile_instance_after_delay(params: Dictionary, project
 	if tree == null:
 		_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
 		return
-	await tree.create_timer(spawn_delay).timeout
+	var manager: Node = source_context.get("skill_manager") as Node
+	var generation: int = int(manager.get("run_generation")) if manager != null else -1
+	var origin_id: StringName = StringName(String(source_context.get("origin_skill_id", source_context.get("skill_id", ""))))
+	var origin: RefCounted = manager.get_skill(origin_id) if manager != null else null
+	await tree.create_timer(spawn_delay, false).timeout
+	var copy_owner: WeakRef = source_context.get("copy_owner") as WeakRef
+	if copy_owner != null and (copy_owner.get_ref() == null or copy_owner.get_ref().is_queued_for_deletion()): return
+	if manager != null and (not is_instance_valid(manager) or int(manager.get("run_generation")) != generation or manager.get_skill(origin_id) != origin):
+		return
 	if caster == null or target == null or not is_instance_valid(caster) or not is_instance_valid(target) or target.is_queued_for_deletion():
 		return
 	_spawn_targeted_projectile_instance_now(params, projectile_params, projectile_context, caster, target, runtime_data, source_context, same_target_hit_index)
@@ -410,6 +430,15 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 				return a_cursed
 			return origin.global_position.distance_squared_to(a.global_position) < origin.global_position.distance_squared_to(b.global_position)
 		)
+	var bus: Node = context.get("event_bus") as Node
+	if bus!=null:
+		var selection: Dictionary=context.duplicate(true)
+		selection["chain_candidates"]=candidates
+		selection["chain_result"]={}
+		selection["position"]=origin.global_position
+		bus.emit_skill_event(&"chain_select",selection)
+		var preferred: Node2D=selection.chain_result.get("target") as Node2D
+		if preferred!=null and candidates.has(preferred): candidates.erase(preferred);candidates.push_front(preferred)
 	var affected: int = 0
 
 	for candidate: Node2D in candidates:
@@ -427,6 +456,12 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 			execute_actions(chain_actions, chained_context)
 		affected += 1
 
+	if params.has("last_target_bonus_power") and affected < max_targets:
+		var last: Node2D = candidates[affected-1] if affected > 0 else context.get("target") as Node2D
+		if last != null:
+			var final_context: Dictionary = context.duplicate(true)
+			final_context.target = last
+			_deal_damage({"amount":{"stat":"power","scale":params.last_target_bonus_power},"damage_type":"thunder","source_type":"cast"},final_context)
 	return affected
 
 

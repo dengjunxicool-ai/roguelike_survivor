@@ -25,6 +25,16 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 	params.erase("type")
 	_apply_growth_to_params(params, effect_type, skill_instance, effect_context)
 	match effect_type:
+		"restore_cooldown":
+			params.erase("_skill_instance")
+			return {"type":"restore_cooldown","params":params}
+		"delayed_output":
+			params["actions"] = to_actions(effect.get("effects",[]),skill_instance)
+			params.erase("effects")
+			params.erase("_skill_instance")
+			return {"type":"delayed_output","params":params}
+		"combustion_explosion":
+			return {"type": "combustion_explosion", "params": params}
 		"damage":
 			return {"type": "deal_damage", "params": _normalize_damage_params(params)}
 		"apply_status":
@@ -72,7 +82,7 @@ static func to_action(effect: Dictionary, skill_instance: RefCounted = null, eff
 		"shatter_frozen":
 			return {"type": "shatter_frozen", "params": params}
 		"spawn_projectile_burst":
-			return {"type": "spawn_projectile_burst", "params": params}
+			return {"type": "spawn_projectile_burst", "params": _normalize_projectile_params(params)}
 		"repeat_area_path":
 			return {"type": "repeat_area_path", "params": params}
 		"spawn_area_from_existing_area":
@@ -107,6 +117,8 @@ static func _normalize_status_params(params: Dictionary) -> Dictionary:
 ## 作用：整理区域效果的伤害、几何、持续时间及 tick 动作参数。
 ## 使用：params 读取 effects_on_tick/_skill_instance/effects_on_apply/effects_on_expire；会原地更新 params.actions_on_tick/actions_on_apply/actions_on_expire。
 static func _normalize_area_params(params: Dictionary) -> Dictionary:
+	if params.has("effects_on_interval"):
+		params["actions_on_interval"] = to_actions(_get_array(params.effects_on_interval), params.get("_skill_instance", null) as RefCounted, "tick")
 	if params.has("effects_on_tick"):
 		params["actions_on_tick"] = to_actions(_get_array(params.get("effects_on_tick", [])), params.get("_skill_instance", null) as RefCounted, "tick")
 	if params.has("effects_on_apply"):
@@ -150,6 +162,8 @@ static func _normalize_chain_params(params: Dictionary) -> Dictionary:
 ## 作用：整理按状态层数造成伤害或消耗状态的动作参数。
 ## 使用：params 读取 status/status_id/power_scale_per_stack/amount_per_stack；会原地更新 params.status_id/amount_per_stack。
 static func _normalize_status_stack_damage_params(params: Dictionary) -> Dictionary:
+	if params.has("statuses") and not params.has("status_ids"):
+		params["status_ids"] = params["statuses"].duplicate()
 	if params.has("status") and not params.has("status_id"):
 		params["status_id"] = params["status"]
 	if params.has("power_scale_per_stack") and not params.has("amount_per_stack"):
@@ -173,10 +187,14 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 		return
 	params["_skill_instance"] = skill_instance
 	match effect_type:
+		"chain_to_targets":
+			_scale_damage_params(params,skill_instance)
 		"damage":
-			if effect_context != "tick":
-				_scale_damage_params(params, skill_instance)
-		"spawn_area", "create_explosion", "spawn_trap", "spawn_area_from_existing_area":
+			_scale_damage_params(params, skill_instance)
+		"instant_area_hit", "damage_by_status_stack":
+			_scale_damage_params(params, skill_instance)
+			_scale_numeric_keys(params, skill_instance, ["power_scale_per_stack"], "damage")
+		"combustion_explosion", "spawn_area", "create_explosion", "spawn_trap", "spawn_area_from_existing_area":
 			_scale_numeric_keys(params, skill_instance, ["radius", "radius_r", "collision_radius", "collision_radius_r", "area_radius", "area_radius_r", "pull_radius", "pull_radius_r"], "radius")
 			_scale_numeric_keys(params, skill_instance, ["duration"], "duration")
 			_scale_damage_params(params, skill_instance)
@@ -193,6 +211,8 @@ static func _apply_growth_to_params(params: Dictionary, effect_type: String, ski
 ## 作用：对伤害动作的 amount 或 damage 配置施加伤害成长。
 ## 使用：params 读取 power_scale/scale/amount/damage；skill_instance 为技能运行实例；会原地更新 params.power_scale/scale/amount。
 static func _scale_damage_params(params: Dictionary, skill_instance: RefCounted) -> void:
+	for key: String in ["extra_main_power","last_target_bonus_power"]:
+		if params.has(key): params[key] = SkillGrowthScalingScript.apply_to_number(float(params[key]),skill_instance,"damage")
 	if params.has("power_scale"):
 		params["power_scale"] = SkillGrowthScalingScript.apply_to_number(float(params.get("power_scale", 0.0)), skill_instance, "damage")
 	if params.has("scale"):

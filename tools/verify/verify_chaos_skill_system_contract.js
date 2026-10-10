@@ -34,13 +34,13 @@ const expected = [
   ["chaos_cast_mutation_pulse", "异变脉冲", "cast", "周期性释放脉冲，使敌人随机获得减速、易伤、缩小、沉默中的一种负面异变"],
   ["chaos_summon_chaos_clone", "混沌分身", "summon", "召唤一个分身，模仿玩家最近一次普攻或技能，但伤害降低"],
   ["chaos_summon_void_maw", "虚空巨口", "summon", "召唤固定虚空巨口，持续吸附附近敌人，并吞噬低生命小怪"],
-  ["chaos_passive_entropy_growth", "熵增", "passive", "每次 Instability 裂变后，玩家获得一层随机强化，强化从伤害、范围、冷却、速度中抽取"],
-  ["chaos_passive_geometric_imbalance", "几何失衡", "passive", "弹体类攻击有概率发生分裂、回旋或折返，但单次伤害略微降低"],
-  ["chaos_passive_anomalous_stability", "反常稳定", "passive", "连续触发若干次混沌效果后，下一次混沌效果必定触发最高收益版本"],
+  ["chaos_passive_entropy_growth", "熵增", "passive", "裂变后按伤害、范围、冷却、速度轮换获得12%强化，持续5秒，最多保留最近两种。"],
+  ["chaos_passive_geometric_imbalance", "几何失衡", "passive", "原始弹体伤害为90%，按分裂、回旋、弹跳轮换；最多两枚35%子弹，子代不再变化，回旋和弹跳各最多一次。"],
+  ["chaos_passive_anomalous_stability", "反常稳定", "passive", "每5次成功的正常混沌施法后，下一次正常混沌施法伤害提高25%；失败不消耗。"],
   ["chaos_power_fission_burst", "裂变爆发", "power", "Instability 达到满层时，目标发生裂变，造成范围伤害，并在原地生成短暂小裂隙"],
-  ["chaos_power_echo_cast", "回声施法", "power", "每释放若干次技能类效果后，重复上一次技能，重复版本伤害降低"],
+  ["chaos_power_echo_cast", "回声施法", "power", "每4次正常施法，以40%伤害重放最近一次可复制施法；没有快照时保留充能。"],
   ["chaos_power_chaos_exchange", "混沌交换", "power", "周期性标记两个 Instability 敌人并交换位置，交换时对路径敌人造成撕裂伤害"],
-  ["chaos_core_chaos_singularity", "混沌奇点", "core", "Instability 裂变后不再完全消失，而是为全局奇点充能；奇点满时吸附大范围敌人，复制最近一次非混沌技能，并造成高额虚空爆发"],
+  ["chaos_core_chaos_singularity", "混沌奇点", "core", "每25次合格裂变生成奇点，吸附2秒后造成3P爆发，并以50%伤害复制最近一次非混沌施法。"],
 ];
 
 assert(chaosSkills.length === 14, `expected 14 first-version chaos skills, got ${chaosSkills.length}`);
@@ -51,7 +51,7 @@ for (const [id, name, type, description] of expected) {
   assert(skill, `missing chaos skill ${id}`);
   assert(skill.display_name === name, `${id} name mismatch`);
   assert(skill.skill_type === type, `${id} type mismatch`);
-  assert(skill.description === description, `${id} description must use the requested description field`);
+  assert(skill.description === localizedDescription(description), `${id} description must use the requested description field`);
   assert(Array.isArray(skill.tags) && skill.tags.includes("chaos"), `${id} must be tagged chaos`);
   assert(skill.offer_rule && Array.isArray(skill.offer_rule.required_schools), `${id} must have offer_rule.required_schools`);
   assert(skill.offer_rule.required_schools.includes("chaos"), `${id} must require chaos school`);
@@ -100,7 +100,7 @@ assert((exchangeRule.effects || []).some((effect) => effect.type === "swap_targe
 
 const core = byId.get("chaos_core_chaos_singularity");
 assert(core.exclusive_group === "core_school", "chaos singularity must occupy the core exclusive group");
-assert((core.trigger_rules || []).some((rule) => rule.trigger === "status_max_stack_reached" && rule.threshold === 25), "chaos singularity must count 25 Instability fissions");
+assert(core.trigger_rules.length === 0, "singularity lifecycle belongs to bounded chaos runtime; behavior covered by verify_chaos_mutation_v2");
 assert((core.effects || []).some((effect) => effect.type === "add_modifier" && effect.stat === "instability_fission_stacks_retained" && effect.value === 1), "chaos singularity must retain 1 Instability stack after fission");
 
 for (const objectId of [
@@ -121,3 +121,9 @@ for (const summonId of ["chaos_clone", "void_maw"]) {
 }
 
 console.log("[verify_chaos_skill_system_contract] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

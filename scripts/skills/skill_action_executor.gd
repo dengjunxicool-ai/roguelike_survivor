@@ -28,7 +28,12 @@ func _init() -> void:
 func execute_actions(actions: Array, context: Dictionary) -> void:
 	for action_variant: Variant in actions:
 		if action_variant is Dictionary:
-			execute_action(action_variant, context)
+			var result: Variant = execute_action(action_variant, context)
+			if bool(context.get("is_cast_source", false)) and context.has("_cast_result"):
+				if (result is bool and result) or ((result is int or result is float) and result > 0):
+					context["_cast_result"]["successful_outputs"] = int(context["_cast_result"].get("successful_outputs", 0)) + 1
+					if not context["_cast_result"].has("actions"): context["_cast_result"]["actions"] = []
+					context["_cast_result"]["actions"].append(action_variant.duplicate(true))
 
 
 ## 作用：检查动作条件后按 type 转入对应动作族并返回执行结果。
@@ -36,11 +41,30 @@ func execute_actions(actions: Array, context: Dictionary) -> void:
 func execute_action(action: Dictionary, context: Dictionary) -> Variant:
 	var action_type: String = str(action.get("type", ""))
 	var params: Dictionary = SkillRangeUnitScript.resolve_action_params(_get_dictionary(action.get("params", {})))
+	if params.has("every_n_hits") and int(context.get("area_hit_count",0))%int(params.every_n_hits)!=0: return false
+	if params.has("per_target_interval"):
+		var area: Node = context.get("area") as Node
+		var target: Node = context.get("target") as Node
+		if area == null or target == null: return false
+		var cooldowns: Dictionary = area.get_meta("fusion_action_cooldowns",{})
+		var key: String = "%d:%s" % [target.get_instance_id(),params.get("status_id",action_type)]
+		var now: float = float(context.event_bus.combat_seconds())
+		if float(cooldowns.get(key,-INF))>now: return false
+		cooldowns[key]=now+float(params.per_target_interval)
+		area.set_meta("fusion_action_cooldowns",cooldowns)
+	if bool(params.get("return_only",false)) and not bool(context.get("milestone_returning",false)): return false
+	params = preload("res://scripts/skills/skill_milestone_runtime.gd").prepare(params,context,action_type)
 	var conditions: Array = _get_array(action.get("conditions", params.get("conditions", [])))
 	if not conditions.is_empty() and not ConditionEvaluatorScript.evaluate_all(conditions, context):
 		return null
 
 	match action_type:
+		"restore_cooldown":
+			return preload("res://scripts/skills/skill_milestone_runtime.gd").restore_cooldown(params,context)
+		"delayed_output":
+			return context.event_bus.schedule_output(params.get("actions",[]),context,float(params.get("delay",0.5))) if context.get("event_bus") != null else false
+		"combustion_explosion":
+			return context.event_bus.start_combustion(context,params) if context.get("event_bus") != null else false
 		"deal_damage":
 			return _families["status"]._deal_damage(params, context)
 		"apply_status":

@@ -31,17 +31,43 @@ func _deal_damage_to_target(params: Dictionary, context: Dictionary, damage_targ
 		return false
 	var target_context: Dictionary = context.duplicate(true)
 	target_context["target"] = damage_target
-	var execute_triggered: bool = _should_execute_low_hp_target(params, damage_target)
-	if requires_low_hp_execute and not execute_triggered:
-		return false
+	var policy: Dictionary = _execute_policy(damage_target, params, target_context)
+	var execute_triggered: bool = requires_low_hp_execute and policy.mode == "execute" and policy.eligible
+	if requires_low_hp_execute and not policy.eligible: return false
 	var target_amount: int = _get_low_hp_execute_amount(damage_target, amount) if execute_triggered else amount
+	if requires_low_hp_execute and policy.mode == "bonus":
+		target_amount = roundi(policy.bonus_amount)
+		damage_target.set_meta("frost_execute_ready_at", float(target_context.get("event_bus").combat_seconds())+float(policy.cooldown) if target_context.get("event_bus") != null else float(policy.cooldown))
 	var packet: Dictionary = _build_damage_packet(params, target_context, target_amount, "skill")
 	_inherit_projectile_runtime_damage_packet(packet, target_context, damage_target)
 	if execute_triggered:
 		_apply_low_hp_execute_packet(packet, params, damage_target)
 	packet = _special_rule_executor.call("adjust_damage_packet", packet, target_context)
+	var frozen_execute: bool = execute_triggered and String(context.get("origin_skill_id","")) == "frost_power_shatter_execute" and not context.get("is_copy",false) and damage_target.has_method("get_status_stack") and damage_target.get_status_stack(&"frozen") > 0
+	var status_manager: Node = damage_target.get_node_or_null("StatusEffectManager")
+	var before_statuses: Array = status_manager.get_status_snapshot() if frozen_execute and status_manager != null else []
 	damage_target.call("take_damage", DamagePacketScript.from_dictionary(packet))
+	if frozen_execute and damage_target.has_method("is_dead") and damage_target.is_dead() and context.get("event_bus") != null:
+		var shatter: Dictionary = target_context.duplicate(true)
+		shatter["target_statuses"] = before_statuses
+		shatter["can_generate_secondary_proc"] = true
+		shatter["proc_depth"] = 1
+		context.event_bus.emit_skill_event(&"frozen_shattered", shatter)
 	return true
+
+
+func _execute_policy(target: Node, params: Dictionary, context: Dictionary) -> Dictionary:
+	var rank: String = String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(target).target_type)
+	var maximum: float = maxf(_get_float_property(target, "max_health", 1.0), 1.0)
+	var current: float = _get_float_property(target, "current_health", maximum)
+	var threshold: float = float(params.get("low_hp_execute_threshold", 0.0))
+	if rank == "elite": threshold = minf(threshold, 0.04)
+	var now: float = float(context.get("event_bus").combat_seconds()) if context.get("event_bus") != null else 0.0
+	var eligible: bool = threshold > 0.0 and current > 0.0 and current / maximum <= threshold
+	if rank == "boss":
+		var power: float = _resolve_scaled_amount({"stat":"power", "scale":1.0}, context, "damage")
+		return {"mode":"bonus", "eligible":eligible and now >= float(target.get_meta("frost_execute_ready_at",0.0)), "threshold":threshold, "bonus_amount":minf(0.8*power,0.01*maximum), "cooldown":5.0}
+	return {"mode":"execute", "eligible":eligible, "threshold":threshold, "bonus_amount":0.0, "cooldown":0.0}
 
 
 ## 作用：检查有效存活目标生命比例是否不高于 low_hp_execute_threshold，零门槛不触发。
@@ -105,6 +131,8 @@ func _inherit_projectile_runtime_damage_packet(packet: Dictionary, context: Dict
 	for key_variant: Variant in runtime_packet.keys():
 		var key: String = str(key_variant)
 		if key == "raw_amount" or key == "amount" or key == "target_id":
+			continue
+		if key in ["origin_skill_id", "listener_skill_id", "event_id", "parent_event_id", "proc_depth", "is_copy", "can_generate_secondary_proc", "combat_seconds", "cast_damage_multiplier"] and packet.has(key):
 			continue
 		if (key == "damage_origin" or key == "source_type" or key == "damage_type" or key == "element") and packet.has(key):
 			continue
@@ -277,8 +305,15 @@ func _trigger_overload(params: Dictionary, context: Dictionary) -> bool:
 	var target: Node = context.get("target") as Node
 	if target == null:
 		return false
-	var overload_id: StringName = StringName(str(params.get("status_id", "overload")))
-	return _apply_status_to_target(target, overload_id, {"stacks": 1, "duration": float(params.get("duration", 0.1))})
+	var manager: Node=context.get("skill_manager") as Node
+	var bus: Node=context.get("event_bus") as Node
+	if bus==null or manager==null or not manager.has_skill(&"thunder_power_overload_burst") or int(context.get("proc_depth",0))>=2: return false
+	var child: Dictionary=context.duplicate(true)
+	child["status_id"]=&"conductive"
+	var statuses: Node=target.get_node_or_null("StatusEffectManager")
+	if statuses!=null: child["target_statuses"]=statuses.get_status_snapshot()
+	bus.emit_skill_event(&"status_max_stack_reached",child)
+	return true
 
 
 ## 作用：检查冻结目标并执行粉碎伤害及派生效果。
@@ -289,6 +324,7 @@ func _shatter_frozen(params: Dictionary, context: Dictionary) -> bool:
 		return false
 	if target.has_method("get_status_stack") and int(target.call("get_status_stack", &"frozen")) <= 0:
 		return false
+	context.event_bus.emit_skill_event(&"frozen_shattered",context) if context.get("event_bus") != null else false
 	_consume_status_stack_on_target(target, &"frozen", 1)
 
 	_deal_damage(_prepare_shatter_damage_params(params), context)
@@ -328,8 +364,10 @@ func _mark_target(params: Dictionary, context: Dictionary) -> bool:
 	if mark == "":
 		return false
 
+	if mark == "death_pact" and context.get("event_bus") != null:
+		context.event_bus.register_death_pact(target, resolved_context, 5.0)
 	var mark_key: String = _metadata_identifier(mark)
 	target.set_meta(mark_key, true)
 	if params.has("duration"):
-		target.set_meta(_metadata_key(mark, "expires_at"), float(Time.get_ticks_msec()) / 1000.0 + maxf(float(params.get("duration", 0.0)), 0.0))
+		target.set_meta(_metadata_key(mark, "expires_at"), float(context.get("combat_seconds", 0.0)) + maxf(float(params.get("duration", 0.0)), 0.0))
 	return true

@@ -47,13 +47,17 @@ func _get_burn_base_damage() -> float:
 	return 1.6
 
 
-## 作用：优先取事件 power，否则由 damage/amount 或基础燃烧值推导非负强度。
+## 作用：优先取事件 power，其次取施法者有效攻击力；无施法者的兼容调用使用基础燃烧强度，不从最终命中伤害推导。
 ## 使用：context 携带 power/damage/amount；需由仍存活的宿主创建并调度。
 func _get_burning_power_from_context(context: Dictionary) -> float:
 	var host: RefCounted = _host_ref.get_ref() as RefCounted
 	if context.has("power"):
 		return maxf(float(context.get("power", 0.0)), 0.0)
-	return maxf(float(context.get("damage", context.get("amount", host._get_burn_base_damage() / 0.18))), 0.0)
+	var caster: Node = context.get("caster", context.get("owner")) as Node
+	if caster != null and caster.get("attack_power") != null:
+		var multiplier: Variant = caster.get("damage_multiplier")
+		return maxf(float(caster.get("attack_power")) * (float(multiplier) if multiplier != null else 1.0), 0.0)
+	return host._get_burn_base_damage() / 0.36
 
 
 ## 作用：把本次热连发标记对应的暴击增量加入伤害包。

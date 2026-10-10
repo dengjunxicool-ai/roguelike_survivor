@@ -84,7 +84,7 @@ func _run() -> void:
 	var skill_ids: Array[StringName] = _load_frost_skill_ids()
 	_expect(skill_ids.size() == 14, "loads all 14 first-version frost skills", skill_ids.size())
 	for skill_id: StringName in skill_ids:
-		_expect(bool(_skill_manager.call("add_skill", skill_id)), "learns %s" % str(skill_id), "add_skill=false")
+		_expect(bool(preload("res://tools/verify/skill_rebalance_fixture.gd").install_runtime_skill(_skill_manager, skill_id)), "installs runtime fixture %s" % str(skill_id), "add_skill=false")
 	_expect(_skill_manager.call("get_all_skills").size() == 14, "SkillManager learned 14 frost skills", _skill_manager.call("get_all_skills").size())
 	_expect_skill_modifier("primary_attack_damage_multiplier_add", 0.18, "frost attack applies one primary attack modifier")
 
@@ -138,6 +138,9 @@ func _run() -> void:
 	_expect(_enemy.current_health == 0, "frost shatter execute kills Chilled enemies after primary attack leaves them at 10% HP", _enemy.current_health)
 
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_frost_wolf") as RefCounted)
+	_enemy.current_health = _enemy.max_health
+	# The execution scenario removes dead targets from the registry. Re-register the revived fixture.
+	CombatTargetRegistryScript.get_or_create(root).call("register_enemy", _enemy)
 	_emit(&"on_cast", _skill_manager.call("get_skill", &"frost_summon_ice_crystal_guard") as RefCounted)
 	await process_frame
 	_expect(_count_summons(&"summon_frost_wolf") > 0, "frost wolf spawns through Summon system", _count_summons(&"summon_frost_wolf"))

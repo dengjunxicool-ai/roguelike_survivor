@@ -55,6 +55,9 @@ func tick(delta: float) -> void:
 		_set_property(&"_dash_cooldown", float(config.get("dash_cooldown", 4.5)))
 		_set_property(&"_special_attack_contact_blocked", true)
 		_set_velocity(Vector2.ZERO)
+		_call_enemy(&"notify_preparing_attack", [])
+		if _phase != &"warning" or _float_property(&"_dash_warning_timer") <= 0.0:
+			return
 		_call_enemy(&"_show_dash_attack_warning")
 	else:
 		_apply_chase_movement()

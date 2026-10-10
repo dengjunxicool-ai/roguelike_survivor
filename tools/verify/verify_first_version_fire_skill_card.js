@@ -33,21 +33,21 @@ const fireEffectDescriptions = {
   fire_dash_blazing_run: "冲刺会伤害路径上的敌人，并留下一条火焰路径，使经过敌人 Burning",
   fire_cast_meteor_rain: "天空周期性落下陨石，造成范围伤害，并在落点留下燃烧地面",
   fire_cast_lava_rift: "从最近敌人脚下生成一条向外蔓延的熔岩裂缝，造成线形伤害",
-  fire_cast_scorching_vortex: "在玩家周围生成缓慢旋转的火焰风暴，持续伤害近身敌人",
+  fire_cast_scorching_vortex: "向敌人移动的焚风旋涡，持续伤害并施加燃烧。",
   fire_summon_crimson_dragon: "红龙与你并肩作战，周期性向怪群喷吐龙息，施加 Burning",
   fire_summon_ember_fox_pack: "每当你施加一定次数 Burning，召唤火狐冲向敌人，命中后爆成小火花",
   fire_passive_burning_focus: "Burning 持续时间和伤害提高",
-  fire_passive_overheated_casting: "受到伤害或生命值降低时，短时间提高技能类伤害和范围",
-  fire_passive_scorched_ground_affinity: "敌人站在火焰路径或燃烧地面上时，受到的 Burning 伤害提高",
-  fire_power_combustion_chain: "击杀一定数量 Burning 敌人后，最后一个目标爆炸；爆炸击杀有概率继续引爆",
+  fire_passive_overheated_casting: "受到伤害或生命首次跌破35%时，cast伤害提高30%、范围提高15%，持续5秒；两个入口共享12秒冷却。",
+  fire_passive_scorched_ground_affinity: "仅真实火焰地面中的目标承受更高燃烧伤害。",
+  fire_power_combustion_chain: "累计12点燃烧资源引爆2.4P、R2.2；爆炸击杀有25%概率继续引爆，最多2次派生，每次伤害为前次60%；精英/Boss每5次有效燃烧跳伤+1点。",
   fire_power_ember_attachment: "Burning 敌人死亡后留下余烬，余烬会自动飞向附近敌人并点燃目标",
-  fire_power_ignite_core: "技能类伤害命中 Burning 敌人时，消耗部分 Burning 持续时间，造成一次额外火焰爆发",
-  fire_core_inferno_cycle: "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨",
+  fire_power_ignite_core: "施法命中燃烧目标时消耗1秒燃烧并造成额外伤害；攻击和召唤命中不触发。",
+  fire_core_inferno_cycle: "Burning 敌人死亡必定生成一次小型火焰爆裂；爆裂命中敌人会重新施加 Burning。每触发若干次爆裂，额外召唤一次流星火雨 精英与Boss：每5次有效燃烧跳伤+1点。",
 };
 
 for (const [skillId, expectedDescription] of Object.entries(fireEffectDescriptions)) {
   const skill = findById(skills, skillId, "fire skill");
-  assert(skill.description === expectedDescription, `${skillId} must expose its fire god skill description`);
+  assert(skill.description === localizedDescription(expectedDescription), `${skillId} must expose its fire god skill description`);
   assert(!Object.prototype.hasOwnProperty.call(skill, "effect_description"), `${skillId} must use description instead of effect_description`);
 }
 
@@ -61,3 +61,9 @@ for (const obsoleteId of ["mars_spark_missile", "fire_tornado", "soulburn"]) {
 }
 
 console.log("[verify_first_version_fire_skill_card] PASS");
+
+// M4: preserve the original semantic description contract while localizing player-facing status names.
+function localizedDescription(text) {
+  for (const [from, to] of Object.entries({Burning:'燃烧',Chilled:'寒冷',Frozen:'冻结',Conductive:'导电',Cursed:'诅咒',Judgment:'审判',Instability:'不稳定'})) text = text.replaceAll(from, to).replaceAll(from.toLowerCase(), to);
+  return text;
+}

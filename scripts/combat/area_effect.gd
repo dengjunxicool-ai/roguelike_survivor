@@ -38,7 +38,22 @@ const MAX_TICK_HITS_PER_AREA_FRAME: int = 2
 @export var impact_target_id: String = ""
 @export var impact_target_damage_multiplier: float = 1.0
 
+var _milestone_hits: Dictionary = {}
+var _fusion_total_hits: int = 0
+var _milestone_tick: int = 0
+var _milestone_statuses: Array = []
+var _milestone_parent_first: bool = false
+var _milestone_parent_last: bool = false
+var _return_once: bool = false
+var _returned: bool = false
+var _return_multiplier: float = 1.0
+var spawn_generation: int = 0
+var effect_shape: String = "circle"
+var effect_length: float = 0.0
+var effect_width: float = 0.0
 var _age: float = 0.0
+var _area_step_second: int = 0
+var _fusion_pulse_half: int = 0
 var _tick_timer: float = 0.0
 var _visual_config: Dictionary = {}
 var _visual_mode: String = ""
@@ -72,6 +87,9 @@ var skill_manager: Node
 var relic_manager: Node
 var impact_target: Node
 var actions_on_apply: Array = []
+var actions_on_interval: Array = []
+var action_interval: float = 1.0
+var _action_interval_count: int = 0
 var actions_on_tick: Array = []
 var actions_on_hit: Array = []
 var actions_on_expire: Array = []
@@ -92,6 +110,8 @@ func _ready() -> void:
 ## 作用：按核心、payload、action、上下文、视觉顺序配置，再重置状态启用碰撞与tick登记。
 ## 使用：params为spawn参数；执行on_apply后才裁剪同来源活跃数量。
 func setup(params: Dictionary) -> void:
+	spawn_generation += 1
+	if has_meta("fusion_action_cooldowns"): remove_meta("fusion_action_cooldowns")
 	_apply_area_core_params(params)
 	_apply_area_payload_params(params)
 	_apply_area_action_params(params)
@@ -102,7 +122,9 @@ func setup(params: Dictionary) -> void:
 	_apply_radius(radius)
 	_apply_visual(params)
 	_register_area_effect()
+	_emit_area_event(&"area_created",null)
 	_execute_apply_actions()
+	if source_id==&"lightning_strike_area" and event_bus!=null: _emit_area_event(&"storm_strike",null)
 	_enforce_max_active(int(params.get("max_active", 0)))
 
 
@@ -118,6 +140,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：关闭伤害窗口与碰撞，清空引用、action、命中/候选/待处理tick并注销调度。
 ## 使用：回池前调用，隐藏节点避免残留上下文污染下一次spawn。
 func prepare_for_pool_despawn() -> void:
+	if event_bus != null: event_bus.clear_interaction_object(self)
 	_damage_window_finished = true
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
@@ -138,6 +161,8 @@ func prepare_for_pool_despawn() -> void:
 	_dash_path_end = Vector2.ZERO
 	actions_on_apply.clear()
 	actions_on_tick.clear()
+	actions_on_interval.clear()
+	_action_interval_count = 0
 	actions_on_hit.clear()
 	actions_on_expire.clear()
 	actions_on_death.clear()
@@ -164,6 +189,9 @@ func despawn_or_free() -> void:
 ## 作用：读取伤害量、时长、tick间隔、半径、目标上限和扇形方向。
 ## 使用：规范数值边界，零方向回退向右，否则归一化。
 func _apply_area_core_params(params: Dictionary) -> void:
+	effect_shape = String(params.get("shape","circle"))
+	effect_length = float(params.get("length",0.0))
+	effect_width = float(params.get("width",0.0))
 	damage = maxi(int(params.get("damage", damage)), 0)
 	duration = maxf(float(params.get("duration", duration)), 0.05)
 	tick_interval = maxf(float(params.get("tick_interval", tick_interval)), 0.05)
@@ -199,8 +227,19 @@ func _apply_area_payload_params(params: Dictionary) -> void:
 ## 作用：复制各生命周期action并配置一次命中、触发结束、主目标加成与冲刺路径过滤。
 ## 使用：params用于spawn，路径坐标是世界坐标。
 func _apply_area_action_params(params: Dictionary) -> void:
+	_fusion_total_hits = 0
+	_milestone_hits.clear()
+	_milestone_tick = 0
+	_milestone_parent_first = bool(params.get("milestone_first_tick",false))
+	_milestone_parent_last = bool(params.get("milestone_last_tick",false))
+	_return_once = bool(params.get("return_once",false))
+	_returned = false
+	_return_multiplier = float(params.get("return_damage_multiplier",1.0))
 	actions_on_apply = _get_array(params.get("actions_on_apply", []))
 	actions_on_tick = _get_array(params.get("actions_on_tick", []))
+	actions_on_interval = _get_array(params.get("actions_on_interval", []))
+	action_interval = maxf(float(params.get("action_interval",1.0)),0.05)
+	_action_interval_count = 0
 	actions_on_hit = _get_array(params.get("actions_on_hit", []))
 	actions_on_expire = _get_array(params.get("actions_on_expire", []))
 	actions_on_death = _get_array(params.get("actions_on_death", []))
@@ -240,6 +279,8 @@ func _apply_area_visual_params(params: Dictionary) -> void:
 ## 使用：支持扩圈参数，启用时初始radius取expand_from_radius。
 func _reset_area_runtime_state(params: Dictionary) -> void:
 	_age = 0.0
+	_area_step_second = 0
+	_fusion_pulse_half = 0
 	_tick_timer = 0.0
 	_damage_window_finished = false
 	_finished_by_damage = false
@@ -393,7 +434,7 @@ func _seed_candidate_cache_if_needed() -> void:
 	if _candidate_cache_seeded:
 		return
 	_candidate_cache_seeded = true
-	for body: Node2D in query_target_candidates(global_position, radius):
+	for body: Node2D in query_target_candidates(global_position, geometry_query_radius()):
 		_add_candidate(body)
 
 
@@ -493,7 +534,24 @@ func _physics_process_profiled(delta: float) -> void:
 	if _damage_window_finished:
 		return
 
+	if event_bus != null: event_bus.observe_area(self)
 	_age += delta
+	if not actions_on_interval.is_empty():
+		var steps: int = floori(minf(_age,duration)/action_interval+0.000001)
+		while _action_interval_count < steps:
+			_action_interval_count += 1
+			_execute_adapted_actions(actions_on_interval,null)
+	if event_bus!=null and event_bus.interaction_interest(&"area_pulse",self):
+		var halves: int=floori(minf(_age,duration)*2.0+0.000001)
+		while _fusion_pulse_half<halves:
+			_fusion_pulse_half+=1
+			_emit_area_event(&"area_pulse",null,{"elapsed":_fusion_pulse_half*.5})
+	# Advance the area contract before target budgets; it also runs with no enemies.
+	if source_id == &"divine_barrier_field" and event_bus != null:
+		var steps: int = floori(minf(_age, duration)+0.000001)
+		while _area_step_second < steps:
+			_area_step_second += 1
+			event_bus.emit_skill_event(&"area_step", {"area":self, "area_instance_id":get_instance_id(), "elapsed":float(_area_step_second), "origin_skill_id":damage_packet.get("origin_skill_id",damage_packet.get("source_skill_id",source_id)), "skill_instance":skill_instance, "skill_id":damage_packet.get("source_skill_id",source_id), "caster":caster, "owner":caster, "skill_manager":skill_manager, "position":global_position, "radius":radius})
 	if move_speed > 0.0 and move_direction.length_squared() > 0.0001:
 		global_position += move_direction * move_speed * delta
 	_update_expanding_radius()
@@ -511,7 +569,12 @@ func _physics_process_profiled(delta: float) -> void:
 		_apply_tick_damage()
 
 	if _age >= duration:
-		_finish_damage_window()
+		if _return_once and not _returned:
+			_returned = true
+			_age = 0.0
+			move_direction = -move_direction
+			preload("res://scripts/skills/skill_replay_service.gd").scale_damage(actions_on_tick,_return_multiplier)
+		else: _finish_damage_window()
 
 
 ## 作用：以0.08秒间隔合并程序化重绘。
@@ -591,6 +654,7 @@ func _apply_tick_damage_profiled() -> void:
 
 	_pending_tick_stats = _new_tick_stats()
 	_current_tick_stats = _pending_tick_stats
+	_milestone_tick += 1
 	var targets: Array[Node] = _collect_tick_damage_targets()
 	_pending_tick_target_ids = _get_target_instance_ids(targets)
 	_pending_tick_index = 0
@@ -647,7 +711,6 @@ func _collect_tick_damage_targets() -> Array[Node]:
 
 	_seed_candidate_cache_if_needed()
 	var candidate_count: int = 0
-	var radius_squared: float = radius * radius
 	var snapshot: Array[int] = _candidate_body_order.duplicate()
 	for body_id: int in snapshot:
 		if _damage_window_finished:
@@ -664,7 +727,7 @@ func _collect_tick_damage_targets() -> Array[Node]:
 		candidate_count += 1
 		if not _can_damage_body(body):
 			continue
-		if global_position.distance_squared_to(body.global_position) <= radius_squared and _body_in_effect_shape(body):
+		if _body_in_effect_shape(body):
 			targets.append(body)
 			damaged_bodies[body] = true
 			damaged_count += 1
@@ -719,15 +782,7 @@ func _body_in_effect_shape(body: Node) -> bool:
 	var body_node: Node2D = body as Node2D
 	if body_node == null:
 		return false
-	var to_body: Vector2 = body_node.global_position - global_position
-	if to_body.length_squared() > radius * radius:
-		return false
-	if cone_width_degrees <= 0.0 or cone_width_degrees >= 360.0:
-		return true
-	if to_body.length_squared() <= 0.0001:
-		return true
-	var half_angle: float = deg_to_rad(cone_width_degrees) * 0.5
-	return absf(cone_direction.angle_to(to_body.normalized())) <= half_angle
+	return preload("res://scripts/skills/skill_object_geometry.gd").contains(geometry_shape(),body_node.global_position)
 
 
 ## 作用：按伤害、状态、tick/命中事件、tick/命中/死亡action顺序处理目标。
@@ -735,7 +790,10 @@ func _body_in_effect_shape(body: Node) -> bool:
 func _damage_body(body: Node) -> bool:
 	if not _can_damage_body(body):
 		return false
+	_fusion_total_hits += 1
 	var body_id: int = body.get_instance_id()
+	var status_manager: Node = body.get_node_or_null("StatusEffectManager")
+	_milestone_statuses = status_manager.get_status_snapshot() if status_manager != null else []
 
 	if damage > 0 and body.has_method("take_damage"):
 		body.call(&"take_damage", _get_damage_payload(body))
@@ -744,6 +802,7 @@ func _damage_body(body: Node) -> bool:
 	_emit_area_event(event_on_hit, body)
 	_execute_adapted_actions(actions_on_tick, body)
 	_execute_adapted_actions(actions_on_hit, body)
+	_milestone_hits[body_id] = int(_milestone_hits.get(body_id,0))+1
 	if body.has_method("is_dead") and bool(body.call("is_dead")):
 		_execute_adapted_actions(actions_on_death, body)
 	if damage_once_per_body:
@@ -869,7 +928,7 @@ func _apply_radius(new_radius: float) -> void:
 		return
 
 	var circle_shape: CircleShape2D = collision_shape.shape as CircleShape2D
-	circle_shape.radius = maxf(new_radius, 1.0)
+	circle_shape.radius = geometry_query_radius() if effect_shape in ["line","cross"] else maxf(new_radius, 1.0)
 
 
 ## 作用：判断启用了合法起始与目标半径。
@@ -914,6 +973,14 @@ func _apply_visual(params: Dictionary) -> void:
 ## 作用：按已命名风格绘制，未命名时再处理毒区/毒云。
 ## 使用：引擎重绘回调，只负责视觉。
 func _draw() -> void:
+	if effect_shape in ["line","cross"]:
+		for polygon: PackedVector2Array in preload("res://scripts/skills/skill_object_geometry.gd").polygons(geometry_shape()):
+			var local: PackedVector2Array = PackedVector2Array()
+			for point: Vector2 in polygon: local.append(to_local(point))
+			draw_colored_polygon(local,_visual_color)
+			local.append(local[0])
+			draw_polyline(local,_visual_ring_color,2.0,true)
+		return
 	if _draw_named_visual_style():
 		return
 	if _visual_style == "poison_zone" or _visual_style == "poison_cloud":
@@ -1293,10 +1360,10 @@ func _on_visual_animation_finished() -> void:
 
 ## 作用：发送包含区域、来源、当前命中数和技能服务的规范事件上下文。
 ## 使用：空event_name或无有效总线时无操作。
-func _emit_area_event(event_name: StringName, target: Node) -> void:
+func _emit_area_event(event_name: StringName, target: Node, extra: Dictionary = {}) -> void:
 	if event_bus == null or event_name == &"" or not event_bus.has_method("emit_skill_event"):
 		return
-	event_bus.call("emit_skill_event", event_name, DamageTraceContextScript.normalize_event_context({
+	var c: Dictionary = DamageTraceContextScript.normalize_event_context({
 		"caster": caster,
 		"owner": caster,
 		"target": target,
@@ -1317,7 +1384,9 @@ func _emit_area_event(event_name: StringName, target: Node) -> void:
 		"damage_type": damage_type,
 		"damage_packet": damage_packet,
 		"position": global_position
-	}))
+	})
+	c.merge(extra,true)
+	event_bus.call("emit_skill_event",event_name,c)
 
 
 ## 作用：读取字典配置，非字典输入返回空字典。
@@ -1364,6 +1433,12 @@ func _execute_adapted_actions(actions: Array, target: Node) -> void:
 		"damage_type": damage_type,
 		"damage_packet": damage_packet,
 		"area_tick_stats": _current_tick_stats,
+		"area_hit_count":_fusion_total_hits,
+		"milestone_hit_index":int(_milestone_hits.get(target.get_instance_id(),0)) if target != null else 0,
+		"milestone_first_tick":_milestone_parent_first or _milestone_tick <= 1,
+		"milestone_last_tick":_milestone_parent_last or _age+tick_interval >= duration,
+		"milestone_returning":_returned,
+		"target_statuses":_milestone_statuses,
 		"position": global_position
 	}))
 
@@ -1375,9 +1450,13 @@ func _execute_apply_actions() -> void:
 		return
 	if impact_target != null:
 		if _can_damage_body(impact_target):
+			var statuses: Node = impact_target.get_node_or_null("StatusEffectManager")
+			_milestone_statuses = statuses.get_status_snapshot() if statuses != null else []
 			_execute_adapted_actions(actions_on_apply, impact_target)
 		return
 	for target: Node in _collect_tick_damage_targets():
+		var statuses: Node = target.get_node_or_null("StatusEffectManager")
+		_milestone_statuses = statuses.get_status_snapshot() if statuses != null else []
 		_execute_adapted_actions(actions_on_apply, target)
 
 
@@ -1453,3 +1532,8 @@ func _uses_programmatic_visual() -> bool:
 		"smoke_zone",
 		"acid_cone"
 	].has(_visual_style)
+
+func geometry_shape() -> Dictionary:
+	return {"position":global_position,"radius":radius,"shape":"cone" if cone_width_degrees>0.0 and cone_width_degrees<360.0 else effect_shape,"angle":cone_width_degrees,"direction":cone_direction,"length":effect_length,"width":effect_width}
+func geometry_query_radius() -> float:
+	return maxf(radius,sqrt(effect_length*effect_length+effect_width*effect_width)) if effect_shape in ["line","cross"] else radius

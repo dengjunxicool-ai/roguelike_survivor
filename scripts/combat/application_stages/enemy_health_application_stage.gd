@@ -17,6 +17,7 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 	var packet: DamagePacket = context.get("packet")
 	var damage_result: Dictionary = context.get("damage_result")
 	var final_amount: int = int(context.get("final_amount"))
+	preload("res://scripts/runtime/skill_balance_metrics.gd").observe(enemy,{"kind":"damage","amount":final_amount,"health_before":enemy.get("current_health"),"damage_origin":str(packet.damage_origin),"source_skill_id":str(packet.get_value("source_skill_id","unknown"))})
 	var current_health: int = maxi(int(enemy.get("current_health")) - final_amount, 0)
 	enemy.set("current_health", current_health)
 	enemy.set_meta("last_damage_was_critical", bool(damage_result.get("is_critical", false)))

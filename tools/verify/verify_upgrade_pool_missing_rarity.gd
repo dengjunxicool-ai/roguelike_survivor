@@ -43,7 +43,7 @@ func _run() -> void:
 	var option: RefCounted = options[0] as RefCounted
 	_assert(option != null, "upgrade option is created")
 	var rarity: String = String(option.get("rarity"))
-	_assert(rarity == "epic" or rarity == "legendary", "missing skill definition rarity follows max_level 2 pool")
+	_assert(rarity == String(skill_instance.current_rarity), "missing definition rarity preserves the instance's default quality")
 	_assert(String(option.get("id")).ends_with(":%s" % rarity), "skill level option id preserves generated rarity")
 
 	print("[verify_upgrade_pool_missing_rarity] PASS")

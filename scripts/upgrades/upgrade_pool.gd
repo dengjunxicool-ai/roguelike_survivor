@@ -96,6 +96,7 @@ func _select_growth_stage_options(player: Node, requested_count: int) -> Array:
 	_enforce_guaranteed_options(player, selected_options, requested_count)
 	_enforce_god_skill_learn_option(player, selected_options, requested_count)
 	_enforce_ordinary_active_learn_option(player, selected_options, requested_count)
+	_enforce_progression(player, selected_options, god_skill_learn_options, requested_count)
 	return selected_options
 
 
@@ -125,9 +126,11 @@ func _build_skill_level_up_options(player: Node) -> Array:
 		if definition != null:
 			skill_name = _get_definition_string(definition, "display_name", skill_name)
 			max_level = int(definition.get("max_level"))
-			rarity = SkillGrowthScalingScript.pick_rarity_for_max_level(max_level, _rng)
+			rarity = current_rarity
 
-		options.append(_make_option(UpgradeOptionBuilderScript.build_skill_level_up_data(skill_id, next_level, skill_name, rarity, current_rarity, max_level)))
+		var data: Dictionary = UpgradeOptionBuilderScript.build_skill_level_up_data(skill_id, next_level, skill_name, rarity, current_rarity, max_level)
+		data.payload["weight"] = stage_weight(player, "upgrade", {})
+		options.append(_make_option(data))
 
 	return options
 
@@ -171,6 +174,7 @@ func _build_god_skill_learn_options(player: Node) -> Array:
 		var option_data: Dictionary = SkillLearnOptionBuilderScript.build_option_data(skill, upgrade, rarity)
 		if option_data.is_empty():
 			continue
+		option_data.payload["weight"] = stage_weight(player, "learn", skill)
 		options.append(_make_option(option_data))
 
 	return options
@@ -537,7 +541,7 @@ func _is_ordinary_active_skill(skill: Dictionary) -> bool:
 	if _string_or(skill.get("exclusive_group", ""), "") == "dash_school":
 		return false
 	var skill_type: String = _string_or(skill.get("skill_type", ""), "")
-	return skill_type != "attack" and skill_type != "dash" and skill_type != "passive"
+	return skill_type in ["cast", "summon", "power"]
 
 
 ## 作用：随机查找带保底标签的属性升级卡，并替换已选末项或追加首项。
@@ -622,3 +626,66 @@ func _to_string_array(value: Array) -> Array[String]:
 	for item: Variant in value:
 		strings.append(_string_or(item, ""))
 	return strings
+
+func stage_weight(player: Node, category: String, data: Dictionary) -> float:
+	var level: int = preload("res://scripts/skills/skill_requirement_policy.gd").player_level(player)
+	if category == "upgrade": return 1.5 if level <= 3 else 2.0
+	var type: String = String(data.get("skill_type", ""))
+	if type == "core": return 1.5 if level >= 8 else 0.0
+	if type == "fusion": return 1.5 if level >= 8 else 1.0
+	if type == "passive": return 1.0
+	var manager: Node = player.get_node_or_null("SkillManager")
+	var new_school: bool = manager != null and not manager.get_learned_god_schools().has(StringName(String(data.get("school", ""))))
+	if level <= 3: return 2.0 if new_school else 1.0
+	return 1.5 if level <= 7 else 1.0
+
+func _enforce_progression(player: Node, selected: Array, candidates: Array, count: int) -> void:
+	var protected: Dictionary = {}
+	# Rebuild reservations in priority order after all legacy guarantee passes.
+	_reserve_progression(selected, _build_skill_level_up_options(player), protected, count)
+	if _offer_policy.is_low_hp(player):
+		var survival: Array = []
+		var tags: Array[String] = ["survival"]
+		for option: RefCounted in _build_level_up_upgrade_options(player):
+			if _offer_policy.option_has_any_tag(option, tags): survival.append(option)
+		_reserve_progression(selected, survival, protected, count)
+	var manager: Node = player.get_node_or_null("SkillManager")
+	var status_candidates: Array = []
+	var core_candidates: Array = []
+	var sources: Dictionary = preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(player, {}).capability_sources
+	var has_status: bool = false
+	for cap: Variant in sources:
+		if String(cap).begins_with("apply_"): has_status = true
+	for option: RefCounted in candidates:
+		var data: Dictionary = GameData.get_skill(_get_option_learn_skill_id(option))
+		if data.get("skill_type", "") == "core": core_candidates.append(option)
+		for cap: Variant in data.get("capabilities", []):
+			if String(cap).begins_with("apply_"): status_candidates.append(option); break
+	if not has_status and not status_candidates.is_empty():
+		_reserve_progression(selected, status_candidates, protected, count)
+	var level: int = preload("res://scripts/skills/skill_requirement_policy.gd").player_level(player)
+	var new_level: bool = int(player.get_meta("core_offer_level", -1)) != level
+	if new_level:
+		player.set_meta("core_offer_level", level)
+		player.set_meta("core_offer_due", int(player.get_meta("core_offer_misses", 0)) >= 3)
+	var shown: bool = false
+	for option: RefCounted in selected:
+		if GameData.get_skill(_get_option_learn_skill_id(option)).get("skill_type", "") == "core": shown = true
+	if not shown and not core_candidates.is_empty() and bool(player.get_meta("core_offer_due", false)):
+		shown = _reserve_progression(selected, core_candidates, protected, count)
+	if shown or core_candidates.is_empty(): player.set_meta("core_offer_misses", 0)
+	elif new_level: player.set_meta("core_offer_misses", int(player.get_meta("core_offer_misses", 0)) + 1)
+
+func _reserve_progression(selected: Array, candidates: Array, protected: Dictionary, count: int) -> bool:
+	for existing: RefCounted in selected:
+		for candidate: RefCounted in candidates:
+			if existing.id == candidate.id: protected[String(existing.id)] = true; return true
+	if candidates.is_empty(): return false
+	var option: RefCounted = candidates[0]
+	if selected.size() < count: selected.append(option); protected[String(option.id)] = true; return true
+	for index in range(selected.size() - 1, -1, -1):
+		if not protected.has(String(selected[index].id)):
+			selected[index] = option
+			protected[String(option.id)] = true
+			return true
+	return false

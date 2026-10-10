@@ -31,4 +31,11 @@ static func is_dash(definition: Dictionary) -> bool:
 ## 作用：排除攻击和冲刺槽，判断是否占普通主动技能容量。
 ## 使用：definition 为技能定义。
 static func counts_active_capacity(definition: Dictionary) -> bool:
-	return not is_attack(definition) and not is_dash(definition)
+	return capacity_group(definition) == &"ordinary"
+
+static func capacity_group(definition: Dictionary) -> StringName:
+	if is_attack(definition): return &"attack"
+	if is_dash(definition): return &"dash"
+	var type: String = String(definition.get("skill_type", ""))
+	if type in ["passive", "core", "fusion"]: return StringName(type)
+	return &"ordinary"

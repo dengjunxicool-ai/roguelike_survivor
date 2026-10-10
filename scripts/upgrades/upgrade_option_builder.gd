@@ -6,6 +6,7 @@ class_name UpgradeOptionBuilder
 ## 作用：构建已拥有技能升至指定下一等级的卡片，不直接改技能等级。
 ## 使用：skill_id 为标准技能 ID；rarity 为目标稀有度。
 static func build_skill_level_up_data(skill_id: StringName, next_level: int, skill_name: String, rarity: String, current_rarity: String, max_level: int) -> Dictionary:
+	rarity = preload("res://scripts/skills/skill_growth_scaling.gd").keep_highest_rarity(current_rarity,rarity)
 	return {
 			"id": "skill_level_up:%s:%d:%s" % [_string_or(skill_id, ""), next_level, rarity],
 			"type": "skill_level_up",
@@ -15,7 +16,7 @@ static func build_skill_level_up_data(skill_id: StringName, next_level: int, ski
 			"tags": ["skill", "level_up"],
 			"affected_origin": "当前技能",
 			"does_not_affect": "不学习新的技能。",
-			"recommended_reason": "提高已拥有技能的等级。",
+			"recommended_reason": "提高已拥有技能的等级，保持当前品质。",
 			"level_text": "Lv%d / %d" % [next_level, maxi(max_level, next_level)],
 			"payload": {
 				"skill_id": skill_id,

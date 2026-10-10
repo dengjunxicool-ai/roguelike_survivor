@@ -47,6 +47,16 @@ func _apply_choice_option(option: Dictionary, context: Dictionary) -> Dictionary
 
 	var upgrade_id: StringName = StringName(String(option.get("id", "")))
 	if player != null and player.has_method("apply_upgrade") and upgrade_id != &"":
+		var parts: PackedStringArray = String(upgrade_id).split(":")
+		if parts.size() >= 2 and parts[0] == "level_up_upgrade":
+			var definition: Dictionary = preload("res://scripts/upgrades/skill_learn_definition_repository.gd").resolve_upgrade(StringName(parts[1]))
+			var manager: Node = player.get_node_or_null("SkillManager")
+			var data: Dictionary = GameData.get_skill(definition.get("learn_skill_id", ""))
+			if manager != null and manager.is_active_skill_full() and not data.is_empty() and preload("res://scripts/skills/skill_slot_policy.gd").counts_active_capacity(data):
+				var service: RefCounted = preload("res://scripts/skills/skill_replacement_service.gd").new()
+				var tx: Dictionary = service.begin(player, StringName(String(data.id)), parts[2] if parts.size() > 2 else "normal")
+				if tx.is_empty(): return {"handled": false}
+				return {"handled": true, "replacement_pending": true, "transaction": tx, "service": service, "applied_upgrade_id": upgrade_id}
 		player.call(&"apply_upgrade", upgrade_id)
 		return {"handled": true, "applied_upgrade_id": upgrade_id}
 	return {"handled": false}

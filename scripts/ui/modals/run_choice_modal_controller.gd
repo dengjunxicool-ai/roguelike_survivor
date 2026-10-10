@@ -217,7 +217,7 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 
 	var button: Button = Button.new()
 	button.text = ""
-	button.tooltip_text = ""
+	button.tooltip_text = _get_option_description_text(option)+"\n"+_get_option_effect_text(option)
 	button.clip_contents = true
 	button.custom_minimum_size = CARD_DESIGN_SIZE
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -250,6 +250,9 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 
 	var description_label: Label = _add_card_label(content_layer, _get_option_description_text(option), 15, VERTICAL_ALIGNMENT_CENTER)
 	description_label.name = "SkillCardDescription"
+	description_label.max_lines_visible = 3
+	description_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	description_label.clip_contents = true
 	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
 	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
 	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
@@ -405,6 +408,9 @@ func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
 
 	var description_label: Label = _add_card_label(content_layer, "", 15, VERTICAL_ALIGNMENT_CENTER)
 	description_label.name = "SkillCardDescription"
+	description_label.max_lines_visible = 3
+	description_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	description_label.clip_contents = true
 	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
 	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
 	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
@@ -510,7 +516,7 @@ func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: Strin
 		if button.pressed.is_connected(callable):
 			button.pressed.disconnect(callable)
 	button.pressed.connect(Callable(self, "_select_upgrade_option").bind(option, return_state, consumes_pending_level))
-	button.tooltip_text = ""
+	button.tooltip_text = _get_option_description_text(option)+"\n"+_get_option_effect_text(option)
 	var background: TextureRect = slot.get("background") as TextureRect
 	var background_texture: Texture2D = _load_texture(_get_choice_card_background_texture(option))
 	if background != null:
@@ -844,6 +850,17 @@ func _select_upgrade_option(option: Dictionary, return_state: String, consumes_p
 		"tree": _tree
 	})
 	var command_result: Dictionary = _get_dictionary(command_result_variant)
+	if not bool(command_result.get("handled", false)): return
+	if bool(command_result.get("replacement_pending", false)):
+		var view: CanvasLayer = preload("res://scripts/ui/skill_replacement_view.gd").new()
+		_tree.root.add_child(view)
+		view.open(player, command_result.service, command_result.transaction, func() -> void:
+			player.complete_skill_replacement(command_result.applied_upgrade_id)
+			_finish_upgrade_choice(command_result, return_state, consumes_pending_level))
+		return
+	_finish_upgrade_choice(command_result, return_state, consumes_pending_level)
+
+func _finish_upgrade_choice(command_result: Dictionary, return_state: String, consumes_pending_level: bool) -> void:
 	if bool(command_result.get("consumed_reward", false)) and pending_reward_kinds.size() > 0:
 		pending_reward_kinds.remove_at(0)
 
@@ -907,6 +924,16 @@ func _get_option_rarity_text(option: Dictionary) -> String:
 ## 作用：获取选项描述文本，供当前模块后续逻辑使用。
 ## 使用：本文件由 _add_upgrade_choice_card、_bind_choice_card、_get_option_effect_text 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_description_text(option: Dictionary) -> String:
+	var player: Node = _get_player()
+	var id: StringName = _get_option_skill_id(option)
+	if player != null and id != &"":
+		var payload: Dictionary = option.get("payload",{})
+		var preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,id,int(payload.get("level",1)),str(payload.get("target_rarity",option.get("rarity","normal"))))
+		if not preview.is_empty():
+			var text: String = "品质保持%s" % preload("res://scripts/ui/skill_preview_service.gd").rarity_name(preview.rarity)
+			if preview.cooldown > 0: text = "%s %.2fs · " % [preview.cooldown_label,preview.cooldown]+text
+			if not preview.next_milestone.is_empty(): text += "\nLv%d：%s" % [int(preview.next_milestone.level),preview.next_milestone.get("description","强化")]
+			return text + "\n" + str(GameData.get_skill(id).get("description",""))
 	var description: String = _string_from_variant(option.get("description", ""))
 	if description != "":
 		return description
@@ -920,7 +947,7 @@ func _get_option_description_text(option: Dictionary) -> String:
 ## 作用：获取选项效果文本，供当前模块后续逻辑使用。
 ## 使用：本文件由 _get_option_value_lines 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_effect_text(option: Dictionary) -> String:
-	var summary: String = _string_from_variant(SkillEffectSummaryBuilderScript.build_for_option(option))
+	var summary: String = _string_from_variant(SkillEffectSummaryBuilderScript.build_for_option(option, _get_player()))
 	return summary if summary != "" else _get_option_description_text(option)
 
 

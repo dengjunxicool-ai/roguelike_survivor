@@ -60,9 +60,9 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 	var event: Dictionary = {
 		"trigger": event_name,
 		"conditions": _normalize_conditions(rule.get("conditions", []), _skill_instance),
-		"actions": SkillEffectAdapterScript.to_actions(_get_array(rule.get("effects", [])), _skill_instance)
+		"actions": SkillEffectAdapterScript.to_actions(preload("res://scripts/skills/skill_growth_profile.gd").resolve_effects(_get_array(rule.get("effects", [])),_skill_instance.definition.level_overrides if _skill_instance != null else [],_skill_level(_skill_instance)), _skill_instance)
 	}
-	for optional_key: String in ["source_id", "counter_key", "threshold", "cooldown", "max_triggers_per_second"]:
+	for optional_key: String in ["source_id", "counter_key", "threshold", "cooldown", "cooldown_scope", "cooldown_key", "max_triggers_per_second", "resource_kind"]:
 		if rule.has(optional_key):
 			event[optional_key] = rule[optional_key]
 	if event.has("cooldown") and _skill_instance != null:
@@ -73,7 +73,7 @@ static func to_event(rule: Dictionary, _skill_instance: RefCounted = null) -> Di
 ## 作用：先推进事件计数门槛，再检查并预留技能规则冷却。
 ## 使用：event 为当前事件或规则载荷；context 为施放或命中上下文；skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
 static func can_execute_rule_event(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
-	if not _passes_counter(event, skill_instance):
+	if not _passes_counter(event, context, skill_instance):
 		return false
 	if not _passes_cooldown(event, context, skill_instance):
 		return false
@@ -152,23 +152,26 @@ static func _skill_level(skill_instance: RefCounted) -> int:
 
 ## 作用：累积技能事件计数，达到 threshold 时清零并允许触发。
 ## 使用：event 读取 counter_key/threshold；skill_instance 为技能运行实例；返回布尔判断或执行是否成功。
-static func _passes_counter(event: Dictionary, skill_instance: RefCounted) -> bool:
-	var counter_key: String = str(event.get("counter_key", ""))
-	if counter_key == "" or skill_instance == null:
-		return true
-
-	var threshold: int = maxi(int(event.get("threshold", 1)), 1)
-	var current: int = int(skill_instance.get_meta(counter_key, 0)) + 1
-	if current >= threshold:
-		skill_instance.set_meta(counter_key, 0)
-		return true
-	skill_instance.set_meta(counter_key, current)
-	return false
+static func _passes_counter(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
+	var key: String = str(event.get("counter_key", ""))
+	if key == "" or skill_instance == null: return true
+	var counter: Script = preload("res://scripts/skills/skill_resource_counter.gd")
+	var amount: float = 1.0
+	if event.has("resource_kind"):
+		amount = counter.event_amount(skill_instance, key, String(event.resource_kind), context)
+	elif context.has("event_id") and not counter.once(skill_instance, key, str(context.event_id)):
+		return false
+	var crossings: int = counter.add(skill_instance, StringName(key), amount, maxf(float(event.get("threshold", 1)), 1.0))
+	context["resource_crossings"] = crossings
+	return crossings > 0
 
 
 ## 作用：按事件和 source_id 构造冷却键，到期时写入下一时间及上下文追踪键。
 ## 使用：event 读取 cooldown/source_id/trigger；context 为施放或命中上下文；skill_instance 为技能运行实例；会原地更新 context.last_trigger_cooldown_key；返回布尔判断或执行是否成功。
 static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_instance: RefCounted) -> bool:
+	# The runner already owns the same cast cooldown; do not reserve it a second time.
+	if event.get("trigger") == &"on_cast" and bool(context.get("scheduled_cast", false)):
+		return true
 	if not event.has("cooldown") or skill_instance == null:
 		return true
 
@@ -181,7 +184,24 @@ static func _passes_cooldown(event: Dictionary, context: Dictionary, skill_insta
 		_metadata_token(str(event.get("trigger", ""))),
 		_metadata_token(source_key if source_key != "" else "global")
 	]
-	var now: float = float(Time.get_ticks_msec()) / 1000.0
+	if event.has("cooldown_key"):
+		key = "trigger_cd_%s" % _metadata_token(String(event.cooldown_key))
+	var scope: String = String(event.get("cooldown_scope", "skill"))
+	if scope == "target":
+		var target: Node = context.get("target") as Node
+		if target == null:
+			return false
+		key += "_target_%d" % target.get_instance_id()
+	elif scope == "object_pair":
+		var a: Node = context.get("source", context.get("area")) as Node
+		var b: Node = context.get("other_area", context.get("projectile")) as Node
+		if a == null or b == null:
+			return false
+		var first: int = mini(a.get_instance_id(), b.get_instance_id())
+		var second: int = maxi(a.get_instance_id(), b.get_instance_id())
+		key += "_pair_%d_%d" % [first, second]
+	var bus: Node = context.get("event_bus") as Node
+	var now: float = float(context.get("combat_seconds", bus.call("combat_seconds") if bus != null and bus.has_method("combat_seconds") else 0.0))
 	var ready_at: float = float(skill_instance.get_meta(key, 0.0))
 	if now < ready_at:
 		return false

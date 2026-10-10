@@ -82,6 +82,8 @@ const ALLOWED_TYPES = new Set(["attack", "dash", "cast", "summon", "passive", "p
 const ALLOWED_SCHOOLS = new Set(["fire", "frost", "thunder", "curse", "holy", "chaos"]);
 const ALLOWED_RARITIES = new Set(["normal", "rare", "epic", "legendary"]);
 const SUPPORTED_TRIGGERS = new Set([
+  "player_health_crossed_below",
+  "skill_cast_succeeded",
   "attack_hit",
   "dash_start",
   "dash_tick",
@@ -102,6 +104,9 @@ const SUPPORTED_TRIGGERS = new Set([
   "always",
 ]);
 const SUPPORTED_CONDITIONS = new Set([
+  "fire_ground",
+  "origin_skill_type",
+  "direct_hit",
   "target_has_status",
   "target_has_tag",
   "owner_has_skill",
@@ -117,6 +122,7 @@ const SUPPORTED_CONDITIONS = new Set([
   "always",
 ]);
 const SUPPORTED_EFFECTS = new Set([
+  "combustion_explosion",
   "damage",
   "apply_status",
   "spawn_area",
@@ -337,7 +343,7 @@ function validateSkill(skill, expectedIds, fireBaseIds, fireFusionIds, expectedM
   });
   validateEffectArray(skill.effects, skill.id, "effects");
 
-  assert(skill.trigger_rules.length > 0 || skill.effects.length > 0, `${skill.id} has no runtime payload`);
+  assert(skill.trigger_rules.length > 0 || skill.effects.length > 0 || skill.fusion_rules?.length > 0, `${skill.id} has no runtime payload`);
 }
 
 function findSkill(skills, id) {
@@ -409,7 +415,7 @@ function validateBaseFireRangePixels(skills) {
   assertClose(requireEffect(byId.get("fire_summon_ember_fox_pack"), 1, 1).radius, rangePx(1.2), "fire_summon_ember_fox_pack burst radius must be 1.2R");
   assertClose(requireEffect(byId.get("fire_power_combustion_chain"), 0, 0).radius, rangePx(2.2), "fire_power_combustion_chain radius must be 2.2R");
   assertClose(requireEffect(byId.get("fire_power_ignite_core"), 0, 1).radius, rangePx(1.2), "fire_power_ignite_core projectile hit radius must be 1.2R");
-  assertClose(requireEffect(byId.get("fire_power_ignite_core"), 1, 1).radius, rangePx(1.2), "fire_power_ignite_core area tick radius must be 1.2R");
+  assert(byId.get("fire_power_ignite_core").trigger_rules.length === 1 && byId.get("fire_power_ignite_core").trigger_rules[0].trigger === "post_damage_hit", "ignite must use actual positive cast damage hits");
   assertClose(requireEffect(byId.get("fire_core_inferno_cycle"), 0, 0).radius, rangePx(1.4), "fire_core_inferno_cycle burst radius must be 1.4R");
 }
 
