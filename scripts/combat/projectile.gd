@@ -786,7 +786,7 @@ func _configure_visual_effect_scene() -> void:
 	if _visual_effect_node.has_method("configure_projectile"):
 		_visual_effect_node.call("configure_projectile", {
 			"style": _visual_style, "radius": _collision_radius, "direction": direction,
-			"speed": speed, "lifetime": lifetime
+			"speed": speed, "lifetime": lifetime, "geometry_branch": _geometry_branch
 		})
 		_hide_sprite_nodes()
 	_update_visual_effect()

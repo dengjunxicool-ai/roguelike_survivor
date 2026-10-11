@@ -30,9 +30,13 @@ func tick(delta: float) -> void:
 		_spacing_state = &"hold"
 	if distance > float(config.get("chase_resume_distance", 460.0)):
 		_spacing_state = &"chase"
-	if _spacing_state == &"chase" and not _is_target_in_behavior_attack_range(distance):
+	if not _is_target_in_behavior_attack_range(distance):
 		_cancel_ranged_attack_warning()
-		_apply_chase_movement()
+		if _spacing_state == &"chase":
+			_apply_chase_movement()
+		else:
+			_spacing_state = &"hold"
+			_set_velocity(Vector2.ZERO)
 		return
 	_spacing_state = &"hold"
 

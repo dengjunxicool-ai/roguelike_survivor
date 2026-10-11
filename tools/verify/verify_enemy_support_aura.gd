@@ -8,7 +8,7 @@ func run() -> void:
 	root.add_child(world)
 	world.process_mode = Node.PROCESS_MODE_DISABLED
 	var player := Node2D.new()
-	player.position = Vector2(300,0)
+	player.position = Vector2(200,0)
 	world.add_child(player)
 	var drum := make_enemy(world, player, "war_drum_goblin", Vector2.ZERO)
 	var ally := make_enemy(world, player, "skeleton", Vector2(100,0))

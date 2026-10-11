@@ -498,6 +498,9 @@ func _swap_targets(params: Dictionary, context: Dictionary) -> bool:
 	var second_position: Vector2 = second.global_position
 	first.global_position = second_position
 	second.global_position = first_position
+	var bus: Node = context.get("event_bus") as Node
+	if bus != null and bus.has_method("present_chaos_swap"):
+		bus.present_chaos_swap(first_position,second_position)
 
 	if params.has("area_id"):
 		var area_params: Dictionary = {

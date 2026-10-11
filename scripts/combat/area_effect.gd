@@ -976,7 +976,9 @@ func _apply_visual(params: Dictionary) -> void:
 			if _visual_effect_node.has_method("set_effect_style"):
 				_visual_effect_node.call("set_effect_style", _visual_style)
 			if _visual_effect_node.has_method("set_effect_geometry"):
-				_visual_effect_node.call("set_effect_geometry", geometry_shape())
+				var visual_geometry: Dictionary = geometry_shape()
+				visual_geometry["has_pull"] = actions_on_tick.any(func(action: Variant) -> bool: return action is Dictionary and String(action.get("type", "")) == "pull")
+				_visual_effect_node.call("set_effect_geometry", visual_geometry)
 			_visual_effect_node.call("configure", radius, duration, _visual_seed + float(spawn_generation))
 	if _uses_programmatic_visual():
 		var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D

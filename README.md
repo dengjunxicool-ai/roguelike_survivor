@@ -4,6 +4,21 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 
 ## Current Features
 
+Windows: double-click `run_game.cmd` to play in a separate window with working
+fullscreen settings. This launcher stores saves and caches under
+`E:/codex/roguelike-survivor`; it does not use the editor's embedded game view.
+Godot game embedding does not support window mode changes. When playing from
+the editor, disable **Embed Game on Next Play**, then restart the game.
+
+The level-up skill selection has a free **Reroll Skills** button below the three
+cards. Rerolling keeps the game paused and preserves the pending upgrade.
+
+开发者模式的 **Run Setup** 页提供「技能构筑」：选择角色与地图，按神系筛选并添加技能，
+为每项设置等级和稀有度，支持移除与清空。未选替代攻击时保留角色默认攻击。
+点击「使用构筑开始游戏」会重置本局、应用构筑并开启自动战斗与正常刷怪；按 F12 可再次显示工具栏。
+构筑跳过学习等级和前置条件，仍限制两个神系及攻击、冲刺、主动、被动、核心、融合槽位与互斥技能。
+原有 **Restart Run** 继续启动手动调试局。
+
 - WASD player movement with camera and background bounds.
 - Character selection before each run.
 - Data-driven god skill execution through trigger rules, effects, components, events, and combat actions.
@@ -34,6 +49,7 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 - [雷霆神系特效](docs/THUNDER_SCHOOL_VFX.md)：14 个基础技能的电弧、雷暴、召唤与真实蓄能反馈，以及伤害回归和性能测量。
 - [诅咒神系特效](docs/CURSE_SCHOOL_VFX.md)：14 个基础技能的咒印、魂链、召唤与真实结算／资源展示，以及伤害修复和性能测量。
 - [神圣神系特效](docs/HOLY_SCHOOL_VFX.md)：14 个基础技能的圣光、审判、护盾与召唤，以及真实格挡、伤害回归和性能测量。
+- [混沌神系特效](docs/CHAOS_SCHOOL_VFX.md)：14 个基础技能的裂隙、奇点、复制召唤与真实失稳、熵增和施法进度。
 
 ## Validation Helpers
 

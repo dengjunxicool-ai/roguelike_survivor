@@ -469,6 +469,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/chaos_clone_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.15,
 				"modulate": [
@@ -520,6 +522,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/void_maw_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.2,
 				"modulate": [

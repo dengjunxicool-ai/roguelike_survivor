@@ -24,10 +24,13 @@ func run() -> void:
 	expect(archer.velocity == Vector2.ZERO and float(archer.get("_ranged_warning_timer")) > 0, "280 holds and begins a full warning")
 	archer.position.x = 415
 	archer.call("_update_behavior", 0.1)
-	var remaining := float(archer.get("_ranged_warning_timer"))
+	expect(float(archer.get("_ranged_warning_timer")) > 0, "415 remains inside attack range")
 	archer.position.x = 425
 	archer.call("_update_behavior", 0.1)
-	expect(float(archer.get("_ranged_warning_timer")) > 0 and float(archer.get("_ranged_warning_timer")) < remaining, "415/425 oscillation preserves warning")
+	expect(is_zero_approx(float(archer.get("_ranged_warning_timer"))) and archer.velocity == Vector2.ZERO, "425 cancels attack while preserving movement hysteresis")
+	archer.position.x = 415
+	archer.call("_update_behavior", 0.01)
+	expect(float(archer.get("_ranged_warning_timer")) > 0, "reentering 420 range begins a fresh warning")
 	archer.position.x = 461
 	archer.call("_update_behavior", 0.1)
 	expect(archer.velocity.x < 0 and is_zero_approx(float(archer.get("_ranged_warning_timer"))), "beyond 460 chases and cancels warning")

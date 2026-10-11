@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/chaos_projectile_effect.gd" id="1_chaos"]
+[ext_resource type="Shader" path="res://resources/effects/chaos_projectile.gdshader" id="2_chaos"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chaos"]
+resource_local_to_scene = true
+shader = ExtResource("2_chaos")
+
+[node name="ChaosProjectileEffect" type="Node2D"]
+z_index = 1
+script = ExtResource("1_chaos")
+
+[node name="ChaosEnvelope" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_chaos")
+offset_left = -64.0
+offset_top = -25.0
+offset_right = 26.0
+offset_bottom = 25.0
+mouse_filter = 2
