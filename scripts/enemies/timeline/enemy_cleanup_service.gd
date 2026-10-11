@@ -90,6 +90,8 @@ func despawn_far_enemies(despawn_radius: float) -> void:
 			if visible_rect.has_point(canvas_transform * enemy_node.global_position):
 				continue
 			enemy_node.set_meta("spawn_recycle_reason",&"offscreen_distance")
+			if enemy_node.has_method("_unregister_combat_target"):
+				enemy_node.call("_unregister_combat_target")
 			enemy_node.queue_free()
 
 
@@ -107,6 +109,8 @@ func clear_normal_enemies() -> void:
 
 		if String(enemy_node.get_meta("enemy_rank", "normal")) == "normal":
 			enemy_node.set_meta("spawn_recycle_reason",&"clear_normal_enemies")
+			if enemy_node.has_method("_unregister_combat_target"):
+				enemy_node.call("_unregister_combat_target")
 			enemy_node.queue_free()
 
 ## 休息和 Boss 准备无奖励回收；敌方战斗对象按自身池接口结束。
@@ -124,6 +128,8 @@ func clear_combat_for_transition(include_elites: bool) -> void:
 		if not _is_alive(enemy): continue
 		if include_elites or String(enemy.get_meta("spawn_source_type","")) in ["summon","death_split","treasure_event"]:
 			enemy.set_meta("spawn_recycle_reason",&"boss_prepare" if include_elites else &"clear_rest")
+			if enemy.has_method("_unregister_combat_target"):
+				enemy.call("_unregister_combat_target")
 			enemy.queue_free()
 	for group: String in ["enemy_projectile","enemy_damage_area","map_hazard"]:
 		for object: Node in tree.get_nodes_in_group(group):

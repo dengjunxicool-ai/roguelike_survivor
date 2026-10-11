@@ -179,6 +179,7 @@ func _physics_process_profiled(delta: float) -> void:
 		set_meta("treasure_lifetime",remaining)
 		if remaining<=0.00001:
 			set_meta("spawn_recycle_reason",&"natural_escape")
+			_unregister_combat_target()
 			queue_free()
 			return
 
@@ -300,6 +301,7 @@ func _resolve_current_target() -> bool:
 func _register_combat_target() -> void:
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
 	if registry != null and registry.has_method("register_enemy"):
+		set_meta(CombatTargetRegistryScript.QUERY_CACHE_SAFE_META, true)
 		registry.call("register_enemy", self)
 
 
