@@ -9,6 +9,7 @@ const RunStatsTrackerScript: Script = preload("res://scripts/game/run_stats_trac
 const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_trace_context.gd")
 
 var _owner: Node2D
+var _soul_reward_id: String = ""
 
 
 ## Params:
@@ -19,6 +20,7 @@ var _owner: Node2D
 ## 使用：创建对象后先调用本入口，再调用执行/更新接口；参数应来自当前运行场景。
 func setup(owner: Node2D) -> void:
 	_owner = owner
+	_soul_reward_id = SaveManager.new_receipt_id("enemy")
 
 
 ## Params:
@@ -46,7 +48,14 @@ func award_soul_stones() -> void:
 
 	var final_amount: int = maxi(roundi(float(soul_drop) * multiplier), 0)
 	if final_amount > 0:
-		SaveManager.add_soul_stones(final_amount)
+		var tree: SceneTree = _owner.get_tree()
+		var pending: Node = tree.root.get_node_or_null("PendingSaves") if tree != null else null
+		if pending != null:
+			var ui: Node = tree.get_first_node_in_group(&"ui_manager")
+			var run_id: String = String(ui.get("_run_receipt_id")) if ui != null else ""
+			pending.call("award_souls", final_amount, _soul_reward_id, run_id)
+		else:
+			SaveManager.commit_soul_reward(_soul_reward_id, final_amount)
 
 
 ## Params:

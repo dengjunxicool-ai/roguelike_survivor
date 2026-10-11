@@ -1,5 +1,11 @@
 {
   "scripts": {
+    "verify:qa4-frost-duration": "godot --headless --path . --script res://tools/verify/verify_qa4_frost_duration.gd",
+    "verify:qa4-persistence": "godot --headless --path . --script res://tools/verify/verify_qa4_persistence.gd",
+    "verify:qa3-modifiers": "godot --headless --path . --script res://tools/verify/verify_qa3_modifiers.gd",
+    "verify:qa3-result-persistence": "godot --headless --path . --script res://tools/verify/verify_qa3_result_persistence.gd",
+    "verify:qa3-reward-persistence": "godot --headless --path . --script res://tools/verify/verify_qa3_reward_persistence.gd",
+    "verify:qa3-pending-lifecycle": "godot --headless --path . --script res://tools/verify/verify_qa3_pending_lifecycle.gd",
     "verify:qa2-rewards": "godot --headless --path . --script res://tools/verify/verify_qa2_rewards.gd",
     "verify:qa2-economy-save": "godot --headless --path . --script res://tools/verify/verify_qa_economy_save.gd",
     "verify:qa2-permanent-prices": "node tools/verify/verify_qa_permanent_prices.js",

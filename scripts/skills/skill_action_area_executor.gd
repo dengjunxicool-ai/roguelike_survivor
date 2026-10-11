@@ -276,6 +276,8 @@ func _resolve_area_max_active(area_source_id: StringName, area_params: Dictionar
 ## 使用：context 为施放或命中上下文。
 func _resolve_area_duration(area_source_id: StringName, area_params: Dictionary, context: Dictionary, special_rules: Dictionary) -> float:
 	var duration: float = maxf(float(ModifierResolverScript.resolve_value(context, "duration", area_params.get("duration", 0.12))), 0.05)
+	if area_source_id in [&"frost_field", &"frost_path", &"blizzard_cloud"]:
+		duration = maxf(float(ModifierResolverScript.resolve_value(context, "frost_area_duration", duration)), 0.05)
 	if area_source_id == &"fire_oil_area" and special_rules.has("fire_oil_duration_tuning"):
 		duration += float(_get_dictionary(special_rules.get("fire_oil_duration_tuning", {})).get("duration_add", 0.0))
 	if area_source_id == &"acid_spray_cone_area" and special_rules.has("acid_pressure_duration_damage"):

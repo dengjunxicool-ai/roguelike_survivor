@@ -107,6 +107,9 @@ var _recent_enemy_damage_sources: Dictionary = {}
 var _damage_popup_offset_index: int = 0
 var _visual_controller: RefCounted = PlayerVisualControllerScript.new()
 var _modifier_applier: RefCounted = PlayerModifierApplierScript.new()
+var _applied_run_modifier_effects: Dictionary = {}
+var _run_modifier_event_sources: Dictionary = {}
+var _resetting_modifiers: bool = false
 var _character_run_initializer: RefCounted = CharacterRunInitializerScript.new()
 var _skill_special_rule_executor: RefCounted = SkillSpecialRuleExecutorScript.new()
 var _status_manager: Node
@@ -342,12 +345,17 @@ func _initialize_character_runtime() -> bool:
 ## 作用：重置运行时属性统计。
 ## 使用：本文件由 reset_for_loadout 调用。
 func _reset_runtime_stats() -> void:
+	_resetting_modifiers = true
 	_reset_core_runtime_stats()
 	_reset_reward_and_spawn_modifiers()
 	_reset_damage_reaction_state()
 	_reset_dash_runtime_state()
 	_reset_experience_runtime_state()
 	_reset_runtime_subsystems()
+	_modifier_applier.call("reset_snapshot")
+	_applied_run_modifier_effects.clear()
+	_run_modifier_event_sources.clear()
+	_resetting_modifiers = false
 
 
 ## 作用：重置核心运行时属性统计。
@@ -1325,7 +1333,16 @@ func _apply_modifiers(modifiers: Variant) -> void:
 ## 作用：获取快照属性修正，供当前模块后续逻辑使用。
 ## 使用：本文件由 set_run_modifier_source、merge_run_modifier_source、refresh_run_modifier_snapshot 调用；输入 modifiers（属性修正）；返回结果字典。
 func _get_snapshot_modifiers(modifiers: Variant) -> Dictionary:
-	var flat_modifiers: Dictionary = ModifierSourceScript.flatten(modifiers, ModifierSourceScript.SOURCE_UNKNOWN, ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PLAYER))
+	var stable_modifiers: Variant = modifiers
+	if modifiers is Array:
+		var stable_effects: Array = []
+		for effect: Dictionary in modifiers:
+			# Runtime conditions are consumed by live queries, never frozen in a global field.
+			if (effect.get("scope", {}) as Dictionary).has("owner_has_shield"):
+				continue
+			stable_effects.append(effect)
+		stable_modifiers = stable_effects
+	var flat_modifiers: Dictionary = ModifierSourceScript.flatten(stable_modifiers, ModifierSourceScript.SOURCE_UNKNOWN, ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PLAYER))
 	var snapshot_modifiers: Dictionary = {}
 	for key_variant: Variant in flat_modifiers.keys():
 		var key: String = String(key_variant)
@@ -1383,38 +1400,72 @@ func _get_run_modifier_scopes(modifiers: Variant) -> Array[StringName]:
 ## 作用：更新 ModifierStore 来源及作用域，并把非动态属性快照应用到玩家。
 ## 使用：source_id 标识来源；伤害、移动与拾取动态字段由查询计算，避免重复写入基础字段。
 func set_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
+	if String(source_id).is_empty():
+		return
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("set_source"):
 		modifier_store.call("set_source", source_id, modifiers, _get_run_modifier_scopes(modifiers))
-	_apply_modifiers(_get_snapshot_modifiers(modifiers))
+	refresh_run_modifier_snapshot()
+	if not _run_modifier_event_sources.has(String(source_id)) and not _is_empty_modifier_value(modifiers):
+		_run_modifier_event_sources[String(source_id)] = true
+		_modifier_applier.call("apply_events", self, _get_snapshot_modifiers(modifiers))
 
 
 ## 作用：合并同一来源的属性效果并应用非动态字段。
 ## 使用：与 set_run_modifier_source 的覆盖行为不同，使用 ModifierStore.merge_source。
 func merge_run_modifier_source(source_id: Variant, modifiers: Variant) -> void:
+	if String(source_id).is_empty():
+		return
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("merge_source"):
 		modifier_store.call("merge_source", source_id, modifiers, _get_run_modifier_scopes(modifiers))
-	_apply_modifiers(_get_snapshot_modifiers(modifiers))
+	refresh_run_modifier_snapshot()
+	_run_modifier_event_sources[String(source_id)] = true
+	_modifier_applier.call("apply_events", self, _get_snapshot_modifiers(modifiers))
 
 
 ## 作用：移除 ModifierStore 中指定来源。
-## 使用：source_id 为来源键；本函数不逆向回滚已应用的基础字段快照。
+## 使用：source_id 为来源键；持续属性重算，一次性事件和已消耗资源不回滚。
 func clear_run_modifier_source(source_id: Variant) -> void:
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store != null and modifier_store.has_method("clear_source"):
 		modifier_store.call("clear_source", source_id)
+	refresh_run_modifier_snapshot()
 
 
 ## 作用：刷新单局属性修正快照；具体处理委托给 modifier_store.collect。
 ## 使用：供本模块调用者使用。
 func refresh_run_modifier_snapshot() -> void:
+	if _resetting_modifiers:
+		return
 	var modifier_store: Node = get_node_or_null("ModifierStore")
 	if modifier_store == null or not modifier_store.has_method("collect"):
 		return
-	var modifiers_variant: Variant = modifier_store.call("collect", ModifierQueryScript.for_player(self, ModifierQueryScript.SCOPE_PLAYER))
-	if modifiers_variant is Dictionary:
-		_apply_modifiers(_get_snapshot_modifiers(modifiers_variant))
+	var modifiers: Dictionary = {}
+	var revive_grants: Dictionary = {}
+	_applied_run_modifier_effects.clear()
+	var sources: Dictionary = modifier_store.call("get_debug_sources")
+	for source_id: String in sources.keys():
+		var source: Dictionary = sources[source_id]
+		var scopes: Array = source.get("scopes", [])
+		if not scopes.is_empty() and not scopes.has(ModifierQueryScript.SCOPE_PLAYER):
+			continue
+		for entry: Dictionary in source.get("entries", []):
+			var values: Dictionary = _get_snapshot_modifiers(entry.get("effects", entry.get("snapshot", {})))
+			revive_grants[source_id] = int(revive_grants.get(source_id, 0)) + int(values.get("revive_count_add", 0))
+			for key: String in PlayerModifierApplierScript.MAX_SNAPSHOT_KEYS:
+				if values.has(key):
+					modifiers[key] = maxf(float(modifiers.get(key, values[key])), float(values[key]))
+					values.erase(key)
+			ModifierSourceScript.merge_flat_values(modifiers, values)
+			for effect: Dictionary in entry.get("effects", []):
+				var effect_id: String = String(effect.get("player_snapshot_effect_id", ""))
+				if effect_id != "":
+					_applied_run_modifier_effects[effect_id] = _get_snapshot_modifiers([effect])
+	_modifier_applier.call("apply_snapshot", self, modifiers, revive_grants)
+
+func get_applied_run_modifier_effect(effect_id: String) -> Dictionary:
+	return _applied_run_modifier_effects.get(effect_id, {}).duplicate(true)
 
 
 ## 作用：应用环境属性修正；具体处理委托给 spawner.apply_run_modifiers。

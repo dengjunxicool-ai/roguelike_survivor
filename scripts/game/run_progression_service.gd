@@ -11,19 +11,47 @@ const DamageOrigins: Script = preload("res://scripts/combat/damage_rule_registry
 
 ## 作用：从终局快照计算并保存全局计数、角色专精、地图及固定挑战进度。
 ## 使用：state/run_state 来自已锁定结果；由 UIManager 保证每局只调用一次，返回摘要和新解锁项；可能写入 user:// 存档。
-static func record_run_result(state: String, run_state: Dictionary) -> Dictionary:
+static func record_run_result(state: String, run_state: Dictionary, receipt_id: String = "") -> Dictionary:
 	var summary: Dictionary = _build_summary(state, run_state)
+	var config := ConfigFile.new()
+	if not SaveManager._load_for_write(config):
+		summary["saved"] = false
+		return summary
+	if receipt_id != "" and config.has_section_key(SaveManager.SECTION_PENDING_RECEIPTS, receipt_id):
+		return config.get_value(SaveManager.SECTION_PENDING_RECEIPTS, receipt_id).duplicate(true)
+	var previous: Variant = config.get_value(SaveManager.SECTION_RUN_HISTORY, SaveManager.KEY_LAST_RUN_SUMMARY, {})
+	var previous_sequence: int = int(previous.get("run_sequence", 0)) if previous is Dictionary else 0
+	var latest_sequence: int = maxi(int(config.get_value(SaveManager.SECTION_RUN_HISTORY, "last_run_sequence", 0)), previous_sequence)
+	# Direct callers receive a new sequence; earlier journal entries explicitly carry zero.
+	summary["run_sequence"] = int(run_state["run_sequence"]) if run_state.has("run_sequence") else latest_sequence + 1
 	var unlocked_items: Array[String] = []
-
-	SaveManager.save_last_run_summary(summary)
-	_update_global_counters(summary)
-	_update_character_specialization(summary)
-	_update_map_challenges(summary, unlocked_items)
-	_update_fixed_challenges(summary, unlocked_items)
-
+	_update_global_counters(summary, config)
+	_update_character_specialization(summary, config)
+	_update_map_challenges(summary, unlocked_items, config)
+	_update_fixed_challenges(summary, unlocked_items, config)
+	unlocked_items.append_array(ResultUnlockService.populate_config(config, state, float(summary["run_seconds"]), summary["selected_map_id"], summary["selected_map_name"]))
 	summary["progression_unlocks"] = unlocked_items
+	summary["saved"] = true
+	if not previous is Dictionary or int(summary["run_sequence"]) > previous_sequence or (int(summary["run_sequence"]) == 0 and previous_sequence == 0):
+		config.set_value(SaveManager.SECTION_RUN_HISTORY, SaveManager.KEY_LAST_RUN_SUMMARY, summary.duplicate(true))
+	config.set_value(SaveManager.SECTION_RUN_HISTORY, "last_run_sequence", maxi(latest_sequence, int(summary["run_sequence"])))
+	if receipt_id != "":
+		config.set_value(SaveManager.SECTION_PENDING_RECEIPTS, receipt_id, summary.duplicate(true))
+	if not SaveManager._commit_config(config):
+		summary["saved"] = false
+		summary["progression_unlocks"] = []
 	return summary
 
+
+static func _increment(config: ConfigFile, section: String, key: String, amount: int) -> void:
+	config.set_value(section, key, maxi(int(config.get_value(section, key, 0)) + amount, 0))
+
+
+static func _mark(config: ConfigFile, section: String, key: String) -> bool:
+	if bool(config.get_value(section, key, false)):
+		return false
+	config.set_value(section, key, true)
+	return true
 
 ## 作用：整理终局结果、角色地图、时间、击杀、灵魂、实际 Boss 到达及挑战信息。
 ## 使用：context 为运行上下文；返回包含 main_attack_level 和 run_stats 的成长摘要。
@@ -49,49 +77,49 @@ static func _build_summary(state: String, run_state: Dictionary) -> Dictionary:
 
 ## 作用：更新全局计数器组。
 ## 使用：本文件由 record_run_result 调用；输入 summary（摘要）；可能写入 user:// 存档。
-static func _update_global_counters(summary: Dictionary) -> void:
-	SaveManager.increment_counter(&"total_runs", 1)
-	SaveManager.increment_counter(&"total_kills", int(summary.get("kill_count", 0)))
-	SaveManager.set_counter_max(&"best_run_seconds", floori(float(summary.get("run_seconds", 0.0))))
+static func _update_global_counters(summary: Dictionary, config: ConfigFile) -> void:
+	_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(&"total_runs"), 1)
+	_increment(config, SaveManager.SECTION_RUN_COUNTERS, "total_kills", int(summary.get("kill_count", 0)))
+	config.set_value(SaveManager.SECTION_RUN_COUNTERS, "best_run_seconds", maxi(int(config.get_value(SaveManager.SECTION_RUN_COUNTERS, "best_run_seconds", 0)), floori(float(summary.get("run_seconds", 0.0)))))
 
 	if bool(summary.get("victory", false)):
-		SaveManager.increment_counter(&"victories", 1)
-		SaveManager.increment_counter(&"boss_kills", 1)
+		_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(&"victories"), 1)
+		_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(&"boss_kills"), 1)
 	else:
-		SaveManager.increment_counter(&"defeats", 1)
+		_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(&"defeats"), 1)
 
 	var character_id: StringName = StringName(String(summary.get("selected_character_id", "")))
 	var map_id: StringName = StringName(String(summary.get("selected_map_id", "")))
 	if character_id != &"":
-		SaveManager.increment_counter(StringName("character:%s:runs" % String(character_id)), 1)
+		_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(StringName("character:%s:runs" % String(character_id))), 1)
 	if map_id != &"":
-		SaveManager.increment_counter(StringName("map:%s:runs" % String(map_id)), 1)
+		_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(StringName("map:%s:runs" % String(map_id))), 1)
 		if bool(summary.get("victory", false)):
-			SaveManager.increment_counter(StringName("map:%s:clears" % String(map_id)), 1)
+			_increment(config, SaveManager.SECTION_RUN_COUNTERS, String(StringName("map:%s:clears" % String(map_id))), 1)
 
 
 ## 作用：更新角色专精。
 ## 使用：本文件由 record_run_result 调用；输入 summary（摘要）；可能写入 user:// 存档。
-static func _update_character_specialization(summary: Dictionary) -> void:
+static func _update_character_specialization(summary: Dictionary, config: ConfigFile) -> void:
 	var character_id: StringName = StringName(String(summary.get("selected_character_id", "")))
 	if character_id == &"":
 		return
 
-	SaveManager.increment_character_specialization(character_id, &"runs", 1)
-	SaveManager.increment_character_specialization(character_id, &"kills", int(summary.get("kill_count", 0)))
-	SaveManager.increment_character_specialization(character_id, &"survival_seconds", floori(float(summary.get("run_seconds", 0.0))))
+	_increment(config, SaveManager.SECTION_CHARACTER_SPECIALIZATION, "%s:%s" % [String(character_id), String(&"runs")], 1)
+	_increment(config, SaveManager.SECTION_CHARACTER_SPECIALIZATION, "%s:kills" % String(character_id), int(summary.get("kill_count", 0)))
+	_increment(config, SaveManager.SECTION_CHARACTER_SPECIALIZATION, "%s:survival_seconds" % String(character_id), floori(float(summary.get("run_seconds", 0.0))))
 	if bool(summary.get("victory", false)):
-		SaveManager.increment_character_specialization(character_id, &"victories", 1)
+		_increment(config, SaveManager.SECTION_CHARACTER_SPECIALIZATION, "%s:%s" % [String(character_id), String(&"victories")], 1)
 
 	for goal_variant: Variant in _get_character_goal_ids(character_id):
 		var goal_id: StringName = StringName(String(goal_variant))
 		if goal_id != &"" and _character_goal_met(character_id, goal_id, summary):
-			SaveManager.increment_character_specialization(character_id, goal_id, 1)
+			_increment(config, SaveManager.SECTION_CHARACTER_SPECIALIZATION, "%s:%s" % [String(character_id), String(goal_id)], 1)
 
 
 ## 作用：更新地图挑战列表。
 ## 使用：本文件由 record_run_result 调用；输入 summary（摘要）、unlocked_items（已解锁条目）；可能写入 user:// 存档。
-static func _update_map_challenges(summary: Dictionary, unlocked_items: Array[String]) -> void:
+static func _update_map_challenges(summary: Dictionary, unlocked_items: Array[String], config: ConfigFile) -> void:
 	var map_id: StringName = StringName(String(summary.get("selected_map_id", "")))
 	if map_id == &"":
 		return
@@ -100,13 +128,13 @@ static func _update_map_challenges(summary: Dictionary, unlocked_items: Array[St
 		var objective_id: StringName = StringName(String(objective_variant))
 		if objective_id == &"" or not _map_objective_met(objective_id, summary):
 			continue
-		if SaveManager.mark_map_challenge_completed(map_id, objective_id):
+		if _mark(config, SaveManager.SECTION_MAP_CHALLENGES, "%s:%s" % [String(map_id), String(objective_id)]):
 			unlocked_items.append("地图挑战：%s / %s" % [String(map_id), String(objective_id)])
 
 
 ## 作用：更新固定挑战列表。
 ## 使用：本文件由 record_run_result 调用；输入 summary（摘要）、unlocked_items（已解锁条目）；可能写入 user:// 存档。
-static func _update_fixed_challenges(summary: Dictionary, unlocked_items: Array[String]) -> void:
+static func _update_fixed_challenges(summary: Dictionary, unlocked_items: Array[String], config: ConfigFile) -> void:
 	if not bool(summary.get("victory", false)):
 		return
 
@@ -119,7 +147,7 @@ static func _update_fixed_challenges(summary: Dictionary, unlocked_items: Array[
 		if StringName(String(challenge.get("map_id", ""))) != StringName(String(summary.get("selected_map_id", ""))):
 			continue
 		var challenge_id: StringName = StringName(String(challenge.get("challenge_id", "")))
-		if SaveManager.mark_challenge_completed(challenge_id):
+		if _mark(config, SaveManager.SECTION_CHALLENGES, String(challenge_id)):
 			unlocked_items.append("挑战完成：%s" % String(challenge.get("display_name", challenge_id)))
 
 
