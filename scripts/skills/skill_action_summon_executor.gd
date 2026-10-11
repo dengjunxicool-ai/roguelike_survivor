@@ -3,6 +3,8 @@
 extends "res://scripts/skills/skill_action_support.gd"
 class_name SkillActionSummonExecutor
 
+const FIRE_FOX_EFFECT: PackedScene = preload("res://scenes/effects/fire_fox_effect.tscn")
+
 
 ## 作用：创建并配置动作声明的粒子表现节点。
 ## 使用：params 读取 profile/lifetime；context 为施放或命中上下文；返回布尔判断或执行是否成功。
@@ -74,7 +76,8 @@ func _spawn_single_summon(params: Dictionary, context: Dictionary) -> bool:
 
 	var tree: SceneTree = parent.get_tree()
 	if tree != null:
-		tree.create_timer(duration).timeout.connect(Callable(summon, "queue_free"))
+		var pauses_with_combat: bool = str(params.get("summon_id", "")) == "ember_fox"
+		tree.create_timer(duration, not pauses_with_combat).timeout.connect(Callable(summon, "queue_free"))
 	return true
 
 
@@ -129,20 +132,70 @@ func _summon_tick(summon: Node2D, params: Dictionary, context: Dictionary) -> vo
 		var summon_context: Dictionary = context.duplicate(true)
 		summon_context["target"] = target
 		summon_context["source"] = summon
-		_update_summon_visual_facing(summon, target)
-		_spawn_summon_breath_particles(summon, target, params)
+		var custom_fox: Node2D = summon.get_node_or_null("FireSummonEffect") as Node2D
+		if custom_fox == null:
+			_update_summon_visual_facing(summon, target)
+			_spawn_summon_breath_particles(summon, target, params)
 		var damage_params: Dictionary = params.duplicate(true)
 		if not damage_params.has("damage_type"):
 			damage_params["damage_type"] = "summon_damage"
 		if not damage_params.has("damage_origin"):
 			damage_params["damage_origin"] = "special"
-		_deal_damage(damage_params, summon_context)
+		var applied: bool = _execute_fox_rule_attack(summon, target, summon_context) if custom_fox != null else _deal_damage(damage_params, summon_context)
+		if applied and custom_fox != null:
+			custom_fox.call("set_attack_target", target.global_position - summon.global_position)
+			custom_fox.call("play_attack")
 		affected += 1
+
+
+## The canonical fox stores its actual damage/burst in its owning summon_attack_hit rule.
+## Execute that one skill's adapted actions, avoiding broadcasts to unrelated summon listeners.
+func _execute_fox_rule_attack(summon: Node2D, target: Node2D, context: Dictionary) -> bool:
+	var skill: RefCounted = context.get("skill_instance") as RefCounted
+	var bus: Node = context.get("event_bus") as Node
+	if skill == null or bus == null or String(skill.get("skill_id")) != "fire_summon_ember_fox_pack":
+		return false
+	var definition: RefCounted = skill.get("definition") as RefCounted
+	if definition == null or not _has_property(target, "current_health"):
+		return false
+	var before: float = float(target.get("current_health"))
+	if before <= 0.0:
+		return false
+	var attack_context: Dictionary = context.duplicate(true)
+	attack_context["source"] = summon
+	attack_context["source_id"] = &"ember_fox"
+	attack_context["source_instance_id"] = str(summon.get_instance_id())
+	attack_context["skill_id"] = &"fire_summon_ember_fox_pack"
+	attack_context["origin_skill_id"] = &"fire_summon_ember_fox_pack"
+	attack_context["listener_skill_id"] = &"fire_summon_ember_fox_pack"
+	attack_context["position"] = target.global_position
+	attack_context["direction"] = (target.global_position - summon.global_position).normalized()
+	for key: String in ["projectile", "area", "damage_packet", "hit_damage_packet"]:
+		attack_context.erase(key)
+	var adapter: Script = preload("res://scripts/skills/skill_trigger_rule_adapter.gd")
+	for event: Dictionary in adapter.to_events(skill, definition):
+		if String(event.get("trigger", "")) != "summon_attack_hit":
+			continue
+		if not ConditionEvaluatorScript.evaluate_all(event.get("conditions", []), attack_context):
+			continue
+		if not adapter.can_execute_rule_event(event, attack_context, skill):
+			continue
+		bus.call("execute_adapted_actions", event.get("actions", []), attack_context)
+	return is_instance_valid(target) and float(target.get("current_health")) < before
 
 
 ## 作用：为召唤节点挂载模型或粒子表现配置。
 ## 使用：params 读取 visual_texture/visual_scale/visual_z_index；写入 summon_visual_texture 元数据。
 func _attach_summon_visual(summon: Node2D, params: Dictionary) -> void:
+	if summon != null and str(params.get("summon_id", "")) == "ember_fox":
+		var fox: Node2D = FIRE_FOX_EFFECT.instantiate() as Node2D
+		fox.name = "FireSummonEffect"
+		fox.z_index = int(params.get("visual_z_index", 4))
+		summon.add_child(fox)
+		fox.call("configure_summon", {"autonomous_visual_clock": true,
+			"duration": maxf(float(params.get("duration", 5.0)), maxf(float(params.get("attack_interval", 0.7)), 0.05)),
+			"effect_scale": float(params.get("effect_scale", 0.9))})
+		return
 	var texture_path: String = str(params.get("visual_texture", ""))
 	if summon == null or texture_path == "":
 		return
@@ -213,6 +266,8 @@ func _spawn_summon_breath_particles(summon: Node2D, target: Node2D, params: Dict
 ## 使用：params 读取 profile。
 func _restart_summon_particles(summon: Node2D, params: Dictionary) -> void:
 	if summon == null or not is_instance_valid(summon) or summon.is_queued_for_deletion():
+		return
+	if summon.get_node_or_null("FireSummonEffect") != null:
 		return
 	var particles: GPUParticles2D = summon.get_node_or_null("SummonParticles") as GPUParticles2D
 	if particles == null:

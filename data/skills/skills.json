@@ -3600,6 +3600,9 @@
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "black_serpent_projectile",
+							"homing_enabled": true,
+							"homing_turn_rate": 8.0,
+							"homing_seek_range": 840,
 							"targeting": "uncursed_first_nearest",
 							"count": 2,
 							"spread_angle": 18,
@@ -3689,6 +3692,7 @@
 						{
 							"type": "spawn_projectile_burst",
 							"projectile_id": "death_scythe_projectile",
+							"return_once": true,
 							"targeting": "nearest_enemy",
 							"count": 2,
 							"spread_angle": 10,

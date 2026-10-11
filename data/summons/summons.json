@@ -23,7 +23,7 @@
 				"attack_type": "melee",
 				"attack_range": 52,
 				"attack_cooldown": 1.1,
-				"damage_type": "frost",
+				"damage_type": "ice",
 				"damage_scale": 0.45,
 				"on_hit_effects": [
 					{
@@ -37,6 +37,7 @@
 			"visual": {
 				"texture": "res://icon.svg",
 				"scale": 0.16,
+				"effect_scene": "res://scenes/effects/frost_wolf_effect.tscn",
 				"modulate": [
 					0.62,
 					0.9,
@@ -88,6 +89,7 @@
 			"visual": {
 				"texture": "res://icon.svg",
 				"scale": 0.18,
+				"effect_scene": "res://scenes/effects/ice_crystal_guard_effect.tscn",
 				"modulate": [
 					0.55,
 					0.9,
@@ -134,7 +136,8 @@
 			"visual": {
 				"texture": "res://assets/effect/crimson_dragon.png",
 				"scale": 0.13,
-				"z_index": 6
+				"z_index": 6,
+				"effect_scene": "res://scenes/effects/fire_dragon_effect.tscn"
 			}
 		},
 		{
@@ -160,7 +163,7 @@
 				"attack_type": "melee",
 				"attack_range": 64,
 				"attack_cooldown": 1.2,
-				"damage_type": "thunder",
+				"damage_type": "lightning",
 				"damage_scale": 0.45,
 				"chain_radius": 252,
 				"chain_targets": 3,
@@ -176,6 +179,8 @@
 			"visual": {
 				"texture": "res://icon.svg",
 				"scale": 0.17,
+				"effect_scene": "res://scenes/effects/storm_lynx_effect.tscn",
+				"effect_scale": 1.0,
 				"modulate": [
 					0.5,
 					0.9,
@@ -209,7 +214,7 @@
 				"attack_range": 520,
 				"attack_cooldown": 2,
 				"projectile_id": "thunder_arc_bolt",
-				"damage_type": "thunder",
+				"damage_type": "lightning",
 				"damage_scale": 0.7,
 				"on_hit_effects": [
 					{
@@ -223,6 +228,8 @@
 			"visual": {
 				"texture": "res://icon.svg",
 				"scale": 0.14,
+				"effect_scene": "res://scenes/effects/storm_crow_effect.tscn",
+				"effect_scale": 1.0,
 				"modulate": [
 					0.62,
 					0.82,
@@ -255,7 +262,7 @@
 				"attack_type": "melee",
 				"attack_range": 48,
 				"attack_cooldown": 1.2,
-				"damage_type": "curse",
+				"damage_type": "arcane",
 				"damage_scale": 0.35,
 				"on_hit_effects": [
 					{
@@ -267,6 +274,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/bone_servant_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.15,
 				"modulate": [
@@ -302,7 +311,7 @@
 				"attack_range": 520,
 				"attack_cooldown": 1.8,
 				"projectile_id": "soul_bolt_projectile",
-				"damage_type": "curse",
+				"damage_type": "arcane",
 				"damage_scale": 0.8,
 				"on_hit_effects": [
 					{
@@ -314,6 +323,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/soul_crow_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.13,
 				"modulate": [
@@ -361,6 +372,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/seraph_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.15,
 				"modulate": [
@@ -407,6 +420,8 @@
 				]
 			},
 			"visual": {
+				"effect_scene": "res://scenes/effects/holy_shield_guardian_effect.tscn",
+				"effect_scale": 1.0,
 				"texture": "res://icon.svg",
 				"scale": 0.17,
 				"modulate": [

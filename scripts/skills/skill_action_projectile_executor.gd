@@ -20,7 +20,8 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
 	var cast_instance_id: String = str(runtime_data.get("cast_instance_id", ""))
 	var spread_angle: float = deg_to_rad(float(ModifierResolverScript.resolve_value(context, "spread_angle", params.get("spread_angle", 0.0))))
-	var base_direction: Vector2 = caster.global_position.direction_to(target.global_position)
+	var launch_origin: Vector2 = _get_vector2(params.get("spawn_position", caster.global_position), caster.global_position)
+	var base_direction: Vector2 = launch_origin.direction_to(target.global_position)
 	if base_direction == Vector2.ZERO:
 		return false
 
@@ -131,7 +132,7 @@ func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Di
 	var direction: Vector2 = launch_data.get("direction", base_direction)
 	var curve_target_position: Vector2 = launch_data.get("target_position", target.global_position)
 	var damage: int = int(runtime_data.get("damage", 0))
-	CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
+	var projectile: Node2D = CombatObjectFactoryScript.create_projectile(_build_projectile_spawn_params(
 		params,
 		projectile_params,
 		context,
@@ -157,6 +158,9 @@ func _spawn_direct_projectile_instance(params: Dictionary, projectile_params: Di
 			"forbidden_page": forbidden_page_pending and projectile_index == 0
 		}
 	))
+	var bus: Node = context.get("event_bus") as Node
+	if projectile != null and String(context.get("skill_id", context.get("source_skill_id", ""))) == "thunder_summon_storm_crow" and bus != null and bus.has_method("present_crow_target"):
+		bus.present_crow_target(target, projectile)
 
 
 ## 作用：为指定目标选择即时或延时发射路径。
@@ -440,6 +444,14 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 		var preferred: Node2D=selection.chain_result.get("target") as Node2D
 		if preferred!=null and candidates.has(preferred): candidates.erase(preferred);candidates.push_front(preferred)
 	var affected: int = 0
+	var show_lightning: bool = str(params.get("damage_type", "")) in ["thunder", "lightning"]
+	var show_curse: bool = str(params.get("damage_type", "")) == "curse"
+	var origin_point: Vector2 = origin.global_position
+	for action_variant: Variant in actions:
+		if action_variant is Dictionary:
+			var action_params: Dictionary = action_variant.get("params", {})
+			show_lightning = show_lightning or str(action_params.get("damage_type", "")) in ["thunder", "lightning"] or str(action_params.get("status", action_params.get("status_id", ""))) == "conductive"
+			show_curse = show_curse or str(action_params.get("damage_type", "")) == "curse" or str(action_params.get("status", action_params.get("status_id", ""))) == "cursed"
 
 	for candidate: Node2D in candidates:
 		if affected >= max_targets:
@@ -448,12 +460,28 @@ func _chain_to_targets(params: Dictionary, context: Dictionary) -> int:
 		chained_context["target"] = candidate
 		chained_context["source"] = origin
 		var chain_actions: Array = _actions_with_chain_decay(actions, affected, params)
+		var target_point: Vector2 = candidate.global_position
+		var health_before: Variant = candidate.get("current_health")
+		var stacks_before: int = int(candidate.call("get_status_stack", &"conductive")) if candidate.has_method("get_status_stack") else 0
+		var curse_before: int = int(candidate.call("get_status_stack", &"cursed")) if candidate.has_method("get_status_stack") else 0
 		if actions.is_empty():
 			var chain_params: Dictionary = _params_with_chain_decay(params, affected)
 			_deal_damage(chain_params, chained_context)
 			_apply_status(chain_params, chained_context)
 		else:
 			execute_actions(chain_actions, chained_context)
+		if show_lightning and bus != null and bus.has_method("present_lightning_chain") and is_instance_valid(candidate):
+			var health_after: Variant = candidate.get("current_health")
+			var stacks_after: int = int(candidate.call("get_status_stack", &"conductive")) if candidate.has_method("get_status_stack") else 0
+			if (health_before != null and health_after != null and float(health_after) < float(health_before)) or stacks_after != stacks_before:
+				bus.present_lightning_chain(origin_point, target_point)
+		if show_curse and bus != null and bus.has_method("present_curse_link") and is_instance_valid(candidate):
+			var health_after: Variant = candidate.get("current_health")
+			var curse_after: int = int(candidate.call("get_status_stack", &"cursed")) if candidate.has_method("get_status_stack") else 0
+			if (health_before != null and health_after != null and float(health_after) < float(health_before)) or curse_after != curse_before:
+				var listener: RefCounted = context.get("skill_instance") as RefCounted
+				var skill_id: String = String(listener.get("skill_id")) if listener != null else String(context.get("listener_skill_id", context.get("skill_id", "")))
+				bus.present_curse_link(origin_point, target_point, 0 if skill_id == "curse_dash_soul_chain" else 1)
 		affected += 1
 
 	if params.has("last_target_bonus_power") and affected < max_targets:

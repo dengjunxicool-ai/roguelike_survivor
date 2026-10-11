@@ -71,7 +71,7 @@ func _run() -> void:
 		"pierce": 0,
 		"radius": 10.0,
 		"target_group": &"enemies",
-		"source_id": &"mars_spark_missile_projectile",
+		"source_id": &"fixture_homing_projectile",
 		"homing_enabled": true,
 		"homing_turn_rate": 8.5,
 		"homing_seek_range": 620.0

@@ -22,9 +22,7 @@
 			"display_name": "flame_core",
 			"type": "mark",
 			"max_stacks": 5.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 4.0,
@@ -35,9 +33,7 @@
 			"display_name": "soul_ember",
 			"type": "mark",
 			"max_stacks": 4.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 5.0,
@@ -48,9 +44,7 @@
 			"display_name": "frost_lock",
 			"type": "mark",
 			"max_stacks": 4.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 4.0,
@@ -61,9 +55,7 @@
 			"display_name": "frostbite",
 			"type": "mark",
 			"max_stacks": 3.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 3.0,
@@ -90,7 +82,12 @@
 			"effect": {
 				"move_slow_per_stack": 0.06
 			},
-			"max_stack_status": "frozen"
+			"max_stack_status": "frozen",
+			"visual": {
+				"effect_scene": "res://scenes/effects/frost_status_effect.tscn",
+				"priority": 10,
+				"overlay_z_index": 20
+			}
 		},
 		{
 			"duration": 4.0,
@@ -117,7 +114,11 @@
 			"effect": {
 				"lightning_damage_taken_multiplier_add_per_stack": 0.06
 			},
-			"max_stack_status": "overload"
+			"max_stack_status": "overload",
+			"visual": {
+				"effect_scene": "res://scenes/effects/thunder_status_effect.tscn",
+				"priority": 20
+			}
 		},
 		{
 			"duration": 4.0,
@@ -128,9 +129,7 @@
 			"display_name": "voltage",
 			"type": "mark",
 			"max_stacks": 5.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 6.0,
@@ -141,9 +140,7 @@
 			"display_name": "Instability",
 			"type": "mark",
 			"max_stacks": 4,
-			"effect": {
-
-			},
+			"effect": {},
 			"max_stack_event": "fission"
 		},
 		{
@@ -168,9 +165,7 @@
 			"display_name": "arcane_seal",
 			"type": "mark",
 			"max_stacks": 5.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 5.0,
@@ -181,9 +176,7 @@
 			"display_name": "wound",
 			"type": "base",
 			"max_stacks": 5.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 3.0,
@@ -194,9 +187,7 @@
 			"display_name": "Cursed",
 			"type": "debuff",
 			"max_stacks": 3,
-			"effect": {
-
-			},
+			"effect": {},
 			"on_expire": [
 				{
 					"type": "damage",
@@ -204,7 +195,12 @@
 					"source_type": "status",
 					"power_scale_per_stack": 0.75
 				}
-			]
+			],
+			"visual": {
+				"effect_scene": "res://scenes/effects/curse_status_effect.tscn",
+				"priority": 25,
+				"overlay_z_index": 20
+			}
 		},
 		{
 			"duration": 6.0,
@@ -218,7 +214,8 @@
 			"effect": {
 				"holy_damage_taken_multiplier_add_per_stack": 0.05
 			},
-			"max_stack_event": "divine_punishment"
+			"max_stack_event": "divine_punishment",
+			"visual": {"effect_scene": "res://scenes/effects/holy_status_effect.tscn", "priority": 26, "overlay_z_index": 20}
 		},
 		{
 			"duration": 5.0,
@@ -298,7 +295,8 @@
 					"burn": {
 						"animation": "burn"
 					}
-				}
+				},
+				"effect_scene": "res://scenes/effects/fire_status_effect.tscn"
 			}
 		},
 		{
@@ -365,9 +363,7 @@
 			"display_name": "shock",
 			"type": "reaction",
 			"max_stacks": 1.0,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 0.0,
@@ -378,9 +374,7 @@
 			"display_name": "Overload",
 			"type": "instant",
 			"max_stacks": 1,
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"duration": 2.0,
@@ -450,6 +444,11 @@
 			"max_stacks": 1,
 			"elite_duration": 0.5,
 			"boss_duration": 0.15,
+			"visual": {
+				"effect_scene": "res://scenes/effects/frost_status_effect.tscn",
+				"priority": 50,
+				"overlay_z_index": 20
+			},
 			"effect": {
 				"move_slow_per_stack": 1.0
 			}
@@ -489,9 +488,8 @@
 			"display_name": "weaken",
 			"type": "debuff",
 			"max_stacks": 1.0,
-			"effect": {
-
-			}
+			"effect": {},
+			"visual": {"effect_scene": "res://scenes/effects/holy_status_effect.tscn", "priority": 27, "overlay_z_index": 20}
 		},
 		{
 			"duration": 0.5,
@@ -531,9 +529,7 @@
 			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "burst_mark",
@@ -544,9 +540,7 @@
 			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "prey_mark",
@@ -557,9 +551,7 @@
 			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "impurity",
@@ -570,9 +562,7 @@
 			"max_stacks": 3.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "toxin_seed",
@@ -583,9 +573,7 @@
 			"max_stacks": 4.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "toxic_core",
@@ -596,9 +584,7 @@
 			"max_stacks": 4.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "flammable_mark",
@@ -622,9 +608,7 @@
 			"max_stacks": 3.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "acid_mark",
@@ -648,9 +632,7 @@
 			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "execution_mark",
@@ -661,9 +643,7 @@
 			"max_stacks": 1.0,
 			"refresh_rule": "replace",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		},
 		{
 			"id": "acid_residue",
@@ -674,9 +654,7 @@
 			"max_stacks": 5.0,
 			"refresh_rule": "refresh_duration",
 			"boss_conversion_rule": "none",
-			"effect": {
-
-			}
+			"effect": {}
 		}
 	]
 }

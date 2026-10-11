@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/fire_area_effect.gd" id="1"]
+
+[node name="FireAreaEffect" type="Node2D"]
+visible = false
+script = ExtResource("1")
+effect_style = "fire_path"

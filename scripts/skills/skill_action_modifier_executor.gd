@@ -18,7 +18,12 @@ func _heal_owner(params: Dictionary, context: Dictionary) -> bool:
 	if amount <= 0:
 		return false
 
-	preload("res://scripts/player/player_healing.gd").apply(caster, amount)
+	var restored: int = preload("res://scripts/player/player_healing.gd").apply(caster, amount)
+	var skill: RefCounted = context.get("skill_instance") as RefCounted
+	var skill_id: String = String(skill.get("skill_id")) if skill != null else String(context.get("listener_skill_id", context.get("skill_id", "")))
+	var bus: Node = context.get("event_bus") as Node
+	if restored > 0 and caster is Node2D and skill_id in ["curse_passive_vampiric_ritual", "curse_dash_soul_chain"] and bus != null and bus.has_method("present_curse_heal"):
+		bus.present_curse_heal(caster.global_position)
 	return true
 
 
@@ -92,6 +97,9 @@ func _grant_shield(params: Dictionary, context: Dictionary) -> bool:
 	if amount <= 0 and params.has("max_health_ratio"):
 		amount = maxi(roundi(max_health * float(params.get("max_health_ratio", 0.0))), 0)
 	amount = maxi(roundi(float(amount) * maxf(1.0 + _combined_modifier_value("holy_shield_restore_multiplier_add", context, 0.0), 0.05)), 0)
+	# 裁决攻击的小额百分比恢复在默认75生命值下仍须产生真实整数护盾。
+	if str(params.get("shield_type", "")) == "holy_judgment" and max_health > 0.0 and float(params.get("max_health_ratio", 0.0)) > 0.0:
+		amount = maxi(amount, 1)
 	if amount <= 0:
 		return false
 

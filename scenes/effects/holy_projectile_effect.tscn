@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/holy_projectile_effect.gd" id="1_holy"]
+[ext_resource type="Shader" path="res://resources/effects/holy_projectile.gdshader" id="2_holy"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_holy"]
+resource_local_to_scene = true
+shader = ExtResource("2_holy")
+
+[node name="HolyProjectileEffect" type="Node2D"]
+z_index = 1
+script = ExtResource("1_holy")
+
+[node name="HolyEnvelope" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_holy")
+offset_left = -64.0
+offset_top = -20.0
+offset_right = 52.0
+offset_bottom = 20.0
+mouse_filter = 2

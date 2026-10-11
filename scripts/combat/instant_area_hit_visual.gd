@@ -12,6 +12,9 @@ var _duration: float = 0.12
 var _radius: float = 48.0
 var _visual_color: Color = Color(0.7, 0.2, 1.0, 0.32)
 var _visual_ring_color: Color = Color(0.3, 1.0, 0.9, 0.72)
+var _effect_node: Node2D
+var _effect_path := ""
+var _visual_generation := 0
 
 
 ## 作用：重置年龄并解析时长/半径/颜色，启用处理和首次重绘。
@@ -22,9 +25,34 @@ func setup(params: Dictionary) -> void:
 	_radius = maxf(float(params.get("radius", 48.0)), 1.0)
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
 	_visual_ring_color = _get_color(params.get("visual_ring_color", _visual_ring_color), _visual_ring_color)
+	_configure_effect(params)
 	visible = true
 	set_process(true)
 	queue_redraw()
+
+## 复用可选程序化展示，范围与寿命仍由瞬时命中宿主控制。
+func _configure_effect(params: Dictionary) -> void:
+	if _effect_node != null: _effect_node.deactivate()
+	var effect_path := String(params.get("visual_effect_scene", ""))
+	if effect_path.is_empty(): return
+	if _effect_node != null and _effect_path != effect_path:
+		remove_child(_effect_node)
+		_effect_node.queue_free()
+		_effect_node = null
+	if _effect_node == null:
+		var effect_scene: PackedScene = load(effect_path) as PackedScene
+		if effect_scene == null: return
+		_effect_node = effect_scene.instantiate() as Node2D
+		if _effect_node == null: return
+		_effect_node.name = "InstantAreaVisualEffect"
+		_effect_path = effect_path
+		add_child(_effect_node)
+	_visual_generation += 1
+	if _effect_node.has_method("set_effect_style"):
+		_effect_node.set_effect_style(String(params.get("visual_style", "fire_burst")))
+	if _effect_node.has_method("set_effect_geometry"):
+		_effect_node.set_effect_geometry({"shape":"circle","radius":_radius})
+	_effect_node.configure(_radius, _duration, float(_visual_generation)*0.618)
 
 
 ## 作用：调用setup恢复本次视觉生命周期。
@@ -36,6 +64,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：隐藏并关闭_process。
 ## 使用：回池前调用，不会释放节点。
 func prepare_for_pool_despawn() -> void:
+	if _effect_node != null: _effect_node.deactivate()
 	visible = false
 	set_process(false)
 
@@ -60,12 +89,15 @@ func _process(delta: float) -> void:
 	if _age >= _duration:
 		despawn_or_free()
 		return
+	if _effect_node != null and _effect_node.visible:
+		_effect_node.update_state(_radius, _age, _duration)
 	queue_redraw()
 
 
 ## 作用：按寿命进度绘制轻微脉动圆和淡出轮廓。
 ## 使用：仅在重绘时使用本地坐标，不改变战斗状态。
 func _draw() -> void:
+	if _effect_node != null and _effect_node.visible: return
 	var progress: float = clampf(_age / maxf(_duration, 0.05), 0.0, 1.0)
 	var fade: float = 1.0 - progress
 	var pulse: float = 1.0 + sin(progress * PI) * 0.08

@@ -38,6 +38,51 @@ var _event_nonce: int = 0
 func _ready() -> void:
 	_clock.name = "RunCombatClock"
 	add_child(_clock)
+	var frost_presentation := preload("res://scripts/visual/frost_combat_presentation.gd").new()
+	frost_presentation.name = "FrostCombatPresentation"
+	add_child(frost_presentation)
+	var fire_presentation := preload("res://scripts/visual/fire_combat_presentation.gd").new()
+	fire_presentation.name = "FireCombatPresentation"
+	add_child(fire_presentation)
+	var thunder_presentation := preload("res://scripts/visual/thunder_combat_presentation.gd").new()
+	thunder_presentation.name = "ThunderCombatPresentation"
+	add_child(thunder_presentation)
+	var curse_presentation := preload("res://scripts/visual/curse_combat_presentation.gd").new()
+	curse_presentation.name = "CurseCombatPresentation"
+	add_child(curse_presentation)
+	var holy_presentation := preload("res://scripts/visual/holy_combat_presentation.gd").new()
+	holy_presentation.name = "HolyCombatPresentation"
+	add_child(holy_presentation)
+
+## 已实际吸收的伤害仅通知表现，不增加技能事件或触发预算。
+func present_holy_absorb(point: Vector2, amount: int) -> void:
+	var presentation: Node = get_node_or_null("HolyCombatPresentation")
+	if presentation != null: presentation.play_absorb(point, amount)
+
+func present_holy_guard(guard: Node, amount: int) -> void:
+	var presentation: Node = get_node_or_null("HolyCombatPresentation")
+	if presentation != null: presentation.play_guard(guard, amount)
+
+## 已确认的诅咒动作仅通知展示，不产生新的技能事件。
+func present_curse_link(from: Vector2, to: Vector2, kind: int = 1) -> void:
+	get_node("CurseCombatPresentation").play_link(from, to, kind)
+
+func present_curse_heal(point: Vector2) -> void:
+	get_node("CurseCombatPresentation").play_heal(point)
+
+## 已执行连锁动作的端点通知，不进入技能事件队列。
+func present_lightning_chain(from: Vector2, to: Vector2) -> void:
+	get_node("ThunderCombatPresentation").play_chain(from,to,float(_event_nonce)*0.618)
+
+## 远程召唤攻击发射成功后显示目标印记；生命周期由实际弹体约束。
+func present_crow_target(target: Node2D, projectile: Node2D) -> void:
+	get_node("ThunderCombatPresentation").mark_crow_target(target,projectile)
+
+## 已执行战斗动作的只读展示通知，不进入技能事件队列或消耗触发预算。
+func present_skill_effect(kind: String, point: Vector2, effect_radius: float) -> void:
+	var presentation: Node = get_node_or_null("FireCombatPresentation")
+	if presentation != null:
+		presentation.play_burst(point, effect_radius, kind)
 
 func _physics_process(_delta: float) -> void:
 	update_skill_cycles()
@@ -54,6 +99,20 @@ func combat_seconds() -> float:
 	return _clock.now_seconds()
 
 func reset_run_state() -> void:
+	var holy_presentation: Node = get_node_or_null("HolyCombatPresentation")
+	if holy_presentation != null: holy_presentation.reset_presentation()
+	var curse_presentation: Node = get_node_or_null("CurseCombatPresentation")
+	if curse_presentation != null:
+		curse_presentation.reset_presentation()
+	var thunder_presentation: Node = get_node_or_null("ThunderCombatPresentation")
+	if thunder_presentation != null:
+		thunder_presentation.reset_presentation()
+	var fire_presentation: Node = get_node_or_null("FireCombatPresentation")
+	if fire_presentation != null:
+		fire_presentation.reset_presentation()
+	var frost_presentation: Node = get_node_or_null("FrostCombatPresentation")
+	if frost_presentation != null:
+		frost_presentation.reset_presentation()
 	_fusion.reset()
 	_interactions.reset()
 	_pending_events.clear()
@@ -332,6 +391,8 @@ func update_skill_cycles() -> void:
 
 func register_death_pact(target: Node, context: Dictionary, duration: float) -> void:
 	_cycles.mark(target, context, duration, combat_seconds())
+	if target is Node2D:
+		get_node("CurseCombatPresentation").mark_contract(target, duration)
 
 func start_combustion(context: Dictionary, params: Dictionary = {}) -> bool:
 	return _cycles.start(self, context, params)

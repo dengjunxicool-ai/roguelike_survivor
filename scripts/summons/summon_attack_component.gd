@@ -18,6 +18,8 @@ var pulse_area_id: StringName = &""
 var pulse_duration: float = 0.28
 var pulse_tick_interval: float = 0.1
 var on_hit_effects: Array = []
+var chain_radius: float = 0.0
+var chain_targets: int = 0
 var _cooldown_remaining: float = 0.0
 
 
@@ -35,6 +37,8 @@ func setup(config: Dictionary) -> void:
 	pulse_duration = maxf(float(config.get("pulse_duration", pulse_duration)), 0.05)
 	pulse_tick_interval = maxf(float(config.get("pulse_tick_interval", pulse_tick_interval)), 0.05)
 	on_hit_effects = _array(config.get("on_hit_effects", []))
+	chain_radius = maxf(float(config.get("chain_radius", 0.0)), 0.0)
+	chain_targets = clampi(int(config.get("chain_targets", 0)), 0, 8)
 	_cooldown_remaining = 0.0
 
 
@@ -71,15 +75,18 @@ func attack(summon: Node2D, target: Node2D, player_power: float, context: Dictio
 			if not _spawn_area_pulse(summon, player_power, context):
 				_apply_area_pulse(summon, player_power, context)
 		_:
-			_apply_melee(summon, target, player_power, context)
+			var chain_origin: Vector2 = target.global_position
+			if _apply_melee(summon, target, player_power, context) and chain_targets > 0:
+				_apply_chain(summon, target, chain_origin, player_power, context)
 	_cooldown_remaining = attack_cooldown
 	return true
 
 
 ## 作用：用Power系数取整构造special/summon_damage包并受击，然后施加命中效果。
 ## 使用：正伤害量且目标支持take_damage才造成伤害，状态效果仍会尝试。
-func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> void:
+func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: Dictionary) -> bool:
 	var amount: int = maxi(roundi(player_power * damage_scale), 0)
+	var before: Variant = target.get("current_health")
 	if amount > 0 and target.has_method("take_damage"):
 		var skill_id: StringName = _source_skill_id(context)
 		target.call("take_damage", DamagePacketScript.from_dictionary({
@@ -94,6 +101,40 @@ func _apply_melee(summon: Node2D, target: Node2D, player_power: float, context: 
 			"source_instance_id": "%s:%s" % [String(skill_id), str(summon.get_instance_id()) if summon != null else "summon"]
 		}))
 	_apply_on_hit_effects(target)
+	var after: Variant = target.get("current_health")
+	return before != null and after != null and float(after) < float(before)
+
+## 读取已发布的链跃配置；从上一次实际命中点选择导电优先的下一目标。
+func _apply_chain(summon: Node2D, initial: Node2D, point: Vector2, power: float, context: Dictionary) -> void:
+	if chain_radius <= 0.0: return
+	var registry: Node = CombatTargetRegistryScript.get_or_create(summon)
+	if registry == null: return
+	var visited: Array[Node2D] = [initial]
+	var bus: Node = context.get("event_bus") as Node
+	if bus == null:
+		var owner: Node = context.get("owner") as Node
+		bus = owner.get_node_or_null("SkillEventBus") if owner != null else null
+	for index: int in chain_targets:
+		var candidates: Array = registry.call("get_targets_in_radius",point,chain_radius,StringName(context.get("target_group", &"enemies")))
+		var next: Node2D
+		var next_conductive := false
+		var distance := INF
+		for item: Node in candidates:
+			var candidate: Node2D = item as Node2D
+			if candidate == null or not is_instance_valid(candidate) or candidate.is_queued_for_deletion() or visited.has(candidate): continue
+			if candidate.has_method("is_dead") and candidate.is_dead(): continue
+			var conductive := candidate.has_method("has_status") and bool(candidate.call("has_status", &"conductive"))
+			var gap := point.distance_squared_to(candidate.global_position)
+			if next == null or (conductive and not next_conductive) or (conductive == next_conductive and gap < distance):
+				next = candidate
+				next_conductive = conductive
+				distance = gap
+		if next == null: break
+		visited.append(next)
+		var next_point := next.global_position
+		if _apply_melee(summon,next,power,context) and bus != null and bus.has_method("present_lightning_chain"):
+			bus.present_lightning_chain(point,next_point)
+		point = next_point
 
 
 ## 作用：区域场景不能生成时从注册表查询脉冲圆内目标并逐个用近战入口命中。
@@ -173,6 +214,12 @@ func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, conte
 	projectile_context["caster"] = context.get("owner")
 	projectile_context["target"] = target
 	projectile_context["source"] = summon
+	var hit_actions: Array = []
+	for effect_variant: Variant in on_hit_effects:
+		if not (effect_variant is Dictionary): continue
+		var effect: Dictionary = effect_variant
+		if String(effect.get("type", "")) == "apply_status":
+			hit_actions.append({"type":"apply_status","params":{"status_id":effect.get("status",effect.get("status_id","")),"stack":effect.get("stacks",effect.get("stack",1)),"duration":effect.get("duration",4.0)}})
 	action_executor.call("execute_action", {
 		"type": "spawn_projectile",
 		"params": {
@@ -185,7 +232,10 @@ func _fire_projectile(summon: Node2D, target: Node2D, player_power: float, conte
 			"range": attack_range,
 			"source_origin_id": _source_origin_id(context),
 			"source_skill_id": _source_skill_id(context),
-			"on_hit": on_hit_effects
+			"spawn_position": summon.global_position,
+			"spawn_offset": 16.0,
+			"visual_start_offset": Vector2.ZERO,
+			"actions_on_hit": hit_actions
 		}
 	}, projectile_context)
 

@@ -149,6 +149,20 @@ func collect(query: RefCounted) -> Dictionary:
 func get_debug_sources() -> Dictionary:
 	return _sources.duplicate(true)
 
+## 只读一个临时来源的剩余秒数，供表现层避免复制整个属性库。
+func get_timed_source_remaining(source_id: String) -> float:
+	return maxf(float(_sources.get(source_id, {}).get("remaining", 0.0)), 0.0)
+
+## 只读指定来源的单项实际属性，避免表现层复制属性库或误读其他来源。
+func get_source_modifier_value(source_id: String, stat: String) -> float:
+	var modifiers: Dictionary = {}
+	for entry: Dictionary in _sources.get(source_id, {}).get("entries", []):
+		var values: Dictionary = entry.get("snapshot", {})
+		if entry.has("effects"):
+			values = ModifierSourceScript.flatten_effects(entry.effects, ModifierSourceScript.SOURCE_UNKNOWN)
+		SkillModifierCalculatorScript.merge_modifiers(modifiers, values)
+	return float(modifiers.get(stat, 0.0))
+
 
 ## 作用：判断来源作用域是否包含查询域，未声明来源域默认仅作用于玩家。
 ## 使用：source 为来源数据或对象。

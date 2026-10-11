@@ -356,6 +356,9 @@ func _summon_has_visual(definition_id: StringName) -> bool:
 			continue
 		if child.get_node_or_null("SummonVisual") != null:
 			return true
+		var effect: Node2D = child.get_node_or_null("SummonEffect") as Node2D
+		if effect != null and effect.visible and effect.get_node_or_null("Geometry") != null:
+			return true
 		if child.get_node_or_null("AnimatedSprite2D") != null:
 			return true
 	return false

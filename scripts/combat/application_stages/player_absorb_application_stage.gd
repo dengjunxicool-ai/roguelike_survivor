@@ -32,15 +32,19 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 		if now >= float(player.get_meta("holy_guard_ready_at",0.0)):
 			var live: Array = []
 			var guarded: bool = false
+			var first_guard: Node = null
 			for reference: WeakRef in player.get_meta("holy_guardians",[]):
 				var guard: Node = reference.get_ref()
 				if guard == null or not is_instance_valid(guard) or not guard.can_guard(player): continue
 				live.append(reference)
 				guarded = true
+				if first_guard == null: first_guard = guard
 			player.set_meta("holy_guardians",live)
 			if guarded:
-				absorbed_amount -= mini(absorbed_amount, maxi(roundi(0.1*float(player.get("max_health"))),0))
+				var guard_absorbed: int = mini(absorbed_amount, maxi(roundi(0.1*float(player.get("max_health"))),0))
+				absorbed_amount -= guard_absorbed
 				player.set_meta("holy_guard_ready_at",now+2.0)
+				if guard_absorbed > 0 and bus != null: bus.present_holy_guard(first_guard, guard_absorbed)
 	if absorbed_amount > 0:
 		var fire_shield: int = _get_live_fire_passive_shield(player)
 		if fire_shield > 0:
@@ -48,6 +52,8 @@ func apply_with_host(host: Object, context: RefCounted) -> void:
 			shield_total += fire_absorbed
 			player.set_meta("fire_passive_shield", maxi(fire_shield - fire_absorbed, 0))
 			absorbed_amount = maxi(absorbed_amount - fire_absorbed, 0)
+			var presentation_bus: Node = player.get_node_or_null("SkillEventBus")
+			if presentation_bus != null: presentation_bus.present_holy_absorb(player.global_position, fire_absorbed)
 			if fire_absorbed >= fire_shield:
 				var bus: Node = player.get_node_or_null("SkillEventBus")
 				if bus != null:

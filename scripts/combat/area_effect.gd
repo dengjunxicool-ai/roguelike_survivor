@@ -61,6 +61,8 @@ var _visual_style: String = ""
 var _visual_color: Color = Color(0.35, 0.95, 0.2, 0.32)
 var _visual_ring_color: Color = Color(0.75, 1.0, 0.25, 0.66)
 var _visual_seed: float = 0.0
+var _visual_effect_node: Node2D
+var _visual_effect_path: String = ""
 var _redraw_timer: float = 0.0
 var _damage_window_finished: bool = false
 var _finished_by_damage: bool = false
@@ -140,6 +142,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 ## 作用：关闭伤害窗口与碰撞，清空引用、action、命中/候选/待处理tick并注销调度。
 ## 使用：回池前调用，隐藏节点避免残留上下文污染下一次spawn。
 func prepare_for_pool_despawn() -> void:
+	_deactivate_visual_effect()
 	if event_bus != null: event_bus.clear_interaction_object(self)
 	_damage_window_finished = true
 	set_deferred("monitoring", false)
@@ -555,6 +558,8 @@ func _physics_process_profiled(delta: float) -> void:
 	if move_speed > 0.0 and move_direction.length_squared() > 0.0001:
 		global_position += move_direction * move_speed * delta
 	_update_expanding_radius()
+	if _visual_effect_node != null and _visual_effect_node.visible:
+		_visual_effect_node.call("update_state", radius, _age, duration)
 	if _uses_programmatic_visual():
 		_queue_programmatic_visual_redraw(delta)
 
@@ -923,6 +928,8 @@ func _is_strong_target(body: Node) -> bool:
 ## 作用：只更新现有圆形碰撞形状半径。
 ## 使用：new_radius至少1，不新建缺失形状。
 func _apply_radius(new_radius: float) -> void:
+	if _visual_effect_node != null and _visual_effect_node.visible:
+		_visual_effect_node.call("set_effect_radius", new_radius)
 	var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape == null or not (collision_shape.shape is CircleShape2D):
 		return
@@ -950,6 +957,27 @@ func _update_expanding_radius() -> void:
 ## 作用：程序化风格隐藏sprite并重绘，否则合并资源视觉默认色/缩放并播放loop。
 ## 使用：params显式z_index用于程序化模式。
 func _apply_visual(params: Dictionary) -> void:
+	_deactivate_visual_effect()
+	var effect_path: String = String(params.get("visual_effect_scene", ""))
+	if _visual_mode != "asset" and not effect_path.is_empty():
+		if _visual_effect_node != null and _visual_effect_path != effect_path:
+			remove_child(_visual_effect_node)
+			_visual_effect_node.queue_free()
+			_visual_effect_node = null
+		if _visual_effect_node == null:
+			var scene: PackedScene = load(effect_path) as PackedScene
+			if scene != null:
+				_visual_effect_node = scene.instantiate() as Node2D
+				if _visual_effect_node != null:
+					_visual_effect_node.name = "AreaVisualEffect"
+					_visual_effect_path = effect_path
+					add_child(_visual_effect_node)
+		if _visual_effect_node != null:
+			if _visual_effect_node.has_method("set_effect_style"):
+				_visual_effect_node.call("set_effect_style", _visual_style)
+			if _visual_effect_node.has_method("set_effect_geometry"):
+				_visual_effect_node.call("set_effect_geometry", geometry_shape())
+			_visual_effect_node.call("configure", radius, duration, _visual_seed + float(spawn_generation))
 	if _uses_programmatic_visual():
 		var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 		if sprite != null:
@@ -970,9 +998,17 @@ func _apply_visual(params: Dictionary) -> void:
 	VisualConfigApplierScript.play_state(self, _visual_config, "loop", "idle")
 
 
+## 作用：停用可复用的表现节点，不销毁其 GPU 材质或修改战斗生命周期。
+func _deactivate_visual_effect() -> void:
+	if _visual_effect_node != null:
+		_visual_effect_node.call("deactivate")
+
+
 ## 作用：按已命名风格绘制，未命名时再处理毒区/毒云。
 ## 使用：引擎重绘回调，只负责视觉。
 func _draw() -> void:
+	if _visual_effect_node != null and _visual_effect_node.visible:
+		return
 	if effect_shape in ["line","cross"]:
 		for polygon: PackedVector2Array in preload("res://scripts/skills/skill_object_geometry.gd").polygons(geometry_shape()):
 			var local: PackedVector2Array = PackedVector2Array()
@@ -1512,6 +1548,8 @@ func _get_status_array(value: Variant, fallback_status: StringName = &"") -> Arr
 func _uses_programmatic_visual() -> bool:
 	if _visual_mode == "asset":
 		return false
+	if _visual_effect_node != null and _visual_effect_node.visible:
+		return true
 	return [
 		"fire_burst",
 		"frost_patch",
