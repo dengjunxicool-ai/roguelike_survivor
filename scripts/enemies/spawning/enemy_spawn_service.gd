@@ -442,6 +442,8 @@ func _activate_spawned_enemy(enemy: Node2D) -> void:
 	enemy.modulate = enemy.get_meta("spawn_reveal_modulate", Color.WHITE)
 	enemy.scale = enemy.get_meta("spawn_reveal_scale",enemy.scale)
 	enemy.set_meta("spawn_reveal_pending", false)
+	if enemy.has_method("_register_combat_target"):
+		enemy.call("_register_combat_target")
 	statistics.activated += 1
 	_record_lifecycle(enemy,&"activated",enemy.get_meta("spawn_request",{}))
 	spawn_activated.emit(enemy.get_meta("spawn_request",{}),enemy)

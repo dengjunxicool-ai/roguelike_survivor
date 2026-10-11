@@ -9,11 +9,16 @@ const ENEMY_GROUP: StringName = &"enemies"
 const LEGACY_ENEMY_GROUP: StringName = &"enemy"
 const DEFAULT_CELL_SIZE: float = 128.0
 const GRID_QUERY_MIN_TARGETS: int = 96
+# Opt-in targets notify eligibility changes through their lifecycle. Generic
+# targets keep the original full validation on every query.
+const QUERY_CACHE_SAFE_META: StringName = &"combat_query_cache_safe"
 
 var _targets_by_group: Dictionary = {}
 var _enemy_grid: Dictionary = {}
 var _enemy_grid_frame: int = -1
 var _enemy_grid_dirty: bool = true
+var _enemy_grid_target_count: int = 0
+var _uncached_enemy_ids: Dictionary = {}
 
 
 ## 作用：在场景树根复用或创建注册表节点。
@@ -62,6 +67,12 @@ func register_target(target: Node, group: StringName) -> void:
 	var targets: Dictionary = _targets_by_group.get(group, {})
 	targets[int(target.get_instance_id())] = weakref(target)
 	_targets_by_group[group] = targets
+	if group == ENEMY_GROUP:
+		if bool(target.get_meta(QUERY_CACHE_SAFE_META, false)) and target.has_signal("health_changed") and target.has_signal("died"):
+			_uncached_enemy_ids.erase(int(target.get_instance_id()))
+			_connect_cache_notifications(target)
+		else:
+			_uncached_enemy_ids[int(target.get_instance_id())] = true
 	if _is_enemy_group(group):
 		_enemy_grid_dirty = true
 
@@ -73,6 +84,9 @@ func unregister_target(target: Node, group: StringName) -> void:
 		return
 	var targets: Dictionary = _targets_by_group.get(group, {})
 	targets.erase(int(target.get_instance_id()))
+	if group == ENEMY_GROUP:
+		_uncached_enemy_ids.erase(int(target.get_instance_id()))
+		_disconnect_cache_notifications(target)
 	if targets.is_empty():
 		_targets_by_group.erase(group)
 	else:
@@ -100,6 +114,11 @@ func get_targets(group: StringName = ENEMY_GROUP) -> Array[Node2D]:
 		result.append(target)
 
 	for stale_id: int in stale_ids:
+		if group == ENEMY_GROUP:
+			var stale_target: Node = _target_from_ref(targets[stale_id])
+			if stale_target != null:
+				_disconnect_cache_notifications(stale_target)
+			_uncached_enemy_ids.erase(stale_id)
 		targets.erase(stale_id)
 	if stale_ids.size() > 0:
 		if targets.is_empty():
@@ -119,11 +138,24 @@ func get_targets_in_radius(origin: Vector2, radius: float, group: StringName = E
 	if not _is_enemy_group(group):
 		return _filter_targets_in_radius(get_targets(group), origin, radius, max_results)
 
-	var all_targets: Array[Node2D] = get_targets(ENEMY_GROUP)
-	if all_targets.size() < GRID_QUERY_MIN_TARGETS:
-		return _filter_targets_in_radius(all_targets, origin, radius, max_results)
-
-	_ensure_enemy_grid(all_targets)
+	# Small populations retain registration order. Large populations only scan
+	# the registry when building the existing per-physics-frame grid.
+	var registered: Dictionary = _targets_by_group.get(ENEMY_GROUP, {})
+	if not _uncached_enemy_ids.is_empty():
+		var all_targets: Array[Node2D] = get_targets(ENEMY_GROUP)
+		if all_targets.size() < GRID_QUERY_MIN_TARGETS:
+			return _filter_targets_in_radius(all_targets, origin, radius, max_results)
+		_ensure_enemy_grid(all_targets)
+	elif registered.size() < GRID_QUERY_MIN_TARGETS:
+		return _filter_targets_in_radius(get_targets(ENEMY_GROUP), origin, radius, max_results)
+	else:
+		_ensure_enemy_grid()
+	if _enemy_grid_target_count < GRID_QUERY_MIN_TARGETS:
+		var all_targets: Array[Node2D] = get_targets(ENEMY_GROUP)
+		if all_targets.size() < GRID_QUERY_MIN_TARGETS:
+			return _filter_targets_in_radius(all_targets, origin, radius, max_results)
+		_enemy_grid_dirty = true
+		_ensure_enemy_grid(all_targets)
 	var result: Array[Node2D] = []
 	var radius_squared: float = radius * radius
 	var cell_radius: int = ceili(radius / DEFAULT_CELL_SIZE)
@@ -132,8 +164,8 @@ func get_targets_in_radius(origin: Vector2, radius: float, group: StringName = E
 		for y: int in range(origin_cell.y - cell_radius, origin_cell.y + cell_radius + 1):
 			var bucket: Array = _enemy_grid.get(Vector2i(x, y), [])
 			for target_variant: Variant in bucket:
-				var target: Node2D = target_variant as Node2D
-				if not _is_live_target(target):
+				var target: Node2D = _target_from_ref(target_variant) as Node2D
+				if not _is_live_target(target) or not _is_available_target(target):
 					continue
 				if origin.distance_squared_to(target.global_position) <= radius_squared:
 					result.append(target)
@@ -178,13 +210,45 @@ func _ensure_enemy_grid(targets: Array[Node2D] = []) -> void:
 		return
 	_enemy_grid.clear()
 	_enemy_grid_frame = frame
-	_enemy_grid_dirty = false
 	var enemies: Array[Node2D] = targets if not targets.is_empty() else get_targets(ENEMY_GROUP)
+	_enemy_grid_target_count = enemies.size()
+	var references: Dictionary = _targets_by_group.get(ENEMY_GROUP, {})
 	for enemy: Node2D in enemies:
 		var cell: Vector2i = _spatial_cell(enemy.global_position)
 		var bucket: Array = _enemy_grid.get(cell, [])
-		bucket.append(enemy)
+		# Registration already owns a weak reference; reuse it instead of
+		# allocating one per enemy on every physics-frame rebuild.
+		bucket.append(references.get(int(enemy.get_instance_id())))
 		_enemy_grid[cell] = bucket
+	# get_targets may remove stale registrations while collecting this snapshot.
+	_enemy_grid_dirty = false
+
+
+func _connect_cache_notifications(target: Node) -> void:
+	if not target.is_connected("health_changed", _on_target_health_changed):
+		target.connect("health_changed", _on_target_health_changed)
+	if not target.is_connected("died", _invalidate_enemy_grid):
+		target.connect("died", _invalidate_enemy_grid)
+	if not target.tree_exiting.is_connected(_invalidate_enemy_grid):
+		target.tree_exiting.connect(_invalidate_enemy_grid)
+
+
+func _disconnect_cache_notifications(target: Node) -> void:
+	if target.has_signal("health_changed") and target.is_connected("health_changed", _on_target_health_changed):
+		target.disconnect("health_changed", _on_target_health_changed)
+	if target.has_signal("died") and target.is_connected("died", _invalidate_enemy_grid):
+		target.disconnect("died", _invalidate_enemy_grid)
+	if target.tree_exiting.is_connected(_invalidate_enemy_grid):
+		target.tree_exiting.disconnect(_invalidate_enemy_grid)
+
+
+func _on_target_health_changed(current_health: int, _maximum_health: int) -> void:
+	if current_health <= 0:
+		_invalidate_enemy_grid()
+
+
+func _invalidate_enemy_grid() -> void:
+	_enemy_grid_dirty = true
 
 
 ## 作用：线性过滤圆内目标，超过结果上限时返回最近项。

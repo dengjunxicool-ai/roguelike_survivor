@@ -181,12 +181,38 @@ static func _find_densest_enemy_cluster_center(caster: Node2D, params: Dictionar
 	var best_enemy: Node2D = null
 	var best_count: int = -1
 	var best_distance_squared: float = INF
-	for enemy: Node2D in _get_valid_enemies():
+	# Eligibility is identical for every center in this synchronous selection.
+	# Collect it once, then count exact distances only in nearby spatial cells.
+	var candidates: Array = _get_valid_enemies()
+	var cluster_grid: Dictionary = {}
+	var cell_size: float = CombatTargetRegistryScript.DEFAULT_CELL_SIZE
+	var finite_radius: bool = cluster_radius > 0.0 and not is_inf(cluster_radius)
+	if finite_radius:
+		for enemy: Node2D in candidates:
+			var cell := Vector2i(floori(enemy.global_position.x / cell_size), floori(enemy.global_position.y / cell_size))
+			var bucket: Array = cluster_grid.get(cell, [])
+			bucket.append(enemy)
+			cluster_grid[cell] = bucket
+	var cell_radius: int = ceili(cluster_radius / cell_size) if finite_radius else 0
+	var radius_squared: float = cluster_radius * cluster_radius
+	var priority_status := StringName(str(params.get("priority_status", "")))
+	for enemy: Node2D in candidates:
 		var distance_squared: float = origin.global_position.distance_squared_to(enemy.global_position) if origin != null else 0.0
 		if origin != null and distance_squared > max_distance_squared:
 			continue
-		var nearby_count: int = _nearby_enemy_count(enemy.global_position, cluster_radius)
-		if StringName(str(params.get("priority_status", ""))) != &"" and _has_any_status(enemy, [StringName(str(params.get("priority_status", "")))]):
+		var nearby_count: int = 0
+		if finite_radius:
+			var center := enemy.global_position
+			var cell := Vector2i(floori(center.x / cell_size), floori(center.y / cell_size))
+			for x: int in range(cell.x - cell_radius, cell.x + cell_radius + 1):
+				for y: int in range(cell.y - cell_radius, cell.y + cell_radius + 1):
+					var bucket: Array = cluster_grid.get(Vector2i(x, y), [])
+					for neighbor: Node2D in bucket:
+						if center.distance_squared_to(neighbor.global_position) <= radius_squared:
+							nearby_count += 1
+		elif cluster_radius > 0.0:
+			nearby_count = candidates.size()
+		if priority_status != &"" and _has_any_status(enemy, [priority_status]):
 			nearby_count += 1000
 		if nearby_count > best_count or (nearby_count == best_count and distance_squared < best_distance_squared):
 			best_enemy = enemy
