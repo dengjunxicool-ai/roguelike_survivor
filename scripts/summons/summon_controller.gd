@@ -109,7 +109,9 @@ func _physics_process_profiled(delta: float) -> void:
 				copy_context["skill_manager"] = summon_owner.get_node_or_null("SkillManager")
 				copy_context["event_bus"] = bus
 				copy_context["copy_owner"] = weakref(self)
-				bus.replay_cast(bus.get_cast_snapshot(),copy_context,0.35)
+				if bus.replay_cast(bus.get_cast_snapshot(),copy_context,0.35):
+					if is_instance_valid(_summon_effect) and _summon_effect.has_method("play_attack"):
+						_summon_effect.call("play_attack")
 		_movement.move_follow(self,summon_owner,delta)
 		return
 

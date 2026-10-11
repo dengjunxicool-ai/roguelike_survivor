@@ -18,10 +18,17 @@ static func apply_saved_settings() -> void:
 
 ## 作用：根据全屏请求切换窗口显示模式。
 ## 使用：true 明确应用全屏，false 明确应用窗口态；重复应用保持状态和窗口尺寸。
-static func apply_window_mode(fullscreen_enabled: bool) -> void:
+static func apply_window_mode(fullscreen_enabled: bool) -> bool:
+	if DisplayServer.get_name() == "headless" or is_game_embedded():
+		return false
 	var target_mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen_enabled else DisplayServer.WINDOW_MODE_WINDOWED
 	if DisplayServer.window_get_mode() != target_mode:
 		DisplayServer.window_set_mode(target_mode)
+	return DisplayServer.window_get_mode() == target_mode
+
+## 作用：检测编辑器以原生父窗口启动的游戏；该模式仅支持窗口态。
+static func is_game_embedded() -> bool:
+	return Engine.is_embedded_in_editor()
 
 
 ## 作用：把 0～100 百分比转换为主声道音量，零音量时静音。

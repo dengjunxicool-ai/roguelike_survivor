@@ -125,6 +125,14 @@ func refresh_level_up_modal() -> void:
 
 	_refresh_choice_card_modal(_level_up_options, options, STATE_RUNNING, true)
 
+## 作用：免费重新抽取技能候选，保留待办与暂停状态；替换确认期间禁止刷新。
+func reroll_level_up_options() -> void:
+	if not has_pending_level_up() or is_instance_valid(_replacement_view):
+		return
+	if _level_up_options == null or not _level_up_options.is_visible_in_tree():
+		return
+	refresh_level_up_modal()
+
 
 ## 作用：刷新诅咒选择弹窗。
 ## 使用：供本模块调用者使用。
@@ -798,17 +806,27 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 	# Newly created cards can temporarily enlarge the container's minimum size.
 	# Use the screen's available width too, so four cards can shrink back into view.
 	var screen_width: float = viewport_size.x
+	var screen_height: float = viewport_size.y
 	var ancestor: Node = container.get_parent()
 	while ancestor != null:
 		if ancestor is MarginContainer:
 			screen_width -= ancestor.get_theme_constant("margin_left") + ancestor.get_theme_constant("margin_right")
+			screen_height -= ancestor.get_theme_constant("margin_top") + ancestor.get_theme_constant("margin_bottom")
 		ancestor = ancestor.get_parent()
+	var column: BoxContainer = container.get_parent() as BoxContainer
+	if column != null:
+		for sibling: Node in column.get_children():
+			if sibling != container and sibling is Control and sibling.visible:
+				screen_height -= sibling.get_combined_minimum_size().y + column.get_theme_constant("separation")
 	var available_width: float = minf(container.size.x, maxf(screen_width, 1.0))
 	var max_card_width: float = maxf((available_width - fixed_gap_width) / float(card_count), 1.0)
 	var card_size: Vector2 = base_size * ui_scale
 	if card_size.x > max_card_width:
 		card_size.x = max_card_width
 		card_size.y = card_size.x * (base_size.y / base_size.x)
+	if card_size.y > maxf(screen_height, 1.0):
+		card_size.y = maxf(screen_height, 1.0)
+		card_size.x = card_size.y * (base_size.x / base_size.y)
 	card_size = Vector2(floor(card_size.x), floor(card_size.y))
 	for spacer: Control in _choice_gap_spacers:
 		if is_instance_valid(spacer):

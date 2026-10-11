@@ -39,6 +39,16 @@ func run() -> void:
 		check(view.layer > ui.layer, "replacement draws above choice UI")
 		await capture("replacement-overlay")
 		var count: int = choice.pending_level_up_count
+		var rng_before: int = choice._upgrade_pool._rng.state
+		var candidates_before: Array[String] = []
+		for card: Button in choice._choice_card_buttons:
+			candidates_before.append(card.tooltip_text)
+		ui._reroll_skill_choices()
+		var candidates_after: Array[String] = []
+		for card: Button in choice._choice_card_buttons:
+			candidates_after.append(card.tooltip_text)
+		check(choice._upgrade_pool._rng.state == rng_before and candidates_before == candidates_after, "replacement confirmation blocks skill reroll")
+		check(choice.pending_level_up_count == count and replacement_view() == view, "blocked reroll preserves replacement transaction")
 		choice._select_upgrade_option(ordinary,"RUNNING",true)
 		await settle()
 		check(replacement_view() == view, "duplicate click keeps one transaction")

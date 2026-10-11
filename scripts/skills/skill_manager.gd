@@ -34,6 +34,18 @@ var _primary_attack_method: RefCounted = null
 ## 作用：检查学习、槽位和神系限制，完成攻击继承与替换，再登记技能、属性及信号。
 ## 使用：skill_id 为标准技能 ID；rarity 为目标稀有度；会发出对应变更信号；返回布尔判断或执行是否成功。
 func add_skill(skill_id: Variant, rarity: String = "") -> bool:
+	return _add_skill(skill_id, rarity, false)
+
+
+## 作用：仅在开发者模式中跳过学习前置条件，仍检查容量、神系和互斥槽位。
+## 使用：开发者构筑开局调用；普通学习继续使用 add_skill。
+func add_developer_skill(skill_id: Variant, rarity: String = "") -> bool:
+	if get_tree() == null or not bool(get_tree().root.get_meta("developer_mode_enabled", false)):
+		return false
+	return _add_skill(skill_id, rarity, true)
+
+
+func _add_skill(skill_id: Variant, rarity: String, developer_grant: bool) -> bool:
 	var id: StringName = _to_skill_id(skill_id)
 	if id == &"" or has_skill(id):
 		return false
@@ -41,8 +53,15 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 	var definition_data: Dictionary = _get_skill_definition_data(id)
 	if definition_data.is_empty():
 		return false
-	if not preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(get_parent(), definition_data).available:
+	if not developer_grant and not preload("res://scripts/skills/skill_requirement_policy.gd").new().evaluate(get_parent(), definition_data).available:
 		return false
+	if developer_grant:
+		if not bool(definition_data.get("offer_enabled", true)):
+			return false
+		var exclusive_group: String = String(definition_data.get("exclusive_group", "")) if definition_data.get("exclusive_group") != null else ""
+		for owned: RefCounted in get_all_skills():
+			if exclusive_group != "" and String(owned.exclusive_group) == exclusive_group:
+				return false
 	if _is_starting_attack_method_definition(definition_data):
 		return false
 	var category: String = _category_from_skill_type(definition_data)
@@ -50,7 +69,7 @@ func add_skill(skill_id: Variant, rarity: String = "") -> bool:
 		return false
 	if not _can_current_character_learn(definition_data):
 		return false
-	if not _can_learn_god_school_definition(definition_data):
+	if not (developer_grant and SkillLearningPolicyScript.is_fusion_definition(definition_data)) and not _can_learn_god_school_definition(definition_data):
 		return false
 	var capacity: StringName = SkillSlotPolicyScript.capacity_group(definition_data)
 	if capacity in [&"core", &"fusion"]:

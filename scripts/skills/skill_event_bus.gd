@@ -53,6 +53,16 @@ func _ready() -> void:
 	var holy_presentation := preload("res://scripts/visual/holy_combat_presentation.gd").new()
 	holy_presentation.name = "HolyCombatPresentation"
 	add_child(holy_presentation)
+	var chaos_presentation := preload("res://scripts/visual/chaos_combat_presentation.gd").new()
+	chaos_presentation.name = "ChaosCombatPresentation"
+	add_child(chaos_presentation)
+
+## 已成功交换/复制后的纯表现通知，不增加技能事件或触发预算。
+func present_chaos_swap(from: Vector2, to: Vector2) -> void:
+	get_node("ChaosCombatPresentation").play_swap(from,to)
+
+func present_chaos_replay(point: Vector2) -> void:
+	get_node("ChaosCombatPresentation").play_replay(point)
 
 ## 已实际吸收的伤害仅通知表现，不增加技能事件或触发预算。
 func present_holy_absorb(point: Vector2, amount: int) -> void:
@@ -99,6 +109,8 @@ func combat_seconds() -> float:
 	return _clock.now_seconds()
 
 func reset_run_state() -> void:
+	var chaos_presentation: Node = get_node_or_null("ChaosCombatPresentation")
+	if chaos_presentation != null: chaos_presentation.reset_presentation()
 	var holy_presentation: Node = get_node_or_null("HolyCombatPresentation")
 	if holy_presentation != null: holy_presentation.reset_presentation()
 	var curse_presentation: Node = get_node_or_null("CurseCombatPresentation")

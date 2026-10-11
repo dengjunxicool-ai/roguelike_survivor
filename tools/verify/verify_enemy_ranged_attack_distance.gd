@@ -41,6 +41,13 @@ func _run() -> void:
 	enemy.position = Vector2(420, 0)
 	controller.call("tick", 0.01)
 	_expect(enemy.velocity == Vector2.ZERO and float(enemy.get("_ranged_warning_timer")) > 0.0, "archer can attack at the displayed range boundary")
+	enemy.position = Vector2(421, 0)
+	controller.call("tick", 0.1)
+	_expect(is_zero_approx(float(enemy.get("_ranged_warning_timer"))), "leaving 420 range cancels warning even before chase resumes")
+	for _index: int in range(6):
+		controller.call("tick", 0.1)
+	await process_frame
+	_expect(get_nodes_in_group(&"enemy_projectile").size() == 1, "holding outside range cannot start or complete a new shot")
 	enemy.position = Vector2(461, 0)
 	controller.call("tick", 0.1)
 	_expect(enemy.velocity.x < 0.0 and is_zero_approx(float(enemy.get("_ranged_warning_timer"))), "outside range archer cancels warning and approaches")

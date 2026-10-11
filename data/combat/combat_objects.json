@@ -1627,7 +1627,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 84,
 			"visual_mode": "programmatic",
-			"visual_style": "smoke_zone",
+			"visual_style": "chaos_rift",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.48,
 				0.12,
@@ -1647,7 +1648,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 210,
 			"visual_mode": "programmatic",
-			"visual_style": "smoke_zone",
+			"visual_style": "void_rift_field",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.18,
 				0.05,
@@ -1669,7 +1671,8 @@
 			"destroy_on_wall": true,
 			"destroy_on_hit": true,
 			"visual_mode": "programmatic",
-			"visual_style": "arcane_page",
+			"visual_style": "chaos_orb",
+			"visual_effect_scene": "res://scenes/effects/chaos_projectile_effect.tscn",
 			"visual_color": [
 				0.72,
 				0.18,
@@ -1689,7 +1692,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 54.6,
 			"visual_mode": "programmatic",
-			"visual_style": "lightning_orb",
+			"visual_style": "chaos_weak_hit",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.7,
 				0.2,
@@ -1709,7 +1713,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 252,
 			"visual_mode": "programmatic",
-			"visual_style": "emp_ring",
+			"visual_style": "mutation_pulse_area",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.58,
 				0.12,
@@ -1729,7 +1734,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 151.2,
 			"visual_mode": "programmatic",
-			"visual_style": "lightning_strike",
+			"visual_style": "instability_fission_burst",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.75,
 				0.16,
@@ -1749,7 +1755,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 37.8,
 			"visual_mode": "programmatic",
-			"visual_style": "emp_ring",
+			"visual_style": "chaos_exchange_line",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.45,
 				0.08,
@@ -1769,7 +1776,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 504,
 			"visual_mode": "programmatic",
-			"visual_style": "thunderstorm_cloud",
+			"visual_style": "chaos_singularity_field",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.12,
 				0.03,
@@ -1789,7 +1797,8 @@
 			"scene": "res://scenes/combat/area_effect.tscn",
 			"collision_radius": 504,
 			"visual_mode": "programmatic",
-			"visual_style": "lightning_strike",
+			"visual_style": "chaos_singularity_burst",
+			"visual_effect_scene": "res://scenes/effects/chaos_area_effect.tscn",
 			"visual_color": [
 				0.92,
 				0.25,

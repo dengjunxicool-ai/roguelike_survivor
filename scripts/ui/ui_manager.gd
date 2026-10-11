@@ -40,6 +40,7 @@ const RunHudStateProviderScript: Script = preload("res://scripts/ui/hud/run_hud_
 const RunChoiceModalControllerScript: Script = preload("res://scripts/ui/modals/run_choice_modal_controller.gd")
 const ModalFlowControllerScript: Script = preload("res://scripts/ui/modals/modal_flow_controller.gd")
 const DevDebugPanelScript: Script = preload("res://scripts/debug/dev_debug_panel.gd")
+const DeveloperSkillBuildScript: Script = preload("res://scripts/game/developer_skill_build.gd")
 const UINodeFactoryScript: Script = preload("res://scripts/ui/ui_node_factory.gd")
 const UIScreenFactoryScript: Script = preload("res://scripts/ui/ui_screen_factory.gd")
 const UIResponsiveLayoutScript: Script = preload("res://scripts/ui/ui_responsive_layout.gd")
@@ -56,6 +57,7 @@ const RunResultStateBuilderScript: Script = preload("res://scripts/ui/run_result
 const DEFAULT_MAP_ID: StringName = &"abandoned_dungeon"
 
 var current_state: String = STATE_BOOT
+var last_developer_run_error: String = ""
 
 var _screen_registry: RefCounted = UIScreenRegistryScript.new()
 var _selected_character_id: StringName = &"mage"
@@ -223,19 +225,31 @@ func show_screen(next_state: String) -> void:
 
 ## 作用：启动开发者调试单局。
 ## 使用：本文件由 _start_developer_mode 调用；输入 setup（初始化）。
-func start_developer_debug_run(setup: Dictionary = {}) -> void:
+func start_developer_debug_run(setup: Dictionary = {}) -> bool:
+	last_developer_run_error = ""
+	if _run_loading_active:
+		last_developer_run_error = "游戏正在加载，请稍候。"
+		return false
+	var snapshot: Dictionary = setup.duplicate(true)
+	var character_id: StringName = StringName(String(snapshot.get("character_id", _selected_character_id)))
+	if snapshot.has("skill_build") or bool(snapshot.get("play_build", false)):
+		var validation: Dictionary = DeveloperSkillBuildScript.validate(character_id, snapshot.get("skill_build", []))
+		if not bool(validation.valid):
+			last_developer_run_error = "\n".join(validation.errors)
+			return false
 	var tree: SceneTree = get_tree()
 	if tree != null and tree.root != null:
 		tree.root.set_meta("developer_mode_enabled", true)
 		tree.root.set_meta("debug_control_mode", true)
 		tree.root.set_meta("debug_manual_spawn_only", true)
 
-	_selected_character_id = StringName(String(setup.get("character_id", _selected_character_id)))
-	_selected_map_id = StringName(String(setup.get("map_id", _selected_map_id)))
+	_selected_character_id = character_id
+	_selected_map_id = StringName(String(snapshot.get("map_id", _selected_map_id)))
 	var previous_allow_direct: bool = _allow_direct_running_transition
 	_allow_direct_running_transition = true
-	_start_run(_selected_map_id)
+	var succeeded: bool = await _start_run(_selected_map_id, snapshot)
 	_allow_direct_running_transition = previous_allow_direct
+	return succeeded
 
 
 ## 作用：退出游戏。
@@ -473,6 +487,20 @@ func _ensure_run_hud_built() -> void:
 ## 使用：内部辅助入口。
 func _build_level_up_modal() -> void:
 	_level_up_options = _create_choice_modal_screen(STATE_LEVEL_UP_MODAL, _tr("panel.level_up", "技能选择"), 20)
+	var column: VBoxContainer = _level_up_options.get_parent() as VBoxContainer
+	column.add_theme_constant_override("separation", 20)
+	var button: Button = Button.new()
+	button.name = "RerollSkills"
+	button.custom_minimum_size = Vector2(220, 44)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	UIButtonSkin.apply(button)
+	LocalizationServiceScript.bind_text(button, "panel.reroll_skills", "重新刷新")
+	button.pressed.connect(Callable(self, "_reroll_skill_choices"))
+	column.add_child(button)
+
+func _reroll_skill_choices() -> void:
+	if current_state == STATE_LEVEL_UP_MODAL and _run_choice_modal_controller != null:
+		_run_choice_modal_controller.call("reroll_level_up_options")
 
 
 ## 作用：构建局内奖励弹窗。
@@ -742,9 +770,9 @@ func _on_loadout_confirmed(character_id: StringName) -> void:
 
 ## 作用：绘制加载遮罩后构建合法 loadout，重置局内场景与统计并进入运行态。
 ## 使用：map_id 为选中地图；协程需等待初始化帧，重复加载被拒绝，失败关闭遮罩。
-func _start_run(map_id: Variant) -> void:
+func _start_run(map_id: Variant, developer_setup: Dictionary = {}) -> bool:
 	if _run_loading_active:
-		return
+		return false
 	var allow_direct_transition: bool = _allow_direct_running_transition
 	var resolved_map_id: StringName = _run_scene_coordinator.call("resolve_map_id", map_id)
 	var loading_map_data: Dictionary = GameData.get_map(resolved_map_id)
@@ -755,7 +783,7 @@ func _start_run(map_id: Variant) -> void:
 	if loadout == null:
 		_hide_run_loading_overlay(true)
 		CharacterLoadoutServiceScript.warn_if_invalid(_selected_character_id, "[UIManager]")
-		return
+		return false
 	var run_setup: Dictionary = _run_scene_coordinator.call("start_run", {
 		"tree": get_tree(),
 		"scene_parent": get_parent(),
@@ -767,7 +795,14 @@ func _start_run(map_id: Variant) -> void:
 	})
 	if run_setup.is_empty():
 		_hide_run_loading_overlay(true)
-		return
+		return false
+	if developer_setup.has("skill_build"):
+		var build_player: Node = get_tree().get_first_node_in_group(PLAYER_GROUP)
+		var build_errors: Array[String] = []
+		if not DeveloperSkillBuildScript.apply(build_player, developer_setup.skill_build, build_errors):
+			last_developer_run_error = "\n".join(build_errors)
+			_hide_run_loading_overlay(true)
+			return false
 	_selected_map_id = StringName(run_setup.get("map_id", DEFAULT_MAP_ID))
 	_selected_map_name = String(run_setup.get("map_name", _selected_map_id))
 	_set_run_loading_status("场景初始化中")
@@ -797,9 +832,19 @@ func _start_run(map_id: Variant) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_enter_running_state_with_direct(allow_direct_transition)
+	if bool(developer_setup.get("play_build", false)):
+		get_tree().root.set_meta("debug_control_mode", false)
+		get_tree().root.set_meta("debug_manual_spawn_only", false)
+		get_tree().root.set_meta("debug_player_attack_disabled", false)
+		get_tree().root.set_meta("debug_enemy_forced_state", "")
+		var debug_panel: Node = get_tree().root.find_child("DevDebugPanel", true, false)
+		if debug_panel != null:
+			debug_panel.call("_clear_enemy_state_override")
+			debug_panel.call("_set_left_toolbar_visible", false)
 	_hide_run_loading_overlay(false)
-	if bool(get_tree().root.get_meta("developer_mode_enabled", false)):
+	if bool(get_tree().root.get_meta("developer_mode_enabled", false)) and not bool(developer_setup.get("play_build", false)):
 		call_deferred("_open_developer_debug_panel")
+	return true
 
 
 ## 作用：显示单局加载叠层。

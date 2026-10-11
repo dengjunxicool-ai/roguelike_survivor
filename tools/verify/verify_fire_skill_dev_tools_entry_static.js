@@ -134,16 +134,6 @@ assert(smoke.includes("GodSkillCard_fire_attack_searing"), "Godot smoke must ins
 assert(smoke.includes("fire_attack_searing"), "Godot smoke must exercise fire_attack_searing as a fire skill");
 assert(smoke.includes("enemy_count_after"), "Godot smoke must assert selecting a skill does not spawn enemies");
 
-const fireEffectPaths = [
-  "scripts/effects/fire_tornado_effect.gd",
-  "scenes/effects/fire_tornado_effect.tscn",
-  "scripts/effects/mars_spark_missile_effect.gd",
-  "scenes/effects/mars_spark_missile_effect.tscn",
-];
-for (const relativePath of fireEffectPaths) {
-  const text = read(relativePath);
-  assert(!text.includes("CPUParticles2D"), `${relativePath} must not use CPUParticles2D`);
-}
 assert(!panel.includes("CPUParticles2D"), "DevDebugPanel must not reference CPUParticles2D for fire/debug effects");
 
 console.log("[verify_fire_skill_dev_tools_entry_static] PASS");

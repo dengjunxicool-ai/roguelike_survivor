@@ -10,7 +10,7 @@ var fissions: int = 0
 var geometry_next: int = 0
 var pending: Array[Dictionary] = []
 func state() -> Dictionary:
-	return {"entropy":entropy.duplicate(true),"entropy_next":entropy_next,"stability_ready":stability_ready,"echo_count":echo_count,"pending":pending.size()}
+	return {"entropy":entropy.duplicate(true),"entropy_next":entropy_next,"stability_count":stability_count,"stability_ready":stability_ready,"echo_count":echo_count,"fissions":fissions,"pending":pending.size()}
 func reset() -> void:
 	entropy.clear()
 	entropy_next = 0
@@ -45,7 +45,9 @@ func handle(bus: Node, name: StringName, context: Dictionary) -> void:
 				stability_ready = stability_count >= 5
 		if manager.has_skill(&"chaos_power_echo_cast"):
 			echo_count = mini(echo_count+1,4)
-			if echo_count >= 4 and bus.replay_cast(bus.get_cast_snapshot({"skill_type":"cast"}),context,0.4): echo_count = 0
+			if echo_count >= 4 and bus.replay_cast(bus.get_cast_snapshot({"skill_type":"cast"}),context,0.4):
+				echo_count = 0
+				bus.present_chaos_replay(context.caster.global_position)
 	if name != &"status_max_stack_reached" or String(context.get("status_id","")) != "instability" or not manager.has_skill(&"chaos_power_fission_burst"): return
 	if int(context.get("proc_depth",0)) >= 2: return
 	if manager.has_skill(&"chaos_passive_entropy_growth"):
@@ -54,7 +56,7 @@ func handle(bus: Node, name: StringName, context: Dictionary) -> void:
 			context.caster.get_node("ModifierStore").clear_source(old.source)
 		var source: String = "skill:chaos_passive_entropy_growth:branch:%d" % entropy_next
 		var stat: String = ["damage","range","cooldown","move_speed"][entropy_next]
-		var entry: Dictionary = {"stat":stat,"op":"multiplier_add","value":-0.12 if stat == "cooldown" else 0.12,"scope":{}}
+		var entry: Dictionary = {"source":"skill","stat":stat,"op":"multiplier_add","value":-0.12 if stat == "cooldown" else 0.12,"scope":{}}
 		context.caster.get_node("ModifierStore").set_timed_source(source,[entry],[],5.0)
 		entropy.append({"source":source,"expires":bus.combat_seconds()+5.0,"branch":entropy_next})
 		entropy_next = (entropy_next+1)%4

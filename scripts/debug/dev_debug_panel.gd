@@ -1,4 +1,4 @@
-## 文件用途：调试工具宿主与左侧面板，装配开局、运行时、技能卡、敌人、特效、状态及工具页，保留各页公开转发入口。
+## 文件用途：调试工具宿主与左侧面板，装配开局、运行时、技能卡、敌人、状态及工具页，保留各页公开转发入口。
 ## 使用方式：在调试构建或 developer_mode_enabled 开启时运行；F12 切换工具栏，open_developer_mode 启用手控和手动刷怪，各按钮经本宿主转发给 pages 控制器。
 extends CanvasLayer
 class_name DevDebugPanel
@@ -10,7 +10,6 @@ const SkillActionExecutorScript: Script = preload("res://scripts/skills/skill_ac
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
 const EnemyAttackRangeOverlayScript: Script = preload("res://scripts/debug/enemy_attack_range_overlay.gd")
 const DebugCombatTraceScript: Script = preload("res://scripts/runtime/debug_combat_trace.gd")
-const DevDebugEffectsPageScript: Script = preload("res://scripts/debug/pages/dev_debug_effects_page.gd")
 const SkillEffectSummaryBuilderScript: Script = preload("res://scripts/skills/skill_effect_summary_builder.gd")
 const StatusShortNameFormatterScript: Script = preload("res://scripts/ui/status_short_name_formatter.gd")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/enemy.tscn")
@@ -26,8 +25,6 @@ var _character_option: OptionButton
 var _map_option: OptionButton
 var _enemy_option: OptionButton
 var _enemy_state_option: OptionButton
-var _effects_page: VBoxContainer
-var _effect_option: OptionButton
 var _fire_skill_option: OptionButton
 var _status_option: OptionButton
 var _spawn_count_spin: SpinBox
@@ -97,6 +94,7 @@ func _ready() -> void:
 		return
 
 	_build_panel()
+	get_viewport().size_changed.connect(_fit_panel_to_viewport)
 	_populate_options()
 	_sync_options_from_runtime()
 	set_process(true)
@@ -186,8 +184,6 @@ func _build_panel() -> void:
 
 	_build_enemy_spawn_page(page_root)
 
-	_build_effects_page(page_root)
-
 	_build_status_page(page_root)
 
 	_build_utility_page(page_root)
@@ -210,7 +206,7 @@ func _build_panel_shell() -> VBoxContainer:
 	_panel.offset_left = 12
 	_panel.offset_top = 56
 	_panel.offset_right = 492
-	_panel.offset_bottom = 2036
+	_panel.offset_bottom = get_viewport().get_visible_rect().size.y - 12.0
 	_panel.visible = false
 	add_child(_panel)
 
@@ -241,6 +237,13 @@ func _build_panel_shell() -> VBoxContainer:
 	return root
 
 
+## 作用：让调试面板保持在窗口内，分类内容通过已有滚动容器浏览。
+## 使用：视口尺寸变化时调用，防止开局按钮落到窗口外。
+func _fit_panel_to_viewport() -> void:
+	if _panel != null:
+		_panel.offset_bottom = get_viewport().get_visible_rect().size.y - 12.0
+
+
 ## 作用：为开局、运行时、技能、敌人、特效、状态和工具七类建立两列导航按钮。
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：root: VBoxContainer。
 func _add_category_navigation(root: VBoxContainer) -> void:
@@ -254,7 +257,6 @@ func _add_category_navigation(root: VBoxContainer) -> void:
 	_add_category_button(category_grid, "runtime", "Runtime")
 	_add_category_button(category_grid, "skill_cards", "Skill Cards")
 	_add_category_button(category_grid, "enemy_spawn", "Enemy Spawn")
-	_add_category_button(category_grid, "effects", "Effects")
 	_add_category_button(category_grid, "status", "Status / Stacks")
 	_add_category_button(category_grid, "utility", "Utility")
 
@@ -299,20 +301,6 @@ func _build_enemy_spawn_page(page_root: VBoxContainer) -> void:
 	_enemy_spawn_controller._build_enemy_spawn_page(page_root)
 
 
-## 作用：创建并挂载 DevDebugEffectsPage，注入玩家/敌人查询回调、绑定日志信号后构建控件并缓存下拉框。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：page_root: VBoxContainer。
-func _build_effects_page(page_root: VBoxContainer) -> void:
-	var effects_category: VBoxContainer = _add_category_page(page_root, "effects", "Effects")
-	_effects_page = DevDebugEffectsPageScript.new() as VBoxContainer
-	_effects_page.name = "DevDebugEffectsPage"
-	effects_category.add_child(_effects_page)
-	_effects_page.call("setup", Callable(self, "_get_player"), Callable(self, "_get_nearest_enemy"))
-	if not _effects_page.is_connected("log_requested", Callable(self, "_on_effects_page_log_requested")):
-		_effects_page.connect("log_requested", Callable(self, "_on_effects_page_log_requested"))
-	_effects_page.call("build")
-	_effect_option = _effects_page.call("get_effect_option") as OptionButton
-
-
 ## 作用：转发到状态页 dev_debug_status_page.gd 的 _build_status_page：建立状态、层数、时长、全敌人和玩家目标控件，绑定施加与清除按钮。
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：page_root: VBoxContainer。
 func _build_status_page(page_root: VBoxContainer) -> void:
@@ -325,14 +313,13 @@ func _build_utility_page(page_root: VBoxContainer) -> void:
 	_utility_controller._build_utility_page(page_root)
 
 
-## 作用：重新填充角色、地图、敌人、特效、技能和状态选项，并同步玩家与技能属性输入。
+## 作用：重新填充角色、地图、敌人、技能和状态选项，并同步玩家与技能属性输入。
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。
 func _populate_options() -> void:
 	_populate_character_options()
 	_populate_map_options()
 	_populate_enemy_options()
 	_populate_enemy_state_options()
-	_populate_effect_options()
 	_populate_god_skill_buttons()
 	_refresh_god_skill_cards()
 	_populate_status_options()
@@ -374,13 +361,6 @@ func _add_enemy_group_options(group_label: String, enemies: Array[Dictionary]) -
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。
 func _populate_enemy_state_options() -> void:
 	_enemy_spawn_controller._populate_enemy_state_options()
-
-
-## 作用：已有特效页时调用其 populate_options，重建火龙卷与火星飞弹选项。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。
-func _populate_effect_options() -> void:
-	if _effects_page != null:
-		_effects_page.call("populate_options")
 
 
 ## 作用：转发到技能卡页 dev_debug_skill_cards_page.gd 的 _populate_god_skill_buttons：从神系定义重新创建切换按钮并绑定 ID，校正选择后同步按下状态。
@@ -573,68 +553,6 @@ func _clear_enemy_state_override() -> void:
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。
 func _spawn_configured_enemies() -> void:
 	_enemy_spawn_controller._spawn_configured_enemies()
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 spawn_fire_tornado_effect：实例化火龙卷场景，加入玩家场景父节点并放到目标方向 96 像素处；缺少父节点时释放实例。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。
-func _spawn_fire_tornado_effect() -> void:
-	if _effects_page != null:
-		_effects_page.call("spawn_fire_tornado_effect")
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 start_continuous_effect：用 continuous=true 转交当前选中特效；持续开关由火星飞弹预览消费。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。
-func _start_continuous_effect_fire() -> void:
-	if _effects_page != null:
-		_effects_page.call("start_continuous_effect")
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 fire_single_effect：用 continuous=false 转交当前选中特效，预览一次发射。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。
-func _fire_single_effect() -> void:
-	if _effects_page != null:
-		_effects_page.call("fire_single_effect")
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 trigger_selected_effect：按特效 ID 分派火龙卷或火星飞弹预览，空选项发出警告日志。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：continuous: bool。
-func _trigger_selected_effect(continuous: bool) -> void:
-	if _effects_page != null:
-		_effects_page.call("trigger_selected_effect", continuous)
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 spawn_mars_spark_missile_effect：创建火星飞弹预览，配置起点和目标点以及 continuous 开关，加入场景并输出模式日志。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：continuous: bool。
-func _spawn_mars_spark_missile_effect(continuous: bool) -> void:
-	if _effects_page != null:
-		_effects_page.call("spawn_mars_spark_missile_effect", continuous)
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 resolve_fire_tornado_spawn_position：返回玩家朝最近敌人方向 96 像素的世界坐标；无敌人使用右方向，无玩家返回零向量。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：player: Node2D。 返回 Vector2；具体值及空输入行为见作用说明。
-func _resolve_fire_tornado_spawn_position(player: Node2D) -> Vector2:
-	if _effects_page == null:
-		return Vector2.ZERO
-	var result: Variant = _effects_page.call("resolve_fire_tornado_spawn_position", player)
-	return result if result is Vector2 else Vector2.ZERO
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 resolve_mars_spark_missile_spawn_position：返回玩家朝敌人方向 32 像素的飞弹起点；方向退化时用右方向。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：player: Node2D。 返回 Vector2；具体值及空输入行为见作用说明。
-func _resolve_mars_spark_missile_spawn_position(player: Node2D) -> Vector2:
-	if _effects_page == null:
-		return Vector2.ZERO
-	var result: Variant = _effects_page.call("resolve_mars_spark_missile_spawn_position", player)
-	return result if result is Vector2 else Vector2.ZERO
-
-
-## 作用：转发到特效页 dev_debug_effects_page.gd 的 resolve_mars_spark_missile_target_position：优先返回最近敌人世界坐标；无目标时沿发射方向向前延伸 360 像素。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：player: Node2D, origin: Vector2。 返回 Vector2；具体值及空输入行为见作用说明。
-func _resolve_mars_spark_missile_target_position(player: Node2D, origin: Vector2) -> Vector2:
-	if _effects_page == null:
-		return Vector2.ZERO
-	var result: Variant = _effects_page.call("resolve_mars_spark_missile_target_position", player, origin)
-	return result if result is Vector2 else Vector2.ZERO
 
 
 ## 作用：转发到敌人页 dev_debug_enemy_spawn_page.gd 的 _spawn_all_enemy_types：遍历敌人配置池，各生成一个原始配置实体，环形摆放并标记 debug_spawn_all_types。
@@ -1749,18 +1667,6 @@ func _get_selected_id(option: OptionButton) -> StringName:
 ## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：data: Dictionary, fallback: String。 返回 String；具体值及空输入行为见作用说明。
 func _display_name(data: Dictionary, fallback: String) -> String:
 	return String(data.get("display_name", fallback))
-
-
-## 作用：根据特效页日志等级转发普通、警告或错误显示入口。
-## 使用：由面板按钮、快捷键或调试流程调用此入口。 入参：level: StringName, message: String。
-func _on_effects_page_log_requested(level: StringName, message: String) -> void:
-	match level:
-		&"error":
-			_log_error(message)
-		&"warning":
-			_log_warn(message)
-		_:
-			_log(message)
 
 
 ## 作用：保存最近日志，打印青色调试前缀并刷新状态。

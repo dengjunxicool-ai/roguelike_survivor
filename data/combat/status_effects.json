@@ -138,6 +138,11 @@
 			"boss_conversion_rule": "none",
 			"id": "instability",
 			"display_name": "Instability",
+			"visual": {
+				"effect_scene": "res://scenes/effects/chaos_status_effect.tscn",
+				"priority": 28,
+				"overlay_z_index": 20
+			},
 			"type": "mark",
 			"max_stacks": 4,
 			"effect": {},

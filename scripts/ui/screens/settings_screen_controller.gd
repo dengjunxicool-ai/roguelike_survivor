@@ -41,11 +41,14 @@ func build(body: VBoxContainer) -> void:
 	_add_localized_label(body, "settings.video", "画面", 1)
 	_fullscreen_button = CheckBox.new()
 	LocalizationServiceScript.bind_text(_fullscreen_button, "settings.fullscreen", "全屏")
-	_fullscreen_button.button_pressed = SaveManager.get_fullscreen_enabled()
+	_fullscreen_button.button_pressed = DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+	_fullscreen_button.disabled = UISettingsServiceScript.is_game_embedded()
 	_applied_fullscreen = _fullscreen_button.button_pressed
 	UIButtonSkin.apply(_fullscreen_button)
 	_fullscreen_button.toggled.connect(Callable(self, "_set_fullscreen"))
 	body.add_child(_fullscreen_button)
+	if _fullscreen_button.disabled:
+		_add_localized_label(body, "settings.fullscreen_unavailable", "请在独立游戏窗口中使用全屏。")
 
 	_add_localized_label(body, "settings.language", "语言", 1)
 	_language_button = OptionButton.new()
@@ -71,7 +74,10 @@ func _set_fullscreen(enabled: bool) -> void:
 	if not SaveManager.set_fullscreen_enabled(enabled):
 		_fullscreen_button.set_pressed_no_signal(_applied_fullscreen)
 		return
-	UISettingsServiceScript.apply_window_mode(enabled)
+	if not UISettingsServiceScript.apply_window_mode(enabled):
+		SaveManager.set_fullscreen_enabled(_applied_fullscreen)
+		_fullscreen_button.set_pressed_no_signal(_applied_fullscreen)
+		return
 	_applied_fullscreen = enabled
 
 
