@@ -30,6 +30,7 @@ var _attack: RefCounted
 var _context: Dictionary = {}
 var _remaining_duration: float = 0.0
 var _copy_remaining: float = 2.0
+var _summon_effect: Node2D
 
 
 ## 作用：解析定义与拥有者，按技能成长缩放时长和攻击配置，再创建组件与视觉并启用物理处理。
@@ -76,7 +77,9 @@ func _scaled_attack_config(config: Dictionary, skill_instance: RefCounted) -> Di
 ## 使用：引擎每物理帧传delta。
 func _physics_process(delta: float) -> void:
 	var hot_path_start: int = HotPathProfilerScript.begin(self)
+	var previous_position: Vector2 = global_position
 	_physics_process_profiled(delta)
+	_update_summon_visual(delta, previous_position)
 	HotPathProfilerScript.end(self, &"summon_update", hot_path_start)
 
 
@@ -138,7 +141,11 @@ func _physics_process_profiled(delta: float) -> void:
 		state = STATE_ATTACK
 		_face_target(target)
 		if _attack.can_attack():
-			_attack.attack(self, target, player_power, _context)
+			if _attack.attack(self, target, player_power, _context):
+				if is_instance_valid(_summon_effect) and _summon_effect.has_method("play_attack"):
+					if _summon_effect.has_method("set_attack_target"):
+						_summon_effect.call("set_attack_target", target.global_position-global_position)
+					_summon_effect.call("play_attack")
 		return
 
 	state = STATE_CHASE
@@ -153,6 +160,8 @@ func _face_target(face_target: Node2D) -> void:
 	var direction: Vector2 = face_target.global_position - global_position
 	if direction.length_squared() <= 0.0001:
 		return
+	if is_instance_valid(_summon_effect) and _summon_effect.has_method("face_direction"):
+		_summon_effect.call("face_direction", direction)
 	var sprite: Sprite2D = get_node_or_null("SummonVisual") as Sprite2D
 	if sprite != null:
 		sprite.rotation = direction.angle() - PI * 0.5
@@ -168,9 +177,23 @@ func _get_valid_target() -> Node2D:
 	return target
 
 
-## 作用：有效贴图配置时创建SummonVisual并应用统一缩放和层级。
-## 使用：texture必须存在，默认scale0.12，配置空不创建。
+## 作用：优先实例化纯表现effect_scene；成功时省略旧贴图，否则保留现有贴图入口。
+## 使用：特效使用configure_summon接收视觉配置；不改变召唤本体位置或攻击规则。
 func _apply_visual(visual: Dictionary) -> void:
+	var effect_path: String = String(visual.get("effect_scene", ""))
+	if effect_path != "" and ResourceLoader.exists(effect_path):
+		var packed: PackedScene = load(effect_path) as PackedScene
+		if packed != null:
+			var instance: Node = packed.instantiate()
+			if instance is Node2D:
+				_summon_effect = instance as Node2D
+				_summon_effect.name = "SummonEffect"
+				_summon_effect.z_index = int(visual.get("z_index", 4))
+				add_child(_summon_effect)
+				if _summon_effect.has_method("configure_summon"):
+					_summon_effect.call("configure_summon", visual)
+				return
+			instance.free()
 	var texture_path: String = String(visual.get("texture", ""))
 	if texture_path == "" or not ResourceLoader.exists(texture_path):
 		return
@@ -185,6 +208,18 @@ func _apply_visual(visual: Dictionary) -> void:
 	sprite.scale = Vector2(scale_value, scale_value)
 	sprite.z_index = int(visual.get("z_index", 4))
 	add_child(sprite)
+
+
+## 作用：所有状态机路径完成后同步一次表现时钟、真实位移和剩余寿命。
+## 使用：攻击朝向由目标驱动；跟随/追逐/返回由实际运动驱动，过期传0使表现立即停止。
+func _update_summon_visual(delta: float, previous_position: Vector2) -> void:
+	if not is_instance_valid(_summon_effect):
+		return
+	var motion: Vector2 = (global_position - previous_position) / maxf(delta, 0.000001)
+	if state != STATE_ATTACK and motion.length_squared() > 0.01 and _summon_effect.has_method("face_direction"):
+		_summon_effect.call("face_direction", motion)
+	if _summon_effect.has_method("update_summon"):
+		_summon_effect.call("update_summon", delta, motion, maxf(_remaining_duration, 0.0) if state != STATE_EXPIRED else 0.0)
 
 
 ## 作用：按attack_power、damage、base_damage读取第一个正Power。

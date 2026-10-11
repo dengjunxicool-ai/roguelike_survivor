@@ -394,12 +394,14 @@ func pause_status(status_id: StringName, source_id: StringName) -> void:
 	var sources: Dictionary = status.get("pause_sources", {})
 	sources[source_id] = true
 	status["pause_sources"] = sources
+	_queue_status_visual_refresh()
 
 func resume_status(status_id: StringName, source_id: StringName) -> void:
 	if _statuses.has(status_id):
 		var status: Dictionary = _statuses[status_id]
 		var sources: Dictionary = status.get("pause_sources", {})
 		sources.erase(source_id)
+		_queue_status_visual_refresh()
 
 
 ## 作用：读取宿主指定状态的叠层数。
@@ -951,6 +953,36 @@ func _refresh_status_visual_profiled() -> void:
 
 	var state: String = String(visual.get("state", visual.get("animation", visual.get("status_id", "idle"))))
 	var visual_key: String = _status_visual_identity(visual, state)
+	var effect_path: String = String(visual.get("effect_scene", ""))
+	if not effect_path.is_empty():
+		var effect: Node2D = overlay.get_node_or_null("ProceduralStatus") as Node2D
+		if effect == null or String(effect.get_meta("effect_scene", "")) != effect_path:
+			if effect != null:
+				overlay.remove_child(effect)
+				effect.queue_free()
+			var packed: PackedScene = load(effect_path) as PackedScene
+			if packed == null:
+				_hide_status_visual()
+				return
+			effect = packed.instantiate() as Node2D
+			if effect == null:
+				_hide_status_visual()
+				return
+			effect.name = "ProceduralStatus"
+			effect.set_meta("effect_scene", effect_path)
+			overlay.add_child(effect)
+		for child: Node in overlay.get_children():
+			if child is CanvasItem:
+				child.visible = child == effect
+		overlay.visible = true
+		overlay.z_index = int(visual.get("overlay_z_index", 20))
+		_status_visual_key = visual_key
+		_status_visual_priority = float(visual.get("priority", 0.0))
+		effect.call("configure_status", visual)
+		return
+	var procedural: Node = overlay.get_node_or_null("ProceduralStatus")
+	if procedural != null and procedural.has_method("deactivate"):
+		procedural.call("deactivate")
 	if overlay.visible and visual_key == _status_visual_key:
 		return
 
@@ -1003,7 +1035,7 @@ func _status_visual_refresh_needed_after_apply(status_id: StringName, definition
 	if _status_visual_overlay == null or not is_instance_valid(_status_visual_overlay) or not _status_visual_overlay.visible:
 		return true
 	if visual_key == _status_visual_key:
-		return false
+		return not String(visual.get("effect_scene", "")).is_empty()
 	return float(visual.get("priority", 0.0)) >= _status_visual_priority
 
 
@@ -1026,13 +1058,17 @@ func _get_active_status_visual() -> Dictionary:
 		best_priority = priority
 		best_visual = visual.duplicate(true)
 		best_visual["status_id"] = StringName(String(status.get("id", "")))
+		best_visual["stacks"] = int(status.get("stacks", 1))
+		best_visual["duration_remaining"] = float(status.get("duration_remaining", 0.0))
+		best_visual["duration_paused"] = not _get_dictionary(status.get("pause_sources", {})).is_empty()
+		best_visual["host_controls_lifetime"] = true
 	return best_visual
 
 
 ## 作用：检查texture、sprite_frames或sprite_sheet资源配置是否存在。
 ## 使用：仅检测字段，不加载资源。
 func _has_visual_resource(visual: Dictionary) -> bool:
-	return String(visual.get("texture", "")) != "" or String(visual.get("sprite_frames", "")) != "" or visual.has("sprite_sheet")
+	return String(visual.get("effect_scene", "")) != "" or String(visual.get("texture", "")) != "" or String(visual.get("sprite_frames", "")) != "" or visual.has("sprite_sheet")
 
 
 ## 作用：复用有效overlay或在二维宿主创建隐藏状态视觉节点。
@@ -1064,6 +1100,9 @@ func _hide_status_visual() -> void:
 	if _status_visual_overlay == null or not is_instance_valid(_status_visual_overlay):
 		return
 	_status_visual_overlay.visible = false
+	var procedural: Node = _status_visual_overlay.get_node_or_null("ProceduralStatus")
+	if procedural != null and procedural.has_method("deactivate"):
+		procedural.call("deactivate")
 	_status_visual_key = ""
 	_status_visual_priority = -INF
 
@@ -1071,10 +1110,11 @@ func _hide_status_visual() -> void:
 ## 作用：组合状态ID、贴图、帧资源和播放状态为缓存身份。
 ## 使用：用于跳过重复视觉应用。
 func _status_visual_identity(visual: Dictionary, state: String) -> String:
-	return "%s|%s|%s|%s" % [
+	return "%s|%s|%s|%s|%s" % [
 		String(visual.get("status_id", "")),
 		String(visual.get("texture", "")),
 		String(visual.get("sprite_frames", "")),
+		String(visual.get("effect_scene", "")),
 		state
 	]
 

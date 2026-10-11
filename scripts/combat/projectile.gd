@@ -65,6 +65,9 @@ var _curve_height: float = 0.0
 var _curve_duration: float = 0.0
 var _curve_elapsed: float = 0.0
 var _visual_effect_node: Node2D
+var _visual_effect_path: String = ""
+var _visual_effect_cached_scene: PackedScene
+var _visual_effect_cached_path: String = ""
 var _collision_radius: float = 12.0
 var _homing_target: Node2D
 var _homing_retarget_timer: float = 0.0
@@ -109,7 +112,7 @@ func prepare_for_pool_spawn(params: Dictionary) -> void:
 	setup(params)
 
 
-## 作用：停止碰撞和动画、释放附加特效并清事件引用、命中列表与追踪目标。
+## 作用：停止碰撞和动画、停用可复用展示或释放旧式附加特效，并清事件引用与追踪目标。
 ## 使用：回池前隐藏节点，避免残留生命周期事件。
 func prepare_for_pool_despawn() -> void:
 	_finish_generation()
@@ -123,9 +126,11 @@ func prepare_for_pool_despawn() -> void:
 	var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if animated_sprite != null:
 		animated_sprite.stop()
-	if _visual_effect_node != null and is_instance_valid(_visual_effect_node):
-		_visual_effect_node.queue_free()
-	_visual_effect_node = null
+	if _can_reuse_visual_effect():
+		_visual_effect_node.call("deactivate")
+		_visual_effect_node.visible = false
+	else:
+		_clear_visual_effect_scene()
 	event_bus = null
 	skill_instance = null
 	caster = null
@@ -207,11 +212,11 @@ func _apply_projectile_context_params(params: Dictionary) -> void:
 
 
 ## 作用：读取附加特效场景、视觉模式/风格及颜色。
-## 使用：params缺失时保持当前值。
+## 使用：完整spawn参数缺少场景/风格时清空旧展示，避免跨类型池复用残留。
 func _apply_projectile_visual_params(params: Dictionary) -> void:
-	visual_effect_scene = String(params.get("visual_effect_scene", visual_effect_scene))
-	_visual_mode = String(params.get("visual_mode", _visual_mode))
-	_visual_style = String(params.get("visual_style", _visual_style))
+	visual_effect_scene = String(params.get("visual_effect_scene", ""))
+	_visual_mode = String(params.get("visual_mode", ""))
+	_visual_style = String(params.get("visual_style", ""))
 	_visual_color = _get_color(params.get("visual_color", _visual_color), _visual_color)
 	_visual_ring_color = _get_color(params.get("visual_ring_color", _visual_ring_color), _visual_ring_color)
 
@@ -306,6 +311,7 @@ func _physics_process_profiled(delta: float) -> void:
 		if homing_enabled and _resolve_swept_homing_hit(previous_position, next_position):
 			return
 		global_position = next_position
+	_update_visual_effect()
 	if event_bus != null: event_bus.observe_projectile(self,interaction_from,global_position,_collision_radius)
 	if _visual_style == "lightning_orb" or _visual_style == "meteor":
 		queue_redraw()
@@ -603,7 +609,8 @@ func _update_homing_direction_profiled(delta: float) -> void:
 	if not homing_enabled:
 		return
 	_homing_retarget_timer = maxf(_homing_retarget_timer - delta, 0.0)
-	if not _is_valid_homing_target(_homing_target) or _homing_retarget_timer <= 0.0:
+	# 已释放的缓存引用不能传入Node2D类型参数，须先短路检查实例有效性。
+	if not is_instance_valid(_homing_target) or not _is_valid_homing_target(_homing_target) or _homing_retarget_timer <= 0.0:
 		_homing_target = _find_nearest_homing_target()
 		_homing_retarget_timer = PROJECTILE_RETARGET_INTERVAL
 	var target: Node2D = _homing_target
@@ -624,6 +631,8 @@ func _find_nearest_homing_target() -> Node2D:
 		seek_range = maxf(speed * lifetime, 1.0)
 	var nearest: Node2D = null
 	var nearest_distance_squared: float = seek_range * seek_range
+	var prefer_uncursed: bool = source_id == &"black_serpent_projectile"
+	var nearest_cursed: bool = true
 	var registry: Node = CombatTargetRegistryScript.get_or_create(self)
 	var candidates: Array = registry.call("get_targets_in_radius", global_position, seek_range, target_group) if registry != null and registry.has_method("get_targets_in_radius") else []
 	for node: Node in candidates:
@@ -631,9 +640,11 @@ func _find_nearest_homing_target() -> Node2D:
 		if not _is_valid_homing_target(target):
 			continue
 		var distance_squared: float = global_position.distance_squared_to(target.global_position)
-		if distance_squared < nearest_distance_squared:
+		var cursed: bool = target.has_method("get_status_stack") and int(target.call("get_status_stack", &"cursed")) > 0
+		if nearest == null or (prefer_uncursed and nearest_cursed and not cursed) or ((not prefer_uncursed or cursed == nearest_cursed) and distance_squared < nearest_distance_squared):
 			nearest_distance_squared = distance_squared
 			nearest = target
+			nearest_cursed = cursed
 	return nearest
 
 
@@ -721,10 +732,10 @@ func _apply_area_radius(radius: float) -> void:
 ## 作用：程序化模式或无资源配置时隐藏sprite，其余播放fly状态。
 ## 使用：visual_color可补空配置的modulate。
 func _apply_visual_config(params: Dictionary) -> void:
+	_visual_config = _get_dictionary(params.get("visual", {}))
 	if _visual_mode == "programmatic":
 		_hide_sprite_nodes()
 		return
-	_visual_config = _get_dictionary(params.get("visual", {}))
 	if _visual_config.is_empty() and params.has("visual_color"):
 		_visual_config["modulate"] = params["visual_color"]
 	if _visual_config.is_empty():
@@ -733,27 +744,72 @@ func _apply_visual_config(params: Dictionary) -> void:
 	_play_visual_state("fly", true)
 
 
-## 作用：加载并实例化附加特效为子节点，替换旧特效并关闭其自主处理。
+## 作用：加载附加特效或复用同场景的可配置展示，切换场景时释放旧节点。
 ## 使用：有set_continuous时设为false，位置与旋转归零跟随投射物。
 func _attach_visual_effect_scene() -> void:
-	if visual_effect_scene == "":
+	if _can_reuse_visual_effect() and _visual_effect_path == visual_effect_scene:
+		_configure_visual_effect_scene()
 		return
-	if _visual_effect_node != null and is_instance_valid(_visual_effect_node):
-		_visual_effect_node.queue_free()
-		_visual_effect_node = null
-	var scene: PackedScene = load(visual_effect_scene) as PackedScene
+	_clear_visual_effect_scene()
+	if visual_effect_scene == "":
+		_visual_effect_cached_scene = null
+		_visual_effect_cached_path = ""
+		return
+	if _visual_effect_cached_scene == null or _visual_effect_cached_path != visual_effect_scene:
+		_visual_effect_cached_scene = load(visual_effect_scene) as PackedScene
+		_visual_effect_cached_path = visual_effect_scene
+	var scene: PackedScene = _visual_effect_cached_scene
 	if scene == null:
 		push_warning("[Projectile] Could not load visual_effect_scene: %s" % visual_effect_scene)
 		return
 	_visual_effect_node = scene.instantiate() as Node2D
 	if _visual_effect_node == null:
 		return
+	_visual_effect_path = visual_effect_scene
 	add_child(_visual_effect_node)
+	_configure_visual_effect_scene()
+
+
+## 作用：具备重置与停用契约的同场景展示可随宿主复用，保留材质但重建本次几何与时钟。
+func _can_reuse_visual_effect() -> bool:
+	return _visual_effect_node != null and is_instance_valid(_visual_effect_node) \
+		and not _visual_effect_node.is_queued_for_deletion() \
+		and _visual_effect_node.has_method("configure_projectile") and _visual_effect_node.has_method("deactivate")
+
+
+func _configure_visual_effect_scene() -> void:
 	_visual_effect_node.position = Vector2.ZERO
 	_visual_effect_node.rotation = 0.0
 	if _visual_effect_node.has_method("set_continuous"):
 		_visual_effect_node.call("set_continuous", false)
 	_visual_effect_node.set_process(false)
+	if _visual_effect_node.has_method("configure_projectile"):
+		_visual_effect_node.call("configure_projectile", {
+			"style": _visual_style, "radius": _collision_radius, "direction": direction,
+			"speed": speed, "lifetime": lifetime
+		})
+		_hide_sprite_nodes()
+	_update_visual_effect()
+
+
+## 作用：切换场景、清空场景或回收旧式特效时，立即停旧展示并排队释放。
+func _clear_visual_effect_scene() -> void:
+	if _visual_effect_node != null and is_instance_valid(_visual_effect_node):
+		if _visual_effect_node.has_method("deactivate"):
+			_visual_effect_node.call("deactivate")
+		_visual_effect_node.visible = false
+		_visual_effect_node.queue_free()
+	_visual_effect_node = null
+	_visual_effect_path = ""
+
+
+## 作用：只更新展示方向与时钟，返回弹体及追踪转向使用真实运动方向。
+func _update_visual_effect() -> void:
+	if _visual_effect_node == null or not is_instance_valid(_visual_effect_node):
+		return
+	if _visual_effect_node.has_method("update_projectile"):
+		_visual_effect_node.rotation = direction.angle() - rotation
+		_visual_effect_node.call("update_projectile", _age)
 
 
 ## 作用：配置非空时交给VisualConfigApplier播放指定状态。
@@ -776,6 +832,8 @@ func _has_visual_state(state: String) -> bool:
 ## 作用：按投射物风格分派火球、冰雹、闪电、书页、刀箭、药瓶或陨石绘制。
 ## 使用：引擎绘图回调，不执行战斗动作。
 func _draw() -> void:
+	if _visual_effect_node != null and is_instance_valid(_visual_effect_node) and _visual_effect_node.has_method("configure_projectile"):
+		return
 	match _visual_style:
 		"fireball_orb":
 			_draw_fireball_orb()
@@ -992,6 +1050,9 @@ func _begin_return() -> void:
 	_trajectory_mode = "linear"
 	homing_enabled = false
 	direction = -direction
+	if source_id == &"death_scythe_projectile" and is_instance_valid(caster) and caster is Node2D:
+		var return_direction: Vector2 = global_position.direction_to(caster.global_position)
+		if not return_direction.is_zero_approx(): direction = return_direction
 	_hit_bodies.clear()
 	_hits_remaining = maxi(pierce+1,1)
 	damage = roundi(float(damage)*_return_multiplier)

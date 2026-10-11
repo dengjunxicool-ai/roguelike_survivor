@@ -30,6 +30,10 @@ A Godot 4.6 2D roguelike survivor prototype built around short runs, character s
 ## Architecture Notes
 
 - `docs/UI_SYSTEM_OVERVIEW.md`: UI entry points, state machine, controllers, data dependencies, theming, responsive layout, and safe modification paths.
+- [火焰神系特效](docs/FIRE_SCHOOL_VFX.md)：14 个基础技能的展示映射、生命周期、实际伤害验证和受控性能测量。
+- [雷霆神系特效](docs/THUNDER_SCHOOL_VFX.md)：14 个基础技能的电弧、雷暴、召唤与真实蓄能反馈，以及伤害回归和性能测量。
+- [诅咒神系特效](docs/CURSE_SCHOOL_VFX.md)：14 个基础技能的咒印、魂链、召唤与真实结算／资源展示，以及伤害修复和性能测量。
+- [神圣神系特效](docs/HOLY_SCHOOL_VFX.md)：14 个基础技能的圣光、审判、护盾与召唤，以及真实格挡、伤害回归和性能测量。
 
 ## Validation Helpers
 

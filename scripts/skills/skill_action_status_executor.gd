@@ -21,6 +21,12 @@ func _deal_damage(params: Dictionary, context: Dictionary) -> bool:
 	var damaged_any: bool = false
 	for damage_target: Node in targets:
 		damaged_any = _deal_damage_to_target(params, context, damage_target, amount, damage_type, requires_low_hp_execute) or damaged_any
+	var visual_skill := String(context.get("origin_skill_id", context.get("skill_id", "")))
+	var visual_radius := float(params.get("radius", 0.0))
+	if damaged_any and amount > 0 and visual_radius > 0.0 and visual_skill in ["fire_core_inferno_cycle", "fire_power_ignite_core"]:
+		var bus: Node = context.get("event_bus") as Node
+		if bus != null and bus.has_method("present_skill_effect") and target is Node2D:
+			bus.present_skill_effect("inferno" if visual_skill == "fire_core_inferno_cycle" else "ignite", (target as Node2D).global_position, visual_radius)
 	return damaged_any
 
 

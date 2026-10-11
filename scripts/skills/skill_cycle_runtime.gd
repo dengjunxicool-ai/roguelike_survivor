@@ -51,6 +51,7 @@ func start(bus: Node, context: Dictionary, params: Dictionary = {}) -> bool:
 	return true
 func explode(bus: Node, context: Dictionary, position: Vector2, chain: Dictionary) -> void:
 	combustion_explosions += 1
+	bus.present_skill_effect("combustion", position, float(context.get("combustion_radius",184.8)))
 	var registry: Node = Registry.get_or_create(bus)
 	for target: Node2D in registry.get_targets_in_radius(position, float(context.get("combustion_radius",184.8)), &"enemies"):
 		if target.has_method("is_dead") and target.is_dead(): continue

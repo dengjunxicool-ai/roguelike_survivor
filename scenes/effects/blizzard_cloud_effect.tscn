@@ -1,0 +1,80 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/blizzard_cloud_effect.gd" id="1"]
+[ext_resource type="Shader" path="res://resources/effects/blizzard_cloud.gdshader" id="2"]
+[ext_resource type="Shader" path="res://resources/effects/blizzard_particle.gdshader" id="3"]
+
+[sub_resource type="ShaderMaterial" id="CloudMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+
+[sub_resource type="ShaderMaterial" id="GroundMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/ground_layer = true
+
+[sub_resource type="ShaderMaterial" id="SnowMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("3")
+shader_parameter/particle_style = 0
+
+[sub_resource type="ShaderMaterial" id="IceMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("3")
+shader_parameter/particle_style = 1
+
+[sub_resource type="ShaderMaterial" id="ImpactMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("3")
+shader_parameter/particle_style = 2
+
+[sub_resource type="GradientTexture2D" id="ParticleQuad"]
+width = 16
+height = 16
+
+[node name="BlizzardCloudEffect" type="Node2D"]
+visible = false
+script = ExtResource("1")
+
+[node name="GroundFrost" type="Polygon2D" parent="."]
+material = SubResource("GroundMaterial")
+polygon = PackedVector2Array(-1, -1, 1, -1, 1, 1, -1, 1)
+uv = PackedVector2Array(0, 0, 1, 0, 1, 1, 0, 1)
+
+[node name="CloudCanopy" type="Polygon2D" parent="."]
+material = SubResource("CloudMaterial")
+polygon = PackedVector2Array(-1, -1, 1, -1, 1, 1, -1, 1)
+uv = PackedVector2Array(0, 0, 1, 0, 1, 1, 0, 1)
+
+[node name="SnowFlakes" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 96
+texture = SubResource("ParticleQuad")
+material = SubResource("SnowMaterial")
+lifetime = 1.2
+local_coords = true
+use_fixed_seed = true
+fixed_fps = 30
+interpolate = true
+
+[node name="IceStreaks" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 56
+texture = SubResource("ParticleQuad")
+material = SubResource("IceMaterial")
+lifetime = 0.65
+local_coords = true
+use_fixed_seed = true
+fixed_fps = 30
+interpolate = true
+
+[node name="IceImpacts" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 40
+texture = SubResource("ParticleQuad")
+material = SubResource("ImpactMaterial")
+lifetime = 0.35
+local_coords = true
+use_fixed_seed = true
+fixed_fps = 30
+interpolate = true

@@ -78,7 +78,7 @@ static func build_instant_hit_visual_params(params: Dictionary, definition: Dict
 		"radius": radius,
 		"duration": float(params.get("visual_duration", params.get("duration", 0.12))),
 	}
-	for key: String in ["visual_color", "visual_ring_color"]:
+	for key: String in ["visual_color", "visual_ring_color", "visual_effect_scene", "visual_style"]:
 		if params.has(key):
 			visual_params[key] = params[key]
 		elif definition.has(key):
