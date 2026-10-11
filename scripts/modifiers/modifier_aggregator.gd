@@ -75,7 +75,18 @@ static func _collect_skill_passive_modifiers(skill_manager: Node, query: RefCoun
 	if passive_variant is Dictionary:
 		return (passive_variant as Dictionary).duplicate(true)
 	if passive_variant is Array:
-		return ModifierSourceScript.flatten_effects(passive_variant as Array, ModifierSourceScript.SOURCE_UNKNOWN, query)
+		var modifiers: Dictionary = {}
+		var owner: Node = _get_owner(query)
+		for effect: Dictionary in passive_variant:
+			var values: Dictionary = ModifierSourceScript.flatten_effects([effect], ModifierSourceScript.SOURCE_UNKNOWN, query)
+			var effect_id: String = String(effect.get("player_snapshot_effect_id", ""))
+			if effect_id != "" and owner != null and owner.has_method("get_applied_run_modifier_effect"):
+				var applied: Dictionary = owner.call("get_applied_run_modifier_effect", effect_id)
+				for key: String in ["status_duration_multiplier", "status_duration_multiplier_add", "attack_speed_multiplier", "attack_speed_multiplier_add", "skill_area_multiplier", "skill_area_multiplier_add"]:
+					if applied.has(key):
+						values.erase(key)
+			_merge(modifiers, values)
+		return modifiers
 	return {}
 
 

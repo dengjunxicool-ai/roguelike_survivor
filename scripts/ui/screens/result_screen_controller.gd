@@ -71,8 +71,15 @@ func refresh(state: String, run_state: Dictionary) -> void:
 	var selected_map_id: StringName = StringName(String(run_state.get("selected_map_id", "")))
 	var selected_map_name: String = String(run_state.get("selected_map_name", selected_map_id))
 	var run_seconds: float = float(run_state.get("run_seconds", 0.0))
-	var unlocks: Array[String] = _get_result_unlocks(state, run_seconds, selected_map_id, selected_map_name)
-	unlocks.append_array(_get_progression_unlocks(run_state))
+	var summary: Dictionary = _get_dictionary(run_state.get("progression_summary", {}))
+	var unlocks: Array[String] = []
+	if summary.has("saved"):
+		if bool(summary["saved"]):
+			unlocks = _get_progression_unlocks(run_state)
+			_result_unlock_service.call("cache_result", state, run_seconds, selected_map_id, unlocks)
+	else:
+		unlocks = _get_result_unlocks(state, run_seconds, selected_map_id, selected_map_name)
+		unlocks.append_array(_get_progression_unlocks(run_state))
 	var view_model: Dictionary = _view_model_builder.call("build", state, run_state, unlocks)
 	_last_diagnostics_by_state[state] = _get_dictionary(view_model.get("diagnostic", {}))
 	var label_texts: Dictionary = _get_dictionary(view_model.get("labels", {}))

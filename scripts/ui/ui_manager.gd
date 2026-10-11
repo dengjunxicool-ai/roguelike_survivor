@@ -75,6 +75,10 @@ var _run_souls_earned: int = 0
 var _result_reward_claimed: bool = false
 var _result_progression_recorded: bool = false
 var _last_progression_summary: Dictionary = {}
+var _run_receipt_id: String = ""
+var _frozen_result_state: Dictionary = {}
+var _persistence_status_label: Label
+var _previous_runs_souls_at_start: int = 0
 var _hud_refresh_cooldown: float = 0.0
 var _announcement_timer: float = 0.0
 
@@ -121,6 +125,19 @@ func _ready() -> void:
 	_apply_startup_window_mode()
 	get_viewport().size_changed.connect(Callable(self, "_update_responsive_layouts"))
 	_build_screens()
+	_persistence_status_label = Label.new()
+	_persistence_status_label.position = Vector2(24, 12)
+	_persistence_status_label.z_index = 1100
+	_persistence_status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_persistence_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_persistence_status_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
+	_persistence_status_label.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03))
+	_persistence_status_label.add_theme_constant_override("outline_size", 4)
+	add_child(_persistence_status_label)
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	if pending != null:
+		pending.status_changed.connect(Callable(self, "_on_persistence_status_changed"))
+	_on_persistence_status_changed()
 	_ensure_run_loading_overlay()
 	call_deferred("_update_responsive_layouts")
 	transition_to(STATE_BOOT)
@@ -224,7 +241,21 @@ func start_developer_debug_run(setup: Dictionary = {}) -> void:
 ## 作用：退出游戏。
 ## 使用：本文件由 _build_title 调用。
 func _quit_game() -> void:
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	if pending != null and not bool(pending.call("prepare_exit")):
+		_on_persistence_status_changed()
+		return
 	get_tree().quit()
+
+
+func _on_persistence_status_changed() -> void:
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	if _persistence_status_label != null and pending != null:
+		_persistence_status_label.text = String(pending.call("status_text"))
+		_persistence_status_label.visible = _persistence_status_label.text != ""
+		_persistence_status_label.size.x = maxf(get_viewport().get_visible_rect().size.x - 48.0, 120.0)
+	if (current_state == STATE_RESULT_VICTORY or current_state == STATE_RESULT_DEFEAT) and not _result_progression_recorded and SaveManager.load_value(SaveManager.SECTION_PENDING_RECEIPTS, _run_receipt_id, null) is Dictionary:
+		call_deferred("_refresh_result_screen", current_state)
 
 
 ## 作用：应用启动窗口模式。
@@ -569,6 +600,8 @@ func _create_choice_modal_screen(state: String, title: String, z_index_value: in
 ## 作用：更新响应式布局组。
 ## 使用：本文件由 _ready、_queue_responsive_layout_refresh、_update_responsive_layouts_next_frame 调用。
 func _update_responsive_layouts() -> void:
+	if _persistence_status_label != null:
+		_persistence_status_label.size.x = maxf(get_viewport().get_visible_rect().size.x - 48.0, 120.0)
 	var viewport_size := get_viewport().get_visible_rect().size
 	_responsive_layout.call("update", viewport_size)
 	_update_title_layout()
@@ -742,6 +775,10 @@ func _start_run(map_id: Variant) -> void:
 	_run_seconds = 0.0
 	_kill_count = 0
 	_run_start_souls = SaveManager.get_soul_stones()
+	_run_receipt_id = SaveManager.new_receipt_id("run")
+	_frozen_result_state.clear()
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	_previous_runs_souls_at_start = int(pending.call("completed_souls_for_other_runs", _run_receipt_id)) if pending != null else 0
 	_run_souls_earned = 0
 	_result_reward_claimed = false
 	_result_progression_recorded = false
@@ -1164,7 +1201,12 @@ func _on_boss_defeated(_elapsed_time: float) -> void:
 ## 作用：刷新结果页面；具体处理委托给 _result_controller.refresh。
 ## 使用：内部辅助入口；输入 state（状态）。
 func _refresh_result_screen(state: String) -> void:
-	_run_souls_earned = maxi(SaveManager.get_soul_stones() - _run_start_souls, 0)
+	if state != current_state or (state != STATE_RESULT_VICTORY and state != STATE_RESULT_DEFEAT):
+		return
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	var previous_runs_souls: int = int(pending.call("completed_souls_for_other_runs", _run_receipt_id)) if pending != null else 0
+	var pending_run_souls: int = int(pending.call("pending_souls_for_run", _run_receipt_id)) if pending != null else 0
+	_run_souls_earned = maxi(SaveManager.get_soul_stones() - _run_start_souls - (previous_runs_souls - _previous_runs_souls_at_start), 0) + pending_run_souls
 	_record_result_progression_once(state)
 	if _result_controller != null:
 		_result_controller.call("refresh", state, _get_result_state())
@@ -1175,13 +1217,25 @@ func _refresh_result_screen(state: String) -> void:
 func _record_result_progression_once(state: String) -> void:
 	if _result_progression_recorded:
 		return
-	_last_progression_summary = RunProgressionServiceScript.record_run_result(state, _get_result_state())
-	_result_progression_recorded = true
+	if _frozen_result_state.is_empty():
+		_frozen_result_state = _get_result_state().duplicate(true)
+	if _run_receipt_id == "":
+		_run_receipt_id = SaveManager.new_receipt_id("run")
+	var pending: Node = get_tree().root.get_node_or_null("PendingSaves")
+	if pending != null:
+		_last_progression_summary = pending.call("submit_run", state, _frozen_result_state, _run_receipt_id)
+	else:
+		_last_progression_summary = RunProgressionServiceScript.record_run_result(state, _frozen_result_state, _run_receipt_id)
+	_result_progression_recorded = bool(_last_progression_summary.get("saved", false))
 
 
 ## 作用：获取结果状态，供当前模块后续逻辑使用。
 ## 使用：本文件由 _refresh_result_screen、_record_result_progression_once 调用；返回字典包含 tree/player_group/selected_character_id/selected_map_id/selected_map_name/run_seconds/kill_count/run_souls_earned 等字段。
 func _get_result_state() -> Dictionary:
+	if not _frozen_result_state.is_empty():
+		var result: Dictionary = _frozen_result_state.duplicate(true)
+		result["progression_summary"] = _last_progression_summary.duplicate(true)
+		return result
 	return RunResultStateBuilderScript.build_result_state({
 		"tree": get_tree(),
 		"player_group": PLAYER_GROUP,

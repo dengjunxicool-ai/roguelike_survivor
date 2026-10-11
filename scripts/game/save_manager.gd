@@ -22,6 +22,30 @@ const KEY_LAST_RUN_SUMMARY: String = "last_run_summary"
 const KEY_MASTER_VOLUME: String = "master_volume"
 const KEY_FULLSCREEN: String = "fullscreen"
 const KEY_LANGUAGE: String = "language"
+const SECTION_PENDING_RECEIPTS: String = "pending_receipts"
+
+
+## 应用级补存用：receipt 与余额在同一次原子提交中写入。
+static func commit_soul_reward(receipt_id: String, amount: int) -> bool:
+	var config := ConfigFile.new()
+	if not _load_for_write(config):
+		return false
+	if config.has_section_key(SECTION_PENDING_RECEIPTS, receipt_id):
+		return true
+	config.set_value(SECTION_CURRENCY, KEY_SOUL_STONES, maxi(int(config.get_value(SECTION_CURRENCY, KEY_SOUL_STONES, 0)), 0) + maxi(amount, 0))
+	config.set_value(SECTION_PENDING_RECEIPTS, receipt_id, true)
+	return _commit_config(config)
+
+
+static func get_progress_epoch() -> String:
+	var config := ConfigFile.new()
+	if not _load_for_write(config):
+		return ""
+	return String(config.get_value(SECTION_PENDING_RECEIPTS, "epoch", "legacy"))
+
+
+static func new_receipt_id(prefix: String) -> String:
+	return prefix + ":" + Crypto.new().generate_random_bytes(16).hex_encode()
 
 
 ## 作用：读取现有 ConfigFile 后更新指定 section/key 并写回存档。
@@ -37,18 +61,57 @@ static func save_value(section: String, key: String, value: Variant) -> bool:
 ## 作用：只允许有效旧档或不存在的新档进入写入流程，拒绝覆盖不可读文件。
 static func _load_for_write(config: ConfigFile) -> bool:
 	var error: int = config.load(SAVE_PATH)
-	return error == OK or (error == ERR_FILE_NOT_FOUND and not FileAccess.file_exists(SAVE_PATH))
+	if error == OK:
+		return true
+	if error != ERR_FILE_NOT_FOUND or FileAccess.file_exists(SAVE_PATH):
+		return false
+	# A missing file is a fresh save only when no older pending intent needs its base.
+	var tree := Engine.get_main_loop() as SceneTree
+	var pending: Node = tree.root.get_node_or_null("PendingSaves") if tree != null else null
+	if pending != null and bool(pending.call("requires_existing_save")):
+		return false
+	var journal := ConfigFile.new()
+	var journal_path := "user://pending_rewards.cfg"
+	var journal_error: int = journal.load(journal_path)
+	if journal_error == ERR_FILE_NOT_FOUND and not FileAccess.file_exists(journal_path):
+		return true
+	if journal_error != OK:
+		return false
+	var entries: Variant = journal.get_value("pending", "entries", {})
+	if not entries is Dictionary:
+		return false
+	for entry: Variant in entries.values():
+		if not entry is Dictionary or bool(entry.get("requires_existing_save", true)):
+			return false
+	return true
 
 
 ## 作用：先完整保存临时文件，再原子替换旧档；失败保留旧档并返回 false。
-static func _commit_config(config: ConfigFile) -> bool:
+static func _commit_config(config: ConfigFile, explicit_reset: bool = false) -> bool:
+	var first_save: bool = not FileAccess.file_exists(SAVE_PATH) and not explicit_reset
+	var tree := Engine.get_main_loop() as SceneTree
+	var pending: Node = tree.root.get_node_or_null("PendingSaves") if tree != null else null
+	if first_save:
+		# The main file may disappear after the caller loaded it. Recheck before
+		# writing, then stage the complete temporary bytes for crash recovery.
+		if not _load_for_write(ConfigFile.new()):
+			return false
+		if pending == null and FileAccess.file_exists("user://pending_rewards.cfg"):
+			return false
 	var temporary_path: String = SAVE_PATH + ".tmp"
 	if config.save(temporary_path) != OK:
 		return false
-	var error: int = DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary_path), ProjectSettings.globalize_path(SAVE_PATH))
-	if error != OK:
+	if first_save and pending != null and not bool(pending.call("begin_first_save")):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(temporary_path))
 		return false
+	var error: int = DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary_path), ProjectSettings.globalize_path(SAVE_PATH))
+	if error != OK:
+		# A staged first save keeps its verified temporary bytes for next startup.
+		if not first_save or pending == null or String(pending.get("_first_save_stage_hash")) == "":
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(temporary_path))
+		return false
+	if first_save and pending != null:
+		pending.call("finish_first_save", true)
 	return true
 
 
@@ -59,7 +122,8 @@ static func load_value(section: String, key: String, default_value: Variant = nu
 	var error: int = config.load(SAVE_PATH)
 	if error != OK:
 		return default_value
-
+	if not config.has_section_key(section, key):
+		return default_value
 	return config.get_value(section, key, default_value)
 
 
@@ -454,4 +518,11 @@ static func set_unlocked(kind: String, item_id: StringName, is_item_unlocked: bo
 ## 使用：仅在明确需要重置时调用；影响 user://save.cfg 中的设置、货币和成长记录。
 static func reset_progress() -> bool:
 	var config: ConfigFile = ConfigFile.new()
-	return _commit_config(config)
+	config.set_value(SECTION_PENDING_RECEIPTS, "epoch", new_receipt_id("epoch"))
+	if not _commit_config(config, true):
+		return false
+	var tree := Engine.get_main_loop() as SceneTree
+	var pending: Node = tree.root.get_node_or_null("PendingSaves") if tree != null else null
+	if pending != null:
+		pending.call("discard_previous_epoch", true)
+	return true

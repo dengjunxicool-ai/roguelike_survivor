@@ -424,7 +424,6 @@ func _refresh_skill_modifier_payload(skill_instance: RefCounted) -> void:
 	if skill_instance == null:
 		return
 	var skill_id: StringName = StringName(skill_instance.get("skill_id"))
-	_remove_skill_effect_modifier_source(skill_id)
 	_remove_passive_modifiers_for_skill(skill_id)
 	_apply_skill_effect_payload(skill_instance)
 	if _string_or(skill_instance.get("skill_type"), "") == "passive":
@@ -457,6 +456,7 @@ func _apply_skill_effect_payload(skill_instance: RefCounted) -> void:
 	var skill_id: StringName = StringName(skill_instance.get("skill_id"))
 	var effects_variant: Variant = definition.get("effects")
 	if not (effects_variant is Array):
+		_remove_skill_effect_modifier_source(skill_id)
 		return
 	var modifiers: Array[Dictionary] = []
 	for effect_variant: Variant in effects_variant:
@@ -468,10 +468,13 @@ func _apply_skill_effect_payload(skill_instance: RefCounted) -> void:
 		var modifier: Dictionary = _modifier_effect_to_source(effect, skill_instance)
 		if not modifier.is_empty():
 			modifier["source_skill_id"] = String(skill_id)
+			modifier["player_snapshot_effect_id"] = "skill:%s:effects:%d" % [String(skill_id), modifiers.size()]
 			modifiers.append(modifier)
 	if not modifiers.is_empty():
 		add_passive_modifier(modifiers)
 		_set_skill_effect_modifier_source(skill_id, modifiers)
+	else:
+		_remove_skill_effect_modifier_source(skill_id)
 
 
 ## 作用：删除效果 type，校验 stat/value 并计算成长后的结构化属性效果。

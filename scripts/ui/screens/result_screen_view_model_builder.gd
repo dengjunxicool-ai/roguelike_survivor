@@ -42,7 +42,7 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 			"diagnosis": "诊断：%s" % String(diagnostic.get("diagnosis_text", "")),
 			"suggestion": "下局建议：%s" % String(diagnostic.get("next_run_suggestion", "")),
 			"soul": "本局获得：%d / 总灵魂石：%d" % [run_souls_earned, SaveManager.get_soul_stones()],
-			"unlock": "解锁：%s" % ("、".join(unlocks) if not unlocks.is_empty() else "无")
+			"unlock": "结算待补存：存档恢复后自动重试" if not bool(_get_dictionary(run_state.get("progression_summary", {})).get("saved", true)) else "解锁：%s" % ("、".join(unlocks) if not unlocks.is_empty() else "无")
 		},
 		"reason": "推荐原因：%s" % String(diagnostic.get("recommendation_reason", ""))
 	}
