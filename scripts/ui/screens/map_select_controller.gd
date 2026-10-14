@@ -11,6 +11,7 @@ signal back_requested
 
 const MapRuntimeScript: Script = preload("res://scripts/maps/map_runtime.gd")
 const UIDisplayHelperScript: Script = preload("res://scripts/ui/ui_display_helper.gd")
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 const THREAT_LOCKED_LEVEL: int = 1
 
 var selected_map_id: StringName = MapRuntimeScript.DEFAULT_MAP_ID
@@ -174,7 +175,7 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_map_list(content_row)
 	_build_preview(content_row)
 	_build_detail_panel(content_row)
-	_build_loadout_panel(body)
+	_build_loadout_panel(root)
 
 
 ## 作用：构建地图列表并配置节点/样式所需的属性。
@@ -267,10 +268,6 @@ func _build_detail_panel(parent: BoxContainer) -> void:
 	_enemy_preview_list.add_theme_constant_override("separation", 8)
 	detail_body.add_child(_enemy_preview_list)
 
-	_start_button = _add_button(layout, "开始挑战")
-	_start_button.name = "MapStartButton"
-	_start_button.custom_minimum_size = Vector2(0, 56)
-	_start_button.pressed.connect(Callable(self, "_start_selected_map"))
 
 
 ## 作用：构建开局配置面板并配置节点/样式所需的属性。
@@ -282,15 +279,26 @@ func _build_loadout_panel(parent: VBoxContainer) -> void:
 	_layout_controls["loadout_panel"] = panel
 	var margin: MarginContainer = _create_margin_container(18, 14, 18, 14)
 	panel.add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	margin.add_child(column)
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 16)
-	margin.add_child(row)
+	column.add_child(row)
 
 	_loadout_labels["character"] = _add_loadout_label(row, "MapLoadoutCharacterLabel")
 	_loadout_labels["skill"] = _add_loadout_label(row, "MapLoadoutSkillLabel")
 	_loadout_labels["threat"] = _add_loadout_label(row, "MapLoadoutThreatLabel")
+	_start_button = _add_button(row, "开始挑战")
+	_start_button.name = "MapStartButton"
+	_start_button.custom_minimum_size = Vector2(180, 56)
+	_start_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_start_button.pressed.connect(Callable(self, "_start_selected_map"))
+	var hint := _add_detail_label(column, "")
+	hint.name = "CombatControlsHint"
+	Locale.bind_text(hint, "combat.controls_hint", "WASD / 方向键移动 · 空格冲刺 · Esc 暂停\n攻击和技能自动触发；拾取经验升级，保持移动避免包围。")
 
 
 ## 作用：添加开局配置标签。
@@ -389,7 +397,7 @@ func _update_preview(map_data: Dictionary) -> void:
 func _refresh_loadout() -> void:
 	_set_loadout_label("character", "角色\n%s" % _get_character_display_name(GameData.get_character(_selected_character_id)))
 	_set_loadout_label("skill", "初始技能\n%s" % _get_starting_skill_display_name())
-	_set_loadout_label("threat", "威胁等级\n%d（已锁定，仅 UI）" % THREAT_LOCKED_LEVEL)
+	_set_loadout_label("threat", "难度\n标准")
 
 	var soul_label: Label = _screen.find_child("MapSoulLabel", true, false) as Label
 	if soul_label != null:

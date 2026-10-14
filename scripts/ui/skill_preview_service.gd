@@ -17,19 +17,36 @@ const Replay = preload("res://scripts/skills/skill_replay_service.gd")
 const Names: Dictionary = {"burning":"燃烧","chilled":"寒冷","frozen":"冻结","conductive":"导电","cursed":"诅咒","judgment":"审判","instability":"不稳定"}
 const CapabilityNames: Dictionary = {"apply_burning":"施加燃烧","apply_chilled":"施加寒冷","apply_conductive":"施加导电","apply_cursed":"施加诅咒","apply_judgment":"施加审判","apply_instability":"施加不稳定","fire_ground":"火焰地面","frost_area":"冰霜领域","chaos_rift":"混沌裂隙","divine_barrier":"神圣结界","overload":"过载","divine_punishment":"神罚","fission":"裂变","copyable_cast":"可复制施法","copyable_attack":"可复制攻击"}
 static func build(player: Node, skill_id: StringName, level: int, rarity: String) -> Dictionary:
+	return _build(player, skill_id, level, rarity)
+
+## 展示已持有实例，保留独立主攻定义和运行修正；不修改实例或消耗随机数。
+static func build_owned(player: Node, owned: RefCounted) -> Dictionary:
+	if owned == null: return {}
+	return _build(player, owned.skill_id, owned.current_level, owned.current_rarity, owned)
+
+static func _build(player: Node, skill_id: StringName, level: int, rarity: String, owned_instance: RefCounted = null) -> Dictionary:
 	var data: Dictionary = GameData.get_skill(skill_id)
 	if data.is_empty(): return {}
 	var manager: Node = player.get_node_or_null("SkillManager") if player != null else null
-	var owned: RefCounted = manager.get_skill(skill_id) if manager != null else null
+	var owned: RefCounted = owned_instance if owned_instance != null else manager.get_skill(skill_id) if manager != null else null
 	if owned != null:
 		for key: String in ["base","components","events","damage_scaling","runtime_rules","base_special_rules"]:
 			var value: Variant = owned.definition.get(key)
 			if value is Dictionary or value is Array: data[key] = value.duplicate(true)
+		if owned_instance != null:
+			for key: String in ["trigger_rules","fusion_rules","effects","skill_modifiers","level_overrides"]:
+				data[key] = owned.definition.get(key).duplicate(true)
+			data.events.append_array(owned.runtime_events.duplicate(true))
 	elif data.get("skill_type","") == "attack" and not data.get("is_starting_skill",false) and manager != null:
 		data = manager._with_inherited_attack_runtime(data,manager._find_replaced_active_skill_id(skill_id,data))
 	var instance: RefCounted = Instance.new(Definition.new(data))
 	instance.current_level = clampi(level,1,instance.definition.max_level)
 	instance.current_rarity = Growth.keep_highest_rarity(owned.current_rarity if owned != null else "normal",rarity)
+	if owned_instance != null:
+		instance.runtime_modifiers = owned.runtime_modifiers.duplicate(true)
+		instance.runtime_special_rules = owned.runtime_special_rules.duplicate(true)
+		instance.runtime_tags = owned.runtime_tags.duplicate()
+		instance.runtime_events = owned.runtime_events.duplicate(true)
 	var context: Dictionary = {"caster":player,"owner":player,"skill_instance":instance,"skill_id":skill_id,"skill_manager":manager}
 	var result: Dictionary = {"damage":0.0,"dps":null,"cooldown":0.0,"radius":0.0,"duration":0.0,"statuses":[],"shield_amount":0,"next_milestone":Profile.describe_next_milestone(data,instance.current_level),"requirements":[],"rarity":instance.current_rarity,"lines":[],"hits":[],"conditional":false,"cooldown_label":"","modifiers":[]}
 	var scheduled: bool = not data.get("components",[]).is_empty()

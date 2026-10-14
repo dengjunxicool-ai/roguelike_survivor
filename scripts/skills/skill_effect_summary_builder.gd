@@ -13,8 +13,10 @@ const SkillGrowthScalingScript: Script = preload("res://scripts/skills/skill_gro
 ## 作用：解析选项学习或升级技能，以目标等级稀有度生成效果摘要；无技能定义时保留卡片说明。
 ## 使用：build_for_option 解析卡片目标技能与等级，build_for_skill 遍历触发和效果；数值使用成长系数和配置对象名称。
 static func build_for_option(option: Dictionary, player: Node = null) -> String:
+	var upgrade_summary: String = preload("res://scripts/ui/upgrade_preview_service.gd").build_for_option(option,player)
+	if not upgrade_summary.is_empty(): return upgrade_summary
 	if player != null:
-		var payload: Dictionary = option.get("payload",{})
+		var payload: Dictionary = _dict(option.get("payload",{}))
 		var id: StringName = StringName(str(payload.get("skill_id",payload.get("learn_skill_id",""))))
 		var preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,id,int(payload.get("level",1)),str(payload.get("target_rarity",option.get("rarity","normal"))))
 		if not preview.is_empty():

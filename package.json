@@ -244,6 +244,18 @@
     "verify:thunder-presentation": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_thunder_presentation.gd",
     "verify:base-skill-behavior-v2": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_base_skill_behavior_v2.gd",
     "verify:thunder-proc-v2": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_thunder_proc_v2.gd",
-    "verify:skill-proc-chain-limits": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_proc_chain_limits.gd"
+    "verify:skill-proc-chain-limits": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_skill_proc_chain_limits.gd",
+    "verify:melee-contact-protection": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_melee_contact_protection.gd",
+    "verify:short-run-diagnostics": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_short_run_diagnostics.gd",
+    "verify:character-starting-attacks": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_character_starting_attacks.gd",
+    "verify:playtest-choice-cards": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_playtest_choice_cards.gd",
+    "verify:playtest-navigation": "D:\\Godot\\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tools/verify/verify_playtest_navigation.gd",
+    "verify:matrix-launcher": "pwsh -NoProfile -File tools/verify/verify_matrix_launcher.ps1",
+    "verify:projectile-burst-origin": "godot --headless --path . --script res://tools/verify/verify_projectile_burst_origin.gd",
+    "verify:fusion-projectile-route": "godot --headless --path . --script res://tools/verify/verify_fusion_projectile_route.gd",
+    "verify:defeat-diagnostic-lifecycle": "godot --headless --path . --script res://tools/verify/verify_defeat_diagnostic_lifecycle.gd",
+    "verify:run-hud-awareness": "godot --headless --path . --script res://tools/verify/verify_run_hud_awareness.gd",
+    "verify:choice-card-readability": "godot --headless --path . --script res://tools/verify/verify_choice_card_readability.gd",
+    "verify:pause-inspection": "godot --headless --path . --script res://tools/verify/verify_pause_inspection.gd"
   }
 }

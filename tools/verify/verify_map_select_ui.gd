@@ -114,9 +114,8 @@ func _verify_detail_reachable(screen: Control, outer_scroll: ScrollContainer, wi
 	_assert(detail_scroll.get_global_rect().encloses(final_preview.get_global_rect()), "map final enemy preview fits detail scroll at width %d" % width)
 	_assert(outer_scroll.get_global_rect().encloses(final_preview.get_global_rect()), "map final enemy preview reaches visible outer scroll at width %d" % width)
 	var start: Control = screen.find_child("MapStartButton", true, false) as Control
-	outer_scroll.ensure_control_visible(start)
-	await _settle_layout()
-	_assert(outer_scroll.get_global_rect().encloses(start.get_global_rect()), "map start action is reachable at width %d" % width)
+	_assert(screen.get_global_rect().encloses(start.get_global_rect()), "map start action is visible at width %d" % width)
+	_assert(not outer_scroll.is_ancestor_of(start), "map start action does not require scrolling at width %d" % width)
 	detail_scroll.scroll_vertical = 0
 
 

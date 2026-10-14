@@ -90,6 +90,9 @@ func refresh(character_id: StringName = &"") -> void:
 	_select_default_character_if_needed()
 	_refresh_character_cards()
 	_refresh_selected_character()
+	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
+	if scroll != null:
+		scroll.scroll_vertical = 0
 
 
 ## 作用：更新布局。
@@ -186,7 +189,7 @@ func _build_body(root: VBoxContainer) -> void:
 	_build_character_list(content_row)
 	_build_preview_panel(content_row)
 	_build_detail_panel(content_row)
-	_build_confirm_panel(body)
+	_build_confirm_panel(root)
 
 
 ## 作用：构建角色列表并配置节点/样式所需的属性。

@@ -18,10 +18,14 @@ func build(state: String, run_state: Dictionary, unlocks: Array[String]) -> Dict
 	var run_seconds: float = float(run_state.get("run_seconds", 0.0))
 	var kill_count: int = int(run_state.get("kill_count", 0))
 	var run_souls_earned: int = int(run_state.get("run_souls_earned", 0))
-	var diagnostic: Dictionary = RunDiagnosticServiceScript.build_diagnostic(run_state)
+	var diagnostic_context: Dictionary = run_state.duplicate(true)
+	diagnostic_context["result_state"] = state
+	var diagnostic: Dictionary = RunDiagnosticServiceScript.build_diagnostic(diagnostic_context)
+	var run_stats: Dictionary = _get_dictionary(run_state.get("run_stats", {}))
 	var selected_character: Dictionary = GameData.get_character(selected_character_id)
 	return {
 		"diagnostic": diagnostic,
+		"show_boss_metrics": state == STATE_RESULT_VICTORY or bool(run_state.get("boss_seen", false)) or float(run_stats.get("boss_damage_done", 0)) > 0.0 or float(diagnostic.get("boss_dps", 0.0)) > 0.0 or int(diagnostic.get("boss_core_destroyed_count", 0)) > 0,
 		"labels": {
 			"title": "结果：%s" % ("胜利" if state == STATE_RESULT_VICTORY else "失败"),
 			"character": "角色：%s" % String(selected_character.get("display_name", selected_character_id)),

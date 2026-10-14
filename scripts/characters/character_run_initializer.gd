@@ -2,7 +2,7 @@
 ## 使用方式：玩家创建组件后先 initialize_loadout，再 apply_character_setup 与 configure_starting_skills；技能事件接入特性桥。
 extends RefCounted
 class_name CharacterRunInitializer
-const DEFAULT_STARTING_DASH_SKILL_ID: StringName = &"fire_dash_blazing_run"
+const DEFAULT_STARTING_DASH_SKILL_ID: StringName = &""
 
 ## 作用：校验装配与玩家组件，先初始化角色运行时，再初始化特性系统。
 ## 使用：player 为玩家节点；返回布尔判断或执行是否成功。
@@ -98,7 +98,7 @@ func _resolve_starting_skill_id(player: Node) -> StringName:
 	return _first_configured_starting_skill_id()
 
 
-## 作用：优先取角色配置的初始冲刺，否则使用默认火系冲刺。
+## 作用：仅装配角色明确配置的神系冲刺；默认使用玩家自带的基础冲刺，保留两次神系选择。
 ## 使用：player 为玩家节点。
 func _resolve_starting_dash_skill_id(player: Node) -> StringName:
 	var character_id: StringName = StringName(String(player.get("selected_character_id")))

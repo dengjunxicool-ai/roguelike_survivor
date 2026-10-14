@@ -9,8 +9,8 @@ class_name ChasePlayerBehavior
 ## 使用：先 setup 绑定 enemy；由控制器每物理帧调用，delta 为秒。
 func tick(_delta: float) -> void:
 	_cancel_ranged_attack_warning()
-	if _is_target_in_attack_range():
+	if bool(_call_enemy(&"_is_target_touching_contact_radius")):
 		_set_velocity(Vector2.ZERO)
-		_apply_range_attack_damage()
+		_call_enemy(&"_apply_contact_damage")
 	else:
 		_apply_melee_chase_movement()

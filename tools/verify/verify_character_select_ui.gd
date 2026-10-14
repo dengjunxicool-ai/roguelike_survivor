@@ -92,9 +92,8 @@ func _verify_layout(controller: RefCounted, screen: Control, viewport: SubViewpo
 			usable.size.x -= scroll.get_v_scroll_bar().size.x
 		_assert(_verify_horizontal_bounds(row, usable, width), "character rendered content stays within viewport at width %d" % width)
 		var confirm: Control = screen.find_child("CharacterConfirmButton", true, false) as Control
-		scroll.ensure_control_visible(confirm)
-		await _settle_layout()
-		_assert(scroll.get_global_rect().encloses(confirm.get_global_rect()), "character confirm is reachable at width %d" % width)
+		_assert(screen.get_global_rect().encloses(confirm.get_global_rect()), "character confirm remains visible at width %d" % width)
+		_assert(not scroll.is_ancestor_of(confirm), "character confirm does not require scrolling at width %d" % width)
 		scroll.scroll_vertical = 0
 
 
