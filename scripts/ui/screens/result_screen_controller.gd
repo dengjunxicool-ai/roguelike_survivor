@@ -18,6 +18,7 @@ const ResultScreenViewModelBuilderScript: Script = preload("res://scripts/ui/scr
 var _labels_by_state: Dictionary = {}
 var _reason_labels_by_state: Dictionary = {}
 var _last_diagnostics_by_state: Dictionary = {}
+var _bodies_by_state: Dictionary = {}
 var _result_unlock_service: RefCounted = ResultUnlockServiceScript.new()
 var _view_model_builder: RefCounted = ResultScreenViewModelBuilderScript.new()
 
@@ -26,11 +27,22 @@ var _view_model_builder: RefCounted = ResultScreenViewModelBuilderScript.new()
 ## 使用：供本模块调用者使用。
 func reset_for_new_run() -> void:
 	_result_unlock_service.call("reset_for_new_run")
+	for body: VBoxContainer in _bodies_by_state.values():
+		var details: Control = body.get_node_or_null("CombatResultDetails")
+		if details != null:
+			details.visible = false
+		var toggle: Button = body.get_node_or_null("CombatDetailsToggle")
+		if toggle != null:
+			toggle.set_pressed_no_signal(false)
+		var scroll := body.get_parent() as ScrollContainer
+		if scroll != null:
+			scroll.scroll_vertical = 0
 
 
 ## 作用：构建结算页并展示诊断、解锁和下一局推荐。
 ## 使用：由页面或局内编排的构建流程调用；结果按声明类型供后续展示/执行使用；输入 body（主体）、state（状态）。
 func build(body: VBoxContainer, state: String) -> void:
+	_bodies_by_state[state] = body
 	var labels: Dictionary = {}
 	labels["title"] = _add_label(body, "结果：", HORIZONTAL_ALIGNMENT_CENTER)
 	labels["character"] = _add_label(body, "角色：", HORIZONTAL_ALIGNMENT_CENTER)
@@ -39,11 +51,6 @@ func build(body: VBoxContainer, state: String) -> void:
 	labels["kill"] = _add_label(body, "击杀：0", HORIZONTAL_ALIGNMENT_CENTER)
 	labels["progress"] = _add_label(body, "初始技能：-", HORIZONTAL_ALIGNMENT_CENTER)
 	labels["cause"] = _add_label(body, "死亡原因：")
-	labels["boss"] = _add_label(body, "Boss DPS：")
-	labels["summary"] = _add_label(body, "构筑摘要：")
-	labels["upgrades"] = _add_label(body, "高贡献升级：-")
-	labels["damage"] = _add_label(body, "伤害结构：")
-	labels["taken"] = _add_label(body, "受伤来源：")
 	labels["diagnosis"] = _add_label(body, "诊断：")
 	labels["suggestion"] = _add_label(body, "下局建议：")
 	labels["soul"] = _add_label(body, "灵魂石：0", HORIZONTAL_ALIGNMENT_CENTER)
@@ -53,12 +60,31 @@ func build(body: VBoxContainer, state: String) -> void:
 	var reason_label: Label = _add_label(body, "推荐原因：")
 	reason_label.visible = false
 	_reason_labels_by_state[state] = reason_label
+	var details := VBoxContainer.new()
+	details.name = "CombatResultDetails"
+	details.visible = false
+	details.add_theme_constant_override("separation", 10)
+	body.add_child(details)
+	labels["boss"] = _add_label(details, "Boss DPS：")
+	labels["summary"] = _add_label(details, "构筑摘要：")
+	labels["upgrades"] = _add_label(details, "已选升级：-")
+	labels["damage"] = _add_label(details, "伤害结构：")
+	labels["taken"] = _add_label(details, "受伤来源：")
+	var detail_button := _add_button(body, "展开战斗详情")
+	detail_button.name = "CombatDetailsToggle"
+	detail_button.toggled.connect(func(open: bool) -> void: details.visible = open)
+	detail_button.toggle_mode = true
 
 	_add_button(body, "应用推荐配置").pressed.connect(Callable(self, "_emit_recommended_loadout").bind(state))
 	_add_button(body, "查看推荐原因").pressed.connect(Callable(self, "_toggle_reason").bind(state))
-	_add_state_button(body, "再来一局", STATE_CHARACTER_SELECT)
-	_add_state_button(body, "局外强化", STATE_META_UPGRADE)
-	_add_state_button(body, "返回主菜单", STATE_TITLE)
+	var action_parent: Node = body.get_meta("fixed_footer", body)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_parent.add_child(actions)
+	_add_state_button(actions, "再来一局", STATE_CHARACTER_SELECT)
+	_add_state_button(actions, "局外强化", STATE_META_UPGRADE)
+	_add_state_button(actions, "返回主菜单", STATE_TITLE)
 
 
 ## 作用：读取本局缓存解锁、合并成长成果，再生成并显示结算文案和诊断。
@@ -85,6 +111,9 @@ func refresh(state: String, run_state: Dictionary) -> void:
 	var label_texts: Dictionary = _get_dictionary(view_model.get("labels", {}))
 	for key: Variant in label_texts.keys():
 		_set_label(labels, String(key), String(label_texts[key]))
+	var boss_label: Label = labels.get("boss") as Label
+	if boss_label != null:
+		boss_label.visible = bool(view_model.get("show_boss_metrics", false))
 	var reason_label: Label = _reason_labels_by_state.get(state, null) as Label
 	if reason_label != null:
 		reason_label.text = String(view_model.get("reason", "推荐原因："))

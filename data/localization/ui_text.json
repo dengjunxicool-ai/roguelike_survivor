@@ -26,7 +26,7 @@
 			"settings.fullscreen": "全屏",
 			"settings.fullscreen_unavailable": "请在独立游戏窗口中使用全屏。",
 			"settings.language": "语言",
-			"settings.controls": "控制：WASD / 方向键移动，鼠标和键盘用于菜单。",
+			"settings.controls": "WASD / 方向键移动；空格冲刺；Esc 暂停。\n攻击与技能自动触发，靠近经验结晶拾取并升级。\n冲刺帮助脱离包围，不提供伤害免疫；鼠标或方向键用于菜单。",
 			"settings.back": "返回主菜单",
 			"panel.boot": "BOOT",
 			"panel.loading": "正在加载",
@@ -78,7 +78,13 @@
 			"character.stat.crit_chance": "暴击",
 			"character.stat.crit_damage": "暴伤",
 			"character.stat.armor": "护甲",
-			"character.stat.pickup": "拾取"
+			"character.stat.pickup": "拾取",
+			"combat.controls_hint": "WASD / 方向键移动 · 空格冲刺 · Esc 暂停\n攻击和技能自动触发；拾取经验升级，保持移动避免包围。",
+			"panel.reroll_remaining": "免费刷新（剩余 {count} 次）",
+			"panel.skill_details_hint": "悬停或用方向键聚焦卡片，查看完整效果。",
+			"hud.auto": "自动",
+			"hud.dash_key": "空格",
+			"hud.passive": "被动"
 		},
 		"en": {
 			"title.subtitle": "Dungeon Heart: Survivor",
@@ -96,7 +102,7 @@
 			"settings.fullscreen": "Fullscreen",
 			"settings.fullscreen_unavailable": "Use a separate game window to enable fullscreen.",
 			"settings.language": "Language",
-			"settings.controls": "Controls: WASD / arrow keys to move; mouse and keyboard for menus.",
+			"settings.controls": "WASD / arrows: move; Space: dash; Esc: pause.\nAttacks and skills trigger automatically. Collect crystals to level up.\nDash escapes crowds but grants no damage immunity. Use mouse or arrows in menus.",
 			"settings.back": "Back to Title",
 			"panel.boot": "BOOT",
 			"panel.loading": "Loading",
@@ -148,7 +154,13 @@
 			"character.stat.crit_chance": "Crit Chance",
 			"character.stat.crit_damage": "Crit Damage",
 			"character.stat.armor": "Armor",
-			"character.stat.pickup": "Pickup"
+			"character.stat.pickup": "Pickup",
+			"combat.controls_hint": "WASD / arrows: move · Space: dash · Esc: pause\nAttack automatically. Collect experience and keep moving to avoid crowds.",
+			"panel.reroll_remaining": "Free Reroll ({count} left)",
+			"panel.skill_details_hint": "Hover or focus a card with arrow keys to read its full effects.",
+			"hud.auto": "Auto",
+			"hud.dash_key": "Space",
+			"hud.passive": "Passive"
 		}
 	}
 }

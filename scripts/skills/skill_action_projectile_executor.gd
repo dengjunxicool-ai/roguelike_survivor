@@ -6,7 +6,7 @@ class_name SkillActionProjectileExecutor
 
 ## 作用：解析弹数、发射方式和目标后生成投射物，并补充运行伤害与命中动作。
 ## 使用：params 读取 spread_angle；context 携带 caster/target；返回布尔判断或执行是否成功。
-func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
+func _spawn_projectile(params: Dictionary, context: Dictionary, is_burst: bool = false) -> bool:
 	if context.get("event_bus") != null: params = context.event_bus.prepare_geometry(params,context)
 	context = _context_with_resolved_target(params, context)
 	var caster: Node2D = context.get("caster") as Node2D
@@ -19,9 +19,14 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	var runtime_data: Dictionary = _build_projectile_runtime_data(projectile_stats, params, context)
 	var source_id: StringName = StringName(runtime_data.get("source_id", &""))
 	var cast_instance_id: String = str(runtime_data.get("cast_instance_id", ""))
-	var spread_angle: float = deg_to_rad(float(ModifierResolverScript.resolve_value(context, "spread_angle", params.get("spread_angle", 0.0))))
+	var spread_degrees: float = float(ModifierResolverScript.resolve_value(context, "spread_angle", params.get("spread_angle", 0.0)))
 	var launch_origin: Vector2 = _get_vector2(params.get("spawn_position", caster.global_position), caster.global_position)
 	var base_direction: Vector2 = launch_origin.direction_to(target.global_position)
+	# Hit-triggered bursts originate on their target; retain a useful outgoing heading.
+	if base_direction == Vector2.ZERO and is_burst:
+		base_direction = caster.global_position.direction_to(target.global_position)
+		if base_direction == Vector2.ZERO:
+			base_direction = Vector2.RIGHT
 	if base_direction == Vector2.ZERO:
 		return false
 
@@ -31,7 +36,10 @@ func _spawn_projectile(params: Dictionary, context: Dictionary) -> bool:
 	count += arcane_extra_projectiles
 	var hot_rapid_fire_pending: bool = _consume_hot_rapid_fire_pending(context)
 	var hot_rapid_fire_crit_chance_add: float = _get_hot_rapid_fire_crit_chance_add(context)
-	var start_angle: float = -spread_angle * float(count - 1) * 0.5
+	# A full-circle burst is a ring, whereas ordinary/fan spreads retain per-shot spacing.
+	var is_radial: bool = is_burst and absf(spread_degrees) >= 359.999
+	var spread_angle: float = TAU / float(maxi(count, 1)) if is_radial else deg_to_rad(spread_degrees)
+	var start_angle: float = 0.0 if is_radial else -spread_angle * float(count - 1) * 0.5
 	for projectile_index in range(count):
 		var projectile_params: Dictionary = params.duplicate(true)
 		if not projectile_params.has("source_instance_id"):
@@ -570,7 +578,7 @@ func _spawn_projectile_burst_with_budget(projectile_params: Dictionary, context:
 	var budget_key: String = str(projectile_params.get("defer_budget_key", "")).strip_edges()
 	var max_per_frame: int = maxi(int(projectile_params.get("max_per_frame", projectile_params.get("per_frame_budget", 0))), 0)
 	if budget_key == "" or max_per_frame <= 0:
-		return _spawn_projectile(projectile_params, context)
+		return _spawn_projectile(projectile_params, context, true)
 
 	var cost: int = maxi(int(projectile_params.get("count", 1)), 1)
 	var frame: int = Engine.get_physics_frames()
@@ -582,7 +590,7 @@ func _spawn_projectile_burst_with_budget(projectile_params: Dictionary, context:
 		_defer_projectile_burst_to_budget(projectile_params, context)
 		return true
 	_projectile_burst_budget_used_by_key[budget_key] = used + cost
-	return _spawn_projectile(projectile_params, context)
+	return _spawn_projectile(projectile_params, context, true)
 
 
 ## 作用：安排下一预算时机继续发射尚未创建的弹幕。

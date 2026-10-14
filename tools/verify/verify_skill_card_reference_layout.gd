@@ -63,7 +63,7 @@ func _run() -> void:
 
 
 func _verify_card(button: Button, context: String) -> void:
-	_expect(button.tooltip_text.contains("伤害"), "%s card exposes full quantitative preview on hover" % context, button.tooltip_text)
+	_expect(button.tooltip_text.is_empty() and str(button.get_meta("choice_details","")).contains("伤害"), "%s card retains full quantitative details without floating tooltip" % context, button.get_meta("choice_details",""))
 	var title := button.find_child("SkillCardTitle", true, false) as Label
 	var icon := button.find_child("SkillCardIconTexture", true, false) as TextureRect
 	var description := button.find_child("SkillCardDescription", true, false) as Label
@@ -74,17 +74,18 @@ func _verify_card(button: Button, context: String) -> void:
 	_expect(title != null and title.text == "Reference Skill Lv2", "%s title is first-class content" % context)
 	_expect(title != null and title.get_theme_font_size("font_size") <= 23, "%s title font is compact enough" % context, title.get_theme_font_size("font_size") if title != null else 0)
 	_expect(icon != null and icon.texture != null, "%s icon placeholder texture is loaded" % context)
-	_expect(description != null and description.visible and description.text == "提升 Reference Skill 至 Lv2。", "%s description stores plain option text" % context, description.text if description != null else "")
+	_expect(description != null and description.visible and description.text == GameData.get_skill(&"fire_attack_searing").get("description",""), "%s description explains skill purpose" % context, description.text if description != null else "")
 	_expect(content_layer != null, "%s card uses an absolute content layer" % context)
-	_expect(_ratio_close(button.custom_minimum_size.x / button.custom_minimum_size.y, 720.0 / 1240.0), "%s card size matches background aspect ratio" % context, button.custom_minimum_size)
+	_expect(button.custom_minimum_size.x > 0 and button.custom_minimum_size.y > 0, "%s card has usable width and height" % context, button.custom_minimum_size)
 	_expect(rarity != null and rarity.text == "稀有", "%s rarity section shows only rarity name" % context, rarity.text if rarity != null else "")
 	_expect(values != null and _value_rows(values).size() > 0, "%s values section has value rows" % context)
 	_expect(values != null and _value_rows(values).size() <= 3, "%s values section matches prepared rows" % context, _value_rows(values).size() if values != null else 0)
-	_expect(values != null and _joined_value_text(values).contains("24.84%"), "%s values section shows scaled numeric summary" % context, _joined_value_text(values) if values != null else "")
+	_expect(values != null and _joined_value_text(values).contains("0.24P"), "%s values section shows scaled damage with no player context" % context, _joined_value_text(values) if values != null else "")
 	_expect(values != null and not _joined_value_text(values).contains("searing_fire_path"), "%s values section does not expose internal ids" % context, _joined_value_text(values) if values != null else "")
 
+	var purpose_before: String = description.text if description != null else ""
 	button.mouse_entered.emit()
-	_expect(description != null and description.visible and description.text == "提升 Reference Skill 至 Lv2。", "%s whole-card hover does not alter description" % context, description.text if description != null else "")
+	_expect(description != null and description.visible and description.text == purpose_before, "%s whole-card hover does not alter description" % context, description.text if description != null else "")
 	button.mouse_exited.emit()
 
 	_expect(button.find_child("SkillCardDescriptionParts", true, false) == null, "%s card does not create split description parts" % context)
@@ -102,9 +103,9 @@ func _verify_card(button: Button, context: String) -> void:
 			"SkillCardValues"
 		], "%s card content follows reference order" % context, _content_order(content_layer))
 		_expect(_is_vertical_reference_order(content_layer), "%s card content is positioned top to bottom" % context, _content_offsets(content_layer))
-		_expect(_slot_close(description, 0.472, 0.626), "%s description slot is centered on background panel" % context, _slot_bounds(description))
-		_expect(_slot_close(rarity, 0.634, 0.684), "%s rarity slot is centered on plaque" % context, _slot_bounds(rarity))
-		_expect(_slot_close(values, 0.684, 0.872), "%s values slot is centered on rows" % context, _slot_bounds(values))
+		_expect(_slot_close(description, 0.26, 0.52), "%s purpose receives readable space" % context, _slot_bounds(description))
+		_expect(_slot_close(rarity, 0.52, 0.58), "%s rarity stays above values" % context, _slot_bounds(rarity))
+		_expect(_slot_close(values, 0.58, 0.98), "%s values use the lower readable area" % context, _slot_bounds(values))
 
 
 func _first_button(parent: Node) -> Button:

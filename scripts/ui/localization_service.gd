@@ -22,17 +22,17 @@ static func apply_language(language_id: String) -> void:
 	_language_id = _normalize_language_id(language_id)
 
 ## Store keys rather than reverse-matching translated strings on locale changes.
-static func bind_text(control: Control, key: String, fallback: String = "", property: String = "text") -> void:
+static func bind_text(control: Control, key: String, fallback: String = "", property: String = "text", params: Dictionary = {}) -> void:
 	var bindings: Dictionary = control.get_meta("localized_properties", {})
-	bindings[property] = {"key":key,"fallback":fallback}
+	bindings[property] = {"key":key,"fallback":fallback,"params":params.duplicate(true)}
 	control.set_meta("localized_properties", bindings)
-	control.set(property, translate(key, {}, fallback))
+	control.set(property, translate(key, params, fallback))
 
 static func refresh_tree(node: Node) -> void:
 	var bindings: Dictionary = node.get_meta("localized_properties", {})
 	for property: String in bindings:
 		var binding: Dictionary = bindings[property]
-		node.set(property, translate(binding.key, {}, binding.fallback))
+		node.set(property, translate(binding.key, binding.get("params", {}), binding.fallback))
 	for child: Node in node.get_children(): refresh_tree(child)
 
 

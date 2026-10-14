@@ -6,6 +6,7 @@ class_name RunChoiceModalController
 
 
 signal transition_requested(state: String)
+signal reroll_availability_changed(remaining: int)
 
 
 const STATE_RUNNING: String = "RUNNING"
@@ -18,10 +19,12 @@ const UICommandScript: Script = preload("res://scripts/ui/ui_command.gd")
 const UIThemeServiceScript: Script = preload("res://scripts/ui/ui_theme_service.gd")
 const CARD_DESIGN_SIZE: Vector2 = Vector2(342.0, 589.0)
 const CARD_COMPACT_SIZE: Vector2 = Vector2(300.0, 516.6667)
-const CARD_INNER_GAP: float = 36.0
-const CARD_COMPACT_INNER_GAP: float = 36.0
+const CARD_INNER_GAP: float = 16.0
+const CARD_COMPACT_INNER_GAP: float = 12.0
 const CARD_TEXT_LINE_HEIGHT_MULTIPLIER: float = 1.2
-const DEFAULT_SKILL_CARD_ICON_TEXTURE: String = "res://icon.svg"
+const DEFAULT_SKILL_CARD_ICON_TEXTURE: String = "res://assets/ui/skill_icons/arcane.svg"
+const SkillIconServiceScript: Script = preload("res://scripts/ui/skill_icon_service.gd")
+const FREE_REROLLS_PER_UPGRADE: int = 3
 const SKILL_CARD_MAX_VALUE_ROWS: int = 3
 
 const UpgradePoolScript: Script = preload("res://scripts/upgrades/upgrade_pool.gd")
@@ -47,6 +50,39 @@ var _choice_card_labels: Array[Dictionary] = []
 var _choice_gap_spacers: Array[Control] = []
 var _choice_card_pools: Dictionary = {}
 var _replacement_view: CanvasLayer
+var _rerolls_remaining: int = FREE_REROLLS_PER_UPGRADE
+var _current_level_options: Array[Dictionary] = []
+var _level_details_label: Label
+var _reward_details_label: Label
+
+
+## 完整详情在页面保留的滚动区域中显示；悬停与键盘焦点只更新内容。
+func set_details_label(level_label: Label, reward_label: Label = null) -> void:
+	_level_details_label = level_label
+	_reward_details_label = reward_label
+
+func get_rerolls_remaining() -> int:
+	return _rerolls_remaining if has_pending_level_up() else 0
+
+func _show_card_details(button: Button) -> void:
+	var label: Label = _level_details_label if button.get_meta("consumes_pending_level",false) else _reward_details_label
+	if is_instance_valid(label):
+		if label.has_meta("localized_properties"):
+			label.remove_meta("localized_properties")
+		label.text = str(button.get_meta("choice_details",""))
+		var scroll: ScrollContainer = label.get_parent() as ScrollContainer
+		if scroll != null: scroll.scroll_vertical = 0
+
+func _bind_card_details(button: Button, option: Dictionary, consumes_pending_level: bool) -> void:
+	button.tooltip_text = ""
+	button.set_meta("choice_option",option.duplicate(true))
+	button.set_meta("consumes_pending_level",consumes_pending_level)
+	var description: String = _get_option_description_text(option)
+	var effects: String = _get_option_effect_text(option)
+	button.set_meta("choice_details",_get_option_title(option)+" · "+_get_option_rarity_text(option)+"\n"+description+("\n"+effects if effects != description else ""))
+	var show: Callable = Callable(self,"_show_card_details").bind(button)
+	if not button.mouse_entered.is_connected(show): button.mouse_entered.connect(show)
+	if not button.focus_entered.is_connected(show): button.focus_entered.connect(show)
 
 
 ## 作用：保存场景树、升级/诅咒/奖励选项容器并初始化独立随机流。
@@ -78,6 +114,9 @@ func prewarm_choice_card_pools() -> void:
 func reset_run() -> void:
 	cancel_replacement()
 	pending_level_up_count = 0
+	_current_level_options.clear()
+	_rerolls_remaining = FREE_REROLLS_PER_UPGRADE
+	reroll_availability_changed.emit(0)
 	pending_reward_kinds.clear()
 
 func cancel_replacement() -> void:
@@ -89,8 +128,12 @@ func cancel_replacement() -> void:
 ## 作用：增加一个待处理升级并更新最近的玩家等级。
 ## 使用：new_level 为升级信号给出的等级；先排队，进入升级状态后再生成选项。
 func add_pending_level(new_level: int) -> void:
+	if pending_level_up_count == 0:
+		_current_level_options.clear()
+		_rerolls_remaining = FREE_REROLLS_PER_UPGRADE
 	pending_level_up_count += 1
 	pending_level = new_level
+	reroll_availability_changed.emit(get_rerolls_remaining())
 
 
 ## 作用：检查是否仍有待选择的升级次数。
@@ -116,22 +159,35 @@ func has_pending_reward() -> bool:
 ## 作用：生成本次技能/升级候选并绑定升级卡片。
 ## 使用：无可用选项时清空待办、隐藏卡片并延迟返回 RUNNING；有选项时等待玩家选择。
 func refresh_level_up_modal() -> void:
-	var options: Array[Dictionary] = _get_level_up_options_from_pool(LEVEL_UP_OPTION_COUNT)
+	if _current_level_options.is_empty():
+		_current_level_options = _get_level_up_options_from_pool(LEVEL_UP_OPTION_COUNT)
+	var options: Array[Dictionary] = _current_level_options
 	if options.is_empty():
 		pending_level_up_count = 0
+		reroll_availability_changed.emit(0)
 		_hide_choice_card_pool(_level_up_options)
 		call_deferred("_emit_transition", STATE_RUNNING)
 		return
 
 	_refresh_choice_card_modal(_level_up_options, options, STATE_RUNNING, true)
+	reroll_availability_changed.emit(get_rerolls_remaining())
 
 ## 作用：免费重新抽取技能候选，保留待办与暂停状态；替换确认期间禁止刷新。
 func reroll_level_up_options() -> void:
-	if not has_pending_level_up() or is_instance_valid(_replacement_view):
+	if not has_pending_level_up() or _rerolls_remaining <= 0 or is_instance_valid(_replacement_view):
 		return
 	if _level_up_options == null or not _level_up_options.is_visible_in_tree():
 		return
-	refresh_level_up_modal()
+	var rng: RandomNumberGenerator = _upgrade_pool.get("_rng")
+	var old_state: int = rng.state
+	var options: Array[Dictionary] = _get_level_up_options_from_pool(LEVEL_UP_OPTION_COUNT)
+	if options.is_empty():
+		rng.state = old_state
+		return
+	_current_level_options = options
+	_rerolls_remaining -= 1
+	_refresh_choice_card_modal(_level_up_options,options,STATE_RUNNING,true)
+	reroll_availability_changed.emit(get_rerolls_remaining())
 
 
 ## 作用：刷新诅咒选择弹窗。
@@ -232,7 +288,7 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 
 	var button: Button = Button.new()
 	button.text = ""
-	button.tooltip_text = _get_option_description_text(option)+"\n"+_get_option_effect_text(option)
+	_bind_card_details(button,option,consumes_pending_level)
 	button.clip_contents = true
 	button.custom_minimum_size = CARD_DESIGN_SIZE
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -258,27 +314,27 @@ func _add_upgrade_choice_card(parent: BoxContainer, option: Dictionary, return_s
 	var title_label: Label = _add_card_label(content_layer, _get_option_title(option), 23, VERTICAL_ALIGNMENT_CENTER)
 	title_label.name = "SkillCardTitle"
 	title_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.38, 1.0))
-	_set_card_slot(title_label, 0.14, 0.062, 0.86, 0.145)
+	_set_card_slot(title_label, 0.06, 0.025, 0.94, 0.135)
 
 	var icon_frame: Control = _add_card_icon(content_layer, option)
-	_set_card_slot(icon_frame, 0.285, 0.165, 0.715, 0.405)
+	_set_card_slot(icon_frame, 0.38, 0.14, 0.62, 0.25)
 
 	var description_label: Label = _add_card_label(content_layer, _get_option_description_text(option), 15, VERTICAL_ALIGNMENT_CENTER)
 	description_label.name = "SkillCardDescription"
-	description_label.max_lines_visible = 3
+	description_label.max_lines_visible = 5
 	description_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	description_label.clip_contents = true
 	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
 	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
-	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
+	_set_card_slot(description_label, 0.06, 0.26, 0.94, 0.52)
 
 	var rarity_label: Label = _add_card_label(content_layer, _get_option_rarity_text(option), 18, VERTICAL_ALIGNMENT_CENTER)
 	rarity_label.name = "SkillCardRarity"
 	rarity_label.add_theme_color_override("font_color", Color(0.74, 0.84, 1.0, 1.0))
-	_set_card_slot(rarity_label, 0.27, 0.634, 0.73, 0.684)
+	_set_card_slot(rarity_label, 0.06, 0.52, 0.94, 0.58)
 
 	var values: VBoxContainer = _add_card_value_rows(content_layer, option)
-	_set_card_slot(values, 0.14, 0.684, 0.86, 0.872)
+	_set_card_slot(values, 0.06, 0.58, 0.94, 0.98)
 
 	var resize_callable: Callable = Callable(self, "_update_choice_card_sizes").bind(parent)
 	if not parent.resized.is_connected(resize_callable):
@@ -302,6 +358,7 @@ func _refresh_choice_card_modal(container: BoxContainer, options: Array[Dictiona
 		else:
 			_set_choice_card_slot_visible(slot, false)
 	call_deferred("_update_choice_card_sizes", container)
+	if not _choice_card_buttons.is_empty(): _show_card_details(_choice_card_buttons[0])
 
 
 ## 作用：确保选择卡片池。
@@ -421,32 +478,32 @@ func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
 	var title_label: Label = _add_card_label(content_layer, "", 23, VERTICAL_ALIGNMENT_CENTER)
 	title_label.name = "SkillCardTitle"
 	title_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.38, 1.0))
-	_set_card_slot(title_label, 0.14, 0.062, 0.86, 0.145)
+	_set_card_slot(title_label, 0.06, 0.025, 0.94, 0.135)
 
 	var icon_frame: Control = _create_card_icon_slot(content_layer)
-	_set_card_slot(icon_frame, 0.285, 0.165, 0.715, 0.405)
+	_set_card_slot(icon_frame, 0.38, 0.14, 0.62, 0.25)
 	var icon_texture: TextureRect = icon_frame.get_meta("icon_texture") as TextureRect
 
 	var description_label: Label = _add_card_label(content_layer, "", 15, VERTICAL_ALIGNMENT_CENTER)
 	description_label.name = "SkillCardDescription"
-	description_label.max_lines_visible = 3
+	description_label.max_lines_visible = 5
 	description_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	description_label.clip_contents = true
 	description_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.70, 1.0))
 	description_label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(15))
-	_set_card_slot(description_label, 0.14, 0.472, 0.86, 0.626)
+	_set_card_slot(description_label, 0.06, 0.26, 0.94, 0.52)
 
 	var rarity_label: Label = _add_card_label(content_layer, "", 18, VERTICAL_ALIGNMENT_CENTER)
 	rarity_label.name = "SkillCardRarity"
 	rarity_label.add_theme_color_override("font_color", Color(0.74, 0.84, 1.0, 1.0))
-	_set_card_slot(rarity_label, 0.27, 0.634, 0.73, 0.684)
+	_set_card_slot(rarity_label, 0.06, 0.52, 0.94, 0.58)
 
 	var values: VBoxContainer = VBoxContainer.new()
 	values.name = "SkillCardValues"
 	values.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	values.add_theme_constant_override("separation", 4)
+	values.add_theme_constant_override("separation", 2)
 	content_layer.add_child(values)
-	_set_card_slot(values, 0.14, 0.684, 0.86, 0.872)
+	_set_card_slot(values, 0.06, 0.58, 0.94, 0.98)
 
 	var value_rows: Array[HBoxContainer] = []
 	var value_icons: Array[TextureRect] = []
@@ -469,7 +526,7 @@ func _create_choice_card_slot(parent: BoxContainer) -> Dictionary:
 		icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.self_modulate = Color(1.0, 0.52, 0.12, 0.95)
+		icon.self_modulate = Color.WHITE
 		row.add_child(icon)
 		value_icons.append(icon)
 
@@ -517,7 +574,7 @@ func _create_card_icon_slot(parent: Node) -> Control:
 
 	var texture_rect: TextureRect = TextureRect.new()
 	texture_rect.name = "SkillCardIconTexture"
-	texture_rect.custom_minimum_size = Vector2(122, 122)
+	texture_rect.custom_minimum_size = Vector2(36, 36)
 	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -537,7 +594,7 @@ func _bind_choice_card(slot: Dictionary, option: Dictionary, return_state: Strin
 		if button.pressed.is_connected(callable):
 			button.pressed.disconnect(callable)
 	button.pressed.connect(Callable(self, "_select_upgrade_option").bind(option, return_state, consumes_pending_level))
-	button.tooltip_text = _get_option_description_text(option)+"\n"+_get_option_effect_text(option)
+	_bind_card_details(button,option,consumes_pending_level)
 	var background: TextureRect = slot.get("background") as TextureRect
 	var background_texture: Texture2D = _load_texture(_get_choice_card_background_texture(option))
 	if background != null:
@@ -568,6 +625,7 @@ func _bind_value_rows(slot: Dictionary, option: Dictionary) -> void:
 	var names: Array = slot.get("value_names", []) as Array
 	var amounts: Array = slot.get("value_amounts", []) as Array
 	var icons: Array = slot.get("value_icons", []) as Array
+	var previous_context: String = ""
 	for index: int in range(rows.size()):
 		var row: HBoxContainer = rows[index] as HBoxContainer
 		var visible: bool = index < lines.size()
@@ -578,13 +636,20 @@ func _bind_value_rows(slot: Dictionary, option: Dictionary) -> void:
 		var parts: Dictionary = _split_value_line(lines[index])
 		var name_label: Label = names[index] as Label
 		if name_label != null:
-			name_label.text = str(parts.get("name", ""))
+			var text: String = _format_card_value_line(lines[index])
+			var context: String = lines[index].left(lines[index].rfind("：")) if lines[index].contains("：") else ""
+			if not context.is_empty() and context == previous_context:
+				text = text.substr(text.find("\n") + 1)
+			name_label.text = text
+			previous_context = context
 		var value_label: Label = amounts[index] as Label
 		if value_label != null:
 			value_label.text = str(parts.get("value", ""))
+			value_label.visible = false
 		var icon: TextureRect = icons[index] as TextureRect
 		if icon != null:
-			icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
+			icon.texture = _load_texture(SkillIconServiceScript.icon_path_for_value(lines[index]))
+			icon.visible = false
 
 
 ## 作用：设置选择卡片槽位可见。
@@ -670,7 +735,7 @@ func _add_card_icon(parent: Node, option: Dictionary) -> Control:
 
 	var texture_rect: TextureRect = TextureRect.new()
 	texture_rect.name = "SkillCardIconTexture"
-	texture_rect.custom_minimum_size = Vector2(122, 122)
+	texture_rect.custom_minimum_size = Vector2(36, 36)
 	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_rect.texture = _load_texture(_get_option_icon_texture(option))
 	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -685,7 +750,7 @@ func _add_card_value_rows(parent: Node, option: Dictionary) -> VBoxContainer:
 	var values: VBoxContainer = VBoxContainer.new()
 	values.name = "SkillCardValues"
 	values.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	values.add_theme_constant_override("separation", 4)
+	values.add_theme_constant_override("separation", 2)
 	parent.add_child(values)
 
 	var lines: Array[String] = _get_option_value_lines(option)
@@ -702,20 +767,22 @@ func _add_card_value_rows(parent: Node, option: Dictionary) -> VBoxContainer:
 		icon.name = "SkillCardValueIcon"
 		icon.custom_minimum_size = Vector2(22, 22)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.texture = _load_texture(DEFAULT_SKILL_CARD_ICON_TEXTURE)
+		icon.texture = _load_texture(SkillIconServiceScript.icon_path_for_value(lines[index]))
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.self_modulate = Color(1.0, 0.52, 0.12, 0.95)
+		icon.self_modulate = Color.WHITE
+		icon.visible = false
 		row.add_child(icon)
 
 		var parts: Dictionary = _split_value_line(lines[index])
-		var name_label: Label = _add_value_row_label(row, str(parts.get("name", "")), 14, HORIZONTAL_ALIGNMENT_LEFT)
+		var name_label: Label = _add_value_row_label(row, _format_card_value_line(lines[index]), 14, HORIZONTAL_ALIGNMENT_LEFT)
 		name_label.name = "SkillCardValueName"
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var value_label: Label = _add_value_row_label(row, str(parts.get("value", "")), 14, HORIZONTAL_ALIGNMENT_RIGHT)
 		value_label.name = "SkillCardValueAmount"
 		value_label.custom_minimum_size = Vector2(64, 0)
+		value_label.visible = false
 	return values
 
 
@@ -727,7 +794,7 @@ func _get_choice_card_background_texture(option: Dictionary) -> String:
 		if option_path != "":
 			return option_path
 
-	return UIThemeServiceScript.get_string(["choice_cards", "default_background_texture"], "")
+	return "" # Default cards use a compact panel; explicit option art remains supported.
 
 
 ## 作用：添加卡片标签并配置节点/样式所需的属性。
@@ -756,7 +823,8 @@ func _add_value_row_label(parent: Node, text: String, font_size: int, alignment:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.horizontal_alignment = alignment
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.clip_text = true
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.clip_text = false
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.38, 1.0))
 	parent.add_child(label)
@@ -826,7 +894,6 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 		card_size.y = card_size.x * (base_size.y / base_size.x)
 	if card_size.y > maxf(screen_height, 1.0):
 		card_size.y = maxf(screen_height, 1.0)
-		card_size.x = card_size.y * (base_size.x / base_size.y)
 	card_size = Vector2(floor(card_size.x), floor(card_size.y))
 	for spacer: Control in _choice_gap_spacers:
 		if is_instance_valid(spacer):
@@ -843,7 +910,7 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 	for slot: Dictionary in _get_choice_card_pool(container):
 		var icon: TextureRect = slot.get("icon") as TextureRect
 		if icon != null:
-			var icon_size: float = floor(minf(card_size.x * 0.43, card_size.y * 0.24))
+			var icon_size: float = floor(minf(card_size.x * 0.20, card_size.y * 0.10))
 			icon.custom_minimum_size = Vector2(icon_size, icon_size)
 		for value_icon: TextureRect in slot.get("value_icons", []):
 			value_icon.custom_minimum_size = Vector2.ONE * maxi(10, floori(22 * content_scale))
@@ -856,7 +923,10 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 		if label == null:
 			continue
 		var base_font_size: int = int(item.get("font_size", 14))
-		var scaled_font_size: int = maxi(10, roundi(float(base_font_size) * content_scale))
+		# Text remains legible when height is reduced by the fixed details and reroll.
+		var minimum_font_size: int = 12 if viewport_size.x < 900.0 else 14
+		if label.name == &"SkillCardTitle": minimum_font_size = 18
+		var scaled_font_size: int = maxi(minimum_font_size, roundi(float(base_font_size) * ui_scale))
 		label.add_theme_font_size_override("font_size", scaled_font_size)
 		if bool(item.get("line_spacing", false)):
 			label.add_theme_constant_override("line_spacing", _get_line_spacing_for_font_size(scaled_font_size))
@@ -866,9 +936,9 @@ func _update_choice_card_sizes(container: BoxContainer) -> void:
 ## 使用：本文件由 _add_upgrade_choice_card、_create_choice_card_slot 调用；返回 StyleBoxFlat 对象/值。
 func _create_card_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color.TRANSPARENT
-	style.border_color = Color.TRANSPARENT
-	style.set_border_width_all(0)
+	style.bg_color = Color(0.07, 0.075, 0.10, 0.98)
+	style.border_color = Color(0.60, 0.48, 0.23, 0.9)
+	style.set_border_width_all(1)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
@@ -924,6 +994,9 @@ func _finish_upgrade_choice(command_result: Dictionary, return_state: String, co
 
 	if consumes_pending_level:
 		pending_level_up_count = maxi(pending_level_up_count - 1, 0)
+		_current_level_options.clear()
+		_rerolls_remaining = FREE_REROLLS_PER_UPGRADE
+		reroll_availability_changed.emit(get_rerolls_remaining())
 		if pending_level_up_count > 0:
 			transition_requested.emit(STATE_LEVEL_UP_MODAL)
 			return
@@ -967,7 +1040,7 @@ func _get_option_meta_text(option: Dictionary) -> String:
 func _get_option_rarity_text(option: Dictionary) -> String:
 	var rarity: String = _string_from_variant(option.get("rarity", "common")).to_lower()
 	match rarity:
-		"normal":
+		"normal", "common":
 			return "普通"
 		"rare":
 			return "稀有"
@@ -982,16 +1055,10 @@ func _get_option_rarity_text(option: Dictionary) -> String:
 ## 作用：获取选项描述文本，供当前模块后续逻辑使用。
 ## 使用：本文件由 _add_upgrade_choice_card、_bind_choice_card、_get_option_effect_text 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_description_text(option: Dictionary) -> String:
-	var player: Node = _get_player()
 	var id: StringName = _get_option_skill_id(option)
-	if player != null and id != &"":
-		var payload: Dictionary = option.get("payload",{})
-		var preview: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player,id,int(payload.get("level",1)),str(payload.get("target_rarity",option.get("rarity","normal"))))
-		if not preview.is_empty():
-			var text: String = "品质保持%s" % preload("res://scripts/ui/skill_preview_service.gd").rarity_name(preview.rarity)
-			if preview.cooldown > 0: text = "%s %.2fs · " % [preview.cooldown_label,preview.cooldown]+text
-			if not preview.next_milestone.is_empty(): text += "\nLv%d：%s" % [int(preview.next_milestone.level),preview.next_milestone.get("description","强化")]
-			return text + "\n" + str(GameData.get_skill(id).get("description",""))
+	if id != &"":
+		var purpose: String = str(GameData.get_skill(id).get("description",""))
+		if not purpose.is_empty(): return preload("res://scripts/ui/skill_preview_service.gd").localize(purpose)
 	var description: String = _string_from_variant(option.get("description", ""))
 	if description != "":
 		return description
@@ -1006,16 +1073,74 @@ func _get_option_description_text(option: Dictionary) -> String:
 ## 使用：本文件由 _get_option_value_lines 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_effect_text(option: Dictionary) -> String:
 	var summary: String = _string_from_variant(SkillEffectSummaryBuilderScript.build_for_option(option, _get_player()))
+	if str(option.get("type", "")) == "skill_level_up":
+		var player: Node = _get_player()
+		var manager: Node = player.get_node_or_null("SkillManager") if player != null else null
+		var owned: RefCounted = manager.get_skill(_get_option_skill_id(option)) if manager != null else null
+		if owned != null:
+			var current: Dictionary = preload("res://scripts/ui/skill_preview_service.gd").build(player, owned.skill_id, owned.current_level, owned.current_rarity)
+			summary = _compare_preview_lines(current.get("lines", []), summary.split("\n", false))
 	return summary if summary != "" else _get_option_description_text(option)
+
+
+## Compare each actual output in its original trigger context, preserving repeated outputs.
+func _compare_preview_lines(current: Array, target: PackedStringArray) -> String:
+	var numbers := RegEx.new()
+	numbers.compile("[+-]?[0-9]+(?:\\.[0-9]+)?")
+	var previous: Dictionary = {}
+	for line: String in current:
+		var key: String = numbers.sub(line, "#", true)
+		if not previous.has(key): previous[key] = []
+		previous[key].append(line)
+	var result: Array[String] = []
+	for line: String in target:
+		var key: String = numbers.sub(line, "#", true)
+		var old_lines: Array = previous.get(key, [])
+		if old_lines.is_empty() or line.begins_with("Lv") or line.begins_with("前置："):
+			result.append(line)
+			continue
+		var old: String = old_lines.pop_front()
+		var old_numbers: Array[RegExMatch] = numbers.search_all(old)
+		var new_numbers: Array[RegExMatch] = numbers.search_all(line)
+		for index: int in range(new_numbers.size() - 1, -1, -1):
+			var match_new: RegExMatch = new_numbers[index]
+			var match_old: RegExMatch = old_numbers[index]
+			if match_new.get_string() != match_old.get_string():
+				line = line.left(match_new.get_start()) + match_old.get_string() + "→" + match_new.get_string() + line.substr(match_new.get_end())
+		result.append(line)
+	return "\n".join(result)
+
+
+## Put the complete trigger on its own line; values no longer share a clipped name column.
+func _format_card_value_line(line: String) -> String:
+	var decimals := RegEx.new()
+	decimals.compile("([0-9])\\.00")
+	line = decimals.sub(line, "$1", true)
+	line = line.replace("原区域半径增加 ", "半径 +").replace("；复制区域半径为增加后的 ", " · 复制增后").replace("%，持续 ", "%\n持续 ").replace("同一目标/交互触发间隔", "同目标/交互间隔")
+	var split: int = line.rfind("：")
+	if split >= 0:
+		var context: String = line.left(split).replace("命中时：对冻结目标额外", "命中冻结目标").replace("触发时：满足触发条件时", "触发条件满足").replace("触发时：", "触发 · ").replace("生成时", "生成").replace("到期时", "到期").replace("：", " · ")
+		if context.begins_with("融合触发时（"):
+			context = context.trim_prefix("融合触发时（").trim_suffix("）").replace("区域生成", "生成").replace("指定区域内", "区域内").replace("需要", "").replace(" · ", "/")
+		return context + "\n" + line.substr(split + 1)
+	if line.begins_with("立即治疗"):
+		var parts: Dictionary = _split_value_line(line)
+		return (str(parts.name) + " " + str(parts.value)).strip_edges()
+	# Only strip internal object IDs in the definition-only fallback. Composite
+	# summon lines contain several values and units and must remain complete.
+	var object_id := RegEx.new()
+	object_id.compile("[a-z][a-z0-9_]+(?=范围|持续)")
+	return preload("res://scripts/ui/skill_preview_service.gd").localize(object_id.sub(line, "", true))
 
 
 ## 作用：获取选项值行列表，供当前模块后续逻辑使用。
 ## 使用：本文件由 _bind_value_rows、_add_card_value_rows 调用；输入 option（选项）；返回 Array[String] 列表。
 func _get_option_value_lines(option: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
+	var purpose: String = _get_option_description_text(option)
 	for line: String in _get_option_effect_text(option).split("\n", false):
 		var trimmed: String = line.strip_edges()
-		if trimmed != "":
+		if trimmed != "" and trimmed != purpose and not trimmed.begins_with("前置：") and not trimmed.begins_with("Lv"):
 			lines.append(trimmed)
 	return _prioritize_card_value_lines(lines)
 
@@ -1024,12 +1149,14 @@ func _get_option_value_lines(option: Dictionary) -> Array[String]:
 ## 使用：本文件由 _get_option_value_lines 调用；输入 lines（行列表）；返回 Array[String] 列表。
 func _prioritize_card_value_lines(lines: Array[String]) -> Array[String]:
 	var picked: Array[String] = []
+	# Actual upgrades lead with changed outputs; unchanged mechanics remain in details.
+	_pick_first_matching_value_line(lines, picked, ["→"])
 	var before_damage_pick: int = picked.size()
-	_pick_first_matching_value_line(lines, picked, ["%", "攻击伤害"])
+	_pick_first_matching_value_line(lines, picked, ["单次命中伤害", "单次伤害", "攻击伤害"])
 	if picked.size() == before_damage_pick:
 		_pick_first_matching_value_line(lines, picked, ["伤害"])
 	_pick_first_matching_value_line(lines, picked, ["范围", "px"])
-	_pick_first_matching_value_line(lines, picked, ["Burning", "Chilled", "Conductive", "Cursed", "Judgment", "Instability", "层"])
+	_pick_first_matching_value_line(lines, picked, ["冷却", "间隔", "持续", "层"])
 	for line: String in lines:
 		if picked.size() >= SKILL_CARD_MAX_VALUE_ROWS:
 			break
@@ -1055,6 +1182,16 @@ func _pick_first_matching_value_line(lines: Array[String], picked: Array[String]
 ## 作用：拆分值行。
 ## 使用：本文件由 _bind_value_rows、_add_card_value_rows 调用；输入 line（行）；返回字典包含 name/value。
 func _split_value_line(line: String) -> Dictionary:
+	if line.contains("→"):
+		var split: int = line.find(" ")
+		if split >= 0:
+			var value: String = line.substr(split+1)
+			if line.begins_with("立即治疗"):
+				var details_start: int = value.find("（")
+				if details_start >= 0:
+					value = value.left(details_start)+"\n"+value.substr(details_start+1).get_slice("，",0)
+			else: value = value.replace("（","\n（")
+			return {"name":line.left(split),"value":value}
 	var status_parts: PackedStringArray = line.strip_edges().split(" ", false)
 	if status_parts.size() >= 3 and status_parts[0] == "施加":
 		return {
@@ -1095,17 +1232,7 @@ func _clean_value_name(name: String) -> String:
 ## 作用：获取选项图标纹理，供当前模块后续逻辑使用。
 ## 使用：本文件由 _bind_choice_card、_add_card_icon 调用；输入 option（选项）；返回 String 文本/标识。
 func _get_option_icon_texture(option: Dictionary) -> String:
-	var option_path: String = _first_texture_path(option)
-	if option_path != "":
-		return option_path
-
-	var skill_id: StringName = _get_option_skill_id(option)
-	if skill_id != &"":
-		var skill: Dictionary = GameData.get_skill(skill_id)
-		var skill_path: String = _first_texture_path(skill)
-		if skill_path != "":
-			return skill_path
-	return DEFAULT_SKILL_CARD_ICON_TEXTURE
+	return SkillIconServiceScript.icon_path_for_option(option)
 
 
 ## 作用：获取选项技能ID，供当前模块后续逻辑使用。

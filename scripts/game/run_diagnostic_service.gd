@@ -18,19 +18,36 @@ static func build_diagnostic(run_state: Dictionary) -> Dictionary:
 	var run_stats: Dictionary = _get_dictionary(run_state.get("run_stats", {}))
 	var damage_taken: int = int(run_stats.get("damage_taken_total", 0))
 	var damage_done: int = int(run_stats.get("damage_done_total", 0))
+	var last_source: String = String(run_stats.get("last_damage_source", ""))
+	var is_victory: bool = String(run_state.get("result_state", run_state.get("state", ""))) == "RESULT_VICTORY"
+	var is_death: bool = not is_victory and run_state.get("player_dead", null) == true
+	var is_early_death: bool = is_death and run_seconds > 0.0 and run_seconds < 60.0
 	var recommendation: Dictionary
 
-	if damage_taken > damage_done and damage_taken > 0:
-		recommendation = _recommend(character_id, map_id, "优先生存和拾取范围。", "本局承伤高于输出，先补稳定性。")
+	if is_victory:
+		recommendation = _recommend(character_id, map_id, "沿用本局构筑，继续补强已拥有技能和神系技能。", "本局已取得胜利，可继续巩固当前构筑。")
 	elif damage_done == 0 and damage_taken == 0:
-		recommendation = _recommend(character_id, map_id, "优先学习技能并保持攻击覆盖。", "本局未记录伤害，暂无法判断输出和承伤表现。")
+		recommendation = _recommend(character_id, map_id, "优先学习技能并保持攻击覆盖。", "本局未记录伤害，样本不足，暂无法判断输出和承伤表现。")
+	elif is_early_death:
+		var source_reason: String = "最后记录的伤害来源为%s。" % _source_label(last_source) if last_source != "" else "最后伤害来源未记录。"
+		recommendation = _recommend(character_id, map_id, _early_death_suggestion(last_source), "本局过早死亡，先改善生存与走位。%s短局样本不足以判断完整构筑强度。" % source_reason)
+	elif is_death:
+		var source_reason: String = "最后记录的伤害来源为%s。" % _source_label(last_source) if last_source != "" else "最后伤害来源未记录。"
+		var phase: String = "Boss阶段" if bool(run_state.get("boss_seen", false)) or float(run_stats.get("boss_phase_started_at", -1.0)) >= 0.0 or last_source == "boss" else "波次阶段"
+		var reason: String = "本局在%s死亡，需要改善生存。%s" % [phase, source_reason]
+		var suggestion: String = _early_death_suggestion(last_source)
+		if run_seconds >= 220.0 and kill_count < 120:
+			reason += "后期清场效率偏低，需同时补强攻击覆盖。"
+			suggestion += "补充稳定的范围伤害与清场能力。"
+		recommendation = _recommend(character_id, map_id, suggestion, reason)
+	elif run_state.get("player_dead", null) == false:
+		recommendation = _recommend(character_id, map_id, "继续观察当前技能的触发条件与攻击覆盖，再决定下局调整。", "本局主动结束，不能据此判断生存能力是否足够。")
 	elif run_seconds >= 220.0 and kill_count < 120:
 		recommendation = _recommend(character_id, map_id, "优先选择伤害、范围和 Boss 压制。", "后期清场效率偏低。")
 	else:
-		recommendation = _recommend(character_id, map_id, "沿用当前角色，优先补强已拥有技能和神系技能。", "当前数据没有明显短板。")
-	var last_source: String = String(run_stats.get("last_damage_source", ""))
+		recommendation = _recommend(character_id, map_id, "观察生存与走位，结合技能触发条件和实际受伤来源调整下一局。", "终局状态未记录，现有数据不足以判断生存短板。")
 	recommendation.merge({
-		"death_cause": _source_label(last_source) if last_source != "" else "未记录",
+		"death_cause": "未死亡" if is_victory else (_source_label(last_source) if last_source != "" else "未记录"),
 		"boss_dps": float(run_stats.get("boss_dps", 0.0)),
 		"boss_core_destroyed_count": int(run_stats.get("boss_core_destroyed_count", 0)),
 		"boss_core_average_lifetime": float(run_stats.get("boss_core_average_lifetime", 0.0)),
@@ -43,6 +60,19 @@ static func build_diagnostic(run_state: Dictionary) -> Dictionary:
 		"recommendation_reason": String(recommendation.get("reason", ""))
 	})
 	return recommendation
+
+
+## 作用：按最后实际记录的伤害来源给出短局生存建议，不从承伤占比推测致命来源。
+static func _early_death_suggestion(last_source: String) -> String:
+	match last_source:
+		"ranged", "projectile":
+			return "优先生存，注意远程攻击预警并横向移动躲避，保持与敌人的距离。"
+		"map_toxic_fog", "poison", "area", "fire", "lava", "map_lava":
+			return "优先生存，及时离开危险区域，避免持续承伤后再拾取奖励。"
+		"boss":
+			return "优先生存，观察 Boss 攻击预警，先离开攻击范围再寻找输出机会。"
+		_:
+			return "优先生存并保持移动，避免被敌人包围，留出撤离路线后再拾取经验。"
 
 
 ## 作用：把各来源正伤害量换算为占比。

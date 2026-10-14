@@ -49,7 +49,8 @@ static func create_panel_screen(
 	title: String,
 	min_size: Vector2,
 	z_index_value: int,
-	viewport_size: Vector2
+	viewport_size: Vector2,
+	fixed_footer: bool = false
 ) -> VBoxContainer:
 	var screen: Control = create_screen(owner, screens, state, z_index_value)
 	var background: ColorRect = ColorRect.new()
@@ -67,17 +68,34 @@ static func create_panel_screen(
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	panel.add_child(margin)
 	responsive_layout.call("register_panel", panel, margin, min_size, viewport_size)
+	var scroll_parent: Node = margin
+	var footer: VBoxContainer
+	if fixed_footer:
+		var column := VBoxContainer.new()
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		column.add_theme_constant_override("separation", 12)
+		margin.add_child(column)
+		scroll_parent = column
+		footer = VBoxContainer.new()
+		footer.name = "FixedActions"
+		footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		footer.size_flags_vertical = Control.SIZE_SHRINK_END
 
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	margin.add_child(scroll)
+	scroll_parent.add_child(scroll)
+	if footer != null:
+		scroll_parent.add_child(footer)
 
 	var body: VBoxContainer = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 12)
 	scroll.add_child(body)
+	if footer != null:
+		body.set_meta("fixed_footer", footer)
 	UINodeFactoryScript.add_label(body, title, 1)
 	return body

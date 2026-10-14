@@ -35,6 +35,7 @@ const MetaUpgradeControllerScript: Script = preload("res://scripts/ui/screens/me
 const CodexScreenControllerScript: Script = preload("res://scripts/ui/screens/codex_screen_controller.gd")
 const SettingsScreenControllerScript: Script = preload("res://scripts/ui/screens/settings_screen_controller.gd")
 const ResultScreenControllerScript: Script = preload("res://scripts/ui/screens/result_screen_controller.gd")
+const PauseInspectionControllerScript: Script = preload("res://scripts/ui/screens/pause_inspection_controller.gd")
 const RunHudControllerScript: Script = preload("res://scripts/ui/hud/run_hud_controller.gd")
 const RunHudStateProviderScript: Script = preload("res://scripts/ui/hud/run_hud_state_provider.gd")
 const RunChoiceModalControllerScript: Script = preload("res://scripts/ui/modals/run_choice_modal_controller.gd")
@@ -94,6 +95,7 @@ var _meta_upgrade_controller: RefCounted
 var _codex_controller: RefCounted
 var _settings_controller: RefCounted
 var _result_controller: RefCounted
+var _pause_inspection_controller: RefCounted
 var _run_hud_controller: RefCounted
 var _run_hud_state_provider: RefCounted = RunHudStateProviderScript.new()
 var _run_choice_modal_controller: RefCounted
@@ -114,6 +116,9 @@ var _run_loading_dots_label: Label
 var _run_loading_tween: Tween
 var _run_loading_active: bool = false
 var _run_loading_elapsed: float = 0.0
+var _reroll_skills_button: Button
+var _level_up_details: Label
+var _reward_details: Label
 
 
 ## 作用：组装状态机、页面宿主和界面，应用已存设置并进入启动状态。
@@ -295,6 +300,8 @@ func _can_transition(from_state: String, to_state: String) -> bool:
 ## 作用：准备状态；具体处理委托给 _state_prepare_router.prepare。
 ## 使用：本文件由 transition_to、_enter_running_state_with_direct 调用；输入 state（状态）。
 func _prepare_state(state: String) -> void:
+	if state == STATE_PAUSE_MENU and _pause_inspection_controller != null:
+		_pause_inspection_controller.call("refresh", get_tree().get_first_node_in_group(PLAYER_GROUP), _run_stats_tracker)
 	_state_prepare_router.call("prepare", self, state, {
 		"modal_flow_controller": _modal_flow_controller,
 		"choice_modal": _run_choice_modal_controller
@@ -488,15 +495,40 @@ func _ensure_run_hud_built() -> void:
 func _build_level_up_modal() -> void:
 	_level_up_options = _create_choice_modal_screen(STATE_LEVEL_UP_MODAL, _tr("panel.level_up", "技能选择"), 20)
 	var column: VBoxContainer = _level_up_options.get_parent() as VBoxContainer
-	column.add_theme_constant_override("separation", 20)
+	column.add_theme_constant_override("separation", 12)
+	_level_up_details = _build_choice_details(column)
 	var button: Button = Button.new()
 	button.name = "RerollSkills"
+	_reroll_skills_button = button
 	button.custom_minimum_size = Vector2(220, 44)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	UIButtonSkin.apply(button)
 	LocalizationServiceScript.bind_text(button, "panel.reroll_skills", "重新刷新")
 	button.pressed.connect(Callable(self, "_reroll_skill_choices"))
 	column.add_child(button)
+
+func _build_choice_details(column: VBoxContainer) -> Label:
+	var scroll := ScrollContainer.new()
+	scroll.name = "ChoiceDetailsScroll"
+	scroll.custom_minimum_size = Vector2(0, 84)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	var label := Label.new()
+	label.name = "ChoiceDetailsLabel"
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(0.91, 0.87, 0.75))
+	LocalizationServiceScript.bind_text(label, "panel.skill_details_hint", "悬停或用方向键聚焦卡片，查看完整效果。")
+	scroll.add_child(label)
+	return label
+
+func _update_skill_reroll_button(remaining: int) -> void:
+	if not is_instance_valid(_reroll_skills_button):
+		return
+	_reroll_skills_button.disabled = remaining <= 0
+	LocalizationServiceScript.bind_text(_reroll_skills_button, "panel.reroll_remaining", "免费刷新（剩余 {count} 次）", "text", {"count": str(remaining)})
 
 func _reroll_skill_choices() -> void:
 	if current_state == STATE_LEVEL_UP_MODAL and _run_choice_modal_controller != null:
@@ -507,6 +539,9 @@ func _reroll_skill_choices() -> void:
 ## 使用：内部辅助入口。
 func _build_run_reward_modal() -> void:
 	_reward_options = _create_choice_modal_screen(STATE_RUN_REWARD_MODAL, _tr("panel.reward", "战利品选择"), 20)
+	var column := _reward_options.get_parent() as VBoxContainer
+	column.add_theme_constant_override("separation", 12)
+	_reward_details = _build_choice_details(column)
 
 
 ## 作用：构建诅咒选择弹窗。
@@ -523,6 +558,7 @@ func _build_curse_choice_modal() -> void:
 func _setup_run_choice_modals() -> void:
 	_run_choice_modal_controller = RunChoiceModalControllerScript.new()
 	_run_choice_modal_controller.transition_requested.connect(Callable(self, "transition_to"))
+	_run_choice_modal_controller.reroll_availability_changed.connect(Callable(self, "_update_skill_reroll_button"))
 	_run_choice_modal_controller.call(
 		"setup",
 		get_tree(),
@@ -530,22 +566,31 @@ func _setup_run_choice_modals() -> void:
 		_curse_options,
 		_reward_options
 	)
+	_run_choice_modal_controller.call("set_details_label", _level_up_details, _reward_details)
 	_run_choice_modal_controller.call("prewarm_choice_card_pools")
+	_update_skill_reroll_button(int(_run_choice_modal_controller.call("get_rerolls_remaining")))
 
 
 ## 作用：构建暂停菜单。
 ## 使用：内部辅助入口。
 func _build_pause_menu() -> void:
-	var body: VBoxContainer = _create_panel_screen(STATE_PAUSE_MENU, _tr("panel.pause", "暂停游戏"), Vector2(420, 360), 30)
-	_add_localized_state_button(body, "panel.resume", "继续游戏", STATE_RUNNING)
-	_add_localized_state_button(body, "panel.give_up", "放弃战斗", STATE_RESULT_DEFEAT)
-	_add_localized_state_button(body, "panel.back_to_title", "返回主菜单", STATE_TITLE)
+	var body: VBoxContainer = _create_panel_screen(STATE_PAUSE_MENU, _tr("panel.pause", "暂停游戏"), Vector2(740, 610), 30, true)
+	var help := _add_label(body, "")
+	help.name = "CombatControlsGuide"
+	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	LocalizationServiceScript.bind_text(help, "settings.controls", "WASD / 方向键移动，空格冲刺，Esc 暂停。攻击和技能自动触发。")
+	_pause_inspection_controller = PauseInspectionControllerScript.new()
+	_pause_inspection_controller.call("build", body)
+	var actions: VBoxContainer = body.get_meta("fixed_footer") as VBoxContainer
+	_add_localized_state_button(actions, "panel.resume", "继续游戏", STATE_RUNNING)
+	_add_localized_state_button(actions, "panel.give_up", "放弃战斗", STATE_RESULT_DEFEAT)
+	_add_localized_state_button(actions, "panel.back_to_title", "返回主菜单", STATE_TITLE)
 
 
 ## 作用：构建结果页面并配置节点/样式所需的属性；具体处理委托给 _result_controller.build。
 ## 使用：本文件由 _build_screen_for_state 调用；输入 state（状态）、title（标题）。
 func _build_result_screen(state: String, title: String) -> void:
-	var body: VBoxContainer = _create_panel_screen(state, title, Vector2(560, 460), 30)
+	var body: VBoxContainer = _create_panel_screen(state, title, Vector2(860, 620), 30, true)
 	if _result_controller == null:
 		_result_controller = ResultScreenControllerScript.new()
 		_result_controller.state_requested.connect(Callable(self, "transition_to"))
@@ -564,7 +609,7 @@ func _get_screen_dictionary() -> Dictionary:
 
 ## 作用：创建面板页面。
 ## 使用：本文件由 _build_boot、_build_meta_upgrade、_build_codex 调用；输入 state（状态）、title（标题）、min_size（最小尺寸）、z_index_value（z索引值）；返回 VBoxContainer 对象/值。
-func _create_panel_screen(state: String, title: String, min_size: Vector2, z_index_value: int) -> VBoxContainer:
+func _create_panel_screen(state: String, title: String, min_size: Vector2, z_index_value: int, fixed_footer: bool = false) -> VBoxContainer:
 	var body: VBoxContainer = UIScreenFactoryScript.create_panel_screen(
 		self,
 		_get_screen_dictionary(),
@@ -573,7 +618,8 @@ func _create_panel_screen(state: String, title: String, min_size: Vector2, z_ind
 		title,
 		min_size,
 		z_index_value,
-		get_viewport().get_visible_rect().size
+		get_viewport().get_visible_rect().size,
+		fixed_footer
 	)
 	var title_keys: Dictionary = {STATE_BOOT:"panel.boot",STATE_META_UPGRADE:"panel.meta_upgrade",STATE_CODEX:"panel.codex",STATE_SETTINGS:"panel.settings",STATE_CURSE_CHOICE_MODAL:"panel.curse",STATE_PAUSE_MENU:"panel.pause",STATE_RESULT_DEFEAT:"panel.defeat",STATE_RESULT_VICTORY:"panel.victory"}
 	if title_keys.has(state): LocalizationServiceScript.bind_text(body.get_child(0), title_keys[state], title)
@@ -1210,7 +1256,7 @@ func _collect_all_experience_gems() -> void:
 ## 使用：内部辅助入口；输入 wave_id（波次ID）。
 func _on_wave_changed(wave_id: String) -> void:
 	if wave_id != "":
-		_show_announcement("波次开始：%s" % wave_id, 2.0)
+		_show_announcement("新一波敌人来袭", 2.0)
 
 
 ## 作用：响应波次计时器变化并衔接对应的事件处理流程。

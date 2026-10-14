@@ -256,10 +256,11 @@ function validateCharacters(charactersDocument, errors) {
   }
 
   const characters = requiredArray(charactersDocument, "characters", "data/characters/characters.json", errors);
+  const starters = { mage: "fireball", ranger: "ranger_bolt", paladin: "paladin_smite", alchemist: "alchemist_flask" };
   for (const character of characters) {
     if (!isObject(character)) continue;
-    if (character.starting_skill_id !== "fireball") {
-      errors.push(`data/characters/characters.json character ${character.id || "missing id"} must set starting_skill_id: "fireball"`);
+    if (character.starting_skill_id !== starters[character.id]) {
+      errors.push(`data/characters/characters.json character ${character.id || "missing id"} must set its distinct starting_skill_id: "${starters[character.id]}"`);
     }
   }
 }

@@ -59,7 +59,7 @@ func build(body: VBoxContainer) -> void:
 	_language_button.item_selected.connect(Callable(self, "_on_language_selected"))
 	body.add_child(_language_button)
 
-	_add_localized_label(body, "settings.controls", "控制：WASD / 方向键移动，鼠标和键盘用于菜单。")
+	_add_localized_label(body, "settings.controls", "WASD / 方向键移动；空格冲刺；Esc 暂停。\n攻击与技能自动触发，靠近经验结晶拾取并升级。\n冲刺帮助脱离包围，不提供伤害免疫；鼠标或方向键用于菜单。")
 	var back: Button = _add_state_button(body, "", STATE_TITLE)
 	LocalizationServiceScript.bind_text(back, "settings.back", "返回主菜单")
 

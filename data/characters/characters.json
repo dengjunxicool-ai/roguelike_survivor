@@ -11,7 +11,7 @@
 			},
 			"id": "mage",
 			"display_name": "法师",
-			"description": "以主攻击伤害和元素状态推进节奏，但过载后更脆弱。",
+			"description": "以火球主攻击叠加过载，提高爆发；过载后更脆弱。",
 			"role": "高爆发元素施法者",
 			"unlock": {
 				"type": "default"
@@ -127,7 +127,7 @@
 			},
 			"id": "ranger",
 			"display_name": "游侠",
-			"description": "保持移动能进入猎手节奏，停顿、受击或硬控会中断节奏。",
+			"description": "以快速穿透箭开局，持续移动提高暴击与箭速；停顿、受击或硬控会中断节奏。",
 			"role": "高速暴击与陷阱猎手",
 			"unlock": {
 				"type": "default"
@@ -228,7 +228,7 @@
 				"pickup_radius": 80,
 				"soul_gain_multiplier": 1
 			},
-			"starting_skill_id": "fireball"
+			"starting_skill_id": "ranger_bolt"
 		},
 		{
 			"visual": {
@@ -240,7 +240,7 @@
 			},
 			"id": "paladin",
 			"display_name": "圣骑士",
-			"description": "更稳定地承受伤害，并在护盾存在时强化神圣伤害。",
+			"description": "以近身神圣范围打击开局，承伤更稳；护盾存在时主攻击更强。",
 			"role": "护盾与神圣前线",
 			"unlock": {
 				"type": "default"
@@ -311,7 +311,7 @@
 				"pickup_radius": 78,
 				"soul_gain_multiplier": 1
 			},
-			"starting_skill_id": "fireball"
+			"starting_skill_id": "paladin_smite"
 		},
 		{
 			"visual": {
@@ -323,7 +323,7 @@
 			},
 			"id": "alchemist",
 			"display_name": "炼金术士",
-			"description": "直接主攻击较弱，但持续伤害与状态反应更强。",
+			"description": "以燃烧药瓶开局，直接伤害较弱，但持续伤害与状态击杀反应更强。",
 			"role": "异常状态与反应专家",
 			"unlock": {
 				"type": "default"
@@ -394,7 +394,7 @@
 				"pickup_radius": 90,
 				"soul_gain_multiplier": 1
 			},
-			"starting_skill_id": "fireball"
+			"starting_skill_id": "alchemist_flask"
 		}
 	]
 }

@@ -168,7 +168,7 @@ func effects(bus: Node,items: Array,c: Dictionary,skill: RefCounted) -> bool:
 	var success: bool = false
 	for action: Dictionary in actions:
 		if String(action.type)=="spawn_area": action.params["hit_all_targets"] = true
-		if String(action.type) in ["spawn_projectile","spawn_projectile_burst"]: action.params["spawn_position"] = c.get("position",c.caster.global_position)
+		if String(action.type) in ["spawn_projectile","spawn_projectile_burst"]: action.params["spawn_position"] = c.get("projectile_spawn_position",c.get("position",c.caster.global_position))
 		var result: Variant = _executor.execute_action(action,c)
 		success = (result is bool and result) or (result is int and result>0) or success
 	return success
@@ -194,6 +194,8 @@ func perform(bus: Node,r: Dictionary,c: Dictionary,skill: RefCounted) -> bool:
 			var done: bool = false
 			for next: Node2D in selected.slice(0,int(r.get("count",1))):
 				var child: Dictionary=c.duplicate(true);child.target=next;child.position=next.global_position;child.erase("target_statuses")
+				# Keep projectile travel anchored at the original hit while area/status effects use the destination.
+				child["projectile_spawn_position"] = c.get("position",c.caster.global_position)
 				done=effects(bus,r.effects,child,skill) or done
 			return done
 		"retarget":

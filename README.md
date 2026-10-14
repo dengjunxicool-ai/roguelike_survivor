@@ -11,7 +11,25 @@ Godot game embedding does not support window mode changes. When playing from
 the editor, disable **Embed Game on Next Play**, then restart the game.
 
 The level-up skill selection has a free **Reroll Skills** button below the three
-cards. Rerolling keeps the game paused and preserves the pending upgrade.
+cards, limited to three free rerolls per pending upgrade. Rerolling keeps the
+game paused and preserves the pending upgrade. Complete card effects appear
+in a fixed details area below the cards, accessible with the mouse or keyboard.
+
+Combat controls are shown before starting a run and in Settings/Pause:
+WASD or arrows move, Space dashes, and Esc pauses. Attacks and skills trigger
+automatically; dashing does not grant damage immunity.
+
+Each character has a distinct starting attack: mage fireball, ranger piercing
+arrow, paladin holy close-range strike, and alchemist status flask. Starting
+attacks preserve both god-school choices. Character confirmation, map start,
+and result retry remain visible outside scrolling information panels.
+
+The battle HUD shows current wave time, character trait state (including shield
+recharge and overload stacks), and a steady low-health warning. Empty skill
+slots use compact markers; the skill bar keeps the ground visible underneath.
+Pause includes expandable current attributes and learned-skill details, with
+resume and exit actions fixed below the scroll area. Upgrade cards emphasize
+readable conditions and actual current-to-next values, including summon timing.
 
 开发者模式的 **Run Setup** 页提供「技能构筑」：选择角色与地图，按神系筛选并添加技能，
 为每项设置等级和稀有度，支持移除与清空。未选替代攻击时保留角色默认攻击。

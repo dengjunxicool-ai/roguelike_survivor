@@ -216,7 +216,7 @@ func start_wave(wave_index: int) -> void:
 	_owner.emit_signal(
 		&"timeline_event_started",
 		"wave:%s" % wave_id,
-		String(wave.get("announcement", "第 %s 波来袭" % wave_id))
+		String(wave.get("announcement", "第 %d 波：%s" % [wave_index + 1, String(wave.get("display_name", "敌人来袭"))]))
 	)
 
 

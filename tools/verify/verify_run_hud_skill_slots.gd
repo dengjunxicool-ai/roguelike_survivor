@@ -448,7 +448,7 @@ func _verify_hud_viewport_bounds() -> bool:
 		if viewport_width == 360:
 			ok = _expect(skill_bar.scale.is_equal_approx(Vector2(0.45, 0.45)), "smallest viewport respects approved readable scale floor", skill_bar.scale) and ok
 		if viewport_width == 1280:
-			ok = _expect(skill_rect.is_equal_approx(Rect2(250, 578, 780, 112)), "desktop skill bar layout is preserved", skill_rect) and ok
+			ok = _expect(skill_rect.size.y <= 76.0 and skill_rect.size.x < 780.0 and is_equal_approx(skill_rect.get_center().x, 640.0), "desktop empty capacity uses compact centered layout", skill_rect) and ok
 			ok = _expect(player_rect.is_equal_approx(Rect2(18, 18, 392, 118)), "desktop player panel layout is preserved", player_rect) and ok
 		var slots := skill_bar.get_children()
 		ok = _expect(slots.size() == 12, "resize preserves all twelve skill slots", slots.size()) and ok

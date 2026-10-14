@@ -81,7 +81,8 @@ func run() -> void:
 	for button: Button in modal.get("_choice_card_buttons"):
 		var label: Label = button.find_child("SkillCardDescription",true,false)
 		expect(label != null and label.max_lines_visible == 3 and label.clip_contents,"long Chinese description is bounded to its card")
-		expect(button.tooltip_text.contains("伤害") and not button.tooltip_text.contains("proc_"),"full numerical preview retained in tooltip")
+		var details: String = str(button.get_meta("choice_details",""))
+		expect(button.tooltip_text.is_empty() and details.contains("伤害") and not details.contains("proc_"),"full numerical preview retained in bounded details")
 	if DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png(OS.get_environment("APPDATA").get_base_dir()+"/cards-960.png")

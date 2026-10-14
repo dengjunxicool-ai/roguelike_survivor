@@ -5,6 +5,8 @@ extends RefCounted
 class_name RunHudController
 
 signal pause_requested
+const SkillIconServiceScript: Script = preload("res://scripts/ui/skill_icon_service.gd")
+const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 const COLOR_PANEL := Color(0.035, 0.031, 0.035, 0.76)
 const COLOR_PANEL_STRONG := Color(0.025, 0.023, 0.030, 0.88)
@@ -43,6 +45,7 @@ var _debug_labels: Dictionary = {}
 var _skill_slot_panel: Control
 var _skill_slot_nodes: Array[Dictionary] = []
 var _last_layout_size: Vector2 = Vector2.ZERO
+var _low_health_vignette: ColorRect
 
 
 ## 作用：构建并刷新玩家、Boss、波次、经验和技能槽 HUD。
@@ -53,6 +56,7 @@ func build(tree: SceneTree) -> CanvasLayer:
 	_screen.name = "RunHUD"
 	_screen.layer = 199
 	_screen.visible = false
+	_build_low_health_warning()
 
 	_root = Control.new()
 	_root.name = "BattleHUD"
@@ -87,6 +91,7 @@ func update_layout() -> void:
 	if viewport_size == Vector2.ZERO:
 		return
 	_last_layout_size = viewport_size
+	_set_control_rect(_low_health_vignette, Rect2(Vector2.ZERO, viewport_size))
 	var design_width: float = 1.0
 	for item in _layout_items:
 		var control: Control = item.control
@@ -133,6 +138,7 @@ func update(first: Variant, second: Variant = null, current_wave: int = 0, wave_
 		_update_boss_bar(run_state)
 		_update_hud_visuals(run_state)
 		_update_skill_slots(run_state)
+		_update_skill_bar_occlusion()
 		_update_debug_stats(run_state)
 	_enforce_fixed_panel_spacing(_last_layout_size)
 
@@ -192,14 +198,31 @@ func _build_player_status() -> void:
 	_labels.exp_title = _create_label(panel, "EXPTitle", "EXP", Rect2(122, 58, 30, 20), 10, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, COLOR_MUTED)
 	_labels.exp_number = _create_label(panel, "EXPNumber", "EXP 0/0", Rect2(154, 57, 174, 22), 11, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_TEXT)
 	_labels.level = _create_label(panel, "LevelBadge", "1", Rect2(0, 80, 46, 34), 15, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
-	_labels.status = _create_label(panel, "StatusIconRow", "-", Rect2(122, 90, 232, 22), 12, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, COLOR_MUTED)
+	_labels.trait_status = _create_label(panel, "CharacterTraitStatus", "", Rect2(110, 76, 264, 20), 13, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
+	_labels.status = _create_label(panel, "StatusIconRow", "-", Rect2(122, 98, 232, 18), 11, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, COLOR_MUTED)
+	_labels.low_health = _create_label(panel, "LowHealthWarning", "生命危急", Rect2(110, 0, 260, 20), 14, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, Color(1.0, 0.38, 0.30))
+	_labels.low_health.visible = false
+
+
+## 作用：静态柔和红色边缘提示，中心保持透明，避免频闪和输入遮挡。
+func _build_low_health_warning() -> void:
+	_low_health_vignette = ColorRect.new()
+	_low_health_vignette.name = "LowHealthVignette"
+	_low_health_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_low_health_vignette.visible = false
+	var shader := Shader.new()
+	shader.code = "shader_type canvas_item; uniform float intensity = 0.3; void fragment(){ vec2 edge = abs(UV - vec2(0.5)) * 2.0; float rim = smoothstep(0.73, 1.0, max(edge.x, edge.y)); COLOR = vec4(0.75, 0.015, 0.025, rim * intensity); }"
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	_low_health_vignette.material = material
+	_screen.add_child(_low_health_vignette)
 
 
 ## 作用：构建Boss状态效果。
 ## 使用：本文件由 build 调用。
 func _build_boss_status() -> void:
 	var panel := _create_panel("BossStatusPanel", Rect2(0, 14, 660, 70), true, "top_center")
-	_labels.boss_name = _create_label(panel, "BossName", "Boss", Rect2(0, 4, 660, 24), 19, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
+	_labels.boss_name = _create_label(panel, "BossName", "Boss", Rect2(0, 0, 660, 30), 16, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
 	_bars.boss = _create_progress_bar(panel, "BossHPBar", Rect2(34, 32, 592, 28), COLOR_BOSS, "top_left", "boss")
 	_labels.boss_number = _create_label(panel, "BossHPNumber", "", Rect2(34, 31, 592, 30), 13, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
 	_bars.boss.visible = false
@@ -213,6 +236,7 @@ func _build_top_center() -> void:
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_create_art_rect(panel, "TimerPlaqueArt", Rect2(-8, -4, 142, 54), HUD_TIMER_PLAQUE_TEXTURE)
 	_labels.timer = _create_label(panel, "Timer", "00:00", Rect2(0, 0, 126, 44), 24, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
+	_labels.wave_progress = _create_label(_root, "WaveProgress", "第 1/8 波 · 剩余 00:00", Rect2(0, 100, 360, 24), 16, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_TEXT, "top_center")
 	_labels.boss_notice = _create_label(_root,"BossNotice","第 8 波后 Boss 登场",Rect2(0,130,360,28),14,HORIZONTAL_ALIGNMENT_CENTER,VERTICAL_ALIGNMENT_CENTER,COLOR_GOLD,"top_center")
 	_labels.center_warning = _create_label(_root, "CenterWarning", "", Rect2(0, 100, 360, 38), 18, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_WARN, "top_center")
 
@@ -220,9 +244,9 @@ func _build_top_center() -> void:
 ## 作用：构建技能进度条。
 ## 使用：本文件由 build 调用。
 func _build_skill_bar() -> void:
-	var panel := _create_panel("SkillBar", Rect2(0, 30, 780, 112), false, "bottom_center")
+	var panel := _create_panel("SkillBar", Rect2(0, 8, 780, 76), false, "bottom_center")
 	_skill_slot_panel = panel
-	panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.018, 0.014, 0.018, 0.72), Color(0.58, 0.42, 0.22, 0.46), 6))
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_ensure_fixed_skill_slots()
 
 
@@ -405,14 +429,25 @@ func _enforce_fixed_panel_spacing(viewport_size: Vector2) -> void:
 	var timer_panel := _get_panel("TimerPanel")
 	var timer_label := _get_label_control("Timer", "timer")
 	var warning_label := _get_label_control("CenterWarning", "center_warning")
+	var player_panel := _get_panel("PlayerStatusPanel")
+	# The boss bar is wider than the timer; keep it below the player panel
+	# whenever their rendered rectangles intersect, including desktop sizes.
+	if is_instance_valid(boss_panel):
+		boss_panel.position.y = 14.0 * boss_panel.scale.y
+		var boss_rect := boss_panel.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, boss_panel.size)
+		var player_rect := player_panel.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, player_panel.size)
+		if boss_rect.intersects(player_rect):
+			_place_below(boss_panel, player_panel, HUD_CENTER_GAP)
 	if _is_visible_control(boss_panel):
 		_place_below(timer_panel, boss_panel, HUD_CENTER_GAP)
 	elif is_instance_valid(timer_panel) and viewport_size != Vector2.ZERO:
 		var timer_rect := _get_control_rect(timer_panel)
 		timer_rect.position.x = (viewport_size.x - timer_rect.size.x * timer_panel.scale.x) * 0.5
-		timer_rect.position.y = 48.0 * timer_panel.scale.y
+		timer_rect.position.y = (144.0 if viewport_size.x < 1024.0 else 48.0) * timer_panel.scale.y
 		_set_control_rect(timer_panel, timer_rect)
-	_place_below(warning_label, timer_panel if is_instance_valid(timer_panel) else timer_label, HUD_CENTER_GAP)
+	_place_below(_labels.get("wave_progress"), timer_panel if is_instance_valid(timer_panel) else timer_label, 4.0)
+	_place_below(_labels.get("boss_notice"), _labels.get("wave_progress"), 0.0)
+	_place_below(warning_label, _labels.get("boss_notice"), 2.0)
 
 
 ## 作用：获取面板，供当前模块后续逻辑使用。
@@ -616,6 +651,11 @@ func _update_player_bars(run_state: Dictionary) -> void:
 	_bars.hp.max_value = max_health
 	_bars.hp.value = health
 	_labels.hp_number.text = "%d/%d" % [int(round(health)), int(round(max_health))]
+	var critical := health > 0.0 and health / max_health <= 0.25
+	_low_health_vignette.visible = critical
+	_labels.low_health.visible = critical
+	(_low_health_vignette.material as ShaderMaterial).set_shader_parameter("intensity", 0.24 + 0.12 * (1.0 - health / max_health / 0.25))
+	_labels.hp_number.add_theme_color_override("font_color", Color(1.0, 0.65, 0.58) if critical else COLOR_TEXT)
 	var level: int = int(run_state.get("level", 1))
 	var exp_required: int = maxi(1, int(run_state.get("exp_required", 1)))
 	var exp_value: float = clampf(float(run_state.get("exp", 0)), 0.0, float(exp_required))
@@ -631,6 +671,13 @@ func _update_runtime_labels(run_state: Dictionary, current_wave: int, wave_time_
 	_labels.timer.text = _format_time(float(run_state.get("run_seconds",run_seconds)))
 	var status_summary := String(run_state.get("status_summary", "-"))
 	_labels.status.text = status_summary
+	_labels.trait_status.text = String(run_state.get("trait_summary", ""))
+	var wave := clampi(int(run_state.get("wave_index", current_wave)), 1, 8)
+	var remaining := maxf(float(run_state.get("wave_remaining_seconds", wave_time_remaining)), 0.0)
+	var boss_state: Dictionary = _variant_to_dictionary(run_state.get("boss", {}))
+	var boss_present := bool(boss_state.get("visible", false))
+	_labels.wave_progress.text = "第 %d/8 波 · %s" % [wave, "Boss 战" if boss_present else "剩余 " + _format_time(ceilf(remaining))]
+	_labels.boss_notice.text = "Boss 已登场" if boss_present else "第 8 波后 Boss 登场"
 
 
 ## 作用：更新Boss进度条。
@@ -676,7 +723,6 @@ func _update_skill_slots(run_state: Dictionary) -> void:
 	var fusion_skill: Dictionary = _variant_to_dictionary(run_state.get("fusion_skill", {}))
 	var primary_skill: Dictionary = _variant_to_dictionary(run_state.get("primary_skill", {}))
 	var dash_skill: Dictionary = _variant_to_dictionary(run_state.get("dash_skill", {}))
-	_layout_skill_slots()
 	for index: int in range(_skill_slot_nodes.size()):
 		var nodes: Dictionary = _skill_slot_nodes[index]
 		var slot_kind: String = String(nodes.get("kind", "active"))
@@ -696,6 +742,7 @@ func _update_skill_slots(run_state: Dictionary) -> void:
 				if slot_index < active_skills.size() and active_skills[slot_index] is Dictionary:
 					skill = active_skills[slot_index]
 		_update_skill_slot_nodes(nodes, skill)
+	_layout_skill_slots()
 
 
 ## 作用：更新技能槽位节点组。
@@ -706,13 +753,18 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 		return
 	slot.visible = true
 	var has_skill: bool = not skill.is_empty()
-	slot.modulate = Color(1, 1, 1, 1.0) if has_skill else Color(1, 1, 1, 0.34)
+	nodes["occupied"] = has_skill
+	slot.modulate = Color.WHITE if has_skill else Color(1, 1, 1, 0.48)
 	var name_label: Label = nodes.get("name_label", null) as Label
 	var key_label: Label = nodes.get("key_label", null) as Label
 	var icon: TextureRect = nodes.get("icon", null) as TextureRect
 	var cooldown_label: Label = nodes.get("cooldown_label", null) as Label
 	var cooldown_mask: ColorRect = nodes.get("cooldown_mask", null) as ColorRect
 	if not has_skill:
+		if is_instance_valid(key_label):
+			var kind := String(nodes.get("kind", "active"))
+			key_label.text = _skill_slot_category_text(kind)
+			slot.tooltip_text = "%s · 空槽" % key_label.text
 		if is_instance_valid(name_label):
 			name_label.text = ""
 		if is_instance_valid(icon):
@@ -724,6 +776,8 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 			cooldown_mask.visible = false
 		return
 	if has_skill:
+		if is_instance_valid(key_label):
+			key_label.text = _skill_slot_category_text(String(nodes.get("kind", "active")))
 		var display_name: String = String(skill.get("display_name", skill.get("id", "")))
 		if display_name == "":
 			display_name = "-"
@@ -732,12 +786,16 @@ func _update_skill_slot_nodes(nodes: Dictionary, skill: Dictionary) -> void:
 			name_label.visible = true
 			name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		if is_instance_valid(icon):
-			var texture: Texture2D = _load_texture(String(skill.get("icon", "")))
+			var icon_path: String = String(skill.get("icon", ""))
+			if icon_path == "":
+				icon_path = SkillIconServiceScript.icon_path_for_skill(String(skill.get("id", "")))
+			var texture: Texture2D = _load_texture(icon_path)
 			icon.texture = texture
 			icon.self_modulate = Color.WHITE if texture != null else Color(1.0, 1.0, 1.0, 0.12)
 		var cooldown_remaining: float = maxf(float(skill.get("cooldown_remaining", 0.0)), 0.0)
 		var cooldown_total: float = maxf(float(skill.get("cooldown_total", 0.0)), cooldown_remaining)
 		var show_cooldown: bool = cooldown_remaining > 0.05 and cooldown_total > 0.0
+		nodes["cooldown_progress"] = clampf(cooldown_remaining / cooldown_total, 0.0, 1.0) if cooldown_total > 0.0 else 0.0
 		if is_instance_valid(cooldown_label):
 			cooldown_label.visible = show_cooldown or String(skill.get("feedback","")) != ""
 			cooldown_label.text = String(skill.get("feedback","")) if not show_cooldown else _format_cooldown(cooldown_remaining)
@@ -757,7 +815,7 @@ func _ensure_skill_slot_count(count: int) -> void:
 	if not is_instance_valid(_skill_slot_panel):
 		return
 	while _skill_slot_nodes.size() < count:
-		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlot%d" % _skill_slot_nodes.size(), "%d" % (_skill_slot_nodes.size() + 1), "active", _skill_slot_nodes.size()))
+		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlot%d" % _skill_slot_nodes.size(), "自动", "active", _skill_slot_nodes.size()))
 	for index: int in range(_skill_slot_nodes.size()):
 		var nodes: Dictionary = _skill_slot_nodes[index]
 		var slot: Control = nodes.get("slot", null) as Control
@@ -772,14 +830,25 @@ func _ensure_fixed_skill_slots() -> void:
 		return
 	if not _skill_slot_nodes.is_empty():
 		return
-	_skill_slot_nodes.append(_create_dynamic_skill_slot(0, "SkillSlotPrimary", "A", "primary", 0, true))
-	_skill_slot_nodes.append(_create_dynamic_skill_slot(1, "SkillSlotDash", "D", "dash", 0, true))
+	_skill_slot_nodes.append(_create_dynamic_skill_slot(0, "SkillSlotPrimary", "普攻", "primary", 0, true))
+	_skill_slot_nodes.append(_create_dynamic_skill_slot(1, "SkillSlotDash", "冲刺", "dash", 0, true))
 	for index: int in range(HUD_ACTIVE_SKILL_SLOT_COUNT):
-		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotActive%d" % index, "%d" % (index + 1), "active", index))
+		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotActive%d" % index, "自动", "active", index))
 	_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotCore", "核心", "core", 0, true))
 	_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotFusion", "融合", "fusion", 0, true))
 	for index: int in range(HUD_PASSIVE_SKILL_SLOT_COUNT):
-		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotPassive%d" % index, "P%d" % (index + 1), "passive", index))
+		_skill_slot_nodes.append(_create_dynamic_skill_slot(_skill_slot_nodes.size(), "SkillSlotPassive%d" % index, "被动", "passive", index))
+
+
+## 作用：槽位类别使用玩家可读文字，空槽与已学技能共用同一语义。
+func _skill_slot_category_text(kind: String) -> String:
+	match kind:
+		"primary": return "普攻"
+		"dash": return "冲刺"
+		"core": return "核心"
+		"fusion": return "融合"
+		"passive": return Locale.translate("hud.passive", {}, "被动")
+		_: return Locale.translate("hud.auto", {}, "自动")
 
 
 ## 作用：创建动态技能槽位并配置节点/样式所需的属性。
@@ -800,9 +869,13 @@ func _create_dynamic_skill_slot(index: int, slot_name: String = "", key_text: St
 	cooldown_mask.visible = false
 	slot.add_child(cooldown_mask)
 	_set_control_rect(cooldown_mask, Rect2(0, 0, 72, 72))
-	var name_label := _create_direct_label(slot, "%sName" % slot.name, "", Rect2(4, 50, 64, 20), 11, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
+	var name_label := _create_direct_label(slot, "%sName" % slot.name, "", Rect2(4, 50, 64, 20), 12, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
 	name_label.visible = false
-	var key_label := _create_direct_label(slot, "%sKey" % slot.name, key_text if key_text != "" else "%d" % (index + 1), Rect2(24, 54, 24, 18), 12, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
+	var key_label := _create_direct_label(slot, "%sKey" % slot.name, _skill_slot_category_text(kind), Rect2(24, 54, 24, 18), 12, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, COLOR_GOLD)
+	if kind == "active":
+		Locale.bind_text(key_label, "hud.auto", "自动")
+	elif kind == "passive":
+		Locale.bind_text(key_label, "hud.passive", "被动")
 	var cooldown_label := _create_direct_label(slot, "%sCooldown" % slot.name, "", Rect2(0, 0, 72, 72), 18, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER)
 	cooldown_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
 	cooldown_label.add_theme_constant_override("shadow_offset_x", 1)
@@ -830,16 +903,22 @@ func _layout_skill_slots(count: int = -1) -> void:
 	var visible_count: int = _skill_slot_nodes.size() if count < 0 else maxi(count, 0)
 	if visible_count <= 0:
 		return
-	var panel_size: Vector2 = _skill_slot_panel.size
-	if panel_size == Vector2.ZERO:
-		panel_size = Vector2(780.0, 112.0)
 	var gap: float = 6.0
-	var max_slot_size: float = 68.0
-	var slot_size: float = minf(max_slot_size, floorf((panel_size.x - gap * float(maxi(visible_count - 1, 0)) - 16.0) / float(visible_count)))
-	slot_size = clampf(slot_size, 24.0, max_slot_size)
-	var total_width: float = slot_size * float(visible_count) + gap * float(maxi(visible_count - 1, 0))
-	var start_x: float = (panel_size.x - total_width) * 0.5
-	var top: float = (panel_size.y - slot_size) * 0.5
+	var widths: Array[float] = []
+	var total_width := gap * float(maxi(visible_count - 1, 0)) + 16.0
+	var tallest := 26.0
+	for index: int in range(visible_count):
+		var nodes: Dictionary = _skill_slot_nodes[index]
+		var width := 58.0 if bool(nodes.get("occupied", false)) else (44.0 if String(nodes.get("kind", "")) in ["primary", "dash"] else 26.0)
+		widths.append(width)
+		total_width += width
+		tallest = maxf(tallest, width)
+	var panel_size := Vector2(total_width, tallest + 12.0)
+	_skill_slot_panel.custom_minimum_size = panel_size
+	_skill_slot_panel.size = panel_size
+	var viewport_size := _root.get_viewport_rect().size
+	_skill_slot_panel.position = Vector2((viewport_size.x - panel_size.x * _skill_slot_panel.scale.x) * 0.5, viewport_size.y - (panel_size.y + 8.0) * _skill_slot_panel.scale.y)
+	var cursor_x := 8.0
 	for index: int in range(_skill_slot_nodes.size()):
 		var nodes: Dictionary = _skill_slot_nodes[index]
 		var slot: Control = nodes.get("slot", null) as Control
@@ -849,16 +928,34 @@ func _layout_skill_slots(count: int = -1) -> void:
 		slot.visible = should_show
 		if not should_show:
 			continue
-		_set_control_rect(slot, Rect2(start_x + float(index) * (slot_size + gap), top, slot_size, slot_size))
+		var slot_size := widths[index]
+		var top := panel_size.y - slot_size - 6.0
+		_set_control_rect(slot, Rect2(cursor_x, top, slot_size, slot_size))
+		cursor_x += slot_size + gap
 		_set_control_rect(nodes.get("frame", null) as Control, Rect2(0, 0, slot_size, slot_size))
 		var icon_inset: float = maxf(8.0, slot_size * 0.18)
 		_set_control_rect(nodes.get("icon", null) as Control, Rect2(icon_inset, icon_inset * 0.75, slot_size - icon_inset * 2.0, slot_size - icon_inset * 2.2))
-		_set_control_rect(nodes.get("name_label", null) as Control, Rect2(3, 5, slot_size - 6.0, 16.0))
-		_set_control_rect(nodes.get("key_label", null) as Control, Rect2((slot_size - 24.0) * 0.5, slot_size - 18.0, 24.0, 18.0))
+		_set_control_rect(nodes.get("name_label", null) as Control, Rect2(3, 2, slot_size - 6.0, 20.0))
+		_set_control_rect(nodes.get("key_label", null) as Control, Rect2(1, slot_size - 18.0, slot_size - 2.0, 18.0))
 		_set_control_rect(nodes.get("cooldown_label", null) as Control, Rect2(0, 0, slot_size, slot_size))
 		var cooldown_mask: ColorRect = nodes.get("cooldown_mask", null) as ColorRect
-		if is_instance_valid(cooldown_mask) and not cooldown_mask.visible:
-			_set_control_rect(cooldown_mask, Rect2(0, 0, slot_size, slot_size))
+		if is_instance_valid(cooldown_mask):
+			var progress := float(nodes.get("cooldown_progress", 0.0)) if cooldown_mask.visible else 1.0
+			_set_control_rect(cooldown_mask, Rect2(0, slot_size * (1.0 - progress), slot_size, slot_size * progress))
+
+
+## 作用：玩家接近技能条时仅淡化装饰框，图标和冷却文本仍可读。
+func _update_skill_bar_occlusion() -> void:
+	var player := _tree.get_first_node_in_group("player") as Node2D if is_instance_valid(_tree) else null
+	var overlaps := false
+	if is_instance_valid(player):
+		var player_screen := player.get_global_transform_with_canvas().origin
+		var bar_rect := _skill_slot_panel.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, _skill_slot_panel.size)
+		overlaps = bar_rect.grow(28.0).has_point(player_screen)
+	for nodes: Dictionary in _skill_slot_nodes:
+		var frame := nodes.get("frame") as TextureRect
+		if is_instance_valid(frame):
+			frame.self_modulate.a = 0.24 if overlaps else 0.72
 
 
 ## 作用：获取当前技能数量，供当前模块后续逻辑使用。

@@ -1,6 +1,15 @@
 # UI System Overview
 
-更新日期：2026-06-13
+更新日期：2026-10-15
+
+试玩修复补充：选择卡的完整效果显示在固定详情区，属性升级的数值由只读
+`UpgradePreviewService` 计算，图标由 `SkillIconService` 解析。每个待处理升级
+有三次免费刷新；刷新不消费升级次数，重进同一弹窗不重置额度。角色确认和
+地图开始按钮固定在正文滚动区外；结算通过 `UIScreenFactory` 的可选固定
+操作区承载重开，战斗详情默认折叠，新局会重置展开与滚动状态。
+验证入口：`verify:playtest-navigation`、`verify:playtest-choice-cards`、
+`verify:character-starting-attacks`、`verify:short-run-diagnostics`、
+`verify:melee-contact-protection`。
 
 本文档是后续改造项目 UI 的主入口。目标不是记录某一次改动，而是让每个 UI 相关功能都能快速定位、低风险修改，并且不反向影响战斗、数据、存档和运行场景。
 
@@ -57,6 +66,14 @@
 | 本地化 | `LocalizationService` 已接入标题页、设置页、主面板标题和弹窗标题 | 65% |
 | 响应式布局 | `UIResponsiveLayout` 已有 scale、breakpoint、compact 和 panel layout | 75% |
 | 自动验证 | 标题页、角色选择、地图选择等 UI smoke 覆盖主要入口；完整架构断言需随新状态补对应验证 | 80% |
+
+### 体验反馈修复入口（2026-10-15）
+
+- `RunHudStateProvider` 深拷贝角色公开 `trait_runtime_state`，输出 `trait_state/trait_summary`；护盾、过载和波次数据只用于展示。
+- `RunHudController` 常驻波次/倒计时，Boss 出现时更新提示；生命不高于 25% 时显示静态柔和红边和文字警告。技能槽容量仍为 12，空槽压缩、底板透明，角色接近时淡化装饰框。
+- `PauseInspectionController` 和 `PauseInspectionViewModelBuilder` 在每次进入暂停时读取当前玩家，展开属性/已学技能；控制按钮使用固定页脚。`SkillPreviewService.build_owned` 复用预览流水线，保留独立主攻实例的等级、品质与运行修正。
+- 选卡适配宽高分别处理；默认正文/数值至少 14px，极小四卡窗口至少 12px。升级展示实际当前→目标数值，召唤复合信息保留持续、攻击间隔及伤害单位；完整详情继续由鼠标/焦点更新。
+- 对应运行验证：`verify:run-hud-awareness`、`verify:choice-card-readability`、`verify:pause-inspection`；保留原选卡刷新、槽位容量、暂停输入和重开门禁。
 
 整体判断：
 

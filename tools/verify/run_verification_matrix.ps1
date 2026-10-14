@@ -1,6 +1,7 @@
 param(
     [string]$Batch = 'acceptance',
-    [string[]]$Names = @()
+    [string[]]$Names = @(),
+    [string]$GodotPath = 'D:/Godot/Godot_v4.6.3-stable_win64_console.exe'
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -19,14 +20,23 @@ foreach ($entry in $package.scripts.PSObject.Properties) {
     if ($Names.Count -gt 0 -and $entry.Name -notin $Names) { continue }
     $arguments = $entry.Value -split '\s+'
     $executable = $arguments[0]
+    if ($executable -in @('godot','godot.exe')) { $executable = $GodotPath }
     $parameters = @($arguments | Select-Object -Skip 1)
     $logPath = Join-Path $outputRoot (($entry.Name -replace ':','_') + '.log')
     # Godot is launched directly by this PowerShell, never by Node/npm.
     $previousPreference = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $log = & $executable @parameters 2>&1
-    $exitCode = $LASTEXITCODE
-    $ErrorActionPreference = $previousPreference
+    $exitCode = -1
+    $log = @()
+    try {
+        $command = Get-Command -Name $executable -ErrorAction Stop
+        $ErrorActionPreference = 'Continue'
+        $log = & $command.Source @parameters 2>&1
+        $exitCode = $LASTEXITCODE
+    } catch {
+        $log = @($_.ToString())
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
     $log | Out-File -LiteralPath $logPath -Encoding UTF8
     $scriptErrors = @($log | Where-Object { "$_" -match 'SCRIPT ERROR:|Parse Error:|Compile Error:' })
     $engineErrors = @($log | Where-Object { "$_" -match '^ERROR:' })

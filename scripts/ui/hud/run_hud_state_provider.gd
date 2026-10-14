@@ -30,12 +30,12 @@ func build(context: Dictionary) -> Dictionary:
 	var spawner: Node = tree.get_first_node_in_group(&"enemy_spawner") if tree!=null else null
 	if spawner!=null and spawner.has_method("_get_wave_progress_snapshot"):
 		state["wave_progress"]=spawner.call("_get_wave_progress_snapshot")
-	state["boss_notice"]="第 8 波后 Boss 登场"
 	state["souls"] = SaveManager.get_soul_stones()
 
 	var player: Node = tree.get_first_node_in_group(&"player") if is_instance_valid(tree) else null
 	_enrich_from_player(state, player)
 	state["boss"] = _build_boss_state(tree)
+	state["boss_notice"] = "Boss 已登场" if bool(state["boss"].get("visible", false)) else "第 8 波后 Boss 登场"
 	state["status_summary"] = _get_status_summary(tree)
 	state["debug_stats"] = _build_debug_stats(tree)
 	return state
@@ -58,6 +58,15 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	if runtime != null:
 		state["character_id"] = String(runtime.call("get_character_id"))
 		state["main_attack"] = String(runtime.call("get_starting_skill_id"))
+		# Read the public snapshot; never retain the mutable trait owner's dictionary.
+		for property: Dictionary in runtime.get_property_list():
+			if String(property.get("name", "")) == "trait_runtime_state":
+				var snapshot: Variant = runtime.get("trait_runtime_state")
+				if snapshot is Dictionary:
+					state["trait_state"] = snapshot.duplicate(true)
+				break
+		var trait_config: Dictionary = runtime.call("get_trait") if runtime.has_method("get_trait") else {}
+		state["trait_summary"] = _build_trait_summary(state.get("trait_state", {}), trait_config)
 	var skill_level: int = _get_starting_skill_level(player)
 	if skill_level > 0:
 		state["main_attack_level"] = skill_level
@@ -69,6 +78,31 @@ func _enrich_from_player(state: Dictionary, player: Node) -> void:
 	state["core_skill"] = skill_slots.get("core_skill", {})
 	state["fusion_skill"] = skill_slots.get("fusion_skill", {})
 	state["skills"] = state["active_skills"]
+
+
+## 作用：将公开职业快照和配置转换为只读提示，不推演或修改战斗状态。
+func _build_trait_summary(snapshot: Dictionary, config: Dictionary) -> String:
+	var params: Dictionary = config.get("params", {})
+	match String(snapshot.get("trait_type", config.get("type", ""))):
+		"passive_with_periodic_shield":
+			var points := maxi(int(snapshot.get("shield_points", 0)), 0)
+			if points > 0:
+				var remaining := maxf(float(snapshot.get("shield_remaining_seconds", 0.0)), 0.0)
+				return "圣盾 %d · %.1fs" % [points, remaining] if float(params.get("shield_duration", 0.0)) > 0 else "圣盾 %d" % points
+			var recharge := maxf(float(params.get("shield_interval", 18.0)) - float(snapshot.get("shield_timer", 0.0)), 0.0)
+			return "圣盾耗尽 · 补充 %.1fs" % recharge
+		"skill_cast_stack":
+			var stacks := maxi(int(snapshot.get("stack_count", 0)), 0)
+			var speed_penalty := 0.0
+			for effect: Dictionary in params.get("modifiers_per_stack", []):
+				if String(effect.get("stat", "")) == "move_speed" and String(effect.get("op", "")) == "multiplier_add":
+					speed_penalty += float(effect.get("value", 0.0)) * stacks
+			return "过载 %d/%d · 移速 %+.0f%%" % [stacks, int(params.get("max_stacks", 0)), speed_penalty * 100.0]
+		"moving_bonus":
+			var penalty := maxf(float(snapshot.get("movement_penalty_remaining", 0.0)), 0.0)
+			return "移动惩罚 %.1fs" % penalty if penalty > 0 else String(config.get("display_name", ""))
+		_:
+			return String(config.get("display_name", ""))
 
 
 ## 作用：构建Boss状态。
@@ -159,6 +193,17 @@ func _build_skill_slots(player: Node, main_attack_id: String = "") -> Dictionary
 			continue
 		elif active_slots.size() < MAX_HUD_ACTIVE_SKILLS:
 			active_slots.append(slot)
+	# 基础冲刺由玩家控制器提供，不登记神系技能；学习神系冲刺后优先显示实际技能。
+	if dash_slot.is_empty() and player.has_method("start_dash"):
+		dash_slot = {
+			"id": "basic_dash",
+			"display_name": "基础冲刺",
+			"level": 1,
+			"cooldown_remaining": maxf(_get_player_float(player, "_dash_cooldown_remaining", 0.0), 0.0),
+			"cooldown_total": maxf(_get_player_float(player, "dash_cooldown", 0.0), 0.0),
+			"icon": "",
+			"skill_type": "dash"
+		}
 	var result: Dictionary = _skill_slot_result(primary_slot, dash_slot, active_slots, passive_slots)
 	for instance: RefCounted in skill_manager.get_all_skills():
 		var slot: Dictionary = _build_skill_slot(player, instance)

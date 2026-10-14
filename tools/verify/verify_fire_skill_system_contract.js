@@ -459,9 +459,8 @@ function main() {
 	const combatObjectsDocument = readJson("data/combat/combat_objects.json");
 	const charactersDocument = readJson("data/characters/characters.json");
 	assert(Array.isArray(document.starting_skills), "data/skills/skills.json starting_skills must be an array");
-	assert(document.starting_skills.length === 1, `data/skills/skills.json must contain exactly one starting skill, got ${document.starting_skills.length}`);
-	const fireball = document.starting_skills[0];
-	assert(isObject(fireball), "data/skills/skills.json starting_skills[0] must be an object");
+	const fireball = document.starting_skills.find((skill) => skill.id === "fireball");
+	assert(isObject(fireball), "data/skills/skills.json must retain the mage fireball starting skill");
 	assert(fireball.id === "fireball", "data/skills/skills.json starting skill must be fireball");
 	assert(fireball.is_starting_skill === true, "fireball must be marked as a starting skill");
 	assert(fireball.offer_in_upgrade_pool === false, "fireball must not appear in the upgrade offer pool");
