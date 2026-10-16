@@ -47,7 +47,7 @@ func get_debug_state() -> Dictionary:
 ## 作用：带状态敌人死亡通过来源冷却、区域容量与概率检查后创建毒区，成功后记录冷却。
 ## 使用：event 读取 enemy/spawn_source_type/parent/position。
 func _on_enemy_killed(event: Dictionary) -> void:
-	if not _enemy_has_any_status(event.get("enemy")):
+	if not _enemy_has_any_status(event):
 		return
 
 	var params: Dictionary = _get_params()
@@ -103,19 +103,19 @@ func _on_enemy_killed(event: Dictionary) -> void:
 		tracker.call("record_potion_zone_triggered")
 
 
-## 作用：检查死亡敌人是否带燃烧、毒、冻结、减速、电击、流血或破甲状态。
+## 作用：读取死亡时状态快照，覆盖所有当前状态及正在结算的诅咒。
 ## 使用：由本文件 _on_enemy_killed 调用；返回布尔判断或执行是否成功。
-func _enemy_has_any_status(enemy_variant: Variant) -> bool:
-	var enemy: Node = enemy_variant as Node
-	if enemy == null:
+func _enemy_has_any_status(event: Dictionary) -> bool:
+	var snapshot: Variant = event.get("target_statuses", null)
+	if snapshot is Array:
+		return not snapshot.is_empty()
+	var enemy: Node = event.get("enemy") as Node
+	if not is_instance_valid(enemy):
 		return false
 	var status_manager: Node = enemy.get_node_or_null("StatusEffectManager")
-	if status_manager == null or not status_manager.has_method("has_status"):
+	if status_manager == null or not status_manager.has_method("get_death_status_snapshot"):
 		return false
-	for status_id: StringName in [&"burning", &"poison", &"freeze", &"slow", &"shock", &"bleed", &"armor_break"]:
-		if bool(status_manager.call("has_status", status_id)):
-			return true
-	return false
+	return not status_manager.call("get_death_status_snapshot").is_empty()
 
 
 ## 作用：按事件来源身份查询下一次可触发时间，零冷却不限制。

@@ -30,8 +30,8 @@ const TRIGGER_ALIASES: Dictionary = {
 
 
 ## 作用：遍历定义 trigger_rules，适配有效规则并保持配置顺序。
-## 使用：skill_instance 为技能运行实例；definition 为技能定义。
-static func to_events(skill_instance: RefCounted, definition: RefCounted) -> Array:
+## 使用：event_name 非空时先筛触发名，避免为无关事件计算动作与成长；留空保持全量适配。
+static func to_events(skill_instance: RefCounted, definition: RefCounted, event_name: StringName = &"") -> Array:
 	var events: Array = []
 	if definition == null:
 		return events
@@ -43,6 +43,10 @@ static func to_events(skill_instance: RefCounted, definition: RefCounted) -> Arr
 	var rules: Array = rules_variant
 	for rule_variant: Variant in rules:
 		if rule_variant is Dictionary:
+			if event_name != &"":
+				var trigger_name: String = str((rule_variant as Dictionary).get("trigger", ""))
+				if TRIGGER_ALIASES.get(trigger_name, StringName(trigger_name)) != event_name:
+					continue
 			var event: Dictionary = to_event(rule_variant as Dictionary, skill_instance)
 			if not event.is_empty():
 				events.append(event)

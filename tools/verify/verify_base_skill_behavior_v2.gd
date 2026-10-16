@@ -46,6 +46,11 @@ func run() -> void:
     c.resolution_id=row.id+str(i)
     c.event_id=100+i
     bus.emit_skill_event(StringName(row.event),c)
+    # This row measures the direct status trigger. A random fire path has its
+    # own real tick coverage; stop it before physics can add a second stack.
+    if row.kind=="status":
+     for node: Node in root.get_children():
+      if node.has_method("geometry_shape"): node.set_physics_process(false)
     await physics_frame
     bus.process_pending_events()
     if threshold>1 and i==threshold-2: expect(measure(row)==0,row.id+" below threshold no output")

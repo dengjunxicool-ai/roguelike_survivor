@@ -15,10 +15,18 @@ func run() -> void:
 	var holder: HBoxContainer=HBoxContainer.new();root.add_child(holder)
 	var curses: VBoxContainer=VBoxContainer.new();root.add_child(curses)
 	var modal: RefCounted=preload("res://scripts/ui/modals/run_choice_modal_controller.gd").new();modal.setup(self,holder,curses)
+	var details := Label.new()
+	root.add_child(details)
+	modal.set_details_label(details,details)
 	var core_option: Dictionary={"rarity":"normal","payload":{"skill_id":&"fire_core_inferno_cycle","level":1}}
 	expect(not modal._get_option_description_text(core_option).contains("冷却"),"R1 event card excludes fallback cooldown")
 	var dash_option: Dictionary={"rarity":"normal","payload":{"skill_id":&"fire_dash_blazing_run","level":1}}
-	expect(modal._get_option_description_text(dash_option).contains("冲刺冷却 2.60s"),"R1 dash card reads actual cooldown")
+	expect(modal._get_option_effect_text(dash_option).contains("冲刺冷却 2.60s"),"R1 dash effects read actual cooldown")
+	var dash_options: Array[Dictionary] = [dash_option]
+	modal._refresh_choice_card_modal(holder,dash_options,"RUNNING",false)
+	var dash_card: Button = modal.get("_choice_card_buttons")[0]
+	dash_card.grab_focus()
+	expect(dash_card.tooltip_text.is_empty() and details.text.contains("冲刺冷却 2.60s"),"R1 focused dash card exposes actual cooldown in fixed details")
 	var dash: Dictionary = Preview.build(player,&"fire_dash_blazing_run",1,"normal")
 	expect(absf(float(dash.cooldown)-2.6)<.01,"R1 dash reads actual player CD")
 	var passive: RefCounted = install(&"fire_passive_burning_focus")
@@ -55,7 +63,10 @@ func run() -> void:
 	var emp_option: Dictionary={"display_name":GameData.get_skill(emp.skill_id).display_name,"rarity":"normal","payload":{"skill_id":emp.skill_id,"level":1}}
 	var emp_options: Array[Dictionary]=[emp_option]
 	modal._refresh_choice_card_modal(holder,emp_options,"RUNNING",false)
-	expect(modal.get("_choice_card_buttons")[0].tooltip_text.contains("导电目标额外"),"R3 full card tooltip preserves condition label")
+	var emp_card: Button = modal.get("_choice_card_buttons")[0]
+	# A reused card may already hold focus, so exercise hover and focus callbacks.
+	emp_card.emit_signal("mouse_entered")
+	expect(emp_card.tooltip_text.is_empty() and str(emp_card.get_meta("choice_details","")).contains("导电目标额外") and details.text.contains("导电目标额外"),"R3 full fixed card details preserve condition label")
 	var actions: Array=preload("res://scripts/skills/skill_trigger_rule_adapter.gd").to_event(emp.definition.trigger_rules[0],emp).actions[0].params.actions_on_apply
 	enemy.get_node("StatusEffectManager").clear_statuses();enemy.packets.clear()
 	Executor.new().execute_actions(actions,ctx(enemy,emp))

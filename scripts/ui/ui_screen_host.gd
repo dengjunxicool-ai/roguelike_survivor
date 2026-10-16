@@ -30,9 +30,40 @@ func apply_visible_hierarchy(state: String) -> void:
 	if _is_running_child_state(state):
 		_set_screen_visible(STATE_RUNNING, not _is_fullscreen_choice_state(state))
 		_set_screen_visible(state, true)
-		return
+	else:
+		_set_screen_visible(state, true)
 
-	_set_screen_visible(state, true)
+	var screen: Control = _screen_registry.call("get_screen", state) as Control
+	if screen != null:
+		screen.get_viewport().gui_release_focus()
+	if state != STATE_RUNNING:
+		call_deferred("_focus_screen", state)
+
+
+## 作用：布局完成后给当前页面的首个可操作控件建立键盘焦点。
+func _focus_screen(state: String) -> void:
+	var screen: Control = _screen_registry.call("get_screen", state) as Control
+	if screen == null or not screen.is_visible_in_tree():
+		return
+	var control: Control = _find_focus_control(screen)
+	if control != null:
+		control.grab_focus()
+
+
+func _find_focus_control(node: Node) -> Control:
+	if node.is_queued_for_deletion():
+		return null
+	if node is Control and not node.is_visible_in_tree():
+		return null
+	if node is BaseButton and not node.disabled and node.focus_mode == Control.FOCUS_ALL:
+		return node
+	if node is Slider and node.editable and node.focus_mode == Control.FOCUS_ALL:
+		return node
+	for child: Node in node.get_children():
+		var control: Control = _find_focus_control(child)
+		if control != null:
+			return control
+	return null
 
 
 ## 作用：显式修改指定状态页面的可见性。

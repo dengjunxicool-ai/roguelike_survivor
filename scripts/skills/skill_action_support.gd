@@ -29,6 +29,7 @@ const DamageTraceContextScript: Script = preload("res://scripts/runtime/damage_t
 const SummonDefinitionScript: Script = preload("res://scripts/summons/summon_definition.gd")
 const SummonManagerScript: Script = preload("res://scripts/summons/summon_manager.gd")
 const CombatTargetRegistryScript: Script = preload("res://scripts/combat/combat_target_registry.gd")
+const OptionalCombatPropertyReaderScript: Script = preload("res://scripts/combat/optional_combat_property_reader.gd")
 
 const ELEMENT_ALIASES: Dictionary = {
 	"frost": "ice",
@@ -820,15 +821,10 @@ func _get_array(value: Variant) -> Array:
 	return []
 
 
-## 作用：读取对象浮点属性，空对象或缺值时使用默认值。
+## 作用：读取对象浮点属性，空对象或缺失属性使用默认值，已声明的 null 转为零。
 ## 使用：fallback 为缺值备用结果。
 func _get_float_property(object: Object, property: String, fallback: float) -> float:
-	if object == null:
-		return fallback
-	for property_info: Dictionary in object.get_property_list():
-		if str(property_info.get("name", "")) == property:
-			return float(object.get(property))
-	return fallback
+	return OptionalCombatPropertyReaderScript.read_float_preserving_null(object, property, fallback)
 
 
 ## 作用：从当前技能、被动、角色与遗物聚合快照读取指定属性。

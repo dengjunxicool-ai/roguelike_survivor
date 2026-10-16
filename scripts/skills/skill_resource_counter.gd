@@ -25,7 +25,7 @@ static func event_amount(skill: RefCounted, key: String, kind: String, context: 
 	if event == "on_enemy_killed":
 		return 1.0 if once(skill, key, "corpse:%d" % target.get_instance_id()) else 0.0
 	if float(target.get("current_health")) <= 0.0: return 0.0
-	var rank: String = String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(target).target_type)
+	var rank: String = String(preload("res://scripts/combat/target_damage_profile_resolver.gd").classify_target(target))
 	if rank not in ["elite", "boss"]: return 0.0
 	var token: String = String(context.get("resolution_id", str(context.get("event_id", -1))))
 	if not once(skill, key, token): return 0.0

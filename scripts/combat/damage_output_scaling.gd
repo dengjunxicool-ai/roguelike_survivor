@@ -7,6 +7,7 @@ class_name DamageOutputScaling
 const DamageRuleRegistryScript: Script = preload("res://scripts/combat/damage_rule_registry.gd")
 const TargetDamageProfileResolverScript: Script = preload("res://scripts/combat/target_damage_profile_resolver.gd")
 const ModifierKeyRegistryScript: Script = preload("res://scripts/modifiers/modifier_key_registry.gd")
+const OptionalCombatPropertyReaderScript: Script = preload("res://scripts/combat/optional_combat_property_reader.gd")
 
 
 ## 作用：按开关优先使用包内倍率，否则合并攻击者属性与modifier倍率和加法。
@@ -160,10 +161,7 @@ static func _get_target_class(target: Node) -> String:
 ## 作用：读取对象属性并转为浮点值，缺失对象或属性时使用默认值。
 ## 使用：object/property/fallback 指定对象、属性名和缺失值，供伤害或配置计算使用。
 static func _get_float_property(object: Object, property: String, fallback: float) -> float:
-	var value: Variant = _get_property(object, property, fallback)
-	if value == null:
-		return fallback
-	return float(value)
+	return OptionalCombatPropertyReaderScript.read_float(object, property, fallback)
 
 
 ## 作用：读取聚合 modifier 快照中的数值，缺少键时使用默认值。
@@ -172,14 +170,3 @@ static func _get_modifier_float(modifiers: Dictionary, key: String, fallback: fl
 	if modifiers.is_empty() or not modifiers.has(key):
 		return fallback
 	return float(modifiers.get(key, fallback))
-
-
-## 作用：查找对象属性列表中匹配的属性，找不到时返回默认值。
-## 使用：用于可选属性访问，避免对没有该属性的对象直接读取。
-static func _get_property(object: Object, property: String, fallback: Variant) -> Variant:
-	if object == null:
-		return fallback
-	for property_info: Dictionary in object.get_property_list():
-		if String(property_info.get("name", "")) == property:
-			return object.get(property)
-	return fallback

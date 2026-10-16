@@ -272,7 +272,7 @@ func _execute_skill_events(event_name: StringName, context: Dictionary) -> void:
 	if skill_instance != null:
 		var definition: RefCounted = skill_instance.get("definition") as RefCounted
 		if definition != null:
-			_execute_event_list(event_name, context, skill_instance, _get_skill_events(skill_instance, definition))
+			_execute_event_list(event_name, context, skill_instance, _get_skill_events(skill_instance, definition, event_name))
 	_execute_owned_trigger_rule_events(event_name, context, skill_instance)
 
 
@@ -323,7 +323,7 @@ func _execute_event_list(event_name: StringName, context: Dictionary, skill_inst
 
 		preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"trigger","origin_skill_id":str(skill_instance.skill_id)})
 		var observed_target: Node = event_context.get("target") as Node
-		if is_instance_valid(observed_target) and String(preload("res://scripts/combat/target_damage_profile_resolver.gd").resolve(observed_target).target_type) == "boss":
+		if is_instance_valid(observed_target) and preload("res://scripts/combat/target_damage_profile_resolver.gd").classify_target(observed_target) == &"boss":
 			preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"boss_trigger"})
 		if event_context.has("resource_crossings"): preload("res://scripts/runtime/skill_balance_metrics.gd").observe(self,{"kind":"resource","crossings":event_context.resource_crossings})
 		var actions: Array = _get_array(event.get("actions", []))
@@ -365,12 +365,12 @@ func _execute_owned_trigger_rule_events(event_name: StringName, context: Diction
 		var definition: RefCounted = skill_instance.get("definition") as RefCounted
 		if definition == null:
 			continue
-		_execute_event_list(event_name, context, skill_instance, SkillTriggerRuleAdapterScript.to_events(skill_instance, definition))
+		_execute_event_list(event_name, context, skill_instance, SkillTriggerRuleAdapterScript.to_events(skill_instance, definition, event_name))
 
 
 ## 作用：合并定义事件、实例运行事件和触发规则适配事件。
 ## 使用：skill_instance 为技能运行实例；definition 为技能定义。
-func _get_skill_events(skill_instance: RefCounted, definition: RefCounted) -> Array:
+func _get_skill_events(skill_instance: RefCounted, definition: RefCounted, event_name: StringName = &"") -> Array:
 	var events: Array = []
 	var definition_events_variant: Variant = definition.get("events")
 	if definition_events_variant is Array:
@@ -379,7 +379,7 @@ func _get_skill_events(skill_instance: RefCounted, definition: RefCounted) -> Ar
 	var runtime_events_variant: Variant = skill_instance.get("runtime_events")
 	if runtime_events_variant is Array:
 		events.append_array(runtime_events_variant)
-	events.append_array(SkillTriggerRuleAdapterScript.to_events(skill_instance, definition))
+	events.append_array(SkillTriggerRuleAdapterScript.to_events(skill_instance, definition, event_name))
 
 	return events
 

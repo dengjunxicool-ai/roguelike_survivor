@@ -73,6 +73,7 @@ var _wave_duration_seconds: float = 55.0
 var _wave_spawned_count: int = 0
 var _wave_total_count: int = 0
 var _kill_count: int = 0
+var _recorded_enemy_deaths: Dictionary = {}
 var _run_start_souls: int = 0
 var _run_souls_earned: int = 0
 var _result_reward_claimed: bool = false
@@ -193,7 +194,10 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if current_state == STATE_TITLE and _title_controller != null:
+		var was_revealed: bool = bool(_title_controller.get("actions_revealed"))
 		_title_controller.call("handle_input", event)
+		if not was_revealed and bool(_title_controller.get("actions_revealed")):
+			get_viewport().set_input_as_handled()
 
 
 ## 作用：校验目标页面和允许转移，再统一准备内容、显隐页面与应用暂停。
@@ -855,6 +859,7 @@ func _start_run(map_id: Variant, developer_setup: Dictionary = {}) -> bool:
 	_run_stats_tracker = run_setup.get("run_stats_tracker", null) as Node
 	_run_seconds = 0.0
 	_kill_count = 0
+	_recorded_enemy_deaths.clear()
 	_run_start_souls = SaveManager.get_soul_stones()
 	_run_receipt_id = SaveManager.new_receipt_id("run")
 	_frozen_result_state.clear()
@@ -1120,6 +1125,12 @@ func _get_run_hud_state() -> Dictionary:
 ## 作用：响应敌人死亡并衔接对应的事件处理流程；具体处理委托给 _run_stats_tracker.record_enemy_killed。
 ## 使用：内部辅助入口；输入 _enemy（敌人）。
 func _on_enemy_died(_enemy: Node) -> void:
+	if not is_instance_valid(_enemy):
+		return
+	var enemy_id: int = _enemy.get_instance_id()
+	if _recorded_enemy_deaths.has(enemy_id):
+		return
+	_recorded_enemy_deaths[enemy_id] = true
 	_kill_count += 1
 	if _run_stats_tracker != null and _run_stats_tracker.has_method("record_enemy_killed"):
 		_run_stats_tracker.call("record_enemy_killed", _enemy)
@@ -1286,6 +1297,11 @@ func _on_wave_cleared(wave_id: String, cleared_early: bool) -> void:
 func _on_boss_defeated(_elapsed_time: float) -> void:
 	if current_state == STATE_RESULT_DEFEAT or current_state == STATE_RESULT_VICTORY:
 		return
+	# The spawner's Boss.died listener precedes the UI listener. Account for
+	# the actual dead Boss before freezing the result; its later callback is a no-op.
+	for enemy: Node in get_tree().get_nodes_in_group(&"enemy"):
+		if String(enemy.get_meta("enemy_rank", "")) == "boss" and bool(enemy.get("_is_dead")):
+			_on_enemy_died(enemy)
 	transition_to(STATE_RESULT_VICTORY)
 
 

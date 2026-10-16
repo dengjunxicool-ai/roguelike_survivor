@@ -16,6 +16,7 @@ const Locale: Script = preload("res://scripts/ui/localization_service.gd")
 
 var _soul_label: Label
 var _upgrade_list: VBoxContainer
+var _back_button: Button
 var _command_dispatcher: RefCounted = UICommandDispatcherScript.new()
 var _view_model_builder: RefCounted = MetaUpgradeViewModelBuilderScript.new()
 
@@ -30,13 +31,16 @@ func build(body: VBoxContainer) -> void:
 		add_souls_button.pressed.connect(Callable(self, "_on_add_test_souls_pressed"))
 	var scroll: ScrollContainer = _add_scroll(body)
 	_upgrade_list = _add_vbox(scroll)
-	Locale.bind_text(_add_state_button(body, "", STATE_TITLE), "meta.back")
+	_back_button = _add_state_button(body, "", STATE_TITLE)
+	Locale.bind_text(_back_button, "meta.back")
 	refresh()
 
 
 ## 作用：读取永久升级展示模型并重建货币、等级、费用和购买按钮列表。
 ## 使用：build 后及购买成功后调用；只刷新展示，实际购买由命令分派器完成。
 func refresh() -> void:
+	var focused: Control = _upgrade_list.get_viewport().gui_get_focus_owner() if _upgrade_list.is_inside_tree() else null
+	var focused_name: StringName = focused.name if focused != null and _upgrade_list.is_ancestor_of(focused) else &""
 	var view_model: Dictionary = _view_model_builder.call("build")
 	if _soul_label != null:
 		_soul_label.text = Locale.translate("currency.soul_stones", {"count": str(int(view_model.get("souls", 0)))})
@@ -45,6 +49,21 @@ func refresh() -> void:
 	var upgrades: Array = view_model.get("upgrades", [])
 	for upgrade: Dictionary in upgrades:
 		_add_upgrade_row(upgrade)
+	if focused_name != &"" and _upgrade_list.is_visible_in_tree():
+		var replacement: Button = _upgrade_list.find_child(String(focused_name), true, false) as Button
+		if replacement == null or replacement.disabled:
+			replacement = null
+			for row: Node in _upgrade_list.get_children():
+				for child: Node in row.get_children():
+					if child is Button and not child.disabled:
+						replacement = child
+						break
+				if replacement != null:
+					break
+		if replacement == null:
+			replacement = _back_button
+		if replacement != null:
+			replacement.grab_focus()
 
 
 ## 作用：添加升级行并配置节点/样式所需的属性。
@@ -65,7 +84,9 @@ func _add_upgrade_row(upgrade: Dictionary) -> void:
 		int(upgrade.get("max_level", 1))
 	])
 	var button: Button = _add_button(row, String(upgrade.get("button_text", "")))
+	button.name = "MetaUpgrade_%s" % upgrade_id
 	button.disabled = not bool(upgrade.get("can_purchase", false))
+	button.focus_mode = Control.FOCUS_NONE if button.disabled else Control.FOCUS_ALL
 	button.pressed.connect(Callable(self, "_buy_upgrade").bind(upgrade_id))
 
 
