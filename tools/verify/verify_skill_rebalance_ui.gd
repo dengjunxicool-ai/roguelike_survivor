@@ -72,6 +72,9 @@ func run() -> void:
 	var dummy: VBoxContainer = VBoxContainer.new()
 	background.add_child(dummy)
 	modal.setup(self,cards,dummy)
+	var details_label := Label.new()
+	dummy.add_child(details_label)
+	modal.set_details_label(details_label,details_label)
 	var options: Array[Dictionary] = []
 	for id: StringName in [&"fire_cast_meteor_rain",&"frost_cast_glacial_lance",&"fire_core_inferno_cycle"]:
 		options.append({"display_name":GameData.get_skill(id).display_name,"description":GameData.get_skill(id).description,"rarity":"legendary","payload":{"skill_id":id,"level":5,"target_rarity":"legendary"}})
@@ -80,9 +83,15 @@ func run() -> void:
 	await process_frame
 	for button: Button in modal.get("_choice_card_buttons"):
 		var label: Label = button.find_child("SkillCardDescription",true,false)
-		expect(label != null and label.max_lines_visible == 3 and label.clip_contents,"long Chinese description is bounded to its card")
+		expect(label != null and label.clip_contents and button.get_global_rect().encloses(label.get_global_rect()),"long Chinese description is bounded to its card")
+		if label != null:
+			expect(label.max_lines_visible > 0,"Chinese purpose excerpt has a bounded visible line count")
+		var values: Control = button.find_child("SkillCardValues",true,false)
+		expect(values != null and button.get_global_rect().encloses(values.get_global_rect()),"numerical rows remain inside their card")
 		var details: String = str(button.get_meta("choice_details",""))
 		expect(button.tooltip_text.is_empty() and details.contains("伤害") and not details.contains("proc_"),"full numerical preview retained in bounded details")
+		button.grab_focus()
+		expect(details_label.text == details and details_label.text.contains(label.text),"keyboard focus exposes complete Chinese purpose and numerical effects in details")
 	if DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png(OS.get_environment("APPDATA").get_base_dir()+"/cards-960.png")

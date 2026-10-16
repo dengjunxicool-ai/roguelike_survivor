@@ -256,6 +256,21 @@
     "verify:defeat-diagnostic-lifecycle": "godot --headless --path . --script res://tools/verify/verify_defeat_diagnostic_lifecycle.gd",
     "verify:run-hud-awareness": "godot --headless --path . --script res://tools/verify/verify_run_hud_awareness.gd",
     "verify:choice-card-readability": "godot --headless --path . --script res://tools/verify/verify_choice_card_readability.gd",
-    "verify:pause-inspection": "godot --headless --path . --script res://tools/verify/verify_pause_inspection.gd"
+    "verify:pause-inspection": "godot --headless --path . --script res://tools/verify/verify_pause_inspection.gd",
+    "verify:qa6-keyboard-navigation": "godot --headless --path . --script res://tools/verify/verify_qa6_keyboard_navigation.gd",
+    "verify:qa6-alchemist-death-status": "godot --headless --path . --script res://tools/verify/verify_qa6_alchemist_death_status.gd",
+    "verify:qa6-replacement-keyboard": "godot --headless --path . --script res://tools/verify/verify_qa6_replacement_keyboard.gd",
+    "verify:no-cpu-particles-guard": "node tools/verify/verify_no_cpu_particles_guard.js",
+    "verify:qa7-refresh-focus": "godot --headless --path . --script res://tools/verify/verify_qa7_refresh_focus.gd",
+    "verify:qa7-focus-visibility": "godot --headless --path . --script res://tools/verify/verify_qa7_focus_visibility.gd",
+    "verify:qa7-other-map-paths": "godot --headless --path . --script res://tools/verify/verify_qa7_other_map_paths.gd",
+    "verify:qa7-replacement-mixed-input": "godot --headless --path . --script res://tools/verify/verify_qa7_replacement_mixed_input.gd",
+    "verify:enemy-missing-visuals": "godot --headless --path . --script res://tools/verify/verify_enemy_missing_visuals.gd",
+    "verify:boss-terminal-kill-snapshot": "godot --headless --path . --script res://tools/verify/verify_boss_terminal_kill_snapshot.gd",
+    "verify:trigger-rule-event-filter": "godot --headless --path . --script res://tools/verify/verify_trigger_rule_event_filter.gd",
+    "verify:target-classification-hot-path": "godot --headless --path . --script res://tools/verify/verify_target_classification_hot_path.gd",
+    "verify:target-profile-property-snapshot": "godot --headless --path . --script res://tools/verify/verify_target_profile_property_snapshot.gd",
+    "verify:damage-property-access-hot-path": "godot --headless --path . --script res://tools/verify/verify_damage_property_access_hot_path.gd",
+    "verify:skill-action-float-property-access": "godot --headless --path . --script res://tools/verify/verify_skill_action_float_property_access.gd"
   }
 }

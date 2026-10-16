@@ -5,7 +5,9 @@ const { readTextFile } = require("../lib/json_file");
 const root = path.resolve(__dirname, "../..");
 const targetExtensions = new Set([".gd", ".tscn"]);
 const forbidden = "CPUParticles2D";
-const ignoredDirectories = new Set([".git", ".godot", "node_modules"]);
+// Development checks refer to the CPU particle type to prohibit it; they are
+// not shipped particle effects. Keep scanning every other project directory.
+const ignoredDirectories = new Set([".git", ".godot", "node_modules", "tools"]);
 
 function walk(directory, files = []) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {

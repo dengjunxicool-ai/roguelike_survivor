@@ -12,6 +12,7 @@ config_version=5
 
 config/name="roguelike_survivor"
 run/main_scene="res://scenes/app/app_bootstrap.tscn"
+run/max_fps=60
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
@@ -19,6 +20,10 @@ config/icon="res://icon.svg"
 
 DataManager="*res://scripts/core/data_manager.gd"
 PendingSaves="*res://scripts/game/pending_save_service.gd"
+
+[display]
+
+window/vsync/vsync_mode=0
 
 [input]
 

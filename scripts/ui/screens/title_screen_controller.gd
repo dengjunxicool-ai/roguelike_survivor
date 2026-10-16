@@ -97,6 +97,11 @@ func reveal_actions() -> void:
 		_prompt_label.visible = false
 	if _action_menu != null:
 		_action_menu.visible = true
+	if _action_list != null:
+		for child: Node in _action_list.get_children():
+			if child is Button and not child.disabled:
+				child.grab_focus()
+				break
 
 
 ## 作用：更新布局。
@@ -271,6 +276,7 @@ func _add_menu_button(text: String, callable: Callable, enabled: bool = true, to
 	var button: Button = Button.new()
 	button.text = text
 	button.disabled = not enabled
+	button.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 	button.tooltip_text = tooltip
 	button.custom_minimum_size = Vector2(230, 44)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

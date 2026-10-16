@@ -165,6 +165,7 @@ func _build_nav_bar(root: VBoxContainer) -> void:
 ## 使用：本文件由 build 调用；输入 root（root）。
 func _build_body(root: VBoxContainer) -> void:
 	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -348,6 +349,8 @@ func _select_default_character_if_needed() -> void:
 ## 作用：刷新角色卡片列表。
 ## 使用：本文件由 refresh、_select_character 调用。
 func _refresh_character_cards() -> void:
+	var focused: Control = _character_list.get_viewport().gui_get_focus_owner() if _character_list.is_inside_tree() else null
+	var focused_name: StringName = focused.name if focused != null and _character_list.is_ancestor_of(focused) else &""
 	_clear_children(_character_list)
 	var characters: Array = GameData.get_character_pool()
 	if characters.is_empty():
@@ -358,6 +361,25 @@ func _refresh_character_cards() -> void:
 		var character_id: StringName = StringName(str(character.get("id", "")))
 		if character_id != &"":
 			_add_character_card(character, character_id)
+	if focused_name != &"" and _character_list.is_visible_in_tree():
+		var replacement: Control = _character_list.get_node_or_null(NodePath(focused_name)) as Control
+		if replacement != null:
+			replacement.grab_focus()
+			_ensure_focused_card_visible(replacement)
+
+
+## 重建卡片的尺寸由容器延后排序；布局稳定后只滚动仍持有焦点的当前页卡片。
+func _ensure_focused_card_visible(card: Control) -> void:
+	var tree: SceneTree = _screen.get_tree()
+	await tree.process_frame
+	await tree.process_frame
+	if not is_instance_valid(_screen) or not is_instance_valid(card) or not card.is_visible_in_tree():
+		return
+	if card.get_viewport().gui_get_focus_owner() != card:
+		return
+	var scroll: ScrollContainer = _layout_controls.get("body_scroll") as ScrollContainer
+	if scroll != null:
+		scroll.ensure_control_visible(card)
 
 
 ## 作用：添加角色卡片并配置节点/样式所需的属性。

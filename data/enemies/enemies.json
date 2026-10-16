@@ -289,7 +289,31 @@
 				"type": "chase_player"
 			},
 			"skills": [],
-			"visual": {},
+			"visual": {
+				"texture": "res://assets/enemies/skeleton_warrior/1.png",
+				"sprite_frames": "res://assets/enemies/skeleton_warrior/skeleton_warrior.tres",
+				"scale": [
+					0.72,
+					0.72
+				],
+				"modulate": [
+					0.76,
+					0.84,
+					0.95,
+					1
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			},
 			"enemy_rank": "normal"
 		},
 		{
@@ -458,7 +482,31 @@
 					"skill_id": "shadow_dash"
 				}
 			],
-			"visual": {},
+			"visual": {
+				"texture": "res://assets/enemies/archer_skeleton/1.png",
+				"sprite_frames": "res://assets/enemies/archer_skeleton/archer_skeleton.tres",
+				"scale": [
+					0.62,
+					0.62
+				],
+				"modulate": [
+					0.64,
+					0.52,
+					0.85,
+					1
+				],
+				"animations": {
+					"move_left": {
+						"animation": "move_left"
+					},
+					"move_right": {
+						"animation": "move_right"
+					},
+					"attack": {
+						"animation": "attack"
+					}
+				}
+			},
 			"enemy_rank": "normal"
 		},
 		{
